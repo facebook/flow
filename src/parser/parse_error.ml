@@ -320,8 +320,7 @@ module PP = struct
     | PropertyAfterRestProperty -> "Rest property must be final property of an object pattern"
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
-    | DeclareExportLet ->
-      "`declare export let` is not supported. Use `declare export var` instead."
+    | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
     | DeclareExportConst ->
       "`declare export const` is not supported. Use `declare export var` instead."
     | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
@@ -343,8 +342,7 @@ module PP = struct
     | GetterArity -> "Getter should have zero parameters"
     | SetterArity -> "Setter should have exactly one parameter"
     | InvalidNonTypeImportInDeclareModule ->
-      "Imports within a `declare module` body must always be "
-      ^ "`import type` or `import typeof`!"
+      "Imports within a `declare module` body must always be " ^ "`import type` or `import typeof`!"
     | ImportTypeShorthandOnlyInPureImport ->
       "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements"
     | ImportSpecifierMissingComma -> "Missing comma between import specifiers"

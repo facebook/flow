@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type 'a t = 'a * 'a list
+type 'a t = 'a * 'a list [@@deriving show]
 
 val to_list : 'a t -> 'a list
 

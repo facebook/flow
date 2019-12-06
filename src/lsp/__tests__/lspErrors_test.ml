@@ -37,8 +37,7 @@ let error_list_of_json_response json =
         [
           ("jsonrpc", JSON_String "2.0");
           ("method", JSON_String "textDocument/publishDiagnostics");
-          ( "params",
-            JSON_Object [("uri", JSON_String uri); ("diagnostics", JSON_Array diagnostics)] );
+          ("params", JSON_Object [("uri", JSON_String uri); ("diagnostics", JSON_Array diagnostics)]);
         ] ->
       begin
         match diagnostics with
@@ -88,7 +87,7 @@ let smap_of_error_list error_list =
   List.fold_right
     (fun error map ->
       let existing =
-        match SMap.get error.uri map with
+        match SMap.find_opt error.uri map with
         | None -> []
         | Some existing -> existing
       in
@@ -125,8 +124,7 @@ let clear_all_live_errors_and_send ctxt =
     "Clearing the live errors from a file with no live errors should not send anything"
   in
   let errors =
-    LspErrors.empty
-    |> LspErrors.clear_all_live_errors_and_send (assert_no_send ~reason) path_to_foo
+    LspErrors.empty |> LspErrors.clear_all_live_errors_and_send (assert_no_send ~reason) path_to_foo
   in
   let reason = "Setting the live parse errors for foo.js to 0 errors won't trigger a send" in
   let errors =
@@ -143,9 +141,7 @@ let clear_all_live_errors_and_send ctxt =
   let errors =
     errors |> LspErrors.clear_all_live_errors_and_send (assert_no_send ~reason) path_to_foo
   in
-  let reason =
-    "Setting the live parse errors for foo.js to 0 errors again should trigger a send"
-  in
+  let reason = "Setting the live parse errors for foo.js to 0 errors again should trigger a send" in
   let errors =
     errors |> LspErrors.set_live_parse_errors_and_send (assert_no_send ~reason) path_to_foo []
   in
@@ -283,9 +279,7 @@ let streamed_errors_in_isolation ctxt =
              send
              (smap_of_error_list [foo_infer_error_1; bar_infer_error_1]))
   in
-  let reason =
-    "Streaming in 1 more error for foo.js will cause all of foo's errors to be resent"
-  in
+  let reason = "Streaming in 1 more error for foo.js will cause all of foo's errors to be resent" in
   let expected = [foo_infer_error_1; foo_infer_error_1; foo_infer_error_2] in
   let errors =
     with_assert_errors_match ~ctxt ~reason ~expected (fun send ->
@@ -657,8 +651,7 @@ let tests =
          "streamed_and_finalized_server_errors" >:: streamed_and_finalized_server_errors;
          "live_parse_errors_override_finalized_errors"
          >:: live_parse_errors_override_finalized_errors;
-         "live_parse_errors_override_streamed_errors"
-         >:: live_parse_errors_override_streamed_errors;
+         "live_parse_errors_override_streamed_errors" >:: live_parse_errors_override_streamed_errors;
          "live_non_parse_errors_override_finalized_errors"
          >:: live_non_parse_errors_override_finalized_errors;
          "live_non_parse_errors_override_streamed_errors"

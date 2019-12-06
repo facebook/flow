@@ -216,7 +216,7 @@ let rec merge_type cx =
       | (None, _)
       | (_, None) ->
         None
-      | (Some ts1, Some ts2) -> Some (Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2)
+      | (Some ts1, Some ts2) -> Some (Base.List.map2_exn ~f:(merge_type cx |> curry) ts1 ts2)
     in
     DefT
       ( locationless_reason (RCustom "array"),
@@ -228,7 +228,7 @@ let rec merge_type cx =
       ( locationless_reason (RCustom "tuple"),
         bogus_trust (),
         ArrT
-          (TupleAT (merge_type cx (t1, t2), Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
+          (TupleAT (merge_type cx (t1, t2), Base.List.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
       )
   | (DefT (_, _, ArrT (ROArrayAT elemt1)), DefT (_, _, ArrT (ROArrayAT elemt2))) ->
     DefT
@@ -363,6 +363,7 @@ let find_props cx =
 
 let resolve_tvar cx (_, id) =
   let ts = possible_types cx id in
+
   (* The list of types returned by possible_types is often empty, and the
      most common reason is that we don't have enough type coverage to
      resolve id. Thus, we take the unit of merging to be `any`. (Something
@@ -384,7 +385,7 @@ let rec resolve_type cx = function
   | AnnotT (_, t, _) -> resolve_type cx t
   | MergedT (_, uses) ->
     begin
-      match Core_list.(uses >>= possible_types_of_use cx) with
+      match Base.List.(uses >>= possible_types_of_use cx) with
       (* The unit of intersection is normally mixed, but MergedT is hacky and empty
       fits better here *)
       | [] -> locationless_reason REmpty |> EmptyT.make |> with_trust bogus_trust
@@ -402,9 +403,7 @@ let rec extract_type cx this_t =
   | OptionalT { reason = _; type_ = ty; use_desc = _ }
   | MaybeT (_, ty) ->
     extract_type cx ty
-  | DefT (_, _, (NullT | VoidT))
-  | InternalT (OptionalChainVoidT _) ->
-    FailureNullishType
+  | DefT (_, _, (NullT | VoidT)) -> FailureNullishType
   | AnyT _ -> FailureAnyType
   | DefT (_, _, InstanceT _) as t -> Success t
   | DefT (_, _, ObjT _) as t -> Success t
@@ -438,6 +437,7 @@ let rec extract_type cx this_t =
   | DefT (reason, _, SingletonBoolT _)
   | DefT (reason, _, BoolT _) ->
     get_builtin_type cx reason "Boolean" |> extract_type cx
+  | DefT (reason, _, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (reason, _, CharSetT _) -> get_builtin_type cx reason "String" |> extract_type cx
   | DefT (_, _, IdxWrapper t) -> extract_type cx t
   | DefT (_, _, ReactAbstractComponentT _) as t -> Success t
@@ -479,7 +479,9 @@ let rec extract_type cx this_t =
   | OpenPredT _
   | ShapeT _
   | ThisClassT _
-  | DefT (_, _, TypeT _) ->
+  | DefT (_, _, TypeT _)
+  | DefT (_, _, EnumObjectT _)
+  | DefT (_, _, EnumT _) ->
     FailureUnhandledType this_t
 
 let rec extract_members ?(exclude_proto_members = false) cx = function
@@ -500,7 +502,6 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
             | Get (loc, t)
             | Set (loc, t)
             (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            
             | GetSet (loc, t, _, _)
             | Method (loc, t) ->
               (loc, t)
@@ -564,7 +565,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     (* Intersection type should autocomplete for every property of
          every type in the intersection *)
     let ts = InterRep.members rep in
-    let members = Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
+    let members = Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
     Success
       (List.fold_left
          (fun acc members -> AugmentableSMap.augment acc ~with_bindings:members)
@@ -582,7 +583,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
              | AnyT _ ->
                false
              | _ -> true)
-      |> Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx)
+      |> Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx)
       |> intersect_members cx
     in
     Success members
@@ -590,8 +591,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | SuccessModule t ->
     FailureUnhandledMembers t
 
-and extract ?exclude_proto_members cx =
-  extract_type cx %> extract_members ?exclude_proto_members cx
+and extract ?exclude_proto_members cx = extract_type cx %> extract_members ?exclude_proto_members cx
 
 and extract_members_as_map ~exclude_proto_members cx this_t =
   match extract ~exclude_proto_members cx this_t |> to_command_result with

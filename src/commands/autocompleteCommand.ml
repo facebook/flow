@@ -36,41 +36,64 @@ let spec =
         |> anon "args" (optional (list_of string)));
   }
 
+(* legacy editor integrations inserted the "AUTO332" token themselves. modern ones give us the
+   cursor location. this function finds the first occurrence of "AUTO332" and returns the
+   contents with the token removed, along with the (line, column) cursor position. *)
+let extract_cursor contents =
+  let regexp = Str.regexp_string Autocomplete_js.autocomplete_suffix in
+  try
+    let offset = Str.search_forward regexp contents 0 in
+    let cursor = Line.position_of_offset contents offset in
+    let contents =
+      let prefix = String.sub contents 0 offset in
+      let suffix =
+        String.sub
+          contents
+          (offset + Autocomplete_js.suffix_len)
+          (String.length contents - (offset + 7))
+      in
+      prefix ^ suffix
+    in
+    (contents, Some cursor)
+  with Not_found -> (contents, None)
+
 let parse_args = function
   | None
   | Some [] ->
-    File_input.FileContent (None, Sys_utils.read_stdin_to_string ())
+    let contents = Sys_utils.read_stdin_to_string () in
+    let (contents, cursor) = extract_cursor contents in
+    (None, contents, cursor)
   | Some [filename] ->
     let filename = get_path_of_file filename in
-    File_input.FileContent (Some filename, Sys_utils.read_stdin_to_string ())
+    let contents = Sys_utils.read_stdin_to_string () in
+    let (contents, cursor) = extract_cursor contents in
+    (Some filename, contents, cursor)
   | Some [line; column] ->
     let line = int_of_string line in
     let column = int_of_string column in
     let contents = Sys_utils.read_stdin_to_string () in
-    let (line, column) = convert_input_pos (line, column) in
-    File_input.FileContent
-      (None, AutocompleteService_js.add_autocomplete_token contents line column)
+    let cursor = convert_input_pos (line, column) in
+    (None, contents, Some cursor)
   | Some [filename; line; column] ->
     let line = int_of_string line in
     let column = int_of_string column in
     let contents = Sys_utils.read_stdin_to_string () in
     let filename = get_path_of_file filename in
-    let (line, column) = convert_input_pos (line, column) in
-    File_input.FileContent
-      (Some filename, AutocompleteService_js.add_autocomplete_token contents line column)
+    let cursor = convert_input_pos (line, column) in
+    (Some filename, contents, Some cursor)
   | _ ->
     CommandSpec.usage spec;
     FlowExitStatus.(exit Commandline_usage_error)
 
 let main base_flags option_values json pretty root strip_root wait_for_recheck args () =
-  let file = parse_args args in
+  let (filename, contents, cursor_opt) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
     guess_root
       flowconfig_name
       (match root with
       | Some root -> Some root
-      | None -> File_input.path_of_file_input file)
+      | None -> filename)
   in
   let strip_root =
     if strip_root then
@@ -78,27 +101,37 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck a
     else
       None
   in
-  let request =
-    ServerProt.Request.AUTOCOMPLETE { input = file; wait_for_recheck; trigger_character = None }
-  in
-  let results =
-    match connect_and_make_request flowconfig_name option_values root request with
-    | ServerProt.Response.AUTOCOMPLETE response -> response
-    | response -> failwith_bad_response ~request ~response
-  in
-  if json || pretty then
-    results
-    |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
-    |> Hh_json.print_json_endline ~pretty
-  else
-    match results with
-    | Error error -> prerr_endlinef "Error: %s" error
-    | Ok completions ->
-      List.iter
-        (fun res ->
-          let name = res.ServerProt.Response.res_name in
-          let (_ty_loc, ty) = res.ServerProt.Response.res_ty in
-          print_endline (Printf.sprintf "%s %s" name ty))
-        completions
+  match cursor_opt with
+  | None ->
+    if json || pretty then
+      let open Hh_json in
+      print_json_endline ~pretty (JSON_Object [("result", JSON_Array [])])
+    else
+      ()
+  | Some cursor ->
+    let request =
+      ServerProt.Request.AUTOCOMPLETE
+        { filename; contents; cursor; wait_for_recheck; trigger_character = None }
+    in
+    let results =
+      match connect_and_make_request flowconfig_name option_values root request with
+      | ServerProt.Response.AUTOCOMPLETE response -> response
+      | response -> failwith_bad_response ~request ~response
+    in
+    if json || pretty then
+      results
+      |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
+      |> Hh_json.print_json_endline ~pretty
+    else (
+      match results with
+      | Error error -> prerr_endlinef "Error: %s" error
+      | Ok completions ->
+        List.iter
+          (fun res ->
+            let name = res.ServerProt.Response.res_name in
+            let (_ty_loc, ty) = res.ServerProt.Response.res_ty in
+            print_endline (Printf.sprintf "%s %s" name ty))
+          completions
+    )
 
 let command = CommandSpec.command spec main

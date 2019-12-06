@@ -235,11 +235,22 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
 
   LoggingUtils.set_server_options ~server_options:options;
 
+  let should_log_server_profiles = Options.should_profile options && not Sys.win32 in
+  (* This must happen before we create the workers in create_program_init *)
+  if should_log_server_profiles then Flow_server_profile.init ();
+
   let initial_lwt_thread () =
     let (_, program_init) = create_program_init ~shared_mem_config ?focus_targets options in
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
+          ( if should_log_server_profiles then
+            let rec sample_processor_info () =
+              Flow_server_profile.processor_sample ();
+              let%lwt () = Lwt_unix.sleep 1.0 in
+              sample_processor_info ()
+            in
+            Lwt.async sample_processor_info );
           let%lwt (env, _, first_internal_error) = program_init profiling in
           let reader = State_reader.create () in
           let%lwt (errors, warnings, suppressed_errors) =

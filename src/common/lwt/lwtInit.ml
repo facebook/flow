@@ -101,7 +101,7 @@ class unix_select =
            * than FD_SETSIZE (which is probably 1024). select() stops working for large fds like this
            *)
           let string_of_fd fd = string_of_int (Obj.magic fd : int) in
-          let string_of_fds fds = String.concat ";" (Core_list.map ~f:string_of_fd fds) in
+          let string_of_fds fds = String.concat ";" (Base.List.map ~f:string_of_fd fds) in
           let params = spf "[%s] [%s] []" (string_of_fds fds_r) (string_of_fds fds_w) in
           raise (Unix.Unix_error (Unix.EINVAL, "select", params))
       in

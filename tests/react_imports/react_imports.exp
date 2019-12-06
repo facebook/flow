@@ -47,8 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:436:27
-   436|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:452:27
+   452|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:436:27
-   436|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:452:27
+   452|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -186,39 +186,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:398:26
+   <BUILTINS>/react.js:412:26
                                  v-
-   398|   declare export default {|
-   399|     +DOM: typeof DOM,
-   400|     +PropTypes: typeof PropTypes,
-   401|     +version: typeof version,
-   402|     +checkPropTypes: typeof checkPropTypes,
-   403|     +memo: typeof memo,
-   404|     +lazy: typeof lazy,
-   405|     +createClass: typeof createClass,
-   406|     +createContext: typeof createContext,
-   407|     +createElement: typeof createElement,
-   408|     +cloneElement: typeof cloneElement,
-   409|     +createFactory: typeof createFactory,
-   410|     +createRef: typeof createRef,
-   411|     +forwardRef: typeof forwardRef,
-   412|     +isValidElement: typeof isValidElement,
+   412|   declare export default {|
+   413|     +DOM: typeof DOM,
+   414|     +PropTypes: typeof PropTypes,
+   415|     +version: typeof version,
+   416|     +checkPropTypes: typeof checkPropTypes,
+   417|     +memo: typeof memo,
+   418|     +lazy: typeof lazy,
+   419|     +createClass: typeof createClass,
+   420|     +createContext: typeof createContext,
+   421|     +createElement: typeof createElement,
+   422|     +cloneElement: typeof cloneElement,
+   423|     +createFactory: typeof createFactory,
+   424|     +createRef: typeof createRef,
+   425|     +forwardRef: typeof forwardRef,
+   426|     +isValidElement: typeof isValidElement,
       :
-   416|     +Children: typeof Children,
-   417|     +ConcurrentMode: typeof ConcurrentMode,
-   418|     +StrictMode: typeof StrictMode,
-   419|     +Profiler: typeof Profiler,
-   420|     +Suspense: typeof Suspense,
-   421|     +useContext: typeof useContext,
-   422|     +useState: typeof useState,
-   423|     +useReducer: typeof useReducer,
-   424|     +useRef: typeof useRef,
-   425|     +useEffect: typeof useEffect,
-   426|     +useLayoutEffect: typeof useLayoutEffect,
-   427|     +useCallback: typeof useCallback,
-   428|     +useMemo: typeof useMemo,
-   429|     +useImperativeHandle: typeof useImperativeHandle,
-   430|   |};
+   432|     +StrictMode: typeof StrictMode,
+   433|     +Profiler: typeof Profiler,
+   434|     +Suspense: typeof Suspense,
+   435|     +useContext: typeof useContext,
+   436|     +useState: typeof useState,
+   437|     +useReducer: typeof useReducer,
+   438|     +useRef: typeof useRef,
+   439|     +useEffect: typeof useEffect,
+   440|     +useLayoutEffect: typeof useLayoutEffect,
+   441|     +useCallback: typeof useCallback,
+   442|     +useMemo: typeof useMemo,
+   443|     +useImperativeHandle: typeof useImperativeHandle,
+   444|     +useTransition: typeof useTransition,
+   445|     +useDeferredValue: typeof useDeferredValue,
+   446|   |};
           -^ [1]
 
 
@@ -231,39 +231,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:398:26
+   <BUILTINS>/react.js:412:26
                                  v-
-   398|   declare export default {|
-   399|     +DOM: typeof DOM,
-   400|     +PropTypes: typeof PropTypes,
-   401|     +version: typeof version,
-   402|     +checkPropTypes: typeof checkPropTypes,
-   403|     +memo: typeof memo,
-   404|     +lazy: typeof lazy,
-   405|     +createClass: typeof createClass,
-   406|     +createContext: typeof createContext,
-   407|     +createElement: typeof createElement,
-   408|     +cloneElement: typeof cloneElement,
-   409|     +createFactory: typeof createFactory,
-   410|     +createRef: typeof createRef,
-   411|     +forwardRef: typeof forwardRef,
-   412|     +isValidElement: typeof isValidElement,
+   412|   declare export default {|
+   413|     +DOM: typeof DOM,
+   414|     +PropTypes: typeof PropTypes,
+   415|     +version: typeof version,
+   416|     +checkPropTypes: typeof checkPropTypes,
+   417|     +memo: typeof memo,
+   418|     +lazy: typeof lazy,
+   419|     +createClass: typeof createClass,
+   420|     +createContext: typeof createContext,
+   421|     +createElement: typeof createElement,
+   422|     +cloneElement: typeof cloneElement,
+   423|     +createFactory: typeof createFactory,
+   424|     +createRef: typeof createRef,
+   425|     +forwardRef: typeof forwardRef,
+   426|     +isValidElement: typeof isValidElement,
       :
-   416|     +Children: typeof Children,
-   417|     +ConcurrentMode: typeof ConcurrentMode,
-   418|     +StrictMode: typeof StrictMode,
-   419|     +Profiler: typeof Profiler,
-   420|     +Suspense: typeof Suspense,
-   421|     +useContext: typeof useContext,
-   422|     +useState: typeof useState,
-   423|     +useReducer: typeof useReducer,
-   424|     +useRef: typeof useRef,
-   425|     +useEffect: typeof useEffect,
-   426|     +useLayoutEffect: typeof useLayoutEffect,
-   427|     +useCallback: typeof useCallback,
-   428|     +useMemo: typeof useMemo,
-   429|     +useImperativeHandle: typeof useImperativeHandle,
-   430|   |};
+   432|     +StrictMode: typeof StrictMode,
+   433|     +Profiler: typeof Profiler,
+   434|     +Suspense: typeof Suspense,
+   435|     +useContext: typeof useContext,
+   436|     +useState: typeof useState,
+   437|     +useReducer: typeof useReducer,
+   438|     +useRef: typeof useRef,
+   439|     +useEffect: typeof useEffect,
+   440|     +useLayoutEffect: typeof useLayoutEffect,
+   441|     +useCallback: typeof useCallback,
+   442|     +useMemo: typeof useMemo,
+   443|     +useImperativeHandle: typeof useImperativeHandle,
+   444|     +useTransition: typeof useTransition,
+   445|     +useDeferredValue: typeof useDeferredValue,
+   446|   |};
           -^ [1]
 
 
@@ -276,39 +276,39 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:398:26
+   <BUILTINS>/react.js:412:26
                                  v-
-   398|   declare export default {|
-   399|     +DOM: typeof DOM,
-   400|     +PropTypes: typeof PropTypes,
-   401|     +version: typeof version,
-   402|     +checkPropTypes: typeof checkPropTypes,
-   403|     +memo: typeof memo,
-   404|     +lazy: typeof lazy,
-   405|     +createClass: typeof createClass,
-   406|     +createContext: typeof createContext,
-   407|     +createElement: typeof createElement,
-   408|     +cloneElement: typeof cloneElement,
-   409|     +createFactory: typeof createFactory,
-   410|     +createRef: typeof createRef,
-   411|     +forwardRef: typeof forwardRef,
-   412|     +isValidElement: typeof isValidElement,
+   412|   declare export default {|
+   413|     +DOM: typeof DOM,
+   414|     +PropTypes: typeof PropTypes,
+   415|     +version: typeof version,
+   416|     +checkPropTypes: typeof checkPropTypes,
+   417|     +memo: typeof memo,
+   418|     +lazy: typeof lazy,
+   419|     +createClass: typeof createClass,
+   420|     +createContext: typeof createContext,
+   421|     +createElement: typeof createElement,
+   422|     +cloneElement: typeof cloneElement,
+   423|     +createFactory: typeof createFactory,
+   424|     +createRef: typeof createRef,
+   425|     +forwardRef: typeof forwardRef,
+   426|     +isValidElement: typeof isValidElement,
       :
-   416|     +Children: typeof Children,
-   417|     +ConcurrentMode: typeof ConcurrentMode,
-   418|     +StrictMode: typeof StrictMode,
-   419|     +Profiler: typeof Profiler,
-   420|     +Suspense: typeof Suspense,
-   421|     +useContext: typeof useContext,
-   422|     +useState: typeof useState,
-   423|     +useReducer: typeof useReducer,
-   424|     +useRef: typeof useRef,
-   425|     +useEffect: typeof useEffect,
-   426|     +useLayoutEffect: typeof useLayoutEffect,
-   427|     +useCallback: typeof useCallback,
-   428|     +useMemo: typeof useMemo,
-   429|     +useImperativeHandle: typeof useImperativeHandle,
-   430|   |};
+   432|     +StrictMode: typeof StrictMode,
+   433|     +Profiler: typeof Profiler,
+   434|     +Suspense: typeof Suspense,
+   435|     +useContext: typeof useContext,
+   436|     +useState: typeof useState,
+   437|     +useReducer: typeof useReducer,
+   438|     +useRef: typeof useRef,
+   439|     +useEffect: typeof useEffect,
+   440|     +useLayoutEffect: typeof useLayoutEffect,
+   441|     +useCallback: typeof useCallback,
+   442|     +useMemo: typeof useMemo,
+   443|     +useImperativeHandle: typeof useImperativeHandle,
+   444|     +useTransition: typeof useTransition,
+   445|     +useDeferredValue: typeof useDeferredValue,
+   446|   |};
           -^ [1]
 
 

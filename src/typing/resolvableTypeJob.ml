@@ -141,10 +141,10 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT
       ( _,
         _,
-        InstanceT
-          (static, super, _, { class_id; type_args; own_props; proto_props; inst_call_t; _ }) ) ->
+        InstanceT (static, super, _, { class_id; type_args; own_props; proto_props; inst_call_t; _ })
+      ) ->
     let ts =
-      if class_id = ALoc.none then
+      if class_id = ALoc.id_none then
         []
       else
         [super; static]
@@ -202,10 +202,10 @@ and collect_of_type ?log_unresolved cx acc = function
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     collect_of_type ?log_unresolved cx acc t
-  | InternalT (OptionalChainVoidT _) -> acc
   | DefT (_, _, NumT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)
+  | DefT (_, _, SymbolT)
   | DefT (_, _, VoidT)
   | DefT (_, _, NullT)
   | DefT (_, _, EmptyT _)
@@ -214,6 +214,8 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, SingletonNumT _)
   | DefT (_, _, SingletonStrT _)
   | DefT (_, _, CharSetT _)
+  | DefT (_, _, EnumT _)
+  | DefT (_, _, EnumObjectT _)
   | AnyT _ ->
     acc
   (* Since MergedT only arises from context opt, we can be certain that its
@@ -314,7 +316,7 @@ and collect_of_use ?log_unresolved cx acc = function
   | UseT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | CallT (_, _, fct) ->
     let arg_types =
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Arg t
           | SpreadArg t ->

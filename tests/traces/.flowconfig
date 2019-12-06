@@ -2,3 +2,4 @@
 module.system=haste
 traces=3
 no_flowlib=false
+all=true

@@ -511,8 +511,7 @@ module Expression
       | Some operator ->
         Eat.token env;
         let (end_loc, argument) = with_loc unary env in
-        if not (is_lhs argument) then
-          error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
+        if not (is_lhs argument) then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
         (match argument with
         | (_, Expression.Identifier (_, { Identifier.name; comments = _ })) when is_restricted name
           ->
@@ -561,8 +560,7 @@ module Expression
       | None -> argument
       | Some operator ->
         let argument = as_expression env argument in
-        if not (is_lhs argument) then
-          error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
+        if not (is_lhs argument) then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
         (match argument with
         | (_, Expression.Identifier (_, { Identifier.name; comments = _ })) when is_restricted name
           ->
@@ -649,6 +647,7 @@ module Expression
         else
           Expression.Call call
       in
+      let in_optional_chain = in_optional_chain || optional in
       call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, call))
     in
     if no_call env then
@@ -664,7 +663,7 @@ module Expression
         (* Parameterized call syntax is ambiguous, so we fall back to
            standard parsing if it fails. *)
         Try.or_else env ~fallback:left (fun env ->
-            let targs = type_parameter_instantiation env in
+            let targs = call_type_args env in
             arguments ?targs env)
       | _ -> left
 
@@ -717,7 +716,7 @@ module Expression
              standard parsing if it fails. *)
           let error_callback _ _ = raise Try.Rollback in
           let env = env |> with_error_callback error_callback in
-          Try.or_else env ~fallback:None type_parameter_instantiation
+          Try.or_else env ~fallback:None call_type_args
         else
           None
       in
@@ -731,7 +730,7 @@ module Expression
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
       (Loc.btwn start_loc end_loc, Expression.(New New.{ callee; targs; arguments; comments }))
 
-  and type_parameter_instantiation =
+  and call_type_args =
     let args env acc =
       let rec args_helper env acc =
         match Peek.token env with
@@ -744,8 +743,8 @@ module Expression
             | T_IDENTIFIER { value = "_"; _ } ->
               let loc = Peek.loc env in
               Expect.identifier env "_";
-              Expression.TypeParameterInstantiation.Implicit loc
-            | _ -> Expression.TypeParameterInstantiation.Explicit (Type._type env)
+              Expression.CallTypeArg.Implicit loc
+            | _ -> Expression.CallTypeArg.Explicit (Type._type env)
           in
           let acc = t :: acc in
           if Peek.token env <> T_GREATER_THAN then Expect.token env T_COMMA;
@@ -850,12 +849,7 @@ module Expression
           else
             Expression.Member member
         in
-        call_cover
-          ~allow_optional_chain
-          ~in_optional_chain
-          env
-          start_loc
-          (Cover_expr (loc, member)))
+        call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, member)))
     in
     fun ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left ->
       let options = parse_options env in
@@ -924,7 +918,7 @@ module Expression
                       let env = env |> with_allow_await await |> with_allow_yield yield in
                       Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
                   in
-                  (id, Type.type_parameter_declaration env)
+                  (id, Type.type_params env)
               in
               (* #sec-function-definitions-static-semantics-early-errors *)
               let env = env |> with_allow_super No_super in
@@ -1325,7 +1319,7 @@ module Expression
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->
-            let tparams = Type.type_parameter_declaration env in
+            let tparams = Type.type_params env in
             (* Disallow all fancy features for identifier => body *)
             if Peek.is_identifier env && tparams = None then
               let ((loc, _) as name) =

@@ -49,9 +49,6 @@ module type PARSER = sig
   val identifier_with_type :
     env -> ?no_optional:bool -> Parse_error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
 
-  val assert_identifier_name_is_identifier :
-    ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
-
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
 
   val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
@@ -66,8 +63,7 @@ module type PARSER = sig
 
   val object_key : ?class_body:bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
 
-  val class_declaration :
-    env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
+  val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
 
   val class_expression : env -> (Loc.t, Loc.t) Expression.t
 
@@ -148,6 +144,7 @@ let identifier_name env =
       | T_BIGINT_TYPE -> "bigint"
       | T_STRING_TYPE -> "string"
       | T_VOID_TYPE -> "void"
+      | T_SYMBOL_TYPE -> "symbol"
       (* Contextual stuff *)
       | T_OF -> "of"
       | T_ASYNC -> "async"

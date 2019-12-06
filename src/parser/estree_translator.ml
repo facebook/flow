@@ -518,7 +518,7 @@ with type t = Impl.t = struct
             loc
             [
               ("callee", expression callee);
-              ("typeArguments", option type_parameter_instantiation_with_implicit targs);
+              ("typeArguments", option call_type_args targs);
               ("arguments", array_of_list expression_or_spread arguments);
             ]
         | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
@@ -590,8 +590,7 @@ with type t = Impl.t = struct
       let body =
         match body with
         | Function.BodyBlock b -> b
-        | Function.BodyExpression _ ->
-          failwith "Unexpected FunctionDeclaration with BodyExpression"
+        | Function.BodyExpression _ -> failwith "Unexpected FunctionDeclaration with BodyExpression"
       in
       let return =
         match return with
@@ -605,7 +604,7 @@ with type t = Impl.t = struct
           (* estree hasn't come around to the idea that function decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
-            ("id", option identifier id);
+          ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
           ("async", bool async);
@@ -690,8 +689,7 @@ with type t = Impl.t = struct
         "DeclareVariable"
         loc
         [
-          ( "id",
-            pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false } );
+          ("id", pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false });
         ]
     and declare_function (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_ }) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
@@ -801,21 +799,18 @@ with type t = Impl.t = struct
           (* estree hasn't come around to the idea that class decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
-            ("id", option identifier id);
+          ("id", option identifier id);
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
-          ("superTypeParameters", option type_parameter_instantiation super_targs);
+          ("superTypeParameters", option type_args super_targs);
           ("implements", array_of_list class_implements implements);
           ("decorators", array_of_list class_decorator classDecorators);
         ]
     and class_decorator (loc, { Class.Decorator.expression = expr }) =
       node "Decorator" loc [("expression", expression expr)]
     and class_implements (loc, { Class.Implements.id; targs }) =
-      node
-        "ClassImplements"
-        loc
-        [("id", identifier id); ("typeParameters", option type_parameter_instantiation targs)]
+      node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body }) =
       node "ClassBody" loc [("body", array_of_list class_element body)]
     and class_element =
@@ -888,7 +883,7 @@ with type t = Impl.t = struct
       Statement.EnumDeclaration.(
         let enum_body =
           match body with
-          | BooleanBody { BooleanBody.members; explicitType } ->
+          | (loc, BooleanBody { BooleanBody.members; explicitType }) ->
             node
               "EnumBooleanBody"
               loc
@@ -900,7 +895,7 @@ with type t = Impl.t = struct
                     members );
                 ("explicitType", bool explicitType);
               ]
-          | NumberBody { NumberBody.members; explicitType } ->
+          | (loc, NumberBody { NumberBody.members; explicitType }) ->
             node
               "EnumNumberBody"
               loc
@@ -915,7 +910,7 @@ with type t = Impl.t = struct
                     members );
                 ("explicitType", bool explicitType);
               ]
-          | StringBody { StringBody.members; explicitType } ->
+          | (loc, StringBody { StringBody.members; explicitType }) ->
             let members =
               match members with
               | StringBody.Defaulted defaulted_members ->
@@ -936,7 +931,7 @@ with type t = Impl.t = struct
               "EnumStringBody"
               loc
               [("members", array members); ("explicitType", bool explicitType)]
-          | SymbolBody { SymbolBody.members } ->
+          | (loc, SymbolBody { SymbolBody.members }) ->
             node
               "EnumSymbolBody"
               loc
@@ -965,10 +960,7 @@ with type t = Impl.t = struct
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
-      node
-        "InterfaceExtends"
-        loc
-        [("id", id); ("typeParameters", option type_parameter_instantiation targs)]
+      node "InterfaceExtends" loc [("id", id); ("typeParameters", option type_args targs)]
     and pattern =
       Pattern.(
         function
@@ -1164,6 +1156,7 @@ with type t = Impl.t = struct
         | Empty -> empty_type loc
         | Void -> void_type loc
         | Null -> null_type loc
+        | Symbol -> symbol_type loc
         | Number -> number_type loc
         | BigInt -> bigint_type loc
         | String -> string_type loc
@@ -1183,31 +1176,19 @@ with type t = Impl.t = struct
         | BigIntLiteral n -> bigint_literal_type (loc, n)
         | BooleanLiteral b -> boolean_literal_type (loc, b)
         | Exists -> exists_type loc)
-    and implicit loc =
-      generic_type
-        ( loc,
-          {
-            Type.Generic.id =
-              Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
-            targs = None;
-          } )
-    and explicit_or_implicit_targ x =
-      match x with
-      | Expression.TypeParameterInstantiation.Explicit t -> _type t
-      | Expression.TypeParameterInstantiation.Implicit loc -> implicit loc
     and any_type loc = node "AnyTypeAnnotation" loc []
     and mixed_type loc = node "MixedTypeAnnotation" loc []
     and empty_type loc = node "EmptyTypeAnnotation" loc []
     and void_type loc = node "VoidTypeAnnotation" loc []
     and null_type loc = node "NullLiteralTypeAnnotation" loc []
+    and symbol_type loc = node "SymbolTypeAnnotation" loc []
     and number_type loc = node "NumberTypeAnnotation" loc []
     and bigint_type loc = node "BigIntTypeAnnotation" loc []
     and string_type loc = node "StringTypeAnnotation" loc []
     and boolean_type loc = node "BooleanTypeAnnotation" loc []
     and nullable_type loc t = node "NullableTypeAnnotation" loc [("typeAnnotation", _type t)]
     and function_type
-        ( loc,
-          { Type.Function.params = (_, { Type.Function.Params.params; rest }); return; tparams } )
+        (loc, { Type.Function.params = (_, { Type.Function.Params.params; rest }); return; tparams })
         =
       node
         "FunctionTypeAnnotation"
@@ -1364,10 +1345,7 @@ with type t = Impl.t = struct
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
-      node
-        "GenericTypeAnnotation"
-        loc
-        [("id", id); ("typeParameters", option type_parameter_instantiation targs)]
+      node "GenericTypeAnnotation" loc [("id", id); ("typeParameters", option type_args targs)]
     and union_type (loc, ts) = node "UnionTypeAnnotation" loc [("types", array_of_list _type ts)]
     and intersection_type (loc, ts) =
       node "IntersectionTypeAnnotation" loc [("types", array_of_list _type ts)]
@@ -1400,7 +1378,7 @@ with type t = Impl.t = struct
     and type_param
         ( loc,
           {
-            Type.ParameterDeclaration.TypeParam.name = (_, { Identifier.name; comments = _ });
+            Type.TypeParam.name = (_, { Identifier.name; comments = _ });
             bound;
             variance = tp_var;
             default;
@@ -1411,18 +1389,26 @@ with type t = Impl.t = struct
         [
           (* we track the location of the name, but don't expose it here for
            backwards-compatibility. TODO: change this? *)
-            ("name", string name);
+          ("name", string name);
           ("bound", hint type_annotation bound);
           ("variance", option variance tp_var);
           ("default", option _type default);
         ]
-    and type_parameter_instantiation (loc, targs) =
+    and type_args (loc, targs) =
       node "TypeParameterInstantiation" loc [("params", array_of_list _type targs)]
-    and type_parameter_instantiation_with_implicit (loc, targs) =
-      node
-        "TypeParameterInstantiation"
-        loc
-        [("params", array_of_list explicit_or_implicit_targ targs)]
+    and call_type_args (loc, targs) =
+      node "TypeParameterInstantiation" loc [("params", array_of_list call_type_arg targs)]
+    and call_type_arg x =
+      match x with
+      | Expression.CallTypeArg.Explicit t -> _type t
+      | Expression.CallTypeArg.Implicit loc ->
+        generic_type
+          ( loc,
+            {
+              Type.Generic.id =
+                Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
+              targs = None;
+            } )
     and jsx_element (loc, { JSX.openingElement; closingElement; children = (_loc, children) }) =
       node
         "JSXElement"
@@ -1434,8 +1420,8 @@ with type t = Impl.t = struct
         ]
     and jsx_fragment
         ( loc,
-          { JSX.frag_openingElement; frag_closingElement; frag_children = (_loc, frag_children) }
-        ) =
+          { JSX.frag_openingElement; frag_closingElement; frag_children = (_loc, frag_children) } )
+        =
       node
         "JSXFragment"
         loc
@@ -1579,7 +1565,7 @@ with type t = Impl.t = struct
     and call_node_properties { Expression.Call.callee; targs; arguments } =
       [
         ("callee", expression callee);
-        ("typeArguments", option type_parameter_instantiation_with_implicit targs);
+        ("typeArguments", option call_type_args targs);
         ("arguments", array_of_list expression_or_spread arguments);
       ]
     and member_node_properties { Expression.Member._object; property } =

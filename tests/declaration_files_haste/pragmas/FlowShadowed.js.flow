@@ -1,0 +1,5 @@
+/**
+ * @providesModule FlowShadowed
+ */
+
+export const x = 123;

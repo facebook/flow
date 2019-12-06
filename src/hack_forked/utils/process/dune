@@ -1,0 +1,22 @@
+(library
+  (name process_types)
+  (wrapped false)
+  (modules
+    process_types)
+  (libraries
+    core_kernel
+    utils_core
+    sys_utils))
+
+(library
+  (name process)
+  (wrapped false)
+  (modules
+    process)
+  (flags (:standard -unsafe-string))
+  (libraries
+    process_types
+    utils_core
+    utils_ocaml_overrides
+    stack_utils
+    sys_utils))

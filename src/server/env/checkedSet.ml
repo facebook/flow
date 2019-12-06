@@ -85,7 +85,7 @@ let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 let diff a b =
   FilenameMap.filter
     (fun k kind1 ->
-      let kind2 = FilenameMap.get k b in
+      let kind2 = FilenameMap.find_opt k b in
       match (kind1, kind2) with
       | (_, None) -> true (* Key doesn't exist in b, so keep k around *)
       | (_, Some Focused) -> false (* Focused removes anything *)
@@ -125,7 +125,7 @@ let debug_to_string ?limit =
   let string_of_set set =
     let files =
       Utils_js.FilenameSet.elements set
-      |> Core_list.map ~f:(fun f -> spf "\"%s\"" (File_key.to_string f))
+      |> Base.List.map ~f:(fun f -> spf "\"%s\"" (File_key.to_string f))
     in
     let files =
       match limit with

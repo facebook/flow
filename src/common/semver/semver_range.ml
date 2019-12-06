@@ -75,13 +75,8 @@ let satisfies ?(include_prereleases = false) range version =
                 acc
               else
                 match allowed with
-                | {
-                 major = major';
-                 minor = minor';
-                 patch = patch';
-                 prerelease = _ :: _;
-                 build = _;
-                } ->
+                | { major = major'; minor = minor'; patch = patch'; prerelease = _ :: _; build = _ }
+                  ->
                   major = major' && minor = minor' && patch = patch'
                 | _ -> false)
             false

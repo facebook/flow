@@ -262,5 +262,77 @@ References:
                   ^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:83:5
 
-Found 15 errors
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:83:5
+   83| if (is && is.a) { }
+           ^^
+
+References:
+   simple_sketchies.js:81:39
+   81| declare var ww: {is?: ?({a: number} | number)};
+                                             ^^^^^^ [1]
+   simple_sketchies.js:81:23
+   81| declare var ww: {is?: ?({a: number} | number)};
+                             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:83:11
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:83:11
+   83| if (is && is.a) { }
+                 ^^^^ [2]
+
+References:
+   simple_sketchies.js:81:29
+   81| declare var ww: {is?: ?({a: number} | number)};
+                                   ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:83:11
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+(`sketchy-null-mixed`)
+
+   83| if (is && is.a) { }
+                 ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:86:5
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+(`sketchy-null-mixed`)
+
+   simple_sketchies.js:86:5
+   86| if (hh.a && hh.a.b) { }
+           ^^^^
+
+References:
+   simple_sketchies.js:85:21
+   85| declare var hh: {a: mixed};
+                           ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:86:13
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+(`sketchy-null-mixed`)
+
+   simple_sketchies.js:86:13
+   86| if (hh.a && hh.a.b) { }
+                   ^^^^^^
+
+References:
+   simple_sketchies.js:85:21
+   85| declare var hh: {a: mixed};
+                           ^^^^^ [1]
+
+
+
+Found 20 errors

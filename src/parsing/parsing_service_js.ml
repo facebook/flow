@@ -28,7 +28,7 @@ let sig_opt = function
   | TypesFirst (_, t) -> Some t
 
 type result =
-  | Parse_ok of parse_ok
+  | Parse_ok of parse_ok * parse_error list
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -36,9 +36,11 @@ and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_error = Loc.t * Parse_error.t
+
 and parse_failure =
   | Docblock_errors of docblock_error list
-  | Parse_error of (Loc.t * Parse_error.t)
+  | Parse_error of parse_error
   | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
@@ -114,7 +116,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
   in
   let (ast, parse_errors) = Parser_flow.program_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
-  ast
+  (ast, parse_errors)
 
 let parse_json_file ~fail content file =
   let parse_options =
@@ -136,7 +138,6 @@ let parse_json_file ~fail content file =
      into a `module.exports = {...}` statement *)
   let (expr, parse_errors) = Parser_flow.json_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
-
   Ast.(
     let loc_none = Loc.none in
     let module_exports =
@@ -167,7 +168,7 @@ let parse_json_file ~fail content file =
           } )
     in
     let comments = ([] : Loc.t Comment.t list) in
-    (loc, [statement], comments))
+    ((loc, [statement], comments), parse_errors))
 
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10
@@ -405,8 +406,9 @@ let do_parse ~parse_options ~info content file =
   try
     match file with
     | File_key.JsonFile _ ->
-      let ast = parse_json_file ~fail content file in
-      Parse_ok (Classic (ast, File_sig.With_Loc.init))
+      let (ast, parse_errors) = parse_json_file ~fail content file in
+      (* NOTE: if ~fail:true, we'll never get parse errors here *)
+      Parse_ok (Classic (ast, File_sig.With_Loc.init), parse_errors)
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
@@ -416,7 +418,10 @@ let do_parse ~parse_options ~info content file =
       if not types then
         Parse_skip Skip_non_flow_file
       else
-        let ast = parse_source_file ~fail ~types ~use_strict content file in
+        let (ast, parse_errors) = parse_source_file ~fail ~types ~use_strict content file in
+
+        (* NOTE: if ~fail:true, we'll never get parse errors here *)
+
         (* Only calculate file sigs for files which will actually be inferred.
          * The only files which are parsed but not inferred are .flow files with
          * no @flow pragma. *)
@@ -435,8 +440,12 @@ let do_parse ~parse_options ~info content file =
              recognize and process a custom `keyMirror` function that makes an enum out of the keys
              of an object. *)
           let facebook_keyMirror = true in
-          match Signature_builder.program ast ~module_ref_prefix with
-          | Ok signature ->
+          let { File_sig.With_Loc.toplevel_names; exports_info } =
+            File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix
+          in
+          match exports_info with
+          | Ok exports_info ->
+            let signature = Signature_builder.program ast ~exports_info ~toplevel_names in
             let (errors, sig_ast) =
               Signature_builder.Signature.verify_and_generate
                 ~prevent_munge
@@ -462,13 +471,14 @@ let do_parse ~parse_options ~info content file =
             in
             begin
               match arch with
-              | Options.Classic -> Parse_ok (Classic (ast, file_sig))
+              | Options.Classic -> Parse_ok (Classic (ast, file_sig), parse_errors)
               | Options.TypesFirst ->
-                Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)))
+                Parse_ok
+                  (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)), parse_errors)
             end
           | Error e -> Parse_fail (File_sig_error e)
         else
-          Parse_ok (Classic (ast, File_sig.With_Loc.init))
+          Parse_ok (Classic (ast, File_sig.With_Loc.init), parse_errors)
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -524,8 +534,7 @@ let reducer
      * means we don't currently have the file's AST but we might have the file's hash in the
      * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
     if
-      skip_hash_mismatch
-      && Some new_hash <> Parsing_heaps.Mutator_reader.get_file_hash ~reader file
+      skip_hash_mismatch && Some new_hash <> Parsing_heaps.Mutator_reader.get_file_hash ~reader file
     then
       let parse_hash_mismatch_skips =
         FilenameSet.add file parse_results.parse_hash_mismatch_skips
@@ -557,9 +566,11 @@ let reducer
           in
           begin
             match do_parse ~parse_options ~info content file with
-            | Parse_ok parse_ok ->
-              let (ast, file_sig) = basic parse_ok in
-              let sig_opt = sig_opt parse_ok in
+            | Parse_ok (parse_result, _parse_errors) ->
+              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+                 ignore any parse errors we get here. *)
+              let (ast, file_sig) = basic parse_result in
+              let sig_opt = sig_opt parse_result in
               worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_opt;
               let parse_ok =
                 FilenameMap.add

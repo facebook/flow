@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
 type t =
   (* Signaled *)
   | Interrupted
@@ -209,10 +210,7 @@ let unset_json_mode () = json_mode := None
 let json_props_of_t ?msg t =
   Hh_json.(
     let exit_props =
-      [
-        ("code", JSON_Number (error_code t |> string_of_int));
-        ("reason", JSON_String (to_string t));
-      ]
+      [("code", JSON_Number (error_code t |> string_of_int)); ("reason", JSON_String (to_string t))]
       @ Option.value_map msg ~default:[] ~f:(fun msg -> [("msg", JSON_String msg)])
     in
     [("flowVersion", JSON_String Flow_version.version); ("exit", JSON_Object exit_props)])

@@ -128,8 +128,8 @@ module type S = sig
     | ExportDefault of {
         (* location of the `default` keyword *)
         default_loc: L.t;
-            (* may have local name, e.g., `export default function foo {}` *)
             (** NOTE: local = Some id if and only if id introduces a local binding **)
+        (* may have local name, e.g., `export default function foo {}` *)
         local: L.t Flow_ast_utils.ident option;
       }
     | ExportNamed of {

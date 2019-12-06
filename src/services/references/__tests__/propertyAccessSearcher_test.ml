@@ -26,7 +26,7 @@ let run ctxt expected name content =
     let result = Parsing_service_js.do_parse ~parse_options ~info content file in
     let ast =
       match result with
-      | Parsing_service_js.Parse_ok parse_ok ->
+      | Parsing_service_js.Parse_ok (parse_ok, _parse_errors) ->
         let (ast, _) = Parsing_service_js.basic parse_ok in
         ast
       | Parsing_service_js.Parse_fail _ -> failwith "Parse unexpectedly failed"
@@ -38,22 +38,20 @@ let run ctxt expected name content =
 let tests =
   "SymbolKind"
   >::: [
-         ("property_access_positive" >:: (fun ctxt -> run ctxt true "bar" "foo.bar"));
-         ("property_access_negative" >:: (fun ctxt -> run ctxt false "bar" "foo.baz"));
-         ( "destructuring_shorthand_positive"
-         >:: (fun ctxt -> run ctxt true "bar" "const {bar} = baz") );
-         ( "destructuring_shorthand_negative"
-         >:: (fun ctxt -> run ctxt false "baz" "const {bar} = baz") );
-         ("destructuring_positive" >:: (fun ctxt -> run ctxt true "foo" "const {foo: bar} = baz"));
-         ("destructuring_negative" >:: (fun ctxt -> run ctxt false "bar" "const {foo: bar} = baz"));
-         ("destructuring_negative" >:: (fun ctxt -> run ctxt false "bar" "const {foo: bar} = baz"));
-         ("export_default_positive" >:: (fun ctxt -> run ctxt true "default" "export default 5"));
-         ("export_default_negative" >:: (fun ctxt -> run ctxt false "bar" "export default bar"));
-         ( "import_default_positive"
-         >:: (fun ctxt -> run ctxt true "default" "import bar from 'baz'") );
-         ("import_default_negative" >:: (fun ctxt -> run ctxt false "bar" "import bar from 'baz'"));
-         ("class_method" >:: (fun ctxt -> run ctxt true "bar" "class Foo { bar(): void {} }"));
-         ("class_property" >:: (fun ctxt -> run ctxt true "bar" "class Foo { bar: number }"));
-         ("optional_chain_new" >:: (fun ctxt -> run ctxt true "bar" "foo?.bar"));
-         ("optional_chain_continued" >:: (fun ctxt -> run ctxt true "baz" "foo?.bar.baz"));
+         ("property_access_positive" >:: fun ctxt -> run ctxt true "bar" "foo.bar");
+         ("property_access_negative" >:: fun ctxt -> run ctxt false "bar" "foo.baz");
+         ("destructuring_shorthand_positive" >:: fun ctxt -> run ctxt true "bar" "const {bar} = baz");
+         ( "destructuring_shorthand_negative" >:: fun ctxt ->
+           run ctxt false "baz" "const {bar} = baz" );
+         ("destructuring_positive" >:: fun ctxt -> run ctxt true "foo" "const {foo: bar} = baz");
+         ("destructuring_negative" >:: fun ctxt -> run ctxt false "bar" "const {foo: bar} = baz");
+         ("destructuring_negative" >:: fun ctxt -> run ctxt false "bar" "const {foo: bar} = baz");
+         ("export_default_positive" >:: fun ctxt -> run ctxt true "default" "export default 5");
+         ("export_default_negative" >:: fun ctxt -> run ctxt false "bar" "export default bar");
+         ("import_default_positive" >:: fun ctxt -> run ctxt true "default" "import bar from 'baz'");
+         ("import_default_negative" >:: fun ctxt -> run ctxt false "bar" "import bar from 'baz'");
+         ("class_method" >:: fun ctxt -> run ctxt true "bar" "class Foo { bar(): void {} }");
+         ("class_property" >:: fun ctxt -> run ctxt true "bar" "class Foo { bar: number }");
+         ("optional_chain_new" >:: fun ctxt -> run ctxt true "bar" "foo?.bar");
+         ("optional_chain_continued" >:: fun ctxt -> run ctxt true "baz" "foo?.bar.baz");
        ]

@@ -98,9 +98,7 @@ class ['a] t =
       | ReposT (_, t)
       | InternalT (ReposUpperT (_, t)) ->
         self#type_ cx pole acc t
-      | AnyT _
-      | InternalT (OptionalChainVoidT _) ->
-        acc
+      | AnyT _ -> acc
       | OptionalT { reason = _; type_ = t; use_desc = _ }
       | MaybeT (_, t) ->
         self#type_ cx pole acc t
@@ -114,8 +112,14 @@ class ['a] t =
       | BoolT _
       | EmptyT _
       | MixedT _
+      | SymbolT
       | NullT
       | VoidT ->
+        acc
+      | EnumT enum
+      | EnumObjectT enum ->
+        let { enum_id = _; enum_name = _; members = _; representation_t } = enum in
+        let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, prototype, funtype) ->
         let acc = self#type_ cx pole acc static in
@@ -186,6 +190,7 @@ class ['a] t =
       | VoidP -> acc
       | ArrP -> acc
       | PropExistsP _ -> acc
+      | PropNonMaybeP _ -> acc
       | LatentP (t, _) -> self#type_ cx P.Positive acc t
 
     method destructor cx acc =
@@ -238,7 +243,7 @@ class ['a] t =
         self#fun_call_type cx acc fn
       | MethodT (_, _, _, p, fn, prop_t) ->
         let acc = self#propref cx acc p in
-        let acc = self#fun_call_type cx acc fn in
+        let acc = self#method_action cx acc fn in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
         acc
       | SetPropT (_, _, p, _, _, t, prop_t) ->
@@ -272,7 +277,7 @@ class ['a] t =
         acc
       | CallElemT (_, _, t, fn) ->
         let acc = self#type_ cx pole_TODO acc t in
-        let acc = self#fun_call_type cx acc fn in
+        let acc = self#method_action cx acc fn in
         acc
       | GetStaticsT (_, t)
       | GetProtoT (_, t)
@@ -330,7 +335,10 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc this in
         let acc = self#cont cx acc k in
         acc
-      | VarianceCheckT (_, ts, _) -> List.fold_left (self#type_ cx pole_TODO) acc ts
+      | VarianceCheckT (_, tparams, targs, _) ->
+        let acc = self#smap (self#type_param cx pole_TODO) acc tparams in
+        let acc = List.fold_left (self#type_ cx pole_TODO) acc targs in
+        acc
       | TypeAppVarianceCheckT (_, _, _, ts) ->
         List.fold_left
           (fun acc (a, b) ->
@@ -339,6 +347,9 @@ class ['a] t =
             acc)
           acc
           ts
+      | TypeCastT (_, t) -> self#type_ cx pole_TODO acc t
+      | EnumCastT { enum = (_, _, { representation_t; _ }); _ } ->
+        self#type_ cx pole_TODO acc representation_t
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
         let acc = self#type_ cx pole_TODO acc t2 in
@@ -511,11 +522,10 @@ class ['a] t =
       | IdxUnwrap (_, tout)
       | IdxUnMaybeifyT (_, tout) ->
         self#type_ cx pole_TODO acc tout
-      | OptionalChainT (_, _, uses) ->
-        Nel.fold_left
-          (fun acc (use, tout) -> self#use_type_ cx acc (apply_opt_use use tout))
-          acc
-          uses
+      | OptionalChainT (_, _, this, tout, void_out) ->
+        let acc = self#type_ cx pole_TODO acc this in
+        let acc = self#use_type_ cx acc tout in
+        self#type_ cx pole_TODO acc void_out
       | InvariantT _ -> acc
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->
@@ -598,9 +608,11 @@ class ['a] t =
           let acc = self#type_ cx pole_TODO acc t2 in
           let acc = self#type_ cx pole_TODO acc t3 in
           acc
-        | PropExistsTest (_, _, t1, t2) ->
+        | PropExistsTest (_, _, _, t1, t2, (pred, not_pred)) ->
           let acc = self#type_ cx pole_TODO acc t1 in
           let acc = self#type_ cx pole_TODO acc t2 in
+          let acc = self#predicate cx acc pred in
+          let acc = self#predicate cx acc not_pred in
           acc)
       | DestructuringT (_, _, s, tout) ->
         let acc = self#selector cx acc s in
@@ -613,6 +625,11 @@ class ['a] t =
       | ModuleExportsAssignT (_, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#type_ cx pole_TODO acc tout in
+        acc
+      | ResolveUnionT { reason = _; resolved; unresolved; upper; id = _ } ->
+        let acc = List.fold_left (self#type_ cx pole_TODO) acc resolved in
+        let acc = List.fold_left (self#type_ cx pole_TODO) acc unresolved in
+        let acc = self#use_type_ cx acc upper in
         acc
 
     (* The default behavior here could be fleshed out a bit, to look up the graph,
@@ -647,7 +664,7 @@ class ['a] t =
       Context.find_exports cx id |> self#smap visit_pair acc
 
     method eval_id cx pole acc id =
-      match IMap.get id (Context.evaluated cx) with
+      match Eval.Map.find_opt id (Context.evaluated cx) with
       | None -> acc
       | Some t -> self#type_ cx pole acc t
 
@@ -742,6 +759,28 @@ class ['a] t =
       let acc = self#type_ cx pole_TODO acc call_tout in
       acc
 
+    method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =
+      let acc = self#type_ cx pole_TODO acc call_this_t in
+      let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
+      let acc = self#list (self#call_arg cx) acc call_args_tlist in
+      acc
+
+    method private method_action cx acc =
+      function
+      | CallM call -> self#fun_call_type cx acc call
+      | ChainM (_, _, this, call, void_out) ->
+        let acc = self#type_ cx pole_TODO acc this in
+        let acc = self#fun_call_type cx acc call in
+        self#type_ cx pole_TODO acc void_out
+
+    method private opt_method_action cx acc =
+      function
+      | OptCallM call -> self#opt_fun_call_type cx acc call
+      | OptChainM (_, _, this, call, void_out) ->
+        let acc = self#type_ cx pole_TODO acc this in
+        let acc = self#opt_fun_call_type cx acc call in
+        self#type_ cx pole_TODO acc void_out
+
     method private propref cx acc =
       function
       | Named _ -> acc
@@ -792,7 +831,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
         acc
-      | CallElem (_, fn) -> self#fun_call_type cx acc fn
+      | CallElem (_, fn) -> self#method_action cx acc fn
 
     method private cont cx acc =
       function
@@ -813,6 +852,11 @@ class ['a] t =
         acc
       | TryFlow (_, spec) -> self#try_flow_spec cx acc spec
 
+    method private goal_id cx pole acc id =
+      match Context.goals cx |> IMap.find_opt id with
+      | None -> acc
+      | Some t -> self#type_ cx pole acc t
+
     method private type_graph cx (seen, acc) id =
       Graph_explorer.(
         let seen' = ISet.add id seen in
@@ -820,7 +864,7 @@ class ['a] t =
           (seen, acc)
         else
           let graph = Context.type_graph cx in
-          let acc = (seen', self#eval_id cx pole_TODO acc id) in
+          let acc = (seen', self#goal_id cx pole_TODO acc id) in
           match Tbl.find graph id with
           | exception Not_found -> acc (* shouldn't happen *)
           | Unexplored { rev_deps = deps }
@@ -926,9 +970,7 @@ class ['a] t =
         (fun acc (head, ts, specs) ->
           let acc = self#react_create_class_stack_head cx acc head in
           let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
-          let acc =
-            List.fold_left (self#maybe_known (self#react_create_class_spec cx)) acc specs
-          in
+          let acc = List.fold_left (self#maybe_known (self#react_create_class_spec cx)) acc specs in
           acc)
         acc
 

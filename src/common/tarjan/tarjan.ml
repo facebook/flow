@@ -18,7 +18,7 @@ module type NODE = sig
   val to_string : t -> string
 end
 
-module Make (N : NODE) (NMap : MyMap.S with type key = N.t) (NSet : Set.S with type elt = N.t) =
+module Make (N : NODE) (NMap : WrappedMap.S with type key = N.t) (NSet : Set.S with type elt = N.t) =
 struct
   type node = {
     value: N.t;
@@ -69,7 +69,7 @@ struct
        otherwise it's a cross-edge and can be ignored. *)
     v.edges
     |> NSet.iter (fun e ->
-           let w = NMap.find_unsafe e state.graph in
+           let w = NMap.find e state.graph in
            if w.index = -1 then (
              strongconnect state w;
              v.lowlink <- min v.lowlink w.lowlink
@@ -96,7 +96,7 @@ struct
   let tarjan ~roots state =
     NSet.iter
       (fun x ->
-        let v = NMap.find_unsafe x state.graph in
+        let v = NMap.find x state.graph in
         if v.index = -1 then strongconnect state v)
       roots
 
@@ -109,6 +109,6 @@ struct
     List.iter (fun mc ->
         (* Show cycles, which are components with more than one node. *)
         if Nel.length mc > 1 then
-          let nodes = mc |> Nel.to_list |> Core_list.map ~f:N.to_string |> String.concat "\n\t" in
+          let nodes = mc |> Nel.to_list |> Base.List.map ~f:N.to_string |> String.concat "\n\t" in
           Printf.ksprintf prerr_endline "cycle detected among the following nodes:\n\t%s" nodes)
 end

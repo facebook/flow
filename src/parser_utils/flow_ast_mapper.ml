@@ -74,8 +74,7 @@ class ['loc] mapper =
         | (loc, DeclareModule m) ->
           id_loc this#declare_module loc m stmt (fun m -> (loc, DeclareModule m))
         | (loc, DeclareTypeAlias stuff) ->
-          id_loc this#declare_type_alias loc stuff stmt (fun stuff ->
-              (loc, DeclareTypeAlias stuff))
+          id_loc this#declare_type_alias loc stuff stmt (fun stuff -> (loc, DeclareTypeAlias stuff))
         | (loc, DeclareVariable stuff) ->
           id_loc this#declare_variable loc stuff stmt (fun stuff -> (loc, DeclareVariable stuff))
         | (loc, DeclareModuleExports annot) ->
@@ -164,8 +163,7 @@ class ['loc] mapper =
         | (loc, Class x) -> id_loc this#class_ loc x expr (fun x -> (loc, Class x))
         | (loc, Comprehension x) ->
           id_loc this#comprehension loc x expr (fun x -> (loc, Comprehension x))
-        | (loc, Conditional x) ->
-          id_loc this#conditional loc x expr (fun x -> (loc, Conditional x))
+        | (loc, Conditional x) -> id_loc this#conditional loc x expr (fun x -> (loc, Conditional x))
         | (loc, Function x) ->
           id_loc this#function_expression loc x expr (fun x -> (loc, Function x))
         | (loc, Generator x) -> id_loc this#generator loc x expr (fun x -> (loc, Generator x))
@@ -250,7 +248,7 @@ class ['loc] mapper =
       Ast.Expression.Call.(
         let { callee; targs; arguments } = expr in
         let callee' = this#expression callee in
-        let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
+        let targs' = map_opt this#call_type_args targs in
         let arguments' = this#call_arguments arguments in
         if callee == callee' && targs == targs' && arguments == arguments' then
           expr
@@ -268,6 +266,25 @@ class ['loc] mapper =
           expr
         else
           { expr with call = call' })
+
+    method call_type_args (targs : ('loc, 'loc) Ast.Expression.CallTypeArgs.t) =
+      let (loc, ts) = targs in
+      let ts' = ListUtils.ident_map this#call_type_arg ts in
+      if ts' == ts then
+        targs
+      else
+        (loc, ts')
+
+    method call_type_arg t =
+      let open Ast.Expression.CallTypeArg in
+      match t with
+      | Explicit x ->
+        let x' = this#type_ x in
+        if x' == x then
+          t
+        else
+          Explicit x'
+      | Implicit _ -> t
 
     method catch_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) = map_loc this#block body
 
@@ -300,7 +317,7 @@ class ['loc] mapper =
       Ast.Class.Extends.(
         let { expr; targs } = extends in
         let expr' = this#expression expr in
-        let targs' = map_opt this#type_parameter_instantiation targs in
+        let targs' = map_opt this#type_args targs in
         if expr == expr' && targs == targs' then
           extends
         else
@@ -390,7 +407,7 @@ class ['loc] mapper =
       Ast.Statement.DeclareClass.(
         let { id = ident; tparams; body; extends; mixins; implements } = decl in
         let id' = this#class_identifier ident in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let body' = map_loc this#object_type body in
         let extends' = map_opt (map_loc this#generic_type) extends in
         let mixins' = ListUtils.ident_map (map_loc this#generic_type) mixins in
@@ -528,14 +545,14 @@ class ['loc] mapper =
         let id' = this#identifier ident in
         let body' =
           match body with
-          | BooleanBody boolean_body ->
-            id this#enum_boolean_body boolean_body body (fun body -> BooleanBody body)
-          | NumberBody number_body ->
-            id this#enum_number_body number_body body (fun body -> NumberBody body)
-          | StringBody string_body ->
-            id this#enum_string_body string_body body (fun body -> StringBody body)
-          | SymbolBody symbol_body ->
-            id this#enum_symbol_body symbol_body body (fun body -> SymbolBody body)
+          | (loc, BooleanBody boolean_body) ->
+            id this#enum_boolean_body boolean_body body (fun body -> (loc, BooleanBody body))
+          | (loc, NumberBody number_body) ->
+            id this#enum_number_body number_body body (fun body -> (loc, NumberBody body))
+          | (loc, StringBody string_body) ->
+            id this#enum_string_body string_body body (fun body -> (loc, StringBody body))
+          | (loc, SymbolBody symbol_body) ->
+            id this#enum_symbol_body symbol_body body (fun body -> (loc, SymbolBody body))
         in
         if ident == id' && body == body' then
           enum
@@ -566,8 +583,7 @@ class ['loc] mapper =
         let members' =
           match members with
           | Defaulted members -> Defaulted (ListUtils.ident_map this#enum_defaulted_member members)
-          | Initialized members ->
-            Initialized (ListUtils.ident_map this#enum_string_member members)
+          | Initialized members -> Initialized (ListUtils.ident_map this#enum_string_member members)
         in
         if members == members' then
           body
@@ -650,9 +666,32 @@ class ['loc] mapper =
         else
           { exportKind; source; specifiers = specifiers'; declaration = declaration' })
 
-    (* TODO *)
+    method export_named_declaration_specifier
+        (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+      let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+      let (loc, { local; exported }) = spec in
+      let local' = this#identifier local in
+      let exported' = map_opt this#identifier exported in
+      if local == local' && exported == exported' then
+        spec
+      else
+        (loc, { local = local'; exported = exported' })
+
     method export_named_specifier (spec : 'loc Ast.Statement.ExportNamedDeclaration.specifier) =
-      spec
+      let open Ast.Statement.ExportNamedDeclaration in
+      match spec with
+      | ExportSpecifiers spec_list ->
+        let spec_list' = ListUtils.ident_map this#export_named_declaration_specifier spec_list in
+        if spec_list == spec_list' then
+          spec
+        else
+          ExportSpecifiers spec_list'
+      | ExportBatchSpecifier (loc, id_opt) ->
+        let id_opt' = map_opt this#identifier id_opt in
+        if id_opt == id_opt' then
+          spec
+        else
+          ExportBatchSpecifier (loc, id_opt')
 
     method expression_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Expression.t) =
       Ast.Statement.Expression.(
@@ -747,7 +786,7 @@ class ['loc] mapper =
         let ps' = ListUtils.ident_map this#function_param_type ps in
         let rpo' = map_opt this#function_rest_param_type rpo in
         let return' = this#type_ return in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         if ps' == ps && rpo' == rpo && return' == return && tparams' == tparams then
           ft
         else
@@ -839,43 +878,31 @@ class ['loc] mapper =
 
     method variance (variance : 'loc Ast.Variance.t option) = variance
 
-    method type_parameter_instantiation_with_implicit
-        (pi : ('loc, 'loc) Ast.Expression.TypeParameterInstantiation.t) =
-      let (loc, targs) = pi in
-      let targs' = ListUtils.ident_map this#type_or_implicit targs in
-      if targs' == targs then
-        pi
+    method type_args (targs : ('loc, 'loc) Ast.Type.TypeArgs.t) =
+      let (loc, ts) = targs in
+      let ts' = ListUtils.ident_map this#type_ ts in
+      if ts' == ts then
+        targs
       else
-        (loc, targs')
+        (loc, ts')
 
-    method type_parameter_instantiation (pi : ('loc, 'loc) Ast.Type.ParameterInstantiation.t) =
-      let (loc, targs) = pi in
-      let targs' = ListUtils.ident_map this#type_ targs in
-      if targs' == targs then
-        pi
+    method type_params (tparams : ('loc, 'loc) Ast.Type.TypeParams.t) =
+      let (loc, tps) = tparams in
+      let tps' = ListUtils.ident_map this#type_param tps in
+      if tps' == tps then
+        tparams
       else
-        (loc, targs')
+        (loc, tps')
 
-    method type_parameter_declaration (pd : ('loc, 'loc) Ast.Type.ParameterDeclaration.t) =
-      let (loc, type_params) = pd in
-      let type_params' =
-        ListUtils.ident_map this#type_parameter_declaration_type_param type_params
-      in
-      if type_params' == type_params then
-        pd
-      else
-        (loc, type_params')
-
-    method type_parameter_declaration_type_param
-        (type_param : ('loc, 'loc) Ast.Type.ParameterDeclaration.TypeParam.t) =
-      Ast.Type.ParameterDeclaration.TypeParam.(
-        let (loc, { name; bound; variance; default }) = type_param in
+    method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
+      Ast.Type.TypeParam.(
+        let (loc, { name; bound; variance; default }) = tparam in
         let name' = this#identifier name in
         let bound' = this#type_annotation_hint bound in
         let variance' = this#variance variance in
         let default' = map_opt this#type_ default in
         if name' == name && bound' == bound && variance' == variance && default' == default then
-          type_param
+          tparam
         else
           (loc, { name = name'; bound = bound'; variance = variance'; default = default' }))
 
@@ -883,7 +910,7 @@ class ['loc] mapper =
       Ast.Type.Generic.(
         let { id; targs } = gt in
         let id' = this#generic_identifier_type id in
-        let targs' = map_opt this#type_parameter_instantiation targs in
+        let targs' = map_opt this#type_args targs in
         if id' == id && targs' == targs then
           gt
         else
@@ -899,6 +926,7 @@ class ['loc] mapper =
         | (_, Empty)
         | (_, Void)
         | (_, Null)
+        | (_, Symbol)
         | (_, Number)
         | (_, BigInt)
         | (_, String)
@@ -940,17 +968,6 @@ class ['loc] mapper =
           else
             (loc, Tuple ts'))
 
-    method type_or_implicit t =
-      Ast.Expression.TypeParameterInstantiation.(
-        match t with
-        | Explicit x ->
-          let x' = this#type_ x in
-          if x' == x then
-            t
-          else
-            Explicit x'
-        | Implicit _ -> t)
-
     method type_annotation (annot : ('loc, 'loc) Ast.Type.annotation) =
       let (loc, a) = annot in
       id this#type_ a annot (fun a -> (loc, a))
@@ -981,7 +998,7 @@ class ['loc] mapper =
         let return' = this#type_annotation_hint return in
         let body' = this#function_body_any body in
         (* TODO: walk predicate *)
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         if
           ident == ident'
           && params == params'
@@ -1051,7 +1068,7 @@ class ['loc] mapper =
       Ast.Statement.Interface.(
         let { id = ident; tparams; extends; body } = interface in
         let id' = this#class_identifier ident in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
         let body' = map_loc this#object_type body in
         if id' == ident && tparams' == tparams && extends' == extends && body' == body then
@@ -1362,7 +1379,7 @@ class ['loc] mapper =
       Ast.Expression.New.(
         let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
-        let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
+        let targs' = map_opt this#call_type_args targs in
         let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
         let comments' = this#syntax_opt comments in
         if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
@@ -1445,7 +1462,7 @@ class ['loc] mapper =
       Ast.Statement.OpaqueType.(
         let { id; tparams; impltype; supertype } = otype in
         let id' = this#identifier id in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let impltype' = map_opt this#type_ impltype in
         let supertype' = map_opt this#type_ supertype in
         if
@@ -1531,8 +1548,7 @@ class ['loc] mapper =
         | Property (loc, prop) ->
           id (this#pattern_object_property ?kind) prop p (fun prop -> Property (loc, prop))
         | RestProperty (loc, prop) ->
-          id (this#pattern_object_rest_property ?kind) prop p (fun prop ->
-              RestProperty (loc, prop)))
+          id (this#pattern_object_rest_property ?kind) prop p (fun prop -> RestProperty (loc, prop)))
 
     method pattern_object_property ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.Property.t') =
       Ast.Pattern.Object.Property.(
@@ -1605,8 +1621,7 @@ class ['loc] mapper =
     method pattern_array_element_pattern ?kind (patt : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ?kind patt
 
-    method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.RestElement.t')
-        =
+    method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.RestElement.t') =
       Ast.Pattern.Array.RestElement.(
         let { argument } = elem in
         let argument' = this#pattern_array_rest_element_pattern ?kind argument in
@@ -1734,10 +1749,7 @@ class ['loc] mapper =
         in
         let comments' = this#syntax_opt comments in
         if
-          block == block'
-          && handler == handler'
-          && finalizer == finalizer'
-          && comments == comments'
+          block == block' && handler == handler' && finalizer == finalizer' && comments == comments'
         then
           stmt
         else
@@ -1812,7 +1824,7 @@ class ['loc] mapper =
       Ast.Statement.TypeAlias.(
         let { id; tparams; right } = stuff in
         let id' = this#identifier id in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let right' = this#type_ right in
         if id == id' && right == right' && tparams == tparams' then
           stuff

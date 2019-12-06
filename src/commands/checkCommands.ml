@@ -135,15 +135,6 @@ module CheckCommand = struct
       let lazy_mode = Some Options.NON_LAZY_MODE in
       make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
     in
-    if Options.should_profile options && not Sys.win32 then (
-      Flow_server_profile.init ();
-      let rec sample_processor_info () =
-        Flow_server_profile.processor_sample ();
-        Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
-      in
-      sample_processor_info ()
-    );
-
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
     LoggingUtils.init_loggers ~options ~min_level:Hh_logger.Level.Error ();

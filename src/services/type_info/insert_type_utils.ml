@@ -57,10 +57,9 @@ class type_validator_visitor =
         Ty.explicit_any
       | Ty.Any
           (Ty.Unsound
-            ( ( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports
-              | Ty.FunctionPrototype | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged
-              | Ty.ResolveSpread | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType
-              | Ty.WeakContext ) as kind )) ->
+            ( ( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports | Ty.FunctionPrototype
+              | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged | Ty.ResolveSpread
+              | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType | Ty.WeakContext ) as kind )) ->
         env := Any_Unsound kind :: !env;
         Ty.explicit_any
       | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
@@ -144,14 +143,13 @@ class mapper_type_printing_hardcoded_fixes =
           (loc_f, Flow_ast.Type.Function nf)
         | _ -> t)
 
-    method! type_parameter_instantiation (pi : ('loc, 'loc) Flow_ast.Type.ParameterInstantiation.t)
-        =
-      let (loc, targs) = pi in
-      let targs' = Core_list.map ~f:this#type_generic_normalize targs in
-      if targs' == targs then
-        pi
+    method! type_args (targs : ('loc, 'loc) Flow_ast.Type.TypeArgs.t) =
+      let (loc, ts) = targs in
+      let ts' = Base.List.map ~f:this#type_generic_normalize ts in
+      if ts' == ts then
+        targs
       else
-        (loc, targs')
+        (loc, ts')
   end
 
 let patch_up_type_ast = (new mapper_type_printing_hardcoded_fixes)#type_
@@ -183,7 +181,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
                   ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
                   | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
                   | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name;
-                provenance = Ty_symbol.Library;
+                provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
                 def_loc;
                 _;
               } as symbol ),
@@ -266,12 +264,7 @@ class stylize_ty_mapper ?(imports_react = false) () =
 let is_point loc = Loc.(loc.start = loc._end)
 
 let temporary_objectlit_symbol =
-  {
-    Ty.provenance = Ty.Builtin;
-    def_loc = ALoc.none;
-    name = "$TEMPORARY$object";
-    anonymous = false;
-  }
+  { Ty.provenance = Ty.Builtin; def_loc = ALoc.none; name = "$TEMPORARY$object"; anonymous = false }
 
 let temporary_arraylit_symbol =
   { Ty.provenance = Ty.Builtin; def_loc = ALoc.none; name = "$TEMPORARY$array"; anonymous = false }

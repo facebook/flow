@@ -44,7 +44,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     else
       let command_info =
         CommandList.commands
-        |> Core_list.map ~f:(fun command -> (CommandSpec.name command, CommandSpec.doc command))
+        |> Base.List.map ~f:(fun command -> (CommandSpec.name command, CommandSpec.doc command))
         |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
         |> List.sort (fun (a, _) (b, _) -> String.compare a b)
       in
@@ -53,7 +53,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       in
       let cmd_usage =
         command_info
-        |> Core_list.map ~f:(fun (cmd, doc) -> Utils_js.spf "  %-*s  %s" col_width cmd doc)
+        |> Base.List.map ~f:(fun (cmd, doc) -> Utils_js.spf "  %-*s  %s" col_width cmd doc)
         |> String.concat "\n"
       in
       {

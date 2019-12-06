@@ -134,18 +134,23 @@ type t = Repr.t
 
 let of_loc = Repr.of_loc
 
-let abstractify table loc =
+let abstractify table rev_table loc =
   match Repr.kind loc with
   | Repr.Abstract -> failwith "Cannot abstractify a location which is already abstract"
   | Repr.ALocNone -> loc
   | Repr.Concrete ->
-    let underlying_loc = Repr.to_loc_exn loc in
+    let underlying_loc = Repr.to_loc_exn loc |> RelativeLoc.of_loc in
     let source = Repr.source loc in
     if source <> Some table.file then
-      failwith "abstractify: File mismatch between location and table"
-    else
-      ResizableArray.push table.map (RelativeLoc.of_loc underlying_loc);
-    let key = ResizableArray.size table.map - 1 in
+      failwith "abstractify: File mismatch between location and table";
+    let key =
+      try Hashtbl.find rev_table underlying_loc
+      with Not_found ->
+        let key = ResizableArray.size table.map in
+        ResizableArray.push table.map underlying_loc;
+        Hashtbl.add rev_table underlying_loc key;
+        key
+    in
     Repr.of_key source key
 
 let to_loc_exn = Repr.to_loc_exn
@@ -177,7 +182,7 @@ let to_loc_with_tables tables loc =
          | Some x -> x
          | None -> failwith "Unexpectedly encountered a location without a source"
        in
-       Lazy.force (Utils_js.FilenameMap.find_unsafe source tables))
+       Lazy.force (Utils_js.FilenameMap.find source tables))
   in
   to_loc aloc_table loc
 
@@ -307,7 +312,11 @@ let to_string_no_source loc =
   else
     Loc.to_string_no_source (Repr.to_loc_exn loc)
 
-let lookup_key_if_possible rev_table loc =
+type id = t
+
+let id_none = none
+
+let id_of_aloc rev_table loc =
   match Repr.kind loc with
   | Repr.Abstract
   | Repr.ALocNone ->
@@ -322,6 +331,8 @@ let lookup_key_if_possible rev_table loc =
         | None -> failwith "Unexpectedly encountered a location without a source"
       end
     | None -> loc)
+
+let equal_id a b = quick_compare a b = 0
 
 let reverse_table table = ResizableArray.to_hashtbl table.map
 

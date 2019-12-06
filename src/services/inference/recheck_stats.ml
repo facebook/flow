@@ -99,8 +99,7 @@ let load_per_file_time ~options =
         | Hh_json.Syntax_error str ->
           Result.Error (Printf.sprintf "Failed to parse as JSON contents. %S: %S" str contents)
         | Hh_json_helpers.Jget.Parse key ->
-          Result.Error
-            (Printf.sprintf "Failed to find key %S in estimates object. %S" key contents))
+          Result.Error (Printf.sprintf "Failed to find key %S in estimates object. %S" key contents))
     in
     match result with
     | Result.Ok (per_file_time, last_estimates) -> Lwt.return (per_file_time, last_estimates)
@@ -194,8 +193,7 @@ let with_averages f =
 let record_recheck_time ~options ~total_time ~rechecked_files =
   (* rechecked_files should be non-negative. If it's 0, then we have no new information to add *)
   if rechecked_files > 0 then
-    with_averages
-    @@ fun { init_time; per_file_time; parsed_count } ->
+    with_averages @@ fun { init_time; per_file_time; parsed_count } ->
     (* What should we do for tiny repositories? Let's make the window at least 15 samples big *)
     let window = max parsed_count 15 in
     let per_file_time =
@@ -210,10 +208,10 @@ let record_recheck_time ~options ~total_time ~rechecked_files =
     Lwt.return_unit
 
 let record_last_estimates ~options ~estimates =
-  with_averages @@ (fun averages -> save_averages ~options ~estimates averages)
+  with_averages @@ fun averages -> save_averages ~options ~estimates averages
 
 let get_init_time () =
-  with_averages @@ (fun { init_time; per_file_time = _; parsed_count = _ } -> init_time)
+  with_averages @@ fun { init_time; per_file_time = _; parsed_count = _ } -> init_time
 
 let get_per_file_time () =
-  with_averages @@ (fun { init_time = _; per_file_time; parsed_count = _ } -> per_file_time)
+  with_averages @@ fun { init_time = _; per_file_time; parsed_count = _ } -> per_file_time

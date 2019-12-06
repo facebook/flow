@@ -204,7 +204,7 @@ end = struct
         | T_BOOLEAN_TYPE BOOLEAN -> Some Enum_common.Boolean
         | T_NUMBER_TYPE -> Some Enum_common.Number
         | T_STRING_TYPE -> Some Enum_common.String
-        | T_IDENTIFIER { value = "symbol"; _ } -> Some Enum_common.Symbol
+        | T_SYMBOL_TYPE -> Some Enum_common.Symbol
         | T_IDENTIFIER { value; _ } ->
           let supplied_type = Some value in
           error env (Parse_error.EnumInvalidExplicitType { enum_name; supplied_type });
@@ -219,11 +219,8 @@ end = struct
     ) else
       None
 
-  let declaration =
+  let enum_body ~enum_name ~name_loc =
     with_loc (fun env ->
-        Expect.token env T_ENUM;
-        let id = Parse.identifier env in
-        let (id_loc, { Identifier.name = enum_name; _ }) = id in
         let explicit_type = parse_explicit_type ~enum_name env in
         Expect.token env T_LCURLY;
         let members = enum_members ~enum_name ~explicit_type empty_acc env in
@@ -240,8 +237,7 @@ end = struct
               ~is_explicit:true
               members.string_members
               members.defaulted_members
-          | Some Enum_common.Symbol ->
-            SymbolBody { SymbolBody.members = members.defaulted_members }
+          | Some Enum_common.Symbol -> SymbolBody { SymbolBody.members = members.defaulted_members }
           | None ->
             let bools_len = List.length members.boolean_members in
             let nums_len = List.length members.number_members in
@@ -277,10 +273,18 @@ end = struct
                   members.defaulted_members;
                 NumberBody { NumberBody.members = members.number_members; explicitType = false }
               | _ ->
-                error_at env (id_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
+                error_at env (name_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
                 empty ()
             end
         in
         Expect.token env T_RCURLY;
+        body)
+
+  let declaration =
+    with_loc (fun env ->
+        Expect.token env T_ENUM;
+        let id = Parse.identifier env in
+        let (name_loc, { Identifier.name = enum_name; _ }) = id in
+        let body = enum_body ~enum_name ~name_loc env in
         Statement.EnumDeclaration { id; body })
 end

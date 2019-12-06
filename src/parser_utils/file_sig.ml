@@ -154,9 +154,7 @@ struct
     let items_to_collection_string indent open_ close items =
       let indent_str = String.make (indent * 2) ' ' in
       let items_str =
-        items
-        |> Core_list.map ~f:(Printf.sprintf "%s%s;\n" (indent_str ^ "  "))
-        |> String.concat ""
+        items |> Base.List.map ~f:(Printf.sprintf "%s%s;\n" (indent_str ^ "  ")) |> String.concat ""
       in
       Printf.sprintf "%s\n%s%s%s" open_ items_str indent_str close
 
@@ -164,7 +162,7 @@ struct
 
     let items_to_record_string indent items =
       let items =
-        items |> Core_list.map ~f:(fun (label, value) -> Printf.sprintf "%s: %s" label value)
+        items |> Base.List.map ~f:(fun (label, value) -> Printf.sprintf "%s: %s" label value)
       in
       items_to_collection_string indent "{" "}" items
   end
@@ -177,7 +175,7 @@ struct
     in
     let string_of_module_kind_info = function
       | CommonJSInfo _ -> "CommonJSInfo"
-      | ESInfo named -> PP.items_to_list_string 2 @@ Core_list.map ~f:string_of_es_export_def named
+      | ESInfo named -> PP.items_to_list_string 2 @@ Base.List.map ~f:string_of_es_export_def named
     in
     PP.items_to_record_string
       1
@@ -185,7 +183,7 @@ struct
         ("module_kind_info", string_of_module_kind_info exports_info.module_kind_info);
         ( "type_exports_named_info",
           PP.items_to_list_string 2
-          @@ Core_list.map ~f:string_of_es_export_def exports_info.type_exports_named_info );
+          @@ Base.List.map ~f:string_of_es_export_def exports_info.type_exports_named_info );
       ]
 
   (* Applications may not care about the info carried by signatures. *)
@@ -203,7 +201,7 @@ struct
           | BindNamed named ->
             Printf.sprintf
               "BindNamed: %s"
-              (String.concat ", " @@ Core_list.map ~f:(fun ((_, name), _) -> name) named)
+              (String.concat ", " @@ Base.List.map ~f:(fun ((_, name), _) -> name) named)
         in
         let string_of_require = function
           | Require { source = (_, name); bindings; _ } ->
@@ -215,7 +213,7 @@ struct
           | Import0 _ -> "Import0"
           | Import _ -> "Import"
         in
-        PP.items_to_list_string 2 (Core_list.map ~f:string_of_require require_list)
+        PP.items_to_list_string 2 (Base.List.map ~f:string_of_require require_list)
       in
       let string_of_named_export_kind = function
         | NamedDeclaration -> "NamedDeclaration"
@@ -247,8 +245,8 @@ struct
           PP.items_to_record_string
             2
             [
-              ("named", PP.items_to_record_string 3 @@ Core_list.map ~f:string_of_export named);
-              ("star", PP.items_to_list_string 3 @@ Core_list.map ~f:string_of_export_star star);
+              ("named", PP.items_to_record_string 3 @@ Base.List.map ~f:string_of_export named);
+              ("star", PP.items_to_list_string 3 @@ Base.List.map ~f:string_of_export_star star);
             ]
       in
       PP.items_to_record_string
@@ -258,10 +256,10 @@ struct
           ("module_kind", string_of_module_kind module_sig.module_kind);
           ( "type_exports_named",
             PP.items_to_record_string 2
-            @@ Core_list.map ~f:string_of_type_export module_sig.type_exports_named );
+            @@ Base.List.map ~f:string_of_type_export module_sig.type_exports_named );
           ( "type_exports_star",
             PP.items_to_list_string 2
-            @@ Core_list.map ~f:string_of_export_star module_sig.type_exports_star );
+            @@ Base.List.map ~f:string_of_export_star module_sig.type_exports_star );
         ]
     in
     PP.items_to_record_string 0 [("module_sig", string_of_module_sig t.module_sig)]
@@ -347,7 +345,7 @@ struct
 
   let add_type_exports named named_info star msig =
     let named =
-      Core_list.map
+      Base.List.map
         ~f:(fun (name, export) ->
           let type_export =
             match export with
@@ -461,8 +459,7 @@ struct
 
       method private add_tolerable_error (err : tolerable_error) =
         this#update_acc
-          (Result.map ~f:(fun fsig ->
-               { fsig with tolerable_errors = err :: fsig.tolerable_errors }))
+          (Result.map ~f:(fun fsig -> { fsig with tolerable_errors = err :: fsig.tolerable_errors }))
 
       method! expression (expr : (L.t, L.t) Ast.Expression.t) =
         Ast.Expression.(
@@ -483,8 +480,7 @@ struct
         Ast.Expression.(
           Ast.Expression.Binary.(
             let is_module_or_exports = function
-              | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ }))
-                ->
+              | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ })) ->
                 true
               | _ -> false
             in
@@ -530,15 +526,13 @@ struct
                * looked for assignments to it before recursing down here. *)
               | ( Member
                     {
-                      _object =
-                        (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
+                      _object = (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
                       property =
                         PropertyIdentifier (_, { Ast.Identifier.name = "exports"; comments = _ });
                       _;
                     },
                   PropertyIdentifier _ )
               (* Allow `exports.whatever`, for the same reason as above *)
-              
               | ( Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }),
                   PropertyIdentifier _ ) ->
                 (* In these cases we don't know much about the property so we should recurse *)
@@ -676,6 +670,9 @@ struct
             match declaration with
             | Declaration (_, Ast.Statement.FunctionDeclaration { Ast.Function.id; _ }) -> id
             | Declaration (_, Ast.Statement.ClassDeclaration { Ast.Class.id; _ }) -> id
+            | Declaration (_, Ast.Statement.EnumDeclaration { Ast.Statement.EnumDeclaration.id; _ })
+              ->
+              Some id
             | Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
             | _ -> None
           in
@@ -711,7 +708,9 @@ struct
                 | FunctionDeclaration
                     { Ast.Function.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
                 | ClassDeclaration
-                    { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ } ->
+                    { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
+                | EnumDeclaration
+                    { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
                   let export = (stmt_loc, ExportNamed { loc; kind }) in
                   this#add_exports stmt_loc ExportValue [(name, export)] [export_info] None
                 | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
@@ -865,7 +864,6 @@ struct
                           _;
                         } ) ) )
             (* module.exports.foo = ... *)
-            
             | ( None,
                 ( _,
                   Ast.Pattern.Expression
@@ -1525,7 +1523,7 @@ let abstractify_tolerable_errors =
     | WL.SignatureVerificationError err ->
       WA.SignatureVerificationError (Signature_error.map_locs ~f:ALoc.of_loc err)
   in
-  Core_list.map ~f:abstractify_tolerable_error
+  Base.List.map ~f:abstractify_tolerable_error
 
 let abstractify_locs : With_Loc.t -> With_ALoc.t =
   let module WL = With_Loc in
@@ -1539,7 +1537,7 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
     | WL.BindIdent x -> WA.BindIdent (abstractify_fst x)
     | WL.BindNamed named ->
       WA.BindNamed
-        (Core_list.map
+        (Base.List.map
            ~f:(fun (remote, require_bindings) ->
              (abstractify_fst remote, abstractify_require_bindings require_bindings))
            named)
@@ -1567,7 +1565,7 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
           typesof_ns = Option.map ~f:abstractify_fst typesof_ns;
         }
   in
-  let abstractify_requires = Core_list.map ~f:abstractify_require in
+  let abstractify_requires = Base.List.map ~f:abstractify_require in
   let abstractify_named_export_kind = function
     | WL.NamedDeclaration -> WA.NamedDeclaration
     | WL.NamedSpecifier { local; source } ->
@@ -1587,13 +1585,13 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   let abstractify_named_export (name, (loc, export)) =
     (name, (ALoc.of_loc loc, abstractify_export export))
   in
-  let abstractify_named_exports = Core_list.map ~f:abstractify_named_export in
+  let abstractify_named_exports = Base.List.map ~f:abstractify_named_export in
   let abstractify_export_star = function
     | WL.ExportStar { star_loc; source } ->
       WA.ExportStar { star_loc = ALoc.of_loc star_loc; source = abstractify_fst source }
   in
   let abstractify_es_star =
-    Core_list.map ~f:(fun (loc, export_star) ->
+    Base.List.map ~f:(fun (loc, export_star) ->
         (ALoc.of_loc loc, abstractify_export_star export_star))
   in
   let abstractify_module_kind = function
@@ -1607,7 +1605,7 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
       WA.TypeExportNamed { loc = ALoc.of_loc loc; kind = abstractify_named_export_kind kind }
   in
   let abstractify_type_exports_named =
-    Core_list.map ~f:(fun (name, (loc, type_export)) ->
+    Base.List.map ~f:(fun (name, (loc, type_export)) ->
         (name, (ALoc.of_loc loc, abstractify_type_export type_export)))
   in
   let abstractify_type_exports_star = abstractify_es_star in

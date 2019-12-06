@@ -30,6 +30,7 @@ let string_of_pred_ctor = function
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
   | PropExistsP _ -> "PropExistsP"
+  | PropNonMaybeP _ -> "PropNonMaybeP"
   | LatentP _ -> "LatentP"
 
 let string_of_binary_test_ctor = function
@@ -172,6 +173,7 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, EmptyT _)
       | DefT (_, _, MixedT _)
       | AnyT _
+      | DefT (_, _, SymbolT)
       | DefT (_, _, NullT)
       | DefT (_, _, VoidT) ->
         []
@@ -195,14 +197,14 @@ and _json_of_t_impl json_cx t =
           ("elemType", _json_of_t json_cx elemt);
           ( "tupleType",
             match tuple_types with
-            | Some tuplet -> JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuplet)
+            | Some tuplet -> JSON_Array (Base.List.map ~f:(_json_of_t json_cx) tuplet)
             | None -> JSON_Null );
         ]
       | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
         [
           ("kind", JSON_String "Tuple");
           ("elemType", _json_of_t json_cx elemt);
-          ("tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types));
+          ("tupleType", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) tuple_types));
         ]
       | DefT (_, _, ArrT (ROArrayAT elemt)) ->
         [("kind", JSON_String "ReadOnlyArray"); ("elemType", _json_of_t json_cx elemt)]
@@ -213,57 +215,63 @@ and _json_of_t_impl json_cx t =
         [
           ("static", _json_of_t json_cx static);
           ("super", _json_of_t json_cx super);
-          ("implements", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) implements));
+          ("implements", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) implements));
           ("instance", json_of_insttype json_cx instance);
+        ]
+      | DefT (_, _, EnumT enum)
+      | DefT (_, _, EnumObjectT enum) ->
+        let { enum_id; enum_name; members; representation_t } = enum in
+        [
+          ("enum_id", JSON_String (ALoc.debug_to_string (enum_id :> ALoc.t)));
+          ("enum_name", JSON_String enum_name);
+          ("members", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)));
+          ("representation_t", _json_of_t json_cx representation_t);
         ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
         [
-          ("type", _json_of_t json_cx t);
-          ("defer_use_type", json_of_defer_use_t json_cx defer_use_t);
+          ("type", _json_of_t json_cx t); ("defer_use_type", json_of_defer_use_t json_cx defer_use_t);
         ]
         @
         let evaluated = Context.evaluated json_cx.cx in
         begin
-          match IMap.get id evaluated with
+          match Eval.Map.find_opt id evaluated with
           | None -> []
           | Some t -> [("result", _json_of_t json_cx t)]
         end
       | DefT (_, _, PolyT { tparams; t_out = t; id; _ }) ->
         [
-          ("id", JSON_Number (string_of_int id));
+          ("id", JSON_Number (Poly.string_of_id id));
           ( "typeParams",
-            JSON_Array (Core_list.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams)) );
+            JSON_Array (Base.List.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams)) );
           ("type", _json_of_t json_cx t);
         ]
       | TypeAppT (_, _, t, targs) ->
         [
-          ("typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
+          ("typeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs));
           ("type", _json_of_t json_cx t);
         ]
       | ThisClassT (_, t) -> [("type", _json_of_t json_cx t)]
       | ThisTypeAppT (_, t, this, targs_opt) ->
         (match targs_opt with
-        | Some targs -> [("typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs))]
+        | Some targs -> [("typeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs))]
         | None -> [])
         @ [("thisArg", _json_of_t json_cx this); ("type", _json_of_t json_cx t)]
-      | BoundT (_, name, polarity) ->
-        [("name", JSON_String name); ("polarity", json_of_polarity json_cx polarity)]
+      | BoundT (_, name) -> [("name", JSON_String name)]
       | ExistsT _ -> []
       | ExactT (_, t) -> [("type", _json_of_t json_cx t)]
       | MaybeT (_, t) -> [("type", _json_of_t json_cx t)]
       | IntersectionT (_, rep) ->
         [
           (let ts = InterRep.members rep in
-           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
+           ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts)));
         ]
       | UnionT (_, rep) ->
         [
           (let ts = UnionRep.members rep in
-           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
+           ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts)));
         ]
-      | MergedT (_, uses) ->
-        [("uses", JSON_Array (Core_list.map ~f:(_json_of_use_t json_cx) uses))]
+      | MergedT (_, uses) -> [("uses", JSON_Array (Base.List.map ~f:(_json_of_use_t json_cx) uses))]
       | DefT (_, _, IdxWrapper t) -> [("wrappedObj", _json_of_t json_cx t)]
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
         [("config", _json_of_t json_cx config); ("instance", _json_of_t json_cx instance)]
@@ -274,8 +282,7 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, SingletonNumT (_, raw)) -> [("literal", JSON_String raw)]
       | DefT (_, _, SingletonBoolT b) -> [("literal", JSON_Bool b)]
       | DefT (_, _, TypeT (_, t)) -> [("result", _json_of_t json_cx t)]
-      | AnnotT (_, t, use_desc) ->
-        [("type", _json_of_t json_cx t); ("useDesc", JSON_Bool use_desc)]
+      | AnnotT (_, t, use_desc) -> [("type", _json_of_t json_cx t); ("useDesc", JSON_Bool use_desc)]
       | OpaqueT (_, opaquetype) ->
         let t =
           match opaquetype.underlying_t with
@@ -289,7 +296,7 @@ and _json_of_t_impl json_cx t =
         in
         [
           ("type", t);
-          ("id", JSON_String (ALoc.debug_to_string opaquetype.opaque_id));
+          ("id", JSON_String (ALoc.debug_to_string (opaquetype.opaque_id :> ALoc.t)));
           ("supertype", st);
         ]
       | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export }, is_strict) ->
@@ -326,7 +333,7 @@ and _json_of_t_impl json_cx t =
         [
           (let json_key_map f map =
              JSON_Object
-               (Key_map.elements map |> Core_list.map ~f:(Utils_js.map_pair Key.string_of_key f))
+               (Key_map.elements map |> Base.List.map ~f:(Utils_js.map_pair Key.string_of_key f))
            in
            let json_pred_key_map = json_key_map (json_of_pred json_cx) in
            ( "OpenPred",
@@ -339,8 +346,7 @@ and _json_of_t_impl json_cx t =
         ]
       | ReposT (_, t)
       | InternalT (ReposUpperT (_, t)) ->
-        [("type", _json_of_t json_cx t)]
-      | InternalT (OptionalChainVoidT _) -> [] ))
+        [("type", _json_of_t json_cx t)] ))
 
 and _json_of_import_kind =
   Hh_json.(
@@ -400,8 +406,7 @@ and _json_of_use_t_impl json_cx t =
         ]
       @
       match t with
-      | UseT (op, t) ->
-        [("use", JSON_String (string_of_use_op op)); ("type", _json_of_t json_cx t)]
+      | UseT (op, t) -> [("use", JSON_String (string_of_use_op op)); ("type", _json_of_t json_cx t)]
       | AssertArithmeticOperandT _ -> []
       | AssertBinaryInLHST _ -> []
       | AssertBinaryInRHST _ -> []
@@ -413,7 +418,7 @@ and _json_of_use_t_impl json_cx t =
       | MethodT (_, _, _, propref, funtype, _) ->
         [
           ("propRef", json_of_propref json_cx propref);
-          ("funType", json_of_funcalltype json_cx funtype);
+          ("funType", json_of_methodaction json_cx funtype);
         ]
       | ReposLowerT (_, use_desc, use_t) ->
         [("type", _json_of_use_t json_cx use_t); ("useDesc", JSON_Bool use_desc)]
@@ -434,11 +439,8 @@ and _json_of_use_t_impl json_cx t =
       | SetElemT (_, _, indext, _, elemt, _)
       | GetElemT (_, _, indext, elemt) ->
         [("indexType", _json_of_t json_cx indext); ("elemType", _json_of_t json_cx elemt)]
-      | CallElemT (_, _, indext, funtype) ->
-        [
-          ("indexType", _json_of_t json_cx indext);
-          ("funType", json_of_funcalltype json_cx funtype);
-        ]
+      | CallElemT (_, _, indext, action) ->
+        [("indexType", _json_of_t json_cx indext); ("funType", json_of_methodaction json_cx action)]
       | GetStaticsT (_, t) -> [("type", _json_of_t json_cx t)]
       | GetProtoT (_, t)
       | SetProtoT (_, t) ->
@@ -448,8 +450,8 @@ and _json_of_use_t_impl json_cx t =
           ( "typeArgs",
             match targs with
             | None -> JSON_Null
-            | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts) );
-          ("argTypes", JSON_Array (Core_list.map ~f:(json_of_funcallarg json_cx) args));
+            | Some ts -> JSON_Array (Base.List.map ~f:(_json_of_targ json_cx) ts) );
+          ("argTypes", JSON_Array (Base.List.map ~f:(json_of_funcallarg json_cx) args));
           ("type", _json_of_t json_cx t);
         ]
       | SuperT (_, _, Derived { own; proto; static }) ->
@@ -482,31 +484,37 @@ and _json_of_use_t_impl json_cx t =
       | SpecializeT (_, _, _, cache, targs_opt, tvar) ->
         [("cache", json_of_specialize_cache json_cx cache)]
         @ (match targs_opt with
-          | Some targs -> [("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs))]
+          | Some targs -> [("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs))]
           | None -> [])
         @ [("tvar", _json_of_t json_cx tvar)]
-      | ThisSpecializeT (_, this, k) ->
-        ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
-      | VarianceCheckT (_, targs, polarity) ->
+      | ThisSpecializeT (_, this, k) -> ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
+      | VarianceCheckT (_, _, targs, polarity) ->
         [
-          ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
+          ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs));
           ("polarity", json_of_polarity json_cx polarity);
         ]
       | TypeAppVarianceCheckT (_, _, _, targs) ->
         [
           ( "typeArgs",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun (t1, t2) ->
                    JSON_Object [("t1", _json_of_t json_cx t1); ("t2", _json_of_t json_cx t2)])
                  targs) );
         ]
+      | TypeCastT (op, t) ->
+        [("use", JSON_String (string_of_use_op op)); ("arg", _json_of_t json_cx t)]
+      | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+        [
+          ("use", JSON_String (string_of_use_op use_op));
+          ("enum", _json_of_t json_cx (DefT (reason, trust, EnumT enum)));
+        ]
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) ->
         [
           ("willFlip", JSON_Bool will_flip);
-          ("currentTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts1));
+          ("currentTypeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts1));
           ("currentUpper", _json_of_t json_cx t2);
-          ("currentUpperTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts2));
+          ("currentUpperTypeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts2));
         ]
       | LookupT (_, rstrict, _, propref, action) ->
         (match rstrict with
@@ -528,14 +536,14 @@ and _json_of_use_t_impl json_cx t =
             ( "shadowRead",
               JSON_Array
                 ( Nel.to_list ids
-                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
+                |> Base.List.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
           ]
         | ShadowWrite ids ->
           [
             ( "shadowWrite",
               JSON_Array
                 ( Nel.to_list ids
-                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
+                |> Base.List.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
           ])
         @ [
             ("propref", json_of_propref json_cx propref);
@@ -556,7 +564,7 @@ and _json_of_use_t_impl json_cx t =
       | ObjFreezeT (_, t) -> [("type", _json_of_t json_cx t)]
       | ObjRestT (_, excludes, tvar) ->
         [
-          ("excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes));
+          ("excludedProps", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) excludes));
           ("resultType", _json_of_t json_cx tvar);
         ]
       | ObjSealT (_, t) -> [("type", _json_of_t json_cx t)]
@@ -575,7 +583,7 @@ and _json_of_use_t_impl json_cx t =
           (match action with
           | ReadElem t -> ("readElem", _json_of_t json_cx t)
           | WriteElem (t, _, _) -> ("writeElem", _json_of_t json_cx t)
-          | CallElem (_, funtype) -> ("callElem", json_of_funcalltype json_cx funtype));
+          | CallElem (_, action) -> ("callElem", json_of_methodaction json_cx action));
         ]
       | MakeExactT (_, cont) -> _json_of_cont json_cx cont
       | CJSRequireT (_, export, _) -> [("export", _json_of_t json_cx export)]
@@ -633,7 +641,7 @@ and _json_of_use_t_impl json_cx t =
         [
           ("shape", JSON_Bool shape);
           ("config", _json_of_t json_cx config);
-          ("children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children));
+          ("children", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) children));
           ( "childrenSpread",
             match children_spread with
             | Some children_spread -> _json_of_t json_cx children_spread
@@ -647,7 +655,7 @@ and _json_of_use_t_impl json_cx t =
           ("shape", JSON_Bool shape);
           ("component", _json_of_t json_cx component);
           ("config", _json_of_t json_cx config);
-          ("children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children));
+          ("children", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) children));
           ( "childrenSpread",
             match children_spread with
             | Some children_spread -> _json_of_t json_cx children_spread
@@ -682,13 +690,11 @@ and _json_of_use_t_impl json_cx t =
         ]
       | IdxUnwrap (_, t_out) -> [("t_out", _json_of_t json_cx t_out)]
       | IdxUnMaybeifyT (_, t_out) -> [("t_out", _json_of_t json_cx t_out)]
-      | OptionalChainT (_, _, uses) ->
+      | OptionalChainT (_, _, this, out, void_out) ->
         [
-          ( "chain",
-            JSON_Array
-              ( Nel.to_list
-              @@ Nel.map (fun (use, tout) -> _json_of_use_t json_cx (apply_opt_use use tout)) uses
-              ) );
+          ("this", _json_of_t json_cx this);
+          ("t_out", _json_of_use_t json_cx out);
+          ("voidt_out", _json_of_t json_cx void_out);
         ]
       | InvariantT _ -> []
       | CallLatentPredT (_, sense, offset, l, t) ->
@@ -714,7 +720,7 @@ and _json_of_use_t_impl json_cx t =
                   JSON_Array
                     ( subst
                     |> SMap.elements
-                    |> Core_list.map ~f:(fun (x, k) ->
+                    |> Base.List.map ~f:(fun (x, k) ->
                            JSON_Array [JSON_String x; JSON_String (Key.string_of_key k)]) ) );
                 ("pred_t", _json_of_t_impl json_cx t);
               ] );
@@ -731,7 +737,7 @@ and _json_of_use_t_impl json_cx t =
         [
           ( "resolved",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun param ->
                    let (kind, t) =
                      match param with
@@ -744,7 +750,7 @@ and _json_of_use_t_impl json_cx t =
                  rrt_resolved) );
           ( "unresolved",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun param ->
                    let (kind, t) =
                      match param with
@@ -781,6 +787,14 @@ and _json_of_use_t_impl json_cx t =
           ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
           ("value", _json_of_t json_cx value);
           ("tout", _json_of_t json_cx (OpenT tout_tvar));
+        ]
+      | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
+        [
+          ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
+          ("unresolved", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) unresolved));
+          ("resolved", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) resolved));
+          ("upper", _json_of_use_t json_cx upper);
+          ("id", JSON_Number (string_of_int id));
         ]
       | ModuleExportsAssignT (_, assign, t_out) ->
         [("assign", _json_of_t json_cx assign); ("t_out", _json_of_t json_cx t_out)] ))
@@ -833,7 +847,7 @@ and json_of_sentinel json_cx = check_depth json_of_sentinel_impl json_cx
 and json_of_sentinel_impl json_cx = function
   | UnionEnum.One enum -> _json_of_enum json_cx enum
   | UnionEnum.Many enums ->
-    Hh_json.JSON_Array (Core_list.map ~f:(_json_of_enum json_cx) @@ UnionEnumSet.elements enums)
+    Hh_json.JSON_Array (Base.List.map ~f:(_json_of_enum json_cx) @@ UnionEnumSet.elements enums)
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 
@@ -866,8 +880,7 @@ and json_of_objtype_impl json_cx objtype =
         | None -> []
         | Some d -> [("dictType", json_of_dicttype json_cx d)])
       @ [
-          ("propTypes", json_of_pmap json_cx pmap);
-          ("prototype", _json_of_t json_cx objtype.proto_t);
+          ("propTypes", json_of_pmap json_cx pmap); ("prototype", _json_of_t json_cx objtype.proto_t);
         ] ))
 
 and json_of_dicttype json_cx = check_depth json_of_dicttype_impl json_cx
@@ -939,15 +952,14 @@ and json_of_changeset_impl _json_cx =
     fun (changed_vars, changed_refis) ->
       JSON_Object
         [
-          ("vars", json_of_changed_vars changed_vars);
-          ("refis", json_of_changed_refis changed_refis);
+          ("vars", json_of_changed_vars changed_vars); ("refis", json_of_changed_refis changed_refis);
         ])
 
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 
 and json_of_funtype_impl
-    json_cx
-    { this_t; params; rest_param; return_t; is_predicate; closure_t; changeset; def_reason } =
+    json_cx { this_t; params; rest_param; return_t; is_predicate; closure_t; changeset; def_reason }
+    =
   Hh_json.(
     let rec params_names (any, names_rev) = function
       | [] ->
@@ -961,7 +973,7 @@ and json_of_funtype_impl
     JSON_Object
       ( [
           ("thisType", _json_of_t json_cx this_t);
-          ("paramTypes", JSON_Array (Core_list.map ~f:(fun (_, t) -> _json_of_t json_cx t) params));
+          ("paramTypes", JSON_Array (Base.List.map ~f:(fun (_, t) -> _json_of_t json_cx t) params));
         ]
       @ (match params_names (false, []) params with
         | None -> []
@@ -991,19 +1003,33 @@ and json_of_funcalltype_impl
     json_cx
     { call_this_t; call_targs; call_args_tlist; call_tout; call_closure_t; call_strict_arity } =
   Hh_json.(
-    let arg_types = Core_list.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
+    let arg_types = Base.List.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
     JSON_Object
       [
         ("thisType", _json_of_t json_cx call_this_t);
         ( "typeArgs",
           match call_targs with
           | None -> JSON_Null
-          | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts) );
+          | Some ts -> JSON_Array (Base.List.map ~f:(_json_of_targ json_cx) ts) );
         ("argTypes", JSON_Array arg_types);
         ("tout", _json_of_t json_cx call_tout);
         ("closureIndex", int_ call_closure_t);
         ("strictArity", JSON_Bool call_strict_arity);
       ])
+
+and json_of_methodaction json_cx = check_depth json_of_methodaction_impl json_cx
+
+and json_of_methodaction_impl json_cx =
+  Hh_json.(
+    function
+    | CallM funtype -> json_of_funcalltype json_cx funtype
+    | ChainM (_, _, this, t_out, void_out) ->
+      JSON_Object
+        [
+          ("this", _json_of_t json_cx this);
+          ("t_out", json_of_funcalltype json_cx t_out);
+          ("voidt_out", _json_of_t json_cx void_out);
+        ])
 
 and json_of_funcallarg json_cx = check_depth json_of_funcallarg_impl json_cx
 
@@ -1028,10 +1054,10 @@ and json_of_insttype_impl json_cx insttype =
     in
     JSON_Object
       [
-        ("classId", json_of_aloc ~offset_table:None insttype.class_id);
+        ("classId", json_of_aloc ~offset_table:None (insttype.class_id :> ALoc.t));
         ( "typeArgs",
           JSON_Array
-            (Core_list.map
+            (Base.List.map
                ~f:(fun (x, _, t, p) ->
                  JSON_Object
                    [
@@ -1055,7 +1081,7 @@ and json_of_selector_impl json_cx =
     | Elem key -> JSON_Object [("keyType", _json_of_t json_cx key)]
     | ObjRest excludes ->
       JSON_Object
-        [("excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes))]
+        [("excludedProps", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) excludes))]
     | ArrRest i -> JSON_Object [("index", JSON_Number (string_of_int i))]
     | Default -> JSON_Object [("default", JSON_Bool true)])
 
@@ -1078,7 +1104,7 @@ and json_of_destructor_impl json_cx =
             | Annot { make_exact } ->
               [("target", JSON_String "Annot"); ("makeExact", JSON_Bool make_exact)])
           @ [
-              ("spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts));
+              ("spread", JSON_Array (Base.List.map ~f:(json_of_spread_operand json_cx) ts));
               ( "head_slice",
                 match head_slice with
                 | None -> JSON_Null
@@ -1098,7 +1124,7 @@ and json_of_destructor_impl json_cx =
           ])
     | ValuesType -> JSON_Object [("values", JSON_Bool true)]
     | CallType args ->
-      JSON_Object [("args", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) args))]
+      JSON_Object [("args", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) args))]
     | TypeMap tmap -> json_of_type_map json_cx tmap
     | ReactElementPropsType -> JSON_Object [("reactElementProps", JSON_Bool true)]
     | ReactElementConfigType -> JSON_Object [("reactElementConfig", JSON_Bool true)]
@@ -1112,8 +1138,7 @@ and json_of_spread_operand_slice json_cx { Object.Spread.reason; prop_map; dict 
       [
         ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
         ( "props",
-          JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p) :: acc) prop_map [])
-        );
+          JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p) :: acc) prop_map []) );
         ( "dict",
           match dict with
           | Some dict -> json_of_dicttype json_cx dict
@@ -1232,6 +1257,7 @@ and json_of_pred_impl json_cx p =
       | SingletonStrP (_, _, str) -> [("value", JSON_String str)]
       | SingletonNumP (_, _, (_, raw)) -> [("value", JSON_String raw)]
       | PropExistsP (key, _) -> [("propName", JSON_String key)]
+      | PropNonMaybeP (key, _) -> [("propName", JSON_String key)]
       | ExistsP _
       | VoidP
       | NullP
@@ -1268,7 +1294,7 @@ and json_of_node_impl json_cx id =
   Hh_json.(
     JSON_Object
       (let json_cx = { json_cx with stack = ISet.add id json_cx.stack } in
-       match IMap.find_unsafe id (Context.graph json_cx.cx) with
+       match IMap.find id (Context.graph json_cx.cx) with
        | Constraint.Goto id -> [("kind", JSON_String "Goto")] @ [("id", int_ id)]
        | Constraint.Root root ->
          [("kind", JSON_String "Root")] @ [("root", json_of_root json_cx root)]))
@@ -1355,7 +1381,7 @@ and json_of_specialize_cache_impl json_cx cache =
         [
           ( "reasons",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None)
                  rs) );
         ]))
@@ -1433,7 +1459,7 @@ let json_of_scope =
         let pmap = Context.find_props json_cx.cx c.class_private_fields in
         JSON_Object
           [
-            ("class_id", JSON_String (ALoc.debug_to_string c.class_binding_id));
+            ("class_id", JSON_String (ALoc.debug_to_string (c.class_binding_id :> ALoc.t)));
             ("class_private_fields", json_of_pmap json_cx pmap);
           ]
       in
@@ -1483,7 +1509,7 @@ let json_of_scope =
           ]))
 
 let json_of_env ?(size = 5000) ?(depth = 1000) cx env =
-  Hh_json.JSON_Array (Core_list.map ~f:(json_of_scope ~size ~depth cx) env)
+  Hh_json.JSON_Array (Base.List.map ~f:(json_of_scope ~size ~depth cx) env)
 
 (*****************************************************************)
 
@@ -1538,7 +1564,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | Mixed_non_maybe -> "Mixed_non_maybe"
     | Mixed_non_null -> "Mixed_non_null"
     | Mixed_non_void -> "Mixed_non_void"
-    | Mixed_symbol -> "Mixed_symbol"
   in
   let string_of_any_source = function
     | Annotated -> "Annotated"
@@ -1618,13 +1643,14 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "<this: %s>(%s) => %s"
              (kid this_t)
-             (String.concat "; " (Core_list.map ~f:(fun (_, t) -> kid t) params))
+             (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
              (kid return_t))
         t
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
     | DefT (_, trust, MixedT flavor) ->
       p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
     | DefT (_, trust, EmptyT _)
+    | DefT (_, trust, SymbolT)
     | DefT (_, trust, NullT)
     | DefT (_, trust, VoidT) ->
       p ~trust:(Some trust) t
@@ -1640,13 +1666,13 @@ let rec dump_t_ (depth, tvars) cx t =
         ~trust:(Some trust)
         ~extra:
           (spf
-             "%s [%s] #%d"
+             "%s [%s] #%s"
              (kid c)
-             (String.concat "; " (Core_list.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
-             id)
+             (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
+             (Poly.string_of_id id))
         t
     | ThisClassT (_, inst) -> p ~extra:(kid inst) t
-    | BoundT (_, name, _) -> p ~extra:name t
+    | BoundT (_, name) -> p ~extra:name t
     | ExistsT _ -> p t
     | DefT (_, trust, ObjT { props_tmap; _ }) ->
       p ~trust:(Some trust) t ~extra:(Properties.string_of_id props_tmap)
@@ -1659,12 +1685,12 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "Array %s, %s"
              (kid elemt)
-             (spf "[%s]" (String.concat "; " (Core_list.map ~f:kid tup))))
+             (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup))))
         t
     | DefT (_, trust, ArrT (TupleAT (_, tup))) ->
       p
         ~trust:(Some trust)
-        ~extra:(spf "Tuple [%s]" (String.concat ", " (Core_list.map ~f:kid tup)))
+        ~extra:(spf "Tuple [%s]" (String.concat ", " (Base.List.map ~f:kid tup)))
         t
     | DefT (_, trust, ArrT (ROArrayAT elemt)) ->
       p ~trust:(Some trust) ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
@@ -1672,15 +1698,22 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
     | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
     | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
-      p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string class_id)) t
+      p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
+    | DefT (_, trust, EnumT { enum_id; enum_name; members = _; representation_t = _ })
+    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _; representation_t = _ }) ->
+      p
+        ~trust:(Some trust)
+        ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))
+        t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
     | OpaqueT _ -> p t
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t
-    | EvalT (arg, expr, id) -> p ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
+    | EvalT (arg, expr, id) ->
+      p ~extra:(spf "%s, %s" (defer_use expr (kid arg)) (Eval.string_of_id id)) t
     | TypeAppT (_, _, base, args) ->
-      p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t
+      p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Base.List.map ~f:kid args))) t
     | ThisTypeAppT (_, base, this, args_opt) ->
       p
         ~reason:false
@@ -1692,27 +1725,27 @@ let rec dump_t_ (depth, tvars) cx t =
                 "%s, %s, [%s]"
                 (kid base)
                 (kid this)
-                (String.concat "; " (Core_list.map ~f:kid args))
+                (String.concat "; " (Base.List.map ~f:kid args))
             | None -> spf "%s, %s" (kid base) (kid this)
           end
         t
     | ExactT (_, arg) -> p ~extra:(kid arg) t
     | MaybeT (_, arg) -> p ~extra:(kid arg) t
     | IntersectionT (_, rep) ->
-      p ~extra:(spf "[%s]" (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
+      p ~extra:(spf "[%s]" (String.concat "; " (Base.List.map ~f:kid (InterRep.members rep)))) t
     | UnionT (_, rep) ->
       p
         ~extra:
           (spf
              "[%s]%s"
-             (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))
+             (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
              (UnionRep.string_of_specialization rep))
         t
     | MergedT (_, uses) ->
       p
         ~extra:
           ( "["
-          ^ String.concat ", " (Core_list.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
+          ^ String.concat ", " (Base.List.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
           ^ "]" )
         t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
@@ -1729,7 +1762,7 @@ let rec dump_t_ (depth, tvars) cx t =
         ~extra:
           ( Context.find_exports cx exports_tmap
           |> SMap.bindings
-          |> Core_list.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
+          |> Base.List.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
           |> String.concat ", "
           |> spf "[%s]" )
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
@@ -1746,18 +1779,17 @@ let rec dump_t_ (depth, tvars) cx t =
              (kid arg)
              (String.concat
                 "; "
-                (Core_list.map
+                (Base.List.map
                    ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
                    (Key_map.elements p_pos)))
              (String.concat
                 "; "
-                (Core_list.map
+                (Base.List.map
                    ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
                    (Key_map.elements p_neg))))
     | ReposT (_, arg)
     | InternalT (ReposUpperT (_, arg)) ->
       p ~extra:(kid arg) t
-    | InternalT (OptionalChainVoidT _) -> p t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =
@@ -1783,7 +1815,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | Arg t -> kid t
     | SpreadArg t -> spf "...%s" (kid t)
   in
-  let tlist ts = spf "[%s]" (String.concat "; " (Core_list.map ~f:kid ts)) in
+  let tlist ts = spf "[%s]" (String.concat "; " (Base.List.map ~f:kid ts)) in
   let props map =
     spf
       "{%s}"
@@ -1803,11 +1835,11 @@ and dump_use_t_ (depth, tvars) cx t =
     | ShadowRead (_, ids) ->
       spf
         "ShadowRead [%s]"
-        (String.concat "; " (Nel.to_list ids |> Core_list.map ~f:Properties.string_of_id))
+        (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
     | ShadowWrite ids ->
       spf
         "ShadowWrite [%s]"
-        (String.concat "; " (Nel.to_list ids |> Core_list.map ~f:Properties.string_of_id))
+        (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
   in
   let lookup_action = function
     | ReadProp { tout; _ } -> spf "Read %s" (kid tout)
@@ -1818,7 +1850,7 @@ and dump_use_t_ (depth, tvars) cx t =
   in
   let specialize_cache = function
     | None -> "None"
-    | Some rs -> spf "Some [%s]" (String.concat "; " @@ Core_list.map ~f:(dump_reason cx) rs)
+    | Some rs -> spf "Some [%s]" (String.concat "; " @@ Base.List.map ~f:(dump_reason cx) rs)
   in
   let try_flow = function
     | UnionCases (use_op, t, _rep, ts) ->
@@ -1826,9 +1858,9 @@ and dump_use_t_ (depth, tvars) cx t =
         "(%s, %s, [%s])"
         (string_of_use_op use_op)
         (kid t)
-        (String.concat "; " (Core_list.map ~f:kid ts))
+        (String.concat "; " (Base.List.map ~f:kid ts))
     | IntersectionCases (ts, use_t) ->
-      spf "([%s], %s)" (String.concat "; " (Core_list.map ~f:kid ts)) (use_kid use_t)
+      spf "([%s], %s)" (String.concat "; " (Base.List.map ~f:kid ts)) (use_kid use_t)
   in
   let react_kit =
     React.(
@@ -1882,7 +1914,7 @@ and dump_use_t_ (depth, tvars) cx t =
             (spf
                "CreateElement (%s; %s%s) => %s"
                (kid config)
-               (String.concat "; " (Core_list.map ~f:kid children))
+               (String.concat "; " (Base.List.map ~f:kid children))
                (match children_spread with
                | Some children_spread -> spf "; ...%s" (kid children_spread)
                | None -> "")
@@ -1945,21 +1977,19 @@ and dump_use_t_ (depth, tvars) cx t =
         | And -> "And"
         | Or -> "Or"
       in
-      let resolved xs =
-        spf "[%s]" (String.concat "; " (Core_list.map ~f:slice (Nel.to_list xs)))
-      in
+      let resolved xs = spf "[%s]" (String.concat "; " (Base.List.map ~f:slice (Nel.to_list xs))) in
       let resolve = function
         | Next -> "Next"
         | List0 (todo, j) ->
           spf
             "List0 ([%s], %s)"
-            (String.concat "; " (Core_list.map ~f:kid (Nel.to_list todo)))
+            (String.concat "; " (Base.List.map ~f:kid (Nel.to_list todo)))
             (join j)
         | List (todo, done_rev, j) ->
           spf
             "List ([%s], [%s], %s)"
-            (String.concat "; " (Core_list.map ~f:kid todo))
-            (String.concat "; " (Core_list.map ~f:resolved (Nel.to_list done_rev)))
+            (String.concat "; " (Base.List.map ~f:kid todo))
+            (String.concat "; " (Base.List.map ~f:resolved (Nel.to_list done_rev)))
             (join j)
       in
       let resolve_tool = function
@@ -1967,8 +1997,7 @@ and dump_use_t_ (depth, tvars) cx t =
         | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
       in
       let acc_element = function
-        | Spread.InlineSlice { Spread.reason; prop_map; dict } ->
-          operand_slice reason prop_map dict
+        | Spread.InlineSlice { Spread.reason; prop_map; dict } -> operand_slice reason prop_map dict
         | Spread.ResolvedSlice xs -> resolved xs
       in
       let spread target state =
@@ -1986,8 +2015,8 @@ and dump_use_t_ (depth, tvars) cx t =
             let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
             spf
               "{todo_rev=[%s]; acc=[%s]; spread_id=%s; curr_resolve_idx=%s; union_reason=%s}"
-              (String.concat "; " (Core_list.map ~f:spread_operand todo_rev))
-              (String.concat "; " (Core_list.map ~f:acc_element acc))
+              (String.concat "; " (Base.List.map ~f:spread_operand todo_rev))
+              (String.concat "; " (Base.List.map ~f:acc_element acc))
               (string_of_int spread_id)
               (string_of_int curr_resolve_idx)
               (Option.value_map union_reason ~default:"None" ~f:(dump_reason cx))
@@ -2051,7 +2080,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertImportIsValueT _ -> p t
     | BecomeT (_, arg) -> p ~extra:(kid arg) t
     | BindT _ -> p t
-    | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
+    | CallElemT (_, _, _, _) -> p t
     | CallT (use_op, _, { call_args_tlist; call_tout; call_this_t; _ }) ->
       p
         ~extra:
@@ -2059,7 +2088,7 @@ and dump_use_t_ (depth, tvars) cx t =
              "%s, <this: %s>(%s) => %s"
              (string_of_use_op use_op)
              (kid call_this_t)
-             (String.concat "; " (Core_list.map ~f:call_arg_kid call_args_tlist))
+             (String.concat "; " (Base.List.map ~f:call_arg_kid call_args_tlist))
              (kid call_tout))
         t
     | CallLatentPredT _ -> p t
@@ -2083,7 +2112,7 @@ and dump_use_t_ (depth, tvars) cx t =
           (spf
              "%s, {%s}"
              (kid arg)
-             (String.concat "; " (Core_list.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
+             (String.concat "; " (Base.List.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
     | ExportTypeT _ -> p t
     | AssertExportIsTypeT _ -> p t
     | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
@@ -2096,10 +2125,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetProtoT (_, arg) -> p ~extra:(kid arg) t
     | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
     | GuardT (pred, result, sink) ->
-      p
-        ~reason:false
-        ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (kid sink))
-        t
+      p ~reason:false ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (kid sink)) t
     | HasOwnPropT _ -> p t
     | IdxUnMaybeifyT _ -> p t
     | IdxUnwrap _ -> p t
@@ -2125,7 +2151,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
-    | OptionalChainT _ -> p t
+    | OptionalChainT (_, _, _, t', void_t) -> p ~extra:(spf "%s, %s" (use_kid t') (kid void_t)) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
@@ -2175,7 +2201,7 @@ and dump_use_t_ (depth, tvars) cx t =
               spf
                 "%s, [%s], %s"
                 (specialize_cache cache)
-                (String.concat "; " (Core_list.map ~f:kid args))
+                (String.concat "; " (Base.List.map ~f:kid args))
                 (kid ret)
             | None -> spf "%s, %s" (specialize_cache cache) (kid ret)
           end
@@ -2190,13 +2216,16 @@ and dump_use_t_ (depth, tvars) cx t =
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
     | UnaryMinusT _ -> p t
     | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
-    | VarianceCheckT (_, args, pol) ->
+    | VarianceCheckT (_, _, args, pol) ->
       p
         ~extra:
-          (spf "[%s], %s" (String.concat "; " (Core_list.map ~f:kid args)) (Polarity.string pol))
+          (spf "[%s], %s" (String.concat "; " (Base.List.map ~f:kid args)) (Polarity.string pol))
         t
     | ConcretizeTypeAppsT _ -> p t
     | TypeAppVarianceCheckT _ -> p t
+    | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
+    | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
+      p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
     | CondT (_, then_t, else_t, tout) ->
       p
         t
@@ -2211,12 +2240,22 @@ and dump_use_t_ (depth, tvars) cx t =
     | ExtendsUseT (_, _, nexts, l, u) ->
       p
         ~extra:
-          (spf "[%s], %s, %s" (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u))
+          (spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
         t
     | DestructuringT (_, k, s, tout) ->
       p t ~extra:(spf "%s, %s, %s" (string_of_destruct_kind k) (string_of_selector s) (kid tout))
     | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
       p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
+    | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
+      p
+        t
+        ~extra:
+          (spf
+             "%d [%s], [%s], %s"
+             id
+             (String.concat "; " (Base.List.map ~f:kid resolved))
+             (String.concat "; " (Base.List.map ~f:kid unresolved))
+             (use_kid upper))
     | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =
@@ -2303,7 +2342,7 @@ let string_of_scope_entry =
         function
         | Value r -> spf "Value %s" (string_of_value_binding cx r)
         | Type r -> spf "Type %s" (string_of_type_binding cx r)
-        | Class r -> spf "Class %s" (ALoc.debug_to_string r.class_binding_id)))
+        | Class r -> spf "Class %s" (ALoc.debug_to_string (r.class_binding_id :> ALoc.t))))
 
 let string_of_scope_entries cx entries =
   let strings =
@@ -2689,8 +2728,7 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx valid)
         (string_of_use_op use_op)
-    | EUnsupportedKeyInObjectType loc ->
-      spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
+    | EUnsupportedKeyInObjectType loc -> spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
     | EPredAnnot loc -> spf "EPredAnnot (%s)" (string_of_aloc loc)
     | ERefineAnnot loc -> spf "ERefineAnnot (%s)" (string_of_aloc loc)
     | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
@@ -2750,15 +2788,9 @@ let dump_error_message =
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
-      spf
-        "EObjectComputedPropertyAccess (%s, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+      spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EObjectComputedPropertyAssign (reason1, reason2) ->
-      spf
-        "EObjectComputedPropertyAssign (%s, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+      spf "EObjectComputedPropertyAssign (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
     | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
       spf
@@ -2821,6 +2853,7 @@ let dump_error_message =
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
     | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
+    | EAmbiguousObjectType loc -> spf "EAmbiguousObjectType (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->
       spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
     | EUntypedImport (loc, module_name) ->
@@ -2853,6 +2886,9 @@ let dump_error_message =
           | SketchyNullString -> "SketchyNullString"
           | SketchyNullNumber -> "SketchyNullNumber"
           | SketchyNullMixed -> "SketchyNullMixed"
+          | SketchyNullEnumBool -> "SketchyNullEnumBool"
+          | SketchyNullEnumString -> "SketchyNullEnumString"
+          | SketchyNullEnumNumber -> "SketchyNullEnumNumber"
         in
         spf
           "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
@@ -2879,8 +2915,7 @@ let dump_error_message =
       spf "EInexactSpread (%s, %s)" (dump_reason cx reason) (dump_reason cx reason_op)
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
-    | ECannotDelete (l1, r1) ->
-      spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
+    | ECannotDelete (l1, r1) -> spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
     | ESignatureVerification sve ->
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg
@@ -2897,8 +2932,7 @@ let dump_error_message =
         (dump_reason cx spread_reason)
         (dump_reason cx object_reason)
         (dump_reason cx key_reason)
-    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ }
-      ->
+    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ } ->
       spf
         "EUnableToSpread (%s) (%s) (%s) (%s)"
         (dump_reason cx spread_reason)
@@ -2936,6 +2970,53 @@ let dump_error_message =
         "EComputedPropertyWithUnion (%s) (%s)"
         (dump_reason cx computed_property_reason)
         (dump_reason cx union_reason)
+    | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+      spf
+        "EEnumInvalidMemberAccess (%s) (%s) (%s)"
+        (Option.value ~default:"<None>" member_name)
+        (dump_reason cx access_reason)
+        (dump_reason cx enum_reason)
+    | EEnumModification { loc; enum_reason } ->
+      spf "EEnumModification (%s) (%s)" (string_of_aloc loc) (dump_reason cx enum_reason)
+    | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+      spf
+        "EEnumMemberDuplicateValue (%s) (%s) (%s)"
+        (string_of_aloc loc)
+        (string_of_aloc prev_use_loc)
+        (dump_reason cx enum_reason)
+    | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+      spf
+        "EEnumMemberAlreadyChecked (%s) (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx prev_check_reason)
+        (dump_reason cx enum_reason)
+        member_name
+    | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
+      spf
+        "EEnumAllMembersAlreadyChecked (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx enum_reason)
+    | EEnumNotAllChecked
+        { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+      spf
+        "EEnumNotAllChecked (%s) (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx enum_reason)
+        remaining_member_to_check
+        (string_of_int number_remaining_members_to_check)
+    | EEnumInvalidCheck { reason; enum_name; members } ->
+      spf
+        "EEnumInvalidCheck (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        enum_name
+        (SSet.elements members |> String.concat ", ")
+    | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
+      spf
+        "EEnumExhaustiveCheckOfUnion (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx union_reason)
+    | EEnumMemberUsedAsType { reason; enum_name } ->
+      spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =
@@ -2945,14 +3026,14 @@ module Verbose = struct
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
       let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
-      let lines = Core_list.map ~f:add_prefix lines in
+      let lines = Base.List.map ~f:add_prefix lines in
       prerr_endline (String.concat delim lines)
     | None -> ()
 
   let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines : string list) =
     match Context.verbose cx with
     | Some _ ->
-      let lines = Core_list.map ~f:(fun line -> lazy line) lines in
+      let lines = Base.List.map ~f:(fun line -> lazy line) lines in
       print_if_verbose_lazy cx trace ~delim ~indent lines
     | None -> ()
 

@@ -132,12 +132,8 @@ end = struct
     let get_send () = Option.value ~default:0.0 (Measure.get_sum "worker_send_response") in
     let get_idle () = Option.value ~default:0.0 (Measure.get_sum "worker_idle") in
     let get_done () = Option.value ~default:0.0 (Measure.get_sum "worker_done") in
-    let get_gc_minor () =
-      Option.value ~default:0.0 (Measure.get_sum "worker_gc_minor_wall_time")
-    in
-    let get_gc_major () =
-      Option.value ~default:0.0 (Measure.get_sum "worker_gc_major_wall_time")
-    in
+    let get_gc_minor () = Option.value ~default:0.0 (Measure.get_sum "worker_gc_minor_wall_time") in
+    let get_gc_major () = Option.value ~default:0.0 (Measure.get_sum "worker_gc_major_wall_time") in
     let worker_wall_start_times () =
       {
         worker_idle_start = get_idle ();
@@ -491,7 +487,7 @@ end = struct
     let (results_rev, dupes) =
       List.fold_left
         (fun (results, dupes) result ->
-          match SMap.get result.timer_name dupes with
+          match SMap.find_opt result.timer_name dupes with
           | None -> (result :: results, SMap.add result.timer_name [] dupes)
           | Some prev_dupes -> (results, SMap.add result.timer_name (result :: prev_dupes) dupes))
         ([], SMap.empty)
@@ -501,11 +497,7 @@ end = struct
       List.fold_left
         (fun acc result ->
           let json_result =
-            json_of_result
-              ~abridged
-              ~max_depth
-              ~dupes:(SMap.find_unsafe result.timer_name dupes)
-              result
+            json_of_result ~abridged ~max_depth ~dupes:(SMap.find result.timer_name dupes) result
           in
           json_result :: acc)
         []
@@ -655,13 +647,8 @@ end = struct
     (* If there's more than 1% of wall time since the last end and the next start_age, then print an
      * <Unknown> row *)
     let print_unknown ~indent last_end (wall_start_age, cpu_start_age, worker_wall_start) total =
-      let ( run_start,
-            read_start,
-            send_start,
-            idle_start,
-            done_start,
-            gc_minor_start,
-            gc_major_start ) =
+      let (run_start, read_start, send_start, idle_start, done_start, gc_minor_start, gc_major_start)
+          =
         worker_wall_start
       in
       let ( wall_end,
@@ -892,7 +879,7 @@ end = struct
     Lwt.return (finished_memory, ret)
 
   let get_group_map ~group running_memory =
-    match SMap.get group !running_memory.running_results with
+    match SMap.find_opt group !running_memory.running_results with
     | None ->
       running_memory :=
         {
@@ -904,7 +891,7 @@ end = struct
     | Some group -> group
 
   let get_metric ~group ~metric running_memory =
-    get_group_map ~group running_memory |> SMap.get metric
+    get_group_map ~group running_memory |> SMap.find_opt metric
 
   let set_metric ~group ~metric entry running_memory =
     let group_map = get_group_map ~group running_memory |> SMap.add metric entry in
@@ -1022,12 +1009,10 @@ end = struct
         indent
         key
     in
-    let header_without_section =
-      "  START                DELTA               HWM DELTA          "
-    in
+    let header_without_section = "  START                DELTA               HWM DELTA          " in
     let pre_section_whitespace = String.make (String.length header_without_section) ' ' in
     let print_group ~indent finished_results group_name =
-      Option.iter (SMap.get group_name finished_results) ~f:(fun group ->
+      Option.iter (SMap.find_opt group_name finished_results) ~f:(fun group ->
           let indent_str = String.make (String.length header_without_section + indent - 2) ' ' in
           Printf.eprintf "%s== %s ==\n%!" indent_str group_name;
           SMap.iter (print_summary_single ~indent:(indent + 2)) group)
@@ -1056,9 +1041,7 @@ end = struct
           header_indent;
         let indent = indent + 2 in
         List.iter (print_group ~indent results.finished_results) results.finished_groups;
-        List.iter
-          (fun sub_result -> print_finished ~indent sub_result)
-          results.finished_sub_results
+        List.iter (fun sub_result -> print_finished ~indent sub_result) results.finished_sub_results
       )
     in
     fun memory ->

@@ -1,8 +1,0 @@
-(library
-  (name libancillary)
-  (wrapped false)
-  (c_names
-    libancillary-stubs)
-  (libraries
-    libancillary_c)
-  (c_flags (:standard -I%{env:CMAKE_SOURCE_DIR=xxx})))

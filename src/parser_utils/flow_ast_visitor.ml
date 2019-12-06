@@ -8,7 +8,7 @@
 let run : 'node. ('node -> 'node) -> 'node -> unit = (fun visit node -> ignore @@ visit node)
 
 let run_opt : 'node. ('node -> 'node) -> 'node option -> unit =
- (fun visit -> Option.iter ~f:(run visit))
+ (fun visit -> Base.Option.iter ~f:(run visit))
 
 let run_list : 'node. ('node -> 'node) -> 'node list -> unit = (fun visit -> List.iter (run visit))
 

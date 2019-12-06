@@ -4,3 +4,4 @@ fakelib
 [options]
 module.system=haste
 no_flowlib=false
+all=true

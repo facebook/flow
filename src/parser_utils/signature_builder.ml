@@ -46,6 +46,8 @@ module Signature = struct
 
   let add_interface env loc interface = add_env env (Entry.interface loc interface)
 
+  let add_enum env loc enum = add_env env (Entry.enum loc enum)
+
   let add_declare_export_declaration env =
     Ast.Statement.DeclareExportDeclaration.(
       function
@@ -68,6 +70,7 @@ module Signature = struct
       | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
         ->
         add_class env loc class_
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> add_enum env loc enum
       | Declaration _ -> assert false
       | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
         add_function_expression env loc function_
@@ -91,6 +94,7 @@ module Signature = struct
       | (loc, DeclareOpaqueType opaque_type) -> add_opaque_type env loc opaque_type
       | (loc, InterfaceDeclaration interface) -> add_interface env loc interface
       | (loc, DeclareInterface interface) -> add_interface env loc interface
+      | (loc, EnumDeclaration enum) -> add_enum env loc enum
       | (_, Block _)
       | (_, DoWhile _)
       | (_, For _)
@@ -108,9 +112,6 @@ module Signature = struct
       | (_, DeclareModule _)
       | (_, DeclareModuleExports _)
       | (_, Empty)
-      | (_, EnumDeclaration _)
-      (* TODO(T44736715) Support enums in signature builder/verifier/etc. *)
-      
       | (_, Expression _)
       | (_, Break _)
       | (_, Continue _)
@@ -246,8 +247,7 @@ module Signature = struct
         let env =
           match (module_kind, module_kind_info) with
           | (CommonJS _, CommonJSInfo _) -> env
-          | (ES { named; _ }, ESInfo named_infos) ->
-            add_export_value_bindings named named_infos env
+          | (ES { named; _ }, ESInfo named_infos) -> add_export_value_bindings named named_infos env
           | _ -> assert false
         in
         add_export_type_bindings type_exports_named type_exports_named_info env
@@ -377,7 +377,7 @@ class type_hoister =
 
     method private update_binding (x, id, expr) =
       this#update_acc (fun env ->
-          match SMap.get x env with
+          match SMap.find_opt x env with
           | None -> env
           | Some u ->
             SMap.add
@@ -563,6 +563,10 @@ class type_hoister =
       this#add_binding (Entry.declare_class loc decl);
       decl
 
+    method! enum_declaration loc (enum : (Loc.t, Loc.t) Ast.Statement.EnumDeclaration.t) =
+      this#add_binding (Entry.enum loc enum);
+      enum
+
     method! type_alias loc (stuff : (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) =
       this#add_binding (Entry.type_alias loc stuff);
       stuff
@@ -579,14 +583,9 @@ class type_hoister =
     method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) = expr
   end
 
-let program program ~module_ref_prefix =
+let program ast ~exports_info ~toplevel_names =
   let env =
     let hoist = new type_hoister in
-    hoist#eval hoist#program program
+    hoist#eval hoist#program ast
   in
-  let { File_sig.toplevel_names; exports_info } =
-    File_sig.program_with_toplevel_names_and_exports_info ~ast:program ~module_ref_prefix
-  in
-  match exports_info with
-  | Ok exports_info -> Ok (Signature.mk env toplevel_names exports_info)
-  | Error e -> Error e
+  Signature.mk env toplevel_names exports_info

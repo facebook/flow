@@ -86,7 +86,7 @@ let add_identifier loc str src =
   let default = None in
   let name =
     Option.value_map src.names ~default ~f:(fun names ->
-        Option.value_map (LocMap.get loc names) ~default ~f:(fun name ->
+        Option.value_map (LocMap.find_opt loc names) ~default ~f:(fun name ->
             if name = str then
               None
             else

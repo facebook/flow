@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module List = Core_list
+module List = Base.List
 open LspProt
 
 (* Each interaction gets a unique id. *)
@@ -177,8 +177,7 @@ let start ~start_state ~trigger =
   let id = internal_state.next_id in
   internal_state.next_id <- internal_state.next_id + 1;
   let interaction = { start_state; trigger } in
-  internal_state.pending_interactions <-
-    IMap.add id interaction internal_state.pending_interactions;
+  internal_state.pending_interactions <- IMap.add id interaction internal_state.pending_interactions;
   id
 
 (* Call this to note that a recheck has started *)
@@ -214,7 +213,7 @@ let log_pushed_errors ~end_state ~errors_reason =
   List.iter triggers ~f:(fun trigger -> log ~ux:PushedErrors ~trigger ~start_state ~end_state)
 
 let log ~end_state ~ux ~id =
-  Option.iter (IMap.get id internal_state.pending_interactions) ~f:(fun interaction ->
+  Option.iter (IMap.find_opt id internal_state.pending_interactions) ~f:(fun interaction ->
       internal_state.pending_interactions <- IMap.remove id internal_state.pending_interactions;
       let { start_state; trigger } = interaction in
       log ~ux ~trigger ~start_state ~end_state)
@@ -222,7 +221,7 @@ let log ~end_state ~ux ~id =
 let rec gc ~get_state oldest_allowed =
   let s = internal_state in
   if s.lowest_pending_id < s.next_id then
-    match IMap.get s.lowest_pending_id s.pending_interactions with
+    match IMap.find_opt s.lowest_pending_id s.pending_interactions with
     | None ->
       s.lowest_pending_id <- s.lowest_pending_id + 1;
       gc ~get_state oldest_allowed
@@ -287,7 +286,6 @@ let trigger_of_lsp_msg =
     | RequestMessage (_, CodeLensResolveRequest _)
     | RequestMessage (_, DocumentCodeLensRequest _)
     (* TODO not sure if this is right, just need to unbreak the build. *)
-    
     | RequestMessage (_, TypeDefinitionRequest _)
     | RequestMessage (_, UnknownRequest _)
     | RequestMessage (_, WorkspaceSymbolRequest _)
@@ -309,7 +307,6 @@ let trigger_of_lsp_msg =
     | ResponseMessage (_, DocumentCodeLensResult _)
     | ResponseMessage (_, TypeCoverageResult _)
     (* TODO not sure if this is right, just need to unbreak the build. *)
-    
     | ResponseMessage (_, TypeDefinitionResult _)
     | ResponseMessage (_, DocumentFormattingResult _)
     | ResponseMessage (_, DocumentRangeFormattingResult _)

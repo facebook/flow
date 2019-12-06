@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include MyMap.S with type key = Loc.t
+include WrappedMap.S with type key = Loc.t

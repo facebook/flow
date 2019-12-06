@@ -37,45 +37,43 @@ let assert_sourcemaps_equal =
 let tests =
   "source"
   >::: [
-         ( "simple_string"
-         >:: fun ctxt ->
-         let s =
-           mk_source ()
-           |> Source.push_loc (mk_loc (1, 0) (1, 3))
-           |> Source.add_string "foo;"
-           |> Source.pop_loc
-         in
-         assert_contents_equal ~ctxt "foo;" s;
-         assert_sourcemaps_equal
-           ~ctxt
-           (Some
-              {|{
+         ( "simple_string" >:: fun ctxt ->
+           let s =
+             mk_source ()
+             |> Source.push_loc (mk_loc (1, 0) (1, 3))
+             |> Source.add_string "foo;"
+             |> Source.pop_loc
+           in
+           assert_contents_equal ~ctxt "foo;" s;
+           assert_sourcemaps_equal
+             ~ctxt
+             (Some
+                {|{
         "version": 3,
         "sources": ["<stdin>"],
         "names": [],
         "mappings": "AAAA"
       }|})
-           s );
-         ( "two_strings"
-         >:: fun ctxt ->
-         let s =
-           mk_source ()
-           |> Source.push_loc (mk_loc (1, 0) (1, 3))
-           |> Source.add_string "foo;"
-           |> Source.pop_loc
-           |> Source.push_loc (mk_loc (1, 4) (1, 7))
-           |> Source.add_string "bar;"
-           |> Source.pop_loc
-         in
-         assert_contents_equal ~ctxt "foo;bar;" s;
-         assert_sourcemaps_equal
-           ~ctxt
-           (Some
-              {|{
+             s );
+         ( "two_strings" >:: fun ctxt ->
+           let s =
+             mk_source ()
+             |> Source.push_loc (mk_loc (1, 0) (1, 3))
+             |> Source.add_string "foo;"
+             |> Source.pop_loc
+             |> Source.push_loc (mk_loc (1, 4) (1, 7))
+             |> Source.add_string "bar;"
+             |> Source.pop_loc
+           in
+           assert_contents_equal ~ctxt "foo;bar;" s;
+           assert_sourcemaps_equal
+             ~ctxt
+             (Some
+                {|{
         "version": 3,
         "sources": ["<stdin>"],
         "names": [],
         "mappings": "AAAA,IAAI"
       }|})
-           s );
+             s );
        ]

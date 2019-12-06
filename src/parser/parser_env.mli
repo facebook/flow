@@ -173,6 +173,8 @@ val enter_function : env -> async:bool -> generator:bool -> env
 
 val is_reserved : string -> bool
 
+val token_is_reserved : Token.t -> bool
+
 val is_future_reserved : string -> bool
 
 val is_strict_reserved : string -> bool

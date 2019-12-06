@@ -29,6 +29,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
 
   exception CannotSpreadError of Error_message.t
 
+  let is_widened_reason_desc r =
+    match desc_of_reason r with
+    | RWidenedObjProp _ -> true
+    | _ -> false
+
   let widen_obj_type cx ?trace ~use_op reason t =
     match t with
     | OpenT (r, id) ->
@@ -84,7 +89,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
   (* When a property is optional due to widening (see possibly_missing_prop), we want to make sure
    * that the reason it is missing persists through interactions with other optional properties.
    *
-   * This function preserves the possibly missing prop reason if it existed on both 
+   * This function preserves the possibly missing prop reason if it existed on both
    * of the optional properties. Otherwise, we have an explicit optional property, which
    * is better to use.
    *)
@@ -173,7 +178,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let resolved_list = resolved_list |> mapM List.rev in
           (* Each of the lists were non-empty, so concatenating them creates a non-empty list. Thus,
            * Nel.of_list_exn is safe *)
-          bind (fun lists -> Ok (Nel.of_list_exn (Core_list.join lists))) resolved_list
+          bind (fun lists -> Ok (Nel.of_list_exn (Base.List.join lists))) resolved_list
         in
         let rec loop (x0 : 'a Nel.t) (xs : 'b list) =
           match xs with
@@ -426,7 +431,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                         UnionRep.make
                           (mk_object cx reason options x0)
                           (mk_object cx reason options x1)
-                          (Core_list.map ~f:(mk_object cx reason options) xs) )
+                          (Base.List.map ~f:(mk_object cx reason options) xs) )
                   | Error e ->
                     add_output cx ~trace e;
                     AnyT.why AnyError reason
@@ -783,10 +788,17 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let widen_type cx trace reason ~use_op t1 t2 =
             match (t1, t2) with
             | (t1, t2) when is_subset (t2, t1) -> (t1, false)
-            | (OpenT _, t2) ->
+            | (OpenT (r1, _), OpenT (r2, _))
+              when is_widened_reason_desc r1 && is_widened_reason_desc r2 ->
+              rec_unify cx trace ~use_op t1 t2;
+              (t1, false)
+            | (OpenT (r, _), t2) when is_widened_reason_desc r ->
               rec_flow_t cx trace ~use_op (t2, t1);
               (t1, false)
             | (t1, t2) ->
+              let reason =
+                replace_desc_new_reason (RWidenedObjProp (desc_of_reason reason)) reason
+              in
               ( Tvar.mk_where cx reason (fun t ->
                     rec_flow_t cx trace ~use_op (t1, t);
                     rec_flow_t cx trace ~use_op (t2, t)),
@@ -953,8 +965,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                               rec_flow
                                 cx
                                 trace
-                                ( filter_optional cx ~trace reason t1,
-                                  CondT (reason, None, t2, tvar) ))
+                                (filter_optional cx ~trace reason t1, CondT (reason, None, t2, tvar)))
                         in
                         Some (Field (None, t, prop_polarity)))
                     config_props
@@ -1088,7 +1099,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           reason
           { Object.reason = r1; props = props1; dict = dict1; flags = flags1 }
           { Object.reason = r2; props = props2; dict = dict2; flags = flags2 } =
-        let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
+        let intersection t1 t2 =
+          if reasonless_compare t1 t2 = 0 then
+            t1
+          else
+            IntersectionT (reason, InterRep.make t1 t2 [])
+        in
         let merge_props (t1, own1) (t2, own2) =
           let (t1, t2, opt) =
             match (t1, t2) with
@@ -1188,7 +1204,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let flags = { frozen = false; exact = false; sealed = Sealed } in
         let (id, dict) =
           let props = Context.find_props cx id in
-          match (SMap.get "$key" props, SMap.get "$value" props) with
+          match (SMap.find_opt "$key" props, SMap.find_opt "$value" props) with
           | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
             when polarity = polarity' ->
             let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
@@ -1252,18 +1268,35 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
           resolved cx trace use_op reason resolve_tool tool tout x
-        (* mixed is treated as {[string]: mixed} except in type spread, where it's treated as
-         * {}. Any JavaScript value may be treated as an object and so this is safe.
+        (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
+         * In principle, we should be able to use it for Rest, but right now
+         * `const {x, ...y} = 3;` tries to get `x` from Number.
+         * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
+         * copying/spreading an object. *)
+        | DefT (_, _, (StrT _ | NumT _ | BoolT _))
+          when match tool with
+               | ObjectWiden _
+               | Spread _ ->
+                 true
+               | _ -> false ->
+          let flags = { frozen = true; sealed = Sealed; exact = true } in
+          let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
+          resolved cx trace use_op reason resolve_tool tool tout x
+        (* mixed is treated as {[string]: mixed} except in type spread and react config checking, where
+         * it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
          *
          * We ought to use {} for everything since it is a more sound representation
-         * of `mixed` as an object.
+         * of `mixed` as an object. The fact that we don't today is technical debt that we should
+         * clean up.
          *)
         | DefT (r, _, MixedT _) as t ->
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x =
             match tool with
             | ObjectWiden _
-            | Spread _ ->
+            | Spread _
+            | ObjectRep
+            | ReactConfig _ ->
               Nel.one { Object.reason; props = SMap.empty; dict = None; flags }
             | _ ->
               Nel.one

@@ -74,7 +74,7 @@ let print_json result ~stdin_file ~pretty ~strip_root =
           JSON_Object
             [
               ("kind", JSON_String "refactor-performed");
-              ("edits", JSON_Array (Core_list.map ~f:json_of_edit refactor_edits));
+              ("edits", JSON_Array (Base.List.map ~f:json_of_edit refactor_edits));
             ]
       in
       print_json_endline ~pretty json))
@@ -94,7 +94,7 @@ let to_string result ~strip_root =
         range_string_of_loc ~strip_root
     in
     let string_of_edit (loc, new_text) = Printf.sprintf "%s: %s" (string_of_loc loc) new_text in
-    String.concat "\n" @@ Core_list.map ~f:string_of_edit edits)
+    String.concat "\n" @@ Base.List.map ~f:string_of_edit edits)
 
 let main base_flags option_values json pretty root strip_root path rename args () =
   let (file, line, column) = parse_args path args in

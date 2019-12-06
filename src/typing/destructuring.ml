@@ -82,7 +82,7 @@ let array_element cx acc i loc =
                           } );
                 }) ))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
@@ -112,7 +112,7 @@ let object_named_property ~has_default cx acc loc x comments =
                   property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
                 }) ))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let default =
     Option.map default (fun default ->
         let d = Default.prop x reason has_default default in
@@ -152,7 +152,7 @@ let object_computed_property cx ~expr acc e =
     Option.map init (fun init ->
         (loc, Ast.Expression.(Member Member.{ _object = init; property = PropertyExpression e })))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
@@ -175,9 +175,7 @@ let object_property
     match key with
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
       let acc = object_named_property ~has_default cx acc loc x comments in
-      ( acc,
-        x :: xs,
-        Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }) )
+      (acc, x :: xs, Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }))
     | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
       let acc = object_named_property ~has_default cx acc loc x None in
       (acc, x :: xs, Property.Literal (loc, lit))

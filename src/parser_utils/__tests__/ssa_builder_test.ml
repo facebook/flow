@@ -266,27 +266,15 @@ let tests =
                  empty
                  |> add
                       (mk_loc (1, 32) (1, 33))
-                      [
-                        mk_write (1, 18) (1, 19);
-                        mk_write (1, 37) (1, 38);
-                        mk_write (1, 65) (1, 66);
-                      ]
+                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 65) (1, 66)]
                  |> add
                       (mk_loc (1, 41) (1, 42))
-                      [
-                        mk_write (1, 18) (1, 19);
-                        mk_write (1, 37) (1, 38);
-                        mk_write (1, 65) (1, 66);
-                      ]
+                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 65) (1, 66)]
                  |> add (mk_loc (1, 52) (1, 53)) [mk_write (1, 37) (1, 38)]
                  |> add (mk_loc (1, 69) (1, 70)) [mk_write (1, 37) (1, 38)]
                  |> add
                       (mk_loc (1, 85) (1, 86))
-                      [
-                        mk_write (1, 18) (1, 19);
-                        mk_write (1, 37) (1, 38);
-                        mk_write (1, 65) (1, 66);
-                      ]);
+                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 65) (1, 66)]);
          "continue_labeled_while"
          >:: mk_ssa_builder_test
                "(function() { var x = 0; L: while (x) { x = 1; continue L; x; x = 2; } return x; })"
@@ -362,11 +350,7 @@ let tests =
                  |> add (mk_loc (1, 94) (1, 95)) [mk_write (1, 62) (1, 63)]
                  |> add
                       (mk_loc (1, 109) (1, 110))
-                      [
-                        mk_write (1, 18) (1, 19);
-                        mk_write (1, 37) (1, 38);
-                        mk_write (1, 90) (1, 91);
-                      ]);
+                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 90) (1, 91)]);
          "JSX"
          >:: mk_ssa_builder_test
                "class Foo {}; <Foo></Foo>; <Foo/>"

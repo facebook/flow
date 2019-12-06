@@ -138,6 +138,7 @@ module Eval (Env : EvalEnv) = struct
       | (_, Empty)
       | (_, Void)
       | (_, Null)
+      | (_, Symbol)
       | (_, Number)
       | (_, BigInt)
       | (_, String)
@@ -274,7 +275,7 @@ module Eval (Env : EvalEnv) = struct
 
   and type_params =
     let type_param tps tparam =
-      Ast.Type.ParameterDeclaration.TypeParam.(
+      Ast.Type.TypeParam.(
         let (_, { name = (_, { Ast.Identifier.name = x; comments = _ }); bound; default; _ }) =
           tparam
         in
@@ -825,6 +826,7 @@ module Verifier (Env : EvalEnv) = struct
       in
       let deps = List.fold_left (Deps.reduce_join (Eval.value_ref tps)) deps mixins in
       List.fold_left (Deps.reduce_join (Eval.implement tps)) deps implements
+    | Kind.EnumDef _ -> Deps.bot
     | Kind.TypeDef { tparams; right } ->
       let (tps, deps) = Eval.type_params SSet.empty tparams in
       Deps.join (deps, Eval.type_ tps right)
@@ -838,8 +840,7 @@ module Verifier (Env : EvalEnv) = struct
       List.fold_left (Deps.reduce_join (Eval.type_ref tps)) deps extends
     | Kind.ImportNamedDef { kind; source; name } ->
       Deps.import_named (Kind.Sort.of_import_kind kind) source name
-    | Kind.ImportStarDef { kind; source } ->
-      Deps.import_star (Kind.Sort.of_import_kind kind) source
+    | Kind.ImportStarDef { kind; source } -> Deps.import_star (Kind.Sort.of_import_kind kind) source
     | Kind.RequireDef { source; name } -> Deps.require ?name source
     | Kind.SketchyToplevelDef -> Deps.top (Error.SketchyToplevelDef loc)
 
@@ -904,6 +905,7 @@ module Verifier (Env : EvalEnv) = struct
       | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
         ->
         eval_class loc class_
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> eval_entry (Entry.enum loc enum)
       | Declaration
           ( _,
             Ast.Statement.ClassDeclaration
@@ -950,8 +952,7 @@ module Verifier (Env : EvalEnv) = struct
                     | Some id -> Deps.value (snd id)
                     | None -> eval_export_default_declaration decl
                   end
-                | (ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt) ->
-                  Deps.value n
+                | (ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt) -> Deps.value n
                 | _ -> assert false ))
           Deps.bot
           named
@@ -1034,13 +1035,13 @@ module Verifier (Env : EvalEnv) = struct
         Deps.bot
     | Dep.DynamicImport loc ->
       begin
-        match LocMap.get loc dynamic_imports with
+        match LocMap.find_opt loc dynamic_imports with
         | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
         | Some source -> Deps.import_star Kind.Sort.Value source
       end
     | Dep.DynamicRequire loc ->
       begin
-        match LocMap.get loc dynamic_requires with
+        match LocMap.find_opt loc dynamic_requires with
         | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
         | Some source -> Deps.require source
       end
@@ -1050,7 +1051,7 @@ module Verifier (Env : EvalEnv) = struct
     | Dep.Local local ->
       let (sort, x) = local in
       begin
-        match SMap.get x env with
+        match SMap.find_opt x env with
         | Some entries ->
           let validate = Kind.validator sort in
           Loc_collections.LocMap.fold

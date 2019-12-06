@@ -87,8 +87,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:82:18
 
-Cannot use `Map` as a type. A name can be used as a type only if it refers to a type definition, an interface
-definition, or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `Map` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    82|  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
                         ^^^

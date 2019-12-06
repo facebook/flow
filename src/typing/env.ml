@@ -92,7 +92,7 @@ let peek_scope () = List.hd !scopes
 let peek_env () = !scopes
 
 let string_of_env cx env =
-  spf "[ %s ]" (String.concat ";\n" (Core_list.map ~f:(Debug_js.string_of_scope cx) env))
+  spf "[ %s ]" (String.concat ";\n" (Base.List.map ~f:(Debug_js.string_of_scope cx) env))
 
 (* return the value of f applied to topmost var scope in a scope list *)
 let rec top_var_scope = function
@@ -126,7 +126,7 @@ let iter_local_scopes f =
   loop !scopes
 
 (* clone the given scope stack (snapshots entry maps) *)
-let clone_env scopes = Core_list.map ~f:Scope.clone scopes
+let clone_env scopes = Base.List.map ~f:Scope.clone scopes
 
 let var_scope_kind () =
   let scope = peek_var_scope () in
@@ -205,7 +205,7 @@ let push_var_scope cx scope =
 let saved_closure_changeset = ref (Some Changeset.empty)
 
 let save_closure_changeset scopes =
-  let ids = Core_list.map ~f:(fun { id; _ } -> id) scopes in
+  let ids = Base.List.map ~f:(fun { id; _ } -> id) scopes in
   let changeset = Changeset.(include_scopes ids (Global.peek ())) in
   saved_closure_changeset := Some changeset
 
@@ -392,7 +392,7 @@ let get_class_entries () =
     | Entry.Class c -> c
     | _ -> assert_false "Internal Error: Non-class binding stored with .class"
   in
-  Core_list.map ~f:to_class_record class_bindings
+  Base.List.map ~f:to_class_record class_bindings
 
 (* Search for the scope which binds the given name, through the
    topmost LexScopes and up to the first VarScope. If the entry
@@ -597,7 +597,7 @@ let promote_to_const_like cx loc =
     let writes =
       ALocSet.fold
         (fun use acc ->
-          match ALocMap.get use values with
+          match ALocMap.find_opt use values with
           | None -> (* use is a write *) acc
           | Some write_locs ->
             (* use is a read *)
@@ -642,8 +642,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
       match (kind, entry) with
       | (Var _, Value ({ Entry.kind = Var _; _ } as v))
       | ( Let _,
-          Value ({ Entry.kind = Let _; value_state = State.Undeclared | State.Declared; _ } as v)
-        )
+          Value ({ Entry.kind = Let _; value_state = State.Undeclared | State.Declared; _ } as v) )
       | ( Const _,
           Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
         ) ->
@@ -700,8 +699,7 @@ let pseudo_init_declared_type cx name loc =
       let (scope, entry) = find_entry cx name loc in
       match entry with
       | Value ({ Entry.kind = Var _; _ } as v)
-      | Value
-          ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
+      | Value ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
         ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let kind = v.Entry.kind in
@@ -980,7 +978,7 @@ let envs_congruent envs =
       let scope = List.hd env in
       scope.id = scope0.id && scope.kind = scope0.kind
     in
-    List.for_all check_scope (List.tl envs) && check_scopes (Core_list.map ~f:List.tl envs)
+    List.for_all check_scope (List.tl envs) && check_scopes (Base.List.map ~f:List.tl envs)
   in
   let envs = ListUtils.phys_uniq envs in
   List.length envs <= 1
@@ -1357,8 +1355,7 @@ let refine_with_preds cx loc preds orig_types =
         let reason = loc |> mk_reason (RBooleanLit b) in
         Flow.flow
           cx
-          ( DefT (reason, bogus_trust (), BoolT (Some b)),
-            UseT (Op (Internal Refinement), orig_type) )
+          (DefT (reason, bogus_trust (), BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
       | SingletonStrP (loc, b, str) ->
         let reason = loc |> mk_reason (RStringLit str) in
         Flow.flow
@@ -1411,7 +1408,7 @@ let refine_with_preds cx loc preds orig_types =
           acc))
     (* for heap refinements, we just add new entries *)
     | _ ->
-      let orig_type = Key_map.find_unsafe key orig_types in
+      let orig_type = Key_map.find key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
       let change = refine_expr key loc refi_type orig_type in
       Changeset.add_refi change acc

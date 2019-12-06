@@ -44,9 +44,7 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
     let%lwt () = workload env in
     Lwt.return (wait_for_cancel, env)
 
-  let catch _ exn =
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
+  let catch _ exn = Exception.reraise exn
 end)
 
 let start_parallelizable_workloads env =
@@ -178,9 +176,7 @@ let rec recheck_single
      * This early estimate is not a very good estimate, since it's missing new dependents and
      * dependencies. However it should be good enough to prevent rechecks continuously restarting as
      * the server gets spammed with autocomplete requests *)
-    let will_be_checked_files =
-      ref (CheckedSet.union env.ServerEnv.checked_files files_to_force)
-    in
+    let will_be_checked_files = ref (CheckedSet.union env.ServerEnv.checked_files files_to_force) in
     let get_forced () = !will_be_checked_files in
     let workload = get_and_clear_recheck_workload ~process_updates ~get_forced in
     let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in

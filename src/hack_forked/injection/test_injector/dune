@@ -1,0 +1,3 @@
+(library
+  (name test_injector_config)
+  (implements injector_config))

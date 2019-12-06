@@ -803,20 +803,20 @@ this.js = {
 this2.js = {
   "result":[
     {
-      "name":"this",
-      "type":"A",
+      "name":"super",
+      "type":"super",
       "func_details":null,
-      "path":"this2.js",
-      "line":3,
-      "endline":3,
-      "start":7,
-      "end":7
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
     },
     {
-      "name":"exports",
-      "type":"{||}",
+      "name":"this",
+      "type":"this",
       "func_details":null,
-      "path":"this2.js",
+      "path":"",
       "line":0,
       "endline":0,
       "start":1,
@@ -831,26 +831,6 @@ this2.js = {
       "endline":3,
       "start":7,
       "end":7
-    },
-    {
-      "name":"this",
-      "type":"A",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"super",
-      "type":"typeof Object.prototype",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
     }
   ]
 }
@@ -927,54 +907,24 @@ typeparams.js = {
 typeparams_function.js = {
   "result":[
     {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
       "name":"test",
       "type":"<T>() => void",
       "func_details":{"return_type":"void","params":[]},
       "path":"typeparams_function.js",
       "line":2,
-      "endline":4,
-      "start":1,
-      "end":1
-    },
-    {
-      "name":"exports",
-      "type":"{||}",
-      "func_details":null,
-      "path":"typeparams_function.js",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"T",
-      "type":"type T",
-      "func_details":null,
-      "path":"typeparams_function.js",
-      "line":2,
       "endline":2,
-      "start":15,
-      "end":15
-    },
-    {
-      "name":"this",
-      "type":"empty",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"super",
-      "type":"typeof Object.prototype",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
+      "start":10,
+      "end":13
     }
   ]
 }
@@ -1322,6 +1272,7 @@ jsx-with-children.js = {
     }
   ]
 }
+jsx-text.js = {"result":[]}
 customfun.js = {
   "result":[
     {
@@ -2314,7 +2265,7 @@ indirect_array.js:5:3 = {
     },
     {
       "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<$NonMaybeType<number>>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
+      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":262,
@@ -2730,7 +2681,7 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<$NonMaybeType<number>>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
+      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":262,
@@ -3439,6 +3390,16 @@ poly_no_args.js = {
 identifier.js = {
   "result":[
     {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
       "name":"flowery",
       "type":"number",
       "func_details":null,
@@ -3510,3 +3471,673 @@ identifier.js = {
     }
   ]
 }
+super.js = {
+  "result":[
+    {
+      "name":"super",
+      "type":"super",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Foo",
+      "type":"class Foo",
+      "func_details":null,
+      "path":"super.js",
+      "line":3,
+      "endline":3,
+      "start":7,
+      "end":9
+    }
+  ]
+}
+this-2.js = {
+  "result":[
+    {
+      "name":"y",
+      "type":"(z: empty) => empty",
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"any",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{
+  "result":[
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"y",
+      "type":"(z: empty) => empty",
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"void",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{
+  "result":[
+    {
+      "name":"z",
+      "type":"empty",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":9,
+      "end":9
+    },
+    {
+      "name":"y",
+      "type":"(z: empty) => any",
+      "func_details":{"return_type":"any","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"void",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{
+  "result":[
+    {
+      "name":"super",
+      "type":"super",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"y",
+      "type":"(z: empty) => empty",
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"void",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    },
+    {
+      "name":"Bar",
+      "type":"class Bar",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":13,
+      "endline":13,
+      "start":7,
+      "end":9
+    }
+  ]
+}
+pattern.js = {"result":[]}
+{
+  "result":[
+    {
+      "name":"foo",
+      "type":"number",
+      "func_details":null,
+      "path":"pattern.js",
+      "line":3,
+      "endline":3,
+      "start":5,
+      "end":7
+    },
+    {
+      "name":"bar",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"pattern.js",
+      "line":9,
+      "endline":9,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{"result":[]}
+normalize-1.js = {
+  "result":[
+    {
+      "name":"b",
+      "type":"T",
+      "func_details":null,
+      "path":"normalize-1.js",
+      "line":3,
+      "endline":3,
+      "start":27,
+      "end":27
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+normalize-2.js = {
+  "result":[
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"foo",
+      "type":"<T>(a: {b: T}) => any",
+      "func_details":{"return_type":"any","params":[{"name":"a","type":"{b: T}"}]},
+      "path":"normalize-2.js",
+      "line":3,
+      "endline":3,
+      "start":10,
+      "end":12
+    },
+    {
+      "name":"c",
+      "type":"T",
+      "func_details":null,
+      "path":"normalize-2.js",
+      "line":4,
+      "endline":4,
+      "start":7,
+      "end":7
+    },
+    {
+      "name":"a",
+      "type":"{b: T}",
+      "func_details":null,
+      "path":"normalize-2.js",
+      "line":3,
+      "endline":3,
+      "start":17,
+      "end":17
+    }
+  ]
+}
+unqualified-type-annotation.js = {
+  "result":[
+    {
+      "name":"Typologies",
+      "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":4,
+      "endline":4,
+      "start":5,
+      "end":14
+    },
+    {
+      "name":"Typography",
+      "type":"class Typewriter",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":25,
+      "endline":25,
+      "start":5,
+      "end":14
+    },
+    {
+      "name":"Typewriter",
+      "type":"class Typewriter",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":24,
+      "endline":24,
+      "start":7,
+      "end":16
+    },
+    {
+      "name":"Types",
+      "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":3,
+      "endline":3,
+      "start":13,
+      "end":17
+    },
+    {
+      "name":"Typesafe",
+      "type":"interface Typesafety",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":7,
+      "endline":7,
+      "start":39,
+      "end":46
+    },
+    {
+      "name":"Typhoon",
+      "type":"type ./type-exports.js = string",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":10,
+      "endline":10,
+      "start":17,
+      "end":23
+    },
+    {
+      "name":"Typnotism",
+      "type":"type Typnotism = number",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":13,
+      "endline":13,
+      "start":15,
+      "end":23
+    },
+    {
+      "name":"Tyrant",
+      "type":"type Tyrant = string",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":15,
+      "endline":15,
+      "start":6,
+      "end":11
+    },
+    {
+      "name":"Tympanic",
+      "type":"type Tympanic = number",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":16,
+      "endline":16,
+      "start":13,
+      "end":20
+    },
+    {
+      "name":"Typeset",
+      "type":"interface Typeset",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":18,
+      "endline":18,
+      "start":11,
+      "end":17
+    },
+    {
+      "name":"Typaram",
+      "type":"Typaram",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    }
+  ]
+}
+qualified-type-annotation.js = {
+  "result":[
+    {
+      "name":"Typesafety",
+      "type":"interface Typesafety",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Typical",
+      "type":"type Typical = {|x: number, y: number|}",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Tyrannosaurus",
+      "type":"class Tyrannosaurus",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    }
+  ]
+}
+qualified-type-annotation-require.js = {
+  "result":[
+    {
+      "name":"Typesafety",
+      "type":"interface Typesafety",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Typical",
+      "type":"type Typical = {|x: number, y: number|}",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Tyrannosaurus",
+      "type":"class Tyrannosaurus",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    }
+  ]
+}
+inherited-class-properties.js = {
+  "result":[
+    {
+      "name":"bar",
+      "type":"\"bar\"",
+      "func_details":null,
+      "path":"inherited-class-properties.js",
+      "line":8,
+      "endline":8,
+      "start":9,
+      "end":13
+    },
+    {
+      "name":"baz",
+      "type":"\"baz\"",
+      "func_details":null,
+      "path":"inherited-class-properties.js",
+      "line":12,
+      "endline":12,
+      "start":9,
+      "end":13
+    },
+    {
+      "name":"foo",
+      "type":"\"oof\"",
+      "func_details":null,
+      "path":"inherited-class-properties.js",
+      "line":13,
+      "endline":13,
+      "start":9,
+      "end":13
+    }
+  ]
+}
+function-added-properties.js = {
+  "result":[
+    {
+      "name":"bar",
+      "type":"string",
+      "func_details":null,
+      "path":"function-added-properties.js",
+      "line":4,
+      "endline":4,
+      "start":1,
+      "end":7
+    },
+    {
+      "name":"baz",
+      "type":"string",
+      "func_details":null,
+      "path":"function-added-properties.js",
+      "line":5,
+      "endline":5,
+      "start":1,
+      "end":17
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+comments.js (line) = {"result":[]}
+comments.js (block) = {"result":[]}
+literal.js (inside string) = {"result":[]}
+literal.js (inside regex) = {"result":[]}
+literal.js (inside template literal) = {"result":[]}
+import_source.js = {"result":[]}

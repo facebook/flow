@@ -376,6 +376,14 @@ References:
                                          ^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- exists.js:18:9
+
+Property `current` is not readable.
+
+   18| if (TDR.current) { }
+               ^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
 
 Cannot call `takesBotFunction` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
@@ -3547,4 +3555,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 257 errors
+Found 258 errors

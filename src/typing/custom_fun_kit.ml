@@ -144,8 +144,7 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
-          )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
       (* React.createElement(component, config, ...children) *)
       | component :: config :: children ->
         rec_flow
@@ -153,9 +152,8 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 (false, config, (children, spread_arg), tout) ) )
+              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+          )
       (* React.createElement() *)
       | _ ->
         (* If we don't have the arguments we need, add an arity error. *)
@@ -167,12 +165,7 @@ module Kit (Flow : Flow_common.S) = struct
         (* Create the expected type for our element with a fresh tvar in the
          * component position. *)
         let expected_element =
-          get_builtin_typeapp
-            cx
-            ~trace
-            (reason_of_t element)
-            "React$Element"
-            [Tvar.mk cx reason_op]
+          get_builtin_typeapp cx ~trace (reason_of_t element) "React$Element" [Tvar.mk cx reason_op]
         in
         (* Flow the element arg to our expected element. *)
         rec_flow_t cx trace (element, expected_element);
@@ -213,8 +206,7 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
-          )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
       (* React.createFactory(component)(config, ...children) *)
       | config :: children ->
         rec_flow
@@ -222,9 +214,8 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 (false, config, (children, spread_arg), tout) ) ))
+              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+          ))
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf

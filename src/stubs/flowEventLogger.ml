@@ -51,8 +51,8 @@ let set_saved_state_filename _ = ()
 
 let set_monitor_options ~file_watcher:_ = ()
 
-let set_server_options
-    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ =
+let set_server_options ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_
+    =
   ()
 
 let status_response ~num_errors:_ = ()
@@ -86,7 +86,8 @@ let recheck
     ~recheck_reasons:_
     ~modified:_
     ~deleted:_
-    ~dependent_files:_
+    ~sig_dependent_files:_
+    ~all_dependent_files:_
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_

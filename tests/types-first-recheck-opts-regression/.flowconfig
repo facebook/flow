@@ -5,3 +5,4 @@
 experimental.types_first=true
 experimental.abstract_locations=true
 experimental.minimal_merge=true
+all=true

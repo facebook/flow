@@ -243,6 +243,7 @@ and 'loc t' =
   | EParseError of 'loc * Parse_error.t
   | EDocblockError of 'loc * docblock_error
   | EImplicitInexactObject of 'loc
+  | EAmbiguousObjectType of 'loc
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of 'loc * string
   | EUntypedImport of 'loc * string
@@ -307,6 +308,50 @@ and 'loc t' =
   | EComputedPropertyWithUnion of {
       computed_property_reason: 'loc virtual_reason;
       union_reason: 'loc virtual_reason;
+    }
+  (* enums *)
+  | EEnumInvalidMemberAccess of {
+      member_name: string option;
+      access_reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EEnumModification of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EEnumMemberDuplicateValue of {
+      loc: 'loc;
+      prev_use_loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EEnumMemberAlreadyChecked of {
+      reason: 'loc virtual_reason;
+      prev_check_reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EEnumAllMembersAlreadyChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EEnumNotAllChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      remaining_member_to_check: string;
+      number_remaining_members_to_check: int;
+    }
+  | EEnumInvalidCheck of {
+      reason: 'loc virtual_reason;
+      enum_name: string;
+      members: SSet.t;
+    }
+  | EEnumExhaustiveCheckOfUnion of {
+      reason: 'loc virtual_reason;
+      union_reason: 'loc virtual_reason;
+    }
+  | EEnumMemberUsedAsType of {
+      reason: 'loc virtual_reason;
+      enum_name: string;
     }
 
 and 'loc exponential_spread_reason_group = {
@@ -467,7 +512,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = Option.map ~f:map_use_op use_op;
         lower = (map_reason lreason, lkind);
         upper = (map_reason ureason, map_upper_kind ukind);
-        branches = Core_list.map ~f:map_branch branches;
+        branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     EIncompatibleDefs
@@ -475,7 +520,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
-        branches = Core_list.map ~f:map_branch branches;
+        branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleProp { use_op; prop; reason_prop; reason_obj; special } ->
     EIncompatibleProp
@@ -510,11 +555,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPropNotFound (prop, (r1, r2), op) ->
     EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
-    EPropNotReadable
-      { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
+    EPropNotReadable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
-    EPropNotWritable
-      { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
+    EPropNotWritable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
   | EBuiltinLookupFailed { reason; name } ->
@@ -554,7 +597,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         reason = map_reason reason;
         reason_op = map_reason reason_op;
-        branches = Core_list.map ~f:map_branch branches;
+        branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleWithExact ((r1, r2), op) ->
     EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op)
@@ -608,7 +651,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason = map_reason reason;
         prev_case = (prev_i, map_reason prev_case_reason);
         case = (i, map_reason case_reason);
-        cases = Core_list.map ~f:map_reason cases;
+        cases = Base.List.map ~f:map_reason cases;
       }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
   | EIdxArity r -> EIdxArity (map_reason r)
@@ -636,7 +679,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
-  | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Core_list.map ~f:map_reason rs)
+  | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
@@ -669,6 +712,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EParseError (loc, p) -> EParseError (f loc, p)
   | EDocblockError (loc, e) -> EDocblockError (f loc, e)
   | EImplicitInexactObject loc -> EImplicitInexactObject (f loc)
+  | EAmbiguousObjectType loc -> EAmbiguousObjectType (f loc)
   | EUntypedTypeImport (loc, s) -> EUntypedTypeImport (f loc, s)
   | EUntypedImport (loc, s) -> EUntypedImport (f loc, s)
   | ENonstrictImport loc -> ENonstrictImport (f loc)
@@ -743,6 +787,45 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         computed_property_reason = map_reason computed_property_reason;
         union_reason = map_reason union_reason;
       }
+  | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+    EEnumInvalidMemberAccess
+      {
+        member_name;
+        access_reason = map_reason access_reason;
+        enum_reason = map_reason enum_reason;
+      }
+  | EEnumModification { loc; enum_reason } ->
+    EEnumModification { loc = f loc; enum_reason = map_reason enum_reason }
+  | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+    EEnumMemberDuplicateValue
+      { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
+  | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+    EEnumMemberAlreadyChecked
+      {
+        reason = map_reason reason;
+        prev_check_reason = map_reason prev_check_reason;
+        enum_reason = map_reason enum_reason;
+        member_name;
+      }
+  | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
+    EEnumAllMembersAlreadyChecked
+      { reason = map_reason reason; enum_reason = map_reason enum_reason }
+  | EEnumNotAllChecked
+      { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+    EEnumNotAllChecked
+      {
+        reason = map_reason reason;
+        enum_reason = map_reason enum_reason;
+        remaining_member_to_check;
+        number_remaining_members_to_check;
+      }
+  | EEnumInvalidCheck { reason; enum_name; members } ->
+    EEnumInvalidCheck { reason = map_reason reason; enum_name; members }
+  | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
+    EEnumExhaustiveCheckOfUnion
+      { reason = map_reason reason; union_reason = map_reason union_reason }
+  | EEnumMemberUsedAsType { reason; enum_name } ->
+    EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -875,6 +958,7 @@ let util_use_op_of_msg nope util = function
   | EParseError (_, _)
   | EDocblockError (_, _)
   | EImplicitInexactObject _
+  | EAmbiguousObjectType _
   | EUntypedTypeImport (_, _)
   | EUntypedImport (_, _)
   | ENonstrictImport _
@@ -904,7 +988,16 @@ let util_use_op_of_msg nope util = function
   | EInexactMayOverwriteIndexer _
   | EExponentialSpread _
   | EComputedPropertyWithMultipleLowerBounds _
-  | EComputedPropertyWithUnion _ ->
+  | EComputedPropertyWithUnion _
+  | EEnumInvalidMemberAccess _
+  | EEnumModification _
+  | EEnumMemberDuplicateValue _
+  | EEnumMemberAlreadyChecked _
+  | EEnumAllMembersAlreadyChecked _
+  | EEnumNotAllChecked _
+  | EEnumInvalidCheck _
+  | EEnumExhaustiveCheckOfUnion _
+  | EEnumMemberUsedAsType _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -954,6 +1047,13 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         existing_lower_bound_reason = _;
       }
   | EComputedPropertyWithUnion { computed_property_reason = reason; union_reason = _ } ->
+    Some (poly_loc_of_reason reason)
+  | EEnumMemberAlreadyChecked { reason; _ }
+  | EEnumAllMembersAlreadyChecked { reason; _ }
+  | EEnumNotAllChecked { reason; _ }
+  | EEnumInvalidCheck { reason; _ }
+  | EEnumExhaustiveCheckOfUnion { reason; _ }
+  | EEnumMemberUsedAsType { reason; _ } ->
     Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -1012,6 +1112,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnusedSuppression loc
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
+  | EAmbiguousObjectType loc
   | EParseError (loc, _)
   | EInvalidLHSInAssignment loc
   | EInvalidTypeof (loc, _)
@@ -1068,6 +1169,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         Some loc))
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
+  | EEnumInvalidMemberAccess { access_reason; _ } -> Some (poly_loc_of_reason access_reason)
+  | EEnumModification { loc; _ } -> Some loc
+  | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EFunctionCallExtraArg _
@@ -1121,6 +1225,7 @@ let kind_of_msg =
     | EInexactSpread _ -> LintError Lints.InexactSpread
     | ESignatureVerification _ -> LintError Lints.SignatureVerificationFailure
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
+    | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | ENonArraySpread _ -> LintError Lints.NonArraySpread
     | EBadExportPosition _
@@ -1174,8 +1279,7 @@ let string_of_internal_error = function
   | PropRefComputedLiteral -> "unexpected literal computed property element type"
   | ShadowReadComputed -> "unexpected shadow read on computed property"
   | ShadowWriteComputed -> "unexpected shadow write on computed property"
-  | RestParameterNotIdentifierPattern ->
-    "unexpected rest parameter, expected an identifier pattern"
+  | RestParameterNotIdentifierPattern -> "unexpected rest parameter, expected an identifier pattern"
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
   | MergeTimeout s -> spf "merge job timed out after %0.2f seconds" s
@@ -1515,7 +1619,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         desc reason_use;
         text " as a type. ";
         text "A name can be used as a type only if it refers to ";
-        text "a type definition, an interface definition, or a class definition. ";
+        text "a type, interface, class, or enum definition. ";
         text "To get the type of a non-class value, use ";
         code "typeof";
         text ".";
@@ -1590,12 +1694,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
-      {
-        loc = loc_of_reason (fst reasons);
-        prop = Some ("#" ^ x);
-        reason_obj = snd reasons;
-        use_op;
-      }
+      { loc = loc_of_reason (fst reasons); prop = Some ("#" ^ x); reason_obj = snd reasons; use_op }
   | EAdditionMixed (reason, use_op) ->
     UseOp
       {
@@ -1701,7 +1800,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
         @ conjunction_concat
             ~conjunction:"or"
-            (Core_list.map
+            (Base.List.map
                ~f:(fun case_r ->
                  let text = "to " ^ string_of_desc (desc_of_reason case_r) in
                  [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
@@ -1834,8 +1933,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     UseOp
       {
         loc = loc_of_reason lower;
-        features =
-          [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
+        features = [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
         use_op;
       }
   | EInternal (_, internal_error) ->
@@ -1850,8 +1948,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Not supported."]
       | ObjectPropertyLiteralNonString -> [text "Non-string literal property keys not supported."]
       | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
-      | ObjectPropertyComputedGetSet ->
-        [text "Computed getters and setters are not yet supported."]
+      | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
       | InvariantSpreadArgument ->
         [text "Unsupported arguments in call to "; code "invariant"; text "."]
       | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
@@ -1906,8 +2003,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EUseArrayLiteral _ ->
-    Normal
-      { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
+    Normal { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
   | EMissingAnnotation (reason, _) ->
     let default = [text "Missing type annotation for "; desc reason; text "."] in
     let features =
@@ -2169,14 +2265,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | EmptyArray _ ->
           [
             text "Cannot determine the element type of an empty array. ";
-            text
-              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
         | EmptyObject _ ->
           [
             text "Cannot determine types of initialized properties of an empty object. ";
-            text
-              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
         | UnexpectedExpression (_, esort) ->
           [
@@ -2184,8 +2278,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               (spf
                  "Cannot determine the type of this %s. "
                  (Flow_ast_utils.ExpressionSort.to_string esort));
-            text
-              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
         | SketchyToplevelDef _ -> [text "Unexpected toplevel definition that needs hoisting:"]
         | UnsupportedPredicateExpression _ ->
@@ -2193,8 +2286,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | TODO (msg, _) -> [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       in
       let features =
-        text "Failed to build a typed interface for this module. "
-        :: text "The exports of this module must be annotated with types. "
+        text "Cannot build a typed interface for this module. "
+        :: text "You should annotate the exports of this module with types. "
         :: features
       in
       Normal { features })
@@ -2261,11 +2354,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EObjectComputedPropertyAccess (_, reason_prop) ->
-    Normal
-      { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
+    Normal { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
   | EObjectComputedPropertyAssign (_, reason_prop) ->
-    Normal
-      { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
+    Normal { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
   | EInvalidLHSInAssignment _ ->
     Normal { features = [text "Invalid left-hand side in assignment expression."] }
   | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
@@ -2350,13 +2441,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | n -> spf "no more than %d arguments are expected by" n
     in
     UseOp
-      {
-        loc = loc_of_reason unused_reason;
-        features = [text msg; text " "; ref def_reason];
-        use_op;
-      }
-  | EUnsupportedSetProto _ ->
-    Normal { features = [text "Mutating this prototype is unsupported."] }
+      { loc = loc_of_reason unused_reason; features = [text msg; text " "; ref def_reason]; use_op }
+  | EUnsupportedSetProto _ -> Normal { features = [text "Mutating this prototype is unsupported."] }
   | EDuplicateModuleProvider { module_name; provider; _ } ->
     let features =
       [
@@ -2416,6 +2502,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "...";
         text " to the end of the list of ";
         text "properties to express an inexact object type.";
+      ]
+    in
+    Normal { features }
+  | EAmbiguousObjectType _ ->
+    let features =
+      [
+        text "Please write this object type as explicitly exact (use ";
+        code "{|";
+        text " and ";
+        code "|}";
+        text " instead of ";
+        code "{";
+        text " and ";
+        code "}";
+        text ") or as explicitly inexact (add ";
+        code "...";
+        text " to the end of the list of properties).";
       ]
     in
     Normal { features }
@@ -2480,8 +2583,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EDeprecatedUtility (_, name) ->
     Normal
       {
-        features =
-          [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
+        features = [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
       }
   | EDynamicExport (reason, reason_exp) ->
     let features =
@@ -2535,6 +2637,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | Lints.SketchyNullNumber -> ("number", "0")
       | Lints.SketchyNullString -> ("string", "an empty string")
       | Lints.SketchyNullMixed -> ("mixed", "false")
+      | Lints.SketchyNullEnumBool -> ("boolean enum", "false at runtime")
+      | Lints.SketchyNullEnumNumber -> ("number enum", "0 at runtime")
+      | Lints.SketchyNullEnumString -> ("string enum", "an empty string at runtime")
     in
     let features =
       [
@@ -2588,9 +2693,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EOptionalChainingMethods _ ->
     Normal
-      {
-        features = [text "Flow does not yet support method or property calls in optional chains."];
-      }
+      { features = [text "Flow does not yet support method or property calls in optional chains."] }
   | EUnnecessaryOptionalChain (_, lhs_reason) ->
     let features =
       [
@@ -2607,9 +2710,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EUnnecessaryInvariant (_, reason) ->
     let features =
       [
-        text "This use of `invariant` is unnecessary because ";
-        ref reason;
-        text " is always truthy.";
+        text "This use of `invariant` is unnecessary because "; ref reason; text " is always truthy.";
       ]
     in
     Normal { features }
@@ -2782,6 +2883,134 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+    let features =
+      [text "Cannot access "; ref access_reason]
+      @
+      match member_name with
+      | Some name -> [text " because "; code name; text " is not a member of "; ref enum_reason]
+      | None ->
+        [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
+    in
+    Normal { features }
+  | EEnumModification { loc; enum_reason } ->
+    let features =
+      [
+        text "Cannot change ";
+        ref (mk_reason (RCustom "member") loc);
+        text " of ";
+        ref enum_reason;
+        text " because enums are frozen.";
+      ]
+    in
+    Normal { features }
+  | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+    let features =
+      [
+        text "Enum member initializers need to be unique, but ";
+        ref (mk_reason (RCustom "this value") loc);
+        text " has already been used for a ";
+        ref (mk_reason (RCustom "previous initializer") prev_use_loc);
+        text " in ";
+        ref enum_reason;
+      ]
+    in
+    Normal { features }
+  | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+    let features =
+      [
+        text "The ";
+        ref reason;
+        text " checks for enum member ";
+        code member_name;
+        text " of ";
+        ref enum_reason;
+        text ", but member ";
+        code member_name;
+        text " was already checked at ";
+        ref prev_check_reason;
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
+    let features =
+      [
+        text "The ";
+        ref reason;
+        text " checks for additional enum members of ";
+        ref enum_reason;
+        text ", but all of its members have already been checked.";
+      ]
+    in
+    Normal { features }
+  | EEnumNotAllChecked
+      { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+    let features =
+      if number_remaining_members_to_check > 1 then
+        [
+          text (string_of_int number_remaining_members_to_check);
+          text " members of ";
+          ref enum_reason;
+          text " have not been checked in ";
+          ref reason;
+          text ". For example, the member ";
+          code remaining_member_to_check;
+          text ".";
+        ]
+      else
+        [
+          text "The member ";
+          code remaining_member_to_check;
+          text " of ";
+          ref enum_reason;
+          text " has not been checked in ";
+          ref reason;
+          text ".";
+        ]
+    in
+    Normal { features }
+  | EEnumInvalidCheck { reason; enum_name; members } ->
+    let example_member =
+      match SSet.choose_opt members with
+      | Some name -> name
+      | None -> "A"
+    in
+    let features =
+      [
+        text "Invalid enum member check at ";
+        ref reason;
+        text ". Check must be in the form ";
+        code (spf "case %s.%s" enum_name example_member);
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
+    let features =
+      [
+        text "Cannot exhaustively check enum at ";
+        ref reason;
+        text " because we are switching on ";
+        ref union_reason;
+        text ", which is a union. ";
+        text "Before you exhaustively check an enum, refine away other members of the union.";
+      ]
+    in
+    Normal { features }
+  | EEnumMemberUsedAsType { reason; enum_name } ->
+    let features =
+      [
+        text "Cannot use ";
+        desc reason;
+        text " as a type. ";
+        text "Enum members are not separate types. ";
+        text "Only the enum itself, ";
+        code enum_name;
+        text ", is a type.";
+      ]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -2799,6 +3028,7 @@ let is_lint_error = function
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
+  | EAmbiguousObjectType _
   | EUninitializedInstanceProperty _
   | ENonArraySpread _ ->
     true

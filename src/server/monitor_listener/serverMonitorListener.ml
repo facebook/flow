@@ -12,6 +12,14 @@ open ServerEnv
 module ListenLoop = LwtLoop.Make (struct
   type acc = genv
 
+  let kill_workers () =
+    (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the
+      * middle of a job this will lead to some log spew. We probably should send SIGTERM to each
+      * worker and set up a signal handler to kill the fork and exit gracefully. Might also want
+      * to use the SharedMem_js.cancel thingy *)
+    Hh_logger.info "Killing the worker processes";
+    WorkerController.killall ()
+
   let handle_message genv = function
     | MonitorProt.Request (request_id, command) ->
       CommandHandler.enqueue_or_handle_ephemeral genv (request_id, command)
@@ -32,8 +40,7 @@ module ListenLoop = LwtLoop.Make (struct
       ServerMonitorListenerState.push_new_env_update (fun env ->
           {
             env with
-            connections =
-              Persistent_connection.remove_client_from_clients env.connections client_id;
+            connections = Persistent_connection.remove_client_from_clients env.connections client_id;
           });
       Lwt.return_unit
     | MonitorProt.FileWatcherNotification (changed_files, metadata) ->
@@ -50,12 +57,7 @@ module ListenLoop = LwtLoop.Make (struct
       ServerMonitorListenerState.push_files_to_recheck ?metadata ~reason changed_files;
       Lwt.return_unit
     | MonitorProt.PleaseDie please_die_reason ->
-      (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the
-       * middle of a job this will lead to some log spew. We probably should send SIGTERM to each
-       * worker and set up a signal handler to kill the fork and exit gracefully. Might also want
-       * to use the SharedMem_js.cancel thingy *)
-      Hh_logger.info "Killing the worker processes";
-      WorkerController.killall ();
+      kill_workers ();
       let msg =
         match please_die_reason with
         | MonitorProt.MonitorExiting (monitor_exit_status, monitor_msg) ->
@@ -68,13 +70,17 @@ module ListenLoop = LwtLoop.Make (struct
 
   let main genv =
     (* read a message from the monitor *)
-    let%lwt message = MonitorRPC.read () in
+    let%lwt message =
+      try%lwt MonitorRPC.read ()
+      with End_of_file ->
+        let () = kill_workers () in
+        let msg = "Connection to monitor closed unexpectedly" in
+        FlowExitStatus.(exit ~msg Killed_by_monitor)
+    in
     let%lwt () = handle_message genv message in
     Lwt.return genv
 
-  external reraise : exn -> 'a = "%reraise"
-
-  let catch _ exn = reraise exn
+  let catch _ exn = Exception.reraise exn
 end)
 
 let listen_for_messages genv = ListenLoop.run genv

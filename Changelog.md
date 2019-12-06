@@ -1,3 +1,82 @@
+### 0.113.0
+Bug fixes:
+* Fixed autocomplete when at the end of file
+* Stopped filtering lints (e.g. `signature-verification-failure`) out when running `flow check-contents`
+
+Parser:
+* Added support for `export default class implements Foo {}` [[example]](https://flow.org/try/#0JYOwLgpgTgZghgYwgAgJIDED2nkG8C+AUIRAB4AOmUYyAJhPAK4A2NCzcAzp8sALblmEPhHA8M2PESA)
+* Added support for type parameters in anonymous class expressions [[example]](https://flow.org/try/#0BQYwNghgzlAEA8ANAfLA3gXwJQG4g) (thanks @nicolo-ribaudo)
+
+Library definitions:
+* Fixed type of `navigator.mediaDevices.getUserMedia` (thanks @thecotne)
+* Added missing `InputEvent` to `removeEventListener`
+* Updated type of `ServiceWorkerContainer.getRegistration`
+
+Misc:
+* Added `module.system.node.main_field` option (see #8128 for more details)
+
+### 0.112.0
+
+Likely to cause new Flow errors:
+* JSX expressions now use the new spread semantics added in v0.111.0
+* Attempting to write to or update a read-only property using operator assignment is now a type error
+
+New Features:
+* New `ambiguous-object-type` lint warning against use of `{}` object types (prefer `{||}` or `{...}` instead, even when `exact-by-default` is enabled).
+* Improved support for optional chaining
+
+Notable bug fixes:
+* Malformed type annotations no longer trigger the `unclear-type` lint error
+* Builtin classes can no longer be extended
+
+Misc:
+* Improved performance for utility types and refinements in unions
+* Various improvements to autocomplete and get-def IDE services
+* Add `useDeferredValue` and `useTransition` to React library definitions
+* Add `bytesWritten` funciton to library definition (thanks @farzonl)
+
+### 0.111.3
+
+Notable bug fixes:
+* 0.111.2 did not include the commit that bumped the Flow version inside of Flow. (@jbrown215 was a clown)
+
+### 0.111.2
+
+Notable bug fixes:
+* Spread performance improvements that can prevent timeouts in extreme cases.
+
+### 0.111.1
+
+New features:
+* Add `module.system.node.root_relative_dirname` to allow you to configure where root relative paths resolve to
+
+Notable bug fixes:
+* Fixed the regex generator that handles the <VERSION> magic string in Flow suppression comments
+* Allow spreads of bools, strings, and numbers to support common React Native patterns
+
+### 0.111.0
+
+Likely to cause new Flow errors:
+
+* Fixes to object spread. See https://medium.com/flow-type/spreads-common-errors-fixes-9701012e9d58
+
+New features:
+* Introduced an experimental flag (`experimental.minimal_merge`) that speeds up rechecks when the experimental types-first mode is in use. This flag will be turned on by default and then removed in future releases.
+* Turned on `experimental.allow_skip_direct_dependents` by default. The flag will be removed next release. This flag speeds up rechecks when the experimental types-first mode is in use.
+
+Notable bug fixes:
+* Fixed a bug where the ocaml representation of union types caused crashes in rare scenarios
+* Fixed a bug in node module resolution which allowed `module.system.node.resolve_dirname=.`. For those who relied on this bug to import modules using root-relative paths, you can now use `module.system.node.allow_root_relative=true`. See [#8156](https://github.com/facebook/flow/issues/8156) for more details.
+
+Misc:
+* Add getElementById to DocumentFragment
+* Add missing methods to Blob (thanks @lyleunderwood!)
+* Allow clients of `flow status`, `flow check`, etc. to choose character offset style
+* Support length refinement on tuples (thanks @ilya-bobyr)
+
+Parser:
+* Allow => in objects in return types of arrow functions
+
 ### 0.110.1
 
 Notable bug fixes:

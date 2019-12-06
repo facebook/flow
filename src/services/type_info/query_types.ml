@@ -40,7 +40,7 @@ type result =
   | Success of Loc.t * Ty.t
 
 let concretize_loc_pairs pair_list =
-  Core_list.map ~f:(fun (loc, x) -> (ALoc.to_loc_exn loc, x)) pair_list
+  Base.List.map ~f:(fun (loc, x) -> (ALoc.to_loc_exn loc, x)) pair_list
 
 let sort_loc_pairs pair_list = List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
@@ -101,7 +101,7 @@ let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig t
     | (l, Ok t) -> Some (l, printer t)
     | _ -> None
   in
-  Core_list.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
+  Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
 let suggest_types cx file_sig typed_ast loc =
   let options =

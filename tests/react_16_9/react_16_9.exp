@@ -23,13 +23,13 @@ Cannot create `React.Profiler` element because:
                    ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:392:56
+   <BUILTINS>/react.js:402:56
                                                                v-
-   392|   declare export var Profiler: React$AbstractComponent<{|
-   393|     children?: React$Node,
-   394|     id: string,
-   395|     onRender: ProfilerOnRenderFnType,
-   396|   |}, void>;
+   402|   declare export var Profiler: React$AbstractComponent<{|
+   403|     children?: React$Node,
+   404|     id: string,
+   405|     onRender: ProfilerOnRenderFnType,
+   406|   |}, void>;
           -^ [2]
 
 

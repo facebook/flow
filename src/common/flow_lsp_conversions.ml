@@ -43,6 +43,7 @@ let flow_completion_to_lsp
     Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
+      let insert_text = Option.value item.res_insert_text ~default:item.res_name in
       let trunc n s =
         if String.length s < n then
           s
@@ -51,12 +52,12 @@ let flow_completion_to_lsp
       in
       let trunc80 s = trunc 80 s in
       let flow_params_to_string params =
-        let params = Core_list.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
+        let params = Base.List.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
         "(" ^ String.concat ", " params ^ ")"
       in
       let flow_params_to_lsp_snippet name params =
         let params =
-          Core_list.mapi
+          Base.List.mapi
             ~f:(fun i p -> "${" ^ string_of_int (i + 1) ^ ":" ^ p.param_name ^ "}")
             params
         in
@@ -65,9 +66,16 @@ let flow_completion_to_lsp
       let text_edit loc newText : Lsp.TextEdit.t =
         { Lsp.TextEdit.range = loc_to_lsp_range loc; Lsp.TextEdit.newText }
       in
-      let func_snippet item func_details =
-        let newText = flow_params_to_lsp_snippet item.res_name func_details.param_tys in
+      let func_snippet func_details =
+        let newText = flow_params_to_lsp_snippet insert_text func_details.param_tys in
         text_edit item.res_loc newText
+      in
+      let plaintext_text_edits =
+        lazy
+          ( if item.res_name <> insert_text then
+            [text_edit item.res_loc insert_text]
+          else
+            [] )
       in
       let (itemType, inlineDetail, detail, insertTextFormat, textEdits) =
         match item.func_details with
@@ -78,8 +86,8 @@ let flow_completion_to_lsp
           let detail = Some (trunc80 ty) in
           let (insertTextFormat, textEdits) =
             match is_snippet_supported with
-            | true -> (Some SnippetFormat, [func_snippet item func_details])
-            | false -> (Some PlainText, [])
+            | true -> (Some SnippetFormat, [func_snippet func_details])
+            | false -> (Some PlainText, Lazy.force plaintext_text_edits)
           in
           (itemType, inlineDetail, detail, insertTextFormat, textEdits)
         | None ->
@@ -87,8 +95,7 @@ let flow_completion_to_lsp
           let (_ty_loc, ty) = item.res_ty in
           let inlineDetail = Some (trunc80 ty) in
           let detail = inlineDetail in
-          let textEdits = [] in
-          (itemType, inlineDetail, detail, Some PlainText, textEdits)
+          (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
       in
       {
         label = item.res_name;
@@ -117,7 +124,8 @@ let file_key_to_uri (file_key_opt : File_key.t option) : (string, string) result
 
 let loc_to_lsp (loc : Loc.t) : (Lsp.Location.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
-  file_key_to_uri loc.Loc.source >>| (fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc })
+  file_key_to_uri loc.Loc.source >>| fun uri ->
+  { Lsp.Location.uri = Lsp.uri_of_string uri; range = loc_to_lsp_range loc }
 
 let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location.t =
   let uri =
@@ -125,7 +133,7 @@ let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location
     | Ok uri -> uri
     | Error _ -> default_uri
   in
-  { Lsp.Location.uri; range = loc_to_lsp_range loc }
+  { Lsp.Location.uri = Lsp.uri_of_string uri; range = loc_to_lsp_range loc }
 
 let flow_edit_to_textedit (edit : Loc.t * string) : Lsp.TextEdit.t =
   let (loc, text) = edit in
@@ -198,12 +206,8 @@ module DocumentSymbols = struct
         ast_name ~uri ~containerName ~acc ~loc ~name ~kind)
 
   let ast_key
-      ~uri
-      ~containerName
-      ~acc
-      ~loc
-      ~(key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key)
-      ~kind =
+      ~uri ~containerName ~acc ~loc ~(key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) ~kind
+      =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_key key) ~kind
 
   let ast_id ~uri ~containerName ~acc ~loc ~(id : (Loc.t, Loc.t) Ast.Identifier.t) ~kind =
@@ -242,17 +246,11 @@ module DocumentSymbols = struct
       ~(class_ : (Loc.t, Loc.t) Ast.Class.t) : Lsp.SymbolInformation.t list =
     Ast.Class.(
       let acc =
-        ast_id_opt
-          ~uri
-          ~containerName
-          ~acc
-          ~loc
-          ~id_opt:class_.id
-          ~kind:Lsp.SymbolInformation.Class
+        ast_id_opt ~uri ~containerName ~acc ~loc ~id_opt:class_.id ~kind:Lsp.SymbolInformation.Class
       in
       let containerName = name_of_id_opt class_.id in
       let (_, body) = class_.body in
-      Core_list.fold body.Body.body ~init:acc ~f:(ast_class_member ~uri ~containerName))
+      Base.List.fold body.Body.body ~init:acc ~f:(ast_class_member ~uri ~containerName))
 
   let ast_type_object_property
       ~(uri : Lsp.documentUri)
@@ -275,7 +273,7 @@ module DocumentSymbols = struct
       ~(acc : Lsp.SymbolInformation.t list)
       ~(object_ : (Loc.t, Loc.t) Ast.Type.Object.t) : Lsp.SymbolInformation.t list =
     Ast.Type.Object.(
-      Core_list.fold object_.properties ~init:acc ~f:(ast_type_object_property ~uri ~containerName))
+      Base.List.fold object_.properties ~init:acc ~f:(ast_type_object_property ~uri ~containerName))
 
   let ast_type
       ~(uri : Lsp.documentUri)
@@ -371,7 +369,7 @@ module DocumentSymbols = struct
         let ast_declarator acc (loc, declarator) =
           ast_pattern acc loc declarator.VariableDeclaration.Declarator.id
         in
-        Core_list.fold declarations ~init:acc ~f:ast_declarator
+        Base.List.fold declarations ~init:acc ~f:ast_declarator
       | (loc, DeclareClass { DeclareClass.id; body = (_, object_); _ }) ->
         let acc = ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Class in
         ast_type_object ~uri ~containerName:(Some (name_of_id id)) ~acc ~object_
@@ -382,7 +380,7 @@ module DocumentSymbols = struct
             { DeclareModule.id = DeclareModule.Identifier id; body = (_, { Block.body }); _ } ) ->
         let acc = ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Module in
         let containerName = Some (name_of_id id) in
-        Core_list.fold body ~init:acc ~f:(ast_statement ~uri ~containerName)
+        Base.List.fold body ~init:acc ~f:(ast_statement ~uri ~containerName)
       | (loc, DeclareVariable { DeclareVariable.id; _ }) ->
         ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Variable
       | (loc, DeclareOpaqueType { OpaqueType.id; _ }) ->
@@ -396,4 +394,4 @@ end
 let flow_ast_to_lsp_symbols ~(uri : Lsp.documentUri) (program : (Loc.t, Loc.t) Ast.program) :
     Lsp.SymbolInformation.t list =
   let (_loc, statements, _comments) = program in
-  Core_list.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)
+  Base.List.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)

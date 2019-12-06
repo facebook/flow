@@ -24,7 +24,7 @@ module type S = sig
 end
 
 module Make (Key : Map.OrderedType) : S with type key = Key.t = struct
-  module Map = MyMap.Make (Key)
+  module Map = WrappedMap.Make (Key)
 
   type t = Polarity.t Map.t
 
@@ -33,7 +33,7 @@ module Make (Key : Map.OrderedType) : S with type key = Key.t = struct
   let empty = Map.empty
 
   let add id p x =
-    match Map.get id x with
+    match Map.find_opt id x with
     | None -> Some (p, Map.add id p x)
     | Some p' ->
       (match (p, p') with
@@ -44,10 +44,10 @@ module Make (Key : Map.OrderedType) : S with type key = Key.t = struct
       | (Neutral, Positive) -> Some (Negative, Map.add id p x)
       | _ -> None)
 
-  let get = Map.get
+  let get = Map.find_opt
 
   let mem id p x =
-    match Map.get id x with
+    match Map.find_opt id x with
     | None -> false
     | Some p' -> Polarity.compat (p', p)
 

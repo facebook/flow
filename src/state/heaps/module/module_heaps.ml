@@ -209,8 +209,7 @@ end = struct
     ResolvedRequiresHeap.revive_batch files
 
   let create transaction oldified_files =
-    if
-      not (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
+    if not (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
     then
       failwith "Multiple Resolved_requires_mutator's operating on the same files";
     active_files := Utils_js.FilenameSet.union oldified_files !active_files;
@@ -321,16 +320,14 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
   let get_file_unsafe ~reader ~audit m =
     match get_file ~reader ~audit m with
     | Some file -> file
-    | None ->
-      failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
         match ResolvedRequiresHeap.get f with
         | Some resolved_requires -> resolved_requires
         | None ->
-          failwith
-            (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
+          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
 
   let get_info ~reader:_ = Expensive.wrap InfoHeap.get
 
@@ -377,8 +374,7 @@ module Reader : READER with type reader = State_reader.t = struct
   let get_file_unsafe ~reader ~audit m =
     match get_file ~reader ~audit m with
     | Some file -> file
-    | None ->
-      failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -391,8 +387,7 @@ module Reader : READER with type reader = State_reader.t = struct
         match resolved_requires with
         | Some resolved_requires -> resolved_requires
         | None ->
-          failwith
-            (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
+          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
 
   let get_info ~reader:_ ~audit f =
     if should_use_old_infoheap f then

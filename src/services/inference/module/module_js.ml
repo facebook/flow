@@ -36,7 +36,7 @@ let choose_provider_and_warn_about_duplicates =
         in
         FilenameMap.add
           f
-          (match FilenameMap.get f acc with
+          (match FilenameMap.find_opt f acc with
           | Some errset -> w :: errset
           | None -> [w])
           acc)
@@ -97,8 +97,8 @@ let add_package filename = function
   | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
   | Error _ -> Module_heaps.Package_heap_mutator.add_error filename
 
-let package_incompatible ~reader filename ast =
-  let new_package = Package_json.parse ast in
+let package_incompatible ~options ~reader filename ast =
+  let new_package = Package_json.parse ~options ast in
   let old_package = Module_heaps.Reader.get_package ~reader filename in
   match (old_package, new_package) with
   | (None, Ok _) -> true (* didn't exist before, found a new one *)
@@ -125,7 +125,7 @@ module type MODULE_SYSTEM = sig
   val imported_module :
     options:Options.t ->
     reader:Abstract_state_reader.t ->
-    SSet.t ->
+    SSet.t SMap.t ->
     File_key.t ->
     ALoc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
@@ -186,7 +186,7 @@ and file_exists path =
     Sys.file_exists path
   else
     let files =
-      match SMap.get dir !files_in_dir with
+      match SMap.find_opt dir !files_in_dir with
       | Some files -> files
       | None ->
         let files =
@@ -237,7 +237,7 @@ module Node = struct
   let path_if_exists_with_file_exts ~file_options resolution_acc path file_exts =
     lazy_seq
       ( file_exts
-      |> Core_list.map ~f:(fun ext ->
+      |> Base.List.map ~f:(fun ext ->
              lazy (path_if_exists ~file_options resolution_acc (path ^ ext))) )
 
   let parse_main
@@ -285,8 +285,7 @@ module Node = struct
           [
             lazy (path_if_exists ~file_options resolution_acc path);
             lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
-            lazy
-              (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
+            lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
           ]
 
   let resolve_relative ~options ~reader ((loc : ALoc.t), _) ?resolution_acc root_path rel_path =
@@ -321,20 +320,23 @@ module Node = struct
     lazy_seq
       [
         lazy
-          ( if SSet.mem dir node_modules_containers then
+          (match SMap.find_opt dir node_modules_containers with
+          | Some existing_node_modules_dirs ->
             lazy_seq
               ( Files.node_resolver_dirnames file_options
-              |> Core_list.map ~f:(fun dirname ->
+              |> Base.List.map ~f:(fun dirname ->
                      lazy
-                       (resolve_relative
-                          ~options
-                          ~reader
-                          loc
-                          ?resolution_acc
-                          dir
-                          (spf "%s%s%s" dirname Filename.dir_sep r))) )
-          else
-            None );
+                       ( if SSet.mem dirname existing_node_modules_dirs then
+                         resolve_relative
+                           ~options
+                           ~reader
+                           loc
+                           ?resolution_acc
+                           dir
+                           (spf "%s%s%s" dirname Filename.dir_sep r)
+                       else
+                         None )) )
+          | None -> None);
         lazy
           (let parent_dir = Filename.dirname dir in
            if dir = parent_dir then
@@ -359,26 +361,47 @@ module Node = struct
   let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
+    let root_str = Options.root options |> Path.to_string in
     if explicitly_relative import_str || absolute import_str then
       resolve_relative ~options ~reader loc ?resolution_acc dir import_str
     else
-      node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
+      lazy_seq
+        [
+          lazy
+            ( if Options.node_resolver_allow_root_relative options then
+              lazy_seq
+                ( Options.node_resolver_root_relative_dirnames options
+                |> Base.List.map ~f:(fun root_relative_dirname ->
+                       lazy
+                         (let root_str =
+                            if root_relative_dirname = "" then
+                              root_str
+                            else
+                              Filename.concat root_str root_relative_dirname
+                          in
+                          resolve_relative ~options ~reader loc ?resolution_acc root_str import_str))
+                )
+            else
+              None );
+          lazy
+            (node_module
+               ~options
+               ~reader
+               node_modules_containers
+               f
+               loc
+               resolution_acc
+               dir
+               import_str);
+        ]
 
-  let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str
-      =
+  let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
         let resolved =
-          resolve_import
-            ~options
-            ~reader
-            node_modules_containers
-            file
-            loc
-            ?resolution_acc
-            candidate
+          resolve_import ~options ~reader node_modules_containers file loc ?resolution_acc candidate
         in
         (match resolved with
         | None -> choose_candidate candidates
@@ -437,8 +460,7 @@ module Haste : MODULE_SYSTEM = struct
         (Options.haste_paths_blacklist options)
     in
     fun options name ->
-      matched_haste_paths_whitelist options name
-      && not (matched_haste_paths_blacklist options name)
+      matched_haste_paths_whitelist options name && not (matched_haste_paths_blacklist options name)
 
   let haste_name =
     let reduce_name name (regexp, template) = Str.global_replace regexp template name in
@@ -451,9 +473,7 @@ module Haste : MODULE_SYSTEM = struct
         Modulename.String (short_module_name_of file)
       else if Options.haste_use_name_reducers options then
         (* Standardize \ to / in path for Windows *)
-        let normalized_file_name =
-          Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
-        in
+        let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
         if is_haste_file options normalized_file_name then
           Modulename.String (haste_name options normalized_file_name)
         else
@@ -593,7 +613,7 @@ let find_resolved_module ~reader ~audit file r =
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit file
   in
-  SMap.find_unsafe r resolved_modules
+  SMap.find r resolved_modules
 
 let checked_file ~reader ~audit f =
   let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
@@ -712,7 +732,7 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           let errmap =
             FilenameSet.fold
               (fun f acc ->
-                match FilenameMap.get f acc with
+                match FilenameMap.find_opt f acc with
                 | Some _ -> acc
                 | None -> FilenameMap.add f [] acc)
               ps
@@ -869,9 +889,7 @@ let calc_old_modules =
     old_modules
   in
   fun workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted ->
-    let%lwt old_file_module_assoc =
-      calc_modules_helper ~reader workers new_or_changed_or_deleted
-    in
+    let%lwt old_file_module_assoc = calc_modules_helper ~reader workers new_or_changed_or_deleted in
     Lwt.return (calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc)
 
 module IntroduceFiles : sig

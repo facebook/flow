@@ -6,6 +6,7 @@
     flow_monitor_logger
     flow_server_protocol
     lwt.unix
+    utils_core
   )
   (preprocess (pps lwt_ppx))
 )

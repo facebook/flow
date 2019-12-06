@@ -103,7 +103,7 @@ struct
 
     let one loc = Loc loc
 
-    let all locs = join (Core_list.map ~f:(fun loc -> Loc loc) locs)
+    let all locs = join (Base.List.map ~f:(fun loc -> Loc loc) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
        unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -146,7 +146,7 @@ struct
     (* Simplification converts a Val.t to a list of locations. *)
     let simplify t =
       let vals = normalize t in
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Uninitialized -> Ssa_api.Uninitialized
           | Loc loc -> Ssa_api.Write loc
@@ -276,10 +276,7 @@ struct
       method assert_ssa_env (env0 : Env.t) : unit =
         let env0 = SMap.values env0 in
         let ssa_env = SMap.values ssa_env in
-        List.iter2
-          (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref)
-          ssa_env
-          env0
+        List.iter2 (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref) ssa_env env0
 
       method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty) ssa_env
 
@@ -322,8 +319,7 @@ struct
         this#resolve_havocs bindings;
         ssa_env <- old_ssa_env
 
-      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
-          =
+      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
         fun ?lexical loc bindings visit node ->
           let saved_state = this#push_ssa_env bindings in
           this#run
@@ -427,7 +423,7 @@ struct
         ignore kind;
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
         begin
-          match SMap.get x ssa_env with
+          match SMap.find_opt x ssa_env with
           | Some { val_ref; havoc } ->
             val_ref := Val.one loc;
             Havoc.(havoc.locs <- loc :: havoc.locs)
@@ -437,7 +433,7 @@ struct
 
       (* read *)
       method any_identifier (loc : L.t) (x : string) =
-        match SMap.get x ssa_env with
+        match SMap.find_opt x ssa_env with
         | Some { val_ref; _ } -> values <- L.LMap.add loc !val_ref values
         | None -> ()
 

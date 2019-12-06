@@ -18,8 +18,8 @@ let rec pattern loc ?annot_path ?init_path (p : (Loc.t, Loc.t) Ast.Pattern.t) =
         ( name,
           ( loc,
             Kind.VariableDef
-              { id = name; annot = Kind.Annot_path.mk_annot ?annot_path annot; init = init_path }
-          ) );
+              { id = name; annot = Kind.Annot_path.mk_annot ?annot_path annot; init = init_path } )
+        );
       ]
     | (_, Object { Object.properties; annot }) ->
       Object.(
@@ -87,6 +87,11 @@ let class_ loc class_ =
       | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
     in
     (Option.value_exn id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements })))
+
+let enum loc enum =
+  let open Ast.Statement.EnumDeclaration in
+  let { id; body } = enum in
+  (id, (loc, Kind.EnumDef { body }))
 
 let declare_variable loc declare_variable =
   Ast.Statement.DeclareVariable.(

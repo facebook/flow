@@ -8,7 +8,7 @@
 open CommandUtils
 open Lsp
 open Lsp_fmt
-module List = Core_list
+module List = Base.List
 
 (************************************************************************)
 (** Protocol orchestration & helpers                                   **)
@@ -63,7 +63,7 @@ module WrappedKey = struct
       IdKey.compare x.message_id y.message_id
 end
 
-module WrappedMap = MyMap.Make (WrappedKey)
+module WrappedMap = WrappedMap.Make (WrappedKey)
 
 type server_conn = {
   ic: Timeout.in_channel;
@@ -194,8 +194,8 @@ let get_open_files (state : state) : open_file_info SMap.t option =
   | Disconnected denv -> Some denv.d_ienv.i_open_files
   | _ -> None
 
-let update_open_file (uri : string) (open_file_info : open_file_info option) (state : state) :
-    state =
+let update_open_file (uri : string) (open_file_info : open_file_info option) (state : state) : state
+    =
   let update_ienv ienv =
     match open_file_info with
     | Some open_file_info ->
@@ -335,7 +335,7 @@ let get_next_event
       in
       if fds = [] then
         Lwt.return Tick
-      else if List.mem fds server_fd then
+      else if List.mem ~equal:( = ) fds server_fd then
         Lwt.return (get_next_event_from_server server_fd)
       else
         let%lwt event = get_next_event_from_client state client parser in
@@ -454,8 +454,8 @@ let show_status
             i_outstanding_local_handlers;
           })))
 
-let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata)
-    : unit =
+let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata) :
+    unit =
   let _bytesWritten =
     Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
   in
@@ -538,8 +538,7 @@ let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_en
   let (message, shortMessage, progress, total) =
     match (reason, env.d_server_status) with
     | (CommandConnectSimple.Server_missing, _) -> ("Flow: Server starting", None, None, None)
-    | (CommandConnectSimple.Server_socket_missing, _) ->
-      ("Flow: Server starting?", None, None, None)
+    | (CommandConnectSimple.Server_socket_missing, _) -> ("Flow: Server starting?", None, None, None)
     | (CommandConnectSimple.(Build_id_mismatch Server_exited), _) ->
       ("Flow: Server was wrong version and exited", None, None, None)
     | (CommandConnectSimple.(Build_id_mismatch (Client_should_error _)), _) ->
@@ -660,20 +659,19 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
     match (get_open_files state, c) with
     | (_, NotificationMessage (DidOpenNotification params)) ->
       let o_open_doc = params.DidOpen.textDocument in
-      let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
+      let uri = params.DidOpen.textDocument.TextDocumentItem.uri |> Lsp.string_of_uri in
       let state =
         update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = false }) state
       in
       (state, Some uri)
     | (_, NotificationMessage (DidCloseNotification params)) ->
-      let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
-      let state =
-        state |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri)
-      in
+      let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let state = state |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri) in
       (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      let { o_open_doc; _ } = SMap.find uri open_files in
+      let uri_as_string = Lsp.string_of_uri uri in
+      let { o_open_doc; _ } = SMap.find uri_as_string open_files in
       let text = o_open_doc.TextDocumentItem.text in
       let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
       let o_open_doc =
@@ -685,7 +683,7 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
         }
       in
       let state =
-        update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = true }) state
+        update_open_file uri_as_string (Some { o_open_doc; o_ast = None; o_unsaved = true }) state
       in
       (* update errors... we don't need to send updated squiggle locations *)
       (* right now ourselves, since all editors take care of that; but if ever we *)
@@ -703,9 +701,9 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
           state |> update_errors (LspErrors.update_errors_due_to_change_and_send to_stdout params)
         | _ -> state
       in
-      (state, Some uri)
+      (state, Some uri_as_string)
     | (Some open_files, NotificationMessage (DidSaveNotification params)) ->
-      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri in
+      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
       let open_file = SMap.find uri open_files in
       let state = update_open_file uri (Some { open_file with o_unsaved = false }) state in
       (state, Some uri)
@@ -765,8 +763,8 @@ let dismiss_tracks (state : state) : state =
     let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
     to_stdout json
   in
-  let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request)
-      : unit =
+  let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request) :
+      unit =
     if server_id = wrapped.server_id then
       let id = encode_wrapped wrapped in
       let notification = CancelRequestNotification { CancelRequest.id } in
@@ -814,7 +812,7 @@ let error_to_lsp
     { Lsp.PublishDiagnostics.relatedLocation; relatedMessage }
   in
   let relatedInformation = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp in
-  ( uri,
+  ( Lsp.string_of_uri uri,
     {
       Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
       severity;
@@ -894,7 +892,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         None )
   in
   let open_files = get_open_files state in
-  let existing_open_file_info = Option.bind open_files (SMap.get uri) in
+  let existing_open_file_info = Option.bind open_files (SMap.find_opt uri) in
   match existing_open_file_info with
   | Some { o_ast = Some o_ast; _ } ->
     (* We've already parsed this file since it last changed. No need to parse again *)
@@ -908,7 +906,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
     (state, o_ast)
   | None ->
     (* This is an unopened file, so we won't cache the results and won't return the errors *)
-    let fn = Lsp_helpers.lsp_uri_to_path uri in
+    let fn = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
     let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
     let file = File_input.FileName fn in
     let (open_ast, _) = parse file in
@@ -921,8 +919,7 @@ let show_recheck_progress (cenv : connected_env) : state =
       let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
       let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:true server_status in
       (MessageType.WarningMessage, message, shortMessage, progress, total)
-    | (true, _, _) ->
-      (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
+    | (true, _, _) -> (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
     | (false, _, Some { ServerProt.Response.lazy_mode = mode; checked_files; total_files })
       when checked_files < total_files && mode <> Options.NON_LAZY_MODE ->
       let message =
@@ -939,11 +936,13 @@ let show_recheck_progress (cenv : connected_env) : state =
   Connected
     { cenv with c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv }
 
-let do_documentSymbol
-    flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params) : state =
+let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params)
+    : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
-  let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  let (state, (ast, _live_parse_errors)) =
+    parse_and_cache flowconfig_name state (Lsp.string_of_uri uri)
+  in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
   to_stdout json;
@@ -981,7 +980,7 @@ module RagePrint = struct
   let string_of_open_file { o_open_doc; o_ast; o_unsaved } : string =
     Printf.sprintf
       "(uri=%s version=%d text=[%d bytes] ast=[%s] unsaved=%b)"
-      o_open_doc.TextDocumentItem.uri
+      (Lsp.string_of_uri o_open_doc.TextDocumentItem.uri)
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
       (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
@@ -1195,7 +1194,7 @@ let do_rage flowconfig_name (state : state) : Rage.result =
             let pids =
               PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir ienv.i_root)
             in
-            Core_list.fold pids ~init:items ~f:add_pid
+            Base.List.fold pids ~init:items ~f:add_pid
           with e ->
             let e = Exception.wrap e in
             add_string items (Printf.sprintf "Failed to get PIDs: %s" (Exception.to_string e))
@@ -1203,9 +1202,7 @@ let do_rage flowconfig_name (state : state) : Rage.result =
         items
     in
     (* CLIENT. This includes the client's perception of the server state. *)
-    let items =
-      add_string items ("LSP adapter state: " ^ RagePrint.string_of_state state ^ "\n")
-    in
+    let items = add_string items ("LSP adapter state: " ^ RagePrint.string_of_state state ^ "\n") in
     (* DONE! *)
     items)
 
@@ -1240,7 +1237,7 @@ module LogFlusher = LwtLoop.Make (struct
     let%lwt () = Lwt_unix.sleep 5.0 in
     Lwt.join [EventLoggerLwt.flush (); FlowInteractionLogger.flush ()]
 
-  let catch () exn = Exception.(reraise (wrap exn))
+  let catch () exn = Exception.reraise exn
 end)
 
 (* Our interaction logging logs a snapshot of the state of the world at the start of an
@@ -1320,7 +1317,7 @@ let do_live_diagnostics
       let metadata =
         { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
       in
-      send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
+      send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.uri_of_string uri)) metadata
     | _ -> ()
   in
   let interaction_id = start_interaction ~trigger state in
@@ -1878,11 +1875,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         | LspToServer _ ->
           (* We'll just send a telemetry notification, since the client wasn't expecting a response *)
           let text =
-            Printf.sprintf
-              "%s [%i]\n%s"
-              exception_constructor
-              Lsp.Error.Code.unknownErrorCode
-              stack
+            Printf.sprintf "%s [%i]\n%s" exception_constructor Lsp.Error.Code.unknownErrorCode stack
           in
           Some
             (NotificationMessage
@@ -1939,6 +1932,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             ( LiveErrorsResponse
                 (Ok { live_errors = errors; live_warnings = warnings; live_errors_uri = uri }),
               metadata )) ) ->
+    let uri = Lsp.string_of_uri uri in
     let file_is_still_open =
       get_open_files state |> Option.value_map ~default:false ~f:(SMap.mem uri)
     in
@@ -1947,7 +1941,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         (* Only set the live non-parse errors if the file is still open. If it's been closed since
          * the request was sent, then we will just ignore the response *)
         let all = group_errors_by_uri ~default_uri:uri ~errors ~warnings in
-        let errors_for_uri = SMap.get uri all |> Option.value ~default:[] in
+        let errors_for_uri = SMap.find_opt uri all |> Option.value ~default:[] in
         Option.iter
           metadata.LspProt.interaction_tracking_id
           ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);
@@ -2005,7 +1999,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         Hh_json.(
           JSON_Object
             [
-              ("uri", JSON_String live_errors_failure_uri);
+              ("uri", JSON_String (live_errors_failure_uri |> Lsp.string_of_uri));
               ("reason", JSON_String live_errors_failure_reason);
             ]
           |> json_to_string)
@@ -2033,7 +2027,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           }
         in
         SMap.iter
-          (fun uri _ -> send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata)
+          (fun uri _ ->
+            send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.uri_of_string uri)) metadata)
           open_files);
 
     Ok (state, LogNotNeeded)
@@ -2086,7 +2081,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     let delays =
       match state with
       | Connected cenv ->
-        Core_list.filter_map cenv.c_recent_summaries ~f:(fun (t, s) ->
+        Base.List.filter_map cenv.c_recent_summaries ~f:(fun (t, s) ->
             if t > wall_start then
               Some s
             else

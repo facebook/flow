@@ -16,7 +16,8 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = Set.Make (File_key)
-module FilenameMap = MyMap.Make (File_key)
+module FilenameMap = WrappedMap.Make (File_key)
+module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
 
 let debug_string_of_filename_set set =
   set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
@@ -246,7 +247,7 @@ let ordinal = function
    explicit, and is implemented by simply passing the arguments in the correct
    order to Map.union.
 *)
-module Augmentable (M : MyMap.S) = struct
+module Augmentable (M : WrappedMap.S) = struct
   let augment map ~with_bindings = M.union with_bindings map
 end
 
@@ -340,3 +341,38 @@ let get_next_power_of_two x =
       f (y * 2)
   in
   f 1
+
+(* Simple utility to log the amount of time an operation takes.
+ *
+ * Usage:
+ * Given some expression `foo bar baz` whose evaluation you want to time, transform it to
+ * `debug_time "some_identifying_string" (lazy (foo bar baz))`
+ *)
+let debug_time name x =
+  let start_time = Unix.gettimeofday () in
+  let (lazy result) = x in
+  let end_time = Unix.gettimeofday () in
+  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
+  result
+
+(* Same as above, but displays the time taken for the resulting `Lwt.t` to yield a result *)
+let debug_time_lwt name x =
+  let start_time = Unix.gettimeofday () in
+  let%lwt result = Lazy.force x in
+  let end_time = Unix.gettimeofday () in
+  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
+  Lwt.return result
+
+module BoolMap = Map.Make (struct
+  type t = bool
+
+  (* TODO: Switch to Bool.compare when we upgrade to OCaml 4.08 *)
+  let compare = Pervasives.compare
+end)
+
+module NumberMap = Map.Make (struct
+  type t = float
+
+  (* TODO: Switch to Float.compare when we upgrade to OCaml 4.08 *)
+  let compare = Pervasives.compare
+end)

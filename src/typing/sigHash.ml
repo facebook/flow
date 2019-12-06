@@ -39,6 +39,7 @@ type hash =
   | NumH
   | StrH
   | BoolH
+  | SymbolH
   | EmptyH
   | MixedH
   | AnyH
@@ -67,6 +68,8 @@ type hash =
   | OptionalH
   | EvalH
   | TypeAppH
+  | TypeCastH
+  | EnumCastH
   | ThisClassH
   | ThisTypeAppH
   | BoundH
@@ -113,6 +116,8 @@ type hash =
   | OpenPredH
   | CharSetH
   | ReposH
+  | EnumObjectH
+  | EnumH
   (* use types *)
   | BindH
   | CallH
@@ -208,6 +213,7 @@ type hash =
   | ReactInToPropsH
   | DestructuringH
   | CreateObjWithComputedPropH
+  | ResolveUnionH
   | ModuleExportsAssignH
 
 let hash_of_def_ctor =
@@ -223,10 +229,13 @@ let hash_of_def_ctor =
     | CharSetT _ -> CharSetH
     | ClassT _ -> ClassH
     | EmptyT _ -> EmptyH
+    | EnumT _ -> EnumH
+    | EnumObjectT _ -> EnumObjectH
     | FunT _ -> FunH
     | MixedT _ -> MixedH
     | NullT -> NullH
     | NumT _ -> NumH
+    | SymbolT -> SymbolH
     | ObjT { flags = { frozen; sealed; exact }; _ } ->
       begin
         match (frozen, sealed, exact) with
@@ -355,6 +364,8 @@ let hash_of_use_ctor =
     | ThisSpecializeT _ -> ThisSpecializeH
     | VarianceCheckT _ -> VarianceCheckH
     | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
+    | TypeCastT _ -> TypeCastH
+    | EnumCastT _ -> EnumCastH
     | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH
@@ -409,6 +420,7 @@ let hash_of_use_ctor =
     | ReactInToProps _ -> ReactInToPropsH
     | DestructuringT _ -> DestructuringH
     | CreateObjWithComputedPropT _ -> CreateObjWithComputedPropH
+    | ResolveUnionT _ -> ResolveUnionH
     | ModuleExportsAssignT _ -> ModuleExportsAssignH)
 
 let add = Xx.update

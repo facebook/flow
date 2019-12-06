@@ -102,8 +102,7 @@ module ConcreteLocPrintableErrorSet : Set.S with type elt = Loc.t printable_erro
 
 type stdin_file = (Path.t * string) option
 
-val deprecated_json_props_of_loc :
-  strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
+val deprecated_json_props_of_loc : strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
 
 (* Some of the error printing functions consist only of named and optional arguments,
  * requiring an extra unit argument for disambiguation on partial application. For

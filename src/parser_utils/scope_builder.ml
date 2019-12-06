@@ -28,8 +28,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             | ( _,
                 Call
                   {
-                    Call.callee =
-                      (_, Identifier (_, { Ast.Identifier.name = "eval"; comments = _ }));
+                    Call.callee = (_, Identifier (_, { Ast.Identifier.name = "eval"; comments = _ }));
                     _;
                   } ) ->
               this#set_acc true;
@@ -84,7 +83,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       | [] -> None
       | hd :: rest ->
         begin
-          match SMap.get x hd with
+          match SMap.find_opt x hd with
           | Some def -> Some def
           | None -> get x rest
         end
@@ -260,12 +259,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
             | _ -> Bindings.empty
           in
-          this#with_bindings
-            ~lexical:true
-            loc
-            lexical_bindings
-            (this#scoped_for_statement loc)
-            stmt)
+          this#with_bindings ~lexical:true loc lexical_bindings (this#scoped_for_statement loc) stmt)
 
       method! catch_clause loc (clause : (L.t, L.t) Ast.Statement.Try.CatchClause.t') =
         Ast.Statement.Try.CatchClause.(

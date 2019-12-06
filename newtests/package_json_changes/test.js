@@ -109,4 +109,12 @@ export default suite(({addFile, removeFile, flowCmd}) => [
       .verifyServerStatus('running'),
   ]).flowConfig('haste_flowconfig'),
 
+ test('node - When using main_fields, a change which resolves to '+
+    'the same main file should NOT kill the server', [
+    addFile('start.json', 'package.json'),
+    addFile('irrelevantChangeMainField.json', 'package.json')
+      .startFlowServer()
+      .waitUntilServerStatus(2000, 'stopped') // only 2s not 10s so as not to waste time
+      .verifyServerStatus('running')
+  ]).flowConfig('node_flowconfig_with_main_field'),
 ]);

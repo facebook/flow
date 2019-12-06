@@ -1,3 +1,33 @@
+Error --------------------------------------------------------------------------------------------- object_keys.js:14:36
+
+Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but element of
+`Object.keys` [2] is a union. Can you add a literal type annotation to `k` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types.
+
+   object_keys.js:14:36
+   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
+                                          ^ [1]
+
+References:
+   object_keys.js:14:1
+   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
+       ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:4:33
+
+Cannot assign computed property using `T` [1].
+
+   poly.js:4:33
+   4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
+                                      ^
+
+References:
+   poly.js:4:19
+   4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
+                        ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
 Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because string [1] is incompatible with string
@@ -141,7 +171,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:17:13
 
 Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but this one may be
-either string [2] or string [3]. Can you add a literal type annotation to `x` [1]? See
+either string literal `foo` [2] or string literal `bar` [3]. Can you add a literal type annotation to `x` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types.
 
    union.js:17:13
@@ -168,4 +198,4 @@ References:
 
 
 
-Found 9 errors
+Found 11 errors

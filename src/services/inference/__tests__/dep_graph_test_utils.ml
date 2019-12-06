@@ -20,3 +20,4 @@ let make_dependency_graph lst =
       FilenameMap.add file dependency_set map)
     FilenameMap.empty
     lst
+  |> FilenameGraph.of_map

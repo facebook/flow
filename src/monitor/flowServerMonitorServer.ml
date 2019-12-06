@@ -210,6 +210,7 @@ end = struct
       Lwt.return (watcher, conn)
 
     let catch _ exn =
+      let exn = Exception.to_exn exn in
       Logger.fatal ~exn "Uncaught exception in Server command loop";
       raise exn
   end)
@@ -224,14 +225,14 @@ end = struct
       Lwt.return watcher
 
     let catch watcher exn =
-      match exn with
+      match Exception.unwrap exn with
       | FileWatcher.FileWatcherDied exn ->
         let msg = spf "File watcher (%s) died" watcher#name in
         Logger.fatal ~exn "%s" msg;
         exit ~msg FlowExitStatus.Dfind_died
       | _ ->
-        Logger.fatal ~exn "Uncaught exception in Server file watcher loop";
-        raise exn
+        Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server file watcher loop";
+        Exception.reraise exn
   end)
 
   (* The monitor is exiting. Let's try and shut down the server gracefully *)
@@ -307,7 +308,7 @@ end = struct
 
     (* Lwt.join will run these threads in parallel and only return when EVERY thread has returned
      * or failed *)
-    Lwt.join [(t.watcher)#stop; ServerConnection.close_immediately t.connection]
+    Lwt.join [t.watcher#stop; ServerConnection.close_immediately t.connection]
 
   let handle_file_watcher_exit watcher =
     (* TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
@@ -451,48 +452,34 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (**** Things the server might exit with that implies that the monitor should exit too ****)
         | No_error
         (* Server exited cleanly *)
-        
         | Windows_killed_by_task_manager
         (* Windows task manager killed the server *)
-        
         | Invalid_flowconfig
         (* Parse/version/etc error. Server will never start correctly. *)
-        
         | Path_is_not_a_file
         (* Required a file but privided path was not a file *)
-        
         | Server_client_directory_mismatch
         (* This is a weird one *)
-        
         | Flowconfig_changed
         (* We could survive some config changes, but it's too hard to tell *)
-        
         | Invalid_saved_state
         (* The saved state file won't automatically recover by restarting *)
-        
         | Unused_server
         (* The server appears unused for long enough that it decided to just die *)
-        
         | Unknown_error
         (* Uncaught exn. We probably could survive this, but it's a little risky *)
-        
         | Watchman_error
         (* We ran into an issue with Watchman *)
         (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
-        
         | Interrupted
         | Build_id_mismatch
         (* Client build differs from server build - only monitor uses this *)
-        
         | Lock_stolen
         (* Lock lost - only monitor should use this *)
-        
         | Socket_error
         (* Failed to set up socket - only monitor should use this *)
-        
         | Dfind_died
         (* Any file watcher died (it's misnamed) - only monitor should use this *)
-        
         | Dfind_unresponsive (* Not used anymore *) ->
           (true, None)
         (**** Things the server might exit with which the monitor can survive ****)
@@ -519,7 +506,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
   let should_monitor_exit_with_signaled_server signal =
     (* While there are many scary things which can cause segfaults, in practice we've mostly seen
-     * them when the Flow server hits some infinite or very deep recursion (like Core_list.map ~f:on a
+     * them when the Flow server hits some infinite or very deep recursion (like Base.List.map ~f:on a
      * very large list). Often, this is triggered by some ephemeral command, which is rerun when
      * the server starts back up, leading to a cycle of segfaulting servers.
      *
@@ -538,9 +525,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
     match status with
     | Unix.WEXITED exit_status ->
-      let exit_type =
-        (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None)
-      in
+      let exit_type = (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None) in
       let exit_status_string =
         Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
       in
@@ -626,14 +611,13 @@ module KeepAliveLoop = LwtLoop.Make (struct
     Lwt.return (monitor_options, restart_reason)
 
   let catch _ exn =
-    let e = Exception.wrap exn in
-    match exn with
+    match Exception.unwrap exn with
     | Watchman_lwt.Timeout ->
-      let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string e) in
+      let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string exn) in
       FlowExitStatus.(exit ~msg Watchman_error)
     | _ ->
-      Logger.error ~exn "Exception in KeepAliveLoop";
-      Exception.reraise e
+      Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
+      Exception.reraise exn
 end)
 
 let setup_signal_handlers =
@@ -641,13 +625,12 @@ let setup_signal_handlers =
     [
       Sys.sigint;
       (* Interrupt - ctrl-c *)
-        Sys.sigterm;
+      Sys.sigterm;
       (* Termination - like a nicer sigkill giving you a chance to cleanup *)
-        Sys.sighup;
+      Sys.sighup;
       (* Hang up - the terminal went away *)
-        Sys.sigquit;
-        (* Dump core - Kind of a meaner sigterm *)
-      
+      Sys.sigquit;
+      (* Dump core - Kind of a meaner sigterm *)
     ]
   in
   let handle_signal signal =

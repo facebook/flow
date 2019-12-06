@@ -32,7 +32,7 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
     loc = Option.map ~f loc;
     msg = map_loc_of_error_message f msg;
     source_file;
-    trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
+    trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
   }
 
 let concretize_error lazy_table_of_aloc =
@@ -266,7 +266,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       (loc_of_reason reason, desc :: extras)
     in
     let info_of_reason (r : concrete_reason) = mk_info r [] in
-    let trace_infos = Core_list.map ~f:info_of_reason trace_reasons in
+    let trace_infos = Base.List.map ~f:info_of_reason trace_reasons in
     (* Flip the lower/upper reasons of a frame_use_op. *)
     let flip_frame = function
       | ArrayElementCompatibility c ->
@@ -276,8 +276,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
       | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
       | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
-      | PropertyCompatibility c ->
-        PropertyCompatibility { c with lower = c.upper; upper = c.lower }
+      | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
       | ReactConfigCheck -> ReactConfigCheck
       | TupleElementCompatibility c ->
         TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
@@ -426,8 +425,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
               `Root (op, Some prop, [text "Cannot call "; desc fn])
             | Frame
                 ( FunParam _,
-                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _)))
-                  as use_op ) ) ->
+                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
+                  use_op ) ) ->
               `Next use_op
             | Frame
                 ( FunParam { n; name; lower = lower'; _ },
@@ -447,12 +446,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
                 ( lower,
                   None,
                   [
-                    text "Cannot call ";
-                    desc fn;
-                    text " with ";
-                    desc lower;
-                    text " bound to ";
-                    param;
+                    text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param;
                   ] )
             | Op (FunReturnStatement { value }) ->
               `Root (value, None, [text "Cannot return "; desc value])
@@ -481,8 +475,12 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
                   value
               in
               `Root (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
+            | Op (UpdateProperty { prop; lhs }) ->
+              `Root (lhs, None, [text "Cannot update "; desc prop])
             | Op (DeleteProperty { prop; lhs }) ->
               `Root (lhs, None, [text "Cannot delete "; desc prop])
+            | Op (ExhaustiveCheck { switch; case }) ->
+              `Root (case, None, [text "Invalid check at "; desc case; text " in "; ref switch])
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; _ }, use_op) ->
@@ -644,7 +642,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
     let mk_use_op_speculation_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) branches =
       let (root, loc, frames) = unwrap_use_ops loc use_op in
       let speculation_errors =
-        Core_list.map
+        Base.List.map
           ~f:(fun (_, (msg : Loc.t Error_message.t')) ->
             let score = score_of_msg msg in
             let error = error_of_msg ~trace_reasons:[] ~source_file msg |> make_error_printable in

@@ -101,6 +101,10 @@ printf "jsx-with-children.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx-with-children.js 10 4 < jsx-with-children.js
 
+printf "jsx-text.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-text.js 1 11 < jsx-text.js
+
 printf "customfun.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty customfun.js 6 1 < customfun.js
@@ -184,3 +188,77 @@ assert_ok \
 printf "identifier.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty identifier.js 10 18 < identifier.js
+
+printf "super.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty super.js 4 8 < super.js
+
+printf "this-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 5 10 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 8 3 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 11 15 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 14 9 < this-2.js
+
+printf "pattern.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 3 8 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 6 4 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 9 14 < pattern.js
+
+printf "normalize-1.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-1.js 4 12 < normalize-1.js
+
+printf "normalize-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-2.js 5 10 < normalize-2.js
+
+printf "unqualified-type-annotation.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty unqualified-type-annotation.js 28 19 < unqualified-type-annotation.js
+
+printf "qualified-type-annotation.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation.js 5 23 < qualified-type-annotation.js
+
+printf "qualified-type-annotation-require.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation-require.js 5 23 < qualified-type-annotation-require.js
+
+printf "inherited-class-properties.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty inherited-class-properties.js 16 13 < inherited-class-properties.js
+
+printf "function-added-properties.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty function-added-properties.js 6 5 < function-added-properties.js
+
+printf "comments.js (line) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 3 8 < comments.js
+
+printf "comments.js (block) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 5 8 < comments.js
+
+printf "literal.js (inside string) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 3 16 < literal.js
+
+printf "literal.js (inside regex) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 5 16 < literal.js
+
+printf "literal.js (inside template literal) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 7 16 < literal.js
+
+printf "import_source.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty import_source.js 3 17 < import_source.js

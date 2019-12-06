@@ -10,6 +10,9 @@ type sketchy_null_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | SketchyNullEnumBool
+  | SketchyNullEnumString
+  | SketchyNullEnumNumber
 
 type sketchy_number_kind = SketchyNumberAnd
 
@@ -38,11 +41,18 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | NonArraySpread
+  | AmbiguousObjectType
 
 let string_of_sketchy_null_kind = function
-  | SketchyNullBool -> "sketchy-null-bool"
-  | SketchyNullString -> "sketchy-null-string"
-  | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullBool
+  | SketchyNullEnumBool ->
+    "sketchy-null-bool"
+  | SketchyNullString
+  | SketchyNullEnumString ->
+    "sketchy-null-string"
+  | SketchyNullNumber
+  | SketchyNullEnumNumber ->
+    "sketchy-null-number"
   | SketchyNullMixed -> "sketchy-null-mixed"
 
 let string_of_sketchy_number_kind = function
@@ -66,6 +76,7 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | NonArraySpread -> "non-array-spread"
+  | AmbiguousObjectType -> "ambiguous-object-type"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -75,10 +86,13 @@ let kinds_of_string = function
         SketchyNull SketchyNullString;
         SketchyNull SketchyNullNumber;
         SketchyNull SketchyNullMixed;
+        SketchyNull SketchyNullEnumBool;
+        SketchyNull SketchyNullEnumString;
+        SketchyNull SketchyNullEnumNumber;
       ]
-  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
-  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
-  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
+  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool; SketchyNull SketchyNullEnumBool]
+  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString; SketchyNull SketchyNullEnumString]
+  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber; SketchyNull SketchyNullEnumNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
   | "sketchy-number" -> Some [SketchyNumber SketchyNumberAnd]
   | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]
@@ -95,6 +109,7 @@ let kinds_of_string = function
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "non-array-spread" -> Some [NonArraySpread]
   | _ -> None
@@ -105,5 +120,5 @@ module LintKind = struct
   let compare = compare
 end
 
-module LintMap = MyMap.Make (LintKind)
+module LintMap = WrappedMap.Make (LintKind)
 module LintSet = Set.Make (LintKind)

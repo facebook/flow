@@ -14,7 +14,7 @@ type error = {
   exit_status: FlowExitStatus.t;
 }
 
-let is_incompatible_package_json ~reader =
+let is_incompatible_package_json ~options ~reader =
   (* WARNING! Be careful when adding new incompatibilities to this function. While dfind will
    * return any file which changes within the watched directories, watchman only watches for
    * specific extensions and files. Make sure to update the watchman_expression_terms in our
@@ -25,8 +25,10 @@ let is_incompatible_package_json ~reader =
     | None -> true (* Failed to read package.json *)
     | Some content ->
       (try
-         let ast = Parsing_service_js.parse_json_file ~fail:true content filename in
-         Module_js.package_incompatible ~reader filename_str ast
+         let (ast, _parse_errors) =
+           Parsing_service_js.parse_json_file ~fail:true content filename
+         in
+         Module_js.package_incompatible ~options ~reader filename_str ast
        with _ -> true)
     (* Failed to parse package.json *)
   in
@@ -56,8 +58,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
     let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
     let sroot = Path.to_string root in
     let want = Files.wanted ~options:file_options all_libs in
-    Ok ()
-    >>= fun () ->
+    Ok () >>= fun () ->
     (* Die if the .flowconfig changed *)
     if (not skip_incompatible) && SSet.mem config_path updates then
       Error
@@ -66,10 +67,9 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
           exit_status = FlowExitStatus.Flowconfig_changed;
         }
     else
-      Ok ()
-      >>= fun () ->
+      Ok () >>= fun () ->
       let is_incompatible_package_json =
-        is_incompatible_package_json ~reader ~want ~sroot ~file_options
+        is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options
       in
       (* Die if a package.json changed in an incompatible way *)
       let incompatible_packages = SSet.filter is_incompatible_package_json updates in
@@ -85,8 +85,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
             exit_status = FlowExitStatus.Server_out_of_date;
           }
       else
-        Ok ()
-        >>= fun () ->
+        Ok () >>= fun () ->
         let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
         let is_changed_lib filename =
           let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
@@ -111,8 +110,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
               exit_status = FlowExitStatus.Server_out_of_date;
             }
         else
-          Ok ()
-          >>= fun () ->
+          Ok () >>= fun () ->
           let is_flow_file = Files.is_flow_file ~options:file_options in
           Ok
             (SSet.fold
@@ -122,7 +120,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
                    (* note: is_included may be expensive. check in-root match first. *)
                    && (String_utils.string_starts_with f sroot || Files.is_included file_options f)
                    && (* removes excluded and lib files. the latter are already filtered *)
-                      want f
+                   want f
                  then
                    let filename = Files.filename_from_string ~options:file_options f in
                    FilenameSet.add filename acc

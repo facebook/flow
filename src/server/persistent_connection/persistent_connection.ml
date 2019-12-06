@@ -18,7 +18,7 @@ type t = Prot.client_id list
 
 let active_clients : single_client IMap.t ref = ref IMap.empty
 
-let get_client client_id = IMap.get client_id !active_clients
+let get_client client_id = IMap.find_opt client_id !active_clients
 
 let empty = []
 
@@ -38,7 +38,7 @@ let send_errors =
     let rec get_first_contained warn_map = function
       | [] -> Errors.ConcreteLocPrintableErrorSet.empty
       | filename :: filenames ->
-        (match Utils_js.FilenameMap.get filename warn_map with
+        (match Utils_js.FilenameMap.find_opt filename warn_map with
         | Some errs -> errs
         | None -> get_first_contained warn_map filenames)
     in
@@ -53,7 +53,7 @@ let send_errors =
         ]
   in
   fun ~errors_reason ~errors ~warnings client ->
-    let opened_filenames = SMap.bindings client.opened_files |> Core_list.map ~f:fst in
+    let opened_filenames = SMap.bindings client.opened_files |> Base.List.map ~f:fst in
     let warnings =
       List.fold_right
         (fun filename warn_acc ->
@@ -193,7 +193,7 @@ let client_did_close (client : single_client) ~(filenames : string Nel.t) : bool
   )
 
 let get_file (client : single_client) (fn : string) : File_input.t =
-  let content_opt = SMap.get fn client.opened_files in
+  let content_opt = SMap.find_opt fn client.opened_files in
   match content_opt with
   | None -> File_input.FileName fn
   | Some content -> File_input.FileContent (Some fn, content)

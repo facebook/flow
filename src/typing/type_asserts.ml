@@ -44,6 +44,7 @@ let check_type_visitor wrap =
         | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
         | Void
         | Null
+        | Symbol
         | Num _
         | Str _
         | Bool _
@@ -54,6 +55,7 @@ let check_type_visitor wrap =
         | Generic _
         | ClassDecl _
         | InterfaceDecl _
+        | EnumDecl _
         | Utility _
         | Module _
         | InlineInterface _ ->
@@ -91,10 +93,10 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
           let { Type.TypeScheme.type_ = t; _ } = scheme in
           wrap (Type.desc_of_t t))
   in
-  Core_list.iter2_exn
+  Base.List.iter2_exn
     ~f:(fun cx typed_ast ->
       let file = Context.file cx in
-      let file_sig = FilenameMap.find_unsafe file file_sigs in
+      let file_sig = FilenameMap.find file file_sigs in
       let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
       Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts_map cx))
     cxs

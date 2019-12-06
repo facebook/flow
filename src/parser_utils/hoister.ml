@@ -52,7 +52,7 @@ end = struct
     let (xs, map) =
       List.fold_left
         (fun (xs, map) (loc, { Ast.Identifier.name = x; comments = _ }) ->
-          match SMap.get x map with
+          match SMap.find_opt x map with
           | Some locs -> (xs, SMap.add x (Nel.cons loc locs) map)
           | None -> (x :: xs, SMap.add x (Nel.one loc) map))
         ([], SMap.empty)
@@ -64,7 +64,7 @@ end = struct
     let map =
       List.fold_left
         (fun map (loc, { Ast.Identifier.name = x; comments = _ }) ->
-          match SMap.get x map with
+          match SMap.find_opt x map with
           | Some locs -> SMap.add x (loc :: locs) map
           | None -> SMap.add x [loc] map)
         SMap.empty

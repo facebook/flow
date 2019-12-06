@@ -226,17 +226,17 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 match (in_export env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
-                  let typeParams = Type.type_parameter_declaration env in
+                  let tparams = Type.type_params env in
                   let id =
                     if Peek.token env = T_LPAREN then
                       None
                     else
                       Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
                   in
-                  (typeParams, id)
+                  (tparams, id)
                 | _ ->
                   let id = Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env in
-                  (Type.type_parameter_declaration env, Some id)
+                  (Type.type_params env, Some id)
               in
               let params = function_params ~await:async ~yield:generator env in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
@@ -251,33 +251,34 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
 
   let variable_declaration_list =
     let variable_declaration env =
-      let (loc, (decl, errs)) =
+      let (loc, (decl, err)) =
         with_loc
           (fun env ->
             let id = Parse.pattern env Parse_error.StrictVarName in
-            let (init, errs) =
-              if Peek.token env = T_ASSIGN then (
-                Expect.token env T_ASSIGN;
-                (Some (Parse.assignment env), [])
-              ) else
-                Ast.Pattern.(
-                  match id with
-                  | (_, Identifier _) -> (None, [])
-                  | (loc, _) -> (None, [(loc, Parse_error.NoUninitializedDestructuring)]))
+            let (init, err) =
+              if Expect.maybe env T_ASSIGN then
+                (Some (Parse.assignment env), None)
+              else
+                match id with
+                | (_, Ast.Pattern.Identifier _) -> (None, None)
+                | (loc, _) -> (None, Some (loc, Parse_error.NoUninitializedDestructuring))
             in
-            (Ast.Statement.VariableDeclaration.Declarator.{ id; init }, errs))
+            (Ast.Statement.VariableDeclaration.Declarator.{ id; init }, err))
           env
       in
-      ((loc, decl), errs)
+      ((loc, decl), err)
     in
     let rec helper env decls errs =
-      let (decl, errs_) = variable_declaration env in
+      let (decl, err) = variable_declaration env in
       let decls = decl :: decls in
-      let errs = errs_ @ errs in
-      if Peek.token env = T_COMMA then (
-        Expect.token env T_COMMA;
+      let errs =
+        match err with
+        | Some x -> x :: errs
+        | None -> errs
+      in
+      if Expect.maybe env T_COMMA then
         helper env decls errs
-      ) else
+      else
         (List.rev decls, List.rev errs)
     in
     (fun env -> helper env [] [])
@@ -294,15 +295,14 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     let (variable, errs) = declarations T_CONST Statement.VariableDeclaration.Const env in
     (* Make sure all consts defined are initialized *)
     let errs =
-      Statement.VariableDeclaration.(
-        List.fold_left
-          (fun errs decl ->
-            match decl with
-            | (loc, { Declarator.init = None; _ }) ->
-              (loc, Parse_error.NoUninitializedConst) :: errs
-            | _ -> errs)
-          errs
-          variable.declarations)
+      List.fold_left
+        (fun errs decl ->
+          match decl with
+          | (loc, { Statement.VariableDeclaration.Declarator.init = None; _ }) ->
+            (loc, Parse_error.NoUninitializedConst) :: errs
+          | _ -> errs)
+        errs
+        variable.Statement.VariableDeclaration.declarations
     in
     (variable, List.rev errs)
 

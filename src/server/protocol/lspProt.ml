@@ -117,7 +117,7 @@ type request_with_metadata = request * metadata
 let string_of_request = function
   | Subscribe -> "subscribe"
   | LspToServer msg -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
-  | LiveErrorsRequest uri -> Printf.sprintf "liveErrorsRequest %s" uri
+  | LiveErrorsRequest uri -> Printf.sprintf "liveErrorsRequest %s" (Lsp.string_of_uri uri)
 
 let string_of_request_with_metadata (request, _) = string_of_request request
 
@@ -130,7 +130,7 @@ let json_of_request =
       JSON_Object
         [
           ("method", JSON_String "liveErrorsRequest");
-          ("params", JSON_Object [("uri", JSON_String uri)]);
+          ("params", JSON_Object [("uri", JSON_String (Lsp.string_of_uri uri))]);
           ("trigger", metadata.start_json_truncated);
         ])
 
@@ -154,7 +154,7 @@ type error_response_kind =
 type live_errors_failure = {
   live_errors_failure_kind: error_response_kind;
   live_errors_failure_reason: string;
-  live_errors_failure_uri: string;
+  live_errors_failure_uri: Lsp.documentUri;
 }
 
 type live_errors_response = {
@@ -201,7 +201,7 @@ let string_of_response = function
       "liveErrorsResponse OK (%d errors, %d warnings) %s"
       (Errors.ConcreteLocPrintableErrorSet.cardinal live_errors)
       (Errors.ConcreteLocPrintableErrorSet.cardinal live_warnings)
-      live_errors_uri
+      (live_errors_uri |> Lsp.string_of_uri)
   | LiveErrorsResponse
       (Error { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri }) ->
     Printf.sprintf
@@ -210,7 +210,7 @@ let string_of_response = function
       | Canceled_error_response -> "CANCELED"
       | Errored_error_response -> "ERRORED")
       live_errors_failure_reason
-      live_errors_failure_uri
+      (live_errors_failure_uri |> Lsp.string_of_uri)
   | UncaughtException { request; exception_constructor; stack } ->
     Printf.sprintf
       "UncaughtException %s in handling `%s`: %s"

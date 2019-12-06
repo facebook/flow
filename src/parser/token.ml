@@ -161,6 +161,7 @@ type t =
     }
   | T_STRING_TYPE
   | T_VOID_TYPE
+  | T_SYMBOL_TYPE
 
 (* `bool` and `boolean` are equivalent annotations, but we need to track
    which one was used for when it might be an identifier, as in
@@ -326,6 +327,7 @@ let token_to_string = function
   | T_BIGINT_SINGLETON_TYPE _ -> "T_BIGINT_SINGLETON_TYPE"
   | T_STRING_TYPE -> "T_STRING_TYPE"
   | T_VOID_TYPE -> "T_VOID_TYPE"
+  | T_SYMBOL_TYPE -> "T_SYMBOL_TYPE"
 
 let value_of_token = function
   | T_NUMBER { raw; _ } -> raw
@@ -465,6 +467,7 @@ let value_of_token = function
   | T_BIGINT_SINGLETON_TYPE { raw; _ } -> raw
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"
+  | T_SYMBOL_TYPE -> "symbol"
 
 let quote_token_value value = Printf.sprintf "token `%s`" value
 

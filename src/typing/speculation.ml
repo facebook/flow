@@ -198,7 +198,7 @@ end = struct
         true
       | _ ->
         let action_tvars = Action.tvars cx action in
-        let all_unresolved = IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
+        let all_unresolved = IMap.find speculation_id (Context.all_unresolved cx) in
         let relevant_action_tvars =
           IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars
         in

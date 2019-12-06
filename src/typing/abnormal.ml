@@ -126,7 +126,7 @@ let ignore_break_or_continue_to_label label res =
 (** at some points we need to record control flow directives in addition
     to responding to them. *)
 
-module AbnormalMap : MyMap.S with type key = t = MyMap.Make (struct
+module AbnormalMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
   type abnormal = t
 
   type t = abnormal
@@ -143,7 +143,7 @@ let save ?(env = []) abnormal = abnormals := AbnormalMap.add abnormal env !abnor
 (** set or remove a given control flow directive's value,
     and return the current one *)
 let swap_saved abnormal value =
-  let old = AbnormalMap.get abnormal !abnormals in
+  let old = AbnormalMap.find_opt abnormal !abnormals in
   ( if old <> value then
     abnormals :=
       match value with

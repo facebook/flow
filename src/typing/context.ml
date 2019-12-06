@@ -92,7 +92,9 @@ type sig_t = {
   (* modules point to mutable export maps *)
   mutable export_maps: Type.Exports.map;
   (* map from evaluation ids to types *)
-  mutable evaluated: Type.t IMap.t;
+  mutable evaluated: Type.t Type.Eval.Map.t;
+  (* map from goal ids to types *)
+  mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
@@ -102,8 +104,10 @@ type sig_t = {
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
   (* We track nominal ids in the context to help decide when the types exported by a module have
-     meaningfully changed: see Merge_js.ContextOptimizer. **)
-  mutable nominal_ids: ISet.t;
+     meaningfully changed: see Merge_js.ContextOptimizer. We care about two different types of
+     nominal ids, one for object properties and one for polymorphic types. **)
+  mutable nominal_prop_ids: ISet.t;
+  mutable nominal_poly_ids: Type.Poly.Set.t;
   (* map from TypeAssert assertion locations to the type being asserted *)
   mutable type_asserts_map: (type_assert_kind * ALoc.t) ALocMap.t;
   mutable errors: Flow_error.ErrorSet.t;
@@ -141,11 +145,13 @@ type sig_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
+  mutable possible_exhaustive_checks: (Type.t * (Reason.t * Type.exhaustive_check_t)) list;
 }
 
 type phase =
   | Checking
   | Merging
+  | Normalizing
 
 type t = {
   sig_cx: sig_t;
@@ -217,12 +223,14 @@ let make_sig () =
     property_maps = Type.Properties.Map.empty;
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
-    evaluated = IMap.empty;
+    evaluated = Type.Eval.Map.empty;
+    goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
     envs = IMap.empty;
     module_map = SMap.empty;
-    nominal_ids = ISet.empty;
+    nominal_poly_ids = Type.Poly.Set.empty;
+    nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
@@ -235,6 +243,7 @@ let make_sig () =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
+    possible_exhaustive_checks = [];
   }
 
 (* create a new context structure.
@@ -264,7 +273,7 @@ let graph_sig sig_cx = sig_cx.graph
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 let find_module_sig sig_cx m =
-  (try SMap.find_unsafe m sig_cx.module_map with Not_found -> raise (Module_not_found m))
+  (try SMap.find m sig_cx.module_map with Not_found -> raise (Module_not_found m))
 
 (* modules *)
 
@@ -331,6 +340,8 @@ let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
 
 let evaluated cx = cx.sig_cx.evaluated
 
+let goals cx = cx.sig_cx.goal_map
+
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let file cx = cx.file
@@ -338,26 +349,28 @@ let file cx = cx.file
 let aloc_tables cx = cx.aloc_tables
 
 let find_props cx id =
-  try Type.Properties.Map.find_unsafe id cx.sig_cx.property_maps
+  try Type.Properties.Map.find id cx.sig_cx.property_maps
   with Not_found -> raise (Props_not_found id)
 
 let find_call cx id =
-  (try IMap.find_unsafe id cx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
+  (try IMap.find id cx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
 
 let find_exports cx id =
-  try Type.Exports.Map.find_unsafe id cx.sig_cx.export_maps
+  try Type.Exports.Map.find id cx.sig_cx.export_maps
   with Not_found -> raise (Exports_not_found id)
 
 let find_require cx loc =
-  try ALocMap.find_unsafe loc cx.require_map
+  try ALocMap.find loc cx.require_map
   with Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
 
 let find_module cx m = find_module_sig (sig_cx cx) m
 
 let find_tvar cx id =
-  (try IMap.find_unsafe id cx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
+  (try IMap.find id cx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
 
-let mem_nominal_id cx id = ISet.mem id cx.sig_cx.nominal_ids
+let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.sig_cx.nominal_poly_ids
+
+let mem_nominal_prop_id cx id = ISet.mem id cx.sig_cx.nominal_prop_ids
 
 let graph cx = graph_sig cx.sig_cx
 
@@ -501,7 +514,10 @@ let add_tvar cx id bounds = cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.grap
 
 let add_trust_var cx id bounds = cx.sig_cx.trust_graph <- IMap.add id bounds cx.sig_cx.trust_graph
 
-let add_nominal_id cx id = cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
+let add_nominal_prop_id cx id = cx.sig_cx.nominal_prop_ids <- ISet.add id cx.sig_cx.nominal_prop_ids
+
+let add_nominal_poly_id cx id =
+  cx.sig_cx.nominal_poly_ids <- Type.Poly.Set.add id cx.sig_cx.nominal_poly_ids
 
 let add_type_assert cx k v =
   cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
@@ -522,6 +538,8 @@ let set_all_unresolved cx all_unresolved = cx.sig_cx.all_unresolved <- all_unres
 let set_envs cx envs = cx.sig_cx.envs <- envs
 
 let set_evaluated cx evaluated = cx.sig_cx.evaluated <- evaluated
+
+let set_goals cx goals = cx.sig_cx.goal_map <- goals
 
 let set_graph cx graph = cx.sig_cx.graph <- graph
 
@@ -546,10 +564,11 @@ let set_module_map cx module_map = cx.sig_cx.module_map <- module_map
 let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
-  cx.sig_cx.nominal_ids <- ISet.empty;
-  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0;
+  cx.sig_cx.nominal_poly_ids <- Type.Poly.Set.empty;
+  cx.sig_cx.nominal_prop_ids <- ISet.empty;
 
   (* still 176 bytes :/ *)
+  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0;
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.voidable_checks <- [];
@@ -557,6 +576,9 @@ let clear_intermediates cx =
   cx.sig_cx.computed_property_states <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;
+  cx.sig_cx.type_asserts_map <- ALocMap.empty;
+  cx.sig_cx.goal_map <- IMap.empty;
+  cx.sig_cx.possible_exhaustive_checks <- [];
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -566,19 +588,22 @@ let clear_intermediates cx =
    in other sig contexts. This saves a lot of shared memory as well as
    deserialization time. *)
 let clear_master_shared cx master_cx =
-  set_graph cx (graph cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)));
-  set_trust_graph
-    cx
-    (trust_graph cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)));
-  set_property_maps
-    cx
-    ( property_maps cx
-    |> Type.Properties.Map.filter (fun id _ ->
-           not (Type.Properties.Map.mem id master_cx.property_maps)) );
-  set_call_props
-    cx
-    (call_props cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)));
-  set_evaluated cx (evaluated cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.evaluated)))
+  let module PMap = Type.Properties.Map in
+  let module EMap = Type.Exports.Map in
+  cx.sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) cx.sig_cx.graph;
+  cx.sig_cx.trust_graph <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) cx.sig_cx.trust_graph;
+  cx.sig_cx.property_maps <-
+    PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) cx.sig_cx.property_maps;
+  cx.sig_cx.call_props <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) cx.sig_cx.call_props;
+  cx.sig_cx.evaluated <-
+    Type.Eval.Map.filter
+      (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
+      cx.sig_cx.evaluated;
+  cx.sig_cx.export_maps <-
+    EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) cx.sig_cx.export_maps;
+  ()
 
 let test_prop_hit cx id =
   cx.sig_cx.test_prop_hits_and_misses <- IMap.add id Hit cx.sig_cx.test_prop_hits_and_misses
@@ -648,6 +673,11 @@ let unnecessary_invariants cx =
     cx.sig_cx.invariants_useful
     []
 
+let add_possible_exhaustive_check cx t check =
+  cx.sig_cx.possible_exhaustive_checks <- (t, check) :: cx.sig_cx.possible_exhaustive_checks
+
+let possible_exhaustive_checks cx = cx.sig_cx.possible_exhaustive_checks
+
 (* utils *)
 let find_real_props cx id =
   find_props cx id |> SMap.filter (fun x _ -> not (Reason.is_internal_name x))
@@ -656,9 +686,11 @@ let iter_props cx id f = find_props cx id |> SMap.iter f
 
 let iter_real_props cx id f = find_real_props cx id |> SMap.iter f
 
+let fold_real_props cx id f = find_real_props cx id |> SMap.fold f
+
 let has_prop cx id x = find_props cx id |> SMap.mem x
 
-let get_prop cx id x = find_props cx id |> SMap.get x
+let get_prop cx id x = find_props cx id |> SMap.find_opt x
 
 let set_prop cx id x p = find_props cx id |> SMap.add x p |> add_property_map cx id
 
@@ -667,20 +699,21 @@ let has_export cx id name = find_exports cx id |> SMap.mem name
 let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_export_map cx id
 
 (* constructors *)
+let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
+
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in
-  add_nominal_id cx (id :> int);
+  add_nominal_prop_id cx (id :> int);
   let id = Type.Properties.id_of_int id in
   add_property_map cx id pmap;
   id
 
-let make_source_property_map cx pmap loc =
+let make_source_property_map cx pmap aloc =
   (* To prevent cases where we might compare a concrete and an abstract
      aloc (like in a cycle) we abstractify all incoming alocs before adding
      them to the map. The only exception is for library files, which have only
      concrete definitions and by definition cannot appear in cycles. *)
-  let loc = ALoc.lookup_key_if_possible cx.rev_aloc_table loc in
-  let id = Type.Properties.id_of_aloc loc in
+  let id = make_aloc_id cx aloc |> Type.Properties.id_of_aloc_id in
   add_property_map cx id pmap;
   id
 
@@ -694,20 +727,21 @@ let make_export_map cx tmap =
   add_export_map cx id tmap;
   id
 
-let make_nominal cx =
-  let nominal = Reason.mk_id () in
-  add_nominal_id cx nominal;
+let generate_poly_id cx =
+  let nominal = Type.Poly.generate_id () in
+  add_nominal_poly_id cx nominal;
   nominal
+
+let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
 (* Copy context from cx_other to cx *)
 let merge_into sig_cx sig_cx_other =
   sig_cx.property_maps <- Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
   sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
   sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
-  sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
+  sig_cx.evaluated <- Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
-  sig_cx.type_asserts_map <- ALocMap.union sig_cx.type_asserts_map sig_cx_other.type_asserts_map;
   ()
 
 (* Find the constraints of a type variable in the graph.
@@ -730,7 +764,7 @@ and find_constraints cx id =
    root during traversal to speed up future traversals. *)
 and find_root cx id =
   Constraint.(
-    match IMap.get id (graph cx) with
+    match IMap.find_opt id (graph cx) with
     | Some (Goto next_id) ->
       let (root_id, root) = find_root cx next_id in
       if root_id != next_id then
@@ -760,7 +794,7 @@ let rec find_resolved cx = function
 
 let rec find_trust_root cx (id : Trust_constraint.ident) =
   Trust_constraint.(
-    match IMap.get id (trust_graph cx) with
+    match IMap.find_opt id (trust_graph cx) with
     | Some (TrustGoto next_id) ->
       let (root_id, root) = find_trust_root cx next_id in
       if root_id != next_id then Trust_constraint.new_goto root_id |> add_trust_var cx id;
@@ -782,3 +816,7 @@ let find_trust_constraints cx id =
 let find_trust_graph cx id =
   let (_, constraints) = find_trust_constraints cx id in
   constraints
+
+let with_normalizer_mode cx f = f { cx with phase = Normalizing }
+
+let in_normalizer_mode cx = cx.phase = Normalizing

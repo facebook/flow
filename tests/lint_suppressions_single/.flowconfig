@@ -1,10 +1,5 @@
-[ignore]
-
-[include]
-
-[libs]
-
 [options]
+all=true
 
 [lints]
 all=off

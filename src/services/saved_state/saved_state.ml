@@ -51,7 +51,7 @@ type saved_state_data = {
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t;
+  node_modules_containers: SSet.t SMap.t;
 }
 
 let modulename_map_fn ~f = function
@@ -175,8 +175,7 @@ end = struct
     let relative_file_data =
       {
         unparsed_info =
-          normalize_info ~root
-          @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+          normalize_info ~root @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in
@@ -220,7 +219,7 @@ end = struct
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
       |> List.filter (is_not_in_flowlib ~options)
-      |> Core_list.map ~f:(Files.relative_path root)
+      |> Base.List.map ~f:(Files.relative_path root)
     in
     let local_errors =
       FilenameMap.fold
@@ -241,7 +240,10 @@ end = struct
         FilenameMap.empty
     in
     let node_modules_containers =
-      SSet.map (Files.relative_path root) !Files.node_modules_containers
+      SMap.fold
+        (fun key value acc -> SMap.add (Files.relative_path root key) value acc)
+        !Files.node_modules_containers
+        SMap.empty
     in
     let flowconfig_hash =
       FlowConfig.get_hash
@@ -392,9 +394,7 @@ end = struct
     (* file_sig *)
     let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
     (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } =
-      file_data.resolved_requires
-    in
+    let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules
@@ -474,7 +474,7 @@ end = struct
       denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
     in
     let ordered_non_flowlib_libs =
-      Core_list.map ~f:(Files.absolute_path root) ordered_non_flowlib_libs
+      Base.List.map ~f:(Files.absolute_path root) ordered_non_flowlib_libs
     in
     let local_errors =
       FilenameMap.fold
@@ -494,7 +494,12 @@ end = struct
         warnings
         FilenameMap.empty
     in
-    let node_modules_containers = SSet.map (Files.absolute_path root) node_modules_containers in
+    let node_modules_containers =
+      SMap.fold
+        (fun key value acc -> SMap.add (Files.absolute_path root key) value acc)
+        node_modules_containers
+        SMap.empty
+    in
     Lwt.return
       {
         flowconfig_hash;

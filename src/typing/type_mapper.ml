@@ -43,7 +43,7 @@ let unwrap_type =
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
 let union_flatten =
-  let rec union_flatten cx seen ts = Core_list.(ts >>= flatten cx seen)
+  let rec union_flatten cx seen ts = Base.List.(ts >>= flatten cx seen)
   and flatten cx seen t =
     match t with
     | OpenT (_, id) ->
@@ -240,7 +240,6 @@ class virtual ['a] t =
         else
           InternalT (ReposUpperT (r, t''))
       | AnyT _ -> t
-      | InternalT (OptionalChainVoidT _) -> t
       | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -278,6 +277,14 @@ class virtual ['a] t =
         else
           ExplicitArg t''
 
+    method enum cx map_cx e =
+      let { enum_id; enum_name; members; representation_t } = e in
+      let representation_t' = self#type_ cx map_cx representation_t in
+      if representation_t' = representation_t then
+        e
+      else
+        { enum_id; enum_name; members; representation_t = representation_t' }
+
     method def_type cx map_cx t =
       match t with
       | NumT _
@@ -285,6 +292,7 @@ class virtual ['a] t =
       | BoolT _
       | EmptyT _
       | MixedT _
+      | SymbolT
       | NullT
       | VoidT ->
         t
@@ -315,6 +323,18 @@ class virtual ['a] t =
           t
         else
           ClassT t''
+      | EnumT enum ->
+        let enum' = self#enum cx map_cx enum in
+        if enum' == enum then
+          t
+        else
+          EnumT enum'
+      | EnumObjectT enum ->
+        let enum' = self#enum cx map_cx enum in
+        if enum' == enum then
+          t
+        else
+          EnumObjectT enum'
       | InstanceT (st, su, impl, instt) ->
         let st' = self#type_ cx map_cx st in
         let su' = self#type_ cx map_cx su in
@@ -340,7 +360,8 @@ class virtual ['a] t =
         if tparamlist == tparamlist' && t' == t'' then
           t
         else
-          PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Context.make_nominal cx }
+          PolyT
+            { tparams_loc; tparams = tparamlist'; t_out = t''; id = Context.generate_poly_id cx }
       | IdxWrapper t' ->
         let t'' = self#type_ cx map_cx t' in
         if t' == t'' then
@@ -406,10 +427,7 @@ class virtual ['a] t =
       in
       let return_t' = self#type_ cx map_cx return_t in
       if
-        this_t' == this_t
-        && return_t' == return_t
-        && params' == params
-        && rest_param' == rest_param
+        this_t' == this_t && return_t' == return_t && params' == params && rest_param' == rest_param
       then
         t
       else
@@ -711,6 +729,7 @@ class virtual ['a] t =
       | SymbolP
       | VoidP
       | ArrP
+      | PropNonMaybeP _
       | PropExistsP _ ->
         p
       | LatentP (t, i) ->
@@ -743,7 +762,7 @@ class virtual ['a] t =
 
     method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
 
-    method virtual eval_id : Context.t -> 'a -> int -> int
+    method virtual eval_id : Context.t -> 'a -> Eval.id -> Eval.id
 
     method prop cx map_cx prop =
       match prop with
@@ -804,14 +823,14 @@ class virtual ['a] t_with_uses =
           t
         else
           CallT (op, r, funcall')
-      | MethodT (op, r1, r2, prop, funcall, prop_t) ->
+      | MethodT (op, r1, r2, prop, action, prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
-        let funcall' = self#fun_call_type cx map_cx funcall in
+        let action' = self#method_action cx map_cx action in
         let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
-        if prop' == prop && funcall' == funcall && prop_t' == prop_t then
+        if prop' == prop && action' == action && prop_t' == prop_t then
           t
         else
-          MethodT (op, r1, r2, prop', funcall', prop_t')
+          MethodT (op, r1, r2, prop', action', prop_t')
       | SetPropT (use_op, r, prop, mode, i, t', prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
@@ -873,7 +892,7 @@ class virtual ['a] t_with_uses =
           GetElemT (use_op, r, t1', t2')
       | CallElemT (r1, r2, t', funcall) ->
         let t'' = self#type_ cx map_cx t' in
-        let funcall' = self#fun_call_type cx map_cx funcall in
+        let funcall' = self#method_action cx map_cx funcall in
         if t' == t'' && funcall' == funcall then
           t
         else
@@ -1030,12 +1049,13 @@ class virtual ['a] t_with_uses =
           t
         else
           ThisSpecializeT (r, this', k')
-      | VarianceCheckT (r, tlist, p) ->
-        let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-        if tlist' == tlist then
+      | VarianceCheckT (r, tparams, targs, p) ->
+        let tparams' = SMap.ident_map (self#type_param cx map_cx) tparams in
+        let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
+        if tparams' == tparams && targs' == targs then
           t
         else
-          VarianceCheckT (r, tlist', p)
+          VarianceCheckT (r, tparams', targs', p)
       | TypeAppVarianceCheckT (use_op, r1, r2, tpairlist) ->
         let tpairlist' =
           ListUtils.ident_map
@@ -1052,6 +1072,18 @@ class virtual ['a] t_with_uses =
           t
         else
           TypeAppVarianceCheckT (use_op, r1, r2, tpairlist')
+      | TypeCastT (use_op, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then
+          t
+        else
+          TypeCastT (use_op, t'')
+      | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+        let enum' = self#enum cx map_cx enum in
+        if enum' == enum then
+          t
+        else
+          EnumCastT { use_op; enum = (reason, trust, enum') }
       | ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (t2, ts2, op2, r2), flip) ->
         let ts1' = ListUtils.ident_map (self#type_ cx map_cx) ts1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -1310,16 +1342,14 @@ class virtual ['a] t_with_uses =
           t
         else
           IdxUnMaybeifyT (r, t'')
-      | OptionalChainT (r, lhs_r, uses) ->
-        let uses' =
-          Nel.map
-            (fun (use, tout) -> (self#opt_use_type cx map_cx use, self#type_ cx map_cx tout))
-            uses
-        in
-        if uses' == uses then
+      | OptionalChainT (r1, r2, this, t_out, void_out) ->
+        let this' = self#type_ cx map_cx this in
+        let t_out' = self#use_type cx map_cx t_out in
+        let void_out' = self#type_ cx map_cx void_out in
+        if t_out' == t_out && void_out' == void_out && this' == this then
           t
         else
-          OptionalChainT (r, lhs_r, uses')
+          OptionalChainT (r1, r2, this', t_out', void_out')
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
@@ -1391,6 +1421,15 @@ class virtual ['a] t_with_uses =
           t
         else
           CreateObjWithComputedPropT { reason; value = value'; tout_tvar = (r, id') }
+      | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
+        let resolved' = ListUtils.ident_map (self#type_ cx map_cx) resolved in
+        let unresolved' = ListUtils.ident_map (self#type_ cx map_cx) unresolved in
+        let upper' = self#use_type cx map_cx upper in
+        if resolved == resolved' && unresolved == unresolved' && upper == upper' then
+          t
+        else
+          ResolveUnionT
+            { reason; resolved = resolved'; unresolved = unresolved'; upper = upper'; id }
 
     method private opt_use_type cx map_cx t =
       match t with
@@ -1400,6 +1439,14 @@ class virtual ['a] t_with_uses =
           t
         else
           OptCallT (op, r, funcall')
+      | OptMethodT (op, r1, r2, propref, opt_action, tout) ->
+        let opt_action' = self#opt_method_action cx map_cx opt_action in
+        let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
+        let propref' = self#prop_ref cx map_cx propref in
+        if propref == propref' && opt_action == opt_action' && tout == tout' then
+          t
+        else
+          OptMethodT (op, r1, r2, propref', opt_action', tout')
       | OptGetPropT (use_op, r, prop) ->
         let prop' = self#prop_ref cx map_cx prop in
         if prop' == prop then
@@ -1424,6 +1471,13 @@ class virtual ['a] t_with_uses =
           t
         else
           OptGetElemT (use_op, r, t'')
+      | OptCallElemT (r1, r2, t', action) ->
+        let t'' = self#type_ cx map_cx t' in
+        let action' = self#opt_method_action cx map_cx action in
+        if t'' == t' && action' == action then
+          t
+        else
+          OptCallElemT (r1, r2, t'', action')
 
     method private opt_fun_call_type cx map_cx ((this, targs, args, clos, strict) as t) =
       let this' = self#type_ cx map_cx this in
@@ -1471,7 +1525,7 @@ class virtual ['a] t_with_uses =
         else
           WriteElem (tin', tout', mode)
       | CallElem (r, funcall) ->
-        let funcall' = self#fun_call_type cx map_cx funcall in
+        let funcall' = self#method_action cx map_cx funcall in
         if funcall' == funcall then
           t
         else
@@ -1550,15 +1604,43 @@ class virtual ['a] t_with_uses =
         else
           ResolveSpreadsToCallT (funcalltype', t'')
 
+    method private opt_method_action cx map_cx t =
+      match t with
+      | OptCallM funtype ->
+        let funtype' = self#opt_fun_call_type cx map_cx funtype in
+        if funtype' == funtype then
+          t
+        else
+          OptCallM funtype'
+      | OptChainM (r, lhs_r, this, funtype, void_out) ->
+        let this' = self#type_ cx map_cx this in
+        let funtype' = self#opt_fun_call_type cx map_cx funtype in
+        let void_out' = self#type_ cx map_cx void_out in
+        if funtype' == funtype && void_out' == void_out && this' == this then
+          t
+        else
+          OptChainM (r, lhs_r, this', funtype', void_out')
+
+    method method_action cx map_cx t =
+      match t with
+      | CallM funtype ->
+        let funtype' = self#fun_call_type cx map_cx funtype in
+        if funtype' == funtype then
+          t
+        else
+          CallM funtype'
+      | ChainM (r, lhs_r, this, funtype, void_out) ->
+        let this' = self#type_ cx map_cx this in
+        let funtype' = self#fun_call_type cx map_cx funtype in
+        let void_out' = self#type_ cx map_cx void_out in
+        if funtype' == funtype && void_out' == void_out && this' == this then
+          t
+        else
+          ChainM (r, lhs_r, this', funtype', void_out')
+
     method fun_call_type cx map_cx t =
-      let {
-        call_this_t;
-        call_targs;
-        call_args_tlist;
-        call_tout;
-        call_closure_t;
-        call_strict_arity;
-      } =
+      let { call_this_t; call_targs; call_args_tlist; call_tout; call_closure_t; call_strict_arity }
+          =
         t
       in
       let call_this_t' = self#type_ cx map_cx call_this_t in
@@ -1787,11 +1869,8 @@ class virtual ['a] t_with_uses =
         | ObjectRep -> tool
         | ObjectWiden _ -> tool
         | Spread
-            (options, { Object.Spread.todo_rev; acc; spread_id; union_reason; curr_resolve_idx })
-          ->
-          let todo_rev' =
-            ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) todo_rev
-          in
+            (options, { Object.Spread.todo_rev; acc; spread_id; union_reason; curr_resolve_idx }) ->
+          let todo_rev' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) todo_rev in
           let acc' = ListUtils.ident_map (self#object_kit_acc_element cx map_cx) acc in
           if todo_rev' == todo_rev && acc' == acc then
             tool
@@ -1879,13 +1958,15 @@ class virtual ['a] t_with_uses =
           t
         else
           SentinelPropTest (b, s, t1', t2', t3')
-      | PropExistsTest (b, s, t1, t2) ->
+      | PropExistsTest (b, s, r, t1, t2, (pred, not_pred)) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
-        if t1' == t2 && t2' == t2 then
+        let pred' = self#predicate cx map_cx pred in
+        let not_pred' = self#predicate cx map_cx not_pred in
+        if t1' == t2 && t2' == t2 && pred' == pred && not_pred' == not_pred then
           t
         else
-          PropExistsTest (b, s, t1', t2')
+          PropExistsTest (b, s, r, t1', t2', (pred', not_pred'))
 
     method simplify_prop_type_tool cx map_cx tool =
       React.SimplifyPropType.(
@@ -1946,18 +2027,14 @@ class virtual ['a] t_with_uses =
             PropTypes ((head', tail'), resolve_object')
         | DefaultProps (tlist, default_props) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          let default_props' =
-            OptionUtils.ident_map (self#default_props cx map_cx) default_props
-          in
+          let default_props' = OptionUtils.ident_map (self#default_props cx map_cx) default_props in
           if tlist' == tlist && default_props' == default_props then
             tool
           else
             DefaultProps (tlist', default_props')
         | InitialState (tlist, initial_state) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          let initial_state' =
-            OptionUtils.ident_map (self#initial_state cx map_cx) initial_state
-          in
+          let initial_state' = OptionUtils.ident_map (self#initial_state cx map_cx) initial_state in
           if tlist' == tlist && initial_state' == initial_state then
             tool
           else

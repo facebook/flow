@@ -79,7 +79,7 @@ module NormalizerMonad : sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
-    tparams:Type.typeparam list ->
+    tparams:(ALoc.t * string) list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -99,6 +99,8 @@ end = struct
          The key to this map is the Type.tvar `ident`.
       *)
       tvar_cache: (Ty.t, error) result IMap.t;
+      (* Similar to a tvar map, we maintain an eval ID map. *)
+      eval_cache: (Ty.t, error) result Type.Eval.Map.t;
       (* This set is useful for synthesizing recursive types. It holds the set
          of type variables that are encountered "free". We say that a type
          variable is free when it appears in the body of its own definition.
@@ -110,13 +112,19 @@ end = struct
       free_tvars: VSet.t;
     }
 
-    let empty = { counter = 0; tvar_cache = IMap.empty; free_tvars = VSet.empty }
+    let empty =
+      {
+        counter = 0;
+        tvar_cache = IMap.empty;
+        eval_cache = Type.Eval.Map.empty;
+        free_tvars = VSet.empty;
+      }
   end
 
   include StateResult.Make (State)
 
   (* Monadic helper functions *)
-  let mapM f xs = all (Core_list.map ~f xs)
+  let mapM f xs = all (Base.List.map ~f xs)
 
   let optMapM f = function
     | Some xs -> mapM f xs >>| Option.return
@@ -130,7 +138,7 @@ end = struct
 
   let sndMapM f (x, y) = f y >>| mk_tuple x
 
-  let concat_fold_m f xs = mapM f xs >>| Core_list.concat
+  let concat_fold_m f xs = mapM f xs >>| Base.List.concat
 
   let fresh_num =
     State.(
@@ -141,21 +149,32 @@ end = struct
 
   let terr ~kind ?msg t =
     let t_str = Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
-    let msg = ListUtils.cat_maybes [msg; t_str] |> String.concat "\n" in
+    let msg = ListUtils.cat_maybes [msg; t_str] |> String.concat ", " in
     error (kind, msg)
 
-  (* Type caches *)
+  (* Update state *)
 
-  let update_tvar_cache i t =
-    State.(
-      let%bind st = get in
-      let tvar_cache = IMap.add i t st.tvar_cache in
-      put { st with tvar_cache })
+  type cache_key =
+    | TVarKey of int
+    | EvalKey of Type.Eval.id
 
-  let find_tvar root_id =
-    State.(
-      let%map st = get in
-      IMap.get root_id st.tvar_cache)
+  let find_in_cache i =
+    let open State in
+    let%map state = get in
+    match i with
+    | TVarKey i -> IMap.find_opt i state.tvar_cache
+    | EvalKey i -> Type.Eval.Map.find_opt i state.eval_cache
+
+  let update_cache i t =
+    let open State in
+    let%bind st = get in
+    match i with
+    | TVarKey i -> put { st with tvar_cache = IMap.add i t st.tvar_cache }
+    | EvalKey i -> put { st with eval_cache = Type.Eval.Map.add i t st.eval_cache }
+
+  let add_to_free_tvars v =
+    let open State in
+    modify (fun st -> { st with free_tvars = VSet.add v st.free_tvars })
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
      1. T appears in env and for its first occurence locations match. This means it
@@ -169,21 +188,19 @@ end = struct
      3. The type parameter is not in env. Do the default action.
   *)
   let lookup_tparam ~default env t tp_name tp_loc =
-    Type.(
-      let pred { name; reason; _ } = name = tp_name && Reason.def_aloc_of_reason reason = tp_loc in
-      match List.find_opt pred env.Env.tparams with
-      | Some _ ->
-        (* If we care about shadowing of type params, then flag an error *)
-        if Env.flag_shadowed_type_params env then
-          let shadow_pred { name; _ } = name = tp_name in
-          match List.find_opt shadow_pred env.Env.tparams with
-          | Some { reason; _ } when Reason.def_aloc_of_reason reason <> tp_loc ->
-            terr ~kind:ShadowTypeParam (Some t)
-          | Some _ -> return (Ty.Bound (tp_loc, tp_name))
-          | None -> assert false
-        else
-          return (Ty.Bound (tp_loc, tp_name))
-      | None -> default t)
+    let pred (loc, name) = name = tp_name && loc = tp_loc in
+    match List.find_opt pred env.Env.tparams with
+    | Some _ ->
+      (* If we care about shadowing of type params, then flag an error *)
+      if Env.flag_shadowed_type_params env then
+        let shadow_pred (_, name) = name = tp_name in
+        match List.find_opt shadow_pred env.Env.tparams with
+        | Some (loc, _) when loc <> tp_loc -> terr ~kind:ShadowTypeParam (Some t)
+        | Some _ -> return (Ty.Bound (tp_loc, tp_name))
+        | None -> assert false
+      else
+        return (Ty.Bound (tp_loc, tp_name))
+    | None -> default t
 
   (**************)
   (* Type ctors *)
@@ -370,6 +387,56 @@ end = struct
         let changed = not (t == t') in
         (* If not changed then all free_vars are still in, o.w. recompute free vars *)
         mk_mu ~definitely_appears:(not changed) i t'
+
+    (* Normalize potentially recursive types.
+     *
+     * Input here is a unique `id` (e.g. tvar) and a type-level operation `f`.
+     * To avoid non-termination we make use of the tvar_cache, that holds the result
+     * of ids that have been resolved, or are "in resolution". Depending on whether
+     * we have seen `id` before, there are a few cases here:
+     *
+     * a. The variable is "under resolution": We return the recursive variable as
+     *    result and update the set of free_tvars, which is later used to construct
+     *    the normalized recursive type.
+     *
+     * b. The variable is "resolved": Return the result.
+     *
+     * c. The variable resolution led to an error: Propagate error.
+     *
+     * d. The variable has never been seen before:
+     *    - We set the variable to "under resolution" and introduce a recursive
+     *      variable 'rid' to represent the normalized result.
+     *    - We evaluate the type (`f ()`). This typically includes a Flow_js constraint
+     *      level computation, like resolving lower-bounds, evaluating a type
+     *      destructor.
+     *    - We remove 'rid' from free_tvars, since it will no longer be in scope.
+     *    - We return the result.
+     *)
+    let with_cache id ~f =
+      let open State in
+      match%bind find_in_cache id with
+      | Some (Ok Ty.(TVar (RVar v, _) as t)) ->
+        let%map () = add_to_free_tvars v in
+        t
+      | Some (Ok t) -> return t
+      | Some (Error s) -> error s
+      | None ->
+        let%bind rid = fresh_num in
+        let rvar = Ty.RVar rid in
+        (* Set current variable "under resolution" *)
+        let%bind () = update_cache id (Ok (Ty.TVar (rvar, None))) in
+        let%bind in_st = get in
+        let (result, out_st) = run in_st (f ()) in
+        let result = Base.Result.map ~f:(make out_st.free_tvars rid) result in
+        (* Reset state by removing the current tvar from the free vars set *)
+        let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
+        let%bind () = put out_st in
+        (* Update cache with final result *)
+        let%bind () = update_cache id result in
+        (* Throw the error if one was encountered *)
+        (match result with
+        | Ok ty -> return ty
+        | Error e -> error e)
   end
 
   module Substitution = struct
@@ -410,7 +477,7 @@ end = struct
             super#on_t env t
           | Bound (_, name) ->
             begin
-              match SMap.get name env with
+              match SMap.find_opt name env with
               | Some t' -> t'
               | None -> super#on_t env t
             end
@@ -448,13 +515,18 @@ end = struct
       let symbol_source = ALoc.source def_loc in
       let provenance =
         match symbol_source with
-        | Some (LibFile _) -> Ty.Library
+        | Some (LibFile def_source) ->
+          let current_source = Env.(env.genv.file) in
+          if File_key.to_string current_source = def_source then
+            Ty.Local
+          else
+            Ty.Library { Ty.imported_as = ALocMap.find_opt def_loc env.Env.imported_names }
         | Some (SourceFile def_source) ->
           let current_source = Env.(env.genv.file) in
           if File_key.to_string current_source = def_source then
             Ty.Local
           else
-            Ty.Remote { Ty.imported_as = ALocMap.get def_loc env.Env.imported_names }
+            Ty.Remote { Ty.imported_as = ALocMap.find_opt def_loc env.Env.imported_names }
         | Some (JsonFile _)
         | Some (ResourceFile _) ->
           Ty.Local
@@ -562,194 +634,145 @@ end = struct
           end)
 
   and type_after_reason ~env t =
-    Type.(
-      let env = Env.descend env in
-      match t with
-      | OpenT (_, id) -> type_variable ~env id
-      | BoundT (reason, name, _) -> bound_t ~env reason name
-      | AnnotT (_, t, _) -> type__ ~env t
-      | EvalT (t, d, id) -> eval_t ~env t id d
-      | ExactT (_, t) -> exact_t ~env t
-      | CustomFunT (_, f) -> custom_fun ~env f
-      | InternalT i -> internal_t ~env t i
-      | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
-      | DefT (_, _, MixedT _) -> return Ty.Top
-      | AnyT (_, kind) -> return (Ty.Any (any_t kind))
-      | DefT (_, _, VoidT) -> return Ty.Void
-      | DefT (_, _, NumT (Literal (_, (_, x)))) when Env.preserve_inferred_literal_types env ->
-        return (Ty.Num (Some x))
-      | DefT (_, _, NumT (Truthy | AnyLiteral | Literal _)) -> return (Ty.Num None)
-      | DefT (_, _, StrT (Literal (_, x))) when Env.preserve_inferred_literal_types env ->
-        return (Ty.Str (Some x))
-      | DefT (_, _, StrT (Truthy | AnyLiteral | Literal _)) -> return (Ty.Str None)
-      | DefT (_, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
-        return (Ty.Bool (Some x))
-      | DefT (_, _, BoolT _) -> return (Ty.Bool None)
-      | DefT (_, _, EmptyT _) -> return (mk_empty Ty.EmptyType)
-      | DefT (_, _, NullT) -> return Ty.Null
-      | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
-      | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
-      | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
-      | MaybeT (_, t) ->
-        let%map t = type__ ~env t in
-        Ty.mk_union (Ty.Void, [Ty.Null; t])
-      | OptionalT { reason = _; type_ = t; use_desc = _ } ->
-        let%map t = type__ ~env t in
-        Ty.mk_union (Ty.Void, [t])
-      | DefT (_, _, FunT (_, _, f)) ->
-        let%map t = fun_ty ~env f None in
-        Ty.Fun t
-      | DefT (r, _, ObjT o) -> obj_ty ~env r o
-      | DefT (r, _, ArrT a) -> arr_ty ~env r a
-      | UnionT (_, rep) ->
-        let (t0, (t1, ts)) = UnionRep.members_nel rep in
-        let%bind t0 = type__ ~env t0 in
-        let%bind t1 = type__ ~env t1 in
-        let%map ts = mapM (type__ ~env) ts in
-        Ty.mk_union (t0, t1 :: ts)
-      | IntersectionT (_, rep) ->
-        let (t0, (t1, ts)) = InterRep.members_nel rep in
-        let%bind t0 = type__ ~env t0 in
-        let%bind t1 = type__ ~env t1 in
-        let%map ts = mapM (type__ ~env) ts in
-        Ty.mk_inter (t0, t1 :: ts)
-      | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-      | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
-      | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
-      | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
-      | DefT (_, _, ClassT t) -> class_t ~env t None
-      | DefT (_, _, IdxWrapper t) -> type__ ~env t
-      | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
-        let%bind config = type__ ~env config in
-        let%bind instance = type__ ~env instance in
+    let open Type in
+    let env = Env.descend env in
+    match t with
+    | OpenT (_, id) -> type_variable ~env id
+    | BoundT (reason, name) -> bound_t ~env reason name
+    | AnnotT (_, t, _) -> type__ ~env t
+    | EvalT (t, d, id) -> eval_t ~env t id d
+    | ExactT (_, t) -> exact_t ~env t
+    | CustomFunT (_, f) -> custom_fun ~env f
+    | InternalT i -> internal_t t i
+    | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
+    | DefT (_, _, MixedT _) -> return Ty.Top
+    | AnyT (_, kind) -> return (Ty.Any (any_t kind))
+    | DefT (_, _, VoidT) -> return Ty.Void
+    | DefT (_, _, NumT (Literal (_, (_, x)))) when Env.preserve_inferred_literal_types env ->
+      return (Ty.Num (Some x))
+    | DefT (_, _, NumT (Truthy | AnyLiteral | Literal _)) -> return (Ty.Num None)
+    | DefT (_, _, StrT (Literal (_, x))) when Env.preserve_inferred_literal_types env ->
+      return (Ty.Str (Some x))
+    | DefT (_, _, StrT (Truthy | AnyLiteral | Literal _)) -> return (Ty.Str None)
+    | DefT (_, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
+      return (Ty.Bool (Some x))
+    | DefT (_, _, BoolT _) -> return (Ty.Bool None)
+    | DefT (_, _, EmptyT _) -> return (mk_empty Ty.EmptyType)
+    | DefT (_, _, NullT) -> return Ty.Null
+    | DefT (_, _, SymbolT) -> return Ty.Symbol
+    | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
+    | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
+    | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
+    | MaybeT (_, t) ->
+      let%map t = type__ ~env t in
+      Ty.mk_union (Ty.Void, [Ty.Null; t])
+    | OptionalT { reason = _; type_ = t; use_desc = _ } ->
+      let%map t = type__ ~env t in
+      Ty.mk_union (Ty.Void, [t])
+    | DefT (_, _, FunT (_, _, f)) ->
+      let%map t = fun_ty ~env f None in
+      Ty.Fun t
+    | DefT (r, _, ObjT o) -> obj_ty ~env r o
+    | DefT (r, _, ArrT a) -> arr_ty ~env r a
+    | UnionT (_, rep) ->
+      let (t0, (t1, ts)) = UnionRep.members_nel rep in
+      let%bind t0 = type__ ~env t0 in
+      let%bind t1 = type__ ~env t1 in
+      let%map ts = mapM (type__ ~env) ts in
+      Ty.mk_union (t0, t1 :: ts)
+    | IntersectionT (_, rep) ->
+      let (t0, (t1, ts)) = InterRep.members_nel rep in
+      let%bind t0 = type__ ~env t0 in
+      let%bind t1 = type__ ~env t1 in
+      let%map ts = mapM (type__ ~env) ts in
+      Ty.mk_inter (t0, t1 :: ts)
+    | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
+    | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
+    | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
+    | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
+    | DefT (_, _, ClassT t) -> class_t ~env t None
+    | DefT (_, _, IdxWrapper t) -> type__ ~env t
+    | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
+      let%bind config = type__ ~env config in
+      let%bind instance = type__ ~env instance in
+      return
+        (generic_talias
+           (Ty_symbol.builtin_symbol "React$AbstractComponent")
+           (Some [config; instance]))
+    | ThisClassT (_, t) -> this_class_t ~env t None
+    | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
+    | KeysT (_, t) ->
+      let%map ty = type__ ~env t in
+      Ty.Utility (Ty.Keys ty)
+    | OpaqueT (r, o) -> opaque_t ~env r o
+    | ReposT (_, t) -> type__ ~env t
+    | ShapeT t ->
+      let%map t = type__ ~env t in
+      Ty.Utility (Ty.Shape t)
+    | TypeDestructorTriggerT (_, r, _, _, _) ->
+      let loc = Reason.def_aloc_of_reason r in
+      return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
+    | MergedT (_, uses) -> merged_t ~env uses
+    | ExistsT _ -> return Ty.(Utility Exists)
+    | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
+    | FunProtoT _ -> return Ty.(TypeOf FunProto)
+    | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ } -> type__ ~env t
+    | FunProtoApplyT _ ->
+      if Env.expand_internal_types env then
+        (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
         return
-          (generic_talias
-             (Ty_symbol.builtin_symbol "React$AbstractComponent")
-             (Some [config; instance]))
-      | ThisClassT (_, t) -> this_class_t ~env t None
-      | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
-      | KeysT (_, t) ->
-        let%map ty = type__ ~env t in
-        Ty.Utility (Ty.Keys ty)
-      | OpaqueT (r, o) -> opaque_t ~env r o
-      | ReposT (_, t) -> type__ ~env t
-      | ShapeT t ->
-        let%map t = type__ ~env t in
-        Ty.Utility (Ty.Shape t)
-      | TypeDestructorTriggerT (_, r, _, _, _) ->
-        let loc = Reason.def_aloc_of_reason r in
-        return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
-      | MergedT (_, uses) -> merged_t ~env uses
-      | ExistsT _ -> return Ty.(Utility Exists)
-      | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
-      | FunProtoT _ -> return Ty.(TypeOf FunProto)
-      | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ } -> type__ ~env t
-      | FunProtoApplyT _ ->
-        if Env.expand_internal_types env then
-          (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
-          return
-            Ty.(
-              mk_fun
-                ~params:
-                  [
-                    (Some "thisArg", explicit_any, non_opt_param);
-                    (Some "argArray", explicit_any, opt_param);
-                  ]
-                explicit_any)
-        else
-          return Ty.(TypeOf FunProtoApply)
-      | FunProtoBindT _ ->
-        if Env.expand_internal_types env then
-          (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
-          return
-            Ty.(
-              mk_fun
-                ~params:[(Some "thisArg", explicit_any, non_opt_param)]
-                ~rest:
-                  ( Some "argArray",
-                    Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
-                explicit_any)
-        else
-          return Ty.(TypeOf FunProtoBind)
-      | FunProtoCallT _ ->
-        if Env.expand_internal_types env then
-          (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
-          return
-            Ty.(
-              mk_fun
-                ~params:[(Some "thisArg", explicit_any, non_opt_param)]
-                ~rest:
-                  ( Some "argArray",
-                    Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
-                explicit_any)
-        else
-          return Ty.(TypeOf FunProtoCall)
-      | ModuleT (reason, exports, _) -> module_t env reason exports t
-      | NullProtoT _ -> return Ty.Null
-      | DefT (_, _, CharSetT _) -> terr ~kind:UnsupportedTypeCtor (Some t))
+          Ty.(
+            mk_fun
+              ~params:
+                [
+                  (Some "thisArg", explicit_any, non_opt_param);
+                  (Some "argArray", explicit_any, opt_param);
+                ]
+              explicit_any)
+      else
+        return Ty.(TypeOf FunProtoApply)
+    | FunProtoBindT _ ->
+      if Env.expand_internal_types env then
+        (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
+        return
+          Ty.(
+            mk_fun
+              ~params:[(Some "thisArg", explicit_any, non_opt_param)]
+              ~rest:
+                ( Some "argArray",
+                  Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
+              explicit_any)
+      else
+        return Ty.(TypeOf FunProtoBind)
+    | FunProtoCallT _ ->
+      if Env.expand_internal_types env then
+        (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
+        return
+          Ty.(
+            mk_fun
+              ~params:[(Some "thisArg", explicit_any, non_opt_param)]
+              ~rest:
+                ( Some "argArray",
+                  Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
+              explicit_any)
+      else
+        return Ty.(TypeOf FunProtoCall)
+    | ModuleT (reason, exports, _) -> module_t env reason exports t
+    | NullProtoT _ -> return Ty.Null
+    | DefT (reason, _, EnumObjectT { enum_name; _ }) ->
+      let symbol = symbol_from_reason env reason enum_name in
+      return Ty.(EnumDecl symbol)
+    | DefT (reason, _, EnumT { enum_name; _ }) ->
+      let symbol = symbol_from_reason env reason enum_name in
+      return (Ty.Generic (symbol, Ty.EnumKind, None))
+    | DefT (_, _, CharSetT _) -> terr ~kind:UnsupportedTypeCtor (Some t)
 
-  (* Type variable normalization (input: a type variable `id`)
-
-     Step 1: Use `root_id` as a proxy for `id`.
-
-     Step 2: Check the cache in case root_id has been computed before. There are
-             several cases here:
-             a. The variable is "under resolution" state (recursive variable).
-                Exit with the cached result and add the variable to the free
-                variable set.
-             b. The variable is "resolved". Return the result.
-             c. The variable resolution led to an error. Propagate error.
-             d. The variable has never been seen before. Go to step 3.
-
-     Step 3: Start variable resolution.
-  *)
   and type_variable ~env id =
     let (root_id, constraints) =
-      (* step 1 *)
+      (* Use `root_id` as a proxy for `id` *)
       Context.find_constraints Env.(env.genv.cx) id
     in
-    match%bind find_tvar root_id with
-    (* step 2 *)
-    | Some (Ok Ty.(TVar (RVar v, _) as t)) ->
-      (* step 2a *)
-      let mod_state st = State.{ st with free_tvars = VSet.add v st.free_tvars } in
-      let%map () = modify mod_state in
-      t
-    | Some (Ok t) -> return t (* step 2b *)
-    | Some (Error s) -> error s (* step 2c *)
-    | None ->
-      (* step 2d *)
-      resolve_tvar ~env constraints root_id
-
-  (* step 3 *)
-
-  (* Resolve a type variable (encountered for the first time)
-
-     Resolving a type variable can either succeed and return a Ty.t, or fail and
-     return an error. Since we are caching the result of this resolution we need
-     to save a `(Ty.t, error) result`. For this reason we isolate the execution
-     of the monad under the current state and cache the "monadic" result.
-  *)
-  and resolve_tvar ~env cons root_id =
-    State.(
-      let%bind rid = fresh_num in
-      let rvar = Ty.RVar rid in
-      (* Set current variable "under resolution" *)
-      let%bind _ = update_tvar_cache root_id (Ok (Ty.TVar (rvar, None))) in
-      let%bind in_st = get in
-      (* Resolve the tvar *)
-      let (ty_res, out_st) = run in_st (resolve_bounds ~env cons) in
-      (* Create a recursive type (if needed) *)
-      let ty_res = Base.Result.map ~f:(Recursive.make out_st.free_tvars rid) ty_res in
-      (* Reset state by removing the current tvar from the free vars set *)
-      let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
-      let%bind _ = put out_st in
-      (* Update cache with final result *)
-      let%bind _ = update_tvar_cache root_id ty_res in
-      (* Throw the error if one was encountered *)
-      match ty_res with
-      | Ok ty -> return ty
-      | Error e -> error e)
+    Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds ~env constraints)
 
   (* Resolving a type variable amounts to normalizing its lower bounds and
      taking their union.
@@ -768,8 +791,8 @@ end = struct
     |> mapM (fun t ->
            let%map ty = type__ ~env t in
            Nel.to_list (Ty.bk_union ty))
-    >>| Core_list.concat
-    >>| Core_list.dedup
+    >>| Base.List.concat
+    >>| Base.List.dedup_and_sort ~compare:Pervasives.compare
 
   and empty_with_upper_bounds ~env bounds =
     let uses = T.UseTypeMap.keys bounds.Constraint.upper in
@@ -867,7 +890,7 @@ end = struct
       | t -> [t]
     in
     let%map ts = mapM (method_ty ~env) ts in
-    Core_list.map ~f:(fun t -> Ty.CallProp t) ts
+    Base.List.map ~f:(fun t -> Ty.CallProp t) ts
 
   and obj_props =
     (* call property *)
@@ -958,12 +981,7 @@ end = struct
        *)
       let props_obj =
         Ty.Obj
-          {
-            Ty.obj_exact = false;
-            obj_frozen = false;
-            obj_literal = false;
-            obj_props = static_flds;
-          }
+          { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props = static_flds }
       in
       Ty.mk_inter (parent_class, [props_obj])
 
@@ -996,7 +1014,7 @@ end = struct
   and inline_interface =
     let rec extends = function
       | Ty.Generic g -> return [g]
-      | Ty.Inter (t1, t2, ts) -> mapM extends (t1 :: t2 :: ts) >>| Core_list.concat
+      | Ty.Inter (t1, t2, ts) -> mapM extends (t1 :: t2 :: ts) >>| Base.List.concat
       | Ty.TypeOf Ty.ObjProto (* interface {} *)
       | Ty.TypeOf Ty.FunProto (* interface { (): void } *) ->
         (* Do not contribute to the extends clause *)
@@ -1040,13 +1058,15 @@ end = struct
       Ty.InlineInterface { Ty.if_extends; if_body }
 
   and class_t =
-    let rec go ~env ps ty =
+    let go ~env ps ty =
       match ty with
       | Ty.Generic (name, kind, _) ->
         begin
           match kind with
           | Ty.InterfaceKind -> return (Ty.InterfaceDecl (name, ps))
-          | Ty.TypeAliasKind -> return (Ty.Utility (Ty.Class ty))
+          | Ty.TypeAliasKind
+          | Ty.EnumKind ->
+            return (Ty.Utility (Ty.Class ty))
           | Ty.ClassKind ->
             (* If some parameters have been passed, then we are in the `PolyT-ThisClassT`
              * case of Flow_js.canonicalize_imported_type. This case should still be
@@ -1065,17 +1085,12 @@ end = struct
       | Ty.Union _
       | Ty.Inter _ ->
         return (Ty.Utility (Ty.Class ty))
-      | Ty.Bound (loc, bname) ->
-        let pred Type.{ name; reason; _ } =
-          name = bname && Reason.def_aloc_of_reason reason = loc
-        in
-        begin
-          match List.find_opt pred env.Env.tparams with
-          | Some Type.{ bound; _ } ->
-            let%bind b = type__ ~env bound in
-            go ~env ps b
-          | _ -> terr ~kind:BadClassT ~msg:"bound" None
-        end
+      | Ty.Bound (bloc, bname) ->
+        let pred (loc, name) = name = bname && loc = bloc in
+        if List.exists pred env.Env.tparams then
+          return (Ty.Utility (Ty.Class (Ty.Bound (bloc, bname))))
+        else
+          terr ~kind:BadClassT ~msg:"bound" None
       | ty -> terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
     in
     fun ~env t ps ->
@@ -1097,9 +1112,11 @@ end = struct
   and poly_ty ~env t typeparams =
     let (env, results) =
       Nel.fold_left
-        (fun (env, rs) typeparam ->
-          let r = type_param ~env typeparam in
-          (Env.add_typeparam env typeparam, r :: rs))
+        (fun (env, rs) tp ->
+          let r = type_param ~env tp in
+          let loc = Reason.def_aloc_of_reason tp.T.reason in
+          let name = tp.T.name in
+          (Env.add_typeparam env (loc, name), r :: rs))
         (env, [])
         typeparams
     in
@@ -1174,8 +1191,7 @@ end = struct
           let symbol = symbol_from_reason env r name in
           return (Ty.named_alias symbol)
         | RThisType -> type__ ~env t
-        | desc ->
-          terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
+        | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in
       fun ~env r kind t ps ->
         match kind with
@@ -1463,14 +1479,13 @@ end = struct
       | Complex OneOfType -> return (builtin_t "React$PropType$OneOfType")
       | Complex Shape -> return (builtin_t "React$PropType$Shape"))
 
-  and internal_t ~env t =
+  and internal_t t =
     Type.(
       function
       | ChoiceKitT _
       | ExtendsT _
       | ReposUpperT _ ->
-        terr ~kind:BadInternalT (Some t)
-      | OptionalChainVoidT r -> type__ ~env (DefT (r, bogus_trust (), VoidT)))
+        terr ~kind:BadInternalT (Some t))
 
   and param_bound ~env = function
     | T.DefT (_, _, T.MixedT _) -> return None
@@ -1571,14 +1586,18 @@ end = struct
       in
       mk_spread ty target prefix_tys head_slice
 
-  and type_destructor_t ~env id t d =
+  and type_destructor_t ~env use_op reason id t d =
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
-      let evaluated = Context.evaluated cx in
-      match IMap.get id evaluated with
-      | Some t -> type__ ~env t
-      | None -> type_destructor_unevaluated ~env t d
-    (* fallback *)
+      Context.with_normalizer_mode cx (fun cx ->
+          (* The evaluated type might be recursive. To avoid non-termination we
+           * wrap the evaluation with our caching mechanism. *)
+          Recursive.with_cache (EvalKey id) ~f:(fun () ->
+              let trace = Trace.dummy_trace in
+              match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
+              | exception Flow_js.Attempted_operation_on_bound _ ->
+                type_destructor_unevaluated ~env t d
+              | (_, tout) -> type__ ~env tout))
     else
       type_destructor_unevaluated ~env t d
 
@@ -1624,7 +1643,7 @@ end = struct
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     let t' =
-      match IMap.get id evaluated with
+      match T.Eval.Map.find_opt id evaluated with
       | Some evaled_t -> evaled_t
       | None -> t
     in
@@ -1632,7 +1651,7 @@ end = struct
 
   and eval_t ~env t id = function
     | Type.LatentPredT _ -> latent_pred_t ~env id t
-    | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
+    | Type.TypeDestructorT (use_op, r, d) -> type_destructor_t ~env use_op r id t d
 
   and module_t =
     let mk_module env symbol_opt exports =
@@ -1666,7 +1685,8 @@ end = struct
           | [] -> return Ty.NoUpper
           | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
         end
-      | T.UseT (_, t) :: rest ->
+      | T.UseT (_, t) :: rest
+      | T.TypeCastT (_, t) :: rest ->
         let%bind t = type__ ~env t in
         uses_t_aux ~env (t :: acc) rest
       | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux ~env acc (u :: rest)

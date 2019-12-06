@@ -74,8 +74,7 @@ module Verbose : sig
   val print_if_verbose_lazy :
     Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string Lazy.t list -> unit
 
-  val print_if_verbose :
-    Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string list -> unit
+  val print_if_verbose : Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string list -> unit
 
   val print_types_if_verbose : Context.t -> Trace.t -> ?note:string -> Type.t * Type.use_t -> unit
 end

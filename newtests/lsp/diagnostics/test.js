@@ -531,57 +531,6 @@ export default suite(
           ],
         ),
     ]),
-    test('pseudo parse errors', [
-      lspStartAndConnect(),
-      addFile('pseudo_parse_error.js')
-        .waitUntilLSPMessage(
-          9000,
-          'textDocument/publishDiagnostics{Cannot return}',
-        )
-        .verifyAllLSPMessagesInStep(
-          [
-            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
-          ],
-          [
-            'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
-          ],
-        )
-        .newErrors(
-          `
-                    pseudo_parse_error.js:6
-                      6: obj?.foo(); // Error
-                         ^^^^^^^^^^ Flow does not yet support method or property calls in optional chains.
-                  `,
-        ),
-      lspNotification('textDocument/didOpen', {
-        textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/pseudo_parse_error.js',
-          languageId: 'javascript',
-          version: 1,
-          text: `// @flow
-
-    const obj = {};
-    // Flow does not yet support method or property calls in optional chains, so
-    // this will produce a pseudo parse error
-    obj?.foo(); // Error
-    `,
-        },
-      })
-        .waitUntilLSPMessage(
-          9000,
-          'textDocument/publishDiagnostics{Cannot return}',
-        )
-        .verifyAllLSPMessagesInStep(
-          [
-            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
-          ],
-          [
-            'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
-          ],
-        ),
-    ]),
     test('Errors with Loc.none', [
       lspStartAndConnect(),
       addFiles('empty.js', 'importsFakeSymbol.js').waitUntilLSPMessage(

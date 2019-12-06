@@ -33,7 +33,7 @@ let extract_member_def ~reader cx this name =
   let result =
     match Members.extract cx this |> Members.to_command_result with
     | Ok result_map ->
-      (match SMap.get name result_map with
+      (match SMap.find_opt name result_map with
       | Some (None, t) -> Def (Type.loc_of_t t |> loc_of_aloc ~reader)
       | Some (Some x, _) -> Def (loc_of_aloc ~reader x)
       | None -> Def_error (spf "failed to find member %s in members map" name))
@@ -139,8 +139,9 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
   | Get_def_request.Location loc ->
     begin
       match Get_def_process_location.process_location ~is_legit_require ~typed_ast loc with
-      | Some req -> Chain req
-      | None -> Done Bad_loc
+      | Get_def_process_location.Loc aloc -> Done (Def (loc_of_aloc ~reader aloc))
+      | Get_def_process_location.Chain req -> Chain req
+      | Get_def_process_location.No_loc -> Done Bad_loc
     end
   | Get_def_request.Identifier { name = _; loc = aloc; type_ } ->
     let loc = loc_of_aloc ~reader aloc in
@@ -162,7 +163,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
     NOTE:
     The Member, Type, and Require cases could take us to a different file.
     Since none of these will ever return Chain, we do not need to call
-    basic_check_contents again to get info about the new file.
+    type_contents again to get info about the new file.
     If you break this serendipitous invariant, you'll probably need to add logic
     to deal with updating what file we're looking at.
   *)
@@ -179,7 +180,8 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
       | Type.OpenT _ ->
         (match Flow_js.possible_types_of_type cx v with
         | [t] -> Def (Type.def_loc_of_t t |> loc_of_aloc ~reader)
-        | _ -> Def_error "Flow_js.possible_types_of_type failed")
+        | [] -> Def_error "No possible types"
+        | _ -> Def_error "More than one possible type")
       | _ -> Def (Type.def_loc_of_t v |> loc_of_aloc ~reader)
     in
     Done loc
@@ -252,14 +254,9 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
   let rec loop rev_req_history req =
     match getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast req with
     | Done res ->
-      let request_history = Core_list.rev_map ~f:gdr_to_string rev_req_history in
+      let request_history = Base.List.rev_map ~f:gdr_to_string rev_req_history in
       let res =
         match res with
-        | Def loc ->
-          if Loc.source loc = Loc.source requested_loc && Reason.in_range requested_loc loc then
-            Bad_loc
-          else
-            res
         | Def_error msg ->
           (match recover_intermediate_result rev_req_history with
           | Some recovered_loc -> Partial (recovered_loc, msg)

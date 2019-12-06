@@ -11,10 +11,22 @@ type t = {
   string_loc: ALoc.t option;
   number_loc: ALoc.t option;
   mixed_loc: ALoc.t option;
+  enum_bool_loc: ALoc.t option;
+  enum_string_loc: ALoc.t option;
+  enum_number_loc: ALoc.t option;
 }
 
 let empty =
-  { null_loc = None; bool_loc = None; string_loc = None; number_loc = None; mixed_loc = None }
+  {
+    null_loc = None;
+    bool_loc = None;
+    string_loc = None;
+    number_loc = None;
+    mixed_loc = None;
+    enum_bool_loc = None;
+    enum_string_loc = None;
+    enum_number_loc = None;
+  }
 
 let debug_to_string t =
   let string_of_loc_option = function
@@ -27,8 +39,11 @@ let debug_to_string t =
     ("string_loc", t.string_loc);
     ("number_loc", t.number_loc);
     ("mixed_loc", t.mixed_loc);
+    ("enum_bool_loc", t.enum_bool_loc);
+    ("enum_string_loc", t.enum_string_loc);
+    ("enum_number_loc", t.enum_number_loc);
   ]
-  |> Core_list.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
-  |> Core_list.map ~f:(fun (name, loc) -> Printf.sprintf "  %s: %s;\n" name loc)
+  |> Base.List.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
+  |> Base.List.map ~f:(fun (name, loc) -> Printf.sprintf "  %s: %s;\n" name loc)
   |> String.concat ""
   |> Printf.sprintf "{\n%s}"

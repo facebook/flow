@@ -147,7 +147,7 @@ class visitor =
       if id != root_id then
         self#tvar cx root_id
       else
-        match IMap.get root_id tvar_cache with
+        match IMap.find_opt root_id tvar_cache with
         | Some Started -> (Kind.Any, Taint.Tainted)
         | Some (Done cov) -> cov
         | None ->
@@ -215,13 +215,16 @@ class visitor =
       | DefT (_, t, MixedT _)
       | DefT (_, t, NumT _)
       | DefT (_, t, NullT)
+      | DefT (_, t, SymbolT)
       | DefT (_, t, ObjT _)
       | DefT (_, t, ReactAbstractComponentT _)
       | DefT (_, t, SingletonNumT _)
       | DefT (_, t, SingletonStrT _)
       | DefT (_, t, SingletonBoolT _)
       | DefT (_, t, StrT _)
-      | DefT (_, t, VoidT) ->
+      | DefT (_, t, VoidT)
+      | DefT (_, t, EnumObjectT _)
+      | DefT (_, t, EnumT _) ->
         (Kind.Checked, Taint.of_trust cx t)
       (* Concrete uncovered constructors *)
       (* TODO: Rethink coverage and trust for these types *)
@@ -244,7 +247,7 @@ class visitor =
     method private eval_t cx t id =
       let evaluated = Context.evaluated cx in
       let t =
-        match IMap.get id evaluated with
+        match Eval.Map.find_opt id evaluated with
         | Some cached -> cached
         | None -> t
       in
@@ -429,7 +432,7 @@ let covered_types ~should_check ~check_trust cx tast =
   let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t) :: acc in
   coverage_fold_tast ~f:step ~init:[] tast |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
 
-let component_coverage :
+let file_coverage :
     full_cx:Context.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
     Coverage_response.file_coverage =

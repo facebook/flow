@@ -39,7 +39,7 @@ module Make (L : Loc_sig.S) = struct
     let is x t = Nel.exists (L.equal x) t.locs
   end
 
-  module DefMap = MyMap.Make (Def)
+  module DefMap = WrappedMap.Make (Def)
 
   type use_def_map = Def.t L.LMap.t
 
@@ -75,7 +75,7 @@ module Make (L : Loc_sig.S) = struct
     let use_def_map = defs_of_all_uses info in
     L.LMap.fold
       (fun use def def_uses_map ->
-        match DefMap.get def def_uses_map with
+        match DefMap.find_opt def def_uses_map with
         | None -> DefMap.add def (L.LSet.singleton use) def_uses_map
         | Some uses -> DefMap.add def (L.LSet.add use uses) def_uses_map)
       use_def_map
@@ -87,7 +87,7 @@ module Make (L : Loc_sig.S) = struct
         (fun _ scope acc ->
           match acc with
           | Some _ -> acc
-          | None -> L.LMap.get use scope.Scope.locals)
+          | None -> L.LMap.find_opt use scope.Scope.locals)
         scopes
         None
     in
@@ -122,7 +122,7 @@ module Make (L : Loc_sig.S) = struct
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 
   let scope info scope_id =
-    try IMap.find_unsafe scope_id info.scopes
+    try IMap.find scope_id info.scopes
     with Not_found -> failwith ("Scope " ^ string_of_int scope_id ^ " not found")
 
   let scope_of_loc info scope_loc =
@@ -154,7 +154,7 @@ module Make (L : Loc_sig.S) = struct
         match scope.Scope.parent with
         | Some scope_id ->
           let children' =
-            match IMap.get scope_id acc with
+            match IMap.find_opt scope_id acc with
             | Some children -> children
             | None -> []
           in
@@ -168,7 +168,7 @@ module Make (L : Loc_sig.S) = struct
     let children_map = rev_scope_pointers scopes in
     let rec build_scope_tree scope_id =
       let children =
-        match IMap.get scope_id children_map with
+        match IMap.find_opt scope_id children_map with
         | None -> []
         | Some children_scope_ids -> List.rev_map build_scope_tree children_scope_ids
       in
@@ -188,7 +188,7 @@ module Make (L : Loc_sig.S) = struct
   *)
   let rec compute_free_and_bound_variables = function
     | Tree.Node (scope, children) ->
-      let children' = Core_list.map ~f:compute_free_and_bound_variables children in
+      let children' = Base.List.map ~f:compute_free_and_bound_variables children in
       let (free_children, bound_children) =
         List.fold_left
           (fun (facc, bacc) -> function

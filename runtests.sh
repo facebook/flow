@@ -40,6 +40,71 @@ assert_errors() {
   assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
 }
 
+# Query utilities
+
+query_at_pos() {
+  local query=$1
+  local file=$2
+  local line=$3
+  local col=$4
+  shift 4
+  local flags=("$@")
+
+  printf "%s:%s:%s\n" "$file" "$line" "$col"
+  echo "Flags:" "${flags[@]}"
+  assert_ok "$FLOW" "$query" "$file" "$line" "$col" --strip-root "${flags[@]}"
+  printf "\n"
+}
+
+# Utility to create queries that involve specific locations (line, column)
+#
+# This function performs 'query' on all locations (line, col) in 'file' that
+# have a ^ in comments at location (line+1, col).
+#
+# E.g.
+#   type A = number;
+#   //   ^
+#
+# You can also pass in flags after the ^:
+# //   ^ --expand-type-aliases
+#
+# Invoke this passing the query name, the file, and any additional flags to be
+# applied to every query in the file, e.g.
+#
+#   query_in_file "type-at-pos" "file.js" --pretty --json
+#
+queries_in_file() {
+  local query=$1
+  local file=$2
+  shift 2
+  local arg_flags_array=("$@")
+
+  awk '/^\/\/.*\^/{ print NR }' "$file" | while read -r line; do
+    local linep="$line""p"
+    # Compute the column of the query
+    local col
+    col=$(
+      sed -n "$linep" "$file" | \
+      awk -F'^' '{ print $1}' | \
+      wc -c
+    )
+    col="$((col))" # trim wc's whitespaces
+    # Read line flags into an array (space separation)
+    local line_flags_array=()
+    IFS=" " read -r -a line_flags_array <<< "$(
+      sed -n "$linep" "$file" | \
+      awk -F'^' '{ print $2 }'
+    )"
+    if [ -n "$col" ]; then
+      # Get line above
+      ((line--))
+      # Aggregate flags
+      local all_flags=("${arg_flags_array[@]}" "${line_flags_array[@]}")
+      query_at_pos "$query" "$file" "$line" "$col" "${all_flags[@]}"
+    fi
+  done
+}
+
 show_skipping_stats_classic() {
   printf "\\n========Skipping stats========\\n"
   grep -o "Merge skipped [0-9]\+ of [0-9]\+ modules" $1 | tail -n 1
@@ -345,26 +410,20 @@ runtest() {
         # get config flags.
         # for now this is kind of ad-hoc:
         #
-        # 1. The default flow command is check with the --all flag. This flag
-        # can be overridden here with the line "all: false". Anything besides
-        # "false" is ignored, and the setting itself is ignored if a command
-        # besides check is run.
-        #
-        # 2. The default flow command can be overridden here by supplying the
+        # 1. The default flow command can be overridden here by supplying the
         # entire command on a line that begins with "cmd:". (Note: for writing
         # incremental tests, use the option below). A line beginning with
         # "stdin:" can additionally supply arguments to pass to the command via
         # standard input. We start the server before running the command and
         # stop the server after we get a result.
         #
-        # 3. Integration tests that interleave flow commands with file system
+        # 2. Integration tests that interleave flow commands with file system
         # commands (for testing incremental checks, e.g.) are written by
         # supplying the name of a shell script on a line that begins with
         # "shell:". The shell script is passed the location of the flow binary
         # as argument ($1). We start the server before running the script and
         # stop the server after the script exits.
         #
-        all=" --all"
         auto_start=true
         flowlib=" --no-flowlib"
         shell=""
@@ -378,11 +437,6 @@ runtest() {
         wait_for_recheck="true"
         if [ -e ".testconfig" ]
         then
-            # all
-            if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
-            then
-                all=""
-            fi
             # auto_start
             if [ "$(awk '$1=="auto_start:"{print $2}' .testconfig)" == "false" ]
             then
@@ -462,7 +516,7 @@ runtest() {
             set -e
             # start lazy server and wait
             "$FLOW" start "$root" \
-              $all $flowlib --wait \
+              $flowlib --wait \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy \
               --file-watcher "$file_watcher" \
@@ -488,9 +542,9 @@ runtest() {
         then
             if [[ "$saved_state" -eq 1 ]]; then
               if create_saved_state . ".flowconfig"; then
-                # default command is check with configurable --all and --no-flowlib
+                # default command is check with configurable --no-flowlib
                 "$FLOW" check . \
-                  $all $flowlib --strip-root --show-all-errors \
+                  $flowlib --strip-root --show-all-errors \
                   --saved-state-fetcher "local" \
                   --saved-state-no-fallback \
                    1>> "$abs_out_file" 2>> "$stderr_dest"
@@ -500,9 +554,9 @@ runtest() {
                 return_status=$RUNTEST_ERROR
               fi
             else
-              # default command is check with configurable --all and --no-flowlib
+              # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $all $flowlib --strip-root --show-all-errors \
+                $flowlib --strip-root --show-all-errors \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -537,7 +591,7 @@ runtest() {
                 then
                   PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                   "$FLOW" start "$root" \
-                    $all $flowlib --wait \
+                    $flowlib --wait \
                     --wait-for-recheck "$wait_for_recheck" \
                     --saved-state-fetcher "local" \
                     --saved-state-no-fallback \
@@ -554,7 +608,7 @@ runtest() {
                 # start server and wait
                 PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                 "$FLOW" start "$root" \
-                  $all $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
+                  $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
                   --file-watcher "$file_watcher" \
                   --log-file "$abs_log_file" \
                   --monitor-log-file "$abs_monitor_log_file" \

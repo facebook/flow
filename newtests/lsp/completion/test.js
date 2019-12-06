@@ -28,6 +28,13 @@ export default suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
+                {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
@@ -77,6 +84,13 @@ export default suite(
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -150,6 +164,13 @@ export default suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
+                {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
@@ -213,6 +234,13 @@ export default suite(
                   detail: 'number',
                   inlineDetail: 'number',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 12, character: 4},
+                      end: {line: 12, character: 4},
+                    },
+                    newText: 'a=',
+                  },
                 },
               ],
             };
@@ -306,6 +334,13 @@ export default suite(
                   detail: 'number',
                   inlineDetail: 'number',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 12, character: 4},
+                      end: {line: 12, character: 4},
+                    },
+                    newText: 'a=',
+                  },
                 },
               ],
             };
@@ -336,6 +371,13 @@ export default suite(
                     detail: 'number',
                     inlineDetail: 'number',
                     insertTextFormat: 1,
+                    textEdit: {
+                      range: {
+                        start: {line: 13, character: 4},
+                        end: {line: 13, character: 4},
+                      },
+                      newText: 'a=',
+                    },
                   },
                 ],
               };
@@ -370,6 +412,13 @@ export default suite(
                   detail: 'number',
                   inlineDetail: 'number',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 4},
+                      end: {line: 13, character: 4},
+                    },
+                    newText: 'a=',
+                  },
                 },
               ],
             };
@@ -526,6 +575,30 @@ export default suite(
               ],
             };
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion in an unqualified type annotation', [
+      addFile('type-exports.js'),
+      addFile('unqualified-type-annotation.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/unqualified-type-annotation.js',
+        },
+        position: {line: 27, character: 18},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedSubstrings = [
+              '"newText":"Typologies."',
+              '"newText":"Types."',
+            ];
+
+            return `textDocument/completion{${expectedSubstrings.join(',')}}`;
           })(),
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],

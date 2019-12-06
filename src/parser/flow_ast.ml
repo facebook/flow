@@ -132,7 +132,7 @@ and Type : sig
     end
 
     type ('M, 'T) t = {
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
       return: ('M, 'T) Type.t;
     }
@@ -156,7 +156,7 @@ and Type : sig
 
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Type.TypeArgs.t option;
     }
     [@@deriving show]
   end
@@ -267,6 +267,7 @@ and Type : sig
     | BigInt
     | String
     | Boolean
+    | Symbol
     | Nullable of ('M, 'T) t
     | Function of ('M, 'T) Function.t
     | Object of ('M, 'T) Object.t
@@ -294,25 +295,25 @@ and Type : sig
     | Available of ('M, 'T) Type.annotation
   [@@deriving show]
 
-  module ParameterDeclaration : sig
-    module TypeParam : sig
-      type ('M, 'T) t = 'T * ('M, 'T) t'
+  module TypeParam : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and ('M, 'T) t' = {
-        name: ('M, 'T) Identifier.t;
-        bound: ('M, 'T) Type.annotation_or_hint;
-        variance: 'M Variance.t option;
-        default: ('M, 'T) Type.t option;
-      }
-      [@@deriving show]
-    end
+    and ('M, 'T) t' = {
+      name: ('M, 'M) Identifier.t;
+      bound: ('M, 'T) Type.annotation_or_hint;
+      variance: 'M Variance.t option;
+      default: ('M, 'T) Type.t option;
+    }
+    [@@deriving show]
+  end
 
+  module TypeParams : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = ('M, 'T) TypeParam.t list [@@deriving show]
   end
 
-  module ParameterInstantiation : sig
+  module TypeArgs : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = ('M, 'T) Type.t list [@@deriving show]
@@ -379,7 +380,7 @@ and Statement : sig
   module TypeAlias : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       right: ('M, 'T) Type.t;
     }
     [@@deriving show]
@@ -388,7 +389,7 @@ and Statement : sig
   module OpaqueType : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       impltype: ('M, 'T) Type.t option;
       supertype: ('M, 'T) Type.t option;
     }
@@ -582,7 +583,9 @@ and Statement : sig
       body: 'M body;
     }
 
-    and 'M body =
+    and 'M body = 'M * 'M body'
+
+    and 'M body' =
       | BooleanBody of 'M BooleanBody.t
       | NumberBody of 'M NumberBody.t
       | StringBody of 'M StringBody.t
@@ -593,7 +596,7 @@ and Statement : sig
   module Interface : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       extends: ('M * ('M, 'T) Type.Generic.t) list;
       body: 'M * ('M, 'T) Type.Object.t;
     }
@@ -603,7 +606,7 @@ and Statement : sig
   module DeclareClass : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       body: 'M * ('M, 'T) Type.Object.t;
       extends: ('M * ('M, 'T) Type.Generic.t) option;
       mixins: ('M * ('M, 'T) Type.Generic.t) list;
@@ -718,7 +721,7 @@ and Statement : sig
 
     and ('M, 'T) specifier =
       | ImportNamedSpecifiers of ('M, 'T) named_specifier list
-      | ImportNamespaceSpecifier of ('M * ('M, 'M) Identifier.t)
+      | ImportNamespaceSpecifier of ('M * ('M, 'T) Identifier.t)
 
     and ('M, 'T) named_specifier = {
       kind: importKind option;
@@ -792,14 +795,17 @@ end =
   Statement
 
 and Expression : sig
-  module TypeParameterInstantiation : sig
-    type ('M, 'T) t = 'M * ('M, 'T) t'
-
-    and ('M, 'T) type_parameter_instantiation =
+  module CallTypeArg : sig
+    type ('M, 'T) t =
       | Explicit of ('M, 'T) Type.t
       | Implicit of 'T
+    [@@deriving show]
+  end
 
-    and ('M, 'T) t' = ('M, 'T) type_parameter_instantiation list [@@deriving show]
+  module CallTypeArgs : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = ('M, 'T) CallTypeArg.t list [@@deriving show]
   end
 
   module SpreadElement : sig
@@ -1018,7 +1024,7 @@ and Expression : sig
   module New : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
-      targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
+      targs: ('M, 'T) Expression.CallTypeArgs.t option;
       arguments: ('M, 'T) expression_or_spread list;
       comments: ('M, unit) Syntax.t option;
     }
@@ -1028,7 +1034,7 @@ and Expression : sig
   module Call : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
-      targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
+      targs: ('M, 'T) Expression.CallTypeArgs.t option;
       arguments: ('M, 'T) expression_or_spread list;
     }
     [@@deriving show]
@@ -1422,7 +1428,7 @@ and Class : sig
 
     and ('M, 'T) t' = {
       expr: ('M, 'T) Expression.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Type.TypeArgs.t option;
     }
     [@@deriving show]
   end
@@ -1432,14 +1438,13 @@ and Class : sig
 
     and ('M, 'T) t' = {
       id: ('M, 'T) Identifier.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Type.TypeArgs.t option;
     }
     [@@deriving show]
   end
 
   module Body : sig
-    (* 'T annotation on class body is used to store class's "this" type *)
-    type ('M, 'T) t = 'T * ('M, 'T) t'
+    type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = { body: ('M, 'T) element list }
 
@@ -1459,7 +1464,7 @@ and Class : sig
   type ('M, 'T) t = {
     id: ('M, 'T) Identifier.t option;
     body: ('M, 'T) Class.Body.t;
-    tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+    tparams: ('M, 'T) Type.TypeParams.t option;
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Class.Implements.t list;
     classDecorators: ('M, 'T) Decorator.t list;
@@ -1504,7 +1509,7 @@ and Function : sig
     generator: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
     return: ('M, 'T) Type.annotation_or_hint;
-    tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+    tparams: ('M, 'T) Type.TypeParams.t option;
     (* Location of the signature portion of a function, e.g.
      * function foo(): void {}
      * ^^^^^^^^^^^^^^^^^^^^

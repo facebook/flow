@@ -53,8 +53,7 @@ module InsertType = struct
             |> flag
                  "--omit-typearg-defaults"
                  no_arg
-                 ~doc:
-                   "Omit type arguments when defaults exist and match the provided type argument"
+                 ~doc:"Omit type arguments when defaults exist and match the provided type argument"
             |> anon "args" (required (list_of string)));
       })
 

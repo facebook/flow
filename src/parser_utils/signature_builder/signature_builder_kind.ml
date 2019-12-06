@@ -87,7 +87,7 @@ type t =
   | FunctionDef of {
       generator: bool;
       async: bool;
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
       return: (Loc.t, Loc.t) Ast.Type.annotation_or_hint;
       body: (Loc.t, Loc.t) Ast.Function.body;
@@ -98,30 +98,31 @@ type t =
       predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
     }
   | ClassDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: (Loc.t, Loc.t) Ast.Class.Body.t;
       super: (Loc.t, Loc.t) Ast.Expression.t option;
-      super_targs: (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option;
+      super_targs: (Loc.t, Loc.t) Ast.Type.TypeArgs.t option;
       implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
     }
   | DeclareClassDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) option;
       mixins: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
       implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
     }
+  | EnumDef of { body: Loc.t Ast.Statement.EnumDeclaration.body }
   | TypeDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       right: (Loc.t, Loc.t) Ast.Type.t;
     }
   | OpaqueTypeDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       impltype: (Loc.t, Loc.t) Ast.Type.t option;
       supertype: (Loc.t, Loc.t) Ast.Type.t option;
     }
   | InterfaceDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
     }
@@ -146,6 +147,7 @@ type ctor =
   | DeclareFunctionDefKind
   | ClassDefKind
   | DeclareClassDefKind
+  | EnumDefKind
   | TypeDefKind
   | OpaqueTypeDefKind
   | InterfaceDefKind
@@ -161,6 +163,7 @@ let rec kind_to_ctor = function
   | DeclareFunctionDef _ -> DeclareFunctionDefKind
   | ClassDef _ -> ClassDefKind
   | DeclareClassDef _ -> DeclareClassDefKind
+  | EnumDef _ -> EnumDefKind
   | TypeDef _ -> TypeDefKind
   | OpaqueTypeDef _ -> OpaqueTypeDefKind
   | InterfaceDef _ -> InterfaceDefKind
@@ -176,6 +179,7 @@ let rec to_string = function
   | DeclareFunctionDef _ -> "DeclareFunctionDef"
   | ClassDef _ -> "ClassDef"
   | DeclareClassDef _ -> "DeclareClassDef"
+  | EnumDef _ -> "EnumDef"
   | TypeDef _ -> "TypeDef"
   | OpaqueTypeDef _ -> "OpaqueTypeDef"
   | InterfaceDef _ -> "InterfaceDef"
@@ -191,6 +195,7 @@ let rec is_type = function
   | DeclareFunctionDef _ -> true
   | ClassDef _ -> true
   | DeclareClassDef _ -> true
+  | EnumDef _ -> true
   | TypeDef _ -> true
   | OpaqueTypeDef _ -> true
   | InterfaceDef _ -> true
@@ -208,6 +213,7 @@ let rec is_value = function
   | DeclareFunctionDef _ -> true
   | ClassDef _ -> true
   | DeclareClassDef _ -> true
+  | EnumDef _ -> true
   | TypeDef _ -> false
   | OpaqueTypeDef _ -> false
   | InterfaceDef _ -> false

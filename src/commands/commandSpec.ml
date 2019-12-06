@@ -46,7 +46,7 @@ module ArgSpec = struct
 
   let apply_arg name arg_type f (values, main) =
     let (values, main) = f (values, main) in
-    let value = (try Some (SMap.find_unsafe name values : string list) with Not_found -> None) in
+    let value = (try Some (SMap.find name values : string list) with Not_found -> None) in
     (values, main (arg_type.parse ~name value))
 
   let pop_anon spec =
@@ -94,7 +94,7 @@ module ArgSpec = struct
         (fun ~name -> function
           | Some [x] ->
             begin
-              match Core_list.find ~f:(fun (s, _) -> s = x) values with
+              match Base.List.find ~f:(fun (s, _) -> s = x) values with
               | Some (_, v) -> Some v
               | None ->
                 raise
@@ -102,7 +102,7 @@ module ArgSpec = struct
                      ( name,
                        Utils_js.spf
                          "expected one of: %s"
-                         (String.concat ", " (Core_list.map ~f:fst values)) ))
+                         (String.concat ", " (Base.List.map ~f:fst values)) ))
             end
           | _ -> None);
       arg = Arg;
@@ -174,7 +174,7 @@ module ArgSpec = struct
           | None -> Some []
           | Some values ->
             Some
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun x ->
                    match arg_type.parse ~name (Some [x]) with
                    | Some result -> result
@@ -193,7 +193,7 @@ module ArgSpec = struct
           | Some [x] ->
             let args = Str.split (Str.regexp_string delim) x in
             Some
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun arg ->
                    match arg_type.parse ~name (Some [arg]) with
                    | None ->
@@ -227,8 +227,7 @@ module ArgSpec = struct
     }
 
   let help_flag =
-    SMap.empty
-    |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = No_Arg }
+    SMap.empty |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = No_Arg }
 
   let apply_help (values, main) =
     let main help =
@@ -251,14 +250,14 @@ module ArgSpec = struct
     {
       f = apply_arg name arg_type prev.f;
       flags = prev.flags;
-      anons = Core_list.append prev.anons [(name, arg_type.arg)];
+      anons = Base.List.append prev.anons [(name, arg_type.arg)];
     }
 
   let rest prev =
     {
       f = apply_arg "--" (optional (list_of string)) prev.f;
       flags = prev.flags;
-      anons = Core_list.append prev.anons [("--", Arg_Rest)];
+      anons = Base.List.append prev.anons [("--", Arg_Rest)];
     }
 
   let dummy value prev =
@@ -310,7 +309,7 @@ let is_arg arg = String.length arg > 1 && arg <> "--" && arg.[0] = '-'
 
 let consume_args args =
   let is_done = ref false in
-  Core_list.partition_tf
+  Base.List.partition_tf
     ~f:(fun value ->
       if (not !is_done) && is_arg value then is_done := true;
       not !is_done)
@@ -334,7 +333,7 @@ let rec parse values spec = function
 and parse_flag values spec arg args =
   let flags = spec.ArgSpec.flags in
   try
-    let flag = SMap.find_unsafe arg flags in
+    let flag = SMap.find arg flags in
     match flag.ArgSpec.arg_count with
     | ArgSpec.No_Arg ->
       let values = SMap.add arg ["true"] values in
@@ -400,15 +399,17 @@ let init_from_env spec =
 let usage_string spec =
   let usage = spec.usage in
   let flags = SMap.fold (fun k v a -> (k, v) :: a) spec.args.ArgSpec.flags [] in
-  let cmp (a, _) (b, _) = String.compare (no_dashes a) (no_dashes b) in
-  let flags = Core_list.sort ~cmp flags in
+  let flags =
+    let compare (a, _) (b, _) = String.compare (no_dashes a) (no_dashes b) in
+    Base.List.sort ~compare flags
+  in
   let col_width =
-    flags |> Core_list.fold_left ~f:(fun acc (a, _) -> max acc (String.length a)) ~init:0
+    flags |> Base.List.fold_left ~f:(fun acc (a, _) -> max acc (String.length a)) ~init:0
   in
   let flag_usage =
     flags
-    |> Core_list.filter ~f:(fun (_, meta) -> meta.ArgSpec.doc <> "")
-    |> Core_list.map ~f:(fun (name, meta) ->
+    |> Base.List.filter ~f:(fun (_, meta) -> meta.ArgSpec.doc <> "")
+    |> Base.List.map ~f:(fun (name, meta) ->
            Utils_js.spf "  %-*s  %s" col_width name meta.ArgSpec.doc)
     |> String.concat "\n"
   in
