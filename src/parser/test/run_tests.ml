@@ -696,6 +696,18 @@ end = struct
                   List.iter (fun err -> print [(C.Normal C.Default, spf "    %s\n" err)]) errs;
                   flush stdout;
                   if record then record_tree path test_name key case;
+                  ({ results with failed = results.failed + 1 }, true)
+                | exception exn ->
+                  let exn = Exception.wrap exn in
+                  if quiet && not shown_header then
+                    print [(C.Bold C.White, spf "=== %s ===\n" test_name)];
+                  print
+                    [
+                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL");
+                      (C.Normal C.Default, spf ": %s\n" key);
+                      (C.Normal C.Default, spf "    %s\n" (Exception.to_string exn));
+                    ];
+                  flush stdout;
                   ({ results with failed = results.failed + 1 }, true))
               cases
               ({ ok = 0; skipped = 0; failed = 0 }, false)
