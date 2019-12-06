@@ -1,6 +1,0 @@
-(library
-  (name fsnotify_Darwin)
-  (wrapped false)
-  (libraries
-    fsevents
-    utils_core))

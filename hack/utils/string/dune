@@ -1,4 +1,0 @@
-(library
-  (name string)
-  (wrapped false)
-  (libraries str))
