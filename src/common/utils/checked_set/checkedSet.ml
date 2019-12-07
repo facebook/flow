@@ -108,17 +108,39 @@ let filter_into_set ~f checked =
     checked
     FilenameSet.empty
 
+let count ~f checked =
+  FilenameMap.fold
+    (fun _key kind acc ->
+      if f kind then
+        acc + 1
+      else
+        acc)
+    checked
+    0
+
 (* Gives you a FilenameSet of all the checked files *)
 let all = filter_into_set ~f:(fun _ -> true)
 
+let is_focused kind = kind = Focused
+
+let is_dependent kind = kind = Dependent
+
+let is_dependency kind = kind = Dependency
+
 (* Gives you a FilenameSet of all the focused files *)
-let focused = filter_into_set ~f:(fun kind -> kind = Focused)
+let focused = filter_into_set ~f:is_focused
+
+let focused_cardinal = count ~f:is_focused
 
 (* Gives you a FilenameSet of all the dependent files *)
-let dependents = filter_into_set ~f:(fun kind -> kind = Dependent)
+let dependents = filter_into_set ~f:is_dependent
+
+let dependents_cardinal = count ~f:is_dependent
 
 (* Gives you a FilenameSet of all the dependency files *)
-let dependencies = filter_into_set ~f:(fun kind -> kind = Dependency)
+let dependencies = filter_into_set ~f:is_dependency
+
+let dependencies_cardinal = count ~f:is_dependency
 
 (* Helper function for debugging *)
 let debug_to_string ?limit =

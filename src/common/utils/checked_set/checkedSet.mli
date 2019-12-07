@@ -15,6 +15,12 @@ val of_focused_list : File_key.t list -> t
 
 val cardinal : t -> int
 
+val focused_cardinal : t -> int
+
+val dependents_cardinal : t -> int
+
+val dependencies_cardinal : t -> int
+
 val mem : File_key.t -> t -> bool
 
 val add :
