@@ -86,6 +86,8 @@ let recheck
     ~recheck_reasons:_
     ~modified:_
     ~deleted:_
+    ~to_merge:_
+    ~to_check:_
     ~sig_dependent_files:_
     ~all_dependent_files:_
     ~merge_skip_count:_

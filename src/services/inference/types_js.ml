@@ -1609,6 +1609,8 @@ module Recheck : sig
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
     deleted: Utils_js.FilenameSet.t;
+    to_merge: CheckedSet.t;
+    to_check: CheckedSet.t;
     sig_dependent_files: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
@@ -1666,6 +1668,8 @@ end = struct
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
     deleted: Utils_js.FilenameSet.t;
+    to_merge: CheckedSet.t;
+    to_check: CheckedSet.t;
     sig_dependent_files: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
@@ -2320,6 +2324,8 @@ end = struct
         {
           new_or_changed;
           deleted;
+          to_merge;
+          to_check;
           sig_dependent_files;
           all_dependent_files;
           top_cycle;
@@ -2435,6 +2441,8 @@ let recheck
   let {
     Recheck.new_or_changed = modified;
     deleted;
+    to_merge;
+    to_check;
     sig_dependent_files;
     all_dependent_files;
     top_cycle;
@@ -2476,6 +2484,8 @@ let recheck
     ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
     ~modified
     ~deleted
+    ~to_merge
+    ~to_check
     ~sig_dependent_files
     ~all_dependent_files
     ~profiling
