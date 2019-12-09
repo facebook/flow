@@ -82,18 +82,19 @@ References:
            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+Error ---------------------------------------------------------------------------------------------------- test.js:17:10
 
-Cannot cast `42` to `D` because number [1] is incompatible with undefined [2].
+Cannot instantiate `$Call` because `D` [1] passes only 0 arguments to the provided function type, but function type [2]
+expects more than 0 arguments. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
 
-   test.js:19:2
-   19| (42: D); // Error: number ~> undefined
-        ^^ [1]
+   test.js:17:10
+   17| type D = $Call<Fn1>;
+                ^^^^^^^^^^ [1]
 
 References:
-   test.js:19:6
-   19| (42: D); // Error: number ~> undefined
-            ^ [2]
+   test.js:4:12
+    4| type Fn1 = <T>(T) => T;
+                  ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:24:3

@@ -232,25 +232,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:2:20
 
-Cannot call `Request` because:
- - Either undefined [1] is incompatible with `Request` [2].
- - Or undefined [1] is incompatible with `URL` [3].
- - Or undefined [1] is incompatible with string [4].
+Cannot call `Request` because function [1] requires another argument.
 
    request.js:2:20
       2| const a: Request = new Request(); // incorrect
-                            ^^^^^^^^^^^^^ [1]
+                            ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1411:20
-   1411| type RequestInfo = Request | URL | string;
-                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:1411:30
-   1411| type RequestInfo = Request | URL | string;
-                                      ^^^ [3]
-   <BUILTINS>/bom.js:1411:36
-   1411| type RequestInfo = Request | URL | string;
-                                            ^^^^^^ [4]
+   <BUILTINS>/bom.js:1464:5
+   1464|     constructor(input: RequestInfo, init?: RequestOptions): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
@@ -523,11 +514,11 @@ References:
    <BUILTINS>/bom.js:1409:62
    1409| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                       ^^^^^^^^^^^ [5]
-   <BUILTINS>/core.js:709:25
-    709| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:710:25
+    710| type $ArrayBufferView = $TypedArray | DataView;
                                  ^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:709:39
-    709| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:710:39
+    710| type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ [7]
    <BUILTINS>/bom.js:1409:95
    1409| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;

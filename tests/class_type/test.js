@@ -4,7 +4,7 @@ function foo(x: Class<A>): A {
 }
 
 class B {
-  constructor(_: any) { }
+  constructor(_?: any) { }
 }
 function bar(x: Class<B>): B {
   return new x(); // error (too few args)

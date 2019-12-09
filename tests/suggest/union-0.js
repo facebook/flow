@@ -1,6 +1,6 @@
 // @flow
 
-function foo(x) { }
+function foo(x?) { }
 
 foo(1);
 foo("1");

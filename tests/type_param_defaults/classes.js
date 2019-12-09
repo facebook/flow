@@ -11,7 +11,7 @@ class A<T> {
 class B<T = string> extends A<T> {}
 
 var b_number: B<number> = new B(123);
-var b_void: B<void> = new B();
+var b_void: B<void> = new B(undefined);
 var b_default: B<> = new B('hello');
 
 var b_star: B<*> = new B(123);
@@ -25,7 +25,7 @@ var b_star: B<*> = new B(123);
 class C<T: ?string = string> extends A<T> {}
 
 var c_number: C<number> = new C(123); // Error number ~> ?string
-var c_void: C<void> = new C();
+var c_void: C<void> = new C(undefined);
 var c_default: C<> = new C('hello');
 var c_star: C<*> = new C('hello');
 
@@ -35,7 +35,7 @@ var c_star: C<*> = new C('hello');
 
 class D<S, T = string> extends A<T> {}
 var d_number: D<mixed, number> = new D(123);
-var d_void: D<mixed, void> = new D();
+var d_void: D<mixed, void> = new D(undefined);
 var d_default: D<mixed> = new D('hello');
 var d_too_few_args: D<> = new D('hello'); // Error too few tparams
 var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
@@ -60,6 +60,6 @@ class H<S = T, T = string> {} // Error - can't refer to T before it's defined
 class I<T: ?string = *> extends A<T> {}
 
 var i_number: I<number> = new I(123); // Error number ~> ?string
-var i_void: I<void> = new I();
+var i_void: I<void> = new I(undefined);
 var i_default: I<> = new I('hello');
 var i_star: I<*> = new I('hello');

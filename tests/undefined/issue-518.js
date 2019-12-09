@@ -8,5 +8,5 @@ function doSomethingAsync(): Promise<void> {
 }
 
 // simpler repro to show that too few args are fine when expecting void
-function foo(x: void) { }
+function foo(x?: void) { }
 foo();

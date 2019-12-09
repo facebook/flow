@@ -8,9 +8,9 @@ object literal [1] but exists in `TimeoutConfig` [2].
                                      ^^ [1]
 
 References:
-   <BUILTINS>/react.js:378:13
-   378|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:380:14
+   380|     config?: TimeoutConfig | void | null,
+                     ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:9:30
@@ -23,9 +23,9 @@ Cannot call `React.useDeferredValue` with object literal bound to `config` becau
                                      ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:13
-   378|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:380:14
+   380|     config?: TimeoutConfig | void | null,
+                     ^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:7:21
@@ -38,9 +38,9 @@ object literal [1] but exists in `TimeoutConfig` [2].
                             ^^ [1]
 
 References:
-   <BUILTINS>/react.js:382:13
-   382|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:384:14
+   384|     config?: TimeoutConfig | void | null,
+                     ^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:9:21
@@ -53,9 +53,9 @@ Cannot call `React.useTransition` with object literal bound to `config` because 
                             ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:382:13
-   382|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:384:14
+   384|     config?: TimeoutConfig | void | null,
+                     ^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- useTransition_hook.js:15:17
@@ -68,8 +68,8 @@ type [2].
                         ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:383:8
-   383|   ): [(() => void) => void, boolean];
+   <BUILTINS>/react.js:385:8
+   385|   ): [(() => void) => void, boolean];
                ^^^^^^^^^^ [2]
 
 

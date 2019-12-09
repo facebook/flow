@@ -93,8 +93,8 @@ References:
    test.js:105:12
    105|   string1={null}
                    ^^^^ [1]
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    test.js:106:12
    106|   string2={null}
@@ -102,8 +102,8 @@ References:
    test.js:107:13
    107|   boolean1={null}
                     ^^^^ [4]
-   <BUILTINS>/react.js:484:34
-   484|   bool: React$PropType$Primitive<boolean>,
+   <BUILTINS>/react.js:486:34
+   486|   bool: React$PropType$Primitive<boolean>,
                                          ^^^^^^^ [5]
    test.js:108:13
    108|   boolean2={null}
@@ -111,8 +111,8 @@ References:
    test.js:109:11
    109|   number={null}
                   ^^^^ [7]
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [8]
 
 
@@ -161,8 +161,8 @@ References:
    test.js:144:54
    144|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -1500,8 +1500,8 @@ References:
    test.js:782:28
    782| <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
                                    ^^^^^^^^^ [1]
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -1521,8 +1521,8 @@ References:
    test.js:788:7
    788|   foo="nope"
               ^^^^^^ [1]
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -1542,8 +1542,8 @@ References:
    test.js:793:7
    793|   bar="nope"
               ^^^^^^ [1]
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 

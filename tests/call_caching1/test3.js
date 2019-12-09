@@ -6,7 +6,7 @@ declare class ImmBox<T> {
 }
 
 declare class Box<T> {
-  constructor(x: T): void;
+  constructor(x?: T): void;
   set(value: T): void;
   get(): T;
 }

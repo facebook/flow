@@ -7,6 +7,6 @@ function m<X>() {
 }
 
 declare class D {
-  constructor(_: void): void;
+  constructor(_?: void): void;
   constructor(_: null): void;
 }

@@ -116,7 +116,7 @@ function *generic_next<N>(): Generator<void,N,N> {
   return yield undefined;
 }
 
-function *multiple_return(b) {
+function *multiple_return(b?) {
   if (b) {
     return 0;
   } else {

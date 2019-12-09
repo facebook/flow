@@ -25,7 +25,7 @@ Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with boo
 
 References:
    classes.js:14:15
-   14| var b_void: B<void> = new B();
+   14| var b_void: B<void> = new B(undefined);
                      ^^^^ [1]
    classes.js:20:12
    20| (b_void.p: boolean); // Error void ~> boolean
@@ -127,7 +127,7 @@ Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with boo
 
 References:
    classes.js:28:15
-   28| var c_void: C<void> = new C();
+   28| var c_void: C<void> = new C(undefined);
                      ^^^^ [1]
    classes.js:32:12
    32| (c_void.p: boolean); // Error void ~> boolean
@@ -243,7 +243,7 @@ Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boo
 
 References:
    classes.js:38:22
-   38| var d_void: D<mixed, void> = new D();
+   38| var d_void: D<mixed, void> = new D(undefined);
                             ^^^^ [1]
    classes.js:45:12
    45| (d_void.p: boolean); // Error void ~> boolean

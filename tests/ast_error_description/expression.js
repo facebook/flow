@@ -6,7 +6,7 @@
 type T = {p: mixed};
 
 let a = 0;
-const f = (x: mixed): mixed => x;
+const f = (x?: mixed): mixed => x;
 const o = {p: 42};
 
 declare var React: {createElement: React$CreateElement};
