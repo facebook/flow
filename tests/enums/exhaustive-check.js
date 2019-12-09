@@ -10,7 +10,7 @@ enum F {
   B,
 }
 
-const x: E = E.A;
+const x = E.A;
 
 ///////////
 // Valid //
@@ -101,6 +101,15 @@ switch (x)  {
 }
 
 // Discriminant is union
+function a(x?: E) {
+  switch (x)  { // Error
+    case E.A:
+      'A';
+    case E.B:
+      'B';
+  }
+}
+
 function a(x: ?E) {
   switch (x)  { // Error
     case E.A:
@@ -110,7 +119,8 @@ function a(x: ?E) {
   }
 }
 
-function b(x: E | F) {
+type EnumsUnion = E | F;
+function b(x: EnumsUnion) {
   switch (x)  { // Error
     case E.A:
       'A';
@@ -119,7 +129,8 @@ function b(x: E | F) {
   }
 }
 
-function c(x: E | string) {
+type EnumOrNonEnum = E | string;
+function c(x: EnumOrNonEnum) {
   switch (x)  { // Error
     case E.A:
       'A';

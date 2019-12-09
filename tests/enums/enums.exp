@@ -693,9 +693,13 @@ The member `B` of `E` [1] has not been checked in switch [2].
        ^ [2]
 
 References:
-   exhaustive-check.js:13:10
-   13| const x: E = E.A;
-                ^ [1]
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:58:3
@@ -728,9 +732,13 @@ The case [1] checks for enum member `A` of `E` [2], but member `A` was already c
            -----^ [1]
 
 References:
-   exhaustive-check.js:13:10
-   13| const x: E = E.A;
-                ^ [2]
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
    exhaustive-check.js:71:3
          v--------
    71|   case E.A:
@@ -750,9 +758,13 @@ The default case [1] checks for additional enum members of `E` [2], but all of i
            ---------^ [1]
 
 References:
-   exhaustive-check.js:13:10
-   13| const x: E = E.A;
-                ^ [2]
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:94:1
@@ -772,9 +784,13 @@ Error --------------------------------------------------------------------------
         ^ [2]
 
 References:
-   exhaustive-check.js:13:10
-    13| const x: E = E.A;
-                 ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:3
@@ -803,9 +819,13 @@ References:
    exhaustive-check.js:95:8
     95|   case F.A:
                ^^^ [2]
-   exhaustive-check.js:13:10
-    13| const x: E = E.A;
-                 ^ [3]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:3
@@ -834,14 +854,18 @@ References:
    exhaustive-check.js:98:8
     98|   case F.B:
                ^^^ [2]
-   exhaustive-check.js:13:10
-    13| const x: E = E.A;
-                 ^ [3]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:105:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on nullable `E` [2], which is a union. Before you
+Cannot exhaustively check enum at switch [1] because we are switching on optional `E` [2], which is a union. Before you
 exhaustively check an enum, refine away other members of the union.
 
    exhaustive-check.js:105:3
@@ -855,14 +879,14 @@ exhaustively check an enum, refine away other members of the union.
           ^ [1]
 
 References:
-   exhaustive-check.js:104:15
-   104| function a(x: ?E) {
-                      ^^ [2]
+   exhaustive-check.js:104:16
+   104| function a(x?: E) {
+                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:114:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on union type [2], which is a union. Before you
+Cannot exhaustively check enum at switch [1] because we are switching on nullable `E` [2], which is a union. Before you
 exhaustively check an enum, refine away other members of the union.
 
    exhaustive-check.js:114:3
@@ -877,82 +901,111 @@ exhaustively check an enum, refine away other members of the union.
 
 References:
    exhaustive-check.js:113:15
-   113| function b(x: E | F) {
-                      ^^^^^ [2]
+   113| function a(x: ?E) {
+                      ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:123:3
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:124:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on union type [2], which is a union. Before you
+Cannot exhaustively check enum at switch [1] because we are switching on `EnumsUnion` [2], which is a union. Before you
 exhaustively check an enum, refine away other members of the union.
 
-   exhaustive-check.js:123:3
+   exhaustive-check.js:124:3
           v---------------------
-   123|   switch (x)  { // Error
-   124|     case E.A:
-   125|       'A';
-   126|     case E.B:
-   127|       'B';
-   128|   }
+   124|   switch (x)  { // Error
+   125|     case E.A:
+   126|       'A';
+   127|     case E.B:
+   128|       'B';
+   129|   }
           ^ [1]
 
 References:
-   exhaustive-check.js:122:15
-   122| function c(x: E | string) {
-                      ^^^^^^^^^^ [2]
+   exhaustive-check.js:122:19
+   122| type EnumsUnion = E | F;
+                          ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:131:1
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:134:3
+
+Cannot exhaustively check enum at switch [1] because we are switching on `EnumOrNonEnum` [2], which is a union. Before
+you exhaustively check an enum, refine away other members of the union.
+
+   exhaustive-check.js:134:3
+          v---------------------
+   134|   switch (x)  { // Error
+   135|     case E.A:
+   136|       'A';
+   137|     case E.B:
+   138|       'B';
+   139|   }
+          ^ [1]
+
+References:
+   exhaustive-check.js:132:22
+   132| type EnumOrNonEnum = E | string;
+                             ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:142:1
 
 The member `B` of `E` [1] has not been checked in switch [2].
 
-   exhaustive-check.js:131:1
+   exhaustive-check.js:142:1
         v-----------
-   131| switch (x) {
-   132|   case E.A:
-   133|     'E.A';
-   134|     break;
-   135|   case F.A:
-   136|     'F.A';
-   137|     break;
-   138| }
+   142| switch (x) {
+   143|   case E.A:
+   144|     'E.A';
+   145|     break;
+   146|   case F.A:
+   147|     'F.A';
+   148|     break;
+   149| }
         ^ [2]
 
 References:
-   exhaustive-check.js:13:10
-    13| const x: E = E.A;
-                 ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:135:3
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:146:3
 
 Invalid check at case in switch [1] because `F.A` [2] is incompatible with `E` [3].
 
-   exhaustive-check.js:135:3
+   exhaustive-check.js:146:3
           v--------
-   135|   case F.A:
-   136|     'F.A';
-   137|     break;
+   146|   case F.A:
+   147|     'F.A';
+   148|     break;
             -----^
 
 References:
-   exhaustive-check.js:131:1
+   exhaustive-check.js:142:1
         v-----------
-   131| switch (x) {
-   132|   case E.A:
-   133|     'E.A';
-   134|     break;
-   135|   case F.A:
-   136|     'F.A';
-   137|     break;
-   138| }
+   142| switch (x) {
+   143|   case E.A:
+   144|     'E.A';
+   145|     break;
+   146|   case F.A:
+   147|     'F.A';
+   148|     break;
+   149| }
         ^ [1]
-   exhaustive-check.js:135:8
-   135|   case F.A:
+   exhaustive-check.js:146:8
+   146|   case F.A:
                ^^^ [2]
-   exhaustive-check.js:13:10
-    13| const x: E = E.A;
-                 ^ [3]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- member-as-type.js:8:16
@@ -2342,4 +2395,4 @@ References:
 
 
 
-Found 133 errors
+Found 134 errors
