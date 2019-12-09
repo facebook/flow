@@ -8020,7 +8020,7 @@ and mk_enum cx ~enum_reason enum =
         Base.List.fold_left
           ~f:
             (fun (names, bool_type, seen_values)
-                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                 (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, init_value) = init in
             let bool_type =
               match bool_type with
@@ -8037,7 +8037,7 @@ and mk_enum cx ~enum_reason enum =
                   (Error_message.EEnumMemberDuplicateValue
                      { loc = init_loc; prev_use_loc; enum_reason });
                 seen_values
-              | None -> BoolMap.add init_value init_loc seen_values
+              | None -> BoolMap.add init_value member_loc seen_values
             in
             (SSet.add name names, bool_type, seen_values))
           ~init:(SSet.empty, None, BoolMap.empty)
@@ -8050,7 +8050,7 @@ and mk_enum cx ~enum_reason enum =
         Base.List.fold_left
           ~f:
             (fun (names, num_type, seen_values)
-                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                 (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
             let num_type =
               if init_value = 0.0 then
@@ -8066,7 +8066,7 @@ and mk_enum cx ~enum_reason enum =
                   (Error_message.EEnumMemberDuplicateValue
                      { loc = init_loc; prev_use_loc; enum_reason });
                 seen_values
-              | None -> NumberMap.add init_value init_loc seen_values
+              | None -> NumberMap.add init_value member_loc seen_values
             in
             (SSet.add name names, num_type, seen_values))
           ~init:(SSet.empty, Truthy, NumberMap.empty)
@@ -8079,7 +8079,7 @@ and mk_enum cx ~enum_reason enum =
         Base.List.fold_left
           ~f:
             (fun (names, str_type, seen_values)
-                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                 (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
             let str_type =
               if init_value = "" then
@@ -8095,7 +8095,7 @@ and mk_enum cx ~enum_reason enum =
                   (Error_message.EEnumMemberDuplicateValue
                      { loc = init_loc; prev_use_loc; enum_reason });
                 seen_values
-              | None -> SMap.add init_value init_loc seen_values
+              | None -> SMap.add init_value member_loc seen_values
             in
             (SSet.add name names, str_type, seen_values))
           ~init:(SSet.empty, Truthy, SMap.empty)

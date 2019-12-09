@@ -351,11 +351,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------- error-access.js:9:11
 
-Cannot access `E.C` [1] because `C` is not a member of enum `E` [2]
+Cannot access `E.C` because `C` is not a member of enum `E` [1].
 
    error-access.js:9:11
    9| const x = E.C;
-                ^^^ [1]
+                ^^^
 
 References:
    error-access.js:3:1
@@ -364,16 +364,16 @@ References:
    4|   A,
    5|   B,
    6| }
-      ^ [2]
+      ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:14:1
 
-Cannot access computed property [1] on enum `E` [2] because computed access is not allowed on enums.
+Cannot access computed property on enum `E` [1] because computed access is not allowed on enums.
 
    error-access.js:14:1
    14| E["A"];
-       ^^^^^^ [1]
+       ^^^^^^
 
 References:
    error-access.js:3:1
@@ -382,7 +382,7 @@ References:
     4|   A,
     5|   B,
     6| }
-       ^ [2]
+       ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19
@@ -422,17 +422,17 @@ References:
 
 Error ------------------------------------------------------------------------------------ error-duplicate-values.js:6:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `E` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `E` [2].
 
    error-duplicate-values.js:6:7
    6|   C = true, // Error: duplicate member initializer
-            ^^^^ [1]
+            ^^^^
 
 References:
-   error-duplicate-values.js:4:7
+   error-duplicate-values.js:4:3
    4|   A = true,
-            ^^^^ [2]
+        ^^^^^^^^ [1]
    error-duplicate-values.js:3:1
       v-------
    3| enum E {
@@ -441,22 +441,22 @@ References:
    6|   C = true, // Error: duplicate member initializer
    7|   D = true, // Error: duplicate member initializer
    8| }
-      ^ [3]
+      ^ [2]
 
 
 Error ------------------------------------------------------------------------------------ error-duplicate-values.js:7:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `E` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `E` [2].
 
    error-duplicate-values.js:7:7
    7|   D = true, // Error: duplicate member initializer
-            ^^^^ [1]
+            ^^^^
 
 References:
-   error-duplicate-values.js:4:7
+   error-duplicate-values.js:4:3
    4|   A = true,
-            ^^^^ [2]
+        ^^^^^^^^ [1]
    error-duplicate-values.js:3:1
       v-------
    3| enum E {
@@ -465,22 +465,22 @@ References:
    6|   C = true, // Error: duplicate member initializer
    7|   D = true, // Error: duplicate member initializer
    8| }
-      ^ [3]
+      ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:12:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `F` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `F` [2].
 
    error-duplicate-values.js:12:7
    12|   B = 1, // Error: duplicate member initializer
-             ^ [1]
+             ^
 
 References:
-   error-duplicate-values.js:11:7
+   error-duplicate-values.js:11:3
    11|   A = 1,
-             ^ [2]
+         ^^^^^ [1]
    error-duplicate-values.js:10:1
        v-------
    10| enum F {
@@ -489,22 +489,22 @@ References:
    13|   C = 1.0, // Error: duplicate member initializer
    14|   D = 2,
    15| }
-       ^ [3]
+       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:13:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `F` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `F` [2].
 
    error-duplicate-values.js:13:7
    13|   C = 1.0, // Error: duplicate member initializer
-             ^^^ [1]
+             ^^^
 
 References:
-   error-duplicate-values.js:11:7
+   error-duplicate-values.js:11:3
    11|   A = 1,
-             ^ [2]
+         ^^^^^ [1]
    error-duplicate-values.js:10:1
        v-------
    10| enum F {
@@ -513,22 +513,22 @@ References:
    13|   C = 1.0, // Error: duplicate member initializer
    14|   D = 2,
    15| }
-       ^ [3]
+       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:20:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `G` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `G` [2].
 
    error-duplicate-values.js:20:7
    20|   C = "a", // Error: duplicate member initializer
-             ^^^ [1]
+             ^^^
 
 References:
-   error-duplicate-values.js:19:7
+   error-duplicate-values.js:19:3
    19|   B = "a",
-             ^^^ [2]
+         ^^^^^^^ [1]
    error-duplicate-values.js:17:1
        v-------
    17| enum G {
@@ -537,22 +537,22 @@ References:
    20|   C = "a", // Error: duplicate member initializer
    21|   D = "a", // Error: duplicate member initializer
    22| }
-       ^ [3]
+       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:21:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `G` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `G` [2].
 
    error-duplicate-values.js:21:7
    21|   D = "a", // Error: duplicate member initializer
-             ^^^ [1]
+             ^^^
 
 References:
-   error-duplicate-values.js:19:7
+   error-duplicate-values.js:19:3
    19|   B = "a",
-             ^^^ [2]
+         ^^^^^^^ [1]
    error-duplicate-values.js:17:1
        v-------
    17| enum G {
@@ -561,22 +561,22 @@ References:
    20|   C = "a", // Error: duplicate member initializer
    21|   D = "a", // Error: duplicate member initializer
    22| }
-       ^ [3]
+       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:28:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `H` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `H` [2].
 
    error-duplicate-values.js:28:7
    28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   error-duplicate-values.js:27:7
+   error-duplicate-values.js:27:3
    27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    error-duplicate-values.js:24:1
        v-------
    24| enum H {
@@ -585,22 +585,22 @@ References:
    27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
    28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
    29| }
-       ^ [3]
+       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:35:7
 
-Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
-enum `I` [3]
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `I` [2].
 
    error-duplicate-values.js:35:7
    35|   C = 9007199254740993, // Error: duplicate member initializer
-             ^^^^^^^^^^^^^^^^ [1]
+             ^^^^^^^^^^^^^^^^
 
 References:
-   error-duplicate-values.js:34:7
+   error-duplicate-values.js:34:3
    34|   B = 9007199254740992,
-             ^^^^^^^^^^^^^^^^ [2]
+         ^^^^^^^^^^^^^^^^^^^^ [1]
    error-duplicate-values.js:31:1
        v-------
    31| enum I {
@@ -609,16 +609,16 @@ References:
    34|   B = 9007199254740992,
    35|   C = 9007199254740993, // Error: duplicate member initializer
    36| }
-       ^ [3]
+       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
 
-Cannot change member [1] of enum `E` [2] because enums are frozen.
+Cannot change member of enum `E` [1] because enums are frozen.
 
    error-modification.js:9:1
    9| E.A = 1;
-      ^^^ [1]
+      ^^^
 
 References:
    error-modification.js:3:1
@@ -627,16 +627,16 @@ References:
    4|   A,
    5|   B,
    6| }
-      ^ [2]
+      ^ [1]
 
 
 Error --------------------------------------------------------------------------------------- error-modification.js:12:1
 
-Cannot change member [1] of enum `E` [2] because enums are frozen.
+Cannot change member of enum `E` [1] because enums are frozen.
 
    error-modification.js:12:1
    12| E["A"] = 1;
-       ^^^^^^ [1]
+       ^^^^^^
 
 References:
    error-modification.js:3:1
@@ -645,16 +645,16 @@ References:
     4|   A,
     5|   B,
     6| }
-       ^ [2]
+       ^ [1]
 
 
 Error --------------------------------------------------------------------------------------- error-modification.js:15:8
 
-Cannot change member [1] of enum `E` [2] because enums are frozen.
+Cannot change member of enum `E` [1] because enums are frozen.
 
    error-modification.js:15:8
    15| delete E.A;
-              ^^^ [1]
+              ^^^
 
 References:
    error-modification.js:3:1
@@ -663,7 +663,7 @@ References:
     4|   A,
     5|   B,
     6| }
-       ^ [2]
+       ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- error-reassign.js:4:1
@@ -682,7 +682,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:1
 
-The member `B` of `E` [1] has not been checked in switch [2].
+Invalid exhaustive check: the member `B` of `E` [1] has not been checked in switch.
 
    exhaustive-check.js:51:1
        v---------------------
@@ -690,7 +690,7 @@ The member `B` of `E` [1] has not been checked in switch [2].
    52|   case E.A:
    53|     'A';
    54| }
-       ^ [2]
+       ^
 
 References:
    exhaustive-check.js:3:1
@@ -704,32 +704,32 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:58:3
 
-Invalid enum member check at case [1]. Check must be in the form `case E.A`.
+Invalid enum member check at case. Check must be in the form `case E.A`.
 
          v---------------
    58|   case x: // Error
    59|     'A';
-           ---^ [1]
+           ---^
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:65:5
 
-Invalid enum member check at case [1]. Check must be in the form `case G.A`.
+Invalid enum member check at case. Check must be in the form `case G.A`.
 
    65|     case g:; // Error
-           ^^^^^^^^ [1]
+           ^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:77:3
 
-The case [1] checks for enum member `A` of `E` [2], but member `A` was already checked at case [3].
+Invalid exhaustive check: case checks for enum member `A` of `E` [1], but member `A` was already checked at case [2].
 
    exhaustive-check.js:77:3
          v-----------------
    77|   case E.A: // Error
    78|     'A2';
    79|     break;
-           -----^ [1]
+           -----^
 
 References:
    exhaustive-check.js:3:1
@@ -738,24 +738,25 @@ References:
     4|   A,
     5|   B,
     6| }
-       ^ [2]
+       ^ [1]
    exhaustive-check.js:71:3
          v--------
    71|   case E.A:
    72|     'A1';
    73|     break;
-           -----^ [3]
+           -----^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:89:3
 
-The default case [1] checks for additional enum members of `E` [2], but all of its members have already been checked.
+Invalid exhaustive check: default case checks for additional enum members of `E` [1], but all of its members have
+already been checked.
 
    exhaustive-check.js:89:3
          v----------------
    89|   default: // Error
    90|     'default';
-           ---------^ [1]
+           ---------^
 
 References:
    exhaustive-check.js:3:1
@@ -764,12 +765,12 @@ References:
     4|   A,
     5|   B,
     6| }
-       ^ [2]
+       ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:94:1
 
-2 members of `E` [1] have not been checked in switch [2]. For example, the member `A`.
+Invalid exhaustive check: 2 members of `E` [1] have not been checked in switch. For example, the member `A`.
 
    exhaustive-check.js:94:1
         v------------
@@ -781,7 +782,7 @@ Error --------------------------------------------------------------------------
     99|     'B';
    100|     break;
    101| }
-        ^ [2]
+        ^
 
 References:
    exhaustive-check.js:3:1
@@ -865,8 +866,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:105:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on optional `E` [2], which is a union. Before you
-exhaustively check an enum, refine away other members of the union.
+Cannot exhaustively check enum at switch because it is part of a union type: optional `E` [1]. Before you exhaustively
+check an enum in a union, refine to just the enum type.
 
    exhaustive-check.js:105:3
           v---------------------
@@ -876,18 +877,18 @@ exhaustively check an enum, refine away other members of the union.
    108|     case E.B:
    109|       'B';
    110|   }
-          ^ [1]
+          ^
 
 References:
    exhaustive-check.js:104:16
    104| function a(x?: E) {
-                       ^ [2]
+                       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:114:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on nullable `E` [2], which is a union. Before you
-exhaustively check an enum, refine away other members of the union.
+Cannot exhaustively check enum at switch because it is part of a union type: nullable `E` [1]. Before you exhaustively
+check an enum in a union, refine to just the enum type.
 
    exhaustive-check.js:114:3
           v---------------------
@@ -897,18 +898,18 @@ exhaustively check an enum, refine away other members of the union.
    117|     case E.B:
    118|       'B';
    119|   }
-          ^ [1]
+          ^
 
 References:
    exhaustive-check.js:113:15
    113| function a(x: ?E) {
-                      ^^ [2]
+                      ^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:124:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on `EnumsUnion` [2], which is a union. Before you
-exhaustively check an enum, refine away other members of the union.
+Cannot exhaustively check enum at switch because it is part of a union type: `EnumsUnion` [1]. Before you exhaustively
+check an enum in a union, refine to just the enum type.
 
    exhaustive-check.js:124:3
           v---------------------
@@ -918,18 +919,18 @@ exhaustively check an enum, refine away other members of the union.
    127|     case E.B:
    128|       'B';
    129|   }
-          ^ [1]
+          ^
 
 References:
    exhaustive-check.js:122:19
    122| type EnumsUnion = E | F;
-                          ^^^^^ [2]
+                          ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:134:3
 
-Cannot exhaustively check enum at switch [1] because we are switching on `EnumOrNonEnum` [2], which is a union. Before
-you exhaustively check an enum, refine away other members of the union.
+Cannot exhaustively check enum at switch because it is part of a union type: `EnumOrNonEnum` [1]. Before you
+exhaustively check an enum in a union, refine to just the enum type.
 
    exhaustive-check.js:134:3
           v---------------------
@@ -939,17 +940,17 @@ you exhaustively check an enum, refine away other members of the union.
    137|     case E.B:
    138|       'B';
    139|   }
-          ^ [1]
+          ^
 
 References:
    exhaustive-check.js:132:22
    132| type EnumOrNonEnum = E | string;
-                             ^^^^^^^^^^ [2]
+                             ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:142:1
 
-The member `B` of `E` [1] has not been checked in switch [2].
+Invalid exhaustive check: the member `B` of `E` [1] has not been checked in switch.
 
    exhaustive-check.js:142:1
         v-----------
@@ -961,7 +962,7 @@ The member `B` of `E` [1] has not been checked in switch [2].
    147|     'F.A';
    148|     break;
    149| }
-        ^ [2]
+        ^
 
 References:
    exhaustive-check.js:3:1
@@ -2249,30 +2250,30 @@ References:
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
 
-Cannot access `$PropertyType` [1] because `X` is not a member of enum `E` [2]
+Cannot access `$PropertyType` because `X` is not a member of enum `E` [1].
 
    utility-types.js:12:11
    12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    utility-types.js:12:25
    12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
-                               ^^^^^^^^ [2]
+                               ^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:15:11
 
-Cannot access `$ElementType` [1] on enum `E` [2] because computed access is not allowed on enums.
+Cannot access `$ElementType` on enum `E` [1] because computed access is not allowed on enums.
 
    utility-types.js:15:11
    15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    utility-types.js:15:24
    15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
-                              ^^^^^^^^ [2]
+                              ^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:18:11

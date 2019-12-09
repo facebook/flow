@@ -2895,42 +2895,37 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
     let features =
-      [text "Cannot access "; ref access_reason]
+      [text "Cannot access "; desc access_reason]
       @
       match member_name with
-      | Some name -> [text " because "; code name; text " is not a member of "; ref enum_reason]
+      | Some name ->
+        [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
       | None ->
         [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
     in
     Normal { features }
-  | EEnumModification { loc; enum_reason } ->
+  | EEnumModification { enum_reason; _ } ->
     let features =
-      [
-        text "Cannot change ";
-        ref (mk_reason (RCustom "member") loc);
-        text " of ";
-        ref enum_reason;
-        text " because enums are frozen.";
-      ]
+      [text "Cannot change member of "; ref enum_reason; text " because enums are frozen."]
     in
     Normal { features }
-  | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+  | EEnumMemberDuplicateValue { prev_use_loc; enum_reason; _ } ->
     let features =
       [
-        text "Enum member initializers need to be unique, but ";
-        ref (mk_reason (RCustom "this value") loc);
-        text " has already been used for a ";
-        ref (mk_reason (RCustom "previous initializer") prev_use_loc);
-        text " in ";
+        text "Invalid enum member initializer. Initializers need to be unique, but this one ";
+        text "has already been used for a ";
+        ref (mk_reason (RCustom "previous member") prev_use_loc);
+        text " of ";
         ref enum_reason;
+        text ".";
       ]
     in
     Normal { features }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     let features =
       [
-        text "The ";
-        ref reason;
+        text "Invalid exhaustive check: ";
+        desc reason;
         text " checks for enum member ";
         code member_name;
         text " of ";
@@ -2946,8 +2941,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
     let features =
       [
-        text "The ";
-        ref reason;
+        text "Invalid exhaustive check: ";
+        desc reason;
         text " checks for additional enum members of ";
         ref enum_reason;
         text ", but all of its members have already been checked.";
@@ -2959,23 +2954,25 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       if number_remaining_members_to_check > 1 then
         [
+          text "Invalid exhaustive check: ";
           text (string_of_int number_remaining_members_to_check);
           text " members of ";
           ref enum_reason;
           text " have not been checked in ";
-          ref reason;
+          desc reason;
           text ". For example, the member ";
           code remaining_member_to_check;
           text ".";
         ]
       else
         [
-          text "The member ";
+          text "Invalid exhaustive check: ";
+          text "the member ";
           code remaining_member_to_check;
           text " of ";
           ref enum_reason;
           text " has not been checked in ";
-          ref reason;
+          desc reason;
           text ".";
         ]
     in
@@ -2989,7 +2986,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       [
         text "Invalid enum member check at ";
-        ref reason;
+        desc reason;
         text ". Check must be in the form ";
         code (spf "case %s.%s" enum_name example_member);
         text ".";
@@ -3000,11 +2997,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       [
         text "Cannot exhaustively check enum at ";
-        ref reason;
-        text " because we are switching on ";
+        desc reason;
+        text " because it is part of a union type: ";
         ref union_reason;
-        text ", which is a union. ";
-        text "Before you exhaustively check an enum, refine away other members of the union.";
+        text ". Before you exhaustively check an enum in a union, refine to just the enum type.";
       ]
     in
     Normal { features }
