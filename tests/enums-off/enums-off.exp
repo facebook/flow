@@ -1,0 +1,23 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Experimental `enum` usage. You may opt-in to using enums by putting `experimental.enums=true` into the `[options]`
+section of your `.flowconfig`.
+
+      v-------------------------------
+   3| enum E { // Error: enums are off
+   4|   A,
+   5|   B,
+   6| }
+      ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:16
+
+Cannot resolve name `E`.
+
+   8| declare var x: E; // Error: can't resolve name `E`
+                     ^
+
+
+
+Found 2 errors

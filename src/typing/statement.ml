@@ -519,9 +519,10 @@ and statement_decl cx =
           ( "Flow Error: Nameless function declarations should always be given "
           ^ "an implicit name before they get hoisted!" ))
     | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
-      let r = DescFormat.type_reason name name_loc in
-      let tvar = Tvar.mk cx r in
-      Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name tvar name_loc
+      if Context.enable_enums cx then
+        let r = DescFormat.type_reason name name_loc in
+        let tvar = Tvar.mk cx r in
+        Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name tvar name_loc
     | ( loc,
         DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
       ) ->
@@ -1985,20 +1986,33 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | None -> ());
       (loc, FunctionDeclaration func_ast)
     | (loc, EnumDeclaration enum) ->
-      if not @@ Context.enable_enums cx then
-        Flow.add_output cx (Error_message.EExperimentalEnums loc);
       let open EnumDeclaration in
       let { id = (name_loc, ident); body } = enum in
       let { Ast.Identifier.name; _ } = ident in
       let reason = mk_reason (REnum name) loc in
-      let enum_t = mk_enum cx ~enum_reason:reason enum in
-      let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
-      let id' = ((name_loc, t), ident) in
-      Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
-      let use_op =
-        Op (AssignVar { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t t })
+      let t =
+        if Context.enable_enums cx then (
+          let enum_t = mk_enum cx ~enum_reason:reason enum in
+          let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
+          Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
+          let use_op =
+            Op (AssignVar { var = Some (mk_reason (RIdentifier name) name_loc); init = reason })
+          in
+          Env.init_implicit_const
+            Scope.Entry.EnumNameBinding
+            cx
+            ~use_op
+            name
+            ~has_anno:false
+            t
+            name_loc;
+          t
+        ) else (
+          Flow.add_output cx (Error_message.EExperimentalEnums loc);
+          AnyT.error reason
+        )
       in
-      Env.init_implicit_const Scope.Entry.EnumNameBinding cx ~use_op name ~has_anno:false t name_loc;
+      let id' = ((name_loc, t), ident) in
       (loc, EnumDeclaration { id = id'; body })
     | ( loc,
         DeclareVariable
