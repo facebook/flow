@@ -19,5 +19,7 @@ module type S = sig
 
   val remove_entry : key -> 'a t -> unit
 
-  val with_cache : key -> 'a Lazy.t -> 'a t -> 'a
+  (* Returns the value as well as a boolean which is true if the cache was hit and false if it
+   * missed. *)
+  val with_cache : key -> 'a Lazy.t -> 'a t -> 'a * bool
 end

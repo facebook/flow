@@ -75,6 +75,6 @@ module Make (Map : WrappedMap.S) = struct
     | None ->
       let (lazy value) = value in
       add_after_miss key value cache;
-      value
-    | Some result -> result
+      (value, false)
+    | Some result -> (result, true)
 end

@@ -378,7 +378,9 @@ end = struct
 
   let with_cache ~root_files ~on_miss =
     match FilenameSet.elements root_files with
-    | [root_file] -> FilenameCache.with_cache root_file on_miss cache
+    | [root_file] ->
+      let (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
+      result
     | _ ->
       (* Cache is only for when there is a single root file *)
       Lazy.force on_miss

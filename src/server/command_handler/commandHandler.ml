@@ -16,7 +16,9 @@ let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache conte
   let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
   match type_contents_cache with
   | None -> Lazy.force lazy_result
-  | Some cache -> FilenameCache.with_cache file lazy_result cache
+  | Some cache ->
+    let (result, _did_hit) = FilenameCache.with_cache file lazy_result cache in
+    result
 
 let status_log errors =
   if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
