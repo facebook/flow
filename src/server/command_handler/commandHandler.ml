@@ -10,8 +10,6 @@ open ServerEnv
 open Utils_js
 open Lsp
 
-let ( >|= ) = Lwt.( >|= )
-
 let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file =
   let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
   match type_contents_cache with
@@ -379,9 +377,14 @@ let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
-        type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
-        >|= Base.Result.map ~f:(fun (cx, _, _, typed_ast, _) ->
-                Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content))
+        let%lwt type_contents_result =
+          type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+        in
+        let result =
+          Base.Result.map type_contents_result ~f:(fun (cx, _, _, typed_ast, _) ->
+              Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
+        in
+        Lwt.return result)
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
