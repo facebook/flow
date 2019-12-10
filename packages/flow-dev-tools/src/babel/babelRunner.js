@@ -1,4 +1,11 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
 
 import {mkdirp, ncp, rimraf, writeFile} from '../utils/async';
 import {defaultTestsDirName, getTestsDir} from '../constants';
