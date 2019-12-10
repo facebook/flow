@@ -12,6 +12,12 @@ open Lsp
 
 let ( >|= ) = Lwt.( >|= )
 
+let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file =
+  let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
+  match type_contents_cache with
+  | None -> Lazy.force lazy_result
+  | Some cache -> FilenameCache.with_cache file lazy_result cache
+
 let status_log errors =
   if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
     Hh_logger.info "Status: OK"
@@ -543,12 +549,12 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
                        :: ("error", Hh_json.JSON_String msg)
                        :: json_props )) ) )))
 
-let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
+let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
   let%lwt check_result =
     File_input.content_of_file_input file_input %>>= fun content ->
-    Types_js.type_contents ~options ~env ~profiling content file
+    type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
   in
   match check_result with
   | Error msg ->
@@ -703,7 +709,9 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
   )
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
-  let%lwt (result, json_data) = get_def ~reader ~options ~env ~profiling (filename, line, char) in
+  let%lwt (result, json_data) =
+    get_def ~reader ~options ~env ~profiling ~type_contents_cache:None (filename, line, char)
+  in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
 
 let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
@@ -1335,7 +1343,10 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
          * a little more defensive. The only danger here is that the file contents may have changed *)
         Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
     in
-    let%lwt (result, extra_data) = get_def ~options ~reader ~env ~profiling (file, line, char) in
+    let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+    let%lwt (result, extra_data) =
+      get_def ~options ~reader ~env ~profiling ~type_contents_cache (file, line, char)
+    in
     let metadata = with_data ~extra_data metadata in
     match result with
     | Ok loc when loc = Loc.none ->

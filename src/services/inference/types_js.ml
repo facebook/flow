@@ -2357,6 +2357,14 @@ end = struct
       ~recheck_reasons
       ~will_be_checked_files
       ~env =
+    Transaction.add
+      ~commit:(fun () ->
+        (* We have to clear this at the end of the recheck, because it could have been populated with
+         * now-out-of-date data in the middle of the recheck by parallelizable requests. *)
+        Persistent_connection.clear_type_contents_caches ();
+        Lwt.return_unit)
+      ~rollback:(fun () -> Lwt.return_unit)
+      transaction;
     let%lwt (env, intermediate_values) =
       recheck_parse_and_update_dependency_info
         ~profiling
