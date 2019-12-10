@@ -208,17 +208,19 @@ let infer_type
             match type_contents_result with
             | Error str -> Error (str, None)
             | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
-              Ok
-                (Type_info_service.type_at_pos
-                   ~cx
-                   ~file_sig
-                   ~typed_ast
-                   ~expand_aliases
-                   ~omit_targ_defaults
-                   ~evaluate_type_destructors
-                   file
-                   line
-                   col)
+              let (result, json_props) =
+                Type_info_service.type_at_pos
+                  ~cx
+                  ~file_sig
+                  ~typed_ast
+                  ~expand_aliases
+                  ~omit_targ_defaults
+                  ~evaluate_type_destructors
+                  file
+                  line
+                  col
+              in
+              Ok (result, Some (Hh_json.JSON_Object json_props))
           in
           Lwt.return result)
     in

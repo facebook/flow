@@ -22,12 +22,11 @@ let type_at_pos
   let loc = Loc.make file line col in
   let (json_data, loc, ty) =
     let mk_data result_str loc ty_json =
-      Hh_json.JSON_Object
-        [
-          ("result", Hh_json.JSON_String result_str);
-          ("loc", Reason.json_of_loc ~offset_table:None loc);
-          ("type", ty_json);
-        ]
+      [
+        ("result", Hh_json.JSON_String result_str);
+        ("loc", Reason.json_of_loc ~offset_table:None loc);
+        ("type", ty_json);
+      ]
     in
     Query_types.(
       let file = Context.file cx in
@@ -43,8 +42,7 @@ let type_at_pos
           loc
       in
       match result with
-      | FailureNoMatch ->
-        (Hh_json.JSON_Object [("result", Hh_json.JSON_String "FAILURE_NO_MATCH")], Loc.none, None)
+      | FailureNoMatch -> ([("result", Hh_json.JSON_String "FAILURE_NO_MATCH")], Loc.none, None)
       | FailureUnparseable (loc, gt, _) ->
         let json = Hh_json.JSON_String (Type.string_of_ctor gt) in
         (mk_data "FAILURE_UNPARSEABLE" loc json, loc, None)
@@ -54,7 +52,7 @@ let type_at_pos
         let json = Hh_json.JSON_String (Ty_printer.string_of_t ty) in
         (mk_data "SUCCESS" loc json, loc, Some ty))
   in
-  ((loc, ty), Some json_data)
+  ((loc, ty), json_data)
 
 let insert_type
     ~options
