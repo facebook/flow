@@ -272,7 +272,11 @@ let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
 
 let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
 
-let try_with_json f =
+(* Catch exceptions and promise rejections, stringify them, and return Error. Otherwise, return
+ * the unchanged result of calling `f`. *)
+let try_with_json : (unit -> ('a, string * 'json) result Lwt.t) -> ('a, string * 'json) result Lwt.t
+    =
+ fun f ->
   try%lwt f () with
   | Lwt.Canceled as exn ->
     let exn = Exception.wrap exn in
@@ -281,7 +285,10 @@ let try_with_json f =
     let exn = Exception.wrap exn in
     Lwt.return (Error (Exception.to_string exn, None))
 
-let try_with_json2 f =
+(* Like try_with_json, but the JSON payload is outside of the `result` *)
+let try_with_json2 :
+    (unit -> (('a, string) result * 'json) Lwt.t) -> (('a, string) result * 'json) Lwt.t =
+ fun f ->
   try%lwt f () with
   | Lwt.Canceled as exn ->
     let exn = Exception.wrap exn in
