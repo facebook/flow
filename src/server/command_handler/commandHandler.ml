@@ -365,7 +365,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
         file
         content)
 
-let coverage ~options ~env ~profiling ~force ~trust file_input =
+let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
     Error
       "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
@@ -375,7 +375,7 @@ let coverage ~options ~env ~profiling ~force ~trust file_input =
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
-        Types_js.type_contents ~options ~env ~profiling content file
+        type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
         >|= Base.Result.map ~f:(fun (cx, _, _, typed_ast, _) ->
                 Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content))
 
@@ -638,7 +638,9 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
-  let%lwt response = coverage ~options ~env ~profiling ~force ~trust input in
+  let%lwt response =
+    coverage ~options ~env ~profiling ~type_contents_cache:None ~force ~trust input
+  in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
 let handle_batch_coverage ~options ~profiling:_ ~env ~batch ~trust =
@@ -1540,8 +1542,9 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
   let%lwt result =
     if is_flow then
       let force = false in
+      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
-      coverage ~options ~env ~profiling ~force ~trust:false file
+      coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust:false file
     else
       Lwt.return (Ok [])
   in
