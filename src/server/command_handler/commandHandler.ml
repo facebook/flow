@@ -572,22 +572,27 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
 let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
-  let%lwt check_result =
-    File_input.content_of_file_input file_input %>>= fun content ->
-    let%lwt (result, _did_hit_cache) =
+  let%lwt (check_result, did_hit_cache) =
+    match File_input.content_of_file_input file_input with
+    | Error _ as err -> Lwt.return (err, None)
+    | Ok content ->
       type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
-    in
-    Lwt.return result
   in
   match check_result with
   | Error msg ->
-    Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
+    let json_props = [("error", Hh_json.JSON_String msg)] in
+    let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
+    Lwt.return (Error msg, Some (Hh_json.JSON_Object json_props))
   | Ok check_result ->
     let%lwt (result, json_props) =
       get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
     in
-    let json = Option.map ~f:(fun props -> Hh_json.JSON_Object props) json_props in
-    Lwt.return (result, json)
+    let json =
+      let json_props = Option.value ~default:[] json_props in
+      let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
+      Hh_json.JSON_Object json_props
+    in
+    Lwt.return (result, Some json)
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
