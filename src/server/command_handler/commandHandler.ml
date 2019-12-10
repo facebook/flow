@@ -553,30 +553,21 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
                 |> fold_json_of_parse_errors parse_errors
               in
               match result with
-              | Def loc ->
-                ( Ok loc,
-                  Some
-                    (Hh_json.JSON_Object (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
-                )
+              | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
               | Partial (loc, msg) ->
                 ( Ok loc,
                   Some
-                    (Hh_json.JSON_Object
-                       ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                       :: ("error", Hh_json.JSON_String msg)
-                       :: json_props )) )
+                    ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+                    :: ("error", Hh_json.JSON_String msg)
+                    :: json_props ) )
               | Bad_loc ->
-                ( Ok Loc.none,
-                  Some
-                    (Hh_json.JSON_Object (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
-                )
+                (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
               | Def_error msg ->
                 ( Error msg,
                   Some
-                    (Hh_json.JSON_Object
-                       ( ("result", Hh_json.JSON_String "FAILURE")
-                       :: ("error", Hh_json.JSON_String msg)
-                       :: json_props )) ) )))
+                    ( ("result", Hh_json.JSON_String "FAILURE")
+                    :: ("error", Hh_json.JSON_String msg)
+                    :: json_props ) ) )))
 
 let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
@@ -592,7 +583,11 @@ let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, l
   | Error msg ->
     Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
   | Ok check_result ->
-    get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
+    let%lwt (result, json_props) =
+      get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
+    in
+    let json = Option.map ~f:(fun props -> Hh_json.JSON_Object props) json_props in
+    Lwt.return (result, json)
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
