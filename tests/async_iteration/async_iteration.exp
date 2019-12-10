@@ -99,8 +99,8 @@ Cannot cast `result.value` to string because:
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:528:14
-   528|     +value?: Return,
+   <BUILTINS>/core.js:529:14
+   529|     +value?: Return,
                      ^^^^^^ [1]
    return.js:20:20
     20|     (result.value: string); // error: number | void ~> string

@@ -114,8 +114,8 @@ Cannot call method `freeze` because property `freeze` is missing in statics of `
                     ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/prelude.js:5:15
-    5| declare class Object {}
+   <BUILTINS>/prelude.js:12:15
+   12| declare class Object {}
                      ^^^^^^ [1]
 
 

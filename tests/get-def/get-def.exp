@@ -51,6 +51,6 @@ bogus array destructuring of an object = {"path":"objects.js","line":24,"endline
 property access assigned to a variable = {"path":"objects.js","line":25,"endline":25,"start":9,"end":11}
 property access on the arg to the idx callback = {"path":"idx.js","line":6,"endline":6,"start":3,"end":5}
 nested property access on the arg to the idx callback = {"path":"idx.js","line":7,"endline":7,"start":5,"end":7}
-global (builtin) variable = {"path":"[LIB] prelude.js","line":23,"endline":23,"start":15,"end":19}
+global (builtin) variable = {"path":"[LIB] prelude.js","line":30,"endline":30,"start":15,"end":19}
 object destructuring key = {"path":"destructuring.js","line":4,"endline":4,"start":15,"end":17}
 object destructuring binding = {"path":"destructuring.js","line":5,"endline":5,"start":13,"end":15}

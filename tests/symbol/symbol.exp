@@ -7,8 +7,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:103:3
-   103|   static (value?:any): symbol & Symbol;
+   <BUILTINS>/core.js:104:3
+   104|   static (value?:any): symbol & Symbol;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -55,8 +55,8 @@ Cannot assign `Symbol.toPrimitive` to `y` because `Symbol` [1] is incompatible w
                                  ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:98:50
-   98| declare opaque type $SymbolToPrimitive: symbol & Symbol;
+   <BUILTINS>/core.js:99:50
+   99| declare opaque type $SymbolToPrimitive: symbol & Symbol;
                                                         ^^^^^^ [1]
    symbol.js:45:12
    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error

@@ -22,8 +22,8 @@ References:
    Bad.js:11:21
     11| const Bad = (props: Props) => null;
                             ^^^^^ [2]
-   <BUILTINS>/core.js:164:31
-   164|     toString(radix?: number): string;
+   <BUILTINS>/core.js:165:31
+   165|     toString(radix?: number): string;
                                       ^^^^^^ [3]
    Bad.js:8:8
      8|   bar: number,
