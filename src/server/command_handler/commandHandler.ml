@@ -10,13 +10,18 @@ open ServerEnv
 open Utils_js
 open Lsp
 
+(* Returns the result of calling `type_contents`, along with a bool option indicating whether the
+ * cache was hit -- None if no cache was available, Some true if it was hit, and Some false if it
+ * was missed. *)
 let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file =
-  let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
   match type_contents_cache with
-  | None -> Lazy.force lazy_result
+  | None ->
+    let%lwt result = Types_js.type_contents ~options ~env ~profiling content file in
+    Lwt.return (result, None)
   | Some cache ->
-    let (result, _did_hit) = FilenameCache.with_cache file lazy_result cache in
-    result
+    let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
+    let (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
+    Lwt.map (fun result -> (result, Some did_hit)) result
 
 let status_log errors =
   if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
@@ -201,7 +206,7 @@ let infer_type
   | Ok content ->
     let%lwt result =
       try_with_json (fun () ->
-          let%lwt type_contents_result =
+          let%lwt (type_contents_result, _did_hit_cache) =
             type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
           in
           let result =
@@ -377,7 +382,7 @@ let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
-        let%lwt type_contents_result =
+        let%lwt (type_contents_result, _did_hit_cache) =
           type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
         in
         let result =
@@ -568,7 +573,10 @@ let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, l
   let file = File_key.SourceFile filename in
   let%lwt check_result =
     File_input.content_of_file_input file_input %>>= fun content ->
-    type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+    let%lwt (result, _did_hit_cache) =
+      type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+    in
+    Lwt.return result
   in
   match check_result with
   | Error msg ->
