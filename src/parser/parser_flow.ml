@@ -377,8 +377,14 @@ let json_file ?(fail = true) ?(token_sink = None) ?(parse_options = None) conten
       error_unexpected ~expected:"a number" env;
       raise (Parse_error.Error (errors env)))
   | _ ->
-    error_unexpected ~expected:"a valid JSON value" env;
-    raise (Parse_error.Error (errors env))
+    let errs =
+      match errors env with
+      | [] ->
+        error_unexpected ~expected:"a valid JSON value" env;
+        errors env
+      | errs -> errs
+    in
+    raise (Parse_error.Error errs)
 
 let jsx_pragma_expression =
   let left_hand_side env =

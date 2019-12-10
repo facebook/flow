@@ -552,17 +552,24 @@ end = struct
         match case.expected with
         | Some (Module _) -> (* TODO *) Case_skipped None
         | Some (Tree tree) ->
-          let (expected, json_errors) = Parser_flow.json_file ~fail:false tree None in
-          if json_errors <> [] then
-            let (loc, err) = List.hd json_errors in
+          let parse_result =
+            try
+              let (expected, json_errors) = Parser_flow.json_file ~fail:false tree None in
+              (Some expected, json_errors)
+            with Parse_error.Error errs -> (None, errs)
+          in
+          (match parse_result with
+          | (_, (loc, err) :: _) ->
             let str =
               Printf.sprintf
-                "Unable to parse .tree.json: %s: %s"
+                "Unable to parse .tree.json: %s: %s\n\nContents: %s"
                 (Loc.debug_to_string loc)
                 (Parse_error.PP.error err)
+                tree
             in
             Case_error [str]
-          else
+          | (None, []) -> Case_error ["Unable to parse .tree.json: unknown error"]
+          | (Some expected, []) ->
             let expected =
               match diff with
               | Some str ->
@@ -581,7 +588,7 @@ end = struct
               | ([], Some _) -> Case_error ["Skipped test passes"]
               | (_, Some reason) -> Case_skipped (Some reason)
               | (_, None) -> Case_error errors
-            end
+            end)
         | Some (Tokens _) -> (* TODO *) Case_skipped None
         | Some (Failure _) -> (* TODO *) Case_skipped None
         | None -> Case_error ["Nothing to do"]
