@@ -1,3 +1,8 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 echo "System architecture: $env:PLATFORM"
 echo "Repo build branch is: $env:APPVEYOR_REPO_BRANCH"
 echo "Build folder is: $env:APPVEYOR_BUILD_FOLDER"
