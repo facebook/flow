@@ -23,6 +23,13 @@ let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache conte
     let (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
     Lwt.map (fun result -> (result, Some did_hit)) result
 
+let add_cache_hit_data_to_json json_props did_hit =
+  match did_hit with
+  | None ->
+    (* This means the cache was not available *)
+    json_props
+  | Some did_hit -> ("cached", Hh_json.JSON_Bool did_hit) :: json_props
+
 let status_log errors =
   if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
     Hh_logger.info "Status: OK"
@@ -206,12 +213,14 @@ let infer_type
   | Ok content ->
     let%lwt result =
       try_with_json (fun () ->
-          let%lwt (type_contents_result, _did_hit_cache) =
+          let%lwt (type_contents_result, did_hit_cache) =
             type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
           in
           let result =
             match type_contents_result with
-            | Error str -> Error (str, None)
+            | Error str ->
+              let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+              Error (str, Some (Hh_json.JSON_Object json_props))
             | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
               let (result, json_props) =
                 Type_info_service.type_at_pos
@@ -225,6 +234,7 @@ let infer_type
                   line
                   col
               in
+              let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
               Ok (result, Some (Hh_json.JSON_Object json_props))
           in
           Lwt.return result)
