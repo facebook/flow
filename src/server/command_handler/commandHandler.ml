@@ -189,6 +189,7 @@ let infer_type
     ~(options : Options.t)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
+    ~type_contents_cache
     ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors) :
       File_input.t * int * int * Verbose.t option * bool * bool * bool) :
     ((Loc.t * Ty.t option, string) result * Hh_json.json option) Lwt.t =
@@ -200,20 +201,26 @@ let infer_type
   | Ok content ->
     let%lwt result =
       try_with_json (fun () ->
-          Types_js.type_contents ~options ~env ~profiling content file >|= function
-          | Error str -> Error (str, None)
-          | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
-            Ok
-              (Type_info_service.type_at_pos
-                 ~cx
-                 ~file_sig
-                 ~typed_ast
-                 ~expand_aliases
-                 ~omit_targ_defaults
-                 ~evaluate_type_destructors
-                 file
-                 line
-                 col))
+          let%lwt type_contents_result =
+            type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+          in
+          let result =
+            match type_contents_result with
+            | Error str -> Error (str, None)
+            | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
+              Ok
+                (Type_info_service.type_at_pos
+                   ~cx
+                   ~file_sig
+                   ~typed_ast
+                   ~expand_aliases
+                   ~omit_targ_defaults
+                   ~evaluate_type_destructors
+                   file
+                   line
+                   col)
+          in
+          Lwt.return result)
     in
     Lwt.return (split_result result)
 
@@ -738,6 +745,7 @@ let handle_infer_type
       ~options
       ~env
       ~profiling
+      ~type_contents_cache:None
       (input, line, char, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
@@ -1372,8 +1380,14 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
     in
     let verbose = None in
     (* if Some, would write to server logs *)
+    let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
     let%lwt (result, extra_data) =
-      infer_type ~options ~env ~profiling (file, line, char, verbose, false, false, false)
+      infer_type
+        ~options
+        ~env
+        ~profiling
+        ~type_contents_cache
+        (file, line, char, verbose, false, false, false)
     in
     let metadata = with_data ~extra_data metadata in
     match result with
