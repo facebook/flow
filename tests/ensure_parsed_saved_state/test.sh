@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 # This test is primarily intended to test that Types_js.ensure_parsed properly
 # parses things which were not originally parsed due to saved_state

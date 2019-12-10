@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 printf "\nVariable defs and uses:\n"
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 4 5
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 5 2

@@ -1,4 +1,8 @@
 #!/bin/bash -x
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 echo "version" > "website/_data/flow_dot_js_versions.csv"
 git ls-remote --tags 2>/dev/null | awk '{print $2}' | cut -d/ -f3 | \

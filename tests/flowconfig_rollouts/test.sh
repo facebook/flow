@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 printf "\nShould detect that rollout groups sum to less than 100%%:\n";
 assert_exit 8 "$FLOW" check \

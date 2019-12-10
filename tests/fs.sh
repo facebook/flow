@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 # All these functions assume the $FLOW env variable is set to the Flow binary.
 # Globs should be expanded when you call these functions, so things like

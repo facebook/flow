@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 echo "nothing"
 assert_exit "$EXIT_COULD_NOT_FIND_FLOWCONFIG" "$FLOW" type-at-pos 3 5 < d0.js

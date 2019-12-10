@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 printf "Get-def imported class:\n"
 assert_ok "$FLOW" get-def bar.js 5 23 --strip-root --pretty
