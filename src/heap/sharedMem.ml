@@ -249,7 +249,7 @@ let get_hash s = get_hash (Digest.string s)
  * (cf serverInit.ml). *)
 (*****************************************************************************)
 
-external hh_removed_count : unit -> int = "hh_removed_count"
+external debug_removed_count : unit -> int = "hh_removed_count"
 
 external hh_check_heap_overflow : unit -> bool = "hh_check_heap_overflow"
 
@@ -307,6 +307,8 @@ let is_heap_overflow () = hh_check_heap_overflow ()
 let value_size r =
   let w = Obj.reachable_words r in
   w * (Sys.word_size / 8)
+
+let debug_value_size = value_size
 
 (*****************************************************************************)
 (* Module returning the MD5 of the key. It's because the code in C land
