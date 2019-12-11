@@ -1266,8 +1266,6 @@ module rec TypeTerm : sig
     | ResolvedAnySpreadArg of reason
 
   and spread_resolve =
-    (* Once we've finished resolving spreads, try to construct a tuple *)
-    | ResolveSpreadsToTuple of int * t * t (* elem type, array type *)
     (* Once we've finished resolving spreads, try to construct an array with known element types *)
     | ResolveSpreadsToArrayLiteral of int * t * t (* elem type, array type *)
     (* Once we've finished resolving spreads, try to construct a non-tuple array *)
@@ -3736,7 +3734,6 @@ let string_of_use_ctor = function
       "ResolveSpreadT(%s)"
       begin
         match rrt_resolve_to with
-        | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
         | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
         | ResolveSpreadsToArrayLiteral (id, _, _) -> spf "ResolveSpreadsToArrayLiteral (%d)" id
         | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"

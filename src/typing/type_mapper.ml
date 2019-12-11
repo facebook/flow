@@ -1562,13 +1562,6 @@ class virtual ['a] t_with_uses =
 
     method spread_resolve cx map_cx t =
       match t with
-      | ResolveSpreadsToTuple (i, t1', t2') ->
-        let t1'' = self#type_ cx map_cx t1' in
-        let t2'' = self#type_ cx map_cx t2' in
-        if t1'' == t1' && t2'' == t2' then
-          t
-        else
-          ResolveSpreadsToTuple (i, t1'', t2'')
       | ResolveSpreadsToArrayLiteral (i, t1', t2') ->
         let t1'' = self#type_ cx map_cx t1' in
         let t2'' = self#type_ cx map_cx t2' in

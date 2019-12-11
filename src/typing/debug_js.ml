@@ -809,7 +809,6 @@ and json_of_resolve_to_impl json_cx resolve_to =
   Hh_json.(
     JSON_Object
       (match resolve_to with
-      | ResolveSpreadsToTuple (id, elem_t, tout)
       | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
         [
           ("id", JSON_Number (string_of_int id));
@@ -2170,7 +2169,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p t ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
     | ResolveSpreadT (use_op, _, { rrt_resolve_to; _ }) ->
       (match rrt_resolve_to with
-      | ResolveSpreadsToTuple (_, elem_t, tout)
       | ResolveSpreadsToArrayLiteral (_, elem_t, tout)
       | ResolveSpreadsToArray (elem_t, tout) ->
         p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid elem_t) (kid tout)) t

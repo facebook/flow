@@ -3093,8 +3093,7 @@ struct
                 | ResolveSpreadsToArrayLiteral _
                 | ResolveSpreadsToCustomFunCall _
                 | ResolveSpreadsToMultiflowCallFull _
-                | ResolveSpreadsToMultiflowPartial _
-                | ResolveSpreadsToTuple _ ->
+                | ResolveSpreadsToMultiflowPartial _ ->
                   add_output cx ~trace (Error_message.ENonArraySpread reason);
                   false
               in
@@ -3133,7 +3132,6 @@ struct
             (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
              * carry an id around to break the infinite recursion that constant
              * constant folding can trigger *)
-            | ResolveSpreadsToTuple (id, elem_t, tout)
             | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
               (* You might come across code like
                *
@@ -10929,8 +10927,6 @@ struct
     in
     fun cx ?trace ~use_op ~reason_op resolved resolve_to ->
       match resolve_to with
-      | ResolveSpreadsToTuple (_, elem_t, tout) ->
-        finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Tuple resolved elem_t tout
       | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
         finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Literal resolved elem_t tout
       | ResolveSpreadsToArray (elem_t, tout) ->
