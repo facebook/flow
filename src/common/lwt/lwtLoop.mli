@@ -10,7 +10,7 @@ module type LOOP = sig
 
   val main : acc -> acc Lwt.t
 
-  val catch : acc -> exn -> unit Lwt.t
+  val catch : acc -> Exception.t -> unit Lwt.t
 end
 
 module Make (Loop : LOOP) : sig

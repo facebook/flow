@@ -6,6 +6,7 @@
     imported_core
     lwt
     lwt.unix
+    utils_core
   )
   (preprocess (pps lwt_ppx))
 )

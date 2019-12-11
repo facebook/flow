@@ -80,9 +80,7 @@ module ListenLoop = LwtLoop.Make (struct
     let%lwt () = handle_message genv message in
     Lwt.return genv
 
-  external reraise : exn -> 'a = "%reraise"
-
-  let catch _ exn = reraise exn
+  let catch _ exn = Exception.reraise exn
 end)
 
 let listen_for_messages genv = ListenLoop.run genv
