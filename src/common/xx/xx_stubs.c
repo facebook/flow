@@ -70,6 +70,14 @@ CAMLexport value caml_xx_digest(value state) {
   return caml_copy_int64(caml_xx_digest_unboxed(state));
 }
 
+CAMLexport XXH64_hash_t caml_xx_hash_unboxed(value v) {
+  return XXH64(String_val(v), caml_string_length(v), 0);
+}
+
+CAMLexport value caml_xx_hash(value v) {
+  return caml_copy_int64(caml_xx_hash_unboxed(v));
+}
+
 CAMLexport value caml_xx_to_string_unboxed(XXH64_hash_t hash) {
   CAMLparam0();
   CAMLlocal1(str);
