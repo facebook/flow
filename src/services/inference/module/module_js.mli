@@ -106,8 +106,31 @@ val add_parsed_resolved_requires :
 
 val add_package : string -> Loc.t Package_json.t_or_error -> unit
 
+type package_incompatible_reason =
+  (* Didn't exist before, now it exists *)
+  | New
+  (* Was valid, now is invalid *)
+  | Became_invalid
+  (* Was invalid, now is valid *)
+  | Became_valid
+  (* The `name` property changed from the former to the latter *)
+  | Name_changed of string option * string option
+  (* The `main` property changed from the former to the latter *)
+  | Main_changed of string option * string option
+  | Unknown
+
+val string_of_package_incompatible_reason : package_incompatible_reason -> string
+
+type package_incompatible_return =
+  | Compatible
+  | Incompatible of package_incompatible_reason
+
 val package_incompatible :
-  options:Options.t -> reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
+  options:Options.t ->
+  reader:State_reader.t ->
+  string ->
+  (Loc.t, Loc.t) Flow_ast.program ->
+  package_incompatible_return
 
 (***************************************************)
 

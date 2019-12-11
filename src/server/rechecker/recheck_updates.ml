@@ -22,21 +22,25 @@ let is_incompatible_package_json ~options ~reader =
   let is_incompatible filename_str =
     let filename = File_key.JsonFile filename_str in
     match Sys_utils.cat_or_failed filename_str with
-    | None -> true (* Failed to read package.json *)
+    | None -> Module_js.Incompatible Module_js.Unknown (* Failed to read package.json *)
     | Some content ->
       (try
          let (ast, _parse_errors) =
            Parsing_service_js.parse_json_file ~fail:true content filename
          in
          Module_js.package_incompatible ~options ~reader filename_str ast
-       with _ -> true)
+       with _ -> Module_js.Incompatible Module_js.Unknown)
     (* Failed to parse package.json *)
   in
   fun ~want ~sroot ~file_options f ->
-    (String_utils.string_starts_with f sroot || Files.is_included file_options f)
-    && Filename.basename f = "package.json"
-    && want f
-    && is_incompatible f
+    if
+      (String_utils.string_starts_with f sroot || Files.is_included file_options f)
+      && Filename.basename f = "package.json"
+      && want f
+    then
+      is_incompatible f
+    else
+      Module_js.Compatible
 
 (* This function takes a set of filenames. We have been told that these files have changed. The
  * main job of this function is to tell
@@ -72,11 +76,22 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
         is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options
       in
       (* Die if a package.json changed in an incompatible way *)
-      let incompatible_packages = SSet.filter is_incompatible_package_json updates in
-      if (not skip_incompatible) && not (SSet.is_empty incompatible_packages) then
+      let incompatible_packages =
+        updates
+        |> SSet.elements
+        |> ListUtils.filter_map (fun file ->
+               match is_incompatible_package_json file with
+               | Module_js.Compatible -> None
+               | Module_js.Incompatible reason -> Some (file, reason))
+      in
+      if (not skip_incompatible) && incompatible_packages <> [] then
         let messages =
-          SSet.elements incompatible_packages
-          |> List.rev_map (spf "Modified package: %s")
+          incompatible_packages
+          |> List.rev_map (fun (file, reason) ->
+                 spf
+                   "Modified package: %s (%s)"
+                   file
+                   (Module_js.string_of_package_incompatible_reason reason))
           |> String.concat "\n"
         in
         Error

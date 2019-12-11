@@ -97,16 +97,62 @@ let add_package filename = function
   | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
   | Error _ -> Module_heaps.Package_heap_mutator.add_error filename
 
+type package_incompatible_reason =
+  (* Didn't exist before, now it exists *)
+  | New
+  (* Was valid, now is invalid *)
+  | Became_invalid
+  (* Was invalid, now is valid *)
+  | Became_valid
+  (* The `name` property changed from the former to the latter *)
+  | Name_changed of string option * string option
+  (* The `main` property changed from the former to the latter *)
+  | Main_changed of string option * string option
+  | Unknown
+
+let string_of_package_incompatible_reason =
+  let string_of_option = function
+    | None -> "<None>"
+    | Some x -> x
+  in
+  function
+  | New -> "new"
+  | Became_invalid -> "became invalid"
+  | Became_valid -> "became valid"
+  | Name_changed (old, new_) ->
+    Printf.sprintf "name changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
+  | Main_changed (old, new_) ->
+    Printf.sprintf "main changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
+  | Unknown -> "Unknown"
+
+type package_incompatible_return =
+  | Compatible
+  | Incompatible of package_incompatible_reason
+
 let package_incompatible ~options ~reader filename ast =
   let new_package = Package_json.parse ~options ast in
   let old_package = Module_heaps.Reader.get_package ~reader filename in
   match (old_package, new_package) with
-  | (None, Ok _) -> true (* didn't exist before, found a new one *)
-  | (None, Error _) -> false (* didn't exist before, new one is invalid *)
-  | (Some (Error ()), Error _) -> false (* was invalid before, still invalid *)
-  | (Some (Error ()), Ok _) -> true (* was invalid before, new one is valid *)
-  | (Some (Ok _), Error _) -> true (* existed before, new one is invalid *)
-  | (Some (Ok old_package), Ok new_package) -> old_package <> new_package
+  | (None, Ok _) -> Incompatible New (* didn't exist before, found a new one *)
+  | (None, Error _) -> Compatible (* didn't exist before, new one is invalid *)
+  | (Some (Error ()), Error _) -> Compatible (* was invalid before, still invalid *)
+  | (Some (Error ()), Ok _) -> Incompatible Became_valid (* was invalid before, new one is valid *)
+  | (Some (Ok _), Error _) -> Incompatible Became_invalid (* existed before, new one is invalid *)
+  | (Some (Ok old_package), Ok new_package) ->
+    if old_package = new_package then
+      Compatible
+    else
+      let old_main = Package_json.main old_package in
+      let new_main = Package_json.main new_package in
+      let old_name = Package_json.name old_package in
+      let new_name = Package_json.name new_package in
+      if old_name <> new_name then
+        Incompatible (Name_changed (old_name, new_name))
+      else if old_main <> new_main then
+        Incompatible (Main_changed (old_main, new_main))
+      else
+        (* This shouldn't happen -- if it does, it probably means we need to add cases above *)
+        Incompatible Unknown
 
 type resolution_acc = {
   mutable paths: SSet.t;
