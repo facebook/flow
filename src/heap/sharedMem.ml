@@ -477,62 +477,6 @@ end = struct
   let move from_key to_key = hh_move from_key to_key
 end
 
-module ProfiledImmediate : functor (Key : Key) (Value : Value.Type) -> sig
-  include module type of Immediate (Key) (Value)
-end =
-functor
-  (Key : Key)
-  (Value : Value.Type)
-  ->
-  struct
-    module ProfiledValue = struct
-      (** Tagging a value as Raw (the 99.9999% case) only increases its marshalled
-        size by 1 byte, and does not change its unmarshalled memory
-        representation provided Value.t is a record type containing at least one
-        non-float member. *)
-      type t =
-        | Raw of Value.t
-        | Profiled of {
-            entry: Value.t;
-            write_time: float;
-          }
-
-      let prefix = Value.prefix
-
-      let description = Value.description
-    end
-
-    module Immediate = Immediate (Key) (ProfiledValue)
-
-    let add x y =
-      let sample_rate = hh_sample_rate () in
-      let entry =
-        if hh_log_level () <> 0 && Random.float 1.0 < sample_rate then
-          ProfiledValue.Profiled { entry = y; write_time = Unix.gettimeofday () }
-        else
-          ProfiledValue.Raw y
-      in
-      Immediate.add x entry
-
-    let get x =
-      match Immediate.get x with
-      | ProfiledValue.Raw y -> y
-      | ProfiledValue.Profiled { entry; write_time } ->
-        EventLogger.(
-          log_if_initialized @@ fun () ->
-          sharedmem_access_sample
-            ~heap_name:Value.description
-            ~key:(Key.string_of_md5 x)
-            ~write_time);
-        entry
-
-    let mem = Immediate.mem
-
-    let remove = Immediate.remove
-
-    let move = Immediate.move
-  end
-
 (*****************************************************************************)
 (* Direct access to shared memory, but with a layer of local changes that allow
  * us to decide whether or not to commit specific values.
