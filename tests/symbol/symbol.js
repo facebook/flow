@@ -54,3 +54,31 @@ declare var s: symbol;
   Symbol.keyFor(s); // OK
   Symbol.keyFor(x); // OK
 }
+
+// Non-strict equality
+{
+  // Comparison with symbol is allowed
+  const s: symbol = Symbol();
+  const y: symbol = Symbol();
+  s == y; // OK
+  y == s; // OK
+  s != y; // OK
+  y != s; // OK
+}
+{
+  const s: symbol = Symbol();
+  // Cannot compare against non-symbols
+  const x: [] = [];
+  x == s; // Error
+  s == x; // Error
+  x != s; // Error
+  s != x; // Error
+}
+{
+  const s: symbol = Symbol();
+  // Other than null/void which we always allow
+  s == null; // OK
+  null == s; // OK
+  s == undefined; // OK
+  undefined == s; // OK
+}

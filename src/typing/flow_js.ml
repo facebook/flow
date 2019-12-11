@@ -618,6 +618,7 @@ let equatable = function
   | (DefT (_, _, BoolT _), DefT (_, _, SingletonBoolT _))
   | (DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _))
   | (DefT (_, _, SingletonBoolT _), DefT (_, _, SingletonBoolT _))
+  | (DefT (_, _, SymbolT), DefT (_, _, SymbolT))
   | (DefT (_, _, EmptyT _), _)
   | (_, DefT (_, _, EmptyT _))
   | (_, DefT (_, _, MixedT _))
@@ -629,11 +630,18 @@ let equatable = function
   | (DefT (_, _, NullT), _)
   | (_, DefT (_, _, NullT)) ->
     true
-  | ( DefT (_, _, (NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _)),
+  | ( DefT
+        ( _,
+          _,
+          ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
+          | SymbolT ) ),
       _ )
   | ( _,
-      DefT (_, _, (NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _))
-    ) ->
+      DefT
+        ( _,
+          _,
+          ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
+          | SymbolT ) ) ) ->
     false
   | _ -> true
 
