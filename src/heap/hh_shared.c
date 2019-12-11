@@ -539,6 +539,7 @@ CAMLprim value hh_log_level(void) {
   return Val_long(*log_level);
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_sample_rate(void) {
   CAMLparam0();
   CAMLreturn(caml_copy_double(*sample_rate));
@@ -1195,6 +1196,7 @@ CAMLprim value hh_allow_removes(value val) {
   CAMLreturn(Val_unit);
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_allow_hashtable_writes_by_current_process(value val) {
   CAMLparam1(val);
   allow_hashtable_writes_by_current_process = Bool_val(val);
@@ -1290,6 +1292,7 @@ static void raise_dep_table_full(void) {
   caml_raise_constant(*exn);
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_get_in_memory_dep_table_entry_count() {
   CAMLparam0();
   CAMLreturn(Val_long(*dcounter));
@@ -1479,6 +1482,7 @@ void kill_dep_used_slots(void) {
   memset(deptbl_bindings, 0, bindings_size_b);
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_dep_used_slots(void) {
   CAMLparam0();
   uint64_t count = 0;
@@ -1491,6 +1495,7 @@ CAMLprim value hh_dep_used_slots(void) {
   CAMLreturn(Val_long(count));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_dep_slots(void) {
   CAMLparam0();
   CAMLreturn(Val_long(dep_size));
@@ -1548,6 +1553,7 @@ CAMLprim value hh_get_dep(value ocaml_key) {
   CAMLreturn(result);
 }
 
+// TODO - DEAD CODE
 value hh_check_heap_overflow(void) {
   if (*heap >= shared_mem + shared_mem_size) {
     return Val_bool(1);
@@ -1770,6 +1776,7 @@ static uint64_t get_hash(value key) {
   return *((uint64_t*)String_val(key));
 }
 
+// TODO - DEAD CODE
 CAMLprim value get_hash_ocaml(value key) {
   return caml_copy_int64(*((uint64_t*)String_val(key)));
 }
@@ -2262,6 +2269,7 @@ void hh_load_dep_table_blob_helper(const char* const in_filename) {
  * we do a fresh load, meaning that there was NO saved state loaded.
  * From a loaded saved state, we call hh_update_dep_table_sqlite instead.
  */
+ // TODO - DEAD CODE
 CAMLprim value hh_save_dep_table_blob(
     value out_filename,
     value build_revision
@@ -2275,6 +2283,7 @@ CAMLprim value hh_save_dep_table_blob(
   CAMLreturn(Val_long(edges_added));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_load_dep_table_blob(
     value in_filename,
     value ignore_hh_version
@@ -2303,6 +2312,7 @@ CAMLprim value hh_load_dep_table_blob(
 
 // This code is called when we fall back from a saved state to full init,
 // not at the end of saving the state.
+// TODO - DEAD CODE
 void hh_cleanup_sqlite(void) {
   CAMLparam0();
 
@@ -2684,6 +2694,7 @@ static size_t hh_save_dep_table_helper_sqlite(
  * we do a fresh load, meaning that there was NO saved state loaded.
  * From a loaded saved state, we call hh_update_dep_table_sqlite instead.
  */
+ // TODO - DEAD CODE
 CAMLprim value hh_save_dep_table_sqlite(
     value out_filename,
     value build_revision,
@@ -2700,6 +2711,7 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLreturn(Val_long(edges_added));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_update_dep_table_sqlite(
     value out_filename,
     value build_revision,
@@ -2733,6 +2745,7 @@ CAMLprim value hh_update_dep_table_sqlite(
   CAMLreturn(Val_long(edges_added));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_get_loaded_dep_table_filename() {
   CAMLparam0();
   CAMLlocal1(result);
@@ -2747,6 +2760,7 @@ CAMLprim value hh_get_loaded_dep_table_filename() {
   CAMLreturn(result);
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_load_dep_table_sqlite(
     value in_filename,
     value ignore_hh_version
@@ -2855,6 +2869,7 @@ query_result_t get_dep_sqlite_blob(
 }
 
 /* Given a key, returns the list of values bound to it from the sql db. */
+// TODO - DEAD CODE
 CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   CAMLparam1(ocaml_key);
   CAMLlocal2(result, cell);
@@ -2913,11 +2928,13 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
 // ----------------------- START OF NO_SQLITE3 SECTION ------------------------
 
+// TODO - DEAD CODE
 CAMLprim value hh_get_loaded_dep_table_filename() {
   CAMLparam0();
   CAMLreturn(caml_copy_string(""));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_save_dep_table_sqlite(
     value out_filename,
     value build_revision,
@@ -2927,6 +2944,7 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLreturn(Val_long(0));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_update_dep_table_sqlite(
     value out_filename,
     value build_revision,
@@ -2936,6 +2954,7 @@ CAMLprim value hh_update_dep_table_sqlite(
   CAMLreturn(Val_long(0));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_load_dep_table_sqlite(
     value in_filename,
     value ignore_hh_version) {
@@ -2943,6 +2962,7 @@ CAMLprim value hh_load_dep_table_sqlite(
   CAMLreturn(Val_long(0));
 }
 
+// TODO - DEAD CODE
 CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   // Empty list
   CAMLparam0();
