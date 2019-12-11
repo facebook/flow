@@ -20,7 +20,7 @@ NATIVE_OBJECT_FILES=\
 	src/hack_forked/utils/sys/priorities.o
 
 RUNNER_DEPS=\
-	src/hack_forked/heap\
+	src/heap\
 	src/hack_forked/injection/default_injector\
 	src/hack_forked/third-party/core\
 	src/hack_forked/utils/collections\

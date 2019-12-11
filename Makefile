@@ -148,7 +148,7 @@ MODULES=\
   src/hack_forked/dfind\
   src/hack_forked/find\
   src/hack_forked/globals\
-  src/hack_forked/heap\
+  src/heap\
   src/hack_forked/injection/default_injector\
   src/hack_forked/procs\
   src/hack_forked/search\
@@ -183,8 +183,8 @@ NATIVE_C_FILES=\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/saved_state_compression_stubs.c\
   src/hack_forked/find/hh_readdir.c\
-  src/hack_forked/heap/hh_assert.c\
-  src/hack_forked/heap/hh_shared.c\
+  src/heap/hh_assert.c\
+  src/heap/hh_shared.c\
   src/hack_forked/utils/core/get_build_id.c\
   src/hack_forked/utils/sys/files.c\
   src/hack_forked/utils/sys/gc_profiling.c\
