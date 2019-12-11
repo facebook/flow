@@ -6898,12 +6898,7 @@ struct
             (match (Property.read_t lp, Property.read_t up) with
             | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
             | _ -> ());
-
-            (* Band-aid to avoid side effect in speculation mode. Even in
-           non-speculation mode, the side effect here is racy, so it either
-           needs to be taken out or replaced with something more
-           robust. Tracked by #11299251. *)
-            if not (Speculation.speculating ()) then Context.set_prop cx lflds s up
+            speculative_object_write cx lflds s up
           ) else
             (* prop from aliased LB *)
             rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
@@ -6936,11 +6931,7 @@ struct
            and if inflowing type is a literal (i.e., it is not an
            annotation), then we add it to the inflowing type as
            an optional property *)
-            (* Band-aid to avoid side effect in speculation mode. Even in
-           non-speculation mode, the side effect here is racy, so it either
-           needs to be taken out or replaced with something more
-           robust. Tracked by #11299251. *)
-            if not (Speculation.speculating ()) then Context.set_prop cx lflds s up
+            speculative_object_write cx lflds s up
           | Field (_, OptionalT _, Polarity.Positive)
             when lflags.exact && Obj_type.sealed_in_op ureason lflags.sealed ->
             rec_flow
@@ -6954,16 +6945,9 @@ struct
             (* When an object type is unsealed, typing it as another object type should add properties
            of that object type to it as needed. We do this when not speculating, because adding
            properties changes state, and the state change is necessary to enforce
-           consistency.
-
-           TODO: adding properties to unsealed objects directly is done whether speculating or not,
-           and that should also be done when not speculating; during speculating, it should be a
-           deferred action. *)
-            if
-              (not (Obj_type.sealed_in_op ureason lflags.sealed))
-              && not (Speculation.speculating ())
-            then
-              Context.set_prop cx lflds s up
+           consistency. *)
+            if not (Obj_type.sealed_in_op ureason lflags.sealed) then
+              speculative_object_write cx lflds s up
             else
               (* otherwise, look up the property in the prototype *)
               let strict =
@@ -8872,7 +8856,13 @@ struct
               rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
           | UnionCases (use_op', _, _, _) ->
             rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-        | (_, Speculation.Action.Error msg) -> add_output cx ~trace msg)
+        | (_, Speculation.Action.Error msg) -> add_output cx ~trace msg
+        | (_, Speculation.Action.UnsealedObjectProperty (flds, s, up)) ->
+          Context.set_prop cx flds s up)
+
+  and speculative_object_write cx flds s up =
+    let action = Speculation.Action.UnsealedObjectProperty (flds, s, up) in
+    if not (Speculation.defer_action cx action) then Context.set_prop cx flds s up
 
   and mk_union_reason r us =
     List.fold_left

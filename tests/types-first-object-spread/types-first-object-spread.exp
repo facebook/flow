@@ -69,9 +69,9 @@ Cannot cast `b1.z` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test1.js:6:16
-    6| const b = { z: 0, ...a };
-                      ^ [1]
+   test1.js:11:23
+   11| export type B = {| z: number, ...A |}
+                             ^^^^^^ [1]
    driver.js:12:8
    12| (b1.z: string); // Error, z may not exist, number ~> string
               ^^^^^^ [2]

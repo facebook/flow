@@ -2291,23 +2291,6 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:53:1
-
-Cannot call `f` because property `p` is missing in object literal [1] but exists in object type [2].
-
-   intersection-function.js:53:1
-   53| f({});
-       ^^^^^
-
-References:
-   intersection-function.js:53:3
-   53| f({});
-         ^^ [1]
-   intersection-function.js:48:23
-   48| declare function f(x: {p: string}): void;
-                             ^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------ intersection-function.js:54:1
 
 Cannot call `f` because number [1] is incompatible with string [2] in property `p`.
@@ -2591,21 +2574,6 @@ References:
    nullish.js:9:6
    9| ({}: string | null | void); // Error: should only show string
            ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nullish.js:10:2
-
-Cannot cast object literal to union type because property `p` is missing in object literal [1] but exists in object
-type [2].
-
-   nullish.js:10:2
-   10| ({}: {p: empty} | null | void); // Error: should only show object
-        ^^ [1]
-
-References:
-   nullish.js:10:6
-   10| ({}: {p: empty} | null | void); // Error: should only show object
-            ^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- nullish.js:11:2
@@ -2947,20 +2915,6 @@ References:
                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:43:2
-
-Cannot cast object literal to `F` because property `p` is missing in object literal [1] but exists in object type [2].
-
-   union.js:43:2
-   43| ({}: F);
-        ^^ [1]
-
-References:
-   union.js:40:10
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                ^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- union.js:44:2
 
 Cannot cast `new Y()` to `F` because number [1] is incompatible with string [2] in property `p`.
@@ -3113,8 +3067,131 @@ References:
                ^ [3]
 
 
+Error -------------------------------------------------------------------------------------------------- unsealed.js:6:2
 
-Found 179 errors
+Cannot cast `o1.p` to number because string [1] is incompatible with number [2].
+
+   unsealed.js:6:2
+   6| (o1.p: number); // error
+       ^^^^
+
+References:
+   unsealed.js:5:10
+   5| (o1: {p: string} | {q: number});
+               ^^^^^^ [1]
+   unsealed.js:6:8
+   6| (o1.p: number); // error
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:14:2
+
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to .q [3].
+
+   unsealed.js:14:2
+   14| (o3: {q: number} | {p: string});
+        ^^
+
+References:
+   unsealed.js:14:6
+   14| (o3: {q: number} | {p: string});
+            ^^^^^^^^^^^ [1]
+   unsealed.js:14:20
+   14| (o3: {q: number} | {p: string});
+                          ^^^^^^^^^^^ [2]
+   unsealed.js:13:1
+   13| o3.q = 1;
+       ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:23:2
+
+Cannot cast `foo.a` to number because string [1] is incompatible with number [2].
+
+   unsealed.js:23:2
+   23| (foo.a: number); // error
+        ^^^^^
+
+References:
+   unsealed.js:21:9
+   21|   | {a: string, b: number, c: void, x: number});
+               ^^^^^^ [1]
+   unsealed.js:23:9
+   23| (foo.a: number); // error
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:24:2
+
+Cannot cast `foo.b` to string because number [1] is incompatible with string [2].
+
+   unsealed.js:24:2
+   24| (foo.b: string); // error
+        ^^^^^
+
+References:
+   unsealed.js:21:20
+   21|   | {a: string, b: number, c: void, x: number});
+                          ^^^^^^ [1]
+   unsealed.js:24:9
+   24| (foo.b: string); // error
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:26:2
+
+Cannot cast `foo.c` to boolean because undefined [1] is incompatible with boolean [2].
+
+   unsealed.js:26:2
+   26| (foo.c: boolean); // error
+        ^^^^^
+
+References:
+   unsealed.js:21:31
+   21|   | {a: string, b: number, c: void, x: number});
+                                     ^^^^ [1]
+   unsealed.js:26:9
+   26| (foo.c: boolean); // error
+               ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:29:2
+
+Cannot cast `foo.x` to string because number [1] is incompatible with string [2].
+
+   unsealed.js:29:2
+   29| (foo.x : string); // error
+        ^^^^^
+
+References:
+   unsealed.js:21:40
+   21|   | {a: string, b: number, c: void, x: number});
+                                              ^^^^^^ [1]
+   unsealed.js:29:10
+   29| (foo.x : string); // error
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:33:2
+
+Cannot cast `x.a` to string because number [1] is incompatible with string [2].
+
+   unsealed.js:33:2
+   33| (x.a: string); // error
+        ^^^
+
+References:
+   unsealed.js:32:20
+   32| (x: {a: string, a: number} | number);
+                          ^^^^^^ [1]
+   unsealed.js:33:7
+   33| (x.a: string); // error
+             ^^^^^^ [2]
+
+
+
+Found 183 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

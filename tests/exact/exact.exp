@@ -260,26 +260,18 @@ References:
                                                  ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- unsealed.js:14:3
+Error ------------------------------------------------------------------------------------------------ unsealed.js:16:22
 
-Cannot call `f` with `o` bound to `o` because:
- - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or inexact object literal [1] is incompatible with exact object type [3].
+Cannot assign `0` to `o.p` because number [1] is incompatible with string [2].
 
-   unsealed.js:14:3
-   14| f(o); // error: o incompatible with exact type
-         ^
+   unsealed.js:16:22
+   16| function g() { o.p = 0 } // error: cannot write a number to o because it later expects a string
+                            ^ [1]
 
 References:
-   unsealed.js:12:9
-   12| var o = {};
-               ^^ [1]
-   unsealed.js:4:15
+   unsealed.js:4:19
     4| function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ [2]
-   unsealed.js:4:29
-    4| function f(o: {p: string} | $Exact<{}>): string {
-                                   ^^^^^^^^^^ [3]
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- unsealed2.js:15:12
