@@ -213,7 +213,7 @@ let sharedmem_config =
     sample_rate = 0.0;
   }
 
-let _ = SharedMem_js.hh_shared_init ~config:sharedmem_config ~shm_dir:None ~num_workers:1
+let _ = SharedMem_js.init sharedmem_config ~num_workers:1
 
 let tests =
   "types_js"
