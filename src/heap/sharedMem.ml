@@ -866,6 +866,32 @@ functor
   end
 
 (*****************************************************************************)
+(* All the caches are functors returning a module of the following signature *)
+(*****************************************************************************)
+
+module type CacheType = sig
+  type key
+
+  type value
+
+  val add : key -> value -> unit
+
+  val get : key -> value option
+
+  val remove : key -> unit
+
+  val clear : unit -> unit
+
+  val string_of_key : key -> string
+
+  val get_size : unit -> int
+end
+
+module type DebugCacheType = sig
+  val get_size : unit -> int
+end
+
+(*****************************************************************************)
 (* The signatures of what we are actually going to expose to the user *)
 (*****************************************************************************)
 
@@ -921,12 +947,36 @@ module type NoCache = sig
   end
 end
 
+module type DebugLocalCache = sig
+  module DebugL1 : DebugCacheType
+
+  module DebugL2 : DebugCacheType
+end
+
+module type LocalCache = sig
+  include DebugLocalCache
+
+  type key
+
+  type value
+
+  val add : key -> value -> unit
+
+  val get : key -> value option
+
+  val remove : key -> unit
+
+  val clear : unit -> unit
+end
+
 module type WithCache = sig
   include NoCache
 
   val write_around : key -> t -> unit
 
   val get_no_cache : key -> t option
+
+  module DebugCache : DebugLocalCache
 end
 
 (*****************************************************************************)
@@ -945,7 +995,14 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) = struct
+module NoCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : sig
+  include
+    NoCache
+      with type key = UserKeyType.t
+       and type t = Value.t
+       and module KeySet = Set.Make(UserKeyType)
+       and module KeyMap = WrappedMap.Make(UserKeyType)
+end = struct
   module Key = KeyFunctor (UserKeyType)
   module New = New (Raw) (Key) (Value)
   module Old = Old (Raw) (Key) (Value) (New.WithLocalChanges)
@@ -1071,29 +1128,6 @@ module type ConfigType = sig
 
   (* The capacity of the cache *)
   val capacity : int
-end
-
-(*****************************************************************************)
-(* All the caches are functors returning a module of the following signature
- *)
-(*****************************************************************************)
-
-module type CacheType = sig
-  type key
-
-  type value
-
-  val add : key -> value -> unit
-
-  val get : key -> value option
-
-  val remove : key -> unit
-
-  val clear : unit -> unit
-
-  val string_of_key : key -> string
-
-  val get_size : unit -> int
 end
 
 (*****************************************************************************)
@@ -1236,7 +1270,8 @@ let invalidate_callback_list = ref []
 
 let invalidate_caches () = List.iter !invalidate_callback_list (fun callback -> callback ())
 
-module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
+module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) :
+  LocalCache with type key = UserKeyType.t and type value = Value.t = struct
   type key = UserKeyType.t
 
   type value = Value.t
@@ -1253,7 +1288,9 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   (* Frequent values cache *)
   module L2 = FreqCache (UserKeyType) (ConfValue)
 
-  let string_of_key _key = failwith "LocalCache does not support 'string_of_key'"
+  (* These are exposed only for tests *)
+  module DebugL1 = L1
+  module DebugL2 = L2
 
   let add x y =
     L1.add x y;
@@ -1295,7 +1332,14 @@ end
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)
-module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) = struct
+module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : sig
+  include
+    WithCache
+      with type key = UserKeyType.t
+       and type t = Value.t
+       and module KeySet = Set.Make(UserKeyType)
+       and module KeyMap = WrappedMap.Make(UserKeyType)
+end = struct
   module Direct = NoCache (Raw) (UserKeyType) (Value)
 
   type key = Direct.key
@@ -1305,6 +1349,9 @@ module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) = 
   module KeySet = Direct.KeySet
   module KeyMap = Direct.KeyMap
   module Cache = LocalCache (UserKeyType) (Value)
+
+  (* This is exposed for tests *)
+  module DebugCache = Cache
 
   let string_of_key key = Direct.string_of_key key
 

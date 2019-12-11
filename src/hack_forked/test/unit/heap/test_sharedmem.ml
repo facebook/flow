@@ -132,24 +132,14 @@ let test_local_changes
   test ();
   IntHeap.LocalChanges.pop_stack ()
 
-module type WithVisibleCache = sig
-  include SharedMem.WithCache
-
-  module Cache : sig
-    module L1 : SharedMem.CacheType with type key := key and type value := t
-
-    module L2 : SharedMem.CacheType with type key := key and type value := t
-  end
-end
-
 let test_cache_behavior
-    (module IntHeap : WithVisibleCache with type t = int and type key = string) () =
+    (module IntHeap : SharedMem.WithCache with type t = int and type key = string) () =
   let expect_cache_size expected_l1 expected_l2 =
-    let actual_l1 = IntHeap.Cache.L1.get_size () in
+    let actual_l1 = IntHeap.DebugCache.DebugL1.get_size () in
     expect
       ~msg:(Printf.sprintf "Expected L1 cacke size of %d, got %d" expected_l1 actual_l1)
       (actual_l1 = expected_l1);
-    let actual_l2 = IntHeap.Cache.L2.get_size () in
+    let actual_l2 = IntHeap.DebugCache.DebugL2.get_size () in
     expect
       ~msg:(Printf.sprintf "Expected L2 cacke size of %d, got %d" expected_l2 actual_l2)
       (actual_l2 = expected_l2)
