@@ -8,7 +8,9 @@
 module Make (Set : Set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
   type node = {
     forward: Set.t;
-    backward: Set.t;
+    (* These edges are mutable *only* for efficiency during construction. Once the graph is
+     * constructed these should never be mutated. *)
+    mutable backward: Set.t;
   }
 
   type t = node Map.t
@@ -39,12 +41,29 @@ module Make (Set : Set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
       keys_to_update
       graph
 
+  (* This should only be called during construction. Once construction is complete, entries
+   * should never be mutated. *)
+  let mutate_hashtbl_entries f keys_to_update table =
+    Set.iter
+      (fun key_to_update ->
+        let entry = Hashtbl.find table key_to_update in
+        f entry)
+      keys_to_update
+
   (* Adds backward edges pointing from every key in `keys_to_update` to `key`. *)
   let add_backward_edges key keys_to_update graph =
     update_entries
       (fun entry -> { entry with backward = Set.add key entry.backward })
       keys_to_update
       graph
+
+  (* This should only be called during construction. Once construction is complete, entries
+   * should never be mutated. *)
+  let add_hashtbl_backward_edges table key keys_to_update =
+    mutate_hashtbl_entries
+      (fun entry -> entry.backward <- Set.add key entry.backward)
+      keys_to_update
+      table
 
   (* Removes backwards edges pointing from every key in `keys_to_update` to `key`. *)
   let remove_backward_edges key keys_to_update graph =
@@ -63,8 +82,12 @@ module Make (Set : Set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
   let of_map map =
     (* First, fill in the forward edges *)
     let graph = Map.map (fun forward -> { forward; backward = Set.empty }) map in
-    (* Next, fill in the backward edges *)
-    let graph = Map.fold add_backward_edges map graph in
+    (* Make a hashtable for fast lookups as we populate backward edges *)
+    let table = Hashtbl.create (Map.cardinal graph) in
+    (* Copy the contents of the graph into it *)
+    Map.iter (fun key node -> Hashtbl.add table key node) graph;
+    (* Fill in the backward edges by mutating the entries *)
+    Map.iter (add_hashtbl_backward_edges table) map;
     graph
 
   let update_from_map graph map ~to_remove:keys_to_remove =
