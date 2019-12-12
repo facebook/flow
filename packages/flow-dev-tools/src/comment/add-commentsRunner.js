@@ -30,6 +30,12 @@ import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 import type {Context} from './getContext';
 
+export type Suppression = {|
+  loc: FlowLoc,
+  isError: boolean,
+  lints: Set<string>,
+|};
+
 const unselectedBox = '[ ]';
 const selectedBox = '[\u2713]'; // checkmark
 const someSelected = '[~]';
@@ -677,7 +683,10 @@ function groupErrors(errors: Array<BlessedError>): void {
 
 async function addComments(args: Args, errors: Array<BlessedError>) {
   const seen = new Set();
-  let filenameToLineToLocsMap: Map<string, Map<number, FlowLoc>> = new Map();
+  let filenameToLineToLocsMap: Map<
+    string,
+    Map<number, Suppression>,
+  > = new Map();
   // Filter out errors without a main location, and dedupe errors that share
   // the same main location
   let errorCount = 0;
@@ -686,7 +695,21 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
     if (loc != null && loc.source != null) {
       const source = join(args.root, loc.source);
       const lineToLocsMap = filenameToLineToLocsMap.get(source) || new Map();
-      lineToLocsMap.set(loc.start.line, loc);
+      const prevValue = lineToLocsMap.get(loc.start.line);
+      const isError =
+        (prevValue && prevValue.isError) || error.error.kind !== 'lint';
+      let lints = (prevValue && prevValue.lints) || new Set();
+      if (error.error.kind === 'lint') {
+        // \u0060 is `. using the escape to avoid a syntax highlighting bug in vscode-language-babel
+        const match = /\(\u0060([^\u0060]+)\u0060\)$/.exec(
+          error.error.message[0].descr,
+        );
+        if (match) {
+          lints.add(match[1]);
+        }
+      }
+      const value = {loc, isError, lints};
+      lineToLocsMap.set(loc.start.line, value);
       filenameToLineToLocsMap.set(source, lineToLocsMap);
       errorCount++;
     }
@@ -712,7 +735,7 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
 async function addCommentsToSource(
   args: Args,
   source: string,
-  locs: Array<FlowLoc>,
+  locs: Array<Suppression>,
 ): Promise<number> {
   const codeBuffer = await readFile(source);
 
@@ -729,21 +752,30 @@ async function addCommentsToSource(
 export async function addCommentsToCode(
   comment: ?string,
   code: string,
-  locs: Array<FlowLoc>,
+  locs: Array<Suppression>,
   flowBinPath: string,
 ): Promise<
   [string, number],
 > /* [resulting code, number of comments inserted] */ {
-  locs.sort((l1, l2) => l2.start.line - l1.start.line);
+  locs.sort((l1, l2) => l2.loc.start.line - l1.loc.start.line);
 
   const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
-  for (const loc of locs) {
+  for (const {loc, isError, lints} of locs) {
     const path = getPathToLoc(loc, ast);
 
     if (path != null) {
-      code = addCommentToCode(comment || '', code, loc, path);
+      let c = comment || '';
+      let wrap = true;
+      if (!isError && lints.size > 0) {
+        const sortedLints = Array.from(lints).sort();
+        c = `flowlint-next-line ${sortedLints
+          .map(lint => `${lint}:off`)
+          .join(', ')}`;
+        wrap = false;
+      }
+      code = addCommentToCode(c, code, loc, path, wrap);
       commentCount++;
     }
   }
@@ -755,6 +787,7 @@ function addCommentToCode(
   code: string,
   loc: FlowLoc,
   path: Array<PathNode>,
+  wrap: boolean,
 ): string {
   /* First of all, we want to know if we can add a comment to the line before
    * the error. So we need to see if we're in a JSX children block or inside a
@@ -767,7 +800,7 @@ function addCommentToCode(
     return []
       .concat(
         lines.slice(0, loc.start.line - 1),
-        formatComment(comment, lines[loc.start.line - 1]),
+        formatComment(comment, lines[loc.start.line - 1], {wrap}),
         lines.slice(loc.start.line - 1),
       )
       .join('\n');
@@ -792,7 +825,7 @@ function addCommentToCode(
     return []
       .concat(
         lines.slice(0, loc.start.line - 1),
-        formatComment(comment, lines[loc.start.line - 1], true),
+        formatComment(comment, lines[loc.start.line - 1], {jsx: true, wrap}),
         lines.slice(loc.start.line - 1),
       )
       .join('\n');
@@ -841,7 +874,7 @@ function addCommentToCode(
       .concat(
         lines.slice(0, ast.loc.start.line - 1),
         [part1],
-        formatComment(comment, part2),
+        formatComment(comment, part2, {wrap}),
         [part2],
         lines.slice(ast.loc.start.line),
       )
@@ -881,21 +914,31 @@ function splitAtWord(str: string, max: number): [string, string] {
 function formatComment(
   comment: string,
   line: string,
-  jsx: boolean = false,
+  args: {|
+    jsx?: boolean,
+    wrap?: boolean,
+  |},
 ): Array<string> {
+  const {jsx = false, wrap = true} = args;
   const match = line.match(/^ */);
   let padding = match ? match[0] : '';
   padding.length > 40 && (padding = '    ');
 
   if (jsx === false) {
     const singleLineComment = format('%s// %s', padding, comment);
-    if (singleLineComment.length <= 80) {
+    if (!wrap || singleLineComment.length <= 80) {
       return [singleLineComment];
     }
   }
 
-  const commentLines = [];
   const firstLinePrefix = format(!jsx ? '%s/* ' : '%s{/* ', padding);
+
+  if (!wrap) {
+    // jsx === true
+    return [format('%s{/* %s */}', padding, comment.trim())];
+  }
+
+  const commentLines = [];
   let firstLineComment;
   [firstLineComment, comment] = splitAtWord(
     comment.trim(),

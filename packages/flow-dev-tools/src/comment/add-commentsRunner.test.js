@@ -6,6 +6,7 @@
  */
 
 import {addCommentsToCode} from './add-commentsRunner.js';
+import type {Suppression} from './add-commentsRunner.js'
 
 import * as path from 'path';
 
@@ -19,7 +20,7 @@ test('addCommentsToCode', async () => {
       longComment,
       testInput,
       /* Intentionally made these out of order to test that they are still inserted properly */
-      [1, 6, 5, 3].map(makeLoc),
+      [1, 6, 5, 3].map(makeSuppression),
       flowBinPath,
     )
   ).toEqual([
@@ -66,17 +67,21 @@ const baz = 3;
 // This simulates an error location spanning the entire line. The code looks for AST nodes that are
 // completely contained by the error location, so this location goes from column 1 to a ridiculously
 // large column number.
-function makeLoc(line: number) {
+function makeSuppression(line: number): Suppression {
   return {
-    start: {
-      line,
-      column: 1,
-      offset: 0,
+    loc: {
+      start: {
+        line,
+        column: 1,
+        offset: 0,
+      },
+      end: {
+        line,
+        column: 10000,
+        offset: 0,
+      },
     },
-    end: {
-      line,
-      column: 10000,
-      offset: 0,
-    },
+    isError: true,
+    lints: new Set(),
   };
 }
