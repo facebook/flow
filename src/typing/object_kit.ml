@@ -233,6 +233,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let dict =
               match (dict1, dict2) with
               | (None, Some _) when inline2 -> Ok dict2
+              | (None, Some _) when SMap.is_empty props1 && flags1.exact -> Ok dict2
               | (_, Some { key; value = _; dict_name = _; dict_polarity = _ }) ->
                 Error
                   (Error_message.ECannotSpreadIndexerOnRight
