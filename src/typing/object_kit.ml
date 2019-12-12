@@ -223,6 +223,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            *              ^^^^^^^^^^^^^^^^^
            *)
           let spread2
+              cx
+              trace
+              ~use_op
               reason
               ( _inline1,
                 inexact_reason1,
@@ -234,6 +237,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               match (dict1, dict2) with
               | (None, Some _) when inline2 -> Ok dict2
               | (None, Some _) when SMap.is_empty props1 && flags1.exact -> Ok dict2
+              | (Some d1, Some d2) when SMap.is_empty props1 ->
+                rec_flow_t cx trace ~use_op (d2.key, d1.key);
+                rec_unify cx trace ~use_op d1.value d2.value;
+                (* We take dict1 because we want to use the key from d1 *)
+                Ok dict1
               | (_, Some { key; value = _; dict_name = _; dict_polarity = _ }) ->
                 Error
                   (Error_message.ECannotSpreadIndexerOnRight
@@ -382,10 +390,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               let props = SMap.mapi (read_prop reason flags) prop_map in
               Nel.one (true, None, { Object.reason; props; dict; flags })
           in
-          let spread reason = function
+          let spread cx trace ~use_op reason = function
             | (x, []) -> Ok (resolved_of_acc_element x)
             | (x0, (x1 :: xs : Object.Spread.acc_element list)) ->
-              merge_result (spread2 reason) resolved_of_acc_element x0 (x1, xs)
+              merge_result (spread2 cx trace ~use_op reason) resolved_of_acc_element x0 (x1, xs)
           in
           let mk_object cx reason target { Object.reason = _; props; dict; flags } =
             let props = SMap.map (fun (t, _) -> Field (None, t, Polarity.Neutral)) props in
@@ -423,7 +431,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let rec continue acc (resolved : Object.Spread.acc_element) curr_resolve_idx = function
               | [] ->
                 let t =
-                  match spread reason (resolved, acc) with
+                  match spread cx trace ~use_op reason (resolved, acc) with
                   | Ok ((_, _, x), []) -> mk_object cx reason options x
                   | Ok ((_, _, x0), (_, _, x1) :: xs) ->
                     let xs = List.map (fun (_, _, x) -> x) xs in
