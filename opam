@@ -18,14 +18,14 @@ depends: [
   "ocaml-migrate-parsetree" {build}
   "ounit" {with-test}
   "core_kernel" {= "v0.11.1"}
-  "sedlex" {= "1.99.4"}
+  "sedlex" {= "2.1"}
   "lwt" {>= "4.2.1"}
   "lwt_log" {= "1.1.0"}
   "lwt_ppx" {>= "1.2.0"}
   "ppx_let" {>= "0.11.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
-  "ppx_tools_versioned" {= "5.2"}
+  "ppx_tools_versioned" {build}
   "visitors" {build}
   "wtf8"
 ]
