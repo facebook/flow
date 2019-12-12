@@ -30,6 +30,16 @@ if (typeof bVoidable !== "boolean") {
   (bVoidable: B); // Error
 }
 
+if (bVoidable === undefined) {
+  (bVoidable: void); // Valid
+  (bVoidable: B); // Error
+}
+
+if (bVoidable !== undefined) {
+  (bVoidable: void); // Error
+  (bVoidable: B); // Valid
+}
+
 declare var bMaybe: ?B;
 
 if (bMaybe == null) {
@@ -38,6 +48,17 @@ if (bMaybe == null) {
 }
 
 if (bMaybe != null) {
+  (bMaybe: null); // Error
+  (bMaybe: void); // Error
+  (bMaybe: B); // Valid
+}
+
+if (bMaybe === null || bMaybe === undefined) {
+  (bMaybe: null | void); // Valid
+  (bMaybe: B); // Error
+}
+
+if (bMaybe !== null && bMaybe !== undefined) {
   (bMaybe: null); // Error
   (bMaybe: void); // Error
   (bMaybe: B); // Valid
