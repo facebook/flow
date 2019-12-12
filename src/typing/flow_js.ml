@@ -2721,7 +2721,9 @@ struct
             (Error_message.EComputedPropertyWithUnion
                { computed_property_reason = reason; union_reason = r })
         (* cases where there is no loss of precision *)
-        | (UnionT _, UseT (_, (UnionT _ as u))) when union_optimization_guard cx l u ->
+        | (UnionT _, UseT (_, (UnionT _ as u)))
+          when union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) l u
+          ->
           if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
         (* Optimization to treat maybe and optional types as special unions for subset comparision *)
         | (UnionT (reason, rep), UseT (use_op, MaybeT (r, maybe))) ->
@@ -2775,17 +2777,10 @@ struct
                 (remove_predicate_from_union reason cx filter_void rep, opt)
             | _ -> flow_all_in_union cx trace rep u
           end
-        | (UnionT (_, rep1), EqT (_, _, UnionT (_, rep2))) ->
-          if
-            match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
-            (* If both enums are subsets of each other, they contain the same elements.
-            2 n log n still grows slower than n^2 *)
-            | (Some enums1, Some enums2) ->
-              UnionEnumSet.subset enums1 enums2 && UnionEnumSet.subset enums2 enums1
-            | _ -> false
-          then
-            ()
-          else
+        | ((UnionT (_, rep1) as u1), EqT (_, _, (UnionT _ as u2))) ->
+          if union_optimization_guard cx (curry equatable) u1 u2 then begin
+            if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
+          end else
             flow_all_in_union cx trace rep1 u
         | (UnionT _, EqT (reason, flip, t)) when needs_resolution t ->
           rec_flow cx trace (t, EqT (reason, not flip, l))
@@ -11106,15 +11101,15 @@ struct
   (** TODO: (1) Define a more general partial equality, that takes into
     account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
   and union_optimization_guard =
-    (* Check if l is a subset of u. Flatten both unions and then check that each element
-     of l appears somewhere in u *)
-    let union_subtype cx lts uts =
+    (* Compare l to u. Flatten both unions and then check that each element
+     of l is comparable to an element of u. Note that the comparator need not
+     be symmetric. *)
+    let union_compare cx comparator lts uts =
       let ts2 = Type_mapper.union_flatten cx uts in
       Type_mapper.union_flatten cx lts
-      |> Base.List.for_all ~f:(fun t1 ->
-             Base.List.exists ~f:(TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
+      |> Base.List.for_all ~f:(fun t1 -> Base.List.exists ~f:(comparator t1) ts2)
     in
-    let rec union_optimization_guard_impl seen cx l u =
+    let rec union_optimization_guard_impl seen cx comparator l u =
       match (l, u) with
       | (UnionT (_, rep1), UnionT (_, rep2)) ->
         rep1 = rep2
@@ -11139,12 +11134,12 @@ struct
               Base.List.exists
                 ~f:(fun u ->
                   (not (TypeSet.mem u seen))
-                  && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
+                  && union_optimization_guard_impl (TypeSet.add u seen) cx comparator l u)
                 uts
             then
               true
             else
-              union_subtype cx lts uts
+              union_compare cx comparator lts uts
         end
       | _ -> false
     in
