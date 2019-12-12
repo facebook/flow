@@ -118,7 +118,8 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    PersistentConnection.write LspProt.(NotificationFromServer EOF) conn;
+    (try PersistentConnection.write LspProt.(NotificationFromServer EOF) conn
+     with Lwt_stream.Closed -> ());
     PersistentConnection.flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
