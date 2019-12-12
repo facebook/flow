@@ -69,14 +69,6 @@ CAMLprim value hh_collect(void);
 CAMLprim value hh_get_and_deserialize(value key);
 
 /*****************************************************************************/
-/* Dependency table operations. */
-/*****************************************************************************/
-void hh_add_dep(value ocaml_dep);
-CAMLprim value hh_dep_used_slots(void);
-CAMLprim value hh_dep_slots(void);
-CAMLprim value hh_get_dep(value ocaml_key);
-
-/*****************************************************************************/
 /* Hashtable operations. */
 /*****************************************************************************/
 /* Returns the size of the value associated to a given key.

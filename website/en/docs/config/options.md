@@ -43,7 +43,6 @@ can be overridden with command line flags.
 * [`server.max_workers`](#toc-server-max-workers-integer)
 * [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string)
 * [`sharedmemory.minimum_available`](#toc-sharedmemory-minimum-available-unsigned-integer)
-* [`sharedmemory.dep_table_pow`](#toc-sharedmemory-dep-table-pow-unsigned-integer)
 * [`sharedmemory.hash_table_pow`](#toc-sharedmemory-hash-table-pow-unsigned-integer)
 * [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
@@ -373,17 +372,6 @@ and tries the next. This option lets you configure the minimum amount of space
 needed on a filesystem for shared memory.
 
 By default it is 536870912 (2^29 bytes, which is half a gigabyte).
-
-#### `sharedmemory.dep_table_pow` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-dep-table-pow-unsigned-integer" href="#toc-sharedmemory-dep-table-pow-unsigned-integer"></a>
-
-The 3 largest parts of the shared memory are a dependency table, a hash table,
-and a heap. While the heap grows and shrinks, the two tables are allocated in
-full. This option lets you change the size of the dependency table.
-
-Setting this option to X means the table will support up to 2^X elements,
-which is 16*2^X bytes.
-
-By default, this is set to 17 (Table size is 2^17, which is 2 megabytes)
 
 #### `sharedmemory.hash_table_pow` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-hash-table-pow-unsigned-integer" href="#toc-sharedmemory-hash-table-pow-unsigned-integer"></a>
 

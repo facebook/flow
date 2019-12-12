@@ -195,7 +195,6 @@ let tests () =
             {
               SharedMem.global_size = 16;
               heap_size = 409600;
-              dep_table_pow = 2;
               hash_table_pow = 12;
               shm_dirs = [];
               shm_min_avail = 0;

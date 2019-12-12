@@ -98,7 +98,6 @@ module Opts = struct
     recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
-    shm_dep_table_pow: int;
     shm_dirs: string list;
     shm_hash_table_pow: int;
     shm_heap_size: int;
@@ -199,7 +198,6 @@ module Opts = struct
       recursion_limit = 10000;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
-      shm_dep_table_pow = 17;
       shm_dirs = default_shm_dirs;
       shm_hash_table_pow = 19;
       shm_heap_size = 1024 * 1024 * 1024 * 25;
@@ -524,8 +522,6 @@ module Opts = struct
         string ~multiple:true (fun opts v -> Ok { opts with shm_dirs = opts.shm_dirs @ [v] }) );
       ( "sharedmemory.minimum_available",
         uint (fun opts shm_min_avail -> Ok { opts with shm_min_avail }) );
-      ( "sharedmemory.dep_table_pow",
-        uint (fun opts shm_dep_table_pow -> Ok { opts with shm_dep_table_pow }) );
       ( "sharedmemory.hash_table_pow",
         uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow }) );
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
@@ -1200,8 +1196,6 @@ let recursion_limit c = c.options.Opts.recursion_limit
 let root_name c = c.options.Opts.root_name
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
-
-let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 
 let shm_dirs c = c.options.Opts.shm_dirs
 

@@ -18,7 +18,7 @@
  * The lock-free data structures implemented here only work because of how
  * the Hack phases are synchronized.
  *
- * There are 3 kinds of storage implemented in this file.
+ * There are 2 kinds of storage implemented in this file.
  * I) The global storage. Used by the master to efficiently transfer a blob
  *    of data to the workers. This is used to share an environment in
  *    read-only mode with all the workers.
@@ -30,15 +30,7 @@
  *    storage currently in use; callers are responsible for setting it to zero
  *    once they are done.
  *
- * II) The dependency table. It's a hashtable that contains all the
- *    dependencies between Hack objects. It is filled concurrently by
- *    the workers. The dependency table is made of 2 hashtables, one that
- *    is used to quickly answer if a dependency exists. The other one
- *    to retrieve the list of dependencies associated with an object.
- *    Only the hashes of the objects are stored, so this uses relatively
- *    little memory. No dynamic allocation is required.
- *
- * III) The hashtable that maps string keys to string values. (The strings
+ * II) The hashtable that maps string keys to string values. (The strings
  *    are really serialized / marshalled representations of OCaml structures.)
  *    Key observation of the table is that data with the same key are
  *    considered equivalent, and so you can arbitrarily get any copy of it;
@@ -213,11 +205,6 @@ static int win32_getpagesize(void) {
 static size_t global_size_b;
 static size_t heap_size;
 
-/* Used for the dependency hashtable */
-static uint64_t dep_size;
-static size_t dep_size_b;
-static size_t bindings_size_b;
-
 /* Used for the shared hashtable */
 static uint64_t hashtbl_size;
 static size_t hashtbl_size_b;
@@ -335,112 +322,6 @@ typedef struct {
   uint32_t tag : 1;
 } tagged_uint_t;
 
-/* A deptbl_entry_t is one slot in the deptbl hash table.
- *
- * deptbl maps a 31-bit integer key to a linked list of 31-bit integer values.
- * The key corresponds to a node in a graph and the values correspond to all
- * nodes to which that node has an edge. List order does not matter, and there
- * are no duplicates. Edges are only added, never removed.
- *
- * This data structure, while conceptually simple, is implemented in a
- * complicated way because we store it in shared memory and update it from
- * multiple processes without using any mutexes.  In particular, both the
- * traditional hash table entries and the storage for the linked lists to
- * which they point are stored in the same shared memory array. A tag bit
- * distinguishes the two cases so that hash lookups never accidentally match
- * linked list nodes.
- *
- * Each slot s in deptbl is in one of three states:
- *
- * if s.raw == 0:
- *   empty (the initial state).
- * elif s.key.tag == TAG_KEY:
- *   A traditional hash table entry, where s.key.num is the key
- *   used for hashing/equality and s.next is a "pointer" to a linked
- *   list of all the values for that key, as described below.
- * else (s.key.tag == TAG_VAL):
- *   A node in a linked list of values. s.key.num contains one value and
- *   s.next "points" to the rest of the list, as described below.
- *   Such a slot is NOT matchable by any hash lookup due to the tag bit.
- *
- * To save space, a "next" entry can be one of two things:
- *
- * if next.tag == TAG_NEXT:
- *   next.num is the deptbl slot number of the next node in the linked list
- *   (i.e. just a troditional linked list "next" pointer, shared-memory style).
- * else (next.tag == TAG_VAL):
- *   next.num actually holds the final value in the linked list, rather
- *   than a "pointer" to another entry or some kind of "NULL" sentinel.
- *   This space optimization provides the useful property that each edge
- *   in the graph takes up exactly one slot in deptbl.
- *
- * For example, a mapping from key K to one value V takes one slot S in deptbl:
- *
- *     S = { .key = { K, TAG_KEY }, .val = { V, TAG_VAL } }
- *
- * Mapping K to two values V1 and V2 takes two slots, S1 and S2:
- *
- *     S1 = { .key = { K,  TAG_KEY }, .val = { &S2, TAG_NEXT } }
- *     S2 = { .key = { V1, TAG_VAL }, .val = { V2,  TAG_VAL } }
- *
- * Mapping K to three values V1, V2 and V3 takes three slots:
- *
- *     S1 = { .key = { K,  TAG_KEY }, .val = { &S2, TAG_NEXT } }
- *     S2 = { .key = { V1, TAG_VAL }, .val = { &S3, TAG_NEXT } }
- *     S3 = { .key = { V2, TAG_VAL }, .val = { V3,  TAG_VAL } }
- *
- * ...and so on.
- *
- * You can see that the final node in a linked list always contains
- * two values.
- *
- * As an important invariant, we need to ensure that a non-empty hash table
- * slot can never legally be encoded as all zero bits, because that would look
- * just like an empty slot. How could this happen? Because TAG_VAL == 0,
- * an all-zero slot would look like this:
- *
- *    { .key = { 0, TAG_VAL }, .val = { 0, TAG_VAL } }
- *
- * But fortunately that is impossible -- this entry would correspond to
- * having the same value (0) in the list twice, which is forbidden. Since
- * one of the two values must be nonzero, the entire "raw" uint64_t must
- * be nonzero, and thus distinct from "empty".
- */
-
-enum {
-  /* Valid for both the deptbl_entry_t 'key' and 'next' fields. */
-  TAG_VAL = 0,
-
-  /* Only valid for the deptbl_entry_t 'key' field (so != TAG_VAL). */
-  TAG_KEY = !TAG_VAL,
-
-  /* Only valid for the deptbl_entry_t 'next' field (so != TAG_VAL). */
-  TAG_NEXT = !TAG_VAL
-};
-
-typedef union {
-  struct {
-    /* Tag bit is either TAG_KEY or TAG_VAL. */
-    tagged_uint_t key;
-
-    /* Tag bit is either TAG_VAL or TAG_NEXT. */
-    tagged_uint_t next;
-  } s;
-
-  /* Raw 64 bits of this slot. Useful for atomic operations. */
-  uint64_t raw;
-} deptbl_entry_t;
-
-static deptbl_entry_t* deptbl = NULL;
-static uint64_t* dcounter = NULL;
-
-
-/* ENCODING:
- * The highest 2 bits are unused.
- * The next 31 bits encode the key the lower 31 bits the value.
- */
-static uint64_t* deptbl_bindings = NULL;
-
 /* The hashtable containing the shared values. */
 static helt_t* hashtbl = NULL;
 /* The number of nonempty slots in the hashtable. A nonempty slot has a
@@ -467,8 +348,6 @@ static size_t* log_level = NULL;
 static size_t* workers_should_exit = NULL;
 
 static size_t* allow_removes = NULL;
-
-static size_t* allow_dependency_table_reads = NULL;
 
 /* Worker-local storage is cache line aligned. */
 static char* locals;
@@ -838,37 +717,30 @@ static void define_globals(char * shared_mem_init) {
   assert(CACHE_LINE_SIZE >= sizeof(uint64_t));
   hcounter = (uint64_t*)(mem + CACHE_LINE_SIZE);
 
-  // The number of elements in the deptable
-  assert(CACHE_LINE_SIZE >= sizeof(uint64_t));
-  dcounter = (uint64_t*)(mem + 2*CACHE_LINE_SIZE);
-
   assert (CACHE_LINE_SIZE >= sizeof(uintptr_t));
-  counter = (uintptr_t*)(mem + 3*CACHE_LINE_SIZE);
+  counter = (uintptr_t*)(mem + 2*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(pid_t));
-  master_pid = (pid_t*)(mem + 4*CACHE_LINE_SIZE);
+  master_pid = (pid_t*)(mem + 3*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  log_level = (size_t*)(mem + 5*CACHE_LINE_SIZE);
+  log_level = (size_t*)(mem + 4*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  workers_should_exit = (size_t*)(mem + 6*CACHE_LINE_SIZE);
+  workers_should_exit = (size_t*)(mem + 5*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  wasted_heap_size = (size_t*)(mem + 7*CACHE_LINE_SIZE);
+  wasted_heap_size = (size_t*)(mem + 6*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  allow_removes = (size_t*)(mem + 8*CACHE_LINE_SIZE);
+  allow_removes = (size_t*)(mem + 7*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  allow_dependency_table_reads = (size_t*)(mem + 9*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  hcounter_filled = (size_t*)(mem + 10*CACHE_LINE_SIZE);
+  hcounter_filled = (size_t*)(mem + 8*CACHE_LINE_SIZE);
 
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 11*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 9*CACHE_LINE_SIZE + (int)sizeof(int));
 
   assert (CACHE_LINE_SIZE >= sizeof(local_t));
   locals = mem;
@@ -879,13 +751,6 @@ static void define_globals(char * shared_mem_init) {
   /* Global storage initialization */
   global_storage = (value*)mem;
   mem += global_size_b;
-
-  /* Dependencies */
-  deptbl = (deptbl_entry_t*)mem;
-  mem += dep_size_b;
-
-  deptbl_bindings = (uint64_t*)mem;
-  mem += bindings_size_b;
 
   /* Hashtable */
   hashtbl = (helt_t*)mem;
@@ -910,7 +775,7 @@ static void define_globals(char * shared_mem_init) {
  * virtual. */
 static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
-  return (global_size_b + dep_size_b + bindings_size_b + hashtbl_size_b +
+  return (global_size_b + hashtbl_size_b +
           heap_size + page_size + locals_size_b);
 }
 
@@ -922,14 +787,12 @@ static void init_shared_globals(
   // Initialize the number of element in the table
   *hcounter = 0;
   *hcounter_filled = 0;
-  *dcounter = 0;
   // Ensure the global counter starts on a COUNTER_RANGE boundary
   *counter = ALIGN(early_counter + 1, COUNTER_RANGE);
   *log_level = config_log_level;
   *workers_should_exit = 0;
   *wasted_heap_size = 0;
   *allow_removes = 1;
-  *allow_dependency_table_reads = 1;
 
   for (uint64_t i = 0; i <= num_workers; i++) {
     LOCAL(i)->counter = 0;
@@ -942,7 +805,6 @@ static void init_shared_globals(
 static void set_sizes(
   uint64_t config_global_size,
   uint64_t config_heap_size,
-  uint64_t config_dep_table_pow,
   uint64_t config_hash_table_pow,
   uint64_t config_num_workers) {
 
@@ -951,9 +813,6 @@ static void set_sizes(
   global_size_b = sizeof(global_storage[0]) + config_global_size;
   heap_size = config_heap_size;
 
-  dep_size        = 1ul << config_dep_table_pow;
-  dep_size_b      = dep_size * sizeof(deptbl[0]);
-  bindings_size_b = dep_size * sizeof(deptbl_bindings[0]);
   hashtbl_size    = 1ul << config_hash_table_pow;
   hashtbl_size_b  = hashtbl_size * sizeof(hashtbl[0]);
 
@@ -975,23 +834,20 @@ CAMLprim value hh_shared_init(
   value num_workers_val
 ) {
   CAMLparam3(config_val, shm_dir_val, num_workers_val);
-  CAMLlocal5(
+  CAMLlocal4(
     connector,
     config_global_size_val,
     config_heap_size_val,
-    config_dep_table_pow_val,
     config_hash_table_pow_val
   );
 
   config_global_size_val = Field(config_val, 0);
   config_heap_size_val = Field(config_val, 1);
-  config_dep_table_pow_val = Field(config_val, 2);
-  config_hash_table_pow_val = Field(config_val, 3);
+  config_hash_table_pow_val = Field(config_val, 2);
 
   set_sizes(
     Long_val(config_global_size_val),
     Long_val(config_heap_size_val),
-    Long_val(config_dep_table_pow_val),
     Long_val(config_hash_table_pow_val),
     Long_val(num_workers_val)
   );
@@ -1006,7 +862,7 @@ CAMLprim value hh_shared_init(
   memfd_init(
     shm_dir,
     shared_mem_size,
-    Long_val(Field(config_val, 5))
+    Long_val(Field(config_val, 4))
   );
   char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
@@ -1021,7 +877,7 @@ CAMLprim value hh_shared_init(
 #endif
 
   init_shared_globals(
-    Long_val(Field(config_val, 6)));
+    Long_val(Field(config_val, 5)));
   // Checking that we did the maths correctly.
   assert(*heap + heap_size == shared_mem + shared_mem_size);
 
@@ -1037,13 +893,12 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  connector = caml_alloc_tuple(6);
+  connector = caml_alloc_tuple(5);
   Store_field(connector, 0, Val_handle(memfd));
   Store_field(connector, 1, config_global_size_val);
   Store_field(connector, 2, config_heap_size_val);
-  Store_field(connector, 3, config_dep_table_pow_val);
-  Store_field(connector, 4, config_hash_table_pow_val);
-  Store_field(connector, 5, num_workers_val);
+  Store_field(connector, 3, config_hash_table_pow_val);
+  Store_field(connector, 4, num_workers_val);
 
   CAMLreturn(connector);
 }
@@ -1056,8 +911,7 @@ value hh_connect(value connector, value worker_id_val) {
     Long_val(Field(connector, 1)),
     Long_val(Field(connector, 2)),
     Long_val(Field(connector, 3)),
-    Long_val(Field(connector, 4)),
-    Long_val(Field(connector, 5))
+    Long_val(Field(connector, 4))
   );
   worker_id = Long_val(worker_id_val);
 #ifdef _WIN32
@@ -1125,10 +979,6 @@ void assert_allow_hashtable_writes_by_current_process(void) {
   assert(allow_hashtable_writes_by_current_process);
 }
 
-void assert_allow_dependency_table_reads(void) {
-  assert(*allow_dependency_table_reads);
-}
-
 /*****************************************************************************/
 
 CAMLprim value hh_stop_workers(void) {
@@ -1161,19 +1011,6 @@ CAMLprim value hh_allow_removes(value val) {
 CAMLprim value hh_allow_hashtable_writes_by_current_process(value val) {
   CAMLparam1(val);
   allow_hashtable_writes_by_current_process = Bool_val(val);
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value hh_allow_dependency_table_reads(value val) {
-  CAMLparam1(val);
-  int prev = *allow_dependency_table_reads;
-  *allow_dependency_table_reads = Bool_val(val);
-  CAMLreturn(Val_bool(prev));
-}
-
-CAMLprim value hh_assert_allow_dependency_table_reads (void) {
-  CAMLparam0();
-  assert_allow_dependency_table_reads();
   CAMLreturn(Val_unit);
 }
 
@@ -1237,29 +1074,6 @@ void hh_shared_clear(void) {
 }
 
 /*****************************************************************************/
-/* Dependencies */
-/*****************************************************************************/
-
-static void raise_dep_table_full(void) {
-  fprintf(
-    stderr,
-    "dcounter: %"PRIu64" dep_size: %"PRIu64" \n",
-    *dcounter,
-    dep_size
-  );
-
-  static value *exn = NULL;
-  if (!exn) exn = caml_named_value("dep_table_full");
-  caml_raise_constant(*exn);
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_get_in_memory_dep_table_entry_count() {
-  CAMLparam0();
-  CAMLreturn(Val_long(*dcounter));
-}
-
-/*****************************************************************************/
 /* Hashes an integer such that the low bits are a good starting hash slot. */
 /*****************************************************************************/
 static uint64_t hash_uint64(uint64_t n) {
@@ -1268,250 +1082,6 @@ static uint64_t hash_uint64(uint64_t n) {
   // initial hash table slot number.
   const uint64_t golden_ratio = 0x9e3779b97f4a7c15ull;
   return __builtin_bswap64(n * golden_ratio);
-}
-
-
-/*****************************************************************************/
-/* This code is very perf sensitive, please check the performance before
- * modifying.
- * The table contains key/value bindings encoded in a word.
- * The higher bits represent the key, the lower ones the value.
- * Each key/value binding is unique.
- * Concretely, if you try to add a key/value pair that is already in the table
- * the data structure is left unmodified.
- *
- * Returns 1 if the dep did not previously exist, else 0.
- */
-/*****************************************************************************/
-static int add_binding(uint64_t value) {
-  volatile uint64_t* const table = deptbl_bindings;
-
-  size_t slot = (size_t)hash_uint64(value) & (dep_size - 1);
-
-  while(1) {
-    /* It considerably speeds things up to do a normal load before trying using
-     * an atomic operation.
-     */
-    uint64_t slot_val = table[slot];
-
-    // The binding exists, done!
-    if(slot_val == value)
-      return 0;
-
-    if (*dcounter >= dep_size) {
-      raise_dep_table_full();
-    }
-
-    // The slot is free, let's try to take it.
-    if(slot_val == 0) {
-      // See comments in hh_add about its similar construction here.
-      if(__sync_bool_compare_and_swap(&table[slot], 0, value)) {
-        uint64_t size = __sync_fetch_and_add(dcounter, 1);
-        // Sanity check
-        assert(size <= dep_size);
-        return 1;
-      }
-
-      if(table[slot] == value) {
-        return 0;
-      }
-    }
-
-    slot = (slot + 1) & (dep_size - 1);
-  }
-}
-
-/*****************************************************************************/
-/* Allocates a linked list node in deptbl holding the given value, and returns
- * the slot number where it was stored. The caller is responsible for filling
- * in its "next" field, which starts out in an invalid state.
- */
-/*****************************************************************************/
-static uint32_t alloc_deptbl_node(uint32_t key, uint32_t val) {
-  volatile deptbl_entry_t* const table = deptbl;
-
-  // We can allocate this node in any free slot in deptbl, because
-  // linked list nodes are only findable from another slot which
-  // explicitly specifies its index in the 'next' field. The caller will
-  // initialize such a field using the slot number this function returns.
-  //
-  // Since we know the pair (key, val) is unique, we hash them together to
-  // pick a good "random" starting point to scan for a free slot. But
-  // we could start anywhere.
-  uint64_t start_hint = hash_uint64(((uint64_t)key << 31) | val);
-
-  // Linked list node to create. Its "next" field will get set by the caller.
-  const deptbl_entry_t list_node = { { { val, TAG_VAL }, { ~0, TAG_NEXT } } };
-
-  uint32_t slot = 0;
-  for (slot = (uint32_t)start_hint; ; ++slot) {
-    slot &= dep_size - 1;
-
-    if (table[slot].raw == 0 &&
-        __sync_bool_compare_and_swap(&table[slot].raw, 0, list_node.raw)) {
-      return slot;
-    }
-  }
-}
-
-/*****************************************************************************/
-/* Prepends 'val' to the linked list of values associated with 'key'.
- * Assumes 'val' is not already in that list, a property guaranteed by the
- * deptbl_bindings pre-check.
- */
-/*****************************************************************************/
-static void prepend_to_deptbl_list(uint32_t key, uint32_t val) {
-  volatile deptbl_entry_t* const table = deptbl;
-
-  size_t slot = 0;
-  for (slot = (size_t)hash_uint64(key); ; ++slot) {
-    slot &= dep_size - 1;
-
-    deptbl_entry_t slotval = table[slot];
-
-    if (slotval.raw == 0) {
-      // Slot is empty. Try to create a new linked list head here.
-
-      deptbl_entry_t head = { { { key, TAG_KEY }, { val, TAG_VAL } } };
-      slotval.raw = __sync_val_compare_and_swap(&table[slot].raw, 0, head.raw);
-
-      if (slotval.raw == 0) {
-        // The CAS succeeded, we are done.
-        break;
-      }
-
-      // slotval now holds whatever some racing writer put there.
-    }
-
-    if (slotval.s.key.num == key && slotval.s.key.tag == TAG_KEY) {
-      // A list for this key already exists. Prepend to it by chaining
-      // our new linked list node to whatever the head already points to
-      // then making the head point to our node.
-      //
-      // The head can of course change if someone else prepends first, in
-      // which case we'll retry. This is just the classic "atomic push onto
-      // linked list stock" algarithm.
-
-      // Allocate a linked list node to prepend to the list.
-      uint32_t list_slot = alloc_deptbl_node(key, val);
-
-      // The new head is going to point to our node as the first entry.
-      deptbl_entry_t head = { { { key, TAG_KEY }, { list_slot, TAG_NEXT } } };
-
-      while (1) {
-        // Update our new linked list node, which no one can see yet, to
-        // point to the current list head.
-        table[list_slot].s.next = slotval.s.next;
-
-        // Try to atomically set the new list head to be our node.
-        uint64_t old = slotval.raw;
-        slotval.raw =
-          __sync_val_compare_and_swap(&table[slot].raw, old, head.raw);
-        if (slotval.raw == old) {
-          // The CAS succeeded, we are done.
-          break;
-        }
-      }
-
-      break;
-    }
-  }
-}
-
-
-/* Record an edge from key -> val. Does nothing if one already exists. */
-static void add_dep(uint32_t key, uint32_t val) {
-  // Both key and val must be 31-bit integers, since we use tag bits.
-  assert(key < 0x80000000 && val < 0x80000000);
-
-  if (add_binding(((uint64_t)key << 31) | val)) {
-    prepend_to_deptbl_list(key, val);
-  }
-}
-
-void hh_add_dep(value ocaml_dep) {
-  CAMLparam1(ocaml_dep);
-  check_should_exit();
-  uint64_t dep = Long_val(ocaml_dep);
-  add_dep((uint32_t)(dep >> 31), (uint32_t)(dep & 0x7FFFFFFF));
-  CAMLreturn0;
-}
-
-void kill_dep_used_slots(void) {
-  CAMLparam0();
-  memset(deptbl, 0, dep_size_b);
-  memset(deptbl_bindings, 0, bindings_size_b);
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_dep_used_slots(void) {
-  CAMLparam0();
-  uint64_t count = 0;
-  uintptr_t slot = 0;
-  for (slot = 0; slot < dep_size; ++slot) {
-    if (deptbl[slot].raw != 0) {
-      count++;
-    }
-  }
-  CAMLreturn(Val_long(count));
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_dep_slots(void) {
-  CAMLparam0();
-  CAMLreturn(Val_long(dep_size));
-}
-
-/* Given a key, returns the list of values bound to it. */
-CAMLprim value hh_get_dep(value ocaml_key) {
-  CAMLparam1(ocaml_key);
-  check_should_exit();
-  CAMLlocal2(result, cell);
-
-  volatile deptbl_entry_t* const table = deptbl;
-
-  // The caller is required to pass a 32-bit node ID.
-  const uint64_t key64 = Long_val(ocaml_key);
-  const uint32_t key = (uint32_t)key64;
-  assert((key & 0x7FFFFFFF) == key64);
-
-  result = Val_int(0); // The empty list
-
-  for (size_t slot = (size_t)hash_uint64(key); ; ++slot) {
-    slot &= dep_size - 1;
-
-    deptbl_entry_t slotval = table[slot];
-
-    if (slotval.raw == 0) {
-      // There are no entries associated with this key.
-      break;
-    }
-
-    if (slotval.s.key.num == key && slotval.s.key.tag == TAG_KEY) {
-      // We found the list for 'key', so walk it.
-
-      while (slotval.s.next.tag == TAG_NEXT) {
-        assert(slotval.s.next.num < dep_size);
-        slotval = table[slotval.s.next.num];
-
-        cell = caml_alloc_tuple(2);
-        Store_field(cell, 0, Val_long(slotval.s.key.num));
-        Store_field(cell, 1, result);
-        result = cell;
-      }
-
-      // The tail of the list is special, "next" is really a value.
-      cell = caml_alloc_tuple(2);
-      Store_field(cell, 0, Val_long(slotval.s.next.num));
-      Store_field(cell, 1, result);
-      result = cell;
-
-      // We are done!
-      break;
-    }
-  }
-
-  CAMLreturn(result);
 }
 
 // TODO - DEAD CODE
@@ -2044,26 +1614,6 @@ void hh_remove(value key) {
   hashtbl[slot].addr = NULL;
   removed_count += 1;
   __sync_fetch_and_sub(hcounter_filled, 1);
-}
-
-size_t deptbl_entry_count_for_slot(size_t slot) {
-  assert(slot < dep_size);
-
-  size_t count = 0;
-  deptbl_entry_t slotval = deptbl[slot];
-
-  if (slotval.raw != 0 && slotval.s.key.tag == TAG_KEY) {
-    while (slotval.s.next.tag == TAG_NEXT) {
-      assert(slotval.s.next.num < dep_size);
-      slotval = deptbl[slotval.s.next.num];
-      count++;
-    }
-
-    // The final "next" in the list is always a value, not a next pointer.
-    count++;
-  }
-
-  return count;
 }
 
 #define ARRAY_SIZE(array) \

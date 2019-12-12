@@ -29,7 +29,6 @@ let make_workers n =
       {
         SharedMem.global_size = gig;
         heap_size = 20 * gig;
-        dep_table_pow = 17;
         (* 1 << 17 *)
         hash_table_pow = 18;
         (* 1 << 18 *)

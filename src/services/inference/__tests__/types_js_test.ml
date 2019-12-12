@@ -205,7 +205,6 @@ let sharedmem_config =
   {
     SharedMem_js.global_size = 0;
     heap_size = 1024 * 1024;
-    dep_table_pow = 17;
     hash_table_pow = 19;
     shm_dirs = ["/dev/shm"];
     shm_min_avail = 1024 * 256;

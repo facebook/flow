@@ -8,7 +8,6 @@
 type config = {
   global_size: int;
   heap_size: int;
-  dep_table_pow: int;
   hash_table_pow: int;
   shm_dirs: string list;
   shm_min_avail: int;
@@ -24,9 +23,6 @@ type handle = private {
 exception Out_of_shared_memory
 
 exception Hash_table_full
-
-(* TODO - Hack only? *)
-exception Dep_table_full
 
 exception Heap_full
 

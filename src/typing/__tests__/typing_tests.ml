@@ -19,7 +19,6 @@ let _handle =
       {
         global_size = 0;
         heap_size = 5 * one_gig;
-        dep_table_pow = 0;
         hash_table_pow = 19;
         shm_dirs = [];
         shm_min_avail = one_gig / 2;

@@ -245,14 +245,12 @@ let input_file_flag verb prev =
 type shared_mem_params = {
   shm_dirs: string option;
   shm_min_avail: int option;
-  shm_dep_table_pow: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
 }
 
-let collect_shm_flags main shm_dirs shm_min_avail shm_dep_table_pow shm_hash_table_pow shm_log_level
-    =
-  main { shm_dirs; shm_min_avail; shm_dep_table_pow; shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_dirs shm_min_avail shm_hash_table_pow shm_log_level =
+  main { shm_dirs; shm_min_avail; shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
@@ -268,11 +266,6 @@ let shm_flags prev =
          ~doc:
            "Flow will only use a filesystem for shared memory if it has at least these many bytes available (default: 536870912 - which is 512MB)"
     |> flag
-         "--sharedmemory-dep-table-pow"
-         int
-         ~doc:
-           "The exponent for the size of the shared memory dependency table. The default is 17, implying a size of 2^17 bytes"
-    |> flag
          "--sharedmemory-hash-table-pow"
          int
          ~doc:
@@ -283,9 +276,6 @@ let shm_flags prev =
          ~doc:"The logging level for shared memory statistics. 0=none, 1=some")
 
 let shm_config shm_flags flowconfig =
-  let dep_table_pow =
-    Option.value shm_flags.shm_dep_table_pow ~default:(FlowConfig.shm_dep_table_pow flowconfig)
-  in
   let hash_table_pow =
     Option.value shm_flags.shm_hash_table_pow ~default:(FlowConfig.shm_hash_table_pow flowconfig)
   in
@@ -306,7 +296,6 @@ let shm_config shm_flags flowconfig =
     SharedMem_js.global_size = 0;
     (* we don't use GlobalStorage, don't waste space on it *)
     heap_size = FlowConfig.shm_heap_size flowconfig;
-    dep_table_pow;
     hash_table_pow;
     shm_dirs;
     shm_min_avail;
@@ -1323,7 +1312,6 @@ let make_env flowconfig_name connect_flags root =
     tmp_dir;
     shm_dirs;
     shm_min_avail = connect_flags.shm_flags.shm_min_avail;
-    shm_dep_table_pow = connect_flags.shm_flags.shm_dep_table_pow;
     shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
     shm_log_level = connect_flags.shm_flags.shm_log_level;
     log_file;

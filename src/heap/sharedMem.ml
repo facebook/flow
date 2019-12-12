@@ -12,7 +12,6 @@ open Hh_core
 type config = {
   global_size: int;
   heap_size: int;
-  dep_table_pow: int;
   hash_table_pow: int;
   shm_dirs: string list;
   shm_min_avail: int;
@@ -29,8 +28,6 @@ type handle = private {
 exception Out_of_shared_memory
 
 exception Hash_table_full
-
-exception Dep_table_full
 
 exception Heap_full
 
@@ -49,7 +46,6 @@ exception C_assertion_failure of string
 let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
-  Callback.register_exception "dep_table_full" Dep_table_full;
   Callback.register_exception "heap_full" Heap_full;
   Callback.register_exception "revision_length_is_zero" Revision_length_is_zero;
   Callback.register_exception "sql_assertion_failure" (Sql_assertion_failure 0);
