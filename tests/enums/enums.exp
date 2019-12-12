@@ -385,6 +385,82 @@ References:
        ^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- error-access.js:22:1
+
+Cannot access `F.Car` because `Car` is not a member of enum `F` [1]. Did you mean the member `Cart`?
+
+   error-access.js:22:1
+   22| F.Car; // Error: suggest `Cart`
+       ^^^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:23:1
+
+Cannot access `F.Foobr` because `Foobr` is not a member of enum `F` [1]. Did you mean the member `Foobar`?
+
+   error-access.js:23:1
+   23| F.Foobr; // Error: suggest `Foobar`
+       ^^^^^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:24:1
+
+Cannot access `F.Bar` because `Bar` is not a member of enum `F` [1]. Did you mean the member `Bart`?
+
+   error-access.js:24:1
+   24| F.Bar; // Error: suggest `Bart`
+       ^^^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:25:1
+
+Cannot access `F.X` because `X` is not a member of enum `F` [1].
+
+   error-access.js:25:1
+   25| F.X; // Error: no suggestion
+       ^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19
 
 Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2].
@@ -2396,4 +2472,4 @@ References:
 
 
 
-Found 134 errors
+Found 138 errors

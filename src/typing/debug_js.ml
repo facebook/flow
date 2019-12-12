@@ -2974,10 +2974,11 @@ let dump_error_message =
         "EComputedPropertyWithUnion (%s) (%s)"
         (dump_reason cx computed_property_reason)
         (dump_reason cx union_reason)
-    | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+    | EEnumInvalidMemberAccess { member_name; members; access_reason; enum_reason } ->
       spf
-        "EEnumInvalidMemberAccess (%s) (%s) (%s)"
+        "EEnumInvalidMemberAccess (%s) (%s) (%s) (%s)"
         (Option.value ~default:"<None>" member_name)
+        (SSet.elements members |> String.concat ", ")
         (dump_reason cx access_reason)
         (dump_reason cx enum_reason)
     | EEnumModification { loc; enum_reason } ->

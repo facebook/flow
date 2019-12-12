@@ -6158,7 +6158,7 @@ struct
               cx
               ~trace
               (Error_message.EEnumInvalidMemberAccess
-                 { member_name = Some member_name; access_reason; enum_reason });
+                 { member_name = Some member_name; members; access_reason; enum_reason });
             rec_flow_t cx trace (AnyT.error access_reason, tout)
           )
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
@@ -6166,12 +6166,12 @@ struct
         | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
           ->
           rec_flow cx trace (enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum), u)
-        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, access_reason, _, _)) ->
+        | (DefT (enum_reason, _, EnumObjectT { members; _ }), GetElemT (_, access_reason, _, _)) ->
           add_output
             cx
             ~trace
             (Error_message.EEnumInvalidMemberAccess
-               { member_name = None; access_reason; enum_reason })
+               { member_name = None; members; access_reason; enum_reason })
         | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, _))
         | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, _)) ->
           add_output
