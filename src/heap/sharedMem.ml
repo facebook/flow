@@ -17,7 +17,6 @@ type config = {
   shm_dirs: string list;
   shm_min_avail: int;
   log_level: int;
-  sample_rate: float;
 }
 
 (* Allocated in C only. *)

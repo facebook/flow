@@ -210,7 +210,6 @@ let sharedmem_config =
     shm_dirs = ["/dev/shm"];
     shm_min_avail = 1024 * 256;
     log_level = 0;
-    sample_rate = 0.0;
   }
 
 let _ = SharedMem_js.init sharedmem_config ~num_workers:1

@@ -24,7 +24,6 @@ let _handle =
         shm_dirs = [];
         shm_min_avail = one_gig / 2;
         log_level = 0;
-        sample_rate = 0.0;
       })
 
 let () = run_test_tt_main tests

@@ -302,7 +302,6 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  let sample_rate = 0.0 in
   {
     SharedMem_js.global_size = 0;
     (* we don't use GlobalStorage, don't waste space on it *)
@@ -312,7 +311,6 @@ let shm_config shm_flags flowconfig =
     shm_dirs;
     shm_min_avail;
     log_level;
-    sample_rate;
   }
 
 let from_flag =

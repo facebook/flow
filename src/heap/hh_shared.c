@@ -464,8 +464,6 @@ static uintptr_t* counter = NULL;
  */
 static size_t* log_level = NULL;
 
-static double* sample_rate = NULL;
-
 static size_t* workers_should_exit = NULL;
 
 static size_t* allow_removes = NULL;
@@ -524,12 +522,6 @@ CAMLprim value hh_wasted_heap_size(void) {
 
 CAMLprim value hh_log_level(void) {
   return Val_long(*log_level);
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_sample_rate(void) {
-  CAMLparam0();
-  CAMLreturn(caml_copy_double(*sample_rate));
 }
 
 CAMLprim value hh_hash_used_slots(void) {
@@ -861,27 +853,24 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   log_level = (size_t*)(mem + 5*CACHE_LINE_SIZE);
 
-  assert (CACHE_LINE_SIZE >= sizeof(double));
-  sample_rate = (double*)(mem + 6*CACHE_LINE_SIZE);
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  workers_should_exit = (size_t*)(mem + 6*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  workers_should_exit = (size_t*)(mem + 7*CACHE_LINE_SIZE);
+  wasted_heap_size = (size_t*)(mem + 7*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  wasted_heap_size = (size_t*)(mem + 8*CACHE_LINE_SIZE);
+  allow_removes = (size_t*)(mem + 8*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  allow_removes = (size_t*)(mem + 9*CACHE_LINE_SIZE);
+  allow_dependency_table_reads = (size_t*)(mem + 9*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  allow_dependency_table_reads = (size_t*)(mem + 10*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  hcounter_filled = (size_t*)(mem + 11*CACHE_LINE_SIZE);
+  hcounter_filled = (size_t*)(mem + 10*CACHE_LINE_SIZE);
 
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 12*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 11*CACHE_LINE_SIZE + (int)sizeof(int));
 
   assert (CACHE_LINE_SIZE >= sizeof(local_t));
   locals = mem;
@@ -934,8 +923,7 @@ static size_t get_shared_mem_size(void) {
 }
 
 static void init_shared_globals(
-  size_t config_log_level,
-  double config_sample_rate
+  size_t config_log_level
 ) {
   // Initial size is zero for global storage is zero
   global_storage[0] = 0;
@@ -946,7 +934,6 @@ static void init_shared_globals(
   // Ensure the global counter starts on a COUNTER_RANGE boundary
   *counter = ALIGN(early_counter + 1, COUNTER_RANGE);
   *log_level = config_log_level;
-  *sample_rate = config_sample_rate;
   *workers_should_exit = 0;
   *wasted_heap_size = 0;
   *allow_removes = 1;
@@ -1046,8 +1033,7 @@ CAMLprim value hh_shared_init(
 #endif
 
   init_shared_globals(
-    Long_val(Field(config_val, 6)),
-    Double_val(Field(config_val, 7)));
+    Long_val(Field(config_val, 6)));
   // Checking that we did the maths correctly.
   assert(*heap + heap_size == shared_mem + shared_mem_size);
 
