@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {join} from 'path';
 import {format} from 'util';
 
-import * as blessed from 'blessed'
+import * as blessed from 'blessed';
 
 import {readFile, writeFile} from '../utils/async';
 import {
@@ -29,9 +30,9 @@ import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 import type {Context} from './getContext';
 
-const unselectedBox = "[ ]";
-const selectedBox = "[✓]";
-const someSelected = "[~]";
+const unselectedBox = '[ ]';
+const selectedBox = '[\u2713]'; // checkmark
+const someSelected = '[~]';
 
 // Wraps a Flow error with a few other bits of info
 class BlessedError {
@@ -52,14 +53,13 @@ class BlessedError {
   prettyPrint(): string {
     if (this.pretty == null) {
       const selectedIndex = this.selectedMessage || 0;
-      const messages = this.messages
-        .map((m, idx) => {
-          const pp = prettyPrintMessageOfError(this.error, m);
-          return idx === selectedIndex
+      const messages = this.messages.map((m, idx) => {
+        const pp = prettyPrintMessageOfError(this.error, m);
+        return idx === selectedIndex
           ? format('{white-fg}{blue-bg}%s{/}', pp)
           : pp;
-        });
-      this.pretty = messages.join("\n");
+      });
+      this.pretty = messages.join('\n');
     }
     return this.pretty;
   }
@@ -77,7 +77,7 @@ class BlessedError {
     if (loc == null) {
       return '[No location]';
     }
-    return format("%s:%s", loc.source || "[No file]", loc.start.line);
+    return format('%s:%s', loc.source || '[No file]', loc.start.line);
   }
 
   setSelectedMessage(index: number): void {
@@ -130,7 +130,7 @@ class BlessedError {
 }
 
 function mainSourceLocOfError(error: FlowError): ?FlowLoc {
-  const { operation, message } = error;
+  const {operation, message} = error;
   for (const msg of [operation, ...message]) {
     if (msg && msg.loc && msg.loc.type === 'SourceFile') {
       return msg.loc;
@@ -162,7 +162,7 @@ async function nonInteractive(args: Args): Promise<void> {
   );
 
   if (flowResult.passed) {
-    console.log("No errors found. Nothing to do. Exiting");
+    console.log('No errors found. Nothing to do. Exiting');
     return;
   }
 
@@ -191,7 +191,7 @@ async function interactive(args: Args): Promise<void> {
   // A containing box
   const outer = blessed.box({
     parent: screen,
-    width: "100%",
+    width: '100%',
     height: '100%',
     style: {
       bg: 'white',
@@ -207,15 +207,18 @@ async function interactive(args: Args): Promise<void> {
     border: 'line',
     align: 'center',
   });
-  loading.load(
-    format('Running `%s check %s`', args.bin, args.root),
-  );
+  loading.load(format('Running `%s check %s`', args.bin, args.root));
   // Lading usually disables all keys, but we still want to be able to quit
   screen.lockKeys = false;
   screen.render();
   let flowResult;
   try {
-    flowResult = await getFlowErrors(args.bin, args.errorCheckCommand, args.root, args.flowconfigName);
+    flowResult = await getFlowErrors(
+      args.bin,
+      args.errorCheckCommand,
+      args.root,
+      args.flowconfigName,
+    );
   } catch (e) {
     screen.destroy();
     throw e;
@@ -224,7 +227,7 @@ async function interactive(args: Args): Promise<void> {
 
   if (flowResult.passed) {
     screen.destroy();
-    console.log("No errors found. Nothing to do. Exiting");
+    console.log('No errors found. Nothing to do. Exiting');
     return;
   }
 
@@ -321,7 +324,7 @@ async function interactive(args: Args): Promise<void> {
     style: {
       bg: 'white',
       fg: 'red',
-    }
+    },
   });
   const locRegexText = blessed.text({
     parent: outer,
@@ -334,7 +337,7 @@ async function interactive(args: Args): Promise<void> {
     style: {
       bg: 'white',
       fg: 'red',
-    }
+    },
   });
   var numberActiveText = blessed.text({
     parent: outer,
@@ -347,8 +350,8 @@ async function interactive(args: Args): Promise<void> {
     style: {
       bg: 'white',
       fg: 'red',
-    }
-  })
+    },
+  });
 
   // A key to show which keys do what
   const keyText = blessed.text({
@@ -358,12 +361,13 @@ async function interactive(args: Args): Promise<void> {
     left: '30%',
     height: 2,
     width: 'shrink',
-    content: '(enter/space) select; (a) toggle all; (c) add comments;\n'+
-             '(g) auto-group; (s) toggle sort; (/) filter; (l) loc regex; ( ⇽ / ⇾ ) focus',
+    content:
+      '(enter/space) select; (a) toggle all; (c) add comments;\n' +
+      '(g) auto-group; (s) toggle sort; (/) filter; (l) loc regex; ( \u21FD / \u21FE ) focus',
     style: {
       bg: 'white',
       fg: 'red',
-    }
+    },
   });
 
   const renderLocations = () => {
@@ -386,28 +390,28 @@ async function interactive(args: Args): Promise<void> {
         case 'count':
           return bErrorsOfLoc.length - aErrorsOfLoc.length;
         default:
-          throw new Error("Unexpected sort type: "+sort);
+          throw new Error('Unexpected sort type: ' + sort);
       }
     });
     entries.forEach(([locString, errorsOfLoc], scrollIndex) => {
-      scrollToLocationMap.set(scrollIndex+1, locString);
-      const numSelected = errorsOfLoc.filter(e => e.selected === selectedBox).length;
+      scrollToLocationMap.set(scrollIndex + 1, locString);
+      const numSelected = errorsOfLoc.filter(e => e.selected === selectedBox)
+        .length;
       const selected =
         numSelected === 0
-        ? unselectedBox
+          ? unselectedBox
           : numSelected === errorsOfLoc.length
           ? selectedBox
           : someSelected;
-      rows.push([selected, format("%s (%d)", locString, errorsOfLoc.length)]);
+      rows.push([selected, format('%s (%d)', locString, errorsOfLoc.length)]);
     });
 
-    numberActiveText.setContent(format(
-      "%d errors selected",
-      errors.filter(e => e.isSelected()).length,
-    ));
+    numberActiveText.setContent(
+      format('%d errors selected', errors.filter(e => e.isSelected()).length),
+    );
 
     locations.setRows(rows);
-  }
+  };
   renderLocations();
 
   // We we scroll the locations update the details
@@ -417,7 +421,9 @@ async function interactive(args: Args): Promise<void> {
       const errors = locationToErrorsMap.get(location);
 
       if (errors !== undefined) {
-        let content = blessed.parseTags(errors.map(e => e.prettyPrint()).join("\n\n"));
+        let content = blessed.parseTags(
+          errors.map(e => e.prettyPrint()).join('\n\n'),
+        );
         details.setContent(content);
         screen.render();
       }
@@ -454,12 +460,12 @@ async function interactive(args: Args): Promise<void> {
   });
 
   // Selects all the active errors
-  screen.key('a', (key) => {
+  screen.key('a', key => {
     const selected = locations.selected;
     const activeErrors = errors.filter(e => e.active);
     const allSelected = activeErrors.every(e => e.isSelected());
     activeErrors.forEach(e => {
-      allSelected ? e.unselect() : e.select()
+      allSelected ? e.unselect() : e.select();
     });
     renderLocations();
     locations.select(selected);
@@ -490,31 +496,31 @@ async function interactive(args: Args): Promise<void> {
     label: ' {blue-fg}Filter{/blue-fg} ',
     tags: true,
     keys: true,
-    vi: true
+    vi: true,
   });
 
   let lastSearch = '';
-  screen.key('/', () => search.input(
-    "Enter search regex",
-    lastSearch,
-    (err, value) => {
+  screen.key('/', () =>
+    search.input('Enter search regex', lastSearch, (err, value) => {
       if (err == null && value != null) {
         try {
           // We don't know if value is a valid regex
           const regex = new RegExp(value);
           filterText.setContent(
-            value === '' ? 'No active filter' : format("Active filter: %s", regex)
+            value === ''
+              ? 'No active filter'
+              : format('Active filter: %s', regex),
           );
           lastSearch = value;
           errors.forEach(e => e.setActive(regex));
           renderLocations();
         } catch (e) {
           screen.render();
-          return
+          return;
         }
       }
-    }
-  ));
+    }),
+  );
 
   // `l` opens up a prompt for a regex
   const locSearch = blessed.prompt({
@@ -527,34 +533,34 @@ async function interactive(args: Args): Promise<void> {
     label: ' {blue-fg}Location regex{/blue-fg} ',
     tags: true,
     keys: true,
-    vi: true
+    vi: true,
   });
 
   let lastLocSearch = '';
-  screen.key('l', () => search.input(
-    "Enter location regex",
-    lastLocSearch,
-    (err, value) => {
+  screen.key('l', () =>
+    search.input('Enter location regex', lastLocSearch, (err, value) => {
       if (err == null && value != null) {
         try {
           // We don't know if value is a valid regex
           const regex = new RegExp(value);
           locRegexText.setContent(
-            value === '' ? 'No location regex' : format("Active regex: %s", regex)
+            value === ''
+              ? 'No location regex'
+              : format('Active regex: %s', regex),
           );
           lastLocSearch = value;
           errors.forEach(e => e.setSelectedMessageWithRegex(regex));
           renderLocations();
         } catch (e) {
           screen.render();
-          return
+          return;
         }
       }
-    }
-  ));
+    }),
+  );
 
   screen.key('g', () => {
-    groupErrors(errors.filter(e => e.active))
+    groupErrors(errors.filter(e => e.active));
     renderLocations();
   });
 
@@ -573,21 +579,19 @@ async function interactive(args: Args): Promise<void> {
     label: ' {blue-fg}Enter Comment{/blue-fg} ',
     tags: true,
     keys: true,
-    vi: true
+    vi: true,
   });
 
   const doAddComments = async () => {
     const selectedErrors = errors.filter(e => e.isSelected());
     if (args.comment == null) {
-      enterCommentPrompt.input(
-        'Enter comment',
-        async (err, value) => {
-          if (err == null && value != null) {
-            args.comment = value;
-            screen.destroy();
-            await addComments(args, selectedErrors);
-            process.exit(0);
-          }
+      enterCommentPrompt.input('Enter comment', async (err, value) => {
+        if (err == null && value != null) {
+          args.comment = value;
+          screen.destroy();
+          await addComments(args, selectedErrors);
+          process.exit(0);
+        }
       });
     } else {
       screen.destroy();
@@ -620,8 +624,16 @@ function groupErrors(errors: Array<BlessedError>): void {
     const possibleLocsPerError = ungroupedErrors.map(error => {
       const locToFirstIndexMap = new Map();
       error.messages.forEach((message, msgIdx) => {
-        if (message.loc && message.loc.source && message.loc.type == 'SourceFile') {
-          const locString = format("%s:%s", message.loc.source, message.loc.start.line);
+        if (
+          message.loc &&
+          message.loc.source &&
+          message.loc.type == 'SourceFile'
+        ) {
+          const locString = format(
+            '%s:%s',
+            message.loc.source,
+            message.loc.start.line,
+          );
           if (!locToFirstIndexMap.has(locString)) {
             locToFirstIndexMap.set(locString, msgIdx);
           }
@@ -687,9 +699,9 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
     );
   }
   const counts = await Promise.all(promises);
-  const commentCount = counts.reduce((c1, c2) => c1+c2, 0);
+  const commentCount = counts.reduce((c1, c2) => c1 + c2, 0);
   console.log(
-    "Added %d comments to suppress %d errors",
+    'Added %d comments to suppress %d errors',
     commentCount,
     errorCount,
   );
@@ -719,7 +731,9 @@ export async function addCommentsToCode(
   code: string,
   locs: Array<FlowLoc>,
   flowBinPath: string,
-): Promise<[string, number]> /* [resulting code, number of comments inserted] */ {
+): Promise<
+  [string, number],
+> /* [resulting code, number of comments inserted] */ {
   locs.sort((l1, l2) => l2.start.line - l1.start.line);
 
   const ast = await getAst(code, flowBinPath);
@@ -736,21 +750,31 @@ export async function addCommentsToCode(
   return [code, commentCount];
 }
 
-function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Array<PathNode>): string {
+function addCommentToCode(
+  comment: string,
+  code: string,
+  loc: FlowLoc,
+  path: Array<PathNode>,
+): string {
   /* First of all, we want to know if we can add a comment to the line before
    * the error. So we need to see if we're in a JSX children block or inside a
    * template string when we reach the line with the error */
   const [inside, ast] = getContext(loc, path);
 
-  const lines = code.split("\n");
+  const lines = code.split('\n');
   if (inside === NORMAL) {
     // This is easy, just add the comment to the preceding line
-    return [].concat(
-      lines.slice(0, loc.start.line - 1),
-      formatComment(comment, lines[loc.start.line-1]),
-      lines.slice(loc.start.line-1),
-    ).join("\n");
-  } else if ((inside === JSX_FRAGMENT || inside === JSX) && ast.type === 'JSXElement') {
+    return []
+      .concat(
+        lines.slice(0, loc.start.line - 1),
+        formatComment(comment, lines[loc.start.line - 1]),
+        lines.slice(loc.start.line - 1),
+      )
+      .join('\n');
+  } else if (
+    (inside === JSX_FRAGMENT || inside === JSX) &&
+    ast.type === 'JSXElement'
+  ) {
     /* Ok, so we have something like
      * <jsx>
      *   <foo id={10*'hello'} />
@@ -765,13 +789,17 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
      *   <foo id={10*'hello'} />
      * <jsx>
      */
-    return [].concat(
-      lines.slice(0, loc.start.line - 1),
-      formatComment(comment, lines[loc.start.line-1], true),
-      lines.slice(loc.start.line-1),
-    ).join("\n");
-  } else if ((inside === TEMPLATE) ||
-      inside === JSX && ast.type === 'JSXExpressionContainer') {
+    return []
+      .concat(
+        lines.slice(0, loc.start.line - 1),
+        formatComment(comment, lines[loc.start.line - 1], true),
+        lines.slice(loc.start.line - 1),
+      )
+      .join('\n');
+  } else if (
+    inside === TEMPLATE ||
+    (inside === JSX && ast.type === 'JSXExpressionContainer')
+  ) {
     /* Ok, so we have something like
      *
      * <jsx>
@@ -802,21 +830,22 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
      *     10 * 'hello'}
      * `;
      */
-    const start_col = inside === JSX ?
-      ast.loc.start.column + 1 :
-      ast.loc.start.column;
-    const line = lines[loc.start.line-1];
+    const start_col =
+      inside === JSX ? ast.loc.start.column + 1 : ast.loc.start.column;
+    const line = lines[loc.start.line - 1];
     const part1 = line.substr(0, start_col);
-    const match = part1.match(/^ */)
-    const padding = match ? match[0]+'  ' : '  ';
+    const match = part1.match(/^ */);
+    const padding = match ? match[0] + '  ' : '  ';
     const part2 = padding + line.substr(start_col);
-    return [].concat(
-      lines.slice(0, ast.loc.start.line - 1),
-      [part1],
-      formatComment(comment, part2),
-      [part2],
-      lines.slice(ast.loc.start.line),
-    ).join("\n");
+    return []
+      .concat(
+        lines.slice(0, ast.loc.start.line - 1),
+        [part1],
+        formatComment(comment, part2),
+        [part2],
+        lines.slice(ast.loc.start.line),
+      )
+      .join('\n');
   }
 
   return code;
@@ -825,8 +854,8 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
 /* Take up to `max` characters from str, trying to split at a space or dash or
  * something like that. */
 function splitAtWord(str: string, max: number): [string, string] {
-  let ret = "";
-  let maybe = "";
+  let ret = '';
+  let maybe = '';
 
   for (let i = 0; i < max; i++) {
     if (i === str.length) {
@@ -836,16 +865,14 @@ function splitAtWord(str: string, max: number): [string, string] {
     maybe += str[i];
     if (str[i].match(/[- _\t]/)) {
       ret += maybe;
-      maybe = "";
+      maybe = '';
     }
-
   }
 
   // If there were no breaks then take it all
-  if (ret === "") {
+  if (ret === '') {
     ret = maybe;
   }
-
 
   return [ret, str.substr(ret.length)];
 }
@@ -858,32 +885,35 @@ function formatComment(
 ): Array<string> {
   const match = line.match(/^ */);
   let padding = match ? match[0] : '';
-  padding.length > 40 && (padding = "    ");
+  padding.length > 40 && (padding = '    ');
 
   if (jsx === false) {
-    const singleLineComment = format("%s// %s", padding, comment);
+    const singleLineComment = format('%s// %s', padding, comment);
     if (singleLineComment.length <= 80) {
       return [singleLineComment];
     }
   }
 
   const commentLines = [];
-  const firstLinePrefix = format(!jsx ? "%s/* " : "%s{/* ", padding);
+  const firstLinePrefix = format(!jsx ? '%s/* ' : '%s{/* ', padding);
   let firstLineComment;
-  [firstLineComment, comment] = splitAtWord(comment.trim(), 80 - firstLinePrefix.length);
+  [firstLineComment, comment] = splitAtWord(
+    comment.trim(),
+    80 - firstLinePrefix.length,
+  );
   commentLines.push(firstLinePrefix + firstLineComment.trim());
 
-  const prefix = format(!jsx ? "%s * " : "%s  * ", padding);
+  const prefix = format(!jsx ? '%s * ' : '%s  * ', padding);
   let commentLine;
   while (comment.length > 0) {
     [commentLine, comment] = splitAtWord(comment.trim(), 80 - prefix.length);
     commentLines.push(prefix + commentLine.trim());
   }
-  if (commentLines[commentLines.length-1].length < 76) {
+  if (commentLines[commentLines.length - 1].length < 76) {
     const last = commentLines.pop();
-    commentLines.push(format(!jsx ? "%s */" : "%s */}", last));
+    commentLines.push(format(!jsx ? '%s */' : '%s */}', last));
   } else {
-    commentLines.push(format(!jsx ? "%s */" : "%s  */}", padding));
+    commentLines.push(format(!jsx ? '%s */' : '%s  */}', padding));
   }
   return commentLines;
 }
