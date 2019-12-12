@@ -493,8 +493,6 @@ static size_t worker_id;
 static size_t allow_hashtable_writes_by_current_process = 1;
 static size_t worker_can_exit = 1;
 
-static char *db_filename = NULL;
-
 /* Where the heap started (bottom) */
 static char* heap_init = NULL;
 /* Where the heap will end (top) */
@@ -876,12 +874,6 @@ static void define_globals(char * shared_mem_init) {
   locals = mem;
   mem += locals_size_b;
 
-  /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
-   * page_size - it should be since page_size is quite big for a string
-   */
-  db_filename = (char*)mem;
-  mem += page_size;
-
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */
@@ -919,7 +911,7 @@ static void define_globals(char * shared_mem_init) {
 static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
   return (global_size_b + dep_size_b + bindings_size_b + hashtbl_size_b +
-          heap_size + 2 * page_size + locals_size_b);
+          heap_size + page_size + locals_size_b);
 }
 
 static void init_shared_globals(
@@ -945,10 +937,6 @@ static void init_shared_globals(
 
   // Initialize top heap pointers
   *heap = heap_init;
-
-  // Zero out this shared memory for a string
-  size_t page_size = getpagesize();
-  memset(db_filename, 0, page_size);
 }
 
 static void set_sizes(
@@ -2076,223 +2064,6 @@ size_t deptbl_entry_count_for_slot(size_t slot) {
   }
 
   return count;
-}
-
-/*****************************************************************************/
-/* Saved State as binary */
-/*****************************************************************************/
-
-// TODO: MAGIC_CONSTANT
-// use the same format as what's in the hashtable, but compact
-// Question: is it better to deserialize into hashtbl or an OCaml Hashtable or
-// into SQLite?
-size_t hh_save_dep_table_blob_helper(const char* const out_filename) {
-  struct timeval start_t = { 0 };
-  gettimeofday(&start_t, NULL);
-
-  // Allocate space for all the values
-  FILE* dep_table_blob_file = fopen(out_filename, "wb+");
-
-  // TODO: T38685427 - write MAGIC_CONSTANT
-  // TODO: write the format version
-  size_t slot = 0;
-  size_t count = 0;
-  size_t count_of_values = 0;
-  size_t prev_count = 0;
-  tagged_uint_t *values = NULL;
-  size_t iter = 0;
-  size_t edges_added = 0;
-  size_t new_rows_count = 0;
-  for (slot = 0; slot < dep_size; ++slot) {
-    count_of_values = deptbl_entry_count_for_slot(slot);
-    // 1 key
-    count = count_of_values + 1;
-    if (count_of_values == 0) {
-      continue;
-    }
-    else if (count > prev_count) {
-      // No need to allocate new space if we can just reuse the old one
-      values = realloc(values, count * sizeof(uint32_t));
-      prev_count = count;
-    }
-
-    assert(values != NULL);
-
-    iter = 0;
-
-    deptbl_entry_t slotval = deptbl[slot];
-    if (slotval.raw != 0 && slotval.s.key.tag == TAG_KEY) {
-      // This is the head of a linked list aka KEY VERTEX
-      values[iter] = slotval.s.key;
-      iter++;
-
-      // Then combine each value to VALUE VERTEX
-      while (slotval.s.next.tag == TAG_NEXT) {
-        assert(slotval.s.next.num < dep_size);
-        slotval = deptbl[slotval.s.next.num];
-        values[iter] = slotval.s.key;
-        values[iter].tag = TAG_NEXT;
-        iter++;
-      }
-
-      // The final "next" in the list is always a value, not a next pointer.
-      // NOTE: the tag will be !TAG_NEXT
-      values[iter] = slotval.s.next;
-      iter++;
-
-      new_rows_count += 1;
-
-      fwrite(values, sizeof(uint32_t), iter, dep_table_blob_file);
-    }
-
-    edges_added += iter;
-  }
-
-  if (values != NULL) {
-    free(values);
-  }
-
-  fprintf(stderr, "Wrote %lu new rows\n", new_rows_count);
-  fclose(dep_table_blob_file);
-
-  log_duration("Finished writing the file", start_t);
-
-  return edges_added;
-}
-
-void hh_load_dep_table_blob_helper(const char* const in_filename) {
-  struct timeval start_t = { 0 };
-  gettimeofday(&start_t, NULL);
-
-  // Allocate space for all the values
-  FILE* dep_table_blob_file = fopen(in_filename, "rb");
-  assert(dep_table_blob_file != NULL);
-
-  // TODO: this is an arbitrary buffer size; do something better?
-  size_t buffer_size = 1000;
-  tagged_uint_t buffer[buffer_size];
-
-  // TODO: read MAGIC_CONSTANT
-  // TODO: read the format version
-  uint16_t is_key = 1;
-  tagged_uint_t slot;
-  tagged_uint_t key;
-  tagged_uint_t value;
-  size_t keys_count = 0;
-  size_t values_count = 0;
-
-  // The number of bytes read from the file stream
-  size_t count;
-
-  fprintf(
-    stderr,
-    "Start; dcounter: %"PRIu64" dep_size: %"PRIu64" \n",
-    *dcounter,
-    dep_size
-  );
-
-  do {
-    count = fread(
-      buffer,
-      sizeof(tagged_uint_t),
-      buffer_size,
-      dep_table_blob_file);
-
-    if (count <= 0) {
-      assert(!ferror(dep_table_blob_file));
-    }
-    else {
-      for (int i = 0; i < count; i++) {
-        slot = buffer[i];
-
-        if (is_key) {
-          is_key = 0;
-          keys_count++;
-          key = slot;
-        }
-        else {
-          value = slot;
-          values_count++;
-
-          add_dep(key.num, value.num);
-
-          if (value.tag != TAG_NEXT) {
-            is_key = 1;
-          }
-        }
-      }
-    }
-  } while (!feof(dep_table_blob_file));
-
-  fclose(dep_table_blob_file);
-
-  fprintf(
-    stderr,
-    "End; dcounter: %"PRIu64" dep_size: %"PRIu64" \n",
-    *dcounter,
-    dep_size
-  );
-  fprintf(stderr, "Read %lu keys and %lu values\n", keys_count, values_count);
-
-  log_duration("Finished reading the file", start_t);
-}
-
-/*
- * Assumption: When we save the dependency table using this function,
- * we do a fresh load, meaning that there was NO saved state loaded.
- * From a loaded saved state, we call hh_update_dep_table_sqlite instead.
- */
- // TODO - DEAD CODE
-CAMLprim value hh_save_dep_table_blob(
-    value out_filename,
-    value build_revision
-) {
-  CAMLparam2(out_filename, build_revision);
-  char *out_filename_raw = String_val(out_filename);
-
-  // TODO: use build_revision
-  size_t edges_added =
-    hh_save_dep_table_blob_helper(out_filename_raw);
-  CAMLreturn(Val_long(edges_added));
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_load_dep_table_blob(
-    value in_filename,
-    value ignore_hh_version
-) {
-  CAMLparam1(in_filename);
-  struct timeval tv = { 0 };
-  struct timeval tv2 = { 0 };
-  gettimeofday(&tv, NULL);
-
-  char *in_filename_raw = String_val(in_filename);
-
-  // TODO: T38685889 - use ignore_hh_version
-  assert(ignore_hh_version);
-
-  hh_load_dep_table_blob_helper(in_filename_raw);
-
-  tv2 = log_duration("Loading the dependency blob file", tv);
-  int secs = tv2.tv_sec - tv.tv_sec;
-  // Reporting only seconds, ignore milli seconds
-  CAMLreturn(Val_long(secs));
-}
-
-/*****************************************************************************/
-/* Saved State with SQLite */
-/*****************************************************************************/
-
-// This code is called when we fall back from a saved state to full init,
-// not at the end of saving the state.
-// TODO - DEAD CODE
-void hh_cleanup_sqlite(void) {
-  CAMLparam0();
-
-  // Reset the SQLite database file name
-  size_t page_size = getpagesize();
-  memset(db_filename, 0, page_size);
-  CAMLreturn0;
 }
 
 #define ARRAY_SIZE(array) \
