@@ -349,6 +349,189 @@ References:
              ^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- equality.js:8:1
+
+Cannot compare `F` [1] to `E` [2].
+
+   equality.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [1]
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:21:1
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:21:1
+   21| s == e; // Error
+       ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:22:1
+
+Cannot compare `E` [1] to string [2].
+
+   equality.js:22:1
+   22| e == s; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:24:1
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:24:1
+   24| s != e; // Error
+       ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:25:1
+
+Cannot compare `E` [1] to string [2].
+
+   equality.js:25:1
+   25| e != s; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:27:1
+
+Cannot compare `E` [1] to `E` [1].
+
+   equality.js:27:1
+   27| e == E.A; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:28:1
+
+Cannot compare `E` [1] to `E` [2].
+
+   equality.js:28:1
+   28| ef == E.A; // Error
+       ^^
+
+References:
+   equality.js:16:11
+   16| const ef: E | F = E.A;
+                 ^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:28:1
+
+Cannot compare `F` [1] to `E` [2].
+
+   equality.js:28:1
+   28| ef == E.A; // Error
+       ^^
+
+References:
+   equality.js:16:15
+   16| const ef: E | F = E.A;
+                     ^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:31:1
+
+Cannot compare enum `E` [1] to string [2].
+
+   equality.js:31:1
+   31| eo == s; // Error
+       ^^
+
+References:
+   equality.js:14:11
+   14| const eo: typeof E = E;
+                 ^^^^^^^^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- error-access.js:9:11
 
 Cannot access `E.C` because `C` is not a member of enum `E` [1].
@@ -2472,4 +2655,4 @@ References:
 
 
 
-Found 138 errors
+Found 147 errors

@@ -634,14 +634,14 @@ let equatable = function
         ( _,
           _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT ) ),
+          | SymbolT | EnumObjectT _ | EnumT _ ) ),
       _ )
   | ( _,
       DefT
         ( _,
           _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT ) ) ) ->
+          | SymbolT | EnumObjectT _ | EnumT _ ) ) ) ->
     false
   | _ -> true
 
