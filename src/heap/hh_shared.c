@@ -2325,66 +2325,6 @@ value Val_some(value v)
 
 #define Some_val(v) Field(v,0)
 
-// ----------------------- START OF NO_SQLITE3 SECTION ------------------------
-
-// TODO - DEAD CODE
-CAMLprim value hh_get_loaded_dep_table_filename() {
-  CAMLparam0();
-  CAMLreturn(caml_copy_string(""));
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_save_dep_table_sqlite(
-    value out_filename,
-    value build_revision,
-    value replace_state_after_saving
-) {
-  CAMLparam0();
-
-  UNUSED(out_filename);
-  UNUSED(build_revision);
-  UNUSED(replace_state_after_saving);
-
-  CAMLreturn(Val_long(0));
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_update_dep_table_sqlite(
-    value out_filename,
-    value build_revision,
-    value replace_state_after_saving
-) {
-  CAMLparam0();
-
-  UNUSED(out_filename);
-  UNUSED(build_revision);
-  UNUSED(replace_state_after_saving);
-
-  CAMLreturn(Val_long(0));
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_load_dep_table_sqlite(
-    value in_filename,
-    value ignore_hh_version) {
-  CAMLparam0();
-
-  UNUSED(in_filename);
-  UNUSED(ignore_hh_version);
-
-  CAMLreturn(Val_long(0));
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
-  // Empty list
-  CAMLparam0();
-
-  UNUSED(ocaml_key);
-
-  CAMLreturn(Val_int(0));
-}
-
 CAMLprim value hh_removed_count(value ml_unit) {
     CAMLparam1(ml_unit);
     UNUSED(ml_unit);

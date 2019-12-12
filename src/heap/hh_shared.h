@@ -104,26 +104,4 @@ void hh_move(value key1, value key2);
 /* Removes a key from the hash table. */
 void hh_remove(value key);
 
-/*****************************************************************************/
-/* Saved State with SQLite */
-/*****************************************************************************/
-void hh_cleanup_sqlite(void);
-
-/* Dependency table. */
-CAMLprim value hh_save_dep_table_sqlite(
-        value out_filename,
-        value build_revision,
-        value replace_state_after_saving
-);
-CAMLprim value hh_update_dep_table_sqlite(
-    value out_filename,
-    value build_revision,
-    value replace_state_after_saving
-);
-CAMLprim value hh_load_dep_table_sqlite(
-        value in_filename,
-        value ignore_hh_version
-);
-CAMLprim value hh_get_dep_sqlite(value ocaml_key);
-
 #endif
