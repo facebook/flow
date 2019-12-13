@@ -59,6 +59,7 @@ type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
   opt_arch: arch;
+  opt_babel_loose_array_spread: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
@@ -128,6 +129,8 @@ type t = {
 let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
+
+let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
 let arch opts = opts.opt_arch
 

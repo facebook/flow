@@ -1201,6 +1201,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_debug = options_flags.debug;
       opt_verbose = options_flags.verbose;
       opt_all = options_flags.all || FlowConfig.all flowconfig;
+      opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
       opt_wait_for_recheck;
       opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
       opt_traces = Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);

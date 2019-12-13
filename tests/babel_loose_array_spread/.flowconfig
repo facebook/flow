@@ -1,6 +1,4 @@
 [options]
 no_flowlib=false
 all=true
-
-[lints]
-non-array-spread=error
+babel_loose_array_spread=true

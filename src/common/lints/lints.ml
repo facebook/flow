@@ -40,7 +40,6 @@ type lint_kind =
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
-  | NonArraySpread
   | AmbiguousObjectType
 
 let string_of_sketchy_null_kind = function
@@ -75,7 +74,6 @@ let string_of_kind = function
   | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
-  | NonArraySpread -> "non-array-spread"
   | AmbiguousObjectType -> "ambiguous-object-type"
 
 let kinds_of_string = function
@@ -111,7 +109,6 @@ let kinds_of_string = function
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
-  | "non-array-spread" -> Some [NonArraySpread]
   | _ -> None
 
 module LintKind = struct

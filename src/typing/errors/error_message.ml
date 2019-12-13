@@ -272,7 +272,6 @@ and 'loc t' =
   | ECannotDelete of 'loc * 'loc virtual_reason
   | EBigIntNotYetSupported of 'loc virtual_reason
   | ESignatureVerification of 'loc Signature_error.t
-  | ENonArraySpread of 'loc virtual_reason
   | ECannotSpreadInterface of {
       spread_reason: 'loc virtual_reason;
       interface_reason: 'loc virtual_reason;
@@ -742,7 +741,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification sve -> ESignatureVerification (Signature_error.map_locs ~f sve)
-  | ENonArraySpread r -> ENonArraySpread (map_reason r)
   | ECannotSpreadInterface { spread_reason; interface_reason } ->
     ECannotSpreadInterface
       { spread_reason = map_reason spread_reason; interface_reason = map_reason interface_reason }
@@ -991,7 +989,6 @@ let util_use_op_of_msg nope util = function
   | ECannotDelete _
   | EBigIntNotYetSupported _
   | ESignatureVerification _
-  | ENonArraySpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
   | EUnableToSpread _
@@ -1050,7 +1047,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | EDebugPrint (reason, _)
-  | ENonArraySpread reason
   | EComputedPropertyWithMultipleLowerBounds
       {
         computed_property_reason = reason;
@@ -1239,7 +1235,6 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
-    | ENonArraySpread _ -> LintError Lints.NonArraySpread
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2744,17 +2739,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EBigIntNotYetSupported reason ->
     Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
-  | ENonArraySpread reason ->
-    let features =
-      [
-        text "Cannot spread non-array iterable ";
-        ref reason;
-        text ". Use ";
-        code "...Array.from(<iterable>)";
-        text " instead.";
-      ]
-    in
-    Normal { features }
   | ECannotSpreadInterface { spread_reason; interface_reason } ->
     let features =
       [
@@ -3054,7 +3038,6 @@ let is_lint_error = function
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
-  | EUninitializedInstanceProperty _
-  | ENonArraySpread _ ->
+  | EUninitializedInstanceProperty _ ->
     true
   | _ -> false

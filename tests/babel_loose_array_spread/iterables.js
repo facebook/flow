@@ -8,4 +8,14 @@ if (Array.isArray(it)) {
   f.bind(null, ...it); // No error
 }
 
+import {opaqueIterable as oit} from './opaque';
+[...oit]; // Error
+f(...oit); // Error
+f.bind(null, ...oit); // Error
+if (Array.isArray(oit)) {
+  [...oit]; // No error
+  f(...oit); // No error
+  f.bind(null, ...oit); // No error
+}
+
 function f(...args) {}

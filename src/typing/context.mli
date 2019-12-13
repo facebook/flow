@@ -34,6 +34,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  babel_loose_array_spread: bool;
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
@@ -113,6 +114,8 @@ val all_unresolved : t -> ISet.t IMap.t
 val metadata : t -> metadata
 
 val max_literal_length : t -> int
+
+val babel_loose_array_spread : t -> bool
 
 val enable_const_params : t -> bool
 

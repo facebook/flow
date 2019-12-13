@@ -3097,35 +3097,42 @@ struct
               (* Arrays *)
               arrtype
             | _ ->
-              (* Non-array non-any iterables *)
-              let resolve_array_like =
+              (* Non-array non-any iterables, opaque arrays, etc *)
+              let resolve_to =
                 match rrt_resolve_to with
                 (* Spreading iterables in a type context is always OK *)
-                | ResolveSpreadsToMultiflowSubtypeFull _ -> false
+                | ResolveSpreadsToMultiflowSubtypeFull _ -> `Iterable
                 (* Function.prototype.apply takes array-likes, not iterables *)
-                | ResolveSpreadsToCallT _ -> true
-                (* Otherwise we're spreading values, which we may need to warn about *)
+                | ResolveSpreadsToCallT _ -> `ArrayLike
+                (* Otherwise we're spreading values *)
                 | ResolveSpreadsToArray _
                 | ResolveSpreadsToArrayLiteral _
                 | ResolveSpreadsToCustomFunCall _
                 | ResolveSpreadsToMultiflowCallFull _
                 | ResolveSpreadsToMultiflowPartial _ ->
-                  add_output cx ~trace (Error_message.ENonArraySpread reason);
-                  false
+                  (* Babel's "loose mode" array spread transform deviates from
+                   * the spec by assuming the spread argument is always an
+                   * array. If the babel_loose_array_spread option is set, model
+                   * this assumption.
+                   *)
+                  if Context.babel_loose_array_spread cx then
+                    `Array
+                  else
+                    `Iterable
               in
               let reason = reason_of_t l in
               let element_tvar = Tvar.mk cx reason in
-              let iterable_or_array_like =
-                if resolve_array_like then
-                  let targs = [element_tvar] in
+              let resolve_to_type =
+                match resolve_to with
+                | `ArrayLike ->
                   get_builtin_typeapp
                     cx
                     (replace_desc_new_reason
                        (RCustom "Array-like object expected for apply")
                        reason)
                     "$ArrayLike"
-                    targs
-                else
+                    [element_tvar]
+                | `Iterable ->
                   let targs =
                     [
                       element_tvar;
@@ -3138,8 +3145,13 @@ struct
                     (replace_desc_new_reason (RCustom "Iterable expected for spread") reason)
                     "$Iterable"
                     targs
+                | `Array ->
+                  DefT
+                    ( replace_desc_new_reason (RCustom "Array expected for spread") reason,
+                      bogus_trust (),
+                      ArrT (ROArrayAT element_tvar) )
               in
-              flow_t cx (l, iterable_or_array_like);
+              rec_flow_t cx trace (l, resolve_to_type);
               ArrayAT (element_tvar, None)
           in
           let elemt = elemt_of_arrtype arrtype in

@@ -49,6 +49,7 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
+    babel_loose_array_spread: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
@@ -147,6 +148,7 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
+      babel_loose_array_spread = false;
       disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
@@ -491,6 +493,8 @@ module Opts = struct
             Ok { opts with root_name = Some v }) );
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = v }));
       ("all", boolean (fun opts v -> Ok { opts with all = v }));
+      ( "babel_loose_array_spread",
+        boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v }) );
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
       ("weak", boolean (fun opts v -> Ok { opts with weak = v }));
       ( "suppress_comment",
@@ -1098,6 +1102,8 @@ let libs config = config.libs
 let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
+
+let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 

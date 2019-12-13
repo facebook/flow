@@ -21,7 +21,6 @@ layout: guide
 * [`unnecessary-invariant`](#toc-unnecessary-invariant)
 * [`deprecated-utility`](#toc-deprecated-utility)
 * [`dynamic-export`](#toc-dynamic-export)
-* [`non-array-spread`](#toc-non-array-spread)
 * [`implicit-inexact-object`](#toc-implicit-inexact-object)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
@@ -227,16 +226,6 @@ The effect of `*` can generally be achieved by simply not providing a type annot
 Triggers when a dynamic type (usually `any`) appears in a position exported from a file. Note that this is a very noisy lint, and can be triggered even
 when exporting types that are defined in our library definitions to include `any` types. For this reason we recommend turning it on on a per-file or even
 per-line basis using [flowlint comments](../flowlint-comments/#toc-flowlint) rather than for your whole repository in the `flowconfig`.
-
-#### `non-array-spread` <a class="toc" id="toc-non-array-spread" href="#toc-non-array-spread"></a>
-Triggers when you spread an iterable value that isn't an array or tuple (such as a `Map` or `Set`). We recommend turning this lint on if your code will run in an environment that incorrectly assumes all iterables are arrays (most commonly Babel in [loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose)).
-
-For example:
-
-```js
-const set = new Set();
-const values = [...set]; // Lint: non-array-spread
-```
 
 #### `implicit-inexact-object` <a class="toc" id="toc-implicit-inexact-object" href="#toc-implicit-inexact-object"></a>
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.

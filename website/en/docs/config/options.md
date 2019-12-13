@@ -17,6 +17,7 @@ can be overridden with command line flags.
 ### Available options <a class="toc" id="toc-available-options" href="#toc-available-options"></a>
 
 * [`all`](#toc-all-boolean)
+* [`babel_loose_array_spread`](#toc-babel-loose-array-spread-boolean)
 * [`emoji`](#toc-emoji-boolean)
 * [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
 * [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
@@ -57,6 +58,19 @@ can be overridden with command line flags.
 Set this to `true` to check all files, not just those with `@flow`.
 
 The default value for `all` is `false`.
+
+#### `babel_loose_array_spread` _`(boolean)`_ <a class="toc" id="toc-babel-loose-array-spread-boolean" href="#toc-babel-loose-array-spread-boolean"></a>
+
+Set this to `true` to check that array spread syntax is only used with arrays, not arbitrary iterables (such as `Map` or `Set`). This is useful if you transform your code with Babel in [loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose) which makes this non-spec-compliant assumption at runtime.
+
+For example:
+
+```js
+const set = new Set();
+const values = [...set]; // Valid ES2015, but Set is not compatible with $ReadOnlyArray in Babel loose mode
+```
+
+The default value for `babel_loose_array_spread` is `false`.
 
 #### `emoji` _`(boolean)`_ <a class="toc" id="toc-emoji-boolean" href="#toc-emoji-boolean"></a>
 
