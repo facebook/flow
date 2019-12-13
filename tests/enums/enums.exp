@@ -349,28 +349,6 @@ References:
              ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- equality.js:8:1
-
-Cannot compare `F` [1] to `E` [2].
-
-   equality.js:8:1
-       v-------
-    8| enum F {
-    9|   A,
-   10|   B,
-   11| }
-       ^ [1]
-
-References:
-   equality.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- equality.js:21:1
 
 Cannot compare string [1] to `E` [2].
@@ -506,6 +484,31 @@ References:
    equality.js:16:15
    16| const ef: E | F = E.A;
                      ^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:29:1
+
+Cannot compare `F` [1] to `E` [2].
+
+   equality.js:29:1
+   29| F.A == E.A; // Error
+       ^^^
+
+References:
+   equality.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [1]
    equality.js:3:1
        v-------
     3| enum E {

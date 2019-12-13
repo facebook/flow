@@ -6160,7 +6160,13 @@ struct
               trace
               (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
           else if SSet.mem member_name members then
-            let enum_type = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+            let enum_type =
+              reposition
+                cx
+                ~trace
+                (aloc_of_reason access_reason)
+                (mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum)
+            in
             rec_flow_t cx trace (enum_type, tout)
           else (
             add_output
