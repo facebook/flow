@@ -2,3 +2,4 @@
 Server should start in verbose mode
 No errors!
 UnionT ~> EqT fast path
+UnionT ~> StrictEqT fast path

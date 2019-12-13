@@ -4,7 +4,7 @@
 
 type Enum1 = 'A' | 'B' | 'C';
 
-type Enum2 = "D" | "E" | "F";
+type Enum2 = 'D' | 'E' | 'F';
 
 type Union =
   | Enum1

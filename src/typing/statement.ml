@@ -5161,7 +5161,21 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
       Flow.flow cx (t2, AssertBinaryInRHST reason_rhs);
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
     | StrictEqual
-    | StrictNotEqual
+    | StrictNotEqual ->
+      let (((_, t1), _) as left) = expression cx left in
+      let (((_, t2), _) as right) = expression cx right in
+      let desc =
+        RBinaryOperator
+          ( (match operator with
+            | StrictEqual -> "==="
+            | StrictNotEqual -> "!=="
+            | _ -> failwith "unreachable"),
+            desc_of_reason (reason_of_t t1),
+            desc_of_reason (reason_of_t t2) )
+      in
+      let reason = mk_reason desc loc in
+      Flow.flow cx (t1, StrictEqT { reason; flip = false; arg = t2 });
+      (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
     | Instanceof ->
       let left = expression cx left in
       let right = expression cx right in

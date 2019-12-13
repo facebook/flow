@@ -475,6 +475,7 @@ and _json_of_use_t_impl json_cx t =
           ("result", _json_of_t json_cx r);
           ("sink", _json_of_t json_cx t);
         ]
+      | StrictEqT { arg; _ } -> [("type", _json_of_t json_cx arg)]
       | EqT (_, _, t) -> [("type", _json_of_t json_cx t)]
       | AndT (_, right, res)
       | OrT (_, right, res)
@@ -2208,6 +2209,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | None -> spf "%s, %s" (specialize_cache cache) (kid ret)
           end
         t
+    | StrictEqT { arg; _ } -> p ~extra:(kid arg) t
     | ObjKitT (use_op, _, resolve_tool, tool, tout) ->
       p
         ~extra:

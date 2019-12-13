@@ -645,6 +645,12 @@ let equatable = function
     false
   | _ -> true
 
+let strict_equatable = function
+  | (AnyT _, _)
+  | (_, AnyT _) ->
+    true
+  | _ -> true
+
 (* Creates a union from a list of types. Since unions require a minimum of two
    types this function will return an empty type when there are no types in the
    list, or the list head when there is one type in the list. *)
@@ -2782,8 +2788,15 @@ struct
             if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
+        | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; _ }) ->
+          if union_optimization_guard cx (curry strict_equatable) u1 u2 then begin
+            if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
+          end else
+            flow_all_in_union cx trace rep1 u
         | (UnionT _, EqT (reason, flip, t)) when needs_resolution t ->
           rec_flow cx trace (t, EqT (reason, not flip, l))
+        | (UnionT _, StrictEqT { reason; flip; arg }) when needs_resolution arg ->
+          rec_flow cx trace (arg, StrictEqT { reason; flip = not flip; arg = l })
         | (UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result)) ->
           (* we have the check l.key === sentinel where l.key is a union *)
           if sense then
@@ -5962,6 +5975,7 @@ struct
         (**************************)
         | (l, ComparatorT (reason, flip, r)) -> flow_comparator cx trace reason flip l r
         | (l, EqT (reason, flip, r)) -> flow_eq cx trace reason flip l r
+        | (l, StrictEqT { reason; flip; arg = r }) -> flow_strict_eq cx trace reason flip l r
         (************************)
         (* unary minus operator *)
         (************************)
@@ -6782,6 +6796,20 @@ struct
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
         add_output cx ~trace (Error_message.EComparison reasons)
 
+  and flow_strict_eq cx trace reason flip l r =
+    if needs_resolution r then
+      rec_flow cx trace (r, StrictEqT { reason; flip = not flip; arg = l })
+    else
+      let (l, r) =
+        if flip then
+          (r, l)
+        else
+          (l, r)
+      in
+      if not @@ strict_equatable (l, r) then
+        let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
+        add_output cx ~trace (Error_message.EComparison reasons)
+
   and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let { flags = lflags; dict_t = ldict; call_t = lcall; props_tmap = lflds; proto_t = lproto } =
       l_obj
@@ -7083,6 +7111,7 @@ struct
     | (_, CJSExtractNamedExportsT _)
     | (_, ComparatorT _)
     | (_, DebugPrintT _)
+    | (_, StrictEqT _)
     | (_, EqT _)
     | (_, ExportTypeT _)
     | (_, IdxUnwrap _)
@@ -7372,6 +7401,7 @@ struct
     | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _
+    | StrictEqT _
     | EqT _
     | HasOwnPropT _
     | ImplementsT _

@@ -502,6 +502,12 @@ module rec TypeTerm : sig
        an arbitrary LB specified in the GuardT value, rather than the filtered
        result of the predicate itself *)
     | GuardT of predicate * t * t
+    (* === *)
+    | StrictEqT of {
+        reason: Reason.t;
+        flip: bool;
+        arg: t;
+      }
     (* == *)
     | EqT of reason * bool * t
     (* logical operators *)
@@ -2614,6 +2620,7 @@ end = struct
     | SetPrivatePropT (_, reason, _, _, _, _, _, _) -> reason
     | SetProtoT (reason, _) -> reason
     | SpecializeT (_, _, reason, _, _, _) -> reason
+    | StrictEqT { reason; _ } -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
     | ModuleExportsAssignT (reason, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
@@ -2793,6 +2800,7 @@ end = struct
     | SetProtoT (reason, t) -> SetProtoT (f reason, t)
     | SpecializeT (use_op, reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
+    | StrictEqT { reason; flip; arg } -> StrictEqT { reason = f reason; flip; arg }
     | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjKitT (use_op, f reason, resolve_tool, tool, tout)
     | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
@@ -2900,6 +2908,7 @@ end = struct
     | AssertForInRHST _
     | PredicateT (_, _)
     | GuardT (_, _, _)
+    | StrictEqT _
     | EqT (_, _, _)
     | AndT (_, _, _)
     | OrT (_, _, _)
@@ -3749,6 +3758,7 @@ let string_of_use_ctor = function
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
+  | StrictEqT _ -> "StrictEqT"
   | ObjKitT _ -> "ObjKitT"
   | SubstOnPredT _ -> "SubstOnPredT"
   | SuperT _ -> "SuperT"

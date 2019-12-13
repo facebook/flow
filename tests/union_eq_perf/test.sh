@@ -5,7 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 
 show_fast_path() {
-  grep "UnionT ~> EqT fast path" $1 | tail -n 1
+  grep "UnionT ~> EqT fast path" "$1" | tail -n 1
+  grep "UnionT ~> StrictEqT fast path" "$1" | tail -n 1
 }
 
 printf "\\nServer should start in verbose mode\\n"

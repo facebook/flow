@@ -149,6 +149,7 @@ type hash =
   | AssertForInRHSH
   | PredicateH
   | GuardH
+  | StrictEqH
   | EqH
   | AndH
   | OrH
@@ -357,6 +358,7 @@ let hash_of_use_ctor =
     | AssertForInRHST _ -> AssertForInRHSH
     | PredicateT _ -> PredicateH
     | GuardT _ -> GuardH
+    | StrictEqT _ -> StrictEqH
     | EqT _ -> EqH
     | AndT _ -> AndH
     | OrT _ -> OrH
