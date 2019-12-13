@@ -369,7 +369,6 @@ static size_t num_workers;
  * starting at 1. This is an offset into the worker local values in the heap. */
 static size_t worker_id;
 
-static size_t allow_hashtable_writes_by_current_process = 1;
 static size_t worker_can_exit = 1;
 
 /* Where the heap started (bottom) */
@@ -975,10 +974,6 @@ void assert_allow_removes(void) {
   assert(*allow_removes);
 }
 
-void assert_allow_hashtable_writes_by_current_process(void) {
-  assert(allow_hashtable_writes_by_current_process);
-}
-
 /*****************************************************************************/
 
 CAMLprim value hh_stop_workers(void) {
@@ -1004,13 +999,6 @@ CAMLprim value hh_set_can_worker_stop(value val) {
 CAMLprim value hh_allow_removes(value val) {
   CAMLparam1(val);
   *allow_removes = Bool_val(val);
-  CAMLreturn(Val_unit);
-}
-
-// TODO - DEAD CODE
-CAMLprim value hh_allow_hashtable_writes_by_current_process(value val) {
-  CAMLparam1(val);
-  allow_hashtable_writes_by_current_process = Bool_val(val);
   CAMLreturn(Val_unit);
 }
 
@@ -1333,7 +1321,6 @@ static value write_at(unsigned int slot, value data) {
        HASHTBL_WRITE_IN_PROGRESS
      )
   ) {
-    assert_allow_hashtable_writes_by_current_process();
     size_t alloc_size = 0;
     size_t orig_size = 0;
     hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
