@@ -1,3 +1,21 @@
+### 0.114.0
+
+Likely to cause new Flow errors:
+* Fixed the order of evaluation of JSX attributes and children to match runtime, so that refinements work properly. This can lead to new errors if refined values are used as children, and a function is called within an attribute, because the refinements are now invalidated in a different order. On the other hand, calling a function in a child no longer incorrectly invalidates values used as attributes. [[example](https://flow.org/try/#0JYWwDg9gTgLgBAJQKYEMDG8BmUIjgIilQ3wG4AoczAVwDsNgJa4AxACgG8APAGjgE8AvgC443UbWogARkih9+EqbKiCAlEoA2msXCIxqUZpO1xBlAG4oocLqID8kmXLgBeOABYATBSs3FcI7KLu7eFMCYcGxccACE7iY6AGRJAnEJ1NpqYuRwcAA8LLau3HAA9ABUcADOABYQmQAmcLJwEADWcBVlggIl-G5wiXzeggB8uXliMRna5lNibAFOKtmVNfVNQxDwrR1dPZP5ZSwTgkA)]
+* Added support for refinements on [optional chains](https://github.com/tc39/proposal-optional-chaining)! Now, examples like `if (x?.y)` and `if (x?.y === 42)` understand that `x` is truthy in the consequent. Flow also now refines subexpressions of optional chains. For example, given `obj?.fun(obj.value)`, the second `obj` is known to be truthy since it is only reachable if the earlier `obj?.fun` is also truthy; therefore, you don't need to optional-chain it again (`obj?.value`).
+
+New Features:
+* Added typechecking support for `symbol`! Note that just like `number` is not a `Number`, and vice versa, `symbol` is not a `Symbol`. In the core lib defs, we change usage of `Symbol` to `symbol & Symbol`. Eventually, it will just be `symbol`. The `symbol & Symbol` is temporary for one version to allow for existing usage of the `: Symbol` to be codemodded to `: symbol`.
+
+Bug fixes:
+* Optimized typechecking pointwise-equal unions, from O(n^2) to O(n)
+* Optimized reverse dependency computation, greatly reducing the time spent computing what needs to be rechecked after an edit
+* Fixed an error message that pointed at the definition of a write-only property instead of the callsite that tried to read it [[example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AqARASgLngbwFowBXGOAOwBdc8B7AM3oGcRKB1AS2EoAtdziAWwBGIGAF9xAbgBQHevAAUGTADoSZEFQCU+eOJlA)]
+* Fixed an issue where coverage results could be incorrect in [Types First](https://medium.com/flow-type/what-the-flow-team-has-been-up-to-54239c62004f) mode when a file is rechecked
+* Fixed an issue when Flow prints evaluated types like `$ElementType`, that led to printing `empty` instead. This improves hover tooltips.
+* Fixed several issues causing various processes to die uncleanly while exiting.
+
+
 ### 0.113.0
 Bug fixes:
 * Fixed autocomplete when at the end of file
