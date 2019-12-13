@@ -31,9 +31,6 @@ exception Sql_assertion_failure of int
 
 val connect : handle -> worker_id:int -> unit
 
-(* TODO - hack only? *)
-val allow_removes : bool -> unit
-
 (* TODO - can we hide after inlining SharedMem_js? *)
 val should_collect : [ `aggressive | `always_TEST | `gentle ] -> bool
 

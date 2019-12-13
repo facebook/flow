@@ -347,8 +347,6 @@ static size_t* log_level = NULL;
 
 static size_t* workers_should_exit = NULL;
 
-static size_t* allow_removes = NULL;
-
 /* Worker-local storage is cache line aligned. */
 static char* locals;
 #define LOCAL(id) ((local_t *)(locals + id * CACHE_ALIGN(sizeof(local_t))))
@@ -732,14 +730,11 @@ static void define_globals(char * shared_mem_init) {
   wasted_heap_size = (size_t*)(mem + 6*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  allow_removes = (size_t*)(mem + 7*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  hcounter_filled = (size_t*)(mem + 8*CACHE_LINE_SIZE);
+  hcounter_filled = (size_t*)(mem + 7*CACHE_LINE_SIZE);
 
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 9*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 8*CACHE_LINE_SIZE + (int)sizeof(int));
 
   assert (CACHE_LINE_SIZE >= sizeof(local_t));
   locals = mem;
@@ -791,7 +786,6 @@ static void init_shared_globals(
   *log_level = config_log_level;
   *workers_should_exit = 0;
   *wasted_heap_size = 0;
-  *allow_removes = 1;
 
   for (uint64_t i = 0; i <= num_workers; i++) {
     LOCAL(i)->counter = 0;
@@ -970,10 +964,6 @@ void assert_not_master(void) {
   assert(my_pid != *master_pid);
 }
 
-void assert_allow_removes(void) {
-  assert(*allow_removes);
-}
-
 /*****************************************************************************/
 
 CAMLprim value hh_stop_workers(void) {
@@ -993,12 +983,6 @@ CAMLprim value hh_resume_workers(void) {
 CAMLprim value hh_set_can_worker_stop(value val) {
   CAMLparam1(val);
   worker_can_exit = Bool_val(val);
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value hh_allow_removes(value val) {
-  CAMLparam1(val);
-  *allow_removes = Bool_val(val);
   CAMLreturn(Val_unit);
 }
 
@@ -1096,7 +1080,6 @@ CAMLprim value hh_collect(void) {
   // This function takes a boolean and returns unit.
   // Those are both immediates in the OCaml runtime.
   assert_master();
-  assert_allow_removes();
 
   // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
 
@@ -1569,7 +1552,6 @@ void hh_move(value key1, value key2) {
   unsigned int slot2 = find_slot(key2);
 
   assert_master();
-  assert_allow_removes();
   assert(hashtbl[slot1].hash == get_hash(key1));
   assert(hashtbl[slot2].addr == NULL);
   // We are taking up a previously empty slot. Let's increment the counter.
@@ -1592,7 +1574,6 @@ void hh_remove(value key) {
   unsigned int slot = find_slot(key);
 
   assert_master();
-  assert_allow_removes();
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
   size_t slot_size =

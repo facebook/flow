@@ -110,8 +110,6 @@ let init config ~num_workers =
     Hh_logger.log "Failed to use anonymous memfd init";
     shm_dir_init config ~num_workers config.shm_dirs
 
-external allow_removes : bool -> unit = "hh_allow_removes"
-
 external connect : handle -> worker_id:int -> unit = "hh_connect"
 
 (*****************************************************************************)
