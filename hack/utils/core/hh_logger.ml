@@ -80,6 +80,9 @@ let print_duration name t =
 let exc ?(prefix : string = "") ~(stack : string) (e : exn) : unit =
   print_with_newline "%s%s\n%s" prefix (Printexc.to_string e) stack
 
+let exception_ ?(prefix : string = "") (e : Exception.t) : unit =
+  exc ~prefix ~stack:(Exception.get_backtrace_string e) (Exception.unwrap e)
+
 module Level : sig
   type t =
     | Off

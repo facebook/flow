@@ -107,11 +107,7 @@ end = struct
 
   let return x = x
 
-  let catch ~f ~catch =
-    try f ()
-    with exn ->
-      let stack = Printexc.get_backtrace () in
-      catch ~stack exn
+  let catch ~f ~catch = (try f () with exn -> catch (Exception.wrap exn))
 
   let list_fold_values = List.fold
 
@@ -481,16 +477,15 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
   (****************************************************************************)
 
   let with_crash_record_exn source f =
-    Watchman_process.catch ~f ~catch:(fun ~stack e ->
-        Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") ~stack e;
-        raise e)
+    Watchman_process.catch ~f ~catch:(fun exn ->
+        Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
+        Exception.reraise exn)
 
   let with_crash_record_opt source f =
     Watchman_process.catch
       ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
-      ~catch:(fun ~stack:_ e ->
-        let exn = Exception.wrap e in
-        match e with
+      ~catch:(fun exn ->
+        match Exception.unwrap exn with
         (* Avoid swallowing these *)
         | Exit_status.Exit_with _
         | Watchman_restarted ->
@@ -610,7 +605,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
               ~conn
               (watch_project (Path.to_string path))
             >|= fun response -> Some response)
-          ~catch:(fun ~stack:_ _ -> Watchman_process.return None)
+          ~catch:(fun _ -> Watchman_process.return None)
         >|= fun response ->
         match response with
         | None ->
@@ -791,8 +786,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         ~f:(fun () ->
           with_crash_record_exn source (fun () -> f env)
           >|= fun (env, result) -> (Watchman_alive env, result))
-        ~catch:(fun ~stack exn ->
-          match exn with
+        ~catch:(fun exn ->
+          match Exception.unwrap exn with
           | Sys_error msg when msg = "Broken pipe" ->
             Hh_logger.log "Watchman Pipe broken.";
             close_channel_on_instance env
@@ -825,8 +820,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
           | Watchman_error msg ->
             Hh_logger.log "Watchman error: %s. Closing channel" msg;
             close_channel_on_instance env
-          | e ->
-            let msg = Printf.sprintf "%s\n%s" (Exn.to_string e) stack in
+          | _ ->
+            let msg = Exception.to_string exn in
             EventLogger.watchman_uncaught_failure msg;
             raise Exit_status.(Exit_with Watchman_failed))
     in
@@ -850,7 +845,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         >|= fun response ->
         env.clockspec <- J.get_string_val "clock" response;
         extract_file_names env response)
-      ~catch:(fun ~stack:_ _ -> raise Exit_status.(Exit_with Watchman_failed))
+      ~catch:(fun _ -> raise Exit_status.(Exit_with Watchman_failed))
 
   let make_state_change_response state name data =
     let metadata = J.try_get_val "metadata" data in
