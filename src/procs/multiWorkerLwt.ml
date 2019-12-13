@@ -135,7 +135,6 @@ let call workers ~job ~merge ~neutral ~next =
         Lwt.return_unit]
   )
 
-(* A separate abstract type from MultiWorker.worker forces users to always use MultiWorkerLwt *)
 type worker = WorkerController.worker
 
 let next ?progress_fn ?max_size workers =

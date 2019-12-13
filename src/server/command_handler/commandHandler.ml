@@ -946,7 +946,7 @@ let get_ephemeral_handler genv command =
       ~options
       (handle_find_module ~options ~reader ~moduleref ~filename)
   | ServerProt.Request.FIND_REFS { filename; line; char; global; multi_hop } ->
-    (* find-refs can take a while and may use MultiWorker. Furthermore, it may do a recheck and
+    (* find-refs can take a while and may use MultiWorkerLwt. Furthermore, it may do a recheck and
      * change env. Each of these 3 facts disqualifies find-refs from being parallelizable *)
     Handle_nonparallelizable
       (handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop)

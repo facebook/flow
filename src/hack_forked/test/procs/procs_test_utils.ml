@@ -44,7 +44,7 @@ let make_workers n =
     }
   in
   let handle = SharedMem.init ~num_workers:n default_sharedmem_config in
-  let workers = MultiWorker.make handle entry n (Gc.get ()) handle in
+  let workers = MultiWorkerLwt.make handle entry n (Gc.get ()) handle in
   workers
 
 let cleanup () = WorkerController.killall ()

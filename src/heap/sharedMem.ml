@@ -417,7 +417,7 @@ functor
    * LocalChanges can be committed. This will apply the changes to the previous
    * stack, or directly to shared memory if there are no other active stacks.
    * Since changes are kept local to the process, this is NOT compatible with
-   * the parallelism provided by MultiWorker.ml
+   * the parallelism provided by multiWorkerLwt.ml
    *)
     module LocalChanges = struct
       type action =
