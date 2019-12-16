@@ -3328,10 +3328,10 @@ struct
         | (AnyT _, UseT (use_op, ExactT (_, t))) -> rec_flow cx trace (l, UseT (use_op, t))
         | (DefT (_, _, EmptyT _), UseT (use_op, ExactT (_, t))) ->
           rec_flow cx trace (l, UseT (use_op, t))
-        (* Shapes need to be trapped here to avoid error-ing when used as exact types. Below (see
-       "matching shapes of objects"), we have a rule that allows ShapeT(o) to be used just as o is
-       allowed to be used. *)
-        | (ShapeT o, UseT (_, ExactT _)) -> rec_flow cx trace (o, u)
+        (* Shapes need to be trapped here to avoid error-ing when used as exact types.
+           Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
+           to be used just as o is allowed to be used. *)
+        | (ShapeT o, (UseT (_, ExactT _) | MakeExactT _)) -> rec_flow cx trace (o, u)
         (* inexact LB ~> $Exact<UB>. error *)
         | (_, UseT (use_op, ExactT (ru, _))) ->
           let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in

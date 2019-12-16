@@ -9,3 +9,13 @@ declare function update(
 ): void;
 
 update((prevState: State) => 0);
+
+type ShapeState = $Shape<{|
+  foo: string,
+|}>;
+
+declare function update2(
+  bar: ($Exact<ShapeState>) => number,
+): void;
+
+update2((prevState: ShapeState) => 0);
