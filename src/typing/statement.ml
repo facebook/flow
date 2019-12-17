@@ -6969,7 +6969,6 @@ and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
       let get_prop_u = apply_opt_use opt_use t in
       Flow.flow cx (tobj, get_prop_u))
 
-(* TODO: switch to TypeScript specification of Object *)
 and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args =
   Ast.Expression.(
     let reason = mk_reason (RCustom (spf "`Object.%s`" m)) loc in
