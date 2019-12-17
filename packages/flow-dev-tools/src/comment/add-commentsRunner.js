@@ -794,6 +794,8 @@ function addCommentToCode(
    * template string when we reach the line with the error */
   const [inside, ast] = getContext(loc, path);
 
+  const inJSX = inside === JSX_FRAGMENT || inside === JSX;
+
   const lines = code.split('\n');
   if (inside === NORMAL) {
     // This is easy, just add the comment to the preceding line
@@ -804,10 +806,7 @@ function addCommentToCode(
         lines.slice(loc.start.line - 1),
       )
       .join('\n');
-  } else if (
-    (inside === JSX_FRAGMENT || inside === JSX) &&
-    ast.type === 'JSXElement'
-  ) {
+  } else if (inJSX && ast.type === 'JSXElement') {
     /* Ok, so we have something like
      * <jsx>
      *   <foo id={10*'hello'} />
@@ -831,7 +830,7 @@ function addCommentToCode(
       .join('\n');
   } else if (
     inside === TEMPLATE ||
-    (inside === JSX && ast.type === 'JSXExpressionContainer')
+    (inJSX && ast.type === 'JSXExpressionContainer')
   ) {
     /* Ok, so we have something like
      *
@@ -863,8 +862,7 @@ function addCommentToCode(
      *     10 * 'hello'}
      * `;
      */
-    const start_col =
-      inside === JSX ? ast.loc.start.column + 1 : ast.loc.start.column;
+    const start_col = inJSX ? ast.loc.start.column + 1 : ast.loc.start.column;
     const line = lines[loc.start.line - 1];
     const part1 = line.substr(0, start_col);
     const match = part1.match(/^ */);
