@@ -349,6 +349,8 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_name: string;
     }
+  | EEnumCheckedInIf of 'loc virtual_reason
+  (* end enum error messages *)
   | EAssignExportedConstLikeBinding of {
       loc: 'loc;
       definition: 'loc virtual_reason;
@@ -824,6 +826,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EEnumInvalidCheck { reason = map_reason reason; enum_name; members }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
+  | EEnumCheckedInIf reason -> EEnumCheckedInIf (map_reason reason)
   | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
     EAssignExportedConstLikeBinding
       { loc = f loc; definition = map_reason definition; binding_kind }
@@ -997,6 +1000,7 @@ let util_use_op_of_msg nope util = function
   | EEnumNotAllChecked _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
+  | EEnumCheckedInIf _
   | EAssignExportedConstLikeBinding _ ->
     nope
 
@@ -1051,7 +1055,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
-  | EEnumMemberUsedAsType { reason; _ } ->
+  | EEnumMemberUsedAsType { reason; _ }
+  | EEnumCheckedInIf reason ->
     Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -2986,6 +2991,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Only the enum itself, ";
         code enum_name;
         text ", is a type.";
+      ]
+    in
+    Normal { features }
+  | EEnumCheckedInIf reason ->
+    let features =
+      [
+        text "Invalid check of an enum in an if statement. ";
+        text "Please use a switch statement to exhaustively check ";
+        ref reason;
+        text " instead.";
       ]
     in
     Normal { features }

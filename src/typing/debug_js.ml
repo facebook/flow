@@ -3018,6 +3018,7 @@ let dump_error_message =
         (SSet.elements members |> String.concat ", ")
     | EEnumMemberUsedAsType { reason; enum_name } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
+    | EEnumCheckedInIf reason -> spf "EEnumCheckedInIf (%s)" (dump_reason cx reason)
     | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
       spf
         "EAssignExportedConstLikeBinding (%s) (%s) (%s)"
