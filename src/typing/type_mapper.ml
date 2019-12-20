@@ -1000,12 +1000,12 @@ class virtual ['a] t_with_uses =
           t
         else
           GuardT (p', t1', t2')
-      | StrictEqT { reason; flip; arg } ->
+      | StrictEqT { reason; cond_context; flip; arg } ->
         let arg' = self#type_ cx map_cx arg in
         if arg' == arg then
           t
         else
-          StrictEqT { reason; flip; arg = arg' }
+          StrictEqT { reason; cond_context; flip; arg = arg' }
       | EqT (r, flip, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

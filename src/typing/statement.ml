@@ -821,7 +821,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
       let (loc_test, _) = test in
-      let (test_ast, preds, not_preds, xts) = predicates_of_condition cx test in
+      let (test_ast, preds, not_preds, xts) = predicates_of_condition cx ~cond:IfTest test in
       (* grab a reference to the incoming env -
          we'll restore it and merge branched envs later *)
       let start_env = Env.peek_env () in
@@ -1149,8 +1149,15 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                                  right = expr;
                                }) )
                        in
+                       let case_test_reason = mk_reason (RCustom "case") (fst expr) in
+                       let switch_discriminant_reason =
+                         mk_reason (RCustom "switch") (fst discriminant)
+                       in
                        let ((_, fake_ast), preds, not_preds, xtypes) =
-                         predicates_of_condition cx fake
+                         predicates_of_condition
+                           cx
+                           ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
+                           fake
                        in
                        let expr_ast =
                          match fake_ast with
@@ -1318,7 +1325,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         | None -> (VoidT.at loc |> with_trust literal_trust, None)
         | Some expr ->
           if Env.in_predicate_scope () then
-            let ((((_, t), _) as ast), p_map, n_map, _) = predicates_of_condition cx expr in
+            let ((((_, t), _) as ast), p_map, n_map, _) =
+              predicates_of_condition ~cond:OtherTest cx expr
+            in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
           else
@@ -1583,7 +1592,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       (* generate loop test preds and their complements *)
-      let (test_ast, preds, not_preds, orig_types) = predicates_of_condition cx test in
+      let (test_ast, preds, not_preds, orig_types) =
+        predicates_of_condition ~cond:OtherTest cx test
+      in
       (* save current changeset and install an empty one *)
       let oldset = Changeset.Global.clear () in
       (* widen_env wraps specifics in tvars, anticipating widening inflows *)
@@ -1652,7 +1663,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None then
         Env.havoc_vars (Changeset.Global.peek ());
 
-      let (test_ast, preds, not_preds, xtypes) = predicates_of_condition cx test in
+      let (test_ast, preds, not_preds, xtypes) = predicates_of_condition ~cond:OtherTest cx test in
       (* body_env = Post' *)
       let done_env = Env.clone_env body_env in
       (* done_env = Post' *)
@@ -1707,7 +1718,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             | None ->
               (None, Key_map.empty, Key_map.empty, Key_map.empty) (* TODO: prune the "not" case *)
             | Some expr ->
-              let (expr_ast, preds, not_preds, xtypes) = predicates_of_condition cx expr in
+              let (expr_ast, preds, not_preds, xtypes) =
+                predicates_of_condition ~cond:OtherTest cx expr
+              in
               (Some expr_ast, preds, not_preds, xtypes)
           in
           let body_env = Env.clone_env do_env in
@@ -1753,7 +1766,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
           let eval_right () =
             let ((((right_loc, _), _) as right_ast), preds, _, xtypes) =
-              predicates_of_condition cx right
+              predicates_of_condition ~cond:OtherTest cx right
             in
             let (_ : Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
             right_ast
@@ -1866,7 +1879,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       let eval_right () =
         let ((((right_loc, t), _) as right_ast), preds, _, xtypes) =
-          predicates_of_condition cx right
+          predicates_of_condition ~cond:OtherTest cx right
         in
         let (_ : Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
         let elem_t = Tvar.mk cx reason in
@@ -2999,7 +3012,7 @@ and expression_or_spread_list cx undef_loc =
             (UnresolvedSpreadArg t, Some (Spread (loc, { SpreadElement.argument }))))))
 
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
-and expression ?(is_cond = false) cx (loc, e) = expression_ ~is_cond cx loc e
+and expression ?cond cx (loc, e) = expression_ ~cond cx loc e
 
 and this_ cx loc =
   Ast.Expression.(
@@ -3009,7 +3022,7 @@ and this_ cx loc =
 
 and super_ cx loc = Env.var_ref cx (internal_name "super") loc
 
-and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   let make_trust = Context.trust_constructor cx in
   let ex = (loc, e) in
   Ast.Expression.(
@@ -3047,8 +3060,8 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
       Flow.flow cx (infer_t, TypeCastT (use_op, t));
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot' })
-    | Member _ -> subscript ~is_cond cx ex
-    | OptionalMember _ -> subscript ~is_cond cx ex
+    | Member _ -> subscript ~cond cx ex
+    | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->
       let reason = mk_reason RObjectLit loc in
       let (t, properties) = object_ cx reason properties in
@@ -3220,11 +3233,11 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       in
       ( (loc, new_call cx reason ~use_op class_ targts argts),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments } )
-    | Call _ -> subscript ~is_cond cx ex
-    | OptionalCall _ -> subscript ~is_cond cx ex
+    | Call _ -> subscript ~cond cx ex
+    | OptionalCall _ -> subscript ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason RConditional loc in
-      let (test, preds, not_preds, xtypes) = predicates_of_condition cx test in
+      let (test, preds, not_preds, xtypes) = predicates_of_condition ~cond:OtherTest cx test in
       let env = Env.peek_env () in
       let oldset = Changeset.Global.clear () in
       let then_env = Env.clone_env env in
@@ -3539,7 +3552,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           Tast_utils.unchecked_mapper#expression ex))
 
 (* Handles operations that may traverse optional chains.
-    If is_cond is true, will allow non-existent properties to be looked up
+    If there is some cond, will allow non-existent properties to be looked up
       at the top-level of the chain.
     If is_existence_check is true and the top of the chain is a member lookup
       "a.x", generate the predicate "a.x exists" and "a has property x".
@@ -3570,7 +3583,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         does.
       * result of applying sentinel_refine to the top of the chain, if anything.
 *)
-and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
+and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
   let open Ast.Expression in
   let factor_out_optional (loc, e) =
     let (opt_state, e') =
@@ -3645,12 +3658,12 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
   let exists_pred ((loc, _) as expr) lhs_t =
     if is_existence_check then
       let pred =
-        (* is_cond is true when this expression is the top-level of a conditional,
+        (* there is some cond when this expression is the top-level of a conditional,
            "if ([expr]) {...}". In this case, we check both that the expression exists and
            that it has a truthy type (that's what the "ExistsP" predicate does). If we're
-           deeper in the chain, then is_cond will be false, and we only care if the expression
+           deeper in the chain, then cond will be None, and we only care if the expression
            is null or undefined, not if it's false/0/"". *)
-        if is_cond then
+        if Option.is_some cond then
           ExistsP (Some loc)
         else
           NotP MaybeP
@@ -3665,7 +3678,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
     if is_existence_check then
       let prop_pred =
         (* see comment on exists_pred *)
-        if is_cond then
+        if Option.is_some cond then
           PropExistsP (name, prop_reason)
         else
           PropNonMaybeP (name, prop_reason)
@@ -4025,7 +4038,9 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             Abnormal.Throw
         | (None, Expression cond :: arguments) ->
           let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
-          let ((((_, cond_t), _) as cond), preds, _, xtypes) = predicates_of_condition cx cond in
+          let ((((_, cond_t), _) as cond), preds, _, xtypes) =
+            predicates_of_condition ~cond:OtherTest cx cond
+          in
           let _ = Env.refine_with_preds cx loc preds xtypes in
           let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
           Flow.flow cx (cond_t, InvariantT reason);
@@ -4111,7 +4126,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             Unsoundness.at InferenceHooks ploc
           else
             let use_op = Op (GetProperty (mk_expression_reason ex)) in
-            get_prop ~use_op ~is_cond cx expr_reason super (prop_reason, name)
+            get_prop ~use_op ~cond cx expr_reason super (prop_reason, name)
       in
       let property = Member.PropertyIdentifier ((ploc, super), id) in
       let ast =
@@ -4162,7 +4177,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
         * T1 = number
         * T2 = void, both from `a: ?{...}` and from `a: {b? : {...}}`
         * exp = ast for `a?.b?.c` with type T1 U T2
-        * preds = assuming the overall function was called with ~is_cond,
+        * preds = assuming the overall function was called with ~cond,
               "a exists and has non-nullish property b", "a.b exists and has
               truthy property c", and "a.b.c is truthy", as well as the the
               types of a, a.b, and a.b.c
@@ -4315,7 +4330,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
     | NewChain ->
       let lhs_reason = mk_expression_reason object_ in
       let ((filtered_t, voided_t, object_ast, preds, _) as object_data) =
-        optional_chain ~is_cond:false ~is_existence_check:true cx object_
+        optional_chain ~cond:None ~is_existence_check:true cx object_
       in
       begin
         match refine () with
@@ -4348,7 +4363,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
       end
     | ContinueChain ->
       handle_continue_chain
-        (optional_chain ~is_cond:false ~is_existence_check:false cx object_)
+        (optional_chain ~cond:None ~is_existence_check:false cx object_)
         ~refine
         ~refinement_action
         ~subexpressions
@@ -4473,7 +4488,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
       let expr_reason = mk_expression_reason ex in
       let prop_reason = mk_reason (RProperty (Some name)) ploc in
       let use_op = Op (GetProperty expr_reason) in
-      let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
+      let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
       let test_hooks obj_t =
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
           Some (Unsoundness.at InferenceHooks ploc)
@@ -4790,15 +4805,15 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
          it in the chain was a "?." operator, we'll need to add the predicate that the
          property exists, so that e.g. "a?.b" generates the predicates "a.b exists",
          "a has prop b", and "a exists". *)
-      let (((_, t), _) as res) = expression ~is_cond cx ex in
+      let (((_, t), _) as res) = expression ?cond cx ex in
       let preds = mk_preds @@ exists_pred (loc, e') t in
       (t, None, res, preds, None)
     | _ ->
-      let (((_, t), _) as res) = expression ~is_cond cx ex in
+      let (((_, t), _) as res) = expression ?cond cx ex in
       (t, None, res, None, None))
 
-and subscript ~is_cond cx ex =
-  let (_, _, ast, _, _) = optional_chain ~is_cond ~is_existence_check:false cx ex in
+and subscript ~cond cx ex =
+  let (_, _, ast, _, _) = optional_chain ~cond ~is_existence_check:false cx ex in
   ast
 
 (* Handles function calls that appear in conditional contexts. The main
@@ -5174,7 +5189,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
             desc_of_reason (reason_of_t t2) )
       in
       let reason = mk_reason desc loc in
-      Flow.flow cx (t1, StrictEqT { reason; flip = false; arg = t2 });
+      Flow.flow cx (t1, StrictEqT { reason; cond_context = None; flip = false; arg = t2 });
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
     | Instanceof ->
       let left = expression cx left in
@@ -5242,7 +5257,9 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let ((((_, t1), _) as left), _, not_map, xtypes) = predicates_of_condition cx left in
+      let ((((_, t1), _) as left), _, not_map, xtypes) =
+        predicates_of_condition ~cond:OtherTest cx left
+      in
       let (((_, t2), _) as right) =
         Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx right)
       in
@@ -5250,7 +5267,9 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
       ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
         { operator = Or; left; right } )
     | And ->
-      let ((((_, t1), _) as left), map, _, xtypes) = predicates_of_condition cx left in
+      let ((((_, t1), _) as left), map, _, xtypes) =
+        predicates_of_condition ~cond:OtherTest cx left
+      in
       let (((_, t2), _) as right) =
         Env.in_refined_env cx loc map xtypes (fun () -> expression cx right)
       in
@@ -5338,7 +5357,7 @@ and assign_member
       match (optional, mode) with
       | ((NewChain | ContinueChain), Delete) ->
         let (o, _, _object, preds, _) =
-          optional_chain ~is_cond:false ~is_existence_check:false cx obj
+          optional_chain ~cond:None ~is_existence_check:false cx obj
         in
         (o, _object, preds)
       | _ ->
@@ -5693,7 +5712,7 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
       let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
       let use_op = Op (GetProperty reason) in
-      get_prop ~is_cond:false cx reason ~use_op react (reason, "Fragment")
+      get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_openingElement, children_loc) in
@@ -6232,11 +6251,13 @@ and mk_or map1 map2 =
    - map of unrefined types for lvalues found in refinement maps
    - typed AST of the test expression
  *)
-and predicates_of_condition cx e =
+and predicates_of_condition cx ~cond e =
   Ast.(
     Expression.(
       (* refinement key if expr is eligible, along with unrefined type *)
-      let refinable_lvalue ~allow_optional e = (Refinement.key ~allow_optional e, condition cx e) in
+      let refinable_lvalue ~allow_optional e =
+        (Refinement.key ~allow_optional e, condition ~cond cx e)
+      in
       (* package empty result (no refinements derived) from test type *)
       let empty_result test_tast = (test_tast, Key_map.empty, Key_map.empty, Key_map.empty) in
       let add_predicate key unrefined_t pred sense (test_tast, ps, notps, tmap) =
@@ -6256,7 +6277,10 @@ and predicates_of_condition cx e =
           Key_map.add key unrefined_t tmap )
       in
       let flow_eqt ~strict loc (t1, t2) =
-        if not strict then
+        if strict then
+          let reason = mk_reason (RCustom "strict equality comparison") loc in
+          Flow.flow cx (t1, StrictEqT { reason; cond_context = Some cond; flip = false; arg = t2 })
+        else
           let reason = mk_reason (RCustom "non-strict equality comparison") loc in
           Flow.flow cx (t1, EqT (reason, false, t2))
       in
@@ -6314,7 +6338,7 @@ and predicates_of_condition cx e =
              functionality of optional_chain here. *)
           let (_, _, ast, preds, sentinel_refinement) =
             optional_chain
-              ~is_cond:true (* We do want to allow possibly absent properties... *)
+              ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
               ~is_existence_check:
                 false
                 (* ...but we don't generate predicates about
@@ -6325,7 +6349,7 @@ and predicates_of_condition cx e =
               expr
           in
           (ast, preds, sentinel_refinement)
-        | _ -> (condition cx expr, None, None)
+        | _ -> (condition cx ~cond expr, None, None)
       in
       let extend_with_chain_preds ((ast, preds, not_preds, xts1) as out) chain_preds sense =
         let out =
@@ -6475,13 +6499,13 @@ and predicates_of_condition cx e =
         match Refinement.key ~allow_optional:true target with
         | Some name ->
           let (filtered_out, _, targ_ast, chain_preds, _) =
-            optional_chain ~is_cond:true ~is_existence_check:false cx target
+            optional_chain ~cond:(Some cond) ~is_existence_check:false cx target
           in
           let (ast, pred) = make_ast_and_pred targ_ast bool in
           let out = result ast name filtered_out pred sense in
           extend_with_chain_preds out chain_preds chain_sense
         | None ->
-          let targ_ast = condition cx target in
+          let targ_ast = condition cx ~cond target in
           let (ast, _) = make_ast_and_pred targ_ast bool in
           empty_result ast
       in
@@ -6509,7 +6533,7 @@ and predicates_of_condition cx e =
             sense
             ((sense && not_undef) || ((not sense) && not not_undef))
         | None ->
-          let arg = condition cx arg in
+          let arg = condition cx ~cond arg in
           Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
           empty_result ((loc, bool), reconstruct_ast arg)
       in
@@ -6773,7 +6797,9 @@ and predicates_of_condition cx e =
       (* member expressions *)
       | (_, Member _)
       | (_, OptionalMember _) ->
-        let (_, _, ast, preds, _) = optional_chain ~is_cond:true ~is_existence_check:true cx e in
+        let (_, _, ast, preds, _) =
+          optional_chain ~cond:(Some cond) ~is_existence_check:true cx e
+        in
         begin
           match preds with
           | None -> empty_result ast
@@ -6864,9 +6890,11 @@ and predicates_of_condition cx e =
         instance_test loc arg make_ast_and_pred true true
       (* test1 && test2 *)
       | (loc, Logical { Logical.operator = Logical.And; left; right }) ->
-        let ((((_, t1), _) as left_ast), map1, not_map1, xts1) = predicates_of_condition cx left in
+        let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
+          predicates_of_condition cx ~cond left
+        in
         let ((((_, t2), _) as right_ast), map2, not_map2, xts2) =
-          Env.in_refined_env cx loc map1 xts1 (fun () -> predicates_of_condition cx right)
+          Env.in_refined_env cx loc map1 xts1 (fun () -> predicates_of_condition cx ~cond right)
         in
         let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
         let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))) in
@@ -6878,9 +6906,11 @@ and predicates_of_condition cx e =
       (* test1 || test2 *)
       | (loc, Logical { Logical.operator = Logical.Or; left; right }) ->
         let () = check_default_pattern cx left right in
-        let ((((_, t1), _) as left_ast), map1, not_map1, xts1) = predicates_of_condition cx left in
+        let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
+          predicates_of_condition cx ~cond left
+        in
         let ((((_, t2), _) as right_ast), map2, not_map2, xts2) =
-          Env.in_refined_env cx loc not_map1 xts1 (fun () -> predicates_of_condition cx right)
+          Env.in_refined_env cx loc not_map1 xts1 (fun () -> predicates_of_condition cx ~cond right)
         in
         let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
         let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))) in
@@ -6891,7 +6921,7 @@ and predicates_of_condition cx e =
           Key_map.union xts1 xts2 )
       (* !test *)
       | (loc, Unary { Unary.operator = Unary.Not; argument; comments }) ->
-        let (arg, map, not_map, xts) = predicates_of_condition cx argument in
+        let (arg, map, not_map, xts) = predicates_of_condition cx ~cond argument in
         let ast' = Unary { Unary.operator = Unary.Not; argument = arg; comments } in
         let t_out = BoolT.at loc |> with_trust bogus_trust in
         let ast = ((loc, t_out), ast') in
@@ -6938,7 +6968,7 @@ and predicates_of_condition cx e =
    accesses are provisionally allowed even when such properties do not exist.
    This accommodates the common JavaScript idiom of testing for the existence
    of a property before using that property. *)
-and condition cx e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t = expression ~is_cond:true cx e
+and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t = expression ~cond cx e
 
 and get_private_field_opt_use reason ~use_op name =
   let class_entries = Env.get_class_entries () in
@@ -6957,14 +6987,14 @@ and get_private_field cx reason ~use_op tobj name =
    expressions out of `expression`, somewhat like what assignment_lhs does. That
    would make everything involving Refinement be in the same place.
 *)
-and get_prop_opt_use ~is_cond reason ~use_op (prop_reason, name) =
-  if is_cond then
+and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
+  if Option.is_some cond then
     OptTestPropT (reason, mk_id (), Named (prop_reason, name))
   else
     OptGetPropT (use_op, reason, Named (prop_reason, name))
 
-and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
-  let opt_use = get_prop_opt_use ~is_cond reason ~use_op (prop_reason, name) in
+and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
+  let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
   Tvar.mk_where cx reason (fun t ->
       let get_prop_u = apply_opt_use opt_use t in
       Flow.flow cx (tobj, get_prop_u))
