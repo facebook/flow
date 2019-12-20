@@ -3016,11 +3016,6 @@ let dump_error_message =
         (dump_reason cx reason)
         enum_name
         (SSet.elements members |> String.concat ", ")
-    | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
-      spf
-        "EEnumExhaustiveCheckOfUnion (%s) (%s)"
-        (dump_reason cx reason)
-        (dump_reason cx union_reason)
     | EEnumMemberUsedAsType { reason; enum_name } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
     | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
