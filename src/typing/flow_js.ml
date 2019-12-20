@@ -650,9 +650,10 @@ let strict_equatable_error cond_context (l, r) =
     lazy
       (match cond_context with
       | Some (SwitchTest { case_test_reason; switch_discriminant_reason }) ->
-        (* TODO: ExhaustiveCheck will be renamed to something more general *)
         let use_op =
-          Op (ExhaustiveCheck { case = case_test_reason; switch = switch_discriminant_reason })
+          Op
+            (SwitchCheck
+               { case_test = case_test_reason; switch_discriminant = switch_discriminant_reason })
         in
         Error_message.EIncompatibleWithUseOp (reason_of_t l, reason_of_t r, use_op)
       | _ ->
@@ -9858,7 +9859,7 @@ struct
                   | InitField _ ->
                     true
                   | Cast _
-                  | ExhaustiveCheck _
+                  | SwitchCheck _
                   | ClassExtendsCheck _
                   | ClassImplementsCheck _
                   | ClassOwnProtoCheck _

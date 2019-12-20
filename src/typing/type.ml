@@ -358,9 +358,9 @@ module rec TypeTerm : sig
         lhs: 'loc virtual_reason;
         prop: 'loc virtual_reason;
       }
-    | ExhaustiveCheck of {
-        case: 'loc virtual_reason;
-        switch: 'loc virtual_reason;
+    | SwitchCheck of {
+        case_test: 'loc virtual_reason;
+        switch_discriminant: 'loc virtual_reason;
       }
     | UnknownUse
 
@@ -3040,8 +3040,9 @@ end = struct
         SetProperty { lhs = mod_reason lhs; prop = mod_reason prop; value = mod_reason value }
       | UpdateProperty { lhs; prop } ->
         UpdateProperty { lhs = mod_reason lhs; prop = mod_reason prop }
-      | ExhaustiveCheck { case; switch } ->
-        ExhaustiveCheck { case = mod_reason case; switch = mod_reason switch }
+      | SwitchCheck { case_test; switch_discriminant } ->
+        SwitchCheck
+          { case_test = mod_reason case_test; switch_discriminant = mod_reason switch_discriminant }
       | UnknownUse -> UnknownUse
     in
     let mod_loc_of_frame_use_op = function
@@ -3491,7 +3492,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | TypeApplication { type' = op }
   | SetProperty { value = op; _ }
   | UpdateProperty { lhs = op; _ }
-  | ExhaustiveCheck { case = op; _ } ->
+  | SwitchCheck { case_test = op; _ } ->
     aloc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
@@ -3629,7 +3630,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | TypeApplication _ -> "TypeApplication"
   | SetProperty _ -> "SetProperty"
   | UpdateProperty _ -> "UpdateProperty"
-  | ExhaustiveCheck _ -> "ExhaustiveCheck"
+  | SwitchCheck _ -> "SwitchCheck"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function
