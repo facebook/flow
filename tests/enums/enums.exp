@@ -1217,7 +1217,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:8
 
-Invalid check at case in switch [1] because `F` [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
 
    exhaustive-check.js:95:8
    95|   case F.A:
@@ -1245,7 +1245,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:8
 
-Invalid check at case in switch [1] because `F` [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
 
    exhaustive-check.js:98:8
    98|   case F.B:
@@ -1273,7 +1273,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:105:8
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with string [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
 
    exhaustive-check.js:105:8
    105|   case E.A:
@@ -1297,7 +1297,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:108:8
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with string [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
 
    exhaustive-check.js:108:8
    108|   case E.B:
@@ -1321,7 +1321,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:116:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with undefined [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
 
    exhaustive-check.js:116:10
    116|     case E.A:
@@ -1345,7 +1345,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:118:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with undefined [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
 
    exhaustive-check.js:118:10
    118|     case E.B:
@@ -1369,7 +1369,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:125:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with null or undefined [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
 
    exhaustive-check.js:125:10
    125|     case E.A:
@@ -1393,7 +1393,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:127:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with null or undefined [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
 
    exhaustive-check.js:127:10
    127|     case E.B:
@@ -1417,7 +1417,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:134:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with `F` [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
 
    exhaustive-check.js:134:10
    134|     case E.A:
@@ -1441,7 +1441,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:136:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with `F` [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
 
    exhaustive-check.js:136:10
    136|     case E.B:
@@ -1465,7 +1465,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:143:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with string [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
 
    exhaustive-check.js:143:10
    143|     case E.A:
@@ -1489,7 +1489,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:145:10
 
-Invalid check at case in switch [1] because `E` [2] is incompatible with string [3].
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
 
    exhaustive-check.js:145:10
    145|     case E.B:
@@ -1539,7 +1539,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:154:8
 
-Invalid check at case in switch [1] because `F` [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
 
    exhaustive-check.js:154:8
    154|   case F.A:

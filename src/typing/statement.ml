@@ -1149,9 +1149,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                                  right = expr;
                                }) )
                        in
-                       let case_test_reason = mk_reason (RCustom "case") (fst expr) in
+                       let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
                        let switch_discriminant_reason =
-                         mk_reason (RCustom "switch") (fst discriminant)
+                         mk_reason (RCustom "switch discriminant") (fst discriminant)
                        in
                        let ((_, fake_ast), preds, not_preds, xtypes) =
                          predicates_of_condition
