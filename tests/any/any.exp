@@ -15,6 +15,40 @@ References:
             ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- ex_special_cases.js:41:21
+
+Cannot assign `array[receiver.name]` to `test1` because number [1] is incompatible with string [2].
+
+   ex_special_cases.js:41:21
+   41| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
+                           ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   ex_special_cases.js:40:26
+   40| declare var array: Array<number>;
+                                ^^^^^^ [1]
+   ex_special_cases.js:41:12
+   41| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- ex_special_cases.js:42:21
+
+Cannot assign `array[receiver.name()]` to `test2` because number [1] is incompatible with string [2].
+
+   ex_special_cases.js:42:21
+   42| var test2: string = array[receiver.name()] // likewise
+                           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   ex_special_cases.js:40:26
+   40| declare var array: Array<number>;
+                                ^^^^^^ [1]
+   ex_special_cases.js:42:12
+   42| var test2: string = array[receiver.name()] // likewise
+                  ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- flowfixme.js:14:27
 
 Cannot resolve name `nnumber`.
@@ -117,4 +151,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors

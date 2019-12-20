@@ -1765,17 +1765,6 @@ struct
         (* common implicit conversions *)
         (*******************************)
         | (_, UseT (_, DefT (_, _, NumT _))) when numeric l -> ()
-        | (_, UseT (_, AnyT _)) when function_like l -> ()
-        | (AnyT _, GetPropT (_, _, Named (_, x), _))
-        | (AnyT _, SetPropT (_, _, Named (_, x), _, _, _, _))
-        | (AnyT _, LookupT (_, _, _, Named (_, x), _))
-        | (AnyT _, MethodT (_, _, _, Named (_, x), _, _))
-          when is_function_prototype x ->
-          ()
-        | (AnyT _, UseT (_, u)) when function_like u -> ()
-        | (AnyT _, UseT (_, u)) when object_like u -> ()
-        | (_, UseT (_, AnyT _)) when object_like l -> ()
-        | (AnyT _, UseT (_, u)) when object_like u -> ()
         (*
          * Handling for the idx() custom function.
          *
