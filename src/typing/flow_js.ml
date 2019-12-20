@@ -673,7 +673,7 @@ let strict_equatable_error cond_context (l, r) =
     when ALoc.equal_id id1 id2 ->
     begin
       match cond_context with
-      | Some IfTest -> Some (Lazy.force comparison_error) (* TODO: custom error will be added *)
+      | Some IfTest -> Some (Error_message.EEnumCheckedInIf (reason_of_t l))
       | _ -> None
     end
   (* We allow the comparison of enums to null and void outside of switches. *)

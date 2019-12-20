@@ -621,7 +621,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ equality.js:47:11
 
-Cannot compare `E` [1] to `E` [1].
+Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
 
    equality.js:47:11
    47| if (e === E.A) { } // Error
@@ -639,7 +639,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:48:5
 
-Cannot compare `E` [1] to `E` [1].
+Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
 
    equality.js:48:5
    48| if (E.A === e) { } // Error
@@ -657,7 +657,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ equality.js:49:27
 
-Cannot compare `E` [1] to `E` [1].
+Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
 
    equality.js:49:27
    49| if (s.length > 0 && e === E.A) { } // Error
