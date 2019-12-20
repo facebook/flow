@@ -505,6 +505,7 @@ module rec TypeTerm : sig
     (* === *)
     | StrictEqT of {
         reason: Reason.t;
+        cond_context: cond_context option;
         flip: bool;
         arg: t;
       }
@@ -763,6 +764,14 @@ module rec TypeTerm : sig
         default_case: reason option;
       }
     | ExhaustiveCheckInvalid of reason list
+
+  and cond_context =
+    | SwitchTest of {
+        case_test_reason: reason;
+        switch_discriminant_reason: reason;
+      }
+    | IfTest
+    | OtherTest
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
@@ -2800,7 +2809,8 @@ end = struct
     | SetProtoT (reason, t) -> SetProtoT (f reason, t)
     | SpecializeT (use_op, reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
-    | StrictEqT { reason; flip; arg } -> StrictEqT { reason = f reason; flip; arg }
+    | StrictEqT { reason; cond_context; flip; arg } ->
+      StrictEqT { reason = f reason; cond_context; flip; arg }
     | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjKitT (use_op, f reason, resolve_tool, tool, tout)
     | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)

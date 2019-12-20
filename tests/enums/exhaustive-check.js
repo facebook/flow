@@ -100,6 +100,16 @@ switch (x)  {
     break;
 }
 
+declare var s: string;
+switch (s)  {
+  case E.A:
+    'A';
+    break;
+  case E.B:
+    'B';
+    break;
+}
+
 // Discriminant is union
 function a(x?: E) {
   switch (x)  { // Error
@@ -119,8 +129,7 @@ function a(x: ?E) {
   }
 }
 
-type EnumsUnion = E | F;
-function b(x: EnumsUnion) {
+function b(x: E | F) {
   switch (x)  { // Error
     case E.A:
       'A';
@@ -129,8 +138,7 @@ function b(x: EnumsUnion) {
   }
 }
 
-type EnumOrNonEnum = E | string;
-function c(x: EnumOrNonEnum) {
+function c(x: E | string) {
   switch (x)  { // Error
     case E.A:
       'A';
@@ -147,4 +155,3 @@ switch (x) {
     'F.A';
     break;
 }
-

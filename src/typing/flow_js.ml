@@ -645,11 +645,54 @@ let equatable = function
     false
   | _ -> true
 
-let strict_equatable = function
+let strict_equatable_error cond_context (l, r) =
+  let comparison_error =
+    lazy
+      (match cond_context with
+      | Some (SwitchTest { case_test_reason; switch_discriminant_reason }) ->
+        (* TODO: ExhaustiveCheck will be renamed to something more general *)
+        let use_op =
+          Op (ExhaustiveCheck { case = case_test_reason; switch = switch_discriminant_reason })
+        in
+        Error_message.EIncompatibleWithUseOp (reason_of_t l, reason_of_t r, use_op)
+      | _ ->
+        let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
+        Error_message.EComparison reasons)
+  in
+  match (l, r) with
   | (AnyT _, _)
   | (_, AnyT _) ->
-    true
-  | _ -> true
+    None
+  (* No comparisons of enum objects are allowed. *)
+  | (DefT (_, _, EnumObjectT _), _)
+  | (_, DefT (_, _, EnumObjectT _)) ->
+    Some (Lazy.force comparison_error)
+  (* We don't allow for the comparison of enums in if statements. *)
+  | (DefT (_, _, EnumT { enum_id = id1; _ }), DefT (_, _, EnumT { enum_id = id2; _ }))
+    when ALoc.equal_id id1 id2 ->
+    begin
+      match cond_context with
+      | Some IfTest -> Some (Lazy.force comparison_error) (* TODO: custom error will be added *)
+      | _ -> None
+    end
+  (* We allow the comparison of enums to null and void outside of switches. *)
+  | (DefT (_, _, EnumT _), DefT (_, _, (NullT | VoidT)))
+  | (DefT (_, _, (NullT | VoidT)), DefT (_, _, EnumT _)) ->
+    begin
+      match cond_context with
+      | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
+      | None
+      | Some _ ->
+        None
+    end
+  (* We don't allow the comparison of enums and other types in general. *)
+  | (DefT (_, _, EnumT _), _)
+  | (_, DefT (_, _, EnumT _)) ->
+    Some (Lazy.force comparison_error)
+  (* We don't check other strict equality comparisons. *)
+  | _ -> None
+
+let strict_equatable cond_context args = strict_equatable_error cond_context args |> Option.is_none
 
 (* Creates a union from a list of types. Since unions require a minimum of two
    types this function will return an empty type when there are no types in the
@@ -2788,15 +2831,15 @@ struct
             if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
-        | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; _ }) ->
-          if union_optimization_guard cx (curry strict_equatable) u1 u2 then begin
+        | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; cond_context; _ }) ->
+          if union_optimization_guard cx (curry (strict_equatable cond_context)) u1 u2 then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
         | (UnionT _, EqT (reason, flip, t)) when needs_resolution t ->
           rec_flow cx trace (t, EqT (reason, not flip, l))
-        | (UnionT _, StrictEqT { reason; flip; arg }) when needs_resolution arg ->
-          rec_flow cx trace (arg, StrictEqT { reason; flip = not flip; arg = l })
+        | (UnionT _, StrictEqT { reason; cond_context; flip; arg }) when needs_resolution arg ->
+          rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
         | (UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result)) ->
           (* we have the check l.key === sentinel where l.key is a union *)
           if sense then
@@ -5987,7 +6030,8 @@ struct
         (**************************)
         | (l, ComparatorT (reason, flip, r)) -> flow_comparator cx trace reason flip l r
         | (l, EqT (reason, flip, r)) -> flow_eq cx trace reason flip l r
-        | (l, StrictEqT { reason; flip; arg = r }) -> flow_strict_eq cx trace reason flip l r
+        | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
+          flow_strict_eq cx trace reason cond_context flip l r
         (************************)
         (* unary minus operator *)
         (************************)
@@ -6796,7 +6840,7 @@ struct
  *
  * typecheck iff they intersect (otherwise, unsafe coercions may happen).
  *
- * note: any types may be compared with === (in)equality.
+ * note: almost any types may be compared with === (in)equality.
  **)
   and flow_eq cx trace reason flip l r =
     if needs_resolution r then
@@ -6814,9 +6858,9 @@ struct
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
         add_output cx ~trace (Error_message.EComparison reasons)
 
-  and flow_strict_eq cx trace reason flip l r =
+  and flow_strict_eq cx trace reason cond_context flip l r =
     if needs_resolution r then
-      rec_flow cx trace (r, StrictEqT { reason; flip = not flip; arg = l })
+      rec_flow cx trace (r, StrictEqT { reason; cond_context; flip = not flip; arg = l })
     else
       let (l, r) =
         if flip then
@@ -6824,9 +6868,9 @@ struct
         else
           (l, r)
       in
-      if not @@ strict_equatable (l, r) then
-        let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx ~trace (Error_message.EComparison reasons)
+      match strict_equatable_error cond_context (l, r) with
+      | Some error -> add_output cx ~trace error
+      | None -> ()
 
   and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let { flags = lflags; dict_t = ldict; call_t = lcall; props_tmap = lflds; proto_t = lproto } =
