@@ -345,10 +345,6 @@ and 'loc t' =
       enum_name: string;
       members: SSet.t;
     }
-  | EEnumExhaustiveCheckOfUnion of {
-      reason: 'loc virtual_reason;
-      union_reason: 'loc virtual_reason;
-    }
   | EEnumMemberUsedAsType of {
       reason: 'loc virtual_reason;
       enum_name: string;
@@ -826,9 +822,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EEnumInvalidCheck { reason; enum_name; members } ->
     EEnumInvalidCheck { reason = map_reason reason; enum_name; members }
-  | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
-    EEnumExhaustiveCheckOfUnion
-      { reason = map_reason reason; union_reason = map_reason union_reason }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
   | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
@@ -1003,7 +996,6 @@ let util_use_op_of_msg nope util = function
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
   | EEnumInvalidCheck _
-  | EEnumExhaustiveCheckOfUnion _
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _ ->
     nope
@@ -1059,7 +1051,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
-  | EEnumExhaustiveCheckOfUnion { reason; _ }
   | EEnumMemberUsedAsType { reason; _ } ->
     Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
@@ -2982,17 +2973,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text ". Check must be in the form ";
         code (spf "case %s.%s" enum_name example_member);
         text ".";
-      ]
-    in
-    Normal { features }
-  | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
-    let features =
-      [
-        text "Cannot exhaustively check enum at ";
-        desc reason;
-        text " because it is part of a union type: ";
-        ref union_reason;
-        text ". Before you exhaustively check an enum in a union, refine to just the enum type.";
       ]
     in
     Normal { features }
