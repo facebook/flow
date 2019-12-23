@@ -1025,7 +1025,9 @@ let rec jsx_text env mode buf raw lexbuf =
   | "'"
   | '"'
   | '<'
-  | '{' ->
+  | '>'
+  | '{'
+  | '}' ->
     let c = lexeme lexbuf in
     begin
       match (mode, c) with
@@ -1037,6 +1039,10 @@ let rec jsx_text env mode buf raw lexbuf =
          * yet...they're not part of the JSX text *)
         Sedlexing.rollback lexbuf;
         env
+      | (JSX_CHILD_TEXT, ">") ->
+        unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) ">" "{'>'}"
+      | (JSX_CHILD_TEXT, "}") ->
+        unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) "}" "{'}'}"
       | _ ->
         Buffer.add_string raw c;
         Buffer.add_string buf c;
