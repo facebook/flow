@@ -297,19 +297,17 @@ let test_heapsize_decrease () =
   add "4" "4";
   add "5" "5";
   expect_heap_size 6;
-  gentle_collect ();
-
   (* This runs because 6 >= 2*3 *)
+  gentle_collect ();
   expect_heap_size 3;
   add "0" "0";
   add "1" "1";
   remove "4";
   remove "5";
   expect_heap_size 5;
-  aggressive_collect ();
-
   (* Aggressive collection should kick in,
    * because 5 >= 1.2*3 *)
+  aggressive_collect ();
   expect_heap_size 3;
   ()
 

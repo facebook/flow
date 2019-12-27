@@ -114,7 +114,7 @@
 #endif
 
 
-#define HASHTBL_WRITE_IN_PROGRESS ((heap_entry_t*)1)
+#define HASHTBL_WRITE_IN_PROGRESS (0xfffffffffffffffeull)
 
 /****************************************************************************
  * Quoting the linux manpage: memfd_create() creates an anonymous file
@@ -263,9 +263,36 @@ typedef struct {
 // |
 // * 63-33 size of heap entry
 //
-// The tag bit is always 1 and is used to differentiate headers from pointers
+// The tag bit is always 1 and is used to differentiate headers from addresses
 // during garbage collection (see hh_collect).
 typedef uint64_t hh_header_t;
+
+// Locations in the heap are encoded as byte offsets from the beginning of
+// the hash table, shifted left by 1 with the least-significant bit always set
+// to 0 to distinguish addresses from headers during garbage collection.
+//
+// Note that the offsets do not start at the beginning of the heap, but the
+// start of the hash table. This has two important implications:
+//
+// 1. The offset 0 will always point to the hash of the first hash table entry,
+// which is never a meaningful offset. Because of this, we can take the
+// address 0 to be the "null" address.
+//
+// 2. During garbage collection, it is necessary to point from the heap to the
+// hash table itself, since we temporarily store heap headers in the addr field
+// of helt_t. By starting the offsets at the beginning of the hash table, we can
+// represent offsets into the hash table itself.
+typedef uint64_t addr_t;
+
+#define NULL_ADDR 0
+#define Offset_of_addr(addr) ((addr) >> 1)
+#define Addr_of_offset(offset) ((offset) << 1)
+#define Addr_of_ptr(entry) (Addr_of_offset((char *)(entry) - (char *)hashtbl))
+#define Ptr_of_offset(offset) ((char *)hashtbl + (offset))
+#define Ptr_of_addr(addr) (Ptr_of_offset(Offset_of_addr(addr)))
+#define Entry_of_addr(addr) ((heap_entry_t *)Ptr_of_addr(addr))
+#define Entry_of_offset(offset) ((heap_entry_t *)Ptr_of_offset(offset))
+#define Header_of_addr(addr) ((hh_header_t *)Ptr_of_addr(addr))
 
 #define Entry_size(x) ((x) >> 33)
 #define Entry_kind(x) (((x) >> 32) & 1)
@@ -281,7 +308,7 @@ typedef struct {
 /* Cells of the Hashtable */
 typedef struct {
   uint64_t hash;
-  heap_entry_t* addr;
+  addr_t addr;
 } helt_t;
 
 /*****************************************************************************/
@@ -332,8 +359,8 @@ static char* locals;
 /* This should only be used before forking */
 static uintptr_t early_counter = 0;
 
-/* The top of the heap */
-static char** heap = NULL;
+/* The top of the heap, offset from hashtbl pointer */
+static size_t* heap = NULL;
 
 /* Useful to add assertions */
 static pid_t* master_pid = NULL;
@@ -347,10 +374,10 @@ static size_t worker_id;
 
 static size_t worker_can_exit = 1;
 
-/* Where the heap started (bottom) */
-static char* heap_init = NULL;
-/* Where the heap will end (top) */
-static char* heap_max = NULL;
+/* Where the heap started (bottom), offset from hashtbl pointer */
+static size_t heap_init = 0;
+/* Where the heap will end (top), offset from hashtbl pointer */
+static size_t heap_max = 0;
 
 static size_t* wasted_heap_size = NULL;
 
@@ -686,7 +713,7 @@ static void define_globals(char * shared_mem_init) {
   /* The pointer to the top of the heap.
    * We will atomically increment *heap every time we want to allocate.
    */
-  heap = (char**)mem;
+  heap = (size_t*)mem;
 
   // The number of elements in the hashtable
   assert(CACHE_LINE_SIZE >= sizeof(uint64_t));
@@ -725,7 +752,7 @@ static void define_globals(char * shared_mem_init) {
   mem += hashtbl_size_b;
 
   /* Heap */
-  heap_init = mem;
+  heap_init = hashtbl_size_b;
   heap_max = heap_init + heap_size;
 
 #ifdef _WIN32
@@ -836,7 +863,7 @@ CAMLprim value hh_shared_init(
   init_shared_globals(
     Long_val(Field(config_val, 4)));
   // Checking that we did the maths correctly.
-  assert(*heap + heap_size == shared_mem + shared_mem_size);
+  assert(Ptr_of_offset(*heap) + heap_size == shared_mem + shared_mem_size);
 
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
@@ -976,7 +1003,7 @@ static uint64_t hash_uint64(uint64_t n) {
 
 // TODO - DEAD CODE
 value hh_check_heap_overflow(void) {
-  if (*heap >= shared_mem + shared_mem_size) {
+  if (*heap >= heap_max) {
     return Val_bool(1);
   }
   return Val_bool(0);
@@ -1003,7 +1030,7 @@ CAMLprim value hh_collect(void) {
 
   for (size_t i = 0; i < hashtbl_size; i++) {
     // Skip empty slots
-    if (hashtbl[i].addr == NULL) { continue; }
+    if (hashtbl[i].addr == NULL_ADDR) { continue; }
 
     // No workers should be writing at the moment. If a worker died in the
     // middle of a write, that is also very bad
@@ -1018,54 +1045,47 @@ CAMLprim value hh_collect(void) {
     // be. Then, after moving the heap entry, we can follow the pointer to
     // restore our original header and update the addr field to our relocated
     // address.
-    //
-    // This is all super unsafe and only works because we constrain the size of
-    // an hh_header_t struct to the size of a pointer.
 
-    // Location of the addr field (8 bytes) in the hashtable
-    char **hashtbl_addr = (char **)&hashtbl[i].addr;
-
-    // Location of the header (8 bytes) in the heap
-    char *heap_addr = (char *)hashtbl[i].addr;
-
-    // Swap
-    hh_header_t header = *(hh_header_t *)heap_addr;
-    *(hh_header_t *)hashtbl_addr = header;
-    *(uintptr_t *)heap_addr = (uintptr_t)hashtbl_addr;
+    heap_entry_t *entry = Entry_of_addr(hashtbl[i].addr);
+    hashtbl[i].addr = entry->header;
+    entry->header = Addr_of_ptr(&hashtbl[i].addr);
   }
 
   // Step 2: Walk the heap and relocate entries, updating the hashtbl to point
   // to relocated addresses.
 
-  // Pointer to free space in the heap where moved values will move to.
-  char *dest = heap_init;
+  // Offset of free space in the heap where moved values will move to.
+  size_t dest = heap_init;
 
   // Pointer that walks the heap from bottom to top.
-  char *src = heap_init;
+  char *src = Ptr_of_offset(heap_init);
+  char *heap_ptr = Ptr_of_offset(*heap);
 
   size_t aligned_size;
   hh_header_t header;
-  while (src < *heap) {
-    if (*(uint64_t *)src & 1) {
+  while (src < heap_ptr) {
+    if (*(hh_header_t *)src & 1) {
       // If the lsb is set, this is a header. If it's a header, that means the
       // entry was not marked in the first pass and should be collected. Don't
       // move dest pointer, but advance src pointer to next heap entry.
       header = *(hh_header_t *)src;
       aligned_size = CACHE_ALIGN(Heap_entry_total_size(header));
     } else {
-      // If the lsb is 0, this is a pointer to the addr field of the hashtable
+      // If the lsb is 0, this is an addr to the addr field of the hashtable
       // element, which holds the header bytes. This entry is live.
-      char *hashtbl_addr = *(char **)src;
-      header = *(hh_header_t *)hashtbl_addr;
+      hh_header_t *hashtbl_addr = Header_of_addr(*(addr_t *)src);
+      header = *hashtbl_addr;
       aligned_size = CACHE_ALIGN(Heap_entry_total_size(header));
 
       // Fix the hashtbl addr field to point to our new location and restore the
       // heap header data temporarily stored in the addr field bits.
-      *(uintptr_t *)hashtbl_addr = (uintptr_t)dest;
+      *hashtbl_addr = Addr_of_offset(dest);
+
+      // Restore the heap entry header
       *(hh_header_t *)src = header;
 
       // Move the entry as far to the left as possible.
-      memmove(dest, src, aligned_size);
+      memmove(Ptr_of_offset(dest), src, aligned_size);
       dest += aligned_size;
     }
 
@@ -1096,17 +1116,19 @@ static void raise_heap_full(void) {
 /* Allocates in the shared heap. The chunks are cache aligned. */
 /*****************************************************************************/
 
-static heap_entry_t* hh_alloc(hh_header_t header) {
+static addr_t hh_alloc(hh_header_t header, char *data) {
   // the size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(header));
-  char *chunk = __sync_fetch_and_add(heap, (char*) slot_size);
-  if (chunk + slot_size > heap_max) {
+  size_t offset = __sync_fetch_and_add(heap, slot_size);
+  if (offset + slot_size > heap_max) {
     raise_heap_full();
   }
-  memfd_reserve(chunk, slot_size);
-  ((heap_entry_t *)chunk)->header = header;
-  return (heap_entry_t *)chunk;
+  heap_entry_t *chunk = Entry_of_offset(offset);
+  memfd_reserve((char *)chunk, slot_size);
+  chunk->header = header;
+  memcpy(&chunk->data, data, Entry_size(header));
+  return Addr_of_offset(offset);
 }
 
 /*****************************************************************************/
@@ -1115,7 +1137,7 @@ static heap_entry_t* hh_alloc(hh_header_t header) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-static heap_entry_t* hh_store_ocaml(
+static addr_t hh_store_ocaml(
   value data,
   /*out*/size_t *alloc_size,
   /*out*/size_t *orig_size
@@ -1172,10 +1194,9 @@ static heap_entry_t* hh_store_ocaml(
     | uncompressed_size << 1
     | 1;
 
-  heap_entry_t* addr = hh_alloc(header);
-  memcpy(&addr->data,
-         uncompressed_size ? compressed_data : value,
-         size);
+  addr_t heap_addr = hh_alloc(
+    header,
+    uncompressed_size ? compressed_data : value);
 
   free(compressed_data);
   // We temporarily allocate memory using malloc to serialize the Ocaml object.
@@ -1183,7 +1204,7 @@ static heap_entry_t* hh_store_ocaml(
   // to free the memory we allocated to avoid a leak.
   if (kind == KIND_SERIALIZED) free(value);
 
-  return addr;
+  return heap_addr;
 }
 
 /*****************************************************************************/
@@ -1218,7 +1239,7 @@ static value write_at(unsigned int slot, value data) {
   if(
      __sync_bool_compare_and_swap(
        &(hashtbl[slot].addr),
-       NULL,
+       NULL_ADDR,
        HASHTBL_WRITE_IN_PROGRESS
      )
   ) {
@@ -1340,7 +1361,7 @@ int hh_mem_inner(value key) {
   check_should_exit();
   unsigned int slot = find_slot(key);
   _Bool good_hash = hashtbl[slot].hash == get_hash(key);
-  _Bool non_null_addr = hashtbl[slot].addr != NULL;
+  _Bool non_null_addr = hashtbl[slot].addr != NULL_ADDR;
   if (good_hash && non_null_addr) {
     // The data is currently in the process of being written, wait until it
     // actually is ready to be used before returning.
@@ -1400,13 +1421,14 @@ CAMLprim value hh_mem_status(value key) {
 /*****************************************************************************/
 /* Deserializes the value pointed to by elt. */
 /*****************************************************************************/
-CAMLprim value hh_deserialize(heap_entry_t *elt) {
+CAMLprim value hh_deserialize(addr_t heap_addr) {
   CAMLparam0();
   CAMLlocal1(result);
-  size_t size = Entry_size(elt->header);
-  size_t uncompressed_size_exp = Entry_uncompressed_size(elt->header);
-  char *src = elt->data;
-  char *data = elt->data;
+  heap_entry_t *entry = Entry_of_addr(heap_addr);
+  size_t size = Entry_size(entry->header);
+  size_t uncompressed_size_exp = Entry_uncompressed_size(entry->header);
+  char *src = entry->data;
+  char *data = entry->data;
   if (uncompressed_size_exp) {
     data = malloc(uncompressed_size_exp);
     size_t uncompressed_size = LZ4_decompress_safe(
@@ -1418,7 +1440,7 @@ CAMLprim value hh_deserialize(heap_entry_t *elt) {
     size = uncompressed_size;
   }
 
-  if (Entry_kind(elt->header) == KIND_STRING) {
+  if (Entry_kind(entry->header) == KIND_STRING) {
     result = caml_alloc_string(size);
     memcpy(String_val(result), data, size);
   } else {
@@ -1455,7 +1477,8 @@ CAMLprim value hh_get_size(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Val_long(Entry_size(hashtbl[slot].addr->header)));
+  heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
+  CAMLreturn(Val_long(Entry_size(entry->header)));
 }
 
 /*****************************************************************************/
@@ -1471,7 +1494,7 @@ void hh_move(value key1, value key2) {
 
   assert_master();
   assert(hashtbl[slot1].hash == get_hash(key1));
-  assert(hashtbl[slot2].addr == NULL);
+  assert(hashtbl[slot2].addr == NULL_ADDR);
   // We are taking up a previously empty slot. Let's increment the counter.
   // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
   // filled.
@@ -1480,7 +1503,7 @@ void hh_move(value key1, value key2) {
   }
   hashtbl[slot2].hash = get_hash(key2);
   hashtbl[slot2].addr = hashtbl[slot1].addr;
-  hashtbl[slot1].addr = NULL;
+  hashtbl[slot1].addr = NULL_ADDR;
 }
 
 /*****************************************************************************/
@@ -1494,10 +1517,10 @@ void hh_remove(value key) {
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
-  size_t slot_size =
-    CACHE_ALIGN(Heap_entry_total_size(hashtbl[slot].addr->header));
+  heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
+  size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(entry->header));
   __sync_fetch_and_add(wasted_heap_size, slot_size);
-  hashtbl[slot].addr = NULL;
+  hashtbl[slot].addr = NULL_ADDR;
   removed_count += 1;
   __sync_fetch_and_sub(hcounter_filled, 1);
 }
