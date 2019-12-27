@@ -121,28 +121,28 @@ Misc:
 ### 0.109.0
 
 Likely to cause new Flow errors:
-    - Flow was previously not typechecking `delete`, but now does
-    - `Object.defineProperty` and similar methods now adhere more closely to the spec
-    - Allow defaults for properties that may not exist in React components
+- Flow was previously not typechecking `delete`, but now does
+- `Object.defineProperty` and similar methods now adhere more closely to the spec
+- Allow defaults for properties that may not exist in React components
 
 Notable bug fixes:
-   - `$NonMaybeType<mixed>` no longer includes null and undefined (Thanks @goodmind)
+- `$NonMaybeType<mixed>` no longer includes null and undefined (Thanks @goodmind)
 
 Misc:
-   - Deprecated `$Supertype` and `$Subtype` utilities are now removed entirely
-   - flow-upgrade should now use https over git (Thanks @lukeapage)
-   - Autocomplete now fires on spaces in JSX
-   - Better error messages when a value is used as a type
+- Deprecated `$Supertype` and `$Subtype` utilities are now removed entirely
+- flow-upgrade should now use https over git (Thanks @lukeapage)
+- Autocomplete now fires on spaces in JSX
+- Better error messages when a value is used as a type
 
 Performance:
-   - Reduced memory usage by using a more compact representation for code locations
-   - Types-first should no longer check direct dependents of files where the signature has not changed
+- Reduced memory usage by using a more compact representation for code locations
+- Types-first should no longer check direct dependents of files where the signature has not changed
 
 Library Definitions
-   - Add a number of CSSOM interfaces + fix `HTMLStyleElement.sheet` type (Thanks @kof)
-   - Add `AsyncIterator` to `node.js` (Thanks @goodmind)
-   - Add `undefined` to prelude (Thanks @goodmind)
-   - Add String.prototype.matchAll (Thanks @goodmind)
+- Add a number of CSSOM interfaces + fix `HTMLStyleElement.sheet` type (Thanks @kof)
+- Add `AsyncIterator` to `node.js` (Thanks @goodmind)
+- Add `undefined` to prelude (Thanks @goodmind)
+- Add String.prototype.matchAll (Thanks @goodmind)
 
 ### 0.108.0
 
@@ -719,7 +719,7 @@ Misc:
 * Huge reduction (~15%) in total memory usage (thanks @nmote)
 * Huge reduction in error collation time (thanks @panagosg7)
 
-## 0.90.0
+### 0.90.0
 
 Likely to cause new Flow errors:
 * Removed unsafe rule allowing Date instances to be used as a number
@@ -3082,7 +3082,7 @@ Likely to cause new Flow errors:
 New Features:
 
 - Generators support, courtesy of [@samwgoldman](https://github.com/samwgoldman)
-- # of worker processers is now configurable, defaults to the # of CPUs
+- The number of worker processers is now configurable, defaults to the # of CPUs
 - If Flow knows the value of a boolean expression, then it will know the value of that expression negated.
 - Flow can remember refinements for things like `if(x.y[a.b])`
 - `export type {type1, type2}` syntax
