@@ -6,7 +6,6 @@
  *)
 
 type config = {
-  global_size: int;
   heap_size: int;
   hash_table_pow: int;
   shm_dirs: string list;
@@ -16,7 +15,6 @@ type config = {
 
 type handle = private {
   h_fd: Unix.file_descr;
-  h_global_size: int;
   h_heap_size: int;
 }
 

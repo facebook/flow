@@ -17,7 +17,6 @@ let _handle =
     init
       ~num_workers:0
       {
-        global_size = 0;
         heap_size = 5 * one_gig;
         hash_table_pow = 19;
         shm_dirs = [];

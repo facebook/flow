@@ -334,8 +334,7 @@ let tests () =
           SharedMem.init
             ~num_workers
             {
-              SharedMem.global_size = 16;
-              heap_size = 1024;
+              SharedMem.heap_size = 1024;
               hash_table_pow = 3;
               shm_dirs = [];
               shm_min_avail = 0;

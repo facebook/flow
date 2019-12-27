@@ -203,8 +203,7 @@ let include_dependencies_and_dependents
  * crashes, so we have to initialize it before running tests. *)
 let sharedmem_config =
   {
-    SharedMem_js.global_size = 0;
-    heap_size = 1024 * 1024;
+    SharedMem_js.heap_size = 1024 * 1024;
     hash_table_pow = 19;
     shm_dirs = ["/dev/shm"];
     shm_min_avail = 1024 * 256;

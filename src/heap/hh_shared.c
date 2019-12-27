@@ -15,55 +15,39 @@
  * BUT ... YOU WERE GOING TO SAY BUT? BUT ...
  * THERE IS NO BUT! DONNY YOU'RE OUT OF YOUR ELEMENT!
  *
- * The lock-free data structures implemented here only work because of how
- * the Hack phases are synchronized.
+ * The lock-free data structures implemented here only work because of how the
+ * Hack phases are synchronized.
  *
- * There are 2 kinds of storage implemented in this file.
- * I) The global storage. Used by the master to efficiently transfer a blob
- *    of data to the workers. This is used to share an environment in
- *    read-only mode with all the workers.
- *    The master stores, the workers read.
- *    Only concurrent reads allowed. No concurrent write/read and write/write.
- *    There are a few different OCaml modules that act as interfaces to this
- *    global storage. They all use the same area of memory, so only one can be
- *    active at any one time. The first word indicates the size of the global
- *    storage currently in use; callers are responsible for setting it to zero
- *    once they are done.
- *
- * II) The hashtable that maps string keys to string values. (The strings
- *    are really serialized / marshalled representations of OCaml structures.)
- *    Key observation of the table is that data with the same key are
- *    considered equivalent, and so you can arbitrarily get any copy of it;
- *    furthermore if data is missing it can be recomputed, so incorrectly
- *    saying data is missing when it is being written is only a potential perf
- *    loss. Note that "equivalent" doesn't necessarily mean "identical", e.g.,
- *    two alpha-converted types are "equivalent" though not literally byte-
- *    identical. (That said, I'm pretty sure the Hack typechecker actually does
- *    always write identical data, but the hashtable doesn't need quite that
- *    strong of an invariant.)
+ * The hashtable maps string keys to string values. (The strings are really
+ * serialized / marshalled representations of OCaml structures.) Key observation
+ * of the table is that data with the same key are considered equivalent, and so
+ * you can arbitrarily get any copy of it; furthermore if data is missing it can
+ * be recomputed, so incorrectly saying data is missing when it is being written
+ * is only a potential perf loss. Note that "equivalent" doesn't necessarily
+ * mean "identical", e.g., two alpha-converted types are "equivalent" though not
+ * literally byte- identical. (That said, I'm pretty sure the Hack typechecker
+ * actually does always write identical data, but the hashtable doesn't need
+ * quite that strong of an invariant.)
  *
  *    The operations implemented, and their limitations:
  *
- *    -) Concurrent writes: SUPPORTED
- *       One will win and the other will get dropped on the floor. There is no
- *       way to tell which happened. Only promise is that after a write, the
- *       one thread which did the write will see data in the table (though it
- *       may be slightly different data than what was written, see above about
- *       equivalent data).
+ *    -) Concurrent writes: SUPPORTED One will win and the other will get
+ *    dropped on the floor. There is no way to tell which happened. Only promise
+ *    is that after a write, the one thread which did the write will see data in
+ *    the table (though it may be slightly different data than what was written,
+ *    see above about equivalent data).
  *
- *    -) Concurrent reads: SUPPORTED
- *       If interleaved with a concurrent write, the read will arbitrarily
- *       say that there is no data at that slot or return the entire new data
- *       written by the concurrent writer.
+ *    -) Concurrent reads: SUPPORTED If interleaved with a concurrent write, the
+ *    read will arbitrarily say that there is no data at that slot or return the
+ *    entire new data written by the concurrent writer.
  *
- *    -) Concurrent removes: NOT SUPPORTED
- *       Only the master can remove, and can only do so if there are no other
- *       concurrent operations (reads or writes).
+ *    -) Concurrent removes: NOT SUPPORTED Only the master can remove, and can
+ *    only do so if there are no other concurrent operations (reads or writes).
  *
  *    Since the values are variably sized and can get quite large, they are
  *    stored separately from the hashes in a garbage-collected heap.
  *
- * Both II and III resolve hash collisions via linear probing.
+ * Hash collisions are resolved via linear probing.
  */
 /*****************************************************************************/
 
@@ -202,7 +186,6 @@ static int win32_getpagesize(void) {
 
 /* Convention: .*_b = Size in bytes. */
 
-static size_t global_size_b;
 static size_t heap_size;
 
 /* Used for the shared hashtable */
@@ -310,11 +293,6 @@ static size_t shared_mem_size = 0;
 
 /* Beginning of shared memory */
 static char* shared_mem = NULL;
-
-/* ENCODING: The first element is the size stored in bytes, the rest is
- * the data. The size is set to zero when the storage is empty.
- */
-static value* global_storage = NULL;
 
 /* A pair of a 31-bit unsigned number and a tag bit. */
 typedef struct {
@@ -742,10 +720,6 @@ static void define_globals(char * shared_mem_init) {
 
   /* END OF THE SMALL OBJECTS PAGE */
 
-  /* Global storage initialization */
-  global_storage = (value*)mem;
-  mem += global_size_b;
-
   /* Hashtable */
   hashtbl = (helt_t*)mem;
   mem += hashtbl_size_b;
@@ -755,11 +729,9 @@ static void define_globals(char * shared_mem_init) {
   heap_max = heap_init + heap_size;
 
 #ifdef _WIN32
-  /* Reserve all memory space except the "huge" `global_size_b`. This is
-   * required for Windows but we don't do this for Linux since it lets us run
-   * more processes in parallel without running out of memory immediately
-   * (though we do risk it later on) */
-  memfd_reserve((char *)global_storage, sizeof(global_storage[0]));
+  /* Reserve all memory space. This is required for Windows but we don't do this
+   * for Linux since it lets us run more processes in parallel without running
+   * out of memory immediately (though we do risk it later on) */
   memfd_reserve((char *)heap, heap_init - (char *)heap);
 #endif
 
@@ -769,15 +741,12 @@ static void define_globals(char * shared_mem_init) {
  * virtual. */
 static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
-  return (global_size_b + hashtbl_size_b +
-          heap_size + page_size + locals_size_b);
+  return (hashtbl_size_b + heap_size + page_size + locals_size_b);
 }
 
 static void init_shared_globals(
   size_t config_log_level
 ) {
-  // Initial size is zero for global storage is zero
-  global_storage[0] = 0;
   // Initialize the number of element in the table
   *hcounter = 0;
   *hcounter_filled = 0;
@@ -796,14 +765,12 @@ static void init_shared_globals(
 }
 
 static void set_sizes(
-  uint64_t config_global_size,
   uint64_t config_heap_size,
   uint64_t config_hash_table_pow,
   uint64_t config_num_workers) {
 
   size_t page_size = getpagesize();
 
-  global_size_b = sizeof(global_storage[0]) + config_global_size;
   heap_size = config_heap_size;
 
   hashtbl_size    = 1ul << config_hash_table_pow;
@@ -827,19 +794,16 @@ CAMLprim value hh_shared_init(
   value num_workers_val
 ) {
   CAMLparam3(config_val, shm_dir_val, num_workers_val);
-  CAMLlocal4(
+  CAMLlocal3(
     connector,
-    config_global_size_val,
     config_heap_size_val,
     config_hash_table_pow_val
   );
 
-  config_global_size_val = Field(config_val, 0);
-  config_heap_size_val = Field(config_val, 1);
-  config_hash_table_pow_val = Field(config_val, 2);
+  config_heap_size_val = Field(config_val, 0);
+  config_hash_table_pow_val = Field(config_val, 1);
 
   set_sizes(
-    Long_val(config_global_size_val),
     Long_val(config_heap_size_val),
     Long_val(config_hash_table_pow_val),
     Long_val(num_workers_val)
@@ -855,7 +819,7 @@ CAMLprim value hh_shared_init(
   memfd_init(
     shm_dir,
     shared_mem_size,
-    Long_val(Field(config_val, 4))
+    Long_val(Field(config_val, 3))
   );
   char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
@@ -870,7 +834,7 @@ CAMLprim value hh_shared_init(
 #endif
 
   init_shared_globals(
-    Long_val(Field(config_val, 5)));
+    Long_val(Field(config_val, 4)));
   // Checking that we did the maths correctly.
   assert(*heap + heap_size == shared_mem + shared_mem_size);
 
@@ -888,10 +852,9 @@ CAMLprim value hh_shared_init(
 
   connector = caml_alloc_tuple(5);
   Store_field(connector, 0, Val_handle(memfd));
-  Store_field(connector, 1, config_global_size_val);
-  Store_field(connector, 2, config_heap_size_val);
-  Store_field(connector, 3, config_hash_table_pow_val);
-  Store_field(connector, 4, num_workers_val);
+  Store_field(connector, 1, config_heap_size_val);
+  Store_field(connector, 2, config_hash_table_pow_val);
+  Store_field(connector, 3, num_workers_val);
 
   CAMLreturn(connector);
 }
@@ -903,8 +866,7 @@ value hh_connect(value connector, value worker_id_val) {
   set_sizes(
     Long_val(Field(connector, 1)),
     Long_val(Field(connector, 2)),
-    Long_val(Field(connector, 3)),
-    Long_val(Field(connector, 4))
+    Long_val(Field(connector, 3))
   );
   worker_id = Long_val(worker_id_val);
 #ifdef _WIN32
@@ -999,50 +961,6 @@ CAMLprim value hh_check_should_exit (void) {
   CAMLparam0();
   check_should_exit();
   CAMLreturn(Val_unit);
-}
-
-/*****************************************************************************/
-/* Global storage */
-/*****************************************************************************/
-
-void hh_shared_store(value data) {
-  CAMLparam1(data);
-  size_t size = caml_string_length(data);
-
-  assert_master();                               // only the master can store
-  assert(global_storage[0] == 0);                // Is it clear?
-  assert(size < global_size_b - sizeof(global_storage[0])); // Do we have enough space?
-
-  global_storage[0] = size;
-  memfd_reserve((char *)&global_storage[1], size);
-  memcpy(&global_storage[1], &Field(data, 0), size);
-
-  CAMLreturn0;
-}
-
-/*****************************************************************************/
-/* We are allocating ocaml values. The OCaml GC must know about them.
- * caml_alloc_string might trigger the GC, when that happens, the GC needs
- * to scan the stack to find the OCaml roots. The macros CAMLparam0 and
- * CAMLlocal1 register the roots.
- */
-/*****************************************************************************/
-
-CAMLprim value hh_shared_load(void) {
-  CAMLparam0();
-  CAMLlocal1(result);
-
-  size_t size = global_storage[0];
-  assert(size != 0);
-  result = caml_alloc_string(size);
-  memcpy(&Field(result, 0), &global_storage[1], size);
-
-  CAMLreturn(result);
-}
-
-void hh_shared_clear(void) {
-  assert_master();
-  global_storage[0] = 0;
 }
 
 /*****************************************************************************/

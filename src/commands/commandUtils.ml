@@ -293,9 +293,7 @@ let shm_config shm_flags flowconfig =
     Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
   {
-    SharedMem_js.global_size = 0;
-    (* we don't use GlobalStorage, don't waste space on it *)
-    heap_size = FlowConfig.shm_heap_size flowconfig;
+    SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig;
     hash_table_pow;
     shm_dirs;
     shm_min_avail;

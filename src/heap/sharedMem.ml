@@ -10,7 +10,6 @@ open Hh_core
 (* Don't change the ordering of this record without updating hh_shared_init in
  * hh_shared.c, which indexes into config objects *)
 type config = {
-  global_size: int;
   heap_size: int;
   hash_table_pow: int;
   shm_dirs: string list;
@@ -21,7 +20,6 @@ type config = {
 (* Allocated in C only. *)
 type handle = private {
   h_fd: Unix.file_descr;
-  h_global_size: int;
   h_heap_size: int;
 }
 

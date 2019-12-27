@@ -99,8 +99,7 @@ let () =
 
       let shm_dir = (try Sys.getenv "HH_SHMDIR" with _ -> "/dev/shm") in
       {
-        SharedMem.global_size = gig;
-        heap_size = 20 * gig;
+        SharedMem.heap_size = 20 * gig;
         (* 1 << 17 *)
         hash_table_pow = 18;
         (* 1 << 18 *)
