@@ -216,20 +216,6 @@ typedef struct {
 #define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
 #define CACHE_ALIGN(x)          ALIGN(x,CACHE_LINE_SIZE)
 
-/* Fix the location of our shared memory so we can save and restore the
- * hashtable easily */
-#ifdef _WIN32
-/* We have to set differently our shared memory location on Windows. */
-#define SHARED_MEM_INIT ((char *) 0x48047e00000ll)
-#elif defined __aarch64__
-/* CentOS 7.3.1611 kernel does not support a full 48-bit VA space, so choose a
- * value low enough that the 21 GB's mmapped in do not interfere with anything
- * growing down from the top. 1 << 36 works. */
-#define SHARED_MEM_INIT ((char *) 0x1000000000ll)
-#else
-#define SHARED_MEM_INIT ((char *) 0x500000000000ll)
-#endif
-
 /* As a sanity check when loading from a file */
 static const uint64_t MAGIC_CONSTANT = 0xfacefacefaceb000ull;
 
@@ -592,14 +578,10 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
 
 static char *memfd_map(size_t shared_mem_size) {
   char *mem = NULL;
-  mem = MapViewOfFileEx(
-    memfd,
-    FILE_MAP_ALL_ACCESS,
-    0, 0, 0,
-    (char *)SHARED_MEM_INIT);
-  if (mem != SHARED_MEM_INIT) {
+  mem = MapViewOfFile(memfd, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+  if (mem == NULL) {
     win32_maperr(GetLastError());
-    uerror("MapViewOfFileEx", Nothing);
+    uerror("MapViewOfFile", Nothing);
   }
   return mem;
 }
@@ -611,11 +593,9 @@ static char *memfd_map(size_t shared_mem_size) {
   /* MAP_NORESERVE is because we want a lot more virtual memory than what
    * we are actually going to use.
    */
-  int flags = MAP_SHARED | MAP_NORESERVE | MAP_FIXED;
+  int flags = MAP_SHARED | MAP_NORESERVE;
   int prot  = PROT_READ  | PROT_WRITE;
-  mem =
-    (char*)mmap((void *)SHARED_MEM_INIT, shared_mem_size, prot,
-                flags, memfd, 0);
+  mem = (char*)mmap(NULL, shared_mem_size, prot, flags, memfd, 0);
   if(mem == MAP_FAILED) {
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
