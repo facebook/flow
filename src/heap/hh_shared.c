@@ -714,8 +714,8 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   wasted_heap_size = (size_t*)(mem + 6*CACHE_LINE_SIZE);
 
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  hcounter_filled = (size_t*)(mem + 7*CACHE_LINE_SIZE);
+  assert (CACHE_LINE_SIZE >= sizeof(uint64_t));
+  hcounter_filled = (uint64_t*)(mem + 7*CACHE_LINE_SIZE);
 
   mem += page_size;
   // Just checking that the page is large enough.
@@ -739,7 +739,7 @@ static void define_globals(char * shared_mem_init) {
   /* Reserve all memory space. This is required for Windows but we don't do this
    * for Linux since it lets us run more processes in parallel without running
    * out of memory immediately (though we do risk it later on) */
-  memfd_reserve((char *)heap, heap_init - (char *)heap);
+  memfd_reserve((char *)heap, page_size + locals_size_b + hashtbl_size_b);
 #endif
 
 }
