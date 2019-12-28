@@ -1,4 +1,4 @@
-true: package(dtoa), package(ppx_gen_rec), package(ppx_deriving.eq), package(ppx_deriving.show), package(sedlex), package(wtf8)
+true: package(dtoa), package(ppx_gen_rec), package(ppx_deriving.eq), package(ppx_deriving.show), package(sedlex.ppx), package(wtf8)
 <*.ml*>: warn(-39)
 <test/**>: package(base)
 <dist>: -traverse
