@@ -1,3 +1,7 @@
+### 0.114.1
+
+Upgrade internal dependencies sedlex and lwt. Lwt includes a fix to stack traces that we need to debug crash logs.
+
 ### 0.114.0
 
 Likely to cause new Flow errors:
