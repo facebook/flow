@@ -1057,7 +1057,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       let opaque_id = Context.make_aloc_id cx name_loc in
       let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
-      let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
+      let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
       let type_ =
         poly_type_of_tparams
           (Context.generate_poly_id cx)
