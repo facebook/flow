@@ -10,7 +10,7 @@ JavaScript has a number of different primitive types
 - Numbers
 - `null`
 - `undefined` (`void` in Flow types)
-- Symbols (new in ECMAScript 2015, not yet supported in Flow)
+- Symbols (new in ECMAScript 2015)
 
 The primitive types appear in the language as either literal values.
 
@@ -28,7 +28,6 @@ Or as constructed wrapper objects.
 new Boolean(false);
 new String("world");
 new Number(42);
-Symbol("foo");
 ```
 
 Types for literal values are lowercase.
@@ -293,8 +292,26 @@ acceptsOptionalString();          // Works!
 
 ## Symbols <a class="toc" id="toc-symbols" href="#toc-symbols"></a>
 
-Symbols are not currently supported by Flow. You can see these two issues for
-more information:
+Symbols are created with `Symbol()` in JavaScript. Flow has basic support for symbols, using the `symbol` type.
 
-- [facebook/flow#810](https://github.com/facebook/flow/issues/810)
-- [facebook/flow#1015](https://github.com/facebook/flow/issues/1015)
+```js
+// @flow
+function acceptsSymbol(value: symbol) {
+  // ...
+}
+
+acceptsSymbol(Symbol()); // Works!
+acceptsSymbol(Symbol.isConcatSpreadable); // Works!
+acceptsSymbol(false); // Error!
+```
+
+You can use `typeof x === "symbol"` to refine to a symbol.
+
+```
+const x: symbol | number = Symbol();
+if (typeof x === "symbol") {
+  const y: symbol = x;
+} else {
+  const z: number = x;
+}
+```
