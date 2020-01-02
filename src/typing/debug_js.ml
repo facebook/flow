@@ -2917,8 +2917,6 @@ let dump_error_message =
     | EUnnecessaryOptionalChain (loc, _) ->
       spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
     | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
-    | EInexactSpread (reason, reason_op) ->
-      spf "EInexactSpread (%s, %s)" (dump_reason cx reason) (dump_reason cx reason_op)
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ECannotDelete (l1, r1) -> spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)

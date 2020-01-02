@@ -267,7 +267,6 @@ and 'loc t' =
   | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
-  | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
   | EBigIntNotYetSupported of 'loc virtual_reason
@@ -734,7 +733,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
-  | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
@@ -980,7 +978,6 @@ let util_use_op_of_msg nope util = function
   | EOptionalChainingMethods _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
-  | EInexactSpread _
   | EUnexpectedTemporaryBaseType _
   | ECannotDelete _
   | EBigIntNotYetSupported _
@@ -1011,7 +1008,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
   | EDynamicExport (_, primary)
-  | EInexactSpread (_, primary)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
@@ -1226,7 +1222,6 @@ let kind_of_msg =
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
     | EUnnecessaryOptionalChain _ -> LintError Lints.UnnecessaryOptionalChain
     | EUnnecessaryInvariant _ -> LintError Lints.UnnecessaryInvariant
-    | EInexactSpread _ -> LintError Lints.InexactSpread
     | ESignatureVerification _ -> LintError Lints.SignatureVerificationFailure
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
@@ -2717,22 +2712,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EInexactSpread (reason, reason_op) ->
-    let features =
-      [
-        text "Cannot determine the type of ";
-        ref reason_op;
-        text " because ";
-        text "it contains a spread of inexact ";
-        ref reason;
-        text ". ";
-        text "Being inexact, ";
-        ref reason;
-        text " might be missing the types of some properties that are being copied. ";
-        text "Perhaps you could make it exact?";
-      ]
-    in
-    Normal { features }
   | EBigIntNotYetSupported reason ->
     Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
   | ECannotSpreadInterface { spread_reason; interface_reason } ->
@@ -3027,7 +3006,6 @@ let is_lint_error = function
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
-  | EInexactSpread _
   | EBigIntNotYetSupported _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _

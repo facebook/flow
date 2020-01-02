@@ -5084,8 +5084,8 @@ struct
         with reads of those properties through X as soon as O2 is resolved. To
         avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,ObjAssign);
         when O2 is resolved, we make the switch. **)
-        | ( DefT (lreason, _, ObjT { props_tmap = mapr; flags; dict_t; _ }),
-            ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign error_flags) ) ->
+        | ( DefT (lreason, _, ObjT { props_tmap = mapr; dict_t; _ }),
+            ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _) ) ->
           Context.iter_props cx mapr (fun x p ->
               (* move the reason to the call site instead of the definition, so
            that it is in the same scope as the Object.assign, so that
@@ -5110,11 +5110,8 @@ struct
                   (Error_message.EPropNotReadable { reason_prop; prop_name = Some x; use_op }));
           if dict_t <> None then
             rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
-          else (
-            if error_flags.assert_exact && not flags.exact then
-              add_output cx ~trace (Error_message.EInexactSpread (lreason, reason_op));
+          else
             rec_flow_t cx trace ~use_op (to_obj, t)
-          )
         | ( DefT (lreason, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
             ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _) ) ->
           let own_props = Context.find_props cx own_props in

@@ -34,7 +34,6 @@ type lint_kind =
   | DeprecatedUtility
   | DynamicExport
   | UnsafeGettersSetters
-  | InexactSpread
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | SignatureVerificationFailure

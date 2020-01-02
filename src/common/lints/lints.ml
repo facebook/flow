@@ -34,7 +34,6 @@ type lint_kind =
   | DeprecatedUtility
   | DynamicExport
   | UnsafeGettersSetters
-  | InexactSpread
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | SignatureVerificationFailure
@@ -68,7 +67,6 @@ let string_of_kind = function
   | DeprecatedUtility -> "deprecated-utility"
   | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
-  | InexactSpread -> "inexact-spread"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | SignatureVerificationFailure -> "signature-verification-failure"
@@ -102,7 +100,6 @@ let kinds_of_string = function
   | "deprecated-utility" -> Some [DeprecatedUtility]
   | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
-  | "inexact-spread" -> Some [InexactSpread]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
