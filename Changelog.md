@@ -1,3 +1,27 @@
+### 0.115.0
+
+Likely to cause new Flow errors:
+* In [Types First](https://medium.com/flow-type/what-the-flow-team-has-been-up-to-54239c62004f) mode, exported classes and functions cannot be reassigned.
+* Added similar checking of `symbol` in non-strict equality as other primitive types ([example](https://flow.org/try/#0MYewdgzgLgBBBccCeBbARiANjAvDAyqhpgBQCUA3AFAD0NMAwgIZhgiygoAOTATgKYwmAcyYBLSLDZgAtBCJYIVUJJgAPRAG0Aurhg7qa3HggUYdGAFFevELyoRj6sxeu37RgIQmX9N3YcYb2dzPxsAoA)). We allow for non-strict equality checks between two symbol types, and between a symbol and null/void ([example](https://flow.org/try/#0N4KABGD0lgwg9gWwA4EMBOBLAzvAdmAO6YAuAFmNgJ6IBG8ANmDmKgw-IQKYAm4YAY3zYSlAFyUa9JgF4wAZSmMAFAEoA3PyF4RYKhOp1GYOYqMM1miNhNyq6qDADyAaX5VblB9DCv+NgEI7b2c3CA8gr0dfNwBfEFAIbV1sAyVZBXTLfh8nci50MHJUAjwAV3ZIADd4TB4iMkwBCm5WBkJUKhs2DkJ-T3L2EJj+Qdk5bGG-a08yvB4uADNMPF4psLA5heXV+pkJ9ZBYoA)).
+* We now write properties to unsealed objects recorded during speculative checking, after speculation has succeeded.
+* Added more complete handling for indexers in spreads:
+  - Use the indexer on the right, when the left is empty, exact and has no indexer. [[example](https://flow.org/try/#0MYewdgzgLgBAJgLhgbwD6oL4wLwoHQFgCuANiRgNwwD01KWAfgHwrpYCmATpyJxADQwIIIQAdO7AIZwAlmADmMYmRgAoUJFjskyANrROc+QF0kAWxkAPdnCy5kldeGgwAZjv1RDC0zAvXbHHwCOEECPHZKGjoAZQALEFI4GAAjdhhJMhAAdxsgA)]
+  - Allow matching indexers to be spread. [[example](https://flow.org/try/#0MYewdgzgLgBAhgJgFwwN4G1oCcCWYDmAuigLY4AeApgCYC+MAvGrQNwBQoksARsmugHI4AmAB8YA7gOIwyVOo2btO0GMD4ZseIqQo16TVADoTiADQwTR3qxgB6OzADyAaxhA)]
+* Removed the `non-array-spread` lint, and replaced it with a new .flowconfig option, `babel_loose_array_spread`.
+
+Notable bug fixes:
+* Improved union optimization for non-enum union equality checks.
+* Fixed a bug in which `$Exact<T>` failed when `T` resolved to a `Shape<T>`. [[example](https://flow.org/try/#0C4TwDgpgBAygFgQ0jYDjQLxQCTyRAHgG8AfAKCigDMB7GgLigGdgAnASwDsBzAGjJIBfAHwBuMmQAmEAMYAbBK2hUArpxnB2NTlBVhJaCACYAFBSgAjRYxPYAogA8EGgnmSp0wgJRQMwqJwqALYWEKz8XowAbjTskuJkegbopiZgSlEohoxuEFnoPn5QAAxeokA)]
+
+Misc:
+* Improved performance of calculating the set of files that need to be checked.
+* Cached the typed AST as part of the persistent connection client info, to speed up requests coming from an LSP client (DefinitionRequest, Hover, TypeCoverage).
+* Improved dependency graph construction times, by using Hashtbl and mutable back edges.
+* Improved `tool add-comments` by
+  - using `flowlint-next-line` instead of adding full `$FlowFixMe` suppressions on lints, and
+  - making the rule for inserting comments inside JSX elements also apply to JSX fragments.
+* Upgraded to sedlex 2.1.
+
 ### 0.114.1
 
 Upgrade internal dependencies sedlex and lwt. Lwt includes a fix to stack traces that we need to debug crash logs.
