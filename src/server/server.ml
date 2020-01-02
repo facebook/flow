@@ -224,6 +224,8 @@ let run_from_daemonize ~monitor_channels ~shared_mem_config options =
           ":\n" ^ bt )
     in
     FlowExitStatus.(exit ~msg Out_of_shared_memory)
+  | MonitorRPC.Monitor_died ->
+    FlowExitStatus.(exit ~msg:"Monitor died unexpectedly" Killed_by_monitor)
   | e ->
     let e = Exception.wrap e in
     let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
