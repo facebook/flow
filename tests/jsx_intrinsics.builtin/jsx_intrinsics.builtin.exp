@@ -19,7 +19,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:14:3
 
 Cannot assign `<CustomComponent />` to `c` because:
- - property `prop1` is missing in object type [1] but exists in object type [2] in property `props`.
+ - property `prop1` (did you mean `prop`?) is missing in object type [1] but exists in object type [2] in property
+   `props`.
  - property `prop` is missing in object type [2] but exists in object type [1] in type argument `Props` [3] of property
    `type`.
  - property `prop1` is missing in object type [1] but exists in object type [2] in type argument `Props` [3] of property

@@ -499,7 +499,7 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
           Frame (PropertyCompatibility { prop = Some x; lower = reason; upper = reason_o }, use_op)
         in
         let reason_prop = update_desc_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-        let err = Error_message.EPropNotFound (Some x, (reason_prop, reason), use_op) in
+        let err = Error_message.EPropNotFound (Some x, (reason_prop, reason), use_op, None) in
         add_output cx ~trace err)
       props_not_found;
     not (SMap.is_empty props_not_found)
@@ -2536,12 +2536,14 @@ struct
           | (_, Some { key; _ }) ->
             rec_flow_t cx trace (DefT (reason_op, bogus_trust (), StrT x), key)
           | _ ->
-            let prop =
+            let (prop, suggestion) =
               match x with
-              | Literal (_, prop) -> Some prop
-              | _ -> None
+              | Literal (_, prop) -> (Some prop, prop_typo_suggestion cx [mapr] prop)
+              | _ -> (None, None)
             in
-            let err = Error_message.EPropNotFound (prop, (reason_op, reason_o), use_op) in
+            let err =
+              Error_message.EPropNotFound (prop, (reason_op, reason_o), use_op, suggestion)
+            in
             add_output cx ~trace err)
         | ( DefT (reason_o, _, InstanceT (_, _, _, instance)),
             HasOwnPropT (use_op, reason_op, Literal (_, x)) ) ->
@@ -2551,10 +2553,16 @@ struct
           (match SMap.find_opt x fields with
           | Some _ -> ()
           | None ->
-            let err = Error_message.EPropNotFound (Some x, (reason_op, reason_o), use_op) in
+            let err =
+              Error_message.EPropNotFound
+                ( Some x,
+                  (reason_op, reason_o),
+                  use_op,
+                  prop_typo_suggestion cx [instance.own_props; instance.proto_props] x )
+            in
             add_output cx ~trace err)
         | (DefT (reason_o, _, InstanceT (_, _, _, _)), HasOwnPropT (use_op, reason_op, _)) ->
-          let err = Error_message.EPropNotFound (None, (reason_op, reason_o), use_op) in
+          let err = Error_message.EPropNotFound (None, (reason_op, reason_o), use_op, None) in
           add_output cx ~trace err
         (* AnyT has every prop *)
         | (AnyT _, HasOwnPropT _) -> ()
@@ -2974,7 +2982,9 @@ struct
       *)
 
         (* lookup of properties **)
-        | (IntersectionT (_, rep), LookupT (reason, strict, try_ts_on_failure, s, t)) ->
+        | ( IntersectionT (_, rep),
+            LookupT { reason; lookup_kind; ts = try_ts_on_failure; propref; lookup_action; ids } )
+          ->
           let ts = InterRep.members rep in
           assert (ts <> []);
 
@@ -2984,7 +2994,16 @@ struct
           rec_flow
             cx
             trace
-            (List.hd ts, LookupT (reason, strict, List.tl ts @ try_ts_on_failure, s, t))
+            ( List.hd ts,
+              LookupT
+                {
+                  reason;
+                  lookup_kind;
+                  ts = List.tl ts @ try_ts_on_failure;
+                  propref;
+                  lookup_action;
+                  ids;
+                } )
         | (IntersectionT _, TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
         | ( IntersectionT _,
@@ -3100,7 +3119,17 @@ struct
          away by this point. *)
           let propref = Named (reason, x) in
           let strict = NonstrictReturning (None, None) in
-          let u = LookupT (reason, strict, [], propref, MatchProp (use_op, t)) in
+          let u =
+            LookupT
+              {
+                reason;
+                lookup_kind = strict;
+                ts = [];
+                propref;
+                lookup_action = MatchProp (use_op, t);
+                ids = Properties.Set.empty;
+              }
+          in
           rec_flow cx trace (l, u)
         | (MatchingPropT _, _) when is_use u -> () (* TODO: empty? *)
         (*************************)
@@ -4453,7 +4482,13 @@ struct
                     Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
                   else
                     Error_message.EStrictLookupFailed
-                      { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+                      {
+                        reason_prop;
+                        reason_obj = lreason;
+                        name = prop_name;
+                        use_op = Some use_op;
+                        suggestion = None;
+                      }
                 in
                 add_output cx ~trace error_message);
 
@@ -4481,7 +4516,15 @@ struct
                     ReposLowerT
                       ( lreason,
                         false,
-                        LookupT (ureason, strict, [], propref, LookupProp (use_op, up)) ) ));
+                        LookupT
+                          {
+                            reason = ureason;
+                            lookup_kind = strict;
+                            ts = [];
+                            propref;
+                            lookup_action = LookupProp (use_op, up);
+                            ids = Properties.Set.of_list [lown; lproto];
+                          } ) ));
 
           rec_flow cx trace (l, UseT (use_op, uproto))
         (* For some object `x` and constructor `C`, if `x instanceof C`, then the
@@ -4516,7 +4559,13 @@ struct
                   Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
                 else
                   Error_message.EStrictLookupFailed
-                    { reason_prop; reason_obj = reason; name = prop_name; use_op = Some use_op }
+                    {
+                      reason_prop;
+                      reason_obj = reason;
+                      name = prop_name;
+                      use_op = Some use_op;
+                      suggestion = None;
+                    }
               in
               add_output cx ~trace error_message;
               AnyT.error reason_op
@@ -4835,7 +4884,15 @@ struct
         (* instances of classes may have their fields looked up *)
         (********************************************************)
         | ( DefT (lreason, _, InstanceT (_, super, _, instance)),
-            LookupT (reason_op, kind, try_ts_on_failure, (Named (_, x) as propref), action) ) ->
+            LookupT
+              {
+                reason = reason_op;
+                lookup_kind = kind;
+                ts = try_ts_on_failure;
+                propref = Named (_, x) as propref;
+                lookup_action = action;
+                ids;
+              } ) ->
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
           let pmap = SMap.union own_props proto_props in
@@ -4848,13 +4905,27 @@ struct
               | (true, Strict _) -> NonstrictReturning (None, None)
               | _ -> kind
             in
-            rec_flow cx trace (super, LookupT (reason_op, kind, try_ts_on_failure, propref, action))
+            rec_flow
+              cx
+              trace
+              ( super,
+                LookupT
+                  {
+                    reason = reason_op;
+                    lookup_kind = kind;
+                    ts = try_ts_on_failure;
+                    propref;
+                    lookup_action = action;
+                    ids =
+                      Properties.Set.add instance.own_props ids
+                      |> Properties.Set.add instance.proto_props;
+                  } )
           | Some p ->
             (match kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
             perform_lookup_action cx trace propref p PropertyMapProperty lreason reason_op action)
-        | (DefT (_, _, InstanceT _), LookupT (reason_op, _, _, Computed _, _)) ->
+        | (DefT (_, _, InstanceT _), LookupT { reason = reason_op; propref = Computed _; _ }) ->
           (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
@@ -4871,6 +4942,7 @@ struct
           let strict = Strict reason_c in
           set_prop
             cx
+            (Properties.Set.of_list [instance.own_props; instance.proto_props])
             ~mode
             ~wr_ctx
             trace
@@ -4929,7 +5001,18 @@ struct
           let proto_props = Context.find_props cx instance.proto_props in
           let fields = SMap.union own_props proto_props in
           let strict = Strict reason_c in
-          match_prop cx trace ~use_op reason_prop reason_op strict super x fields prop_t
+          match_prop
+            cx
+            (Properties.Set.of_list [instance.own_props; instance.proto_props])
+            trace
+            ~use_op
+            reason_prop
+            reason_op
+            strict
+            super
+            x
+            fields
+            prop_t
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
@@ -4946,7 +5029,19 @@ struct
             else
               Strict reason_c
           in
-          get_prop cx trace ~use_op reason_prop reason_op strict l super x fields tout
+          get_prop
+            cx
+            (Properties.Set.of_list [instance.own_props; instance.proto_props])
+            trace
+            ~use_op
+            reason_prop
+            reason_op
+            strict
+            l
+            super
+            x
+            fields
+            tout
         | (DefT (reason_c, _, InstanceT _), GetPrivatePropT (use_op, reason_op, x, [], _, _)) ->
           add_output
             cx
@@ -4996,7 +5091,19 @@ struct
             else
               Strict reason_c
           in
-          get_prop cx trace ~use_op reason_prop reason_lookup strict l super x props funt;
+          get_prop
+            cx
+            (Properties.Set.of_list [instance.own_props; instance.proto_props])
+            trace
+            ~use_op
+            reason_prop
+            reason_lookup
+            strict
+            l
+            super
+            x
+            props
+            funt;
           Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (funt, prop_t)) prop_t;
 
           (* suppress ops while calling the function. if `funt` is a `FunT`, then
@@ -5252,7 +5359,15 @@ struct
         (* objects may have their fields looked up *)
         (*******************************************)
         | ( DefT (reason_obj, _, ObjT o),
-            LookupT (reason_op, strict, try_ts_on_failure, propref, action) ) ->
+            LookupT
+              {
+                reason = reason_op;
+                lookup_kind = strict;
+                ts = try_ts_on_failure;
+                propref;
+                lookup_action = action;
+                ids;
+              } ) ->
           (match get_obj_prop cx trace o propref reason_op with
           | Some (p, target_kind) ->
             (match strict with
@@ -5269,8 +5384,26 @@ struct
             rec_flow
               cx
               trace
-              (o.proto_t, LookupT (reason_op, strict, try_ts_on_failure, propref, action)))
-        | (AnyT (reason, _), LookupT (reason_op, kind, _, propref, action)) ->
+              ( o.proto_t,
+                LookupT
+                  {
+                    reason = reason_op;
+                    lookup_kind = strict;
+                    ts = try_ts_on_failure;
+                    propref;
+                    lookup_action = action;
+                    ids = Properties.Set.add o.props_tmap ids;
+                  } ))
+        | ( AnyT (reason, _),
+            LookupT
+              {
+                reason = reason_op;
+                lookup_kind = kind;
+                ts = _;
+                propref;
+                lookup_action = action;
+                ids = _;
+              } ) ->
           (match action with
           | SuperProp (_, lp) when Property.write_t lp = None ->
             (* Without this exception, we will call rec_flow_p where
@@ -6312,11 +6445,14 @@ struct
             trace
             ( l,
               LookupT
-                ( reason_op,
-                  lookup_kind,
-                  [],
-                  propref,
-                  ReadProp { use_op = unknown_use; obj_t = l; tout } ) )
+                {
+                  reason = reason_op;
+                  lookup_kind;
+                  ts = [];
+                  propref;
+                  lookup_action = ReadProp { use_op = unknown_use; obj_t = l; tout };
+                  ids = Properties.Set.empty;
+                } )
         (************)
         (* indexing *)
         (************)
@@ -6374,53 +6510,90 @@ struct
         does not.
      *)
         | ( (DefT (_, _, NullT) | ObjProtoT _),
-            LookupT (reason, strict, next :: try_ts_on_failure, propref, t) ) ->
+            LookupT
+              { reason; lookup_kind; ts = next :: try_ts_on_failure; propref; lookup_action; ids }
+          ) ->
           (* When s is not found, we always try to look it up in the next element in
          the list try_ts_on_failure. *)
-          rec_flow cx trace (next, LookupT (reason, strict, try_ts_on_failure, propref, t))
+          rec_flow
+            cx
+            trace
+            ( next,
+              LookupT { reason; lookup_kind; ts = try_ts_on_failure; propref; lookup_action; ids }
+            )
         | ( (ObjProtoT _ | FunProtoT _),
             LookupT
-              (reason_op, _, [], Named (_, "__proto__"), ReadProp { use_op = _; obj_t = l; tout })
-          ) ->
+              {
+                reason = reason_op;
+                lookup_kind = _;
+                ts = [];
+                propref = Named (_, "__proto__");
+                lookup_action = ReadProp { use_op = _; obj_t = l; tout };
+                ids = _;
+              } ) ->
           (* __proto__ is a getter/setter on Object.prototype *)
           rec_flow cx trace (l, GetProtoT (reason_op, tout))
         | ( (ObjProtoT _ | FunProtoT _),
             LookupT
-              ( reason_op,
-                _,
-                [],
-                Named (_, "__proto__"),
-                WriteProp { use_op = _; obj_t = l; prop_tout = _; tin; write_ctx = _; mode = _ } )
-          ) ->
+              {
+                reason = reason_op;
+                lookup_kind = _;
+                ts = [];
+                propref = Named (_, "__proto__");
+                lookup_action =
+                  WriteProp { use_op = _; obj_t = l; prop_tout = _; tin; write_ctx = _; mode = _ };
+                ids = _;
+              } ) ->
           (* __proto__ is a getter/setter on Object.prototype *)
           rec_flow cx trace (l, SetProtoT (reason_op, tin))
-        | (ObjProtoT _, LookupT (reason_op, _, [], Named (_, x), _))
+        | (ObjProtoT _, LookupT { reason = reason_op; ts = []; propref = Named (_, x); _ })
           when is_object_prototype_method x ->
           (* TODO: These properties should go in Object.prototype. Currently we
           model Object.prototype as a ObjProtoT, as an optimization against a
           possible deluge of shadow properties on Object.prototype, since it
           is shared by every object. **)
           rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
-        | (FunProtoT _, LookupT (reason_op, _, _, Named (_, x), _)) when is_function_prototype x ->
+        | (FunProtoT _, LookupT { reason = reason_op; propref = Named (_, x); _ })
+          when is_function_prototype x ->
           (* TODO: Ditto above comment for Function.prototype *)
           rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
-              (reason_op, Strict strict_reason, [], (Named (reason_prop, x) as propref), action) )
-          ->
+              {
+                reason = reason_op;
+                lookup_kind = Strict strict_reason;
+                ts = [];
+                propref = Named (reason_prop, x) as propref;
+                lookup_action = action;
+                ids;
+              } ) ->
           let error_message =
             if is_builtin_reason ALoc.source reason then
               Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
             else
               let use_op = use_op_of_lookup_action action in
               Error_message.EStrictLookupFailed
-                { reason_prop; reason_obj = strict_reason; name = Some x; use_op }
+                {
+                  reason_prop;
+                  reason_obj = strict_reason;
+                  name = Some x;
+                  use_op;
+                  suggestion = prop_typo_suggestion cx (Properties.Set.elements ids) x;
+                }
           in
           add_output cx ~trace error_message;
           let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
           perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
-            LookupT (reason_op, Strict strict_reason, [], (Computed elem_t as propref), action) ) ->
+            LookupT
+              {
+                reason = reason_op;
+                lookup_kind = Strict strict_reason;
+                ts = [];
+                propref = Computed elem_t as propref;
+                lookup_action = action;
+                ids = _;
+              } ) ->
           (match elem_t with
           | OpenT _ ->
             let loc = loc_of_t elem_t in
@@ -6447,16 +6620,25 @@ struct
               else
                 let use_op = use_op_of_lookup_action action in
                 Error_message.EStrictLookupFailed
-                  { reason_prop; reason_obj = strict_reason; name = None; use_op }
+                  {
+                    reason_prop;
+                    reason_obj = strict_reason;
+                    name = None;
+                    use_op;
+                    suggestion = None;
+                  }
             in
             add_output cx ~trace error_message)
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
-              ( reason_op,
-                ShadowRead (strict, rev_proto_ids),
-                [],
-                (Named (reason_prop, x) as propref),
-                action ) ) ->
+              {
+                reason = reason_op;
+                lookup_kind = ShadowRead (strict, rev_proto_ids);
+                ts = [];
+                propref = Named (reason_prop, x) as propref;
+                lookup_action = action;
+                ids;
+              } ) ->
           (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
           (match strict with
           | None -> ()
@@ -6467,7 +6649,13 @@ struct
               else
                 let use_op = use_op_of_lookup_action action in
                 Error_message.EStrictLookupFailed
-                  { reason_prop; reason_obj = strict_reason; name = Some x; use_op }
+                  {
+                    reason_prop;
+                    reason_obj = strict_reason;
+                    name = Some x;
+                    use_op;
+                    suggestion = prop_typo_suggestion cx (Properties.Set.elements ids) x;
+                  }
             in
             add_output cx ~trace error_message);
 
@@ -6477,11 +6665,14 @@ struct
           perform_lookup_action cx trace propref p PropertyMapProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
-              ( reason_op,
-                ShadowWrite rev_proto_ids,
-                [],
-                (Named (lookup_reason, x) as propref),
-                action ) ) ->
+              {
+                reason = reason_op;
+                lookup_kind = ShadowWrite rev_proto_ids;
+                ts = [];
+                propref = Named (lookup_reason, x) as propref;
+                lookup_action = action;
+                ids = _;
+              } ) ->
           let (id, proto_ids) = Nel.rev rev_proto_ids in
           let pmap = Context.find_props cx id in
           (* Re-check written-to unsealed object to see if prop was added since we
@@ -6518,16 +6709,23 @@ struct
           in
           perform_lookup_action cx trace propref p PropertyMapProperty reason reason_op action
         | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-            LookupT (_, ShadowRead _, [], Computed elem_t, _) ) ->
+            LookupT { lookup_kind = ShadowRead _; ts = []; propref = Computed elem_t; _ } ) ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, ShadowReadComputed))
         | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-            LookupT (_, ShadowWrite _, [], Computed elem_t, _) ) ->
+            LookupT { lookup_kind = ShadowWrite _; ts = []; propref = Computed elem_t; _ } ) ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, ShadowWriteComputed))
         (* LookupT is a non-strict lookup *)
         | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-            LookupT (_, NonstrictReturning (t_opt, test_opt), [], propref, action) ) ->
+            LookupT
+              {
+                lookup_kind = NonstrictReturning (t_opt, test_opt);
+                ts = [];
+                propref;
+                lookup_action = action;
+                _;
+              } ) ->
           (* don't fire
 
          ...unless a default return value is given. Two examples:
@@ -6683,7 +6881,7 @@ struct
         | (FunProtoBindT reason, _)
         | (FunProtoCallT reason, _) ->
           rec_flow cx trace (FunProtoT reason, u)
-        | (_, LookupT (_, _, _, propref, lookup_action)) ->
+        | (_, LookupT { propref; lookup_action; _ }) ->
           let use_op = use_op_of_lookup_action lookup_action in
           add_output
             cx
@@ -6912,7 +7110,10 @@ struct
                   use_op )
             in
             let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
-            let err = Error_message.EPropNotFound (Some s, (reason_prop, ureason), use_op) in
+            let err =
+              Error_message.EPropNotFound
+                (Some s, (reason_prop, ureason), use_op, prop_typo_suggestion cx [uflds] s)
+            in
             add_output cx ~trace err);
       Option.iter lcall ~f:(fun _ ->
           if Option.is_none ucall then
@@ -6930,7 +7131,7 @@ struct
                   use_op )
             in
             let reason_prop = replace_desc_reason (RProperty prop) lreason in
-            let err = Error_message.EPropNotFound (prop, (reason_prop, ureason), use_op) in
+            let err = Error_message.EPropNotFound (prop, (reason_prop, ureason), use_op, None) in
             add_output cx ~trace err)
     );
 
@@ -6950,7 +7151,13 @@ struct
             Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
           else
             Error_message.EStrictLookupFailed
-              { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+              {
+                reason_prop;
+                reason_obj = lreason;
+                name = prop_name;
+                use_op = Some use_op;
+                suggestion = None;
+              }
         in
         add_output cx ~trace error_message)
     | None -> ());
@@ -7011,8 +7218,14 @@ struct
               trace
               ( lproto,
                 LookupT
-                  (ureason, NonstrictReturning (None, None), [], propref, LookupProp (use_op, up))
-              )
+                  {
+                    reason = ureason;
+                    lookup_kind = NonstrictReturning (None, None);
+                    ts = [];
+                    propref;
+                    lookup_action = LookupProp (use_op, up);
+                    ids = Properties.Set.singleton lflds;
+                  } )
           | _ ->
             (* When an object type is unsealed, typing it as another object type should add properties
            of that object type to it as needed. We do this when not speculating, because adding
@@ -7031,7 +7244,16 @@ struct
               rec_flow
                 cx
                 trace
-                (lproto, LookupT (ureason, strict, [], propref, LookupProp (use_op, up)))));
+                ( lproto,
+                  LookupT
+                    {
+                      reason = ureason;
+                      lookup_kind = strict;
+                      ts = [];
+                      propref;
+                      lookup_action = LookupProp (use_op, up);
+                      ids = Properties.Set.singleton lflds;
+                    } )));
 
     (* Any properties in l but not u must match indexer *)
     (match udict with
@@ -7602,10 +7824,11 @@ struct
    requirements given in the tuple. *)
   (* TODO: own_props/proto_props is misleading, since they come from interfaces,
    which don't have an own/proto distinction. *)
-  and structural_subtype cx trace ~use_op lower reason_struct (own_props, proto_props, call_id) =
+  and structural_subtype cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id)
+      =
     let lreason = reason_of_t lower in
-    let own_props = Context.find_props cx own_props in
-    let proto_props = Context.find_props cx proto_props in
+    let own_props = Context.find_props cx own_props_id in
+    let proto_props = Context.find_props cx proto_props_id in
     let call_t = Option.map call_id ~f:(Context.find_call cx) in
     own_props
     |> SMap.iter (fun s p ->
@@ -7627,11 +7850,14 @@ struct
                trace
                ( lower,
                  LookupT
-                   ( reason_struct,
-                     NonstrictReturning (None, None),
-                     [],
-                     propref,
-                     LookupProp (use_op, Field (None, t, polarity)) ) )
+                   {
+                     reason = reason_struct;
+                     lookup_kind = NonstrictReturning (None, None);
+                     ts = [];
+                     propref;
+                     lookup_action = LookupProp (use_op, Field (None, t, polarity));
+                     ids = Properties.Set.empty;
+                   } )
            | _ ->
              let propref =
                let reason_prop =
@@ -7642,7 +7868,16 @@ struct
              rec_flow
                cx
                trace
-               (lower, LookupT (reason_struct, Strict lreason, [], propref, LookupProp (use_op, p))));
+               ( lower,
+                 LookupT
+                   {
+                     reason = reason_struct;
+                     lookup_kind = Strict lreason;
+                     ts = [];
+                     propref;
+                     lookup_action = LookupProp (use_op, p);
+                     ids = Properties.Set.empty;
+                   } ));
     proto_props
     |> SMap.iter (fun s p ->
            let use_op =
@@ -7659,7 +7894,16 @@ struct
            rec_flow
              cx
              trace
-             (lower, LookupT (reason_struct, Strict lreason, [], propref, LookupProp (use_op, p))));
+             ( lower,
+               LookupT
+                 {
+                   reason = reason_struct;
+                   lookup_kind = Strict lreason;
+                   ts = [];
+                   propref;
+                   lookup_action = LookupProp (use_op, p);
+                   ids = Properties.Set.empty;
+                 } ));
     call_t
     |> Option.iter ~f:(fun ut ->
            let prop_name = Some "$call" in
@@ -7682,7 +7926,13 @@ struct
                  Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
                else
                  Error_message.EStrictLookupFailed
-                   { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+                   {
+                     reason_prop;
+                     reason_obj = lreason;
+                     name = prop_name;
+                     use_op = Some use_op;
+                     suggestion = None;
+                   }
              in
              add_output cx ~trace error_message)
 
@@ -7692,7 +7942,7 @@ struct
     in
     let strict = NonstrictReturning (None, None) in
     let reason_prop = replace_desc_reason (RProperty (Some x)) lreason in
-    lookup_prop cx trace t reason_prop lreason strict x (SuperProp (use_op, p))
+    lookup_prop cx Properties.Set.empty trace t reason_prop lreason strict x (SuperProp (use_op, p))
 
   and eval_latent_pred cx ?trace reason curr_t p i =
     let evaluated = Context.evaluated cx in
@@ -7742,7 +7992,15 @@ struct
               NonstrictReturning
                 (Some (DefT (void_reason, bogus_trust (), VoidT), default_tout), None)
             in
-            LookupT (reason, strict, [], Named (reason, x), action)
+            LookupT
+              {
+                reason;
+                lookup_kind = strict;
+                ts = [];
+                propref = Named (reason, x);
+                lookup_action = action;
+                ids = Properties.Set.empty;
+              }
           in
           (* We use GetPropT instead of a strict lookup because a strict lookup directly on
            * an unsealed object would cause an error. *)
@@ -8977,7 +9235,10 @@ struct
   and is_munged_prop_name_with_munge name ~should_munge_underscores =
     Signature_utils.is_munged_property_name name && should_munge_underscores
 
-  and lookup_prop cx trace l reason_prop reason_op strict x action =
+  and prop_typo_suggestion cx ids =
+    Base.List.(ids >>| Context.find_real_props cx >>= SMap.keys |> typo_suggestion)
+
+  and lookup_prop cx previously_seen_props trace l reason_prop reason_op strict x action =
     let l =
       (* munge names beginning with single _ *)
       if is_munged_prop_name cx x then
@@ -8986,9 +9247,21 @@ struct
         l
     in
     let propref = Named (reason_prop, x) in
-    rec_flow cx trace (l, LookupT (reason_op, strict, [], propref, action))
+    rec_flow
+      cx
+      trace
+      ( l,
+        LookupT
+          {
+            reason = reason_op;
+            lookup_kind = strict;
+            ts = [];
+            propref;
+            lookup_action = action;
+            ids = previously_seen_props;
+          } )
 
-  and access_prop cx trace reason_prop reason_op strict super x pmap action =
+  and access_prop cx previously_seen_props trace reason_prop reason_op strict super x pmap action =
     match SMap.find_opt x pmap with
     | Some p ->
       perform_lookup_action
@@ -9000,17 +9273,21 @@ struct
         reason_prop
         reason_op
         action
-    | None -> lookup_prop cx trace super reason_prop reason_op strict x action
+    | None -> lookup_prop cx previously_seen_props trace super reason_prop reason_op strict x action
 
-  and get_prop cx trace ~use_op reason_prop reason_op strict l super x map tout =
+  and get_prop
+      cx previously_seen_props trace ~use_op reason_prop reason_op strict l super x map tout =
     ReadProp { use_op; obj_t = l; tout }
-    |> access_prop cx trace reason_prop reason_op strict super x map
+    |> access_prop cx previously_seen_props trace reason_prop reason_op strict super x map
 
-  and match_prop cx trace ~use_op reason_prop reason_op strict super x pmap prop_t =
-    MatchProp (use_op, prop_t) |> access_prop cx trace reason_prop reason_op strict super x pmap
+  and match_prop
+      cx previously_seen_props trace ~use_op reason_prop reason_op strict super x pmap prop_t =
+    MatchProp (use_op, prop_t)
+    |> access_prop cx previously_seen_props trace reason_prop reason_op strict super x pmap
 
   and set_prop
       cx
+      previously_seen_props
       ?(wr_ctx = Normal)
       ~mode
       trace
@@ -9025,7 +9302,7 @@ struct
       tin
       prop_tout =
     let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx = wr_ctx; mode } in
-    access_prop cx trace reason_prop reason_op strict super x pmap action
+    access_prop cx previously_seen_props trace reason_prop reason_op strict super x pmap action
 
   and get_obj_prop cx trace o propref reason_op =
     let named_prop =
@@ -9065,7 +9342,16 @@ struct
         rec_flow
           cx
           trace
-          (o.proto_t, LookupT (reason_op, strict, [], propref, ReadProp { use_op; obj_t = l; tout }))
+          ( o.proto_t,
+            LookupT
+              {
+                reason = reason_op;
+                lookup_kind = strict;
+                ts = [];
+                propref;
+                lookup_action = ReadProp { use_op; obj_t = l; tout };
+                ids = Properties.Set.singleton o.props_tmap;
+              } )
       | Computed elem_t ->
         (match elem_t with
         | OpenT _ ->
@@ -9117,7 +9403,11 @@ struct
           add_output
             cx
             ~trace
-            (Error_message.EPropNotFound (Some prop, (reason_prop, reason_obj), use_op))
+            (Error_message.EPropNotFound
+               ( Some prop,
+                 (reason_prop, reason_obj),
+                 use_op,
+                 prop_typo_suggestion cx [o.props_tmap] prop ))
         else
           let strict =
             if sealed then
@@ -9125,7 +9415,19 @@ struct
             else
               ShadowWrite (Nel.one o.props_tmap)
           in
-          rec_flow cx trace (o.proto_t, LookupT (reason_op, strict, [], propref, action))
+          rec_flow
+            cx
+            trace
+            ( o.proto_t,
+              LookupT
+                {
+                  reason = reason_op;
+                  lookup_kind = strict;
+                  ts = [];
+                  propref;
+                  lookup_action = action;
+                  ids = Properties.Set.singleton o.props_tmap;
+                } )
       | Computed elem_t ->
         (match elem_t with
         | OpenT _ ->
@@ -10293,7 +10595,7 @@ struct
                   (PropertyCompatibility { prop = None; lower = ureason; upper = lreason }, use_op)
               in
               let lreason = replace_desc_reason RSomeProperty lreason in
-              let err = Error_message.EPropNotFound (None, (lreason, ureason), use_op) in
+              let err = Error_message.EPropNotFound (None, (lreason, ureason), use_op, None) in
               add_output cx ~trace err
             | (None, Some _) ->
               let use_op =
@@ -10302,7 +10604,7 @@ struct
                     Frame (UnifyFlip, use_op) )
               in
               let ureason = replace_desc_reason RSomeProperty ureason in
-              let err = Error_message.EPropNotFound (None, (ureason, lreason), use_op) in
+              let err = Error_message.EPropNotFound (None, (ureason, lreason), use_op, None) in
               add_output cx ~trace err
             | (None, None) -> ()
           end;
@@ -10418,7 +10720,7 @@ struct
           ( PropertyCompatibility { prop = Some x; lower = dict_reason; upper = prop_obj_reason },
             use_op )
       in
-      let err = Error_message.EPropNotFound (Some x, (prop_reason, dict_reason), use_op) in
+      let err = Error_message.EPropNotFound (Some x, (prop_reason, dict_reason), use_op, None) in
       add_output cx ~trace err
 
   (* TODO: Unification between concrete types is still implemented as
@@ -11101,8 +11403,14 @@ struct
       ?trace
       ( l,
         LookupT
-          (reason, strict, [], propref, ReadProp { use_op = unknown_use; obj_t = l; tout = builtin })
-      )
+          {
+            reason;
+            lookup_kind = strict;
+            ts = [];
+            propref;
+            lookup_action = ReadProp { use_op = unknown_use; obj_t = l; tout = builtin };
+            ids = Properties.Set.empty;
+          } )
 
   and get_builtin_typeapp cx ?trace reason x ts =
     typeapp ?annot_loc:(annot_aloc_of_reason reason) (get_builtin cx ?trace x reason) ts

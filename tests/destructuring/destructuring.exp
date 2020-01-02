@@ -752,7 +752,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:39:13
 
-Property `baz` is missing in object literal [1].
+Property `baz` (did you mean `bar`?) is missing in object literal [1].
 
    destructuring.js:39:13
    39|   var {bar, baz} = {bar: 123} // error on baz
@@ -766,7 +766,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:45:4
 
-Cannot get `x.baz` because property `baz` is missing in object literal [1].
+Cannot get `x.baz` because property `baz` (did you mean `bar`?) is missing in object literal [1].
 
    destructuring.js:45:4
    45|   (x.baz: string); // error, baz doesn't exist
@@ -780,7 +780,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:4
 
-Cannot get `rest.baz` because property `baz` is missing in rest of object pattern [1].
+Cannot get `rest.baz` because property `baz` (did you mean `bar`?) is missing in rest of object pattern [1].
 
    destructuring.js:46:4
    46|   (rest.baz: string); // error, rest is sealed

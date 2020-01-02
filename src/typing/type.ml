@@ -550,9 +550,9 @@ module rec TypeTerm : sig
            * the lower bound. See the implementation of flow_js for more clarity. *)
           bool
     (* operation on prototypes *)
-    (* LookupT(_, strict, try_ts_on_failure, x, lookup_action) looks for
+    (* LookupT(_, strict, try_ts_on_failure, x, lookup_action, ids) looks for
         property x in an object type and emits a constraint according to the
-        provided lookup_action.
+        provided lookup_action. It also carries with it a list of the prop_map ids it has already tried.
 
         When x is not found, we have the following cases:
 
@@ -563,7 +563,14 @@ module rec TypeTerm : sig
 
         (3) strict = Some reason, so the position in reason is blamed.
     **)
-    | LookupT of reason * lookup_kind * t list * propref * lookup_action
+    | LookupT of {
+        reason: reason;
+        lookup_kind: lookup_kind;
+        ts: t list;
+        propref: propref;
+        lookup_action: lookup_action;
+        ids: Properties.Set.t;
+      }
     (* operations on objects *)
 
     (* Resolves the object into which the properties are assigned *)
@@ -2601,7 +2608,7 @@ end = struct
     | ImportTypeT (reason, _, _) -> reason
     | IntersectionPreprocessKitT (reason, _) -> reason
     | InvariantT reason -> reason
-    | LookupT (reason, _, _, _, _) -> reason
+    | LookupT { reason; _ } -> reason
     | MakeExactT (reason, _) -> reason
     | MapTypeT (_, reason, _, _) -> reason
     | MethodT (_, reason, _, _, _, _) -> reason
@@ -2776,7 +2783,8 @@ end = struct
     | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
     | IntersectionPreprocessKitT (reason, tool) -> IntersectionPreprocessKitT (f reason, tool)
     | InvariantT reason -> InvariantT (f reason)
-    | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
+    | LookupT { reason; lookup_kind; ts; propref; lookup_action; ids } ->
+      LookupT { reason = f reason; lookup_kind; ts; propref; lookup_action; ids }
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
     | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
     | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
@@ -2926,7 +2934,7 @@ end = struct
     | NotT (_, _)
     | ThisSpecializeT (_, _, _)
     | VarianceCheckT (_, _, _, _)
-    | LookupT (_, _, _, _, _)
+    | LookupT _
     | ObjFreezeT (_, _)
     | ObjRestT (_, _, _)
     | ObjSealT (_, _)

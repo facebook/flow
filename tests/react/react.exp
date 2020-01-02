@@ -208,7 +208,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- create_class.js:73:6
 
-Cannot get `this.statics` because property `statics` is missing in React component [1].
+Cannot get `this.statics` because property `statics` (did you mean `state`?) is missing in React component [1].
 
    create_class.js:73:6
    73|     (this.statics: mixed); // error: property `statics` not found
@@ -764,8 +764,8 @@ References:
 
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:81:19
 
-Cannot call `this.setState` with object literal bound to `partialState` because property `baz` is missing in object
-type [1] in property `baz`.
+Cannot call `this.setState` with object literal bound to `partialState` because property `baz` (did you mean `bar`?) is
+missing in object type [1] in property `baz`.
 
    create_class_initial_state_sealed.js:81:19
    81|     this.setState({ baz: 0 }); // property `baz`  not found
@@ -779,7 +779,7 @@ References:
 
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:84:6
 
-Cannot get `this.state.baz` because property `baz` is missing in object type [1].
+Cannot get `this.state.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
 
    create_class_initial_state_sealed.js:84:6
    84|     (this.state.baz: empty); // property `baz` not found
@@ -1008,7 +1008,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:53:2
 
-Cannot get `F.baz` because property `baz` is missing in statics of React class [1].
+Cannot get `F.baz` because property `baz` (did you mean `bar`?) is missing in statics of React class [1].
 
    create_class_statics_sealed.js:53:2
    53| (F.baz: empty); // number ~> empty (inflow below)
@@ -1022,7 +1022,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:54:1
 
-Cannot assign `0` to `F.baz` because property `baz` is missing in statics of React class [1].
+Cannot assign `0` to `F.baz` because property `baz` (did you mean `bar`?) is missing in statics of React class [1].
 
    create_class_statics_sealed.js:54:1
    54| F.baz = 0;
@@ -2493,7 +2493,7 @@ object literal [1] is not a React propType.
 
 Error ------------------------------------------------------------------------------------------- proptype_shape.js:20:6
 
-Cannot get `this.props.foo.baz` because property `baz` is missing in object type [1].
+Cannot get `this.props.foo.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
 
    proptype_shape.js:20:6
    20|     (this.props.foo.baz: string);
@@ -2510,7 +2510,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_shape.js:24:5
 
-Cannot assign `0` to `this.props.foo.baz` because property `baz` is missing in object type [1].
+Cannot assign `0` to `this.props.foo.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
 
    proptype_shape.js:24:5
    24|     this.props.foo.baz = 0;

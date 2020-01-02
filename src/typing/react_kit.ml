@@ -108,7 +108,16 @@ let get_intrinsic
   rec_flow
     cx
     trace
-    (intrinsic, LookupT (reason_op, Strict reason_op, [], propref, LookupProp (unknown_use, prop)))
+    ( intrinsic,
+      LookupT
+        {
+          reason = reason_op;
+          lookup_kind = Strict reason_op;
+          ts = [];
+          propref;
+          lookup_action = LookupProp (unknown_use, prop);
+          ids = Properties.Set.empty;
+        } )
 
 (* Lookup the defaultProps of a component and flow with upper depending
  * on the given polarity.
@@ -131,7 +140,19 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
   let propref = Named (reason_prop, name) in
   let action = LookupProp (unknown_use, Field (None, upper, pole)) in
   (* Lookup the `defaultProps` property. *)
-  rec_flow cx trace (component, LookupT (reason_op, strict, [], propref, action))
+  rec_flow
+    cx
+    trace
+    ( component,
+      LookupT
+        {
+          reason = reason_op;
+          lookup_kind = strict;
+          ts = [];
+          propref;
+          lookup_action = action;
+          ids = Properties.Set.empty;
+        } )
 
 (* Get a type for the default props of a component. If a component has no
  * default props then either the type will be Some {||} or we will
@@ -547,7 +568,19 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               use_op )
         in
         let action = LookupProp (use_op, Field (None, key_t, Polarity.Positive)) in
-        rec_flow cx trace (normalized_config, LookupT (reason_key, kind, [], propref, action))
+        rec_flow
+          cx
+          trace
+          ( normalized_config,
+            LookupT
+              {
+                reason = reason_key;
+                lookup_kind = kind;
+                ts = [];
+                propref;
+                lookup_action = action;
+                ids = Properties.Set.empty;
+              } )
       in
       (* Check the type of React refs in the config input.
        *
@@ -572,7 +605,19 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               use_op )
         in
         let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
-        rec_flow cx trace (normalized_config, LookupT (reason_ref, kind, [], propref, action))
+        rec_flow
+          cx
+          trace
+          ( normalized_config,
+            LookupT
+              {
+                reason = reason_ref;
+                lookup_kind = kind;
+                ts = [];
+                propref;
+                lookup_action = action;
+                ids = Properties.Set.empty;
+              } )
       in
       let annot_loc = aloc_of_reason reason_op in
       let elem_reason =

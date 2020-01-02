@@ -238,7 +238,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:10
 
-Cannot get `t.bar` because property `bar` is missing in object type [1].
+Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in object type [1].
 
    cond_prop.js:36:10
    36|         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }

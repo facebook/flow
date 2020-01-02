@@ -180,7 +180,7 @@ let score_of_msg msg =
      * a missing prop does not increase the likelihood that the user was close to
      * the right types. *)
     | EIncompatibleProp { use_op = Some (Frame (PropertyCompatibility _, _)); _ }
-    | EPropNotFound (_, _, Frame (PropertyCompatibility _, _))
+    | EPropNotFound (_, _, Frame (PropertyCompatibility _, _), _)
     | EStrictLookupFailed { use_op = Some (Frame (PropertyCompatibility _, _)); _ } ->
       -frame_score
     | _ -> 0
@@ -861,7 +861,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
      * If the use_op is a PropertyCompatibility frame then we encountered this
      * error while subtyping two objects. In this case we add a bit more
      * information to the error message. *)
-    let mk_prop_missing_error prop_loc prop lower use_op =
+    let mk_prop_missing_error prop_loc prop lower use_op suggestion =
       let (loc, lower, upper, use_op) =
         match use_op with
         (* If we are missing a property while performing property compatibility
@@ -875,11 +875,19 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       (* If we were subtyping that add to the error message so our user knows what
        * object required the missing property. *)
       let prop_message = mk_prop_message prop in
+      let suggestion =
+        match suggestion with
+        | Some suggestion -> [text " (did you mean "; code suggestion; text "?)"]
+        | None -> []
+      in
       let message =
         match upper with
         | Some upper ->
-          prop_message @ [text " is missing in "; ref lower; text " but exists in "] @ [ref upper]
-        | None -> prop_message @ [text " is missing in "; ref lower]
+          prop_message
+          @ suggestion
+          @ [text " is missing in "; ref lower; text " but exists in "]
+          @ [ref upper]
+        | None -> prop_message @ suggestion @ [text " is missing in "; ref lower]
       in
       (* Finally, create our error message. *)
       mk_use_op_error loc use_op message
@@ -931,11 +939,11 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       | IncompatibleMatchPropT (prop_loc, prop)
       | IncompatibleHasOwnPropT (prop_loc, prop)
       | IncompatibleMethodT (prop_loc, prop) ->
-        mk_prop_missing_error prop_loc prop lower use_op
+        mk_prop_missing_error prop_loc prop lower use_op None
       | IncompatibleGetElemT prop_loc
       | IncompatibleSetElemT prop_loc
       | IncompatibleCallElemT prop_loc ->
-        mk_prop_missing_error prop_loc None lower use_op
+        mk_prop_missing_error prop_loc None lower use_op None
       | IncompatibleGetStaticsT -> nope "is not an instance type"
       (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
@@ -986,8 +994,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
     match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal { features }) -> mk_error ~trace_infos ~kind loc features
     | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
-    | (None, PropMissing { loc; prop; reason_obj; use_op }) ->
-      mk_prop_missing_error loc prop reason_obj use_op
+    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
+      mk_prop_missing_error loc prop reason_obj use_op suggestion
     | ( None,
         PropPolarityMismatch
           { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op } ) ->

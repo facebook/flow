@@ -1,0 +1,338 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Cannot get `x.asd` because property `asd` (did you mean `asdf`?) is missing in object literal [1].
+
+   test.js:4:1
+   4| x.asd;
+      ^^^^^
+
+References:
+   test.js:3:9
+   3| let x = {asdf : 3};
+              ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
+
+Cannot get `x.asdfo` because property `asdfo` (did you mean `asdf`?) is missing in object literal [1].
+
+   test.js:5:1
+   5| x.asdfo;
+      ^^^^^^^
+
+References:
+   test.js:3:9
+   3| let x = {asdf : 3};
+              ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
+
+Cannot get `x.bsdf` because property `bsdf` (did you mean `asdf`?) is missing in object literal [1].
+
+   test.js:6:1
+   6| x.bsdf;
+      ^^^^^^
+
+References:
+   test.js:3:9
+   3| let x = {asdf : 3};
+              ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+
+Cannot assign `3` to `x.asd` because property `asd` (did you mean `asdf`?) is missing in object literal [1].
+
+   test.js:7:1
+   7| x.asd = 3;
+      ^^^^^
+
+References:
+   test.js:3:9
+   3| let x = {asdf : 3};
+              ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
+
+Cannot get `y.aaab` because property `aaab` (did you mean `aaaa`?) is missing in object literal [1].
+
+   test.js:10:1
+   10| y.aaab;
+       ^^^^^^
+
+References:
+   test.js:9:9
+    9| let y = {aaaa : 3, bbaa : 3};
+               ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:1
+
+Cannot get `y.bbba` because property `bbba` (did you mean `bbaa`?) is missing in object literal [1].
+
+   test.js:11:1
+   11| y.bbba;
+       ^^^^^^
+
+References:
+   test.js:9:9
+    9| let y = {aaaa : 3, bbaa : 3};
+               ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:1
+
+Cannot get `y.baaa` because property `baaa` (did you mean `aaaa`?) is missing in object literal [1].
+
+   test.js:12:1
+   12| y.baaa;
+       ^^^^^^
+
+References:
+   test.js:9:9
+    9| let y = {aaaa : 3, bbaa : 3};
+               ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:34:1
+
+Cannot get `a.fooo` because property `fooo` (did you mean `foo`?) is missing in `A` [1].
+
+   test.js:34:1
+   34| a.fooo;
+       ^^^^^^
+
+References:
+   test.js:30:9
+   30| let a = new A;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+
+Cannot get `a.barr` because property `barr` is missing in `A` [1].
+
+   test.js:35:1
+   35| a.barr; // should have no suggestion
+       ^^^^^^
+
+References:
+   test.js:30:9
+   30| let a = new A;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:36:1
+
+Cannot call `a.funk` because property `funk` (did you mean `func`?) is missing in `A` [1].
+
+   test.js:36:1
+   36| a.funk();
+       ^^^^^^^^
+
+References:
+   test.js:30:9
+   30| let a = new A;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:37:1
+
+Cannot get `A.s11111` because property `s11111` (did you mean `s1111`?) is missing in statics of `A` [1].
+
+   test.js:37:1
+   37| A.s11111;
+       ^^^^^^^^
+
+References:
+   test.js:14:7
+   14| class A {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:38:1
+
+Cannot get `A.s22222` because property `s22222` is missing in statics of `A` [1].
+
+   test.js:38:1
+   38| A.s22222; // should have no suggestion
+       ^^^^^^^^
+
+References:
+   test.js:14:7
+   14| class A {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:1
+
+Cannot get `b.fooo` because property `fooo` (did you mean `foo`?) is missing in `B` [1].
+
+   test.js:40:1
+   40| b.fooo;
+       ^^^^^^
+
+References:
+   test.js:31:9
+   31| let b = new B;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:1
+
+Cannot get `b.barr` because property `barr` (did you mean `bar`?) is missing in `B` [1].
+
+   test.js:41:1
+   41| b.barr;
+       ^^^^^^
+
+References:
+   test.js:31:9
+   31| let b = new B;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:1
+
+Cannot call `b.funk` because property `funk` (did you mean `func`?) is missing in `B` [1].
+
+   test.js:42:1
+   42| b.funk();
+       ^^^^^^^^
+
+References:
+   test.js:31:9
+   31| let b = new B;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:1
+
+Cannot get `B.s11111` because property `s11111` (did you mean `s1111`?) is missing in statics of `B` [1].
+
+   test.js:43:1
+   43| B.s11111;
+       ^^^^^^^^
+
+References:
+   test.js:20:7
+   20| class B extends A {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:44:1
+
+Cannot get `B.s22222` because property `s22222` (did you mean `s2222`?) is missing in statics of `B` [1].
+
+   test.js:44:1
+   44| B.s22222;
+       ^^^^^^^^
+
+References:
+   test.js:20:7
+   20| class B extends A {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:46:1
+
+Cannot get `c.fooo` because property `fooo` (did you mean `foo`?) is missing in `C` [1].
+
+   test.js:46:1
+   46| c.fooo;
+       ^^^^^^
+
+References:
+   test.js:32:9
+   32| let c = new C;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:1
+
+Cannot get `c.barr` because property `barr` (did you mean `bar`?) is missing in `C` [1].
+
+   test.js:47:1
+   47| c.barr;
+       ^^^^^^
+
+References:
+   test.js:32:9
+   32| let c = new C;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:48:1
+
+Cannot get `c.bazz` because property `bazz` (did you mean `baz`?) is missing in `C` [1].
+
+   test.js:48:1
+   48| c.bazz;
+       ^^^^^^
+
+References:
+   test.js:32:9
+   32| let c = new C;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:49:1
+
+Cannot call `c.funk` because property `funk` (did you mean `func`?) is missing in `C` [1].
+
+   test.js:49:1
+   49| c.funk();
+       ^^^^^^^^
+
+References:
+   test.js:32:9
+   32| let c = new C;
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:50:1
+
+Cannot get `C.s11111` because property `s11111` (did you mean `s1111`?) is missing in statics of `C` [1].
+
+   test.js:50:1
+   50| C.s11111;
+       ^^^^^^^^
+
+References:
+   test.js:25:7
+   25| class C extends B {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:51:1
+
+Cannot get `C.s22222` because property `s22222` (did you mean `s2222`?) is missing in statics of `C` [1].
+
+   test.js:51:1
+   51| C.s22222;
+       ^^^^^^^^
+
+References:
+   test.js:25:7
+   25| class C extends B {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:1
+
+Cannot get `C.s33333` because property `s33333` (did you mean `s3333`?) is missing in statics of `C` [1].
+
+   test.js:52:1
+   52| C.s33333;
+       ^^^^^^^^
+
+References:
+   test.js:25:7
+   25| class C extends B {
+             ^ [1]
+
+
+
+Found 24 errors

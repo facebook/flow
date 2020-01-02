@@ -1110,7 +1110,15 @@ class virtual ['a] t_with_uses =
           t
         else
           ConcretizeTypeAppsT (use_op, (ts1', op1, r1), (t2', ts2', op2, r2), flip)
-      | LookupT (r, lookup, tlist, prop, action) ->
+      | LookupT
+          {
+            reason = r;
+            lookup_kind = lookup;
+            ts = tlist;
+            propref = prop;
+            lookup_action = action;
+            ids;
+          } ->
         let lookup' = self#lookup_kind cx map_cx lookup in
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         let prop' = self#prop_ref cx map_cx prop in
@@ -1118,7 +1126,15 @@ class virtual ['a] t_with_uses =
         if lookup' == lookup && tlist' == tlist && prop' == prop && action' == action then
           t
         else
-          LookupT (r, lookup', tlist', prop', action')
+          LookupT
+            {
+              reason = r;
+              lookup_kind = lookup';
+              ts = tlist';
+              propref = prop';
+              lookup_action = action';
+              ids;
+            }
       | ObjAssignToT (op, r, t1, t2, obj_assign) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
