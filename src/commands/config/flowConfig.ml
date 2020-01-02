@@ -185,7 +185,7 @@ module Opts = struct
       max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
-      minimal_merge = false;
+      minimal_merge = true;
       module_file_exts;
       module_name_mappers = [];
       module_resource_exts;
