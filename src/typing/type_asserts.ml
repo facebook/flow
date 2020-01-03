@@ -63,19 +63,7 @@ let check_type_visitor wrap =
     end)
 
 let detect_invalid_calls ~full_cx file_sigs cxs tasts =
-  let options =
-    {
-      Ty_normalizer_env.fall_through_merged = false;
-      expand_internal_types = false;
-      expand_type_aliases = true;
-      flag_shadowed_type_params = false;
-      evaluate_type_destructors = true;
-      preserve_inferred_literal_types = false;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-    }
-  in
+  let options = Ty_normalizer_env.default_options in
   let check_valid_call ~genv (call_loc : ALoc.t) (_, targ_loc) =
     let typed_ast = genv.Ty_normalizer_env.typed_ast in
     let ty_opt = Typed_ast_utils.find_exact_match_annotation typed_ast targ_loc in

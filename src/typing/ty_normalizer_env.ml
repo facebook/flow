@@ -8,6 +8,25 @@
 module File_sig = File_sig.With_ALoc
 
 type options = {
+  (* If this flag is set to `true` then the normalizer will attempt to reuse the
+   * cached results of evaluated type-destructors. If this is set to `false`, then
+   * instread it will try to use:
+   *  - a potentially attendant type-alias annotation, or
+   *  - reuse the utility type that corresponds to this the specific type-destructor.
+   *
+   * Choosing 'false' will typically result in smaller produced types, which makes
+   * it a more appropriate option for codemods.
+   *)
+  evaluate_type_destructors: bool;
+  (* Expand the signatures of built-in functions, such as:
+   * Function.prototype.apply: (thisArg: any, argArray?: any): any
+   *)
+  expand_internal_types: bool;
+  (* If set to `true` type aliase names will be expanded to the types they represent.
+   *
+   * WARNING: This can cause a blow-up in the size of the produced types.
+   *)
+  expand_type_aliases: bool;
   (* MergedT is somewhat unconventional. It introduces UseT's that the
    * normalizer is not intended to handle. If this flag is set to true, all
    * instances of MergedT will fall through and return Top. Otherwise, we
@@ -18,15 +37,6 @@ type options = {
    * Pick `true` if the result does not need to be "parseable", e.g. coverage.
    *)
   fall_through_merged: bool;
-  (* Expand the signatures of built-in functions, such as:
-   * Function.prototype.apply: (thisArg: any, argArray?: any): any
-   *)
-  expand_internal_types: bool;
-  (* If set to `true` type aliase names will be expanded to the types they represent.
-   *
-   * WARNING: This can cause a blow-up in the size of the produced types.
-   *)
-  expand_type_aliases: bool;
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
    * may contain the same name twice (but with different associated locations).
    * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
@@ -41,30 +51,6 @@ type options = {
    * This flags toggles this behavior.
    *)
   flag_shadowed_type_params: bool;
-  (* Makes the normalizer more aggressive in preserving inferred literal types *)
-  preserve_inferred_literal_types: bool;
-  (* If this flag is set to `true` then the normalizer will attempt to reuse the
-   * cached results of evaluated type-destructors. If this is set to `false`, then
-   * instread it will try to use:
-   *  - a potentially attendant type-alias annotation, or
-   *  - reuse the utility type that corresponds to this the specific type-destructor.
-   *
-   * Choosing 'false' will typically result in smaller produced types, which makes
-   * it a more appropriate option for codemods.
-   *)
-  evaluate_type_destructors: bool;
-  (* Run an optimization pass that removes duplicates from unions and intersections.
-   *
-   * WARNING May be slow for large types
-   *)
-  optimize_types: bool;
-  (* Omits type params if they match the defaults, e.g:
-   *
-   * Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
-   *
-   * WARNING: May be slow due to the structural equality checks that this necessitates.
-   *)
-  omit_targ_defaults: bool;
   (* Consider all kinds of Bot and Any the same when simplifying types.
    *
    * The normalized type Ty.Bot may correspond to either the `Empty` type, not
@@ -76,7 +62,34 @@ type options = {
    * Any can be due to an annotation or implicitly arising from inference.
    *)
   merge_bot_and_any_kinds: bool;
+  (* Omits type params if they match the defaults, e.g:
+   *
+   * Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
+   *
+   * WARNING: May be slow due to the structural equality checks that this necessitates.
+   *)
+  omit_targ_defaults: bool;
+  (* Run an optimization pass that removes duplicates from unions and intersections.
+   *
+   * WARNING May be slow for large types
+   *)
+  optimize_types: bool;
+  (* Makes the normalizer more aggressive in preserving inferred literal types *)
+  preserve_inferred_literal_types: bool;
 }
+
+let default_options =
+  {
+    evaluate_type_destructors = false;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    fall_through_merged = false;
+    flag_shadowed_type_params = false;
+    merge_bot_and_any_kinds = true;
+    omit_targ_defaults = false;
+    optimize_types = true;
+    preserve_inferred_literal_types = false;
+  }
 
 (* This is a global environment that should not change during normalization *)
 type genv = {

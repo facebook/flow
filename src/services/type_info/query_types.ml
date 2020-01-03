@@ -81,15 +81,9 @@ let type_at_pos_type
 let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
     {
-      Ty_normalizer_env.fall_through_merged = false;
-      expand_internal_types = false;
-      expand_type_aliases = expand_aliases;
-      flag_shadowed_type_params = false;
-      preserve_inferred_literal_types = false;
+      Ty_normalizer_env.default_options with
+      Ty_normalizer_env.expand_type_aliases = expand_aliases;
       evaluate_type_destructors;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
     }
   in
   let file = Context.file cx in
@@ -105,17 +99,7 @@ let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig t
 
 let suggest_types cx file_sig typed_ast loc =
   let options =
-    {
-      Ty_normalizer_env.fall_through_merged = false;
-      expand_internal_types = false;
-      expand_type_aliases = false;
-      flag_shadowed_type_params = true;
-      preserve_inferred_literal_types = false;
-      evaluate_type_destructors = false;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-    }
+    { Ty_normalizer_env.default_options with Ty_normalizer_env.flag_shadowed_type_params = true }
   in
   let file = Context.file cx in
   let aLoc = ALoc.of_loc loc in
