@@ -197,14 +197,31 @@ let check_file ~options ~env ~profiling ~force file_input =
     else
       Lwt.return ServerProt.Response.NOT_COVERED
 
+type infer_type_input = {
+  file_input: File_input.t;
+  query_position: Loc.position;
+  verbose: Verbose.t option;
+  expand_aliases: bool;
+  omit_targ_defaults: bool;
+  evaluate_type_destructors: bool;
+}
+
 let infer_type
     ~(options : Options.t)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_contents_cache
-    ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors) :
-      File_input.t * int * int * Verbose.t option * bool * bool * bool) :
-    ((Loc.t * Ty.t option, string) result * Hh_json.json option) Lwt.t =
+    input : ((Loc.t * Ty.t option, string) result * Hh_json.json option) Lwt.t =
+  let {
+    file_input;
+    query_position = { Loc.line; column };
+    verbose;
+    expand_aliases;
+    omit_targ_defaults;
+    evaluate_type_destructors;
+  } =
+    input
+  in
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   let options = { options with Options.opt_verbose = verbose } in
@@ -232,7 +249,7 @@ let infer_type
                   ~evaluate_type_destructors
                   file
                   line
-                  col
+                  column
               in
               let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
               Ok (result, Some (Hh_json.JSON_Object json_props))
@@ -767,13 +784,18 @@ let handle_infer_type
     ~evaluate_type_destructors
     ~profiling
     ~env =
+  let input =
+    {
+      file_input = input;
+      query_position = { Loc.line; column = char };
+      verbose;
+      expand_aliases;
+      omit_targ_defaults;
+      evaluate_type_destructors;
+    }
+  in
   let%lwt (result, json_data) =
-    infer_type
-      ~options
-      ~env
-      ~profiling
-      ~type_contents_cache:None
-      (input, line, char, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors)
+    infer_type ~options ~env ~profiling ~type_contents_cache:None input
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -1397,7 +1419,7 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
 
 let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   TextDocumentPositionParams.(
-    let (file, line, char) =
+    let (file, line, column) =
       match loc with
       | Some loc -> loc
       | None ->
@@ -1405,17 +1427,19 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
          * a little more defensive. The only danger here is that the file contents may have changed *)
         Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
     in
-    let verbose = None in
     (* if Some, would write to server logs *)
     let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
-    let%lwt (result, extra_data) =
-      infer_type
-        ~options
-        ~env
-        ~profiling
-        ~type_contents_cache
-        (file, line, char, verbose, false, false, false)
+    let input =
+      {
+        file_input = file;
+        query_position = { Loc.line; column };
+        verbose = None;
+        expand_aliases = false;
+        omit_targ_defaults = false;
+        evaluate_type_destructors = false;
+      }
     in
+    let%lwt (result, extra_data) = infer_type ~options ~env ~profiling ~type_contents_cache input in
     let metadata = with_data ~extra_data metadata in
     match result with
     | Ok (loc, content) ->
