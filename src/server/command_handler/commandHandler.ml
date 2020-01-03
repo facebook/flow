@@ -204,6 +204,7 @@ type infer_type_input = {
   expand_aliases: bool;
   omit_targ_defaults: bool;
   evaluate_type_destructors: bool;
+  verbose_normalizer: bool;
 }
 
 let infer_type
@@ -219,6 +220,7 @@ let infer_type
     expand_aliases;
     omit_targ_defaults;
     evaluate_type_destructors;
+    verbose_normalizer;
   } =
     input
   in
@@ -247,6 +249,7 @@ let infer_type
                   ~expand_aliases
                   ~omit_targ_defaults
                   ~evaluate_type_destructors
+                  ~verbose_normalizer
                   file
                   line
                   column
@@ -782,6 +785,7 @@ let handle_infer_type
     ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
+    ~verbose_normalizer
     ~profiling
     ~env =
   let input =
@@ -792,6 +796,7 @@ let handle_infer_type
       expand_aliases;
       omit_targ_defaults;
       evaluate_type_destructors;
+      verbose_normalizer;
     }
   in
   let%lwt (result, json_data) =
@@ -994,6 +999,7 @@ let get_ephemeral_handler genv command =
         omit_targ_defaults;
         evaluate_type_destructors;
         wait_for_recheck;
+        verbose_normalizer;
       } ->
     mk_parallelizable
       ~wait_for_recheck
@@ -1006,7 +1012,8 @@ let get_ephemeral_handler genv command =
          ~verbose
          ~expand_aliases
          ~omit_targ_defaults
-         ~evaluate_type_destructors)
+         ~evaluate_type_destructors
+         ~verbose_normalizer)
   | ServerProt.Request.RAGE { files } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE
@@ -1437,6 +1444,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
         expand_aliases = false;
         omit_targ_defaults = false;
         evaluate_type_destructors = false;
+        verbose_normalizer = false;
       }
     in
     let%lwt (result, extra_data) = infer_type ~options ~env ~profiling ~type_contents_cache input in

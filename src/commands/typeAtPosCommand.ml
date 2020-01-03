@@ -46,6 +46,7 @@ let spec =
              "--evaluate-type-destructors"
              no_arg
              ~doc:"Use the result of type destructor evaluation if available"
+        |> flag "--verbose-normalizer" no_arg ~doc:"Print verbose info during normalization"
         |> anon "args" (required (list_of string)));
   }
 
@@ -110,6 +111,7 @@ let main
     expand_aliases
     omit_targ_defaults
     evaluate_type_destructors
+    verbose_normalizer
     args
     () =
   let json = json || pretty || expanded in
@@ -136,6 +138,7 @@ let main
         omit_targ_defaults;
         evaluate_type_destructors;
         wait_for_recheck;
+        verbose_normalizer;
       }
   in
   let file_contents = File_input.content_of_file_input file |> Base.Result.ok in

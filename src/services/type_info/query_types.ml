@@ -59,6 +59,7 @@ let type_at_pos_type
     ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
+    ~verbose_normalizer
     ~typed_ast
     loc =
   let options =
@@ -72,6 +73,7 @@ let type_at_pos_type
       optimize_types = true;
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
+      verbose_normalizer;
     }
   in
   match find_type_at_pos_annotation typed_ast loc with
@@ -136,6 +138,7 @@ let insert_type_normalize
       optimize_types = false;
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
+      verbose_normalizer = false;
     }
   in
   type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme

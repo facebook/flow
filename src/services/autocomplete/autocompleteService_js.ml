@@ -155,6 +155,7 @@ let ty_normalizer_options =
       optimize_types = true;
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
+      verbose_normalizer = false;
     }
 
 type autocomplete_service_result =

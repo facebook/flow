@@ -93,6 +93,7 @@ module Request = struct
         omit_targ_defaults: bool;
         evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
+        verbose_normalizer: bool;
       }
     | INSERT_TYPE of {
         input: File_input.t;
@@ -173,6 +174,7 @@ module Request = struct
           omit_targ_defaults = _;
           evaluate_type_destructors = _;
           wait_for_recheck = _;
+          verbose_normalizer = _;
         } ->
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char
     | INSERT_TYPE { input; target; _ } ->

@@ -16,6 +16,7 @@ let type_at_pos
     ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
+    ~verbose_normalizer
     file
     line
     col =
@@ -38,6 +39,7 @@ let type_at_pos
           ~expand_aliases
           ~omit_targ_defaults
           ~evaluate_type_destructors
+          ~verbose_normalizer
           ~typed_ast
           loc
       in

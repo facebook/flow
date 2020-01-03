@@ -76,6 +76,8 @@ type options = {
   optimize_types: bool;
   (* Makes the normalizer more aggressive in preserving inferred literal types *)
   preserve_inferred_literal_types: bool;
+  (* Debug *)
+  verbose_normalizer: bool;
 }
 
 let default_options =
@@ -89,6 +91,7 @@ let default_options =
     omit_targ_defaults = false;
     optimize_types = true;
     preserve_inferred_literal_types = false;
+    verbose_normalizer = false;
   }
 
 (* This is a global environment that should not change during normalization *)

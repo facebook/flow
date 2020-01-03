@@ -126,6 +126,17 @@ end = struct
   (* Monadic helper functions *)
   let mapM f xs = all (Base.List.map ~f xs)
 
+  (* Each run of the monad gets assigned its own id. *)
+  let run_id = ref 0
+
+  (* Wrapper around 'run' that assigns a distinct id to every run of the monad. *)
+  let run state f =
+    let result = run state f in
+    incr run_id;
+    result
+
+  let get_run_id () = !run_id
+
   let optMapM f = function
     | Some xs -> mapM f xs >>| Option.return
     | None as y -> return y
@@ -567,7 +578,29 @@ end = struct
   (* Main transformation   *)
   (*************************)
 
-  let rec type__ ~env t = type_poly ~env t
+  let rec type__ =
+    let type_debug ~env t state =
+      let cx = Env.get_cx env in
+      let depth = env.Env.depth - 1 in
+      let indent = String.make (2 * depth) ' ' in
+      let prefix = spf "%s[Norm|run_id:%d|depth:%d]" indent (get_run_id ()) depth in
+      prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
+      let result = type_poly ~env t state in
+      let result_str =
+        match result with
+        | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
+        | (Error e, _) -> "[Error] " ^ error_to_string e
+      in
+      prerr_endlinef "%s Output: %s\n" prefix result_str;
+      result
+    in
+    fun ~env t ->
+      let env = Env.descend env in
+      let options = env.Env.options in
+      if options.Env.verbose_normalizer then
+        type_debug ~env t
+      else
+        type_poly ~env t
 
   (* Before we start pattern-matching on the structure of the input type, we can
      reconstruct some types based on attached reasons. Two cases are of interest here:
@@ -635,7 +668,6 @@ end = struct
 
   and type_after_reason ~env t =
     let open Type in
-    let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
     | BoundT (reason, name) -> bound_t ~env reason name
@@ -1833,7 +1865,17 @@ open NormalizerMonad
 
 (* Exposed API *)
 
+let print_normalizer_banner env =
+  if env.Env.verbose_normalizer then
+    let banner =
+      "\n========================================"
+      ^ " Normalization "
+      ^ "=======================================\n"
+    in
+    prerr_endlinef "%s" banner
+
 let from_schemes ~options ~genv schemes =
+  print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (_, result) =
     ListUtils.fold_map
@@ -1848,6 +1890,7 @@ let from_schemes ~options ~genv schemes =
   result
 
 let from_types ~options ~genv ts =
+  print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (_, result) =
     ListUtils.fold_map
@@ -1861,17 +1904,20 @@ let from_types ~options ~genv ts =
   result
 
 let from_scheme ~options ~genv scheme =
+  print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams; type_ = t } = scheme in
   let (result, _) = run_type ~options ~genv ~imported_names ~tparams State.empty t in
   result
 
 let from_type ~options ~genv t =
+  print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (result, _) = run_type ~options ~genv ~imported_names ~tparams:[] State.empty t in
   result
 
 let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
+  print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (result, _) =
     Hashtbl.fold

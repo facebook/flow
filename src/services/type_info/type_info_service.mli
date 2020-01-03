@@ -12,6 +12,7 @@ val type_at_pos :
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
   evaluate_type_destructors:bool ->
+  verbose_normalizer:bool ->
   File_key.t ->
   int ->
   int ->
