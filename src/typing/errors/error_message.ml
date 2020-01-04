@@ -78,11 +78,13 @@ and 'loc t' =
       reason_upper: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
-  | EPropNotFound of
-      string option
-      * ('loc virtual_reason * 'loc virtual_reason)
-      * 'loc virtual_use_op
-      * string option
+  | EPropNotFound of {
+      prop_name: string option;
+      reason_prop: 'loc virtual_reason;
+      reason_obj: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+      suggestion: string option;
+    }
   | EPropNotReadable of {
       reason_prop: 'loc virtual_reason;
       prop_name: string option;
@@ -558,8 +560,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
       }
-  | EPropNotFound (prop, (r1, r2), op, suggestion) ->
-    EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op, suggestion)
+  | EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion } ->
+    EPropNotFound
+      {
+        prop_name;
+        reason_prop = map_reason reason_prop;
+        reason_obj = map_reason reason_obj;
+        use_op = map_use_op use_op;
+        suggestion;
+      }
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
     EPropNotReadable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -855,8 +864,9 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EExpectedNumberLit { reason_lower; reason_upper; use_op })
   | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
     util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
-  | EPropNotFound (prop, rs, op, suggestion) ->
-    util op (fun op -> EPropNotFound (prop, rs, op, suggestion))
+  | EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion } ->
+    util use_op (fun use_op ->
+        EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion })
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
     util use_op (fun use_op -> EPropNotReadable { reason_prop; prop_name; use_op })
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -1639,9 +1649,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Incompatible { reason_lower; reason_upper; use_op }
   | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
-  | EPropNotFound (prop, reasons, use_op, suggestion) ->
-    let (reason_prop, reason_obj) = reasons in
-    PropMissing { loc = loc_of_reason reason_prop; prop; reason_obj; use_op; suggestion }
+  | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
+    PropMissing
+      { loc = loc_of_reason reason_prop; prop = prop_name; reason_obj; use_op; suggestion }
   | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
     UseOp
       {

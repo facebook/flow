@@ -641,7 +641,16 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                             unknown_use )
                       in
                       let r2 = replace_desc_reason (RProperty (Some k)) r2 in
-                      let err = Error_message.EPropNotFound (Some k, (r2, r1), use_op, None) in
+                      let err =
+                        Error_message.EPropNotFound
+                          {
+                            prop_name = Some k;
+                            reason_prop = r2;
+                            reason_obj = r1;
+                            use_op;
+                            suggestion = None;
+                          }
+                      in
                       add_output cx ~trace err );
                     None)
                 props1

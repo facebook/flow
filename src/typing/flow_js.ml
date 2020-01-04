@@ -499,7 +499,10 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
           Frame (PropertyCompatibility { prop = Some x; lower = reason; upper = reason_o }, use_op)
         in
         let reason_prop = update_desc_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-        let err = Error_message.EPropNotFound (Some x, (reason_prop, reason), use_op, None) in
+        let err =
+          Error_message.EPropNotFound
+            { prop_name = Some x; reason_prop; reason_obj = reason; use_op; suggestion = None }
+        in
         add_output cx ~trace err)
       props_not_found;
     not (SMap.is_empty props_not_found)
@@ -2542,7 +2545,14 @@ struct
               | _ -> (None, None)
             in
             let err =
-              Error_message.EPropNotFound (prop, (reason_op, reason_o), use_op, suggestion)
+              Error_message.EPropNotFound
+                {
+                  prop_name = prop;
+                  reason_prop = reason_op;
+                  reason_obj = reason_o;
+                  use_op;
+                  suggestion;
+                }
             in
             add_output cx ~trace err)
         | ( DefT (reason_o, _, InstanceT (_, _, _, instance)),
@@ -2555,14 +2565,26 @@ struct
           | None ->
             let err =
               Error_message.EPropNotFound
-                ( Some x,
-                  (reason_op, reason_o),
-                  use_op,
-                  prop_typo_suggestion cx [instance.own_props; instance.proto_props] x )
+                {
+                  prop_name = Some x;
+                  reason_prop = reason_op;
+                  reason_obj = reason_o;
+                  use_op;
+                  suggestion = prop_typo_suggestion cx [instance.own_props; instance.proto_props] x;
+                }
             in
             add_output cx ~trace err)
         | (DefT (reason_o, _, InstanceT (_, _, _, _)), HasOwnPropT (use_op, reason_op, _)) ->
-          let err = Error_message.EPropNotFound (None, (reason_op, reason_o), use_op, None) in
+          let err =
+            Error_message.EPropNotFound
+              {
+                prop_name = None;
+                reason_prop = reason_op;
+                reason_obj = reason_o;
+                use_op;
+                suggestion = None;
+              }
+          in
           add_output cx ~trace err
         (* AnyT has every prop *)
         | (AnyT _, HasOwnPropT _) -> ()
@@ -7112,7 +7134,13 @@ struct
             let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
             let err =
               Error_message.EPropNotFound
-                (Some s, (reason_prop, ureason), use_op, prop_typo_suggestion cx [uflds] s)
+                {
+                  prop_name = Some s;
+                  reason_prop;
+                  reason_obj = ureason;
+                  use_op;
+                  suggestion = prop_typo_suggestion cx [uflds] s;
+                }
             in
             add_output cx ~trace err);
       Option.iter lcall ~f:(fun _ ->
@@ -7131,7 +7159,10 @@ struct
                   use_op )
             in
             let reason_prop = replace_desc_reason (RProperty prop) lreason in
-            let err = Error_message.EPropNotFound (prop, (reason_prop, ureason), use_op, None) in
+            let err =
+              Error_message.EPropNotFound
+                { prop_name = prop; reason_prop; reason_obj = ureason; use_op; suggestion = None }
+            in
             add_output cx ~trace err)
     );
 
@@ -9404,10 +9435,13 @@ struct
             cx
             ~trace
             (Error_message.EPropNotFound
-               ( Some prop,
-                 (reason_prop, reason_obj),
-                 use_op,
-                 prop_typo_suggestion cx [o.props_tmap] prop ))
+               {
+                 prop_name = Some prop;
+                 reason_prop;
+                 reason_obj;
+                 use_op;
+                 suggestion = prop_typo_suggestion cx [o.props_tmap] prop;
+               })
         else
           let strict =
             if sealed then
@@ -10595,7 +10629,16 @@ struct
                   (PropertyCompatibility { prop = None; lower = ureason; upper = lreason }, use_op)
               in
               let lreason = replace_desc_reason RSomeProperty lreason in
-              let err = Error_message.EPropNotFound (None, (lreason, ureason), use_op, None) in
+              let err =
+                Error_message.EPropNotFound
+                  {
+                    prop_name = None;
+                    reason_prop = lreason;
+                    reason_obj = ureason;
+                    use_op;
+                    suggestion = None;
+                  }
+              in
               add_output cx ~trace err
             | (None, Some _) ->
               let use_op =
@@ -10604,7 +10647,16 @@ struct
                     Frame (UnifyFlip, use_op) )
               in
               let ureason = replace_desc_reason RSomeProperty ureason in
-              let err = Error_message.EPropNotFound (None, (ureason, lreason), use_op, None) in
+              let err =
+                Error_message.EPropNotFound
+                  {
+                    prop_name = None;
+                    reason_prop = lreason;
+                    reason_obj = ureason;
+                    use_op;
+                    suggestion = None;
+                  }
+              in
               add_output cx ~trace err
             | (None, None) -> ()
           end;
@@ -10720,7 +10772,16 @@ struct
           ( PropertyCompatibility { prop = Some x; lower = dict_reason; upper = prop_obj_reason },
             use_op )
       in
-      let err = Error_message.EPropNotFound (Some x, (prop_reason, dict_reason), use_op, None) in
+      let err =
+        Error_message.EPropNotFound
+          {
+            prop_name = Some x;
+            reason_prop = prop_reason;
+            reason_obj = dict_reason;
+            use_op;
+            suggestion = None;
+          }
+      in
       add_output cx ~trace err
 
   (* TODO: Unification between concrete types is still implemented as

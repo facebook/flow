@@ -2582,14 +2582,14 @@ let dump_error_message =
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
-    | EPropNotFound (prop, (prop_reason, obj_reason), use_op, suggestion) ->
+    | EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion } ->
       spf
         "EPropNotFound (%s, %s, %s, %s, %s)"
         (match prop with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
-        (dump_reason cx prop_reason)
-        (dump_reason cx obj_reason)
+        (dump_reason cx reason_prop)
+        (dump_reason cx reason_obj)
         (string_of_use_op use_op)
         (match suggestion with
         | Some prop -> spf "Some %s" prop
