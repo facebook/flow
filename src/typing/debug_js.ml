@@ -521,7 +521,7 @@ and _json_of_use_t_impl json_cx t =
           ("currentUpper", _json_of_t json_cx t2);
           ("currentUpperTypeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts2));
         ]
-      | LookupT (_, rstrict, _, propref, action) ->
+      | LookupT { lookup_kind = rstrict; propref; lookup_action = action; _ } ->
         (match rstrict with
         | NonstrictReturning (default_opt, test_opt) ->
           let ret =
@@ -2140,8 +2140,18 @@ and dump_use_t_ (depth, tvars) cx t =
     | ImportTypeT _ -> p t
     | IntersectionPreprocessKitT _ -> p t
     | InvariantT _ -> p t
-    | LookupT (_, kind, _, prop, action) ->
-      p ~extra:(spf "%S, %s, %s" (propref prop) (lookup_kind kind) (lookup_action action)) t
+    | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->
+      p
+        ~extra:
+          (spf
+             "%S, %s, %s, [%s]"
+             (propref prop)
+             (lookup_kind kind)
+             (lookup_action action)
+             (String.concat
+                "; "
+                (Properties.Set.elements ids |> Base.List.map ~f:Properties.string_of_id)))
+        t
     | MakeExactT _ -> p t
     | MapTypeT _ -> p t
     | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
@@ -2572,15 +2582,18 @@ let dump_error_message =
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
-    | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
+    | EPropNotFound (prop, (prop_reason, obj_reason), use_op, suggestion) ->
       spf
-        "EPropNotFound (%s, %s, %s, %s)"
+        "EPropNotFound (%s, %s, %s, %s, %s)"
         (match prop with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
         (dump_reason cx prop_reason)
         (dump_reason cx obj_reason)
         (string_of_use_op use_op)
+        (match suggestion with
+        | Some prop -> spf "Some %s" prop
+        | None -> "None")
     | EPropNotReadable { reason_prop; prop_name; use_op } ->
       spf
         "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
@@ -2619,12 +2632,15 @@ let dump_error_message =
         (match name with
         | Some x -> spf "Some(%S)" x
         | None -> "None")
-    | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
+    | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
       spf
-        "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; use_op = %s }"
+        "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; suggestion = %S; use_op = %s }"
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
         (match name with
+        | Some x -> spf "Some(%S)" x
+        | None -> "None")
+        (match suggestion with
         | Some x -> spf "Some(%S)" x
         | None -> "None")
         (match use_op with

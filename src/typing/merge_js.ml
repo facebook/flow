@@ -180,7 +180,7 @@ let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
   Base.List.iter
     ~f:(fun (name, reasons, use_op) ->
-      Flow_js.add_output cx (Error_message.EPropNotFound (name, reasons, use_op)))
+      Flow_js.add_output cx (Error_message.EPropNotFound (name, reasons, use_op, None)))
     misses
 
 let detect_unnecessary_optional_chains cx =

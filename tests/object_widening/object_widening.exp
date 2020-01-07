@@ -204,7 +204,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:83:2
 
-Cannot get `c.baz` because property `baz` is missing in object type [1].
+Cannot get `c.baz` because:
+ - property `baz` (did you mean `bar`?) is missing in object type [1].
+ - property `baz` is missing in object type [1].
 
    type_widening.js:83:2
    83| (c.baz: number); // Error, baz does not appear in all branches
@@ -315,7 +317,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:117:2
 
-Cannot get `optional_spread.baz` because property `baz` is missing in object type [1].
+Cannot get `optional_spread.baz` because:
+ - property `baz` (did you mean `bar`?) is missing in object type [1].
+ - property `baz` is missing in object type [1].
 
    type_widening.js:117:2
    117| (optional_spread.baz: number); // Error, baz does not appear in all branches, might be undefined
@@ -553,4 +557,4 @@ References:
 
 
 
-Found 39 errors
+Found 41 errors
