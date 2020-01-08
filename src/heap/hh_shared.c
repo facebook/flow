@@ -51,10 +51,6 @@
  */
 /*****************************************************************************/
 
-/* For printing uint64_t
- * http://jhshi.me/2014/07/11/print-uint64-t-properly-in-c/index.html */
-#define __STDC_FORMAT_MACROS
-
 /* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
  * 'caml_' */
 #define CAML_NAME_SPACE
@@ -91,19 +87,6 @@
 
 #include "hh_assert.h"
 
-#define UNUSED(x) \
-    ((void)(x))
-#define UNUSED1 UNUSED
-#define UNUSED2(a, b) \
-    (UNUSED(a), UNUSED(b))
-#define UNUSED3(a, b, c) \
-    (UNUSED(a), UNUSED(b), UNUSED(c))
-#define UNUSED4(a, b, c, d) \
-    (UNUSED(a), UNUSED(b), UNUSED(c), UNUSED(d))
-#define UNUSED5(a, b, c, d, e) \
-    (UNUSED(a), UNUSED(b), UNUSED(c), UNUSED(d), UNUSED(e))
-
-
 // Ideally these would live in a handle.h file but our internal build system
 // can't support that at the moment. These are shared with handle_stubs.c
 #ifdef _WIN32
@@ -112,7 +95,6 @@
 #define Handle_val(fd) (Long_val(fd))
 #define Val_handle(fd) (Val_long(fd))
 #endif
-
 
 #define HASHTBL_WRITE_IN_PROGRESS (0xfffffffffffffffeull)
 
@@ -162,13 +144,6 @@
   #define MAP_NORESERVE 0
 #endif
 
-// The following 'typedef' won't be required anymore
-// when dropping support for OCaml < 4.03
-#ifdef __MINGW64__
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-#endif
-
 #ifdef _WIN32
 static int win32_getpagesize(void) {
   SYSTEM_INFO siSysInfo;
@@ -200,27 +175,12 @@ typedef enum {
   KIND_SERIALIZED = !KIND_STRING
 } storage_kind;
 
-typedef struct {
-  // Size of the BLOB in bytes.
-  size_t size;
-  // BLOB returned by sqlite3. Its memory is managed by sqlite3.
-  // It will be automatically freed on the next query of the same
-  // statement.
-  void * blob;
-} query_result_t;
-
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
 
 #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
 #define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
 #define CACHE_ALIGN(x)          ALIGN(x,CACHE_LINE_SIZE)
-
-/* As a sanity check when loading from a file */
-static const uint64_t MAGIC_CONSTANT = 0xfacefacefaceb000ull;
-
-/* The VCS identifier (typically a git hash) of the build */
-extern const char* const BuildInfo_kRevision;
 
 /*****************************************************************************/
 /* Types */
@@ -306,12 +266,6 @@ static size_t shared_mem_size = 0;
 
 /* Beginning of shared memory */
 static char* shared_mem = NULL;
-
-/* A pair of a 31-bit unsigned number and a tag bit. */
-typedef struct {
-  uint32_t num : 31;
-  uint32_t tag : 1;
-} tagged_uint_t;
 
 /* The hashtable containing the shared values. */
 static helt_t* hashtbl = NULL;
@@ -404,26 +358,6 @@ CAMLprim value hh_hash_slots(void) {
   CAMLparam0();
   CAMLreturn(Val_long(hashtbl_size));
 }
-
-#ifdef _WIN32
-
-struct timeval log_duration(const char *prefix, struct timeval start_t) {
-   return start_t; // TODO
-}
-
-#else
-
-struct timeval log_duration(const char *prefix, struct timeval start_t) {
-  struct timeval end_t = {0};
-  gettimeofday(&end_t, NULL);
-  time_t secs = end_t.tv_sec - start_t.tv_sec;
-  suseconds_t usecs = end_t.tv_usec - start_t.tv_usec;
-  double time_taken = secs + ((double)usecs / 1000000);
-  fprintf(stderr, "%s took %.2lfs\n", prefix, time_taken);
-  return end_t;
-}
-
-#endif
 
 #ifdef _WIN32
 
@@ -971,25 +905,6 @@ CAMLprim value hh_check_should_exit (void) {
 }
 
 /*****************************************************************************/
-/* Hashes an integer such that the low bits are a good starting hash slot. */
-/*****************************************************************************/
-static uint64_t hash_uint64(uint64_t n) {
-  // Multiplying produces a well-mixed value in the high bits of the result.
-  // The bswap moves those "good" high bits into the low bits, to serve as the
-  // initial hash table slot number.
-  const uint64_t golden_ratio = 0x9e3779b97f4a7c15ull;
-  return __builtin_bswap64(n * golden_ratio);
-}
-
-// TODO - DEAD CODE
-value hh_check_heap_overflow(void) {
-  if (*heap >= heap_max) {
-    return Val_bool(1);
-  }
-  return Val_bool(0);
-}
-
-/*****************************************************************************/
 /* We compact the heap when it gets twice as large as its initial size.
  * Step one, copy the live values in a new heap.
  * Step two, memcopy the values back into the shared heap.
@@ -1195,11 +1110,6 @@ static addr_t hh_store_ocaml(
 /*****************************************************************************/
 static uint64_t get_hash(value key) {
   return *((uint64_t*)String_val(key));
-}
-
-// TODO - DEAD CODE
-CAMLprim value get_hash_ocaml(value key) {
-  return caml_copy_int64(*((uint64_t*)String_val(key)));
 }
 
 /*****************************************************************************/
@@ -1505,24 +1415,7 @@ void hh_remove(value key) {
   *hcounter_filled -= 1;
 }
 
-#define ARRAY_SIZE(array) \
-    (sizeof(array) / sizeof((array)[0]))
-
-#define Val_none Val_int(0)
-
-value Val_some(value v)
-{
-    CAMLparam1(v);
-    CAMLlocal1(some);
-    some = caml_alloc_small(1, 0);
-    Store_field(some, 0, v);
-    CAMLreturn(some);
-}
-
-#define Some_val(v) Field(v,0)
-
-CAMLprim value hh_removed_count(value ml_unit) {
-    CAMLparam1(ml_unit);
-    UNUSED(ml_unit);
+CAMLprim value hh_removed_count(value unit) {
+    CAMLparam1(unit);
     return Val_long(removed_count);
 }
