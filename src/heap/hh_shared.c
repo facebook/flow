@@ -1479,7 +1479,7 @@ void hh_move(value key1, value key2) {
   // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
   // filled.
   if (hashtbl[slot2].hash == 0) {
-    __sync_fetch_and_add(hcounter, 1);
+    *hcounter += 1;
   }
   hashtbl[slot2].hash = get_hash(key2);
   hashtbl[slot2].addr = hashtbl[slot1].addr;
@@ -1499,10 +1499,10 @@ void hh_remove(value key) {
   // see hh_alloc for the source of this size
   heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(entry->header));
-  __sync_fetch_and_add(wasted_heap_size, slot_size);
+  *wasted_heap_size += slot_size;
   hashtbl[slot].addr = NULL_ADDR;
-  removed_count += 1;
-  __sync_fetch_and_sub(hcounter_filled, 1);
+  removed_count++;
+  *hcounter_filled -= 1;
 }
 
 #define ARRAY_SIZE(array) \
