@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+exception Monitor_died
+
 type channels =
   (MonitorProt.monitor_to_server_message, MonitorProt.server_to_monitor_message) Daemon.channel_pair
 
