@@ -166,11 +166,6 @@ static size_t hashtbl_size_b;
 /* Used for worker-local data */
 static size_t locals_size_b;
 
-typedef enum {
-  KIND_STRING = 1,
-  KIND_SERIALIZED = !KIND_STRING
-} storage_kind;
-
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
 
@@ -191,19 +186,16 @@ typedef struct {
 
 // Every heap entry starts with a 64-bit header with the following layout:
 //
-//  6                                3 3  3                                0 0
-//  3                                3 2  1                                1 0
-// +----------------------------------+-+-----------------------------------+-+
-// |11111111 11111111 11111111 1111111|0| 11111111 11111111 11111111 1111111|1|
-// +----------------------------------+-+-----------------------------------+-+
-// |                                  | |                                   |
-// |                                  | |                                   * 0 tag
-// |                                  | |
-// |                                  | * 31-1 uncompressed size (0 if uncompressed)
-// |                                  |
-// |                                  * 32 kind (0 = serialized, 1 = string)
-// |
-// * 63-33 size of heap entry
+//  6                                 3  3                                0 0
+//  3                                 2  1                                1 0
+// +------------------------------------+----------------------------------+-+
+// |11111111 11111111 11111111 11111111 |11111111 11111111 11111111 1111111|1|
+// +------------------------------------+----------------------------------+-+
+// |                                    |                                  |
+// |                                    |                                  * 0 tag
+// |                                    |
+// |                                    * 31-1 uncompressed size (0 if uncompressed)
+// * 63-32 size of heap entry
 //
 // The tag bit is always 1 and is used to differentiate headers from addresses
 // during garbage collection (see hh_collect).
@@ -236,9 +228,8 @@ typedef uint64_t addr_t;
 #define Entry_of_offset(offset) ((heap_entry_t *)Ptr_of_offset(offset))
 #define Header_of_addr(addr) ((hh_header_t *)Ptr_of_addr(addr))
 
-#define Entry_size(x) ((x) >> 33)
-#define Entry_kind(x) (((x) >> 32) & 1)
-#define Entry_uncompressed_size(x) (((x) >> 1) & 0x7FFFFFFF)
+#define Entry_size(header) ((header) >> 32)
+#define Entry_uncompressed_size(header) (((header) >> 1) & 0x7FFFFFFF)
 #define Heap_entry_total_size(header) sizeof(heap_entry_t) + Entry_size(header)
 
 /* Shared memory structures. hh_shared.h typedefs this to heap_entry_t. */
@@ -1034,54 +1025,40 @@ static addr_t hh_store_ocaml(
   /*out*/size_t *orig_size
 ) {
   char* value = NULL;
-  size_t size = 0;
-  size_t uncompressed_size = 0;
-  storage_kind kind = 0;
+  intnat uncompressed_size = 0;
 
-  // If the data is an Ocaml string it is more efficient to copy its contents
-  // directly in our heap instead of serializing it.
-  if (Is_block(data) && Tag_val(data) == String_tag) {
-    value = String_val(data);
-    size = caml_string_length(data);
-    kind = KIND_STRING;
-  } else {
-    intnat serialized_size;
-    // We are responsible for freeing the memory allocated by this function
-    // After copying value into our object heap we need to make sure to free
-    // value
-    caml_output_value_to_malloc(
-      data, Val_int(0)/*flags*/, &value, &serialized_size);
+  // Note: we take ownership of the memory allocated by this call
+  intnat serialized_size;
+  caml_output_value_to_malloc(
+    data, Val_int(0)/*flags*/, &value, &serialized_size);
 
-    assert(serialized_size >= 0);
-    size = (size_t) serialized_size;
-    kind = KIND_SERIALIZED;
-  }
+  assert(serialized_size >= 0);
+  intnat heap_size = serialized_size;
 
   // We limit the size of elements we will allocate to our heap to ~2GB
-  assert(size < 0x80000000);
-  *orig_size = size;
+  assert(heap_size < 0x80000000);
+  *orig_size = heap_size;
 
-  size_t max_compression_size = LZ4_compressBound(size);
+  size_t max_compression_size = LZ4_compressBound(heap_size);
   char* compressed_data = malloc(max_compression_size);
   size_t compressed_size = LZ4_compress_default(
     value,
     compressed_data,
-    size,
+    heap_size,
     max_compression_size);
 
-  if (compressed_size != 0 && compressed_size < size) {
-    uncompressed_size = size;
-    size = compressed_size;
+  if (compressed_size != 0 && compressed_size < heap_size) {
+    uncompressed_size = heap_size;
+    heap_size = compressed_size;
   }
 
-  *alloc_size = size;
+  *alloc_size = heap_size;
 
   // Both size and uncompressed_size will certainly fit in 31 bits, as the
   // original size fits per the assert above and we check that the compressed
   // size is less than the original size.
   hh_header_t header
-    = size << 33
-    | (uint64_t)kind << 32
+    = heap_size << 32
     | uncompressed_size << 1
     | 1;
 
@@ -1093,7 +1070,7 @@ static addr_t hh_store_ocaml(
   // We temporarily allocate memory using malloc to serialize the Ocaml object.
   // When we have finished copying the serialized data into our heap we need
   // to free the memory we allocated to avoid a leak.
-  if (kind == KIND_SERIALIZED) free(value);
+  free(value);
 
   return heap_addr;
 }
@@ -1326,12 +1303,7 @@ CAMLprim value hh_deserialize(addr_t heap_addr) {
     size = uncompressed_size;
   }
 
-  if (Entry_kind(entry->header) == KIND_STRING) {
-    result = caml_alloc_string(size);
-    memcpy(String_val(result), data, size);
-  } else {
-    result = caml_input_value_from_block(data, size);
-  }
+  result = caml_input_value_from_block(data, size);
 
   if (data != src) {
     free(data);
