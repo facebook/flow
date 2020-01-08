@@ -119,8 +119,16 @@ let set_engine () =
   else
     Lwt_engine.set (new unix_select)
 
+exception WrappedException of Exception.t
+
 (* See comment on unix_select *)
 
 let run_lwt f =
   set_engine ();
-  Lwt_main.run (f ())
+  try
+    Lwt_main.run
+      (try%lwt f ()
+       with exn ->
+         let exn = Exception.wrap exn in
+         raise (WrappedException exn))
+  with WrappedException exn -> Exception.reraise exn
