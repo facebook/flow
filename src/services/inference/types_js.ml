@@ -2850,6 +2850,8 @@ let load_saved_state ~profiling ~workers options =
        else
          Lwt.return_none)
 
+exception Watchman_init_failed
+
 let query_watchman_for_changed_files ~options =
   match Options.lazy_mode options with
   | Options.NON_LAZY_MODE
@@ -2874,7 +2876,7 @@ let query_watchman_for_changed_files ~options =
     let%lwt watchman_env = Watchman_lwt.init init_settings () in
     let%lwt changed_files =
       match watchman_env with
-      | None -> failwith "Failed to set up Watchman in order to get the changes since the mergebase"
+      | None -> raise Watchman_init_failed
       | Some watchman_env ->
         (* No timeout. We'll time this out ourselves after init if we need *)
         let%lwt changed_files =
@@ -2958,12 +2960,16 @@ let init ~profiling ~workers options =
         Lwt_unix.with_timeout timeout @@ fun () ->
         let%lwt get_watchman_updates = get_watchman_updates_thread in
         get_watchman_updates ~libs:env.ServerEnv.libs
-      with Lwt_unix.Timeout ->
+      with
+      | Lwt_unix.Timeout ->
         let msg =
           Printf.sprintf
             "Timed out after %ds waiting for Watchman."
             (Unix.gettimeofday () -. start_time |> int_of_float)
         in
+        FlowExitStatus.(exit ~msg Watchman_error)
+      | Watchman_init_failed ->
+        let msg = "Failed to set up Watchman in order to get the changes since the mergebase" in
         FlowExitStatus.(exit ~msg Watchman_error)
     in
     Lwt.return (FilenameSet.union updates watchman_updates, files_to_focus)
