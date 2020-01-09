@@ -76,6 +76,7 @@
 #include <unistd.h>
 #endif
 
+#include <stdalign.h>
 #include <inttypes.h>
 #include <lz4.h>
 #include <sys/time.h>
@@ -179,9 +180,12 @@ static size_t locals_size_b;
 
 /* Per-worker data which can be quickly updated non-atomically. Will be placed
  * in cache-aligned array in the first few pages of shared memory, indexed by
- * worker id. */
+ * worker id.
+ *
+ * The first member of this struct is over-aligned to ensure that each element
+ * of the global locals array is on a separate cache line. */
 typedef struct {
-  uint64_t counter;
+  alignas(128) uint64_t counter;
 } local_t;
 
 // Every heap entry starts with a 64-bit header with the following layout:
@@ -280,8 +284,7 @@ static size_t* log_level = NULL;
 static size_t* workers_should_exit = NULL;
 
 /* Worker-local storage is cache line aligned. */
-static char* locals;
-#define LOCAL(id) ((local_t *)(locals + id * CACHE_ALIGN(sizeof(local_t))))
+static local_t* locals;
 
 /* This should only be used before forking */
 static uintptr_t early_counter = 0;
@@ -642,8 +645,7 @@ static void define_globals(char * shared_mem_init) {
   // Just checking that the page is large enough.
   assert(page_size > 8*CACHE_LINE_SIZE + (int)sizeof(int));
 
-  assert (CACHE_LINE_SIZE >= sizeof(local_t));
-  locals = mem;
+  locals = (local_t *)mem;
   mem += locals_size_b;
 
   /* END OF THE SMALL OBJECTS PAGE */
@@ -685,7 +687,7 @@ static void init_shared_globals(
   *wasted_heap_size = 0;
 
   for (uint64_t i = 0; i <= num_workers; i++) {
-    LOCAL(i)->counter = 0;
+    locals[i].counter = 0;
   }
 
   // Initialize top heap pointers
@@ -707,7 +709,7 @@ static void set_sizes(
   // We will allocate a cache line for the master process and each worker
   // process, then pad that out to the nearest page.
   num_workers = config_num_workers;
-  locals_size_b = ALIGN((1 + num_workers) * CACHE_LINE_SIZE, page_size);
+  locals_size_b = ALIGN((1 + num_workers) * sizeof(local_t), page_size);
 
   shared_mem_size = get_shared_mem_size();
 }
@@ -826,12 +828,12 @@ CAMLprim value hh_counter_next(void) {
 
   uintptr_t v = 0;
   if (counter) {
-    v = LOCAL(worker_id)->counter;
+    v = locals[worker_id].counter;
     if (v % COUNTER_RANGE == 0) {
       v = __atomic_fetch_add(counter, COUNTER_RANGE, __ATOMIC_RELAXED);
     }
     ++v;
-    LOCAL(worker_id)->counter = v;
+    locals[worker_id].counter = v;
   } else {
     v = ++early_counter;
   }
