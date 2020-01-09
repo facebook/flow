@@ -2930,4 +2930,36 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
              ~source
              ~expected:"((a, b, c, d, a, b, c, d))"
              ~mapper:(new double_sequence_mapper) );
+         ( "declare_class_id" >:: fun ctxt ->
+           let source = "declare class rename { }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((14, 20), "gotRenamed")]
+             ~source
+             ~expected:"declare class gotRenamed { }"
+             ~mapper:(new useless_mapper) );
+         ( "declare_class_tparam" >:: fun ctxt ->
+           let source = "declare class C<rename> { }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((16, 22), "gotRenamed")]
+             ~source
+             ~expected:"declare class C<gotRenamed> { }"
+             ~mapper:(new useless_mapper) );
+         ( "declare_class_extends" >:: fun ctxt ->
+           let source = "declare class C extends rename { }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((24, 30), "gotRenamed")]
+             ~source
+             ~expected:"declare class C extends gotRenamed { }"
+             ~mapper:(new useless_mapper) );
+         ( "declare_class_body" >:: fun ctxt ->
+           let source = "declare class C { f: rename }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((21, 27), "gotRenamed")]
+             ~source
+             ~expected:"declare class C { f: gotRenamed }"
+             ~mapper:(new useless_mapper) );
        ]
