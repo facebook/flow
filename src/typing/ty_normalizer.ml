@@ -86,21 +86,38 @@ module NormalizerMonad : sig
 
   val run_imports : options:Env.options -> genv:Env.genv -> Ty.imported_ident ALocMap.t
 end = struct
+  type id_key =
+    | TVarKey of int
+    | EvalKey of Type.Eval.id
+
+  (* A cache for resolved OpenTs/EvalTs. We cache the result even when the output
+   * is an error. This is mostly useful for the batch call (`from_types`). The
+   * key to this map is the Type.tvar identifier or an Eval.id.
+   *)
+  module Cache = struct
+    type t = {
+      open_ts: (Ty.t, error) result IMap.t;
+      eval_ts: (Ty.t, error) result Type.Eval.Map.t;
+    }
+
+    let empty = { open_ts = IMap.empty; eval_ts = Type.Eval.Map.empty }
+
+    let find i c =
+      match i with
+      | TVarKey i -> IMap.find_opt i c.open_ts
+      | EvalKey i -> Type.Eval.Map.find_opt i c.eval_ts
+
+    let update i t c =
+      match i with
+      | TVarKey i -> { c with open_ts = IMap.add i t c.open_ts }
+      | EvalKey i -> { c with eval_ts = Type.Eval.Map.add i t c.eval_ts }
+  end
+
   module State = struct
     type t = {
       (* Source of fresh ints for creating new Ty.tvar's *)
       counter: int;
-      (* A cache for resolved type variables.
-
-         We cache the result even when the output is an error, to avoid
-         recomputing tvar resolution. This is mostly useful for the batch call
-         (`from_types`).
-
-         The key to this map is the Type.tvar `ident`.
-      *)
-      tvar_cache: (Ty.t, error) result IMap.t;
-      (* Similar to a tvar map, we maintain an eval ID map. *)
-      eval_cache: (Ty.t, error) result Type.Eval.Map.t;
+      cache: Cache.t;
       (* This set is useful for synthesizing recursive types. It holds the set
          of type variables that are encountered "free". We say that a type
          variable is free when it appears in the body of its own definition.
@@ -112,13 +129,7 @@ end = struct
       free_tvars: VSet.t;
     }
 
-    let empty =
-      {
-        counter = 0;
-        tvar_cache = IMap.empty;
-        eval_cache = Type.Eval.Map.empty;
-        free_tvars = VSet.empty;
-      }
+    let empty = { counter = 0; cache = Cache.empty; free_tvars = VSet.empty }
   end
 
   include StateResult.Make (State)
@@ -165,27 +176,19 @@ end = struct
 
   (* Update state *)
 
-  type cache_key =
-    | TVarKey of int
-    | EvalKey of Type.Eval.id
-
   let find_in_cache i =
     let open State in
     let%map state = get in
-    match i with
-    | TVarKey i -> IMap.find_opt i state.tvar_cache
-    | EvalKey i -> Type.Eval.Map.find_opt i state.eval_cache
+    Cache.find i state.cache
 
   let update_cache i t =
     let open State in
-    let%bind st = get in
-    match i with
-    | TVarKey i -> put { st with tvar_cache = IMap.add i t st.tvar_cache }
-    | EvalKey i -> put { st with eval_cache = Type.Eval.Map.add i t st.eval_cache }
+    let%bind state = get in
+    put { state with cache = Cache.update i t state.cache }
 
   let add_to_free_tvars v =
     let open State in
-    modify (fun st -> { st with free_tvars = VSet.add v st.free_tvars })
+    modify (fun state -> { state with free_tvars = VSet.add v state.free_tvars })
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
      1. T appears in env and for its first occurence locations match. This means it
