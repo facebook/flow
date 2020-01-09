@@ -523,6 +523,21 @@ literals.js:32:7 = {
   "start":7,
   "end":9
 }
+literals.js:34:7 = {
+  "type":"Array<(any | number)> | Array<(any | number)>",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":7,"offset":507},
+    "end":{"line":34,"column":15,"offset":516}
+  },
+  "path":"literals.js",
+  "line":34,
+  "endline":34,
+  "start":7,
+  "end":15
+}
 new-array.js:3:15 = {
   "type":"class Array<T>",
   "reasons":[],

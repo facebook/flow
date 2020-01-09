@@ -20,6 +20,8 @@
  *)
 val tvar_appears_in_type : is_toplevel:bool -> Ty.tvar -> Ty.t -> bool
 
+val free_vars_of_type : Ty.t -> ISet.t
+
 (* Returns the number of nodes in a type. Will return None if the number of nodes
  * exceeds the max parameter.
  *)
