@@ -46,7 +46,7 @@ module type S = sig
 
   val flow_p :
     Context.t ->
-    ?use_op:use_op ->
+    use_op:use_op ->
     reason ->
     reason ->
     Type.propref ->
@@ -98,7 +98,7 @@ module type S = sig
 
   val rec_flow : Context.t -> Trace.t -> Type.t * Type.use_t -> unit
 
-  val rec_flow_t : Context.t -> Trace.t -> ?use_op:Type.use_op -> Type.t * Type.t -> unit
+  val rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
   val rec_unify :
     Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
@@ -120,13 +120,7 @@ module type S = sig
   val unify : Context.t -> Type.t -> Type.t -> unit
 
   val unify_opt :
-    Context.t ->
-    ?trace:Trace.t ->
-    ?use_op:Type.use_op ->
-    ?unify_any:bool ->
-    Type.t ->
-    Type.t ->
-    unit
+    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
 
   val union_of_ts : reason -> Type.t list -> Type.t
 

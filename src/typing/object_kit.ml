@@ -612,7 +612,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                      * be overwritten. *)
                     (match t1 with
                     | OptionalT { reason = _; type_ = t1; use_desc = _ } ->
-                      rec_flow_t cx trace (t2, t1)
+                      rec_flow_t ~use_op:unknown_use cx trace (t2, t1)
                     | _ -> ());
                     Some (Field (None, t1, Polarity.Positive))
                   (* Using our same equation. Consider this case:
@@ -625,7 +625,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * programs then {||}. *)
                   | (ReactConfigMerge _, Some (t1, _), Some (t2, _), _) ->
                     (* The DP type for p must be a subtype of the P type for p. *)
-                    rec_flow_t cx trace (t2, t1);
+                    rec_flow_t ~use_op:unknown_use cx trace (t2, t1);
                     Some (Field (None, optional t1, Polarity.Positive))
                   (* Consider this case:
                    *
@@ -718,7 +718,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 rec_flow_t cx trace ~use_op:(use_op Polarity.Positive) (t, tout)
               | _ ->
                 (* Intentional UnknownUse here. *)
-                rec_flow_t cx trace (t, tout)))
+                rec_flow_t ~use_op:unknown_use cx trace (t, tout)))
       in
       (********************)
       (* Object Read Only *)
@@ -745,7 +745,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
           in
           (* Intentional UnknownUse here. *)
-          rec_flow_t cx trace (t, tout)
+          rec_flow_t ~use_op:unknown_use cx trace (t, tout)
       in
       (**************)
       (* Object Rep *)

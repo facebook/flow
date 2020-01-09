@@ -124,7 +124,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             (match pole with
             | Polarity.Neutral
             | Polarity.Negative ->
-              AnyT.locationless AnyError |> unify_opt cx ~unify_any:true (OpenT (r, id));
+              AnyT.locationless AnyError
+              |> unify_opt cx ~use_op:unknown_use ~unify_any:true (OpenT (r, id));
               let trace_reasons =
                 if max_reasons = 0 then
                   []
@@ -244,9 +245,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | DefT (r, _, FunT (static, prototype, ft)) ->
                 (* This won't propagate to any other types because this happens post-merge *)
                 let any kind = AnyT.locationless (Unsound kind) in
-                any DummyStatic |> unify_opt cx ~unify_any:true static;
-                any FunctionPrototype |> unify_opt cx ~unify_any:true prototype;
-                any BoundFunctionThis |> unify_opt cx ~unify_any:true ft.this_t;
+                any DummyStatic |> unify_opt cx ~use_op:unknown_use ~unify_any:true static;
+                any FunctionPrototype |> unify_opt cx ~use_op:unknown_use ~unify_any:true prototype;
+                any BoundFunctionThis |> unify_opt cx ~use_op:unknown_use ~unify_any:true ft.this_t;
                 super#type_
                   cx
                   pole

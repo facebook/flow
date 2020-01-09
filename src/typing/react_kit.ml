@@ -175,7 +175,7 @@ let props_to_tout
     component
     ~use_op
     ~reason_op
-    ~(rec_flow_t : Context.t -> Trace.t -> ?use_op:Type.use_op -> Type.t * Type.t -> unit)
+    ~(rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(get_builtin_type :
        Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
@@ -186,7 +186,7 @@ let props_to_tout
   (* Class components or legacy components. *)
   | DefT (_, _, ClassT _) ->
     let props = Tvar.mk cx reason_op in
-    rec_flow_t cx trace (props, tout);
+    rec_flow_t ~use_op:unknown_use cx trace (props, tout);
     rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
   (* Stateless functional components. *)
   | DefT (_, _, FunT _)
@@ -205,9 +205,9 @@ let props_to_tout
       lit
       (Field (None, tout, Polarity.Positive))
   (* any and any specializations *)
-  | AnyT (reason, src) -> rec_flow_t cx trace (AnyT.why src reason, tout)
+  | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
   | DefT (reason, trust, ReactAbstractComponentT _) ->
-    rec_flow_t cx trace (MixedT.why reason trust, tout)
+    rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
   (* ...otherwise, error. *)
   | _ -> err_incompatible cx trace ~use_op ~add_output (reason_of_t component) u
 
@@ -236,7 +236,7 @@ let get_config
     component
     ~use_op
     ~reason_op
-    ~(rec_flow_t : Context.t -> Trace.t -> ?use_op:Type.use_op -> Type.t * Type.t -> unit)
+    ~(rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(rec_unify :
        Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
@@ -316,7 +316,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let loc = aloc_of_reason reason in
         Ok (required, reposition cx ~trace loc t)
       | DefT (reason, _, FunT _) as t ->
-        rec_flow_t cx trace (t, get_builtin_type cx reason_op "ReactPropsCheckType");
+        rec_flow_t
+          ~use_op:unknown_use
+          cx
+          trace
+          (t, get_builtin_type cx reason_op "ReactPropsCheckType");
         Error reason
       | AnyT (reason, _) -> Error reason
       | t ->
@@ -364,7 +368,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (* The Props type parameter is invariant, but we only want to create a
          * constraint tin <: props. *)
         let props = Tvar.mk cx reason_op in
-        rec_flow_t cx trace (tin, props);
+        rec_flow_t ~use_op:unknown_use cx trace (tin, props);
         rec_flow cx trace (component, ReactInToProps (reason_op, props))
       (* Stateless functional components. *)
       | DefT (_, _, FunT _)
@@ -373,10 +377,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
       (* Abstract components. *)
       | DefT (reason, trust, ReactAbstractComponentT _) ->
-        rec_flow_t cx trace (tin, MixedT.why reason trust)
+        rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason trust)
       (* Intrinsic components. *)
       | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Polarity.Negative))
-      | AnyT (reason, source) -> rec_flow_t cx trace (tin, AnyT.why source reason)
+      | AnyT (reason, source) ->
+        rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
       | _ -> err_incompatible (reason_of_t component)
     in
@@ -624,6 +629,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         annot_reason ~annot_loc (replace_desc_reason (RType "React$Element") reason_op)
       in
       rec_flow_t
+        ~use_op:unknown_use
         cx
         trace
         (get_builtin_typeapp cx ~trace elem_reason "React$Element" [component], tout)
@@ -664,18 +670,28 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let component = l in
       match component with
       (* Class components or legacy components. *)
-      | DefT (_, _, ClassT component) -> rec_flow_t cx trace (component, tout)
+      | DefT (_, _, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
       (* Stateless functional components. *)
       | DefT (r, trust, FunT _) ->
-        rec_flow_t cx trace (VoidT.make (replace_desc_reason RVoid r) trust, tout)
+        rec_flow_t
+          ~use_op:unknown_use
+          cx
+          trace
+          (VoidT.make (replace_desc_reason RVoid r) trust, tout)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
       | DefT (r, trust, ObjT { call_t = Some _; _ }) ->
-        rec_flow_t cx trace (VoidT.make (replace_desc_reason RVoid r) trust, tout)
+        rec_flow_t
+          ~use_op:unknown_use
+          cx
+          trace
+          (VoidT.make (replace_desc_reason RVoid r) trust, tout)
       (* Abstract components. *)
-      | DefT (_, _, ReactAbstractComponentT { instance; _ }) -> rec_flow_t cx trace (instance, tout)
+      | DefT (_, _, ReactAbstractComponentT { instance; _ }) ->
+        rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
       (* Intrinsic components. *)
       | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
-      | AnyT (reason, source) -> rec_flow_t cx trace (AnyT.why source reason, tout)
+      | AnyT (reason, source) ->
+        rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)
       | _ -> err_incompatible (reason_of_t component)
     in
@@ -686,6 +702,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let simplify_prop_type tout =
       let resolve t =
         rec_flow_t
+          ~use_op:unknown_use
           cx
           trace
           (CustomFunT (reason_op, ReactPropType (PropType.Primitive (false, t))), tout)
@@ -874,7 +891,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | Some _ as p -> p
           | None ->
             Option.map dict (fun { key; value; dict_polarity; _ } ->
-                rec_flow_t cx trace (string_key x reason_op, key);
+                rec_flow_t ~use_op:unknown_use cx trace (string_key x reason_op, key);
                 Field (None, value, dict_polarity))
         in
         let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
@@ -982,7 +999,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   ~sealed:true
                   ~exact:false
             in
-            rec_flow_t cx trace (t, knot.default_t)
+            rec_flow_t ~use_op:unknown_use cx trace (t, knot.default_t)
           | t :: todo ->
             let tool = DefaultProps (todo, acc) in
             resolve_call knot.static tool t
@@ -999,7 +1016,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 let sealed = not (exact && sealed_in_op reason_op sealed) in
                 Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason) ?dict ~sealed ~exact
             in
-            rec_flow_t cx trace (t, knot.state_t)
+            rec_flow_t ~use_op:unknown_use cx trace (t, knot.state_t)
           | t :: todo ->
             let tool = InitialState (todo, acc) in
             resolve_call knot.this tool t
@@ -1182,9 +1199,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let instance =
             DefT (reason_component, bogus_trust (), InstanceT (static, super, [], insttype))
           in
-          rec_flow_t cx trace (instance, knot.this);
-          rec_flow_t cx trace (static, knot.static);
-          rec_flow_t cx trace (class_type instance, tout)
+          rec_flow_t ~use_op:unknown_use cx trace (instance, knot.this);
+          rec_flow_t ~use_op:unknown_use cx trace (static, knot.static);
+          rec_flow_t ~use_op:unknown_use cx trace (class_type instance, tout)
         in
         let empty_spec obj =
           {
@@ -1212,7 +1229,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             (match stack' with
             | [] ->
               (* The root spec is unknown *)
-              rec_flow_t cx trace (AnyT.error reason_op, tout)
+              rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout)
             | ((obj, spec), todo, mixins_rev) :: stack' ->
               (* A mixin is unknown *)
               let mixins_rev = Unknown reason :: mixins_rev in

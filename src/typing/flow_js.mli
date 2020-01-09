@@ -25,7 +25,7 @@ val unify : Context.t -> Type.t -> Type.t -> unit
 
 val flow_p :
   Context.t ->
-  ?use_op:Type.use_op ->
+  use_op:Type.use_op ->
   reason ->
   (* lreason *)
   reason ->
