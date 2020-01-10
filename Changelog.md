@@ -1,3 +1,18 @@
+### 0.116.0
+
+New Features:
+
+* Flow now suggests similar names (if applicable) when issuing missing property errors.
+
+Misc:
+
+* Added a rudimentary libdef for `Array.prototype.flat` (#8237, thanks @nnmrts!).
+* Fixed a bug that in certain specific cases led to an expression getting typed as `empty` rather than `any`.
+
+Parser:
+
+* `>` and `}` in JSX child text is a parse error.
+
 ### 0.115.0
 
 Likely to cause new Flow errors:
