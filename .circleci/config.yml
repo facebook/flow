@@ -13,6 +13,48 @@ aliases:
 orbs:
   win: circleci/windows@2.2.0
 
+  opam_windows:
+    commands:
+      install:
+        steps:
+          - run:
+              name: Install dependencies
+              command: |
+                choco install --no-progress cygwin
+                if (-not $?) { throw "Failed to install cygwin" }
+                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core --source=cygwin
+                if (-not $?) { throw "Failed to install deps from cygwin" }
+          - run:
+              name: Install opam
+              command: |
+                $install_dir = "$Env:TEMP\flow\opam_installer"
+                New-Item -ItemType Directory $install_dir
+                echo "Downloading opam64.tar.xz"
+                (New-Object System.Net.WebClient).DownloadFile("https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz", "$install_dir\opam64.tar.xz")
+                echo "Extracting opam64.tar.xz"
+                $out_dir = "$install_dir".Replace("\", "/")
+                C:\tools\cygwin\bin\tar.exe -x --force-local -f $install_dir\opam64.tar.xz -C "$out_dir"
+                echo "Installing opam"
+                C:\tools\cygwin\bin\bash.exe -l "$install_dir\opam64\install.sh"
+                echo "Done"
+      init:
+        steps:
+          - run:
+              name: Init opam
+              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              command: |
+                export PATH=$PATH:/usr/local/bin:/usr/bin
+                [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
+      create_switch:
+        steps:
+          - run:
+              name: Create opam switch
+              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              environment:
+                PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+              command: |
+                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes
+
 executors:
   linux-opam:
     docker:
@@ -219,24 +261,7 @@ jobs:
           name: Set up workspace
           command: |
             New-Item -ItemType Directory $Env:FLOW_TMP_DIR
-            New-Item -ItemType Directory $Env:FLOW_TMP_DIR\opam_installer
-      - run:
-          name: Install dependencies
-          command: |
-            choco install --no-progress cygwin
-            if (-not $?) { throw "Failed to install cygwin" }
-            choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core --source=cygwin
-            if (-not $?) { throw "Failed to install deps from cygwin" }
-      - run:
-          name: Install opam
-          command: |
-            echo "Downloading opam64.tar.xz"
-            try { (New-Object System.Net.WebClient).DownloadFile("https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz", "$Env:FLOW_TMP_DIR\opam64.tar.xz") } catch { echo $_.Exception }
-            echo "Extracting opam64.tar.xz"
-            C:\tools\cygwin\bin\tar.exe -x --force-local -f $Env:FLOW_TMP_DIR\opam64.tar.xz -C C:/tmp/flow/opam_installer
-            echo "Installing opam"
-            C:\tools\cygwin\bin\bash.exe -l "$Env:FLOW_TMP_DIR\opam_installer\opam64\install.sh"
-            echo "Done"
+      - opam_windows/install
       - run:
           name: Calculate opam version
           shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
@@ -245,19 +270,8 @@ jobs:
       - restore_cache:
           keys:
           - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
-      - run:
-          name: Init opam
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
-          command: |
-            export PATH=$PATH:/usr/local/bin:/usr/bin
-            [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
-      - run:
-          name: Create opam switch
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
-          environment:
-            PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
-          command: |
-            [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes
+      - opam_windows/init
+      - opam_windows/create_switch
       - save_cache:
           key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
           paths:
