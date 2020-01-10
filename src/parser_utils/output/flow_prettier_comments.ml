@@ -99,191 +99,190 @@ and find_comment_attach statements (comment_pos, _) =
 (* comments.js#getSortedChildNodes *)
 and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
   let (_loc, stmt) = statement in
-  Ast.Statement.(
-    match stmt with
-    | Block { Block.body } -> body
-    | If { If.test; consequent; alternate; comments = _ } ->
-      [statement_of_expression test; consequent] @ statement_list_of_option alternate
-    | Labeled { Labeled.body; _ } -> [body]
-    | With { With._object; body } -> [statement_of_expression _object; body]
-    | TypeAlias _ -> []
-    | OpaqueType _ -> []
-    | Switch { Switch.discriminant; cases } ->
-      get_children_nodes_expr discriminant
-      @ List.fold_left
-          (fun nodes (_, { Switch.Case.test; consequent }) ->
-            let test_nodes = node_list_of_option ~f:get_children_nodes_expr test in
-            let consequent_nodes =
-              consequent |> Base.List.map ~f:get_children_nodes |> List.flatten
-            in
-            nodes @ test_nodes @ consequent_nodes)
-          []
-          cases
-    | Return { Return.argument; comments = _ } ->
-      node_list_of_option ~f:statement_list_of_expression argument
-    | Throw { Throw.argument } -> statement_list_of_expression argument
-    | Try { Try.block = (_, { Block.body }); handler; finalizer; _ } ->
-      let handler_nodes =
-        Option.value_map
-          ~default:[]
-          ~f:(fun (_, { Try.CatchClause.param; body = (_, { Block.body }); _ }) ->
-            node_list_of_option ~f:get_children_nodes_pattern param @ body)
-          handler
-      in
-      let finalizer_nodes =
-        Option.value_map ~default:[] ~f:(fun (_, { Block.body }) -> body) finalizer
-      in
-      body @ handler_nodes @ finalizer_nodes
-    | VariableDeclaration { VariableDeclaration.declarations; _ } ->
-      List.fold_left
-        (fun nodes (_, { VariableDeclaration.Declarator.init; _ }) ->
-          nodes @ node_list_of_option ~f:get_children_nodes_expr init)
+  let open Ast.Statement in
+  match stmt with
+  | Block { Block.body } -> body
+  | If { If.test; consequent; alternate; comments = _ } ->
+    [statement_of_expression test; consequent] @ statement_list_of_option alternate
+  | Labeled { Labeled.body; _ } -> [body]
+  | With { With._object; body } -> [statement_of_expression _object; body]
+  | TypeAlias _ -> []
+  | OpaqueType _ -> []
+  | Switch { Switch.discriminant; cases } ->
+    get_children_nodes_expr discriminant
+    @ List.fold_left
+        (fun nodes (_, { Switch.Case.test; consequent }) ->
+          let test_nodes = node_list_of_option ~f:get_children_nodes_expr test in
+          let consequent_nodes =
+            consequent |> Base.List.map ~f:get_children_nodes |> List.flatten
+          in
+          nodes @ test_nodes @ consequent_nodes)
         []
-        declarations
-    | While { While.test; body } -> [statement_of_expression test; body]
-    | DoWhile { DoWhile.test; body; comments = _ } -> [statement_of_expression test; body]
-    | For { For.init; test; update; body } ->
-      let init_nodes =
-        node_list_of_option
-          ~f:(fun init ->
-            For.(
-              match init with
-              | InitDeclaration (loc, decl) -> get_children_nodes (loc, VariableDeclaration decl)
-              | InitExpression expr -> get_children_nodes_expr expr))
-          init
-      in
-      let test_nodes = node_list_of_option ~f:get_children_nodes_expr test in
-      let update_nodes = node_list_of_option ~f:get_children_nodes_expr update in
-      let body_nodes = get_children_nodes body in
-      init_nodes @ test_nodes @ update_nodes @ body_nodes
-    | ForIn { ForIn.left; right; body; _ } ->
-      let left_nodes =
-        ForIn.(
-          match left with
-          | LeftDeclaration (loc, decl) -> get_children_nodes (loc, VariableDeclaration decl)
-          | LeftPattern pattern -> get_children_nodes_pattern pattern)
-      in
-      let right_nodes = get_children_nodes_expr right in
-      let body_nodes = get_children_nodes body in
-      left_nodes @ right_nodes @ body_nodes
-    | ForOf { ForOf.left; right; body; _ } ->
-      let left_nodes =
-        ForOf.(
-          match left with
-          | LeftDeclaration (loc, decl) -> get_children_nodes (loc, VariableDeclaration decl)
-          | LeftPattern pattern -> get_children_nodes_pattern pattern)
-      in
-      let right_nodes = get_children_nodes_expr right in
-      let body_nodes = get_children_nodes body in
-      left_nodes @ right_nodes @ body_nodes
-    | DeclareClass _ -> []
-    | DeclareVariable _ -> []
-    | DeclareFunction _ -> []
-    | DeclareModule { DeclareModule.body = (_, { Block.body }); _ } -> body
-    | ExportNamedDeclaration { ExportNamedDeclaration.declaration; _ } ->
-      statement_list_of_option declaration
-    | ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } ->
-      (match declaration with
-      | ExportDefaultDeclaration.Declaration d -> [d]
-      | ExportDefaultDeclaration.Expression e -> statement_list_of_expression e)
-    | DeclareExportDeclaration _ -> []
-    | ImportDeclaration _ -> []
-    | Expression { Expression.expression; _ } -> get_children_nodes_expr expression
-    | Debugger -> []
-    | Empty -> []
-    | EnumDeclaration _ -> []
-    | Break _ -> []
-    | ClassDeclaration clazz -> get_children_nodes_class clazz
-    | Continue _ -> []
-    | DeclareInterface _ -> []
-    | DeclareModuleExports _ -> []
-    | DeclareTypeAlias _ -> []
-    | DeclareOpaqueType _ -> []
-    | FunctionDeclaration funct -> get_children_nodes_function funct
-    | InterfaceDeclaration _ -> [])
+        cases
+  | Return { Return.argument; comments = _ } ->
+    node_list_of_option ~f:statement_list_of_expression argument
+  | Throw { Throw.argument } -> statement_list_of_expression argument
+  | Try { Try.block = (_, { Block.body }); handler; finalizer; _ } ->
+    let handler_nodes =
+      Option.value_map
+        ~default:[]
+        ~f:(fun (_, { Try.CatchClause.param; body = (_, { Block.body }); _ }) ->
+          node_list_of_option ~f:get_children_nodes_pattern param @ body)
+        handler
+    in
+    let finalizer_nodes =
+      Option.value_map ~default:[] ~f:(fun (_, { Block.body }) -> body) finalizer
+    in
+    body @ handler_nodes @ finalizer_nodes
+  | VariableDeclaration { VariableDeclaration.declarations; _ } ->
+    List.fold_left
+      (fun nodes (_, { VariableDeclaration.Declarator.init; _ }) ->
+        nodes @ node_list_of_option ~f:get_children_nodes_expr init)
+      []
+      declarations
+  | While { While.test; body } -> [statement_of_expression test; body]
+  | DoWhile { DoWhile.test; body; comments = _ } -> [statement_of_expression test; body]
+  | For { For.init; test; update; body } ->
+    let init_nodes =
+      node_list_of_option
+        ~f:(fun init ->
+          For.(
+            match init with
+            | InitDeclaration (loc, decl) -> get_children_nodes (loc, VariableDeclaration decl)
+            | InitExpression expr -> get_children_nodes_expr expr))
+        init
+    in
+    let test_nodes = node_list_of_option ~f:get_children_nodes_expr test in
+    let update_nodes = node_list_of_option ~f:get_children_nodes_expr update in
+    let body_nodes = get_children_nodes body in
+    init_nodes @ test_nodes @ update_nodes @ body_nodes
+  | ForIn { ForIn.left; right; body; _ } ->
+    let left_nodes =
+      ForIn.(
+        match left with
+        | LeftDeclaration (loc, decl) -> get_children_nodes (loc, VariableDeclaration decl)
+        | LeftPattern pattern -> get_children_nodes_pattern pattern)
+    in
+    let right_nodes = get_children_nodes_expr right in
+    let body_nodes = get_children_nodes body in
+    left_nodes @ right_nodes @ body_nodes
+  | ForOf { ForOf.left; right; body; _ } ->
+    let left_nodes =
+      ForOf.(
+        match left with
+        | LeftDeclaration (loc, decl) -> get_children_nodes (loc, VariableDeclaration decl)
+        | LeftPattern pattern -> get_children_nodes_pattern pattern)
+    in
+    let right_nodes = get_children_nodes_expr right in
+    let body_nodes = get_children_nodes body in
+    left_nodes @ right_nodes @ body_nodes
+  | DeclareClass _ -> []
+  | DeclareVariable _ -> []
+  | DeclareFunction _ -> []
+  | DeclareModule { DeclareModule.body = (_, { Block.body }); _ } -> body
+  | ExportNamedDeclaration { ExportNamedDeclaration.declaration; _ } ->
+    statement_list_of_option declaration
+  | ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } ->
+    (match declaration with
+    | ExportDefaultDeclaration.Declaration d -> [d]
+    | ExportDefaultDeclaration.Expression e -> statement_list_of_expression e)
+  | DeclareExportDeclaration _ -> []
+  | ImportDeclaration _ -> []
+  | Expression { Expression.expression; _ } -> get_children_nodes_expr expression
+  | Debugger -> []
+  | Empty -> []
+  | EnumDeclaration _ -> []
+  | Break _ -> []
+  | ClassDeclaration clazz -> get_children_nodes_class clazz
+  | Continue _ -> []
+  | DeclareInterface _ -> []
+  | DeclareModuleExports _ -> []
+  | DeclareTypeAlias _ -> []
+  | DeclareOpaqueType _ -> []
+  | FunctionDeclaration funct -> get_children_nodes_function funct
+  | InterfaceDeclaration _ -> []
 
 and get_children_nodes_expr expression =
   let (loc, expr) = expression in
-  Ast.Expression.(
-    match expr with
-    | Array { Array.elements; comments = _ } ->
-      List.fold_left
-        (fun nodes element ->
-          nodes @ Option.value_map ~default:[] ~f:get_children_nodes_expression_or_spread element)
+  let open Ast.Expression in
+  match expr with
+  | Array { Array.elements; comments = _ } ->
+    List.fold_left
+      (fun nodes element ->
+        nodes @ Option.value_map ~default:[] ~f:get_children_nodes_expression_or_spread element)
+      []
+      elements
+  | ArrowFunction func -> get_children_nodes_function func
+  | Assignment { Assignment.left; right; _ } ->
+    get_children_nodes_pattern left @ get_children_nodes_expr right
+  | Binary { Binary.left; right; _ } -> get_children_nodes_expr left @ get_children_nodes_expr right
+  | Call { Call.callee; arguments; _ } ->
+    get_children_nodes_expr callee
+    @ List.fold_left
+        (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
         []
-        elements
-    | ArrowFunction func -> get_children_nodes_function func
-    | Assignment { Assignment.left; right; _ } ->
-      get_children_nodes_pattern left @ get_children_nodes_expr right
-    | Binary { Binary.left; right; _ } ->
-      get_children_nodes_expr left @ get_children_nodes_expr right
-    | Call { Call.callee; arguments; _ } ->
-      get_children_nodes_expr callee
-      @ List.fold_left
-          (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
-          []
-          arguments
-    | Class clazz -> get_children_nodes_class clazz
-    | Comprehension { Comprehension.blocks; filter } ->
-      let block_nodes = get_children_nodes_comprehension_block_list blocks in
-      let filter_nodes = node_list_of_option ~f:get_children_nodes_expr filter in
-      block_nodes @ filter_nodes
-    | Conditional { Conditional.consequent; alternate; _ } ->
-      get_children_nodes_expr consequent @ get_children_nodes_expr alternate
-    | Function func -> get_children_nodes_function func
-    | Generator { Generator.blocks; filter } ->
-      get_children_nodes_expr (loc, Comprehension { Comprehension.blocks; filter })
-    | Identifier _ -> []
-    | Import i -> get_children_nodes_expr i
-    | JSXElement { Ast.JSX.openingElement; children; _ } ->
-      get_children_nodes_jsx_opening openingElement @ get_children_nodes_jsx_child_list children
-    | JSXFragment { Ast.JSX.frag_children; _ } -> get_children_nodes_jsx_child_list frag_children
-    | Literal _ -> []
-    | Logical { Logical.left; right; _ } ->
-      get_children_nodes_expr left @ get_children_nodes_expr right
-    | Member member -> get_children_nodes_member member
-    | MetaProperty _ -> []
-    | New { New.callee; arguments; _ } ->
-      get_children_nodes_expr callee
-      @ List.fold_left
-          (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
-          []
-          arguments
-    | Object { Object.properties; comments = _ } ->
-      List.fold_left
-        (fun nodes property ->
-          nodes
-          @
-          match property with
-          | Object.SpreadProperty (_, { Object.SpreadProperty.argument }) ->
-            get_children_nodes_expr argument
-          | Object.Property (_, property) ->
-            (match property with
-            | Object.Property.Init { value; _ } -> get_children_nodes_expr value
-            | Object.Property.Method { value = (_, func); _ } -> get_children_nodes_function func
-            | Object.Property.Get { value = (_, func); _ } -> get_children_nodes_function func
-            | Object.Property.Set { value = (_, func); _ } -> get_children_nodes_function func))
+        arguments
+  | Class clazz -> get_children_nodes_class clazz
+  | Comprehension { Comprehension.blocks; filter } ->
+    let block_nodes = get_children_nodes_comprehension_block_list blocks in
+    let filter_nodes = node_list_of_option ~f:get_children_nodes_expr filter in
+    block_nodes @ filter_nodes
+  | Conditional { Conditional.consequent; alternate; _ } ->
+    get_children_nodes_expr consequent @ get_children_nodes_expr alternate
+  | Function func -> get_children_nodes_function func
+  | Generator { Generator.blocks; filter } ->
+    get_children_nodes_expr (loc, Comprehension { Comprehension.blocks; filter })
+  | Identifier _ -> []
+  | Import i -> get_children_nodes_expr i
+  | JSXElement { Ast.JSX.openingElement; children; _ } ->
+    get_children_nodes_jsx_opening openingElement @ get_children_nodes_jsx_child_list children
+  | JSXFragment { Ast.JSX.frag_children; _ } -> get_children_nodes_jsx_child_list frag_children
+  | Literal _ -> []
+  | Logical { Logical.left; right; _ } ->
+    get_children_nodes_expr left @ get_children_nodes_expr right
+  | Member member -> get_children_nodes_member member
+  | MetaProperty _ -> []
+  | New { New.callee; arguments; _ } ->
+    get_children_nodes_expr callee
+    @ List.fold_left
+        (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
         []
-        properties
-    | OptionalCall { OptionalCall.call = { Call.callee; arguments; _ }; _ } ->
-      get_children_nodes_expr callee
-      @ List.fold_left
-          (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
-          []
-          arguments
-    | OptionalMember { OptionalMember.member; _ } -> get_children_nodes_member member
-    | Sequence { Sequence.expressions } ->
-      List.fold_left (fun nodes eos -> nodes @ get_children_nodes_expr eos) [] expressions
-    | Super -> []
-    | TaggedTemplate { TaggedTemplate.tag; quasi = (loc, quasi) } ->
-      get_children_nodes_expr tag @ get_children_nodes_expr (loc, TemplateLiteral quasi)
-    | TemplateLiteral { TemplateLiteral.expressions; _ } ->
-      expressions |> Base.List.map ~f:get_children_nodes_expr |> List.flatten
-    | This -> []
-    | TypeCast { TypeCast.expression; _ } -> get_children_nodes_expr expression
-    | Unary { Unary.argument; _ } -> get_children_nodes_expr argument
-    | Update { Update.argument; _ } -> get_children_nodes_expr argument
-    | Yield { Yield.argument; _ } -> node_list_of_option ~f:get_children_nodes_expr argument)
+        arguments
+  | Object { Object.properties; comments = _ } ->
+    List.fold_left
+      (fun nodes property ->
+        nodes
+        @
+        match property with
+        | Object.SpreadProperty (_, { Object.SpreadProperty.argument }) ->
+          get_children_nodes_expr argument
+        | Object.Property (_, property) ->
+          (match property with
+          | Object.Property.Init { value; _ } -> get_children_nodes_expr value
+          | Object.Property.Method { value = (_, func); _ } -> get_children_nodes_function func
+          | Object.Property.Get { value = (_, func); _ } -> get_children_nodes_function func
+          | Object.Property.Set { value = (_, func); _ } -> get_children_nodes_function func))
+      []
+      properties
+  | OptionalCall { OptionalCall.call = { Call.callee; arguments; _ }; _ } ->
+    get_children_nodes_expr callee
+    @ List.fold_left
+        (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
+        []
+        arguments
+  | OptionalMember { OptionalMember.member; _ } -> get_children_nodes_member member
+  | Sequence { Sequence.expressions } ->
+    List.fold_left (fun nodes eos -> nodes @ get_children_nodes_expr eos) [] expressions
+  | Super -> []
+  | TaggedTemplate { TaggedTemplate.tag; quasi = (loc, quasi) } ->
+    get_children_nodes_expr tag @ get_children_nodes_expr (loc, TemplateLiteral quasi)
+  | TemplateLiteral { TemplateLiteral.expressions; _ } ->
+    expressions |> Base.List.map ~f:get_children_nodes_expr |> List.flatten
+  | This -> []
+  | TypeCast { TypeCast.expression; _ } -> get_children_nodes_expr expression
+  | Unary { Unary.argument; _ } -> get_children_nodes_expr argument
+  | Update { Update.argument; _ } -> get_children_nodes_expr argument
+  | Yield { Yield.argument; _ } -> node_list_of_option ~f:get_children_nodes_expr argument
 
 and get_children_nodes_function { Ast.Function.body; _ } =
   match body with
@@ -297,39 +296,39 @@ and get_children_nodes_expression_or_spread eos =
     get_children_nodes_expr argument
 
 and get_children_nodes_pattern (_loc, pattern) =
-  Ast.Pattern.(
-    match pattern with
-    | Object { Object.properties; _ } ->
-      properties
-      |> Base.List.map ~f:(fun property ->
-             match property with
-             | Object.Property (_, { Object.Property.key; pattern; default; shorthand = _ }) ->
-               let key_nodes =
-                 match key with
-                 | Object.Property.Literal _ -> []
-                 | Object.Property.Identifier _ -> []
-                 | Object.Property.Computed expr -> get_children_nodes_expr expr
-               in
-               let pattern_nodes = get_children_nodes_pattern pattern in
-               let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
-               key_nodes @ pattern_nodes @ default_nodes
-             | Object.RestProperty (_, { Object.RestProperty.argument }) ->
-               get_children_nodes_pattern argument)
-      |> List.flatten
-    | Array { Array.elements; _ } ->
-      elements
-      |> Base.List.map ~f:(fun element_opt ->
-             match element_opt with
-             | Some (Array.Element (_, { Array.Element.argument; default })) ->
-               let pattern_nodes = get_children_nodes_pattern argument in
-               let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
-               pattern_nodes @ default_nodes
-             | Some (Array.RestElement (_, { Array.RestElement.argument })) ->
-               get_children_nodes_pattern argument
-             | None -> [])
-      |> List.flatten
-    | Identifier _ -> []
-    | Expression expr -> get_children_nodes_expr expr)
+  let open Ast.Pattern in
+  match pattern with
+  | Object { Object.properties; _ } ->
+    properties
+    |> Base.List.map ~f:(fun property ->
+           match property with
+           | Object.Property (_, { Object.Property.key; pattern; default; shorthand = _ }) ->
+             let key_nodes =
+               match key with
+               | Object.Property.Literal _ -> []
+               | Object.Property.Identifier _ -> []
+               | Object.Property.Computed expr -> get_children_nodes_expr expr
+             in
+             let pattern_nodes = get_children_nodes_pattern pattern in
+             let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
+             key_nodes @ pattern_nodes @ default_nodes
+           | Object.RestProperty (_, { Object.RestProperty.argument }) ->
+             get_children_nodes_pattern argument)
+    |> List.flatten
+  | Array { Array.elements; _ } ->
+    elements
+    |> Base.List.map ~f:(fun element_opt ->
+           match element_opt with
+           | Some (Array.Element (_, { Array.Element.argument; default })) ->
+             let pattern_nodes = get_children_nodes_pattern argument in
+             let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
+             pattern_nodes @ default_nodes
+           | Some (Array.RestElement (_, { Array.RestElement.argument })) ->
+             get_children_nodes_pattern argument
+           | None -> [])
+    |> List.flatten
+  | Identifier _ -> []
+  | Expression expr -> get_children_nodes_expr expr
 
 and get_children_nodes_class { Ast.Class.body = (_, { Ast.Class.Body.body }); _ } =
   List.fold_left
@@ -347,60 +346,60 @@ and get_children_nodes_class { Ast.Class.body = (_, { Ast.Class.Body.body }); _ 
     body
 
 and get_children_nodes_member { Ast.Expression.Member._object; property; _ } =
-  Ast.Expression.Member.(
-    match property with
-    | PropertyIdentifier _ -> []
-    | PropertyPrivateName _ -> []
-    | PropertyExpression e -> get_children_nodes_expr e)
+  let open Ast.Expression.Member in
+  (match property with
+  | PropertyIdentifier _ -> []
+  | PropertyPrivateName _ -> []
+  | PropertyExpression e -> get_children_nodes_expr e)
   @ get_children_nodes_expr _object
 
 and get_children_nodes_comprehension_block_list
     (blocks : (Loc.t, Loc.t) Ast.Expression.Comprehension.Block.t list) =
-  Ast.Expression.Comprehension.(
-    blocks
-    |> Base.List.map ~f:(fun (_, { Block.left; right; _ }) ->
-           get_children_nodes_pattern left @ get_children_nodes_expr right)
-    |> List.flatten)
+  let open Ast.Expression.Comprehension in
+  blocks
+  |> Base.List.map ~f:(fun (_, { Block.left; right; _ }) ->
+         get_children_nodes_pattern left @ get_children_nodes_expr right)
+  |> List.flatten
 
 and get_children_nodes_jsx_opening (_loc, { Ast.JSX.Opening.attributes; _ }) =
-  Ast.JSX.(
-    attributes
-    |> Base.List.map ~f:(fun attr ->
-           match attr with
-           | Opening.Attribute (_, { Attribute.value; _ }) ->
-             node_list_of_option
-               ~f:(fun value ->
-                 match value with
-                 | Attribute.ExpressionContainer
-                     ( _,
-                       {
-                         ExpressionContainer.expression = ExpressionContainer.Expression expression;
-                       } ) ->
-                   get_children_nodes_expr expression
-                 | _ -> [])
-               value
-           | Opening.SpreadAttribute _ -> [])
-    |> List.flatten)
+  let open Ast.JSX in
+  attributes
+  |> Base.List.map ~f:(fun attr ->
+         match attr with
+         | Opening.Attribute (_, { Attribute.value; _ }) ->
+           node_list_of_option
+             ~f:(fun value ->
+               match value with
+               | Attribute.ExpressionContainer
+                   ( _,
+                     { ExpressionContainer.expression = ExpressionContainer.Expression expression }
+                   ) ->
+                 get_children_nodes_expr expression
+               | _ -> [])
+             value
+         | Opening.SpreadAttribute _ -> [])
+  |> List.flatten
 
 and get_children_nodes_jsx_child_list (_children_loc, children) =
-  Ast.JSX.(
-    children
-    |> Base.List.map ~f:(fun (loc, child) ->
-           match child with
-           | Element e -> get_children_nodes_expr (loc, Ast.Expression.JSXElement e)
-           | Fragment f -> get_children_nodes_expr (loc, Ast.Expression.JSXFragment f)
-           | ExpressionContainer { ExpressionContainer.expression } ->
-             (match expression with
-             | ExpressionContainer.Expression expression -> get_children_nodes_expr expression
-             | _ -> [])
-           | SpreadChild expr -> get_children_nodes_expr expr
-           | Text _ -> [])
-    |> List.flatten)
+  let open Ast.JSX in
+  children
+  |> Base.List.map ~f:(fun (loc, child) ->
+         match child with
+         | Element e -> get_children_nodes_expr (loc, Ast.Expression.JSXElement e)
+         | Fragment f -> get_children_nodes_expr (loc, Ast.Expression.JSXFragment f)
+         | ExpressionContainer { ExpressionContainer.expression } ->
+           (match expression with
+           | ExpressionContainer.Expression expression -> get_children_nodes_expr expression
+           | _ -> [])
+         | SpreadChild expr -> get_children_nodes_expr expr
+         | Text _ -> [])
+  |> List.flatten
 
 and statement_of_expression (expression : (Loc.t, Loc.t) Ast.Expression.t) :
     (Loc.t, Loc.t) Ast.Statement.t =
   let (pos, _) = expression in
-  Ast.Statement.(pos, Expression { Expression.expression; directive = None })
+  let open Ast.Statement in
+  (pos, Expression { Expression.expression; directive = None })
 
 and statement_list_of_expression (expression : (Loc.t, Loc.t) Ast.Expression.t) :
     (Loc.t, Loc.t) Ast.Statement.t list =

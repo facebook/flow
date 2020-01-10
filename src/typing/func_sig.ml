@@ -146,11 +146,11 @@ module Make (F : Func_params.S) = struct
       ~expr
       { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } =
     let loc =
-      Ast.Function.(
-        match body with
-        | Some (BodyBlock (loc, _)) -> loc
-        | Some (BodyExpression (loc, _)) -> loc
-        | None -> ALoc.none)
+      let open Ast.Function in
+      match body with
+      | Some (BodyBlock (loc, _)) -> loc
+      | Some (BodyExpression (loc, _)) -> loc
+      | None -> ALoc.none
     in
     let reason = mk_reason RFunctionBody loc in
     let env = Env.peek_env () in
@@ -231,22 +231,22 @@ module Make (F : Func_params.S) = struct
     Scope.add_entry (internal_name "return") return function_scope;
 
     let (statements, reconstruct_body) =
-      Ast.Statement.(
-        match body with
-        | None -> ([], Fn.const None)
-        | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
-          (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body }))))
-        | Some (Ast.Function.BodyExpression expr) ->
-          ( [
-              ( fst expr,
-                Return { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () }
-              );
-            ],
-            (function
-            | [(_, Return { Return.argument = Some expr; comments = _ })]
-            | [(_, Expression { Expression.expression = expr; _ })] ->
-              Some (Ast.Function.BodyExpression expr)
-            | _ -> failwith "expected return body") ))
+      let open Ast.Statement in
+      match body with
+      | None -> ([], Fn.const None)
+      | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
+        (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body }))))
+      | Some (Ast.Function.BodyExpression expr) ->
+        ( [
+            ( fst expr,
+              Return { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () }
+            );
+          ],
+          (function
+          | [(_, Return { Return.argument = Some expr; comments = _ })]
+          | [(_, Expression { Expression.expression = expr; _ })] ->
+            Some (Ast.Function.BodyExpression expr)
+          | _ -> failwith "expected return body") )
     in
     (* NOTE: Predicate functions can currently only be of the form:
        function f(...) { return <exp>; }

@@ -27,94 +27,94 @@ class rename_mapper refs new_name =
         expr
 
     method! object_property_type (opt : (Loc.t, Loc.t) Ast.Type.Object.Property.t) =
-      Ast.Type.Object.Property.(
-        let opt = super#object_property_type opt in
-        let (loc, ({ key; _ } as property)) = opt in
-        let key' =
-          Ast.Expression.Object.Property.(
-            match key with
-            | Identifier id ->
-              let id' = this#identifier id in
-              if id == id' then
-                key
-              else
-                Identifier id'
-            | _ -> key)
-        in
-        if key == key' then
-          opt
-        else
-          (loc, { property with key = key' }))
+      let open Ast.Type.Object.Property in
+      let opt = super#object_property_type opt in
+      let (loc, ({ key; _ } as property)) = opt in
+      let key' =
+        let open Ast.Expression.Object.Property in
+        match key with
+        | Identifier id ->
+          let id' = this#identifier id in
+          if id == id' then
+            key
+          else
+            Identifier id'
+        | _ -> key
+      in
+      if key == key' then
+        opt
+      else
+        (loc, { property with key = key' })
 
     method! pattern_object_property ?kind (prop : (Loc.t, Loc.t) Ast.Pattern.Object.Property.t') =
-      Ast.Pattern.Object.Property.(
-        let { key; pattern; default; shorthand } = prop in
+      let open Ast.Pattern.Object.Property in
+      let { key; pattern; default; shorthand } = prop in
+      if not shorthand then
+        super#pattern_object_property prop
+      else
+        let key_loc =
+          match key with
+          | Literal (x, _)
+          | Identifier (x, _)
+          | Computed (x, _) ->
+            x
+        in
+        let ref_kinds = get_ref_kinds refs key_loc in
+        let key' =
+          if List.mem FindRefsTypes.PropertyAccess ref_kinds then
+            this#pattern_object_property_key ?kind key
+          else
+            key
+        in
+        let pattern' =
+          if List.mem FindRefsTypes.Local ref_kinds then
+            this#pattern_object_property_pattern ?kind pattern
+          else
+            pattern
+        in
+        (* TODO *)
+        let default' = default in
+        if key == key' && pattern == pattern' && default == default' then
+          prop
+        else
+          (* TODO if both changed (e.g. destructuring requires) then retain shorthand *)
+          { key = key'; pattern = pattern'; default = default'; shorthand = false }
+
+    method! object_property (prop : (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
+      let open Ast.Expression.Object.Property in
+      match prop with
+      | (loc, Init { key; value; shorthand }) ->
         if not shorthand then
-          super#pattern_object_property prop
+          super#object_property prop
         else
           let key_loc =
             match key with
             | Literal (x, _)
             | Identifier (x, _)
+            | PrivateName (x, _)
             | Computed (x, _) ->
               x
           in
           let ref_kinds = get_ref_kinds refs key_loc in
+          (* What about computed properties? *)
           let key' =
-            if List.mem FindRefsTypes.PropertyAccess ref_kinds then
-              this#pattern_object_property_key ?kind key
+            if List.mem FindRefsTypes.PropertyDefinition ref_kinds then
+              this#object_key key
             else
               key
           in
-          let pattern' =
+          let value' =
             if List.mem FindRefsTypes.Local ref_kinds then
-              this#pattern_object_property_pattern ?kind pattern
+              this#expression value
             else
-              pattern
+              value
           in
-          (* TODO *)
-          let default' = default in
-          if key == key' && pattern == pattern' && default == default' then
+          if key == key' && value == value' then
             prop
           else
-            (* TODO if both changed (e.g. destructuring requires) then retain shorthand *)
-            { key = key'; pattern = pattern'; default = default'; shorthand = false })
-
-    method! object_property (prop : (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
-      Ast.Expression.Object.Property.(
-        match prop with
-        | (loc, Init { key; value; shorthand }) ->
-          if not shorthand then
-            super#object_property prop
-          else
-            let key_loc =
-              match key with
-              | Literal (x, _)
-              | Identifier (x, _)
-              | PrivateName (x, _)
-              | Computed (x, _) ->
-                x
-            in
-            let ref_kinds = get_ref_kinds refs key_loc in
-            (* What about computed properties? *)
-            let key' =
-              if List.mem FindRefsTypes.PropertyDefinition ref_kinds then
-                this#object_key key
-              else
-                key
-            in
-            let value' =
-              if List.mem FindRefsTypes.Local ref_kinds then
-                this#expression value
-              else
-                value
-            in
-            if key == key' && value == value' then
-              prop
-            else
-              (loc, Init { key = key'; value = value'; shorthand = false })
-        (* TODO *)
-        | _ -> super#object_property prop)
+            (loc, Init { key = key'; value = value'; shorthand = false })
+      (* TODO *)
+      | _ -> super#object_property prop
   end
 
 let mapper_to_edits (ast_mapper : Loc.t Flow_ast_mapper.mapper) (ast : (Loc.t, Loc.t) Ast.program) =

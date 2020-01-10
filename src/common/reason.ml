@@ -937,262 +937,260 @@ let rec code_desc_of_expression ~wrap (_, x) =
       fun s ->
     s
   in
-  Ast.Expression.(
-    match x with
-    | Array { Array.elements = []; _ } -> "[]"
-    | Array _ -> "[...]"
-    | ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression ((_, Object _) as e); _ } ->
-      do_wrap ("(...) => (" ^ code_desc_of_expression ~wrap:false e ^ ")")
-    | ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression e; _ } ->
-      do_wrap ("(...) => " ^ code_desc_of_expression ~wrap:false e)
-    | ArrowFunction _ -> do_wrap "(...) => { ... }"
-    | Assignment { Assignment.left; operator; right } ->
-      let left = code_desc_of_pattern left in
-      let right = code_desc_of_expression ~wrap:false right in
-      let operator =
+  let open Ast.Expression in
+  match x with
+  | Array { Array.elements = []; _ } -> "[]"
+  | Array _ -> "[...]"
+  | ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression ((_, Object _) as e); _ } ->
+    do_wrap ("(...) => (" ^ code_desc_of_expression ~wrap:false e ^ ")")
+  | ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression e; _ } ->
+    do_wrap ("(...) => " ^ code_desc_of_expression ~wrap:false e)
+  | ArrowFunction _ -> do_wrap "(...) => { ... }"
+  | Assignment { Assignment.left; operator; right } ->
+    let left = code_desc_of_pattern left in
+    let right = code_desc_of_expression ~wrap:false right in
+    let operator =
+      match operator with
+      | None -> "="
+      | Some op -> Flow_ast_utils.string_of_assignment_operator op
+    in
+    do_wrap (left ^ " " ^ operator ^ " " ^ right)
+  | Binary { Binary.operator; left; right } ->
+    do_wrap (code_desc_of_operation left (`Binary operator) right)
+  | Call { Call.callee; targs; arguments } ->
+    let targs =
+      match targs with
+      | None -> ""
+      | Some (_, []) -> "<>"
+      | Some (_, _ :: _) -> "<...>"
+    in
+    let args =
+      match arguments with
+      | [] -> "()"
+      | _ :: _ -> "(...)"
+    in
+    code_desc_of_expression ~wrap:true callee ^ targs ^ args
+  | Class _ -> "class { ... }"
+  | Conditional { Conditional.test; consequent; alternate } ->
+    let wrap_test =
+      match test with
+      | (_, Conditional _) -> true
+      | _ -> false
+    in
+    do_wrap
+      ( code_desc_of_expression ~wrap:wrap_test test
+      ^ " ? "
+      ^ code_desc_of_expression ~wrap:false consequent
+      ^ " : "
+      ^ code_desc_of_expression ~wrap:false alternate )
+  | Function _ -> "function () { ... }"
+  | Identifier (_, { Ast.Identifier.name = x; comments = _ }) -> x
+  | Import x -> "import(" ^ code_desc_of_expression ~wrap:false x ^ ")"
+  | JSXElement x -> code_desc_of_jsx_element x
+  | JSXFragment _ -> "<>...</>"
+  | Ast.Expression.Literal x -> code_desc_of_literal x
+  | Logical { Logical.operator; left; right } ->
+    do_wrap (code_desc_of_operation left (`Logical operator) right)
+  | Member { Member._object; property } ->
+    let o = code_desc_of_expression ~wrap:true _object in
+    let p = code_desc_of_property ~optional:false property in
+    o ^ p
+  | MetaProperty
+      {
+        MetaProperty.meta = (_, { Ast.Identifier.name = o; comments = _ });
+        property = (_, { Ast.Identifier.name = p; comments = _ });
+      } ->
+    o ^ "." ^ p
+  | New { New.callee; targs; arguments; comments = _ } ->
+    let targs =
+      match targs with
+      | None -> ""
+      | Some (_, []) -> "<>"
+      | Some (_, _ :: _) -> "<...>"
+    in
+    let args =
+      match arguments with
+      | [] -> "()"
+      | _ :: _ -> "(...)"
+    in
+    "new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args
+  | Object _ -> "{...}"
+  | OptionalCall { OptionalCall.call = { Call.callee; targs; arguments }; optional } ->
+    let targ_string =
+      match targs with
+      | None -> ""
+      | Some (_, []) -> "<>"
+      | Some (_, _ :: _) -> "<...>"
+    in
+    let arg_string =
+      match arguments with
+      | [] -> "()"
+      | _ -> "(...)"
+    in
+    code_desc_of_expression ~wrap:true callee
+    ^ ( if optional then
+        "?."
+      else
+        "" )
+    ^ targ_string
+    ^ arg_string
+  | OptionalMember { OptionalMember.member = { Member._object; property }; optional } ->
+    let o = code_desc_of_expression ~wrap:true _object in
+    let p = code_desc_of_property ~optional property in
+    o ^ p
+  | Sequence { Sequence.expressions } ->
+    code_desc_of_expression ~wrap (List.hd (List.rev expressions))
+  | Super -> "super"
+  | TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"
+  | TemplateLiteral _ -> "`...`"
+  | This -> "this"
+  | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
+  | Unary { Unary.operator; argument; comments = _ } ->
+    let x = code_desc_of_expression ~wrap:true argument in
+    let op =
+      Unary.(
         match operator with
-        | None -> "="
-        | Some op -> Flow_ast_utils.string_of_assignment_operator op
-      in
-      do_wrap (left ^ " " ^ operator ^ " " ^ right)
-    | Binary { Binary.operator; left; right } ->
-      do_wrap (code_desc_of_operation left (`Binary operator) right)
-    | Call { Call.callee; targs; arguments } ->
-      let targs =
-        match targs with
-        | None -> ""
-        | Some (_, []) -> "<>"
-        | Some (_, _ :: _) -> "<...>"
-      in
-      let args =
-        match arguments with
-        | [] -> "()"
-        | _ :: _ -> "(...)"
-      in
-      code_desc_of_expression ~wrap:true callee ^ targs ^ args
-    | Class _ -> "class { ... }"
-    | Conditional { Conditional.test; consequent; alternate } ->
-      let wrap_test =
-        match test with
-        | (_, Conditional _) -> true
-        | _ -> false
-      in
-      do_wrap
-        ( code_desc_of_expression ~wrap:wrap_test test
-        ^ " ? "
-        ^ code_desc_of_expression ~wrap:false consequent
-        ^ " : "
-        ^ code_desc_of_expression ~wrap:false alternate )
-    | Function _ -> "function () { ... }"
-    | Identifier (_, { Ast.Identifier.name = x; comments = _ }) -> x
-    | Import x -> "import(" ^ code_desc_of_expression ~wrap:false x ^ ")"
-    | JSXElement x -> code_desc_of_jsx_element x
-    | JSXFragment _ -> "<>...</>"
-    | Ast.Expression.Literal x -> code_desc_of_literal x
-    | Logical { Logical.operator; left; right } ->
-      do_wrap (code_desc_of_operation left (`Logical operator) right)
-    | Member { Member._object; property } ->
-      let o = code_desc_of_expression ~wrap:true _object in
-      let p = code_desc_of_property ~optional:false property in
-      o ^ p
-    | MetaProperty
-        {
-          MetaProperty.meta = (_, { Ast.Identifier.name = o; comments = _ });
-          property = (_, { Ast.Identifier.name = p; comments = _ });
-        } ->
-      o ^ "." ^ p
-    | New { New.callee; targs; arguments; comments = _ } ->
-      let targs =
-        match targs with
-        | None -> ""
-        | Some (_, []) -> "<>"
-        | Some (_, _ :: _) -> "<...>"
-      in
-      let args =
-        match arguments with
-        | [] -> "()"
-        | _ :: _ -> "(...)"
-      in
-      "new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args
-    | Object _ -> "{...}"
-    | OptionalCall { OptionalCall.call = { Call.callee; targs; arguments }; optional } ->
-      let targ_string =
-        match targs with
-        | None -> ""
-        | Some (_, []) -> "<>"
-        | Some (_, _ :: _) -> "<...>"
-      in
-      let arg_string =
-        match arguments with
-        | [] -> "()"
-        | _ -> "(...)"
-      in
-      code_desc_of_expression ~wrap:true callee
-      ^ ( if optional then
-          "?."
-        else
-          "" )
-      ^ targ_string
-      ^ arg_string
-    | OptionalMember { OptionalMember.member = { Member._object; property }; optional } ->
-      let o = code_desc_of_expression ~wrap:true _object in
-      let p = code_desc_of_property ~optional property in
-      o ^ p
-    | Sequence { Sequence.expressions } ->
-      code_desc_of_expression ~wrap (List.hd (List.rev expressions))
-    | Super -> "super"
-    | TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"
-    | TemplateLiteral _ -> "`...`"
-    | This -> "this"
-    | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
-    | Unary { Unary.operator; argument; comments = _ } ->
-      let x = code_desc_of_expression ~wrap:true argument in
-      let op =
-        Unary.(
-          match operator with
-          | Minus -> "-"
-          | Plus -> "+"
-          | Not -> "!"
-          | BitNot -> "~"
-          | Typeof -> "typeof "
-          | Void -> "void "
-          | Delete -> "delete "
-          | Await -> "await ")
-      in
-      do_wrap (op ^ x)
-    | Update { Update.operator; prefix; argument } ->
-      let x = code_desc_of_expression ~wrap:true argument in
-      let op =
-        Update.(
-          match operator with
-          | Increment -> "++"
-          | Decrement -> "--")
-      in
-      do_wrap
-        ( if prefix then
-          op ^ x
-        else
-          x ^ op )
-    | Yield { Yield.argument = Some x; delegate = false; _ } ->
-      do_wrap ("yield " ^ code_desc_of_expression ~wrap:false x)
-    | Yield { Yield.argument = Some x; delegate = true; _ } ->
-      do_wrap ("yield* " ^ code_desc_of_expression ~wrap:false x)
-    | Yield { Yield.argument = None; delegate = false; _ } -> "yield"
-    | Yield { Yield.argument = None; delegate = true; _ } -> "yield*"
-    (* TODO *)
-    | Comprehension _
-    | Generator _ ->
-      do_wrap "...")
+        | Minus -> "-"
+        | Plus -> "+"
+        | Not -> "!"
+        | BitNot -> "~"
+        | Typeof -> "typeof "
+        | Void -> "void "
+        | Delete -> "delete "
+        | Await -> "await ")
+    in
+    do_wrap (op ^ x)
+  | Update { Update.operator; prefix; argument } ->
+    let x = code_desc_of_expression ~wrap:true argument in
+    let op =
+      Update.(
+        match operator with
+        | Increment -> "++"
+        | Decrement -> "--")
+    in
+    do_wrap
+      ( if prefix then
+        op ^ x
+      else
+        x ^ op )
+  | Yield { Yield.argument = Some x; delegate = false; _ } ->
+    do_wrap ("yield " ^ code_desc_of_expression ~wrap:false x)
+  | Yield { Yield.argument = Some x; delegate = true; _ } ->
+    do_wrap ("yield* " ^ code_desc_of_expression ~wrap:false x)
+  | Yield { Yield.argument = None; delegate = false; _ } -> "yield"
+  | Yield { Yield.argument = None; delegate = true; _ } -> "yield*"
+  (* TODO *)
+  | Comprehension _
+  | Generator _ ->
+    do_wrap "..."
 
 and code_desc_of_pattern (_, x) =
-  Ast.Pattern.(
-    match x with
-    | Object _ -> "{...}"
-    | Array _ -> "[...]"
-    | Identifier { Identifier.name = (_, { Ast.Identifier.name; comments = _ }); _ } -> name
-    | Expression x -> code_desc_of_expression ~wrap:false x)
+  let open Ast.Pattern in
+  match x with
+  | Object _ -> "{...}"
+  | Array _ -> "[...]"
+  | Identifier { Identifier.name = (_, { Ast.Identifier.name; comments = _ }); _ } -> name
+  | Expression x -> code_desc_of_expression ~wrap:false x
 
 (* Implementation of operator flattening logic lifted from Prettier:
  * https://github.com/prettier/prettier/blob/dd78f31aaf5b4522b780f13194d57308e5fdf53b/src/common/util.js#L328-L399 *)
 and code_desc_of_operation =
-  Ast.Expression.(
-    let string_of_operator = function
-      | `Binary op -> Flow_ast_utils.string_of_binary_operator op
-      | `Logical op ->
-        (match op with
-        | Logical.Or -> "||"
-        | Logical.And -> "&&"
-        | Logical.NullishCoalesce -> "??")
-    in
-    let should_flatten =
-      Binary.(
-        let precedence = function
-          | `Logical Logical.Or -> 0
-          | `Logical Logical.NullishCoalesce -> 0
-          | `Logical Logical.And -> 1
-          | `Binary BitOr -> 2
-          | `Binary Xor -> 3
-          | `Binary BitAnd -> 4
-          | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 5
-          | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) ->
-            6
-          | `Binary (LShift | RShift | RShift3) -> 7
-          | `Binary (Plus | Minus) -> 8
-          | `Binary (Mult | Div | Mod) -> 9
-          | `Binary Exp -> 10
-        in
-        let equality = function
-          | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> true
-          | _ -> false
-        in
-        let multiplicative = function
-          | `Binary (Mult | Div | Mod) -> true
-          | _ -> false
-        in
-        let bitshift = function
-          | `Binary (LShift | RShift | RShift3) -> true
-          | _ -> false
-        in
-        fun a b ->
-          if precedence a <> precedence b then
-            false
-          else if a = `Binary Exp then
-            false
-          else if equality a && equality b then
-            false
-          else if (a = `Binary Mod && multiplicative b) || (b = `Binary Mod && multiplicative a)
-          then
-            false
-          else if bitshift a && bitshift b then
-            false
-          else
-            true)
-    in
-    fun left op right ->
-      let wrap_left =
-        match left with
-        | (_, Binary { Binary.operator; _ }) -> not (should_flatten op (`Binary operator))
-        | (_, Logical { Logical.operator; _ }) -> not (should_flatten op (`Logical operator))
-        | _ -> true
+  let open Ast.Expression in
+  let string_of_operator = function
+    | `Binary op -> Flow_ast_utils.string_of_binary_operator op
+    | `Logical op ->
+      (match op with
+      | Logical.Or -> "||"
+      | Logical.And -> "&&"
+      | Logical.NullishCoalesce -> "??")
+  in
+  let should_flatten =
+    Binary.(
+      let precedence = function
+        | `Logical Logical.Or -> 0
+        | `Logical Logical.NullishCoalesce -> 0
+        | `Logical Logical.And -> 1
+        | `Binary BitOr -> 2
+        | `Binary Xor -> 3
+        | `Binary BitAnd -> 4
+        | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 5
+        | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) -> 6
+        | `Binary (LShift | RShift | RShift3) -> 7
+        | `Binary (Plus | Minus) -> 8
+        | `Binary (Mult | Div | Mod) -> 9
+        | `Binary Exp -> 10
       in
-      let left = code_desc_of_expression ~wrap:wrap_left left in
-      let right = code_desc_of_expression ~wrap:true right in
-      let op = string_of_operator op in
-      left ^ " " ^ op ^ " " ^ right)
+      let equality = function
+        | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> true
+        | _ -> false
+      in
+      let multiplicative = function
+        | `Binary (Mult | Div | Mod) -> true
+        | _ -> false
+      in
+      let bitshift = function
+        | `Binary (LShift | RShift | RShift3) -> true
+        | _ -> false
+      in
+      fun a b ->
+        if precedence a <> precedence b then
+          false
+        else if a = `Binary Exp then
+          false
+        else if equality a && equality b then
+          false
+        else if (a = `Binary Mod && multiplicative b) || (b = `Binary Mod && multiplicative a) then
+          false
+        else if bitshift a && bitshift b then
+          false
+        else
+          true)
+  in
+  fun left op right ->
+    let wrap_left =
+      match left with
+      | (_, Binary { Binary.operator; _ }) -> not (should_flatten op (`Binary operator))
+      | (_, Logical { Logical.operator; _ }) -> not (should_flatten op (`Logical operator))
+      | _ -> true
+    in
+    let left = code_desc_of_expression ~wrap:wrap_left left in
+    let right = code_desc_of_expression ~wrap:true right in
+    let op = string_of_operator op in
+    left ^ " " ^ op ^ " " ^ right
 
 and code_desc_of_jsx_element x =
-  Ast.JSX.(
-    match (snd x.openingElement).Opening.name with
-    | Identifier (_, { Identifier.name }) -> "<" ^ name ^ " />"
-    | NamespacedName
-        ( _,
+  let open Ast.JSX in
+  match (snd x.openingElement).Opening.name with
+  | Identifier (_, { Identifier.name }) -> "<" ^ name ^ " />"
+  | NamespacedName
+      ( _,
+        {
+          NamespacedName.namespace = (_, { Identifier.name = a });
+          name = (_, { Identifier.name = b });
+        } ) ->
+    "<" ^ a ^ ":" ^ b ^ " />"
+  | MemberExpression x ->
+    let rec loop = function
+      | ( _,
           {
-            NamespacedName.namespace = (_, { Identifier.name = a });
-            name = (_, { Identifier.name = b });
+            MemberExpression._object = MemberExpression.Identifier (_, { Identifier.name = a });
+            property = (_, { Identifier.name = b });
           } ) ->
-      "<" ^ a ^ ":" ^ b ^ " />"
-    | MemberExpression x ->
-      let rec loop = function
-        | ( _,
-            {
-              MemberExpression._object = MemberExpression.Identifier (_, { Identifier.name = a });
-              property = (_, { Identifier.name = b });
-            } ) ->
-          a ^ "." ^ b
-        | ( _,
-            {
-              MemberExpression._object = MemberExpression.MemberExpression a;
-              property = (_, { Identifier.name = b });
-            } ) ->
-          loop a ^ "." ^ b
-      in
-      "<" ^ loop x ^ " />")
+        a ^ "." ^ b
+      | ( _,
+          {
+            MemberExpression._object = MemberExpression.MemberExpression a;
+            property = (_, { Identifier.name = b });
+          } ) ->
+        loop a ^ "." ^ b
+    in
+    "<" ^ loop x ^ " />"
 
 and code_desc_of_literal x =
-  Ast.(
-    match x.Literal.value with
-    | Literal.String x when String.length x > 16 -> "'" ^ String.sub x 0 10 ^ "...'"
-    | _ -> x.Literal.raw)
+  let open Ast in
+  match x.Literal.value with
+  | Literal.String x when String.length x > 16 -> "'" ^ String.sub x 0 10 ^ "...'"
+  | _ -> x.Literal.raw
 
 and code_desc_of_property ~optional property =
   match property with
@@ -1217,27 +1215,26 @@ and code_desc_of_property ~optional property =
     ^ "]"
 
 let rec mk_expression_reason =
-  Ast.Expression.(
-    function
-    | (loc, TypeCast { TypeCast.expression; _ }) ->
-      repos_reason loc (mk_expression_reason expression)
-    | (loc, Object _) -> mk_reason RObjectLit loc
-    | (loc, Array _) -> mk_reason RArrayLit loc
-    | (loc, ArrowFunction { Ast.Function.async; _ }) -> func_reason ~async ~generator:false loc
-    | (loc, Function { Ast.Function.async; generator; _ }) -> func_reason ~async ~generator loc
-    | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String ""; _ }) ->
-      mk_reason (RStringLit "") loc
-    | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
-    | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
-    | (loc, Member { Member._object; property }) ->
-      mk_reason
-        (RMember
-           {
-             object_ = code_desc_of_expression ~wrap:true _object;
-             property = code_desc_of_property ~optional:false property;
-           })
-        loc
-    | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc)
+  let open Ast.Expression in
+  function
+  | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
+  | (loc, Object _) -> mk_reason RObjectLit loc
+  | (loc, Array _) -> mk_reason RArrayLit loc
+  | (loc, ArrowFunction { Ast.Function.async; _ }) -> func_reason ~async ~generator:false loc
+  | (loc, Function { Ast.Function.async; generator; _ }) -> func_reason ~async ~generator loc
+  | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String ""; _ }) ->
+    mk_reason (RStringLit "") loc
+  | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
+  | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
+  | (loc, Member { Member._object; property }) ->
+    mk_reason
+      (RMember
+         {
+           object_ = code_desc_of_expression ~wrap:true _object;
+           property = code_desc_of_property ~optional:false property;
+         })
+      loc
+  | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 
 let mk_pattern_reason ((loc, _) as patt) = mk_reason (RCode (code_desc_of_pattern patt)) loc
 

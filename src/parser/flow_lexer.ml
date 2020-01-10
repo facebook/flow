@@ -232,16 +232,16 @@ let mk_comment
     (_end : Loc.position)
     (buf : Buffer.t)
     (multiline : bool) : Loc.t Flow_ast.Comment.t =
-  Flow_ast.Comment.(
-    let loc = { Loc.source = Lex_env.source env; start; _end } in
-    let s = Buffer.contents buf in
-    let c =
-      if multiline then
-        Block s
-      else
-        Line s
-    in
-    (loc, c))
+  let open Flow_ast.Comment in
+  let loc = { Loc.source = Lex_env.source env; start; _end } in
+  let s = Buffer.contents buf in
+  let c =
+    if multiline then
+      Block s
+    else
+      Line s
+  in
+  (loc, c)
 
 let mk_num_singleton number_type raw =
   let (neg, num) =

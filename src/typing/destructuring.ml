@@ -66,21 +66,21 @@ let array_element cx acc i loc =
   let init =
     Option.map init (fun init ->
         ( loc,
-          Ast.Expression.(
-            Member
-              Member.
-                {
-                  _object = init;
-                  property =
-                    PropertyExpression
-                      ( loc,
-                        Ast.Expression.Literal
-                          {
-                            Ast.Literal.value = Ast.Literal.Number (float i);
-                            raw = string_of_int i;
-                            comments = Flow_ast_utils.mk_comments_opt ();
-                          } );
-                }) ))
+          let open Ast.Expression in
+          Member
+            Member.
+              {
+                _object = init;
+                property =
+                  PropertyExpression
+                    ( loc,
+                      Ast.Expression.Literal
+                        {
+                          Ast.Literal.value = Ast.Literal.Number (float i);
+                          raw = string_of_int i;
+                          comments = Flow_ast_utils.mk_comments_opt ();
+                        } );
+              } ))
   in
   let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let (parent, current) =
@@ -104,13 +104,13 @@ let object_named_property ~has_default cx acc loc x comments =
   let init =
     Option.map init (fun init ->
         ( loc,
-          Ast.Expression.(
-            Member
-              Member.
-                {
-                  _object = init;
-                  property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
-                }) ))
+          let open Ast.Expression in
+          Member
+            Member.
+              {
+                _object = init;
+                property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
+              } ))
   in
   let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let default =
@@ -171,22 +171,22 @@ let object_rest_property cx acc xs loc =
 let object_property
     cx ~expr ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key)
     : state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
-  Ast.Pattern.Object.(
-    match key with
-    | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
-      let acc = object_named_property ~has_default cx acc loc x comments in
-      (acc, x :: xs, Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }))
-    | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
-      let acc = object_named_property ~has_default cx acc loc x None in
-      (acc, x :: xs, Property.Literal (loc, lit))
-    | Property.Computed e ->
-      let (acc, e) = object_computed_property cx ~expr acc e in
-      (acc, xs, Property.Computed e)
-    | Property.Literal (loc, _) ->
-      Flow_js.add_output
-        cx
-        Error_message.(EUnsupportedSyntax (loc, DestructuringObjectPropertyLiteralNonString));
-      (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key))
+  let open Ast.Pattern.Object in
+  match key with
+  | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
+    let acc = object_named_property ~has_default cx acc loc x comments in
+    (acc, x :: xs, Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }))
+  | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
+    let acc = object_named_property ~has_default cx acc loc x None in
+    (acc, x :: xs, Property.Literal (loc, lit))
+  | Property.Computed e ->
+    let (acc, e) = object_computed_property cx ~expr acc e in
+    (acc, xs, Property.Computed e)
+  | Property.Literal (loc, _) ->
+    Flow_js.add_output
+      cx
+      Error_message.(EUnsupportedSyntax (loc, DestructuringObjectPropertyLiteralNonString));
+    (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
 let identifier cx ~f acc loc name =
   let { parent; current; init; default; annot } = acc in
@@ -266,50 +266,50 @@ let rec pattern cx ~expr ~f acc (loc, p) =
         Expression (Tast_utils.error_mapper#expression e) )
 
 and array_elements cx ~expr ~f acc =
-  Ast.Pattern.Array.(
-    List.mapi (fun i ->
-        Option.map ~f:(function
-            | Element (loc, { Element.argument = p; default = d }) ->
-              let acc = array_element cx acc i loc in
-              let (acc, d) = pattern_default cx ~expr acc d in
-              let p = pattern cx ~expr ~f acc p in
-              Element (loc, { Element.argument = p; default = d })
-            | RestElement (loc, { RestElement.argument = p }) ->
-              let acc = array_rest_element cx acc i loc in
-              let p = pattern cx ~expr ~f acc p in
-              RestElement (loc, { RestElement.argument = p }))))
+  let open Ast.Pattern.Array in
+  List.mapi (fun i ->
+      Option.map ~f:(function
+          | Element (loc, { Element.argument = p; default = d }) ->
+            let acc = array_element cx acc i loc in
+            let (acc, d) = pattern_default cx ~expr acc d in
+            let p = pattern cx ~expr ~f acc p in
+            Element (loc, { Element.argument = p; default = d })
+          | RestElement (loc, { RestElement.argument = p }) ->
+            let acc = array_rest_element cx acc i loc in
+            let p = pattern cx ~expr ~f acc p in
+            RestElement (loc, { RestElement.argument = p })))
 
 and object_properties =
-  Ast.Pattern.Object.(
-    let prop cx ~expr ~f acc xs p =
-      match p with
-      | Property (loc, { Property.key; pattern = p; default = d; shorthand }) ->
-        let has_default = d <> None in
-        let (acc, xs, key) = object_property cx ~expr ~has_default acc xs key in
-        let (acc, d) = pattern_default cx ~expr acc d in
-        let p = pattern cx ~expr ~f acc p in
-        (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))
-      | RestProperty (loc, { RestProperty.argument = p }) ->
-        let acc = object_rest_property cx acc xs loc in
-        let p = pattern cx ~expr ~f acc p in
-        (xs, RestProperty (loc, { RestProperty.argument = p }))
-    in
-    let rec loop cx ~expr ~f acc xs rev_ps = function
-      | [] -> List.rev rev_ps
-      | p :: ps ->
-        let (xs, p) = prop cx ~expr ~f acc xs p in
-        loop cx ~expr ~f acc xs (p :: rev_ps) ps
-    in
-    (fun cx ~expr ~f acc ps -> loop cx ~expr ~f acc [] [] ps))
+  let open Ast.Pattern.Object in
+  let prop cx ~expr ~f acc xs p =
+    match p with
+    | Property (loc, { Property.key; pattern = p; default = d; shorthand }) ->
+      let has_default = d <> None in
+      let (acc, xs, key) = object_property cx ~expr ~has_default acc xs key in
+      let (acc, d) = pattern_default cx ~expr acc d in
+      let p = pattern cx ~expr ~f acc p in
+      (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))
+    | RestProperty (loc, { RestProperty.argument = p }) ->
+      let acc = object_rest_property cx acc xs loc in
+      let p = pattern cx ~expr ~f acc p in
+      (xs, RestProperty (loc, { RestProperty.argument = p }))
+  in
+  let rec loop cx ~expr ~f acc xs rev_ps = function
+    | [] -> List.rev rev_ps
+    | p :: ps ->
+      let (xs, p) = prop cx ~expr ~f acc xs p in
+      loop cx ~expr ~f acc xs (p :: rev_ps) ps
+  in
+  (fun cx ~expr ~f acc ps -> loop cx ~expr ~f acc [] [] ps)
 
 let type_of_pattern (_, p) =
-  Ast.Pattern.(
-    match p with
-    | Array { Array.annot; _ }
-    | Object { Object.annot; _ }
-    | Identifier { Identifier.annot; _ } ->
-      annot
-    | _ -> Ast.Type.Missing ALoc.none)
+  let open Ast.Pattern in
+  match p with
+  | Array { Array.annot; _ }
+  | Object { Object.annot; _ }
+  | Identifier { Identifier.annot; _ } ->
+    annot
+  | _ -> Ast.Type.Missing ALoc.none
 
 (* instantiate pattern visitor for assignments *)
 let assignment cx ~expr rhs_t init =

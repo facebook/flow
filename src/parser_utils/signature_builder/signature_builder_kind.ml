@@ -48,30 +48,30 @@ module Sort = struct
     | Value -> "value"
 
   let is_import_type =
-    Ast.Statement.ImportDeclaration.(
-      function
-      | ImportType
-      | ImportTypeof ->
-        true
-      | ImportValue -> true)
+    let open Ast.Statement.ImportDeclaration in
+    function
+    | ImportType
+    | ImportTypeof ->
+      true
+    | ImportValue -> true
 
   (* conditional *)
 
   let is_import_value =
-    Ast.Statement.ImportDeclaration.(
-      function
-      | ImportType
-      | ImportTypeof ->
-        false
-      | ImportValue -> true)
+    let open Ast.Statement.ImportDeclaration in
+    function
+    | ImportType
+    | ImportTypeof ->
+      false
+    | ImportValue -> true
 
   let of_import_kind =
-    Ast.Statement.ImportDeclaration.(
-      function
-      | ImportValue
-      | ImportTypeof ->
-        Value
-      | ImportType -> Type)
+    let open Ast.Statement.ImportDeclaration in
+    function
+    | ImportValue
+    | ImportTypeof ->
+      Value
+    | ImportType -> Type
 end
 
 type t =
@@ -237,7 +237,7 @@ let get_function_kind_info = function
         annot = None;
         init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)));
       } ->
-    Ast.Function.(
-      let { id = _; generator; async; tparams; params; return; body; _ } = stuff in
-      Some (generator, async, tparams, params, return, body))
+    let open Ast.Function in
+    let { id = _; generator; async; tparams; params; return; body; _ } = stuff in
+    Some (generator, async, tparams, params, return, body)
   | _ -> None

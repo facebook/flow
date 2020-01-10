@@ -27,19 +27,19 @@ let statement_of_program = function
   | (loc, _, _) -> Error (loc, "Expected a single statement.")
 
 let object_of_statement statement =
-  Ast.(
-    match statement with
-    | ( _,
-        Statement.Expression
-          {
-            Statement.Expression.expression =
-              ( _,
-                Expression.Assignment
-                  { Expression.Assignment.operator = None; left = _; right = obj } );
-            directive = _;
-          } ) ->
-      Ok obj
-    | (loc, _) -> Error (loc, "Expected an assignment"))
+  let open Ast in
+  match statement with
+  | ( _,
+      Statement.Expression
+        {
+          Statement.Expression.expression =
+            ( _,
+              Expression.Assignment { Expression.Assignment.operator = None; left = _; right = obj }
+            );
+          directive = _;
+        } ) ->
+    Ok obj
+  | (loc, _) -> Error (loc, "Expected an assignment")
 
 let properties_of_object = function
   | (_, Ast.Expression.Object { Ast.Expression.Object.properties; comments = _ }) -> Ok properties

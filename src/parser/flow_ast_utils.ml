@@ -37,21 +37,21 @@ let rec fold_bindings_of_pattern =
       | Expression _ -> failwith "expression pattern")
 
 let fold_bindings_of_variable_declarations f acc declarations =
-  Flow_ast.Statement.VariableDeclaration.(
-    List.fold_left
-      (fun acc -> function
-        | (_, { Declarator.id = (_, pattern); _ }) -> fold_bindings_of_pattern f acc pattern)
-      acc
-      declarations)
+  let open Flow_ast.Statement.VariableDeclaration in
+  List.fold_left
+    (fun acc -> function
+      | (_, { Declarator.id = (_, pattern); _ }) -> fold_bindings_of_pattern f acc pattern)
+    acc
+    declarations
 
 let partition_directives statements =
-  Flow_ast.Statement.(
-    let rec helper directives = function
-      | ((_, Expression { Expression.directive = Some _; _ }) as directive) :: rest ->
-        helper (directive :: directives) rest
-      | rest -> (List.rev directives, rest)
-    in
-    helper [] statements)
+  let open Flow_ast.Statement in
+  let rec helper directives = function
+    | ((_, Expression { Expression.directive = Some _; _ }) as directive) :: rest ->
+      helper (directive :: directives) rest
+    | rest -> (List.rev directives, rest)
+  in
+  helper [] statements
 
 let negate_number_literal (value, raw) =
   let raw_len = String.length raw in
@@ -85,46 +85,46 @@ let mk_comments_opt ?(leading = []) ?(trailing = []) () =
   | (_, _) -> Some (mk_comments ~leading ~trailing ())
 
 let string_of_assignment_operator op =
-  Flow_ast.Expression.Assignment.(
-    match op with
-    | PlusAssign -> "+="
-    | MinusAssign -> "-="
-    | MultAssign -> "*="
-    | ExpAssign -> "**="
-    | DivAssign -> "/="
-    | ModAssign -> "%="
-    | LShiftAssign -> "<<="
-    | RShiftAssign -> ">>="
-    | RShift3Assign -> ">>>="
-    | BitOrAssign -> "|="
-    | BitXorAssign -> "^="
-    | BitAndAssign -> "&=")
+  let open Flow_ast.Expression.Assignment in
+  match op with
+  | PlusAssign -> "+="
+  | MinusAssign -> "-="
+  | MultAssign -> "*="
+  | ExpAssign -> "**="
+  | DivAssign -> "/="
+  | ModAssign -> "%="
+  | LShiftAssign -> "<<="
+  | RShiftAssign -> ">>="
+  | RShift3Assign -> ">>>="
+  | BitOrAssign -> "|="
+  | BitXorAssign -> "^="
+  | BitAndAssign -> "&="
 
 let string_of_binary_operator op =
-  Flow_ast.Expression.Binary.(
-    match op with
-    | Equal -> "=="
-    | NotEqual -> "!="
-    | StrictEqual -> "==="
-    | StrictNotEqual -> "!=="
-    | LessThan -> "<"
-    | LessThanEqual -> "<="
-    | GreaterThan -> ">"
-    | GreaterThanEqual -> ">="
-    | LShift -> "<<"
-    | RShift -> ">>"
-    | RShift3 -> ">>>"
-    | Plus -> "+"
-    | Minus -> "-"
-    | Mult -> "*"
-    | Exp -> "**"
-    | Div -> "/"
-    | Mod -> "%"
-    | BitOr -> "|"
-    | Xor -> "^"
-    | BitAnd -> "&"
-    | In -> "in"
-    | Instanceof -> "instanceof")
+  let open Flow_ast.Expression.Binary in
+  match op with
+  | Equal -> "=="
+  | NotEqual -> "!="
+  | StrictEqual -> "==="
+  | StrictNotEqual -> "!=="
+  | LessThan -> "<"
+  | LessThanEqual -> "<="
+  | GreaterThan -> ">"
+  | GreaterThanEqual -> ">="
+  | LShift -> "<<"
+  | RShift -> ">>"
+  | RShift3 -> ">>>"
+  | Plus -> "+"
+  | Minus -> "-"
+  | Mult -> "*"
+  | Exp -> "**"
+  | Div -> "/"
+  | Mod -> "%"
+  | BitOr -> "|"
+  | Xor -> "^"
+  | BitAnd -> "&"
+  | In -> "in"
+  | Instanceof -> "instanceof"
 
 module ExpressionSort = struct
   type t =

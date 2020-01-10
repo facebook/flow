@@ -20,31 +20,31 @@ class ['acc] object_key_visitor ~init =
     inherit ['acc, Loc.t] Flow_ast_visitor.visitor ~init as super
 
     method! expression (exp : (Loc.t, Loc.t) Flow_ast.Expression.t) =
-      Flow_ast.Expression.(
-        begin
-          match exp with
-          | (loc, Object x) -> this#visit_object_literal loc x
-          | _ -> ()
-        end;
-        super#expression exp)
+      let open Flow_ast.Expression in
+      begin
+        match exp with
+        | (loc, Object x) -> this#visit_object_literal loc x
+        | _ -> ()
+      end;
+      super#expression exp
 
     method private visit_object_literal
         (loc : Loc.t) (obj : (Loc.t, Loc.t) Flow_ast.Expression.Object.t) =
-      Flow_ast.Expression.Object.(
-        let get_prop_key =
-          Property.(
-            function
-            | Init { key; _ }
-            | Method { key; _ }
-            | Get { key; _ }
-            | Set { key; _ } ->
-              key)
-        in
-        let { properties; comments = _ } = obj in
-        properties
-        |> List.iter (function
-               | SpreadProperty _ -> ()
-               | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc))
+      let open Flow_ast.Expression.Object in
+      let get_prop_key =
+        Property.(
+          function
+          | Init { key; _ }
+          | Method { key; _ }
+          | Get { key; _ }
+          | Set { key; _ } ->
+            key)
+      in
+      let { properties; comments = _ } = obj in
+      properties
+      |> List.iter (function
+             | SpreadProperty _ -> ()
+             | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc)
 
     method private visit_object_key
         (_literal_loc : Loc.t) (_key : (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =
@@ -65,12 +65,12 @@ end = struct
 
       method! private visit_object_key
           (literal_loc : Loc.t) (key : (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =
-        Flow_ast.Expression.Object.(
-          match key with
-          | Property.Identifier (prop_loc, { Flow_ast.Identifier.name; comments = _ })
-            when Loc.contains prop_loc target_loc ->
-            this#set_acc (Some (literal_loc, prop_loc, name))
-          | _ -> ())
+        let open Flow_ast.Expression.Object in
+        match key with
+        | Property.Identifier (prop_loc, { Flow_ast.Identifier.name; comments = _ })
+          when Loc.contains prop_loc target_loc ->
+          this#set_acc (Some (literal_loc, prop_loc, name))
+        | _ -> ()
     end
 
   let get ast target_loc =

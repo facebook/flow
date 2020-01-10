@@ -56,19 +56,19 @@ let identifier_is_autocomplete ((loc, _), { Flow_ast.Identifier.name; _ }) =
     None
 
 let type_of_jsx_name =
-  Flow_ast.JSX.(
-    function
-    | Identifier ((_, t), _)
-    | NamespacedName (_, NamespacedName.{ name = ((_, t), _); _ })
-    | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
-      t)
+  let open Flow_ast.JSX in
+  function
+  | Identifier ((_, t), _)
+  | NamespacedName (_, NamespacedName.{ name = ((_, t), _); _ })
+  | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
+    t
 
 let type_of_qualification =
-  Flow_ast.Type.Generic.Identifier.(
-    function
-    | Unqualified ((_, t), _)
-    | Qualified (_, { id = ((_, t), _); _ }) ->
-      t)
+  let open Flow_ast.Type.Generic.Identifier in
+  function
+  | Unqualified ((_, t), _)
+  | Qualified (_, { id = ((_, t), _); _ }) ->
+    t
 
 exception Found of (ALoc.t * string) list * ALoc.t * autocomplete_type
 

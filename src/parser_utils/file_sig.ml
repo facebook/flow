@@ -451,10 +451,10 @@ struct
 
       method private add_exports loc kind named named_info batch =
         let add =
-          Ast.Statement.(
-            match kind with
-            | ExportType -> add_type_exports
-            | ExportValue -> add_es_exports loc)
+          let open Ast.Statement in
+          match kind with
+          | ExportType -> add_type_exports
+          | ExportValue -> add_es_exports loc
         in
         this#update_module_sig (add named named_info batch)
 
@@ -469,290 +469,280 @@ struct
           (Result.map ~f:(fun fsig -> { fsig with tolerable_errors = err :: fsig.tolerable_errors }))
 
       method! expression (expr : (L.t, L.t) Ast.Expression.t) =
-        Ast.Expression.(
-          begin
-            match expr with
-            (* Disallow expressions consisting of `module` or `exports`. These are dangerous because they
-             * can allow aliasing and mutation. *)
-            | ( _,
-                Identifier
-                  (loc, { Ast.Identifier.name = ("module" | "exports") as name; comments = _ }) )
-              when not (Scope_api.is_local_use scope_info loc) ->
-              this#add_tolerable_error (BadExportContext (name, loc))
-            | _ -> ()
-          end;
-          super#expression expr)
+        let open Ast.Expression in
+        begin
+          match expr with
+          (* Disallow expressions consisting of `module` or `exports`. These are dangerous because they
+           * can allow aliasing and mutation. *)
+          | ( _,
+              Identifier
+                (loc, { Ast.Identifier.name = ("module" | "exports") as name; comments = _ }) )
+            when not (Scope_api.is_local_use scope_info loc) ->
+            this#add_tolerable_error (BadExportContext (name, loc))
+          | _ -> ()
+        end;
+        super#expression expr
 
       method! binary loc (expr : (L.t, L.t) Ast.Expression.Binary.t) =
-        Ast.Expression.(
-          Ast.Expression.Binary.(
-            let is_module_or_exports = function
-              | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ })) ->
-                true
-              | _ -> false
-            in
-            let is_legal_operator = function
-              | StrictEqual
-              | StrictNotEqual ->
-                true
-              | _ -> false
-            in
-            let identify_or_recurse subexpr =
-              if not (is_module_or_exports subexpr) then ignore (this#expression subexpr)
-            in
-            let { operator; left; right } = expr in
-            (* Whitelist e.g. `require.main === module` by avoiding the recursive calls (where the errors
-             * are generated) if the AST matches specific patterns. *)
-            if is_legal_operator operator then (
-              identify_or_recurse left;
-              identify_or_recurse right;
-              expr
-            ) else
-              super#binary loc expr))
+        let open Ast.Expression in
+        let open Ast.Expression.Binary in
+        let is_module_or_exports = function
+          | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ })) ->
+            true
+          | _ -> false
+        in
+        let is_legal_operator = function
+          | StrictEqual
+          | StrictNotEqual ->
+            true
+          | _ -> false
+        in
+        let identify_or_recurse subexpr =
+          if not (is_module_or_exports subexpr) then ignore (this#expression subexpr)
+        in
+        let { operator; left; right } = expr in
+        (* Whitelist e.g. `require.main === module` by avoiding the recursive calls (where the errors
+         * are generated) if the AST matches specific patterns. *)
+        if is_legal_operator operator then (
+          identify_or_recurse left;
+          identify_or_recurse right;
+          expr
+        ) else
+          super#binary loc expr
 
       method! member loc (expr : (L.t, L.t) Ast.Expression.Member.t) =
-        Ast.Expression.(
-          Ast.Expression.Member.(
-            let { _object; property } = expr in
-            (* Strip the loc to simplify the patterns *)
-            let (_, _object) = _object in
-            (* This gets called when patterns like `module.id` appear on the LHS of an
-             * assignment, in addition to when they appear in ordinary expression
-             * locations. Therefore we have to prevent anything that would be dangerous
-             * if it appeared on the LHS side of an assignment. Ordinary export
-             * statements are handled by handle_assignment, which stops recursion so we
-             * don't arrive here in those cases. *)
-            begin
-              match (_object, property) with
-              (* Allow `module.anythingButExports` *)
-              | ( Identifier (_, { Ast.Identifier.name = "module"; comments = _ }),
-                  PropertyIdentifier (_, { Ast.Identifier.name = prop; comments = _ }) )
-                when prop <> "exports" ->
-                ()
-              (* Allow `module.exports.whatever` -- this is safe because handle_assignment has already
-               * looked for assignments to it before recursing down here. *)
-              | ( Member
-                    {
-                      _object = (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
-                      property =
-                        PropertyIdentifier (_, { Ast.Identifier.name = "exports"; comments = _ });
-                      _;
-                    },
-                  PropertyIdentifier _ )
-              (* Allow `exports.whatever`, for the same reason as above *)
-              | ( Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }),
-                  PropertyIdentifier _ ) ->
-                (* In these cases we don't know much about the property so we should recurse *)
-                ignore (this#member_property property)
-              | _ -> ignore (super#member loc expr)
-            end;
-            expr))
+        let open Ast.Expression in
+        let open Ast.Expression.Member in
+        let { _object; property } = expr in
+        (* Strip the loc to simplify the patterns *)
+        let (_, _object) = _object in
+        (* This gets called when patterns like `module.id` appear on the LHS of an
+         * assignment, in addition to when they appear in ordinary expression
+         * locations. Therefore we have to prevent anything that would be dangerous
+         * if it appeared on the LHS side of an assignment. Ordinary export
+         * statements are handled by handle_assignment, which stops recursion so we
+         * don't arrive here in those cases. *)
+        begin
+          match (_object, property) with
+          (* Allow `module.anythingButExports` *)
+          | ( Identifier (_, { Ast.Identifier.name = "module"; comments = _ }),
+              PropertyIdentifier (_, { Ast.Identifier.name = prop; comments = _ }) )
+            when prop <> "exports" ->
+            ()
+          (* Allow `module.exports.whatever` -- this is safe because handle_assignment has already
+           * looked for assignments to it before recursing down here. *)
+          | ( Member
+                {
+                  _object = (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
+                  property =
+                    PropertyIdentifier (_, { Ast.Identifier.name = "exports"; comments = _ });
+                  _;
+                },
+              PropertyIdentifier _ )
+          (* Allow `exports.whatever`, for the same reason as above *)
+          | (Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }), PropertyIdentifier _)
+            ->
+            (* In these cases we don't know much about the property so we should recurse *)
+            ignore (this#member_property property)
+          | _ -> ignore (super#member loc expr)
+        end;
+        expr
 
       method! call call_loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
-        Ast.Expression.(
-          let { Call.callee; targs = _; arguments } = expr in
-          this#handle_call call_loc callee arguments None;
-          super#call call_loc expr)
+        let open Ast.Expression in
+        let { Call.callee; targs = _; arguments } = expr in
+        this#handle_call call_loc callee arguments None;
+        super#call call_loc expr
 
       method! literal loc (expr : L.t Ast.Literal.t) =
-        Ast.Literal.(
-          this#handle_literal loc expr.value;
-          super#literal loc expr)
+        let open Ast.Literal in
+        this#handle_literal loc expr.value;
+        super#literal loc expr
 
       method! import import_loc (expr : (L.t, L.t) Ast.Expression.t) =
-        Ast.Expression.(
-          begin
-            match expr with
-            | ( loc,
-                ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
-                | TemplateLiteral
-                    {
-                      TemplateLiteral.quasis =
-                        [
-                          ( _,
-                            {
-                              TemplateLiteral.Element.value =
-                                { TemplateLiteral.Element.cooked = name; _ };
-                              _;
-                            } );
-                        ];
-                      _;
-                    } ) ) ->
-              this#add_require (ImportDynamic { source = (loc, name); import_loc })
-            | _ -> ()
-          end;
-          super#expression expr)
+        let open Ast.Expression in
+        begin
+          match expr with
+          | ( loc,
+              ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
+              | TemplateLiteral
+                  {
+                    TemplateLiteral.quasis =
+                      [
+                        ( _,
+                          {
+                            TemplateLiteral.Element.value =
+                              { TemplateLiteral.Element.cooked = name; _ };
+                            _;
+                          } );
+                      ];
+                    _;
+                  } ) ) ->
+            this#add_require (ImportDynamic { source = (loc, name); import_loc })
+          | _ -> ()
+        end;
+        super#expression expr
 
       method! import_declaration import_loc (decl : (L.t, L.t) Ast.Statement.ImportDeclaration.t) =
-        Ast.Statement.ImportDeclaration.(
-          let { importKind; source; specifiers; default } = decl in
-          let source =
-            match source with
-            | (loc, { Ast.StringLiteral.value = name; _ }) -> (loc, name)
-          in
-          let import =
-            match (default, specifiers) with
-            | (None, None) -> Import0 { source }
-            | _ ->
-              let named = ref SMap.empty in
-              let ns = ref None in
-              let types = ref SMap.empty in
-              let typesof = ref SMap.empty in
-              let typesof_ns = ref None in
-              let ref_of_kind = function
-                | ImportType -> types
-                | ImportTypeof -> typesof
-                | ImportValue -> named
-              in
-              let add_named remote local loc ref =
-                let locals = SMap.singleton local (Nel.one loc) in
-                let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
-                ref := SMap.add remote locals !ref ~combine:combine_nel_smap
-              in
-              let set_ns local loc ref =
-                if !ref = None then
-                  ref := Some (loc, local)
-                else
-                  failwith "unreachable"
-              in
-              Option.iter
-                ~f:(fun (loc, { Ast.Identifier.name = local; comments = _ }) ->
-                  add_named
-                    "default"
-                    local
-                    { remote_loc = loc; local_loc = loc }
-                    (ref_of_kind importKind))
-                default;
-              Option.iter
-                ~f:(function
-                  | ImportNamespaceSpecifier
-                      (loc, (_, { Ast.Identifier.name = local; comments = _ })) ->
-                    (match importKind with
-                    | ImportType -> failwith "import type * is a parse error"
-                    | ImportTypeof -> set_ns local loc typesof_ns
-                    | ImportValue -> set_ns local loc ns)
-                  | ImportNamedSpecifiers named_specifiers ->
-                    List.iter
-                      (function
-                        | { local; remote; kind } ->
-                          let importKind =
-                            match kind with
-                            | Some k -> k
-                            | None -> importKind
-                          in
-                          let (local_loc, { Ast.Identifier.name = local_name; comments = _ }) =
-                            match local with
-                            | Some x -> x
-                            | None -> remote
-                          in
-                          let (remote_loc, { Ast.Identifier.name = remote_name; comments = _ }) =
-                            remote
-                          in
-                          add_named
-                            remote_name
-                            local_name
-                            { remote_loc; local_loc }
-                            (ref_of_kind importKind))
-                      named_specifiers)
-                specifiers;
-              Import
-                {
-                  import_loc;
-                  source;
-                  named = !named;
-                  ns = !ns;
-                  types = !types;
-                  typesof = !typesof;
-                  typesof_ns = !typesof_ns;
-                }
-          in
-          this#add_require import;
-          super#import_declaration import_loc decl)
+        let open Ast.Statement.ImportDeclaration in
+        let { importKind; source; specifiers; default } = decl in
+        let source =
+          match source with
+          | (loc, { Ast.StringLiteral.value = name; _ }) -> (loc, name)
+        in
+        let import =
+          match (default, specifiers) with
+          | (None, None) -> Import0 { source }
+          | _ ->
+            let named = ref SMap.empty in
+            let ns = ref None in
+            let types = ref SMap.empty in
+            let typesof = ref SMap.empty in
+            let typesof_ns = ref None in
+            let ref_of_kind = function
+              | ImportType -> types
+              | ImportTypeof -> typesof
+              | ImportValue -> named
+            in
+            let add_named remote local loc ref =
+              let locals = SMap.singleton local (Nel.one loc) in
+              let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
+              ref := SMap.add remote locals !ref ~combine:combine_nel_smap
+            in
+            let set_ns local loc ref =
+              if !ref = None then
+                ref := Some (loc, local)
+              else
+                failwith "unreachable"
+            in
+            Option.iter
+              ~f:(fun (loc, { Ast.Identifier.name = local; comments = _ }) ->
+                add_named
+                  "default"
+                  local
+                  { remote_loc = loc; local_loc = loc }
+                  (ref_of_kind importKind))
+              default;
+            Option.iter
+              ~f:(function
+                | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
+                  ->
+                  (match importKind with
+                  | ImportType -> failwith "import type * is a parse error"
+                  | ImportTypeof -> set_ns local loc typesof_ns
+                  | ImportValue -> set_ns local loc ns)
+                | ImportNamedSpecifiers named_specifiers ->
+                  List.iter
+                    (function
+                      | { local; remote; kind } ->
+                        let importKind =
+                          match kind with
+                          | Some k -> k
+                          | None -> importKind
+                        in
+                        let (local_loc, { Ast.Identifier.name = local_name; comments = _ }) =
+                          match local with
+                          | Some x -> x
+                          | None -> remote
+                        in
+                        let (remote_loc, { Ast.Identifier.name = remote_name; comments = _ }) =
+                          remote
+                        in
+                        add_named
+                          remote_name
+                          local_name
+                          { remote_loc; local_loc }
+                          (ref_of_kind importKind))
+                    named_specifiers)
+              specifiers;
+            Import
+              {
+                import_loc;
+                source;
+                named = !named;
+                ns = !ns;
+                types = !types;
+                typesof = !typesof;
+                typesof_ns = !typesof_ns;
+              }
+        in
+        this#add_require import;
+        super#import_declaration import_loc decl
 
       method! export_default_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.ExportDefaultDeclaration.t) =
-        Ast.Statement.ExportDefaultDeclaration.(
-          let { default = default_loc; declaration } = decl in
-          let local =
-            match declaration with
-            | Declaration (_, Ast.Statement.FunctionDeclaration { Ast.Function.id; _ }) -> id
-            | Declaration (_, Ast.Statement.ClassDeclaration { Ast.Class.id; _ }) -> id
-            | Declaration (_, Ast.Statement.EnumDeclaration { Ast.Statement.EnumDeclaration.id; _ })
-              ->
-              Some id
-            | Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
-            | _ -> None
-          in
-          let local = Option.map ~f:Flow_ast_utils.source_of_ident local in
-          let export = (stmt_loc, ExportDefault { default_loc; local }) in
-          let export_info = ExportDefaultDef declaration in
-          this#add_exports
-            stmt_loc
-            Ast.Statement.ExportValue
-            [("default", export)]
-            [export_info]
-            None;
-          super#export_default_declaration stmt_loc decl)
+        let open Ast.Statement.ExportDefaultDeclaration in
+        let { default = default_loc; declaration } = decl in
+        let local =
+          match declaration with
+          | Declaration (_, Ast.Statement.FunctionDeclaration { Ast.Function.id; _ }) -> id
+          | Declaration (_, Ast.Statement.ClassDeclaration { Ast.Class.id; _ }) -> id
+          | Declaration (_, Ast.Statement.EnumDeclaration { Ast.Statement.EnumDeclaration.id; _ })
+            ->
+            Some id
+          | Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
+          | _ -> None
+        in
+        let local = Option.map ~f:Flow_ast_utils.source_of_ident local in
+        let export = (stmt_loc, ExportDefault { default_loc; local }) in
+        let export_info = ExportDefaultDef declaration in
+        this#add_exports stmt_loc Ast.Statement.ExportValue [("default", export)] [export_info] None;
+        super#export_default_declaration stmt_loc decl
 
       method! export_named_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.ExportNamedDeclaration.t) =
-        Ast.Statement.ExportNamedDeclaration.(
-          let { exportKind; source; specifiers; declaration } = decl in
-          let source =
-            match source with
-            | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) -> Some (loc, mref)
-            | None -> None
-          in
-          begin
-            match declaration with
-            | None -> () (* assert specifiers <> None *)
-            | Some (loc, stmt) ->
-              Ast.Statement.(
-                assert (source = None);
-                let kind = NamedDeclaration in
-                let export_info = ExportNamedDef (loc, stmt) in
-                (match stmt with
-                | FunctionDeclaration
-                    { Ast.Function.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
-                | ClassDeclaration
-                    { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
-                | EnumDeclaration
-                    { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
-                  let export = (stmt_loc, ExportNamed { loc; kind }) in
-                  this#add_exports stmt_loc ExportValue [(name, export)] [export_info] None
-                | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
-                  let (rev_named, rev_info) =
-                    Ast_utils.fold_bindings_of_variable_declarations
-                      (fun (named, infos) (loc, { Ast.Identifier.name; comments = _ }) ->
-                        let export = (stmt_loc, ExportNamed { loc; kind }) in
-                        ((name, export) :: named, export_info :: infos))
-                      ([], [])
-                      decls
-                  in
-                  this#add_exports
-                    stmt_loc
-                    ExportValue
-                    (List.rev rev_named)
-                    (List.rev rev_info)
-                    None
-                | TypeAlias { TypeAlias.id; _ }
-                | OpaqueType { OpaqueType.id; _ }
-                | InterfaceDeclaration { Interface.id; _ } ->
-                  let export = (stmt_loc, ExportNamed { loc; kind }) in
-                  this#add_exports
-                    stmt_loc
-                    ExportType
-                    [(Flow_ast_utils.name_of_ident id, export)]
-                    [export_info]
-                    None
-                | _ -> failwith "unsupported declaration"))
-          end;
-          begin
-            match specifiers with
-            | None -> () (* assert declaration <> None *)
-            | Some specifiers -> this#export_specifiers stmt_loc exportKind source specifiers
-          end;
-          super#export_named_declaration stmt_loc decl)
+        let open Ast.Statement.ExportNamedDeclaration in
+        let { exportKind; source; specifiers; declaration } = decl in
+        let source =
+          match source with
+          | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) -> Some (loc, mref)
+          | None -> None
+        in
+        begin
+          match declaration with
+          | None -> () (* assert specifiers <> None *)
+          | Some (loc, stmt) ->
+            let open Ast.Statement in
+            assert (source = None);
+            let kind = NamedDeclaration in
+            let export_info = ExportNamedDef (loc, stmt) in
+            (match stmt with
+            | FunctionDeclaration
+                { Ast.Function.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
+            | ClassDeclaration
+                { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
+            | EnumDeclaration
+                { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
+              let export = (stmt_loc, ExportNamed { loc; kind }) in
+              this#add_exports stmt_loc ExportValue [(name, export)] [export_info] None
+            | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
+              let (rev_named, rev_info) =
+                Ast_utils.fold_bindings_of_variable_declarations
+                  (fun (named, infos) (loc, { Ast.Identifier.name; comments = _ }) ->
+                    let export = (stmt_loc, ExportNamed { loc; kind }) in
+                    ((name, export) :: named, export_info :: infos))
+                  ([], [])
+                  decls
+              in
+              this#add_exports stmt_loc ExportValue (List.rev rev_named) (List.rev rev_info) None
+            | TypeAlias { TypeAlias.id; _ }
+            | OpaqueType { OpaqueType.id; _ }
+            | InterfaceDeclaration { Interface.id; _ } ->
+              let export = (stmt_loc, ExportNamed { loc; kind }) in
+              this#add_exports
+                stmt_loc
+                ExportType
+                [(Flow_ast_utils.name_of_ident id, export)]
+                [export_info]
+                None
+            | _ -> failwith "unsupported declaration")
+        end;
+        begin
+          match specifiers with
+          | None -> () (* assert declaration <> None *)
+          | Some specifiers -> this#export_specifiers stmt_loc exportKind source specifiers
+        end;
+        super#export_named_declaration stmt_loc decl
 
       method! declare_module_exports loc (annot : (L.t, L.t) Ast.Type.annotation) =
         this#set_cjs_exports loc (DeclareModuleExportsDef annot);
@@ -760,72 +750,71 @@ struct
 
       method! declare_export_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.DeclareExportDeclaration.t) =
-        Ast.Statement.DeclareExportDeclaration.(
-          let { default; source; specifiers; declaration } = decl in
-          let source =
-            match source with
-            | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
-              assert (Option.is_none default);
+        let open Ast.Statement.DeclareExportDeclaration in
+        let { default; source; specifiers; declaration } = decl in
+        let source =
+          match source with
+          | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
+            assert (Option.is_none default);
 
-              (* declare export default from not supported *)
-              Some (loc, mref)
-            | _ -> None
-          in
-          begin
-            match declaration with
-            | None -> () (* assert specifiers <> None *)
-            | Some declaration ->
-              Ast.Statement.(
-                assert (source = None);
-                let kind = NamedDeclaration in
-                let export_info = DeclareExportDef declaration in
-                (match declaration with
-                | Variable (_, { DeclareVariable.id; _ })
-                | Function (_, { DeclareFunction.id; _ })
-                | Class (_, { DeclareClass.id; _ }) ->
-                  let (name, export) =
-                    match default with
-                    | Some default_loc ->
-                      ( "default",
-                        ( stmt_loc,
-                          ExportDefault
-                            { default_loc; local = Some (Flow_ast_utils.source_of_ident id) } ) )
-                    | None ->
-                      ( Flow_ast_utils.name_of_ident id,
-                        (stmt_loc, ExportNamed { loc = fst id; kind }) )
-                  in
-                  this#add_exports stmt_loc ExportValue [(name, export)] [export_info] None
-                | DefaultType _ ->
-                  let default_loc =
-                    match default with
-                    | Some loc -> loc
-                    | None -> failwith "declare export default must have a default loc"
-                  in
-                  let export = (stmt_loc, ExportDefault { default_loc; local = None }) in
-                  this#add_exports stmt_loc ExportValue [("default", export)] [export_info] None
-                | NamedType (_, { TypeAlias.id; _ })
-                | NamedOpaqueType (_, { OpaqueType.id; _ })
-                | Interface (_, { Interface.id; _ }) ->
-                  assert (Option.is_none default);
-                  let export = (stmt_loc, ExportNamed { loc = fst id; kind }) in
-                  this#add_exports
-                    stmt_loc
-                    ExportType
-                    [(Flow_ast_utils.name_of_ident id, export)]
-                    [export_info]
-                    None))
-          end;
-          begin
-            match specifiers with
-            | None -> () (* assert declaration <> None *)
-            | Some specifiers ->
+            (* declare export default from not supported *)
+            Some (loc, mref)
+          | _ -> None
+        in
+        begin
+          match declaration with
+          | None -> () (* assert specifiers <> None *)
+          | Some declaration ->
+            let open Ast.Statement in
+            assert (source = None);
+            let kind = NamedDeclaration in
+            let export_info = DeclareExportDef declaration in
+            (match declaration with
+            | Variable (_, { DeclareVariable.id; _ })
+            | Function (_, { DeclareFunction.id; _ })
+            | Class (_, { DeclareClass.id; _ }) ->
+              let (name, export) =
+                match default with
+                | Some default_loc ->
+                  ( "default",
+                    ( stmt_loc,
+                      ExportDefault
+                        { default_loc; local = Some (Flow_ast_utils.source_of_ident id) } ) )
+                | None ->
+                  (Flow_ast_utils.name_of_ident id, (stmt_loc, ExportNamed { loc = fst id; kind }))
+              in
+              this#add_exports stmt_loc ExportValue [(name, export)] [export_info] None
+            | DefaultType _ ->
+              let default_loc =
+                match default with
+                | Some loc -> loc
+                | None -> failwith "declare export default must have a default loc"
+              in
+              let export = (stmt_loc, ExportDefault { default_loc; local = None }) in
+              this#add_exports stmt_loc ExportValue [("default", export)] [export_info] None
+            | NamedType (_, { TypeAlias.id; _ })
+            | NamedOpaqueType (_, { OpaqueType.id; _ })
+            | Interface (_, { Interface.id; _ }) ->
               assert (Option.is_none default);
+              let export = (stmt_loc, ExportNamed { loc = fst id; kind }) in
+              this#add_exports
+                stmt_loc
+                ExportType
+                [(Flow_ast_utils.name_of_ident id, export)]
+                [export_info]
+                None)
+        end;
+        begin
+          match specifiers with
+          | None -> () (* assert declaration <> None *)
+          | Some specifiers ->
+            assert (Option.is_none default);
 
-              (* declare export type unsupported *)
-              let exportKind = Ast.Statement.ExportValue in
-              this#export_specifiers stmt_loc exportKind source specifiers
-          end;
-          super#declare_export_declaration stmt_loc decl)
+            (* declare export type unsupported *)
+            let exportKind = Ast.Statement.ExportValue in
+            this#export_specifiers stmt_loc exportKind source specifiers
+        end;
+        super#declare_export_declaration stmt_loc decl
 
       method! assignment loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
         this#handle_assignment ~is_toplevel:false loc expr;
@@ -833,87 +822,87 @@ struct
 
       method handle_assignment
           ~(is_toplevel : bool) loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
-        Ast.Expression.(
-          Ast.Expression.Assignment.(
-            let { operator; left; right } = expr in
-            (* Handle exports *)
-            match (operator, left) with
-            (* module.exports = ... *)
-            | ( None,
-                ( mod_exp_loc,
-                  Ast.Pattern.Expression
-                    ( _,
-                      Member
-                        {
-                          Member._object =
-                            ( module_loc,
-                              Identifier (_, { Ast.Identifier.name = "module"; comments = _ }) );
-                          property =
-                            Member.PropertyIdentifier
-                              (_, { Ast.Identifier.name = "exports"; comments = _ });
-                          _;
-                        } ) ) )
-              when not (Scope_api.is_local_use scope_info module_loc) ->
-              this#handle_cjs_default_export module_loc mod_exp_loc (SetModuleExportsDef right);
-              ignore (this#expression right);
-              if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
-            (* exports.foo = ... *)
-            | ( None,
+        let open Ast.Expression in
+        let open Ast.Expression.Assignment in
+        let { operator; left; right } = expr in
+        (* Handle exports *)
+        match (operator, left) with
+        (* module.exports = ... *)
+        | ( None,
+            ( mod_exp_loc,
+              Ast.Pattern.Expression
                 ( _,
-                  Ast.Pattern.Expression
-                    ( _,
-                      Member
-                        {
-                          Member._object =
-                            ( (mod_exp_loc as module_loc),
-                              Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }) );
-                          property = Member.PropertyIdentifier id;
-                          _;
-                        } ) ) )
-            (* module.exports.foo = ... *)
-            | ( None,
-                ( _,
-                  Ast.Pattern.Expression
-                    ( _,
-                      Member
-                        {
-                          Member._object =
-                            ( mod_exp_loc,
-                              Member
-                                {
-                                  Member._object =
-                                    ( module_loc,
-                                      Identifier
-                                        (_, { Ast.Identifier.name = "module"; comments = _ }) );
-                                  property =
-                                    Member.PropertyIdentifier
-                                      (_, { Ast.Identifier.name = "exports"; comments = _ });
-                                  _;
-                                } );
-                          property = Member.PropertyIdentifier id;
-                          _;
-                        } ) ) )
-              when not (Scope_api.is_local_use scope_info module_loc) ->
-              (* expressions not allowed in declare module body *)
-              assert (curr_declare_module = None);
-              this#add_cjs_export
-                mod_exp_loc
-                (AddModuleExportsDef (Flow_ast_utils.source_of_ident id, right));
-              ignore (this#expression right);
-              if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
-            (* module = ... *)
-            | ( None,
-                ( _,
-                  Ast.Pattern.Identifier
+                  Member
                     {
-                      Ast.Pattern.Identifier.name =
-                        (loc, { Ast.Identifier.name = ("exports" | "module") as id; comments = _ });
+                      Member._object =
+                        ( module_loc,
+                          Identifier (_, { Ast.Identifier.name = "module"; comments = _ }) );
+                      property =
+                        Member.PropertyIdentifier
+                          (_, { Ast.Identifier.name = "exports"; comments = _ });
                       _;
-                    } ) )
-              when not (Scope_api.is_local_use scope_info loc) ->
-              ignore (this#expression right);
-              this#add_tolerable_error (BadExportContext (id, loc))
-            | _ -> ignore (super#assignment loc expr)))
+                    } ) ) )
+          when not (Scope_api.is_local_use scope_info module_loc) ->
+          this#handle_cjs_default_export module_loc mod_exp_loc (SetModuleExportsDef right);
+          ignore (this#expression right);
+          if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
+        (* exports.foo = ... *)
+        | ( None,
+            ( _,
+              Ast.Pattern.Expression
+                ( _,
+                  Member
+                    {
+                      Member._object =
+                        ( (mod_exp_loc as module_loc),
+                          Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }) );
+                      property = Member.PropertyIdentifier id;
+                      _;
+                    } ) ) )
+        (* module.exports.foo = ... *)
+        | ( None,
+            ( _,
+              Ast.Pattern.Expression
+                ( _,
+                  Member
+                    {
+                      Member._object =
+                        ( mod_exp_loc,
+                          Member
+                            {
+                              Member._object =
+                                ( module_loc,
+                                  Identifier (_, { Ast.Identifier.name = "module"; comments = _ })
+                                );
+                              property =
+                                Member.PropertyIdentifier
+                                  (_, { Ast.Identifier.name = "exports"; comments = _ });
+                              _;
+                            } );
+                      property = Member.PropertyIdentifier id;
+                      _;
+                    } ) ) )
+          when not (Scope_api.is_local_use scope_info module_loc) ->
+          (* expressions not allowed in declare module body *)
+          assert (curr_declare_module = None);
+          this#add_cjs_export
+            mod_exp_loc
+            (AddModuleExportsDef (Flow_ast_utils.source_of_ident id, right));
+          ignore (this#expression right);
+          if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
+        (* module = ... *)
+        | ( None,
+            ( _,
+              Ast.Pattern.Identifier
+                {
+                  Ast.Pattern.Identifier.name =
+                    (loc, { Ast.Identifier.name = ("exports" | "module") as id; comments = _ });
+                  _;
+                } ) )
+          when not (Scope_api.is_local_use scope_info loc) ->
+          ignore (this#expression right);
+          this#add_tolerable_error (BadExportContext (id, loc))
+        | _ -> ignore (super#assignment loc expr)
 
       method private handle_cjs_default_export module_loc mod_exp_loc cjs_exports_def =
         (* expressions not allowed in declare module body *)
@@ -963,79 +952,79 @@ struct
 
       method private handle_require
           (left : (L.t, L.t) Ast.Pattern.t) (right : (L.t, L.t) Ast.Expression.t) =
-        Ast.Expression.(
-          let bindings = this#require_pattern left in
-          match right with
-          | (call_loc, Call { Call.callee; targs = _; arguments }) ->
-            this#handle_call call_loc callee arguments bindings
-          | _ -> ())
+        let open Ast.Expression in
+        let bindings = this#require_pattern left in
+        match right with
+        | (call_loc, Call { Call.callee; targs = _; arguments }) ->
+          this#handle_call call_loc callee arguments bindings
+        | _ -> ()
 
       method private handle_call call_loc callee arguments bindings =
-        Ast.Expression.(
-          if not (this#visited_requires_with_bindings call_loc bindings) then (
-            this#visit_requires_with_bindings call_loc bindings;
-            match (callee, arguments) with
-            | ( (_, Identifier (loc, { Ast.Identifier.name = "require"; comments = _ })),
-                [
-                  Expression
-                    ( source_loc,
-                      ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
-                      | TemplateLiteral
-                          {
-                            TemplateLiteral.quasis =
-                              [
-                                ( _,
-                                  {
-                                    TemplateLiteral.Element.value =
-                                      { TemplateLiteral.Element.cooked = name; _ };
-                                    _;
-                                  } );
-                              ];
-                            _;
-                          } ) );
-                ] ) ->
-              if not (Scope_api.is_local_use scope_info loc) then
-                this#add_require
-                  (Require { source = (source_loc, name); require_loc = call_loc; bindings })
-            | ( (_, Identifier (loc, { Ast.Identifier.name = "requireLazy"; comments = _ })),
-                [Expression (_, Array { Array.elements; comments = _ }); Expression _] ) ->
-              let element = function
-                | Some
-                    (Expression
-                      (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
-                  if not (Scope_api.is_local_use scope_info loc) then
-                    this#add_require
-                      (Require { source = (source_loc, name); require_loc = call_loc; bindings })
-                | _ -> ()
-              in
-              List.iter element elements
-            | _ -> ()
-          ))
+        let open Ast.Expression in
+        if not (this#visited_requires_with_bindings call_loc bindings) then (
+          this#visit_requires_with_bindings call_loc bindings;
+          match (callee, arguments) with
+          | ( (_, Identifier (loc, { Ast.Identifier.name = "require"; comments = _ })),
+              [
+                Expression
+                  ( source_loc,
+                    ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
+                    | TemplateLiteral
+                        {
+                          TemplateLiteral.quasis =
+                            [
+                              ( _,
+                                {
+                                  TemplateLiteral.Element.value =
+                                    { TemplateLiteral.Element.cooked = name; _ };
+                                  _;
+                                } );
+                            ];
+                          _;
+                        } ) );
+              ] ) ->
+            if not (Scope_api.is_local_use scope_info loc) then
+              this#add_require
+                (Require { source = (source_loc, name); require_loc = call_loc; bindings })
+          | ( (_, Identifier (loc, { Ast.Identifier.name = "requireLazy"; comments = _ })),
+              [Expression (_, Array { Array.elements; comments = _ }); Expression _] ) ->
+            let element = function
+              | Some
+                  (Expression
+                    (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
+                if not (Scope_api.is_local_use scope_info loc) then
+                  this#add_require
+                    (Require { source = (source_loc, name); require_loc = call_loc; bindings })
+              | _ -> ()
+            in
+            List.iter element elements
+          | _ -> ()
+        )
 
       method private handle_literal loc lit =
-        Ast.Literal.(
-          match module_ref_prefix with
-          | Some prefix ->
-            begin
-              match lit with
-              | String s when String_utils.string_starts_with s prefix ->
-                this#add_require
-                  (Require
-                     {
-                       source = (loc, String_utils.lstrip s prefix);
-                       require_loc = loc;
-                       bindings = None;
-                     })
-              | _ -> ()
-            end
-          | None -> ())
+        let open Ast.Literal in
+        match module_ref_prefix with
+        | Some prefix ->
+          begin
+            match lit with
+            | String s when String_utils.string_starts_with s prefix ->
+              this#add_require
+                (Require
+                   {
+                     source = (loc, String_utils.lstrip s prefix);
+                     require_loc = loc;
+                     bindings = None;
+                   })
+            | _ -> ()
+          end
+        | None -> ()
 
       method! declare_module loc (m : (L.t, L.t) Ast.Statement.DeclareModule.t) =
         let name =
-          Ast.Statement.DeclareModule.(
-            match m.id with
-            | Identifier (_, { Ast.Identifier.name; comments = _ }) -> name
-            | Literal (_, { Ast.StringLiteral.value; _ }) -> value)
+          let open Ast.Statement.DeclareModule in
+          match m.id with
+          | Identifier (_, { Ast.Identifier.name; comments = _ }) -> name
+          | Literal (_, { Ast.StringLiteral.value; _ }) -> value
         in
         curr_declare_module <- Some (mk_module_sig init_exports_info);
         let ret = super#declare_module loc m in
@@ -1051,76 +1040,76 @@ struct
         ret
 
       method private export_specifiers stmt_loc kind source =
-        Ast.Statement.ExportNamedDeclaration.(
-          function
-          | ExportBatchSpecifier (star_loc, Some (loc, { Ast.Identifier.name; comments = _ })) ->
-            (* export type * as X from "foo" unsupported *)
-            assert (kind = Ast.Statement.ExportValue);
-            let mref =
-              match source with
-              | Some mref -> mref
-              | None -> failwith "export batch without source"
-            in
-            let export = (stmt_loc, ExportNs { loc; star_loc; source = mref }) in
-            this#add_exports stmt_loc kind [(name, export)] [] None
-          | ExportBatchSpecifier (star_loc, None) ->
-            let mref =
-              match source with
-              | Some mref -> mref
-              | _ -> failwith "batch export missing source"
-            in
-            let export = (stmt_loc, ExportStar { star_loc; source = mref }) in
-            this#add_exports stmt_loc kind [] [] (Some export)
-          | ExportSpecifiers specs ->
-            let bindings =
-              List.fold_left
-                ExportSpecifier.(
-                  fun acc (_, spec) ->
-                    let ({ Ast.Identifier.name; comments = _ }, loc) =
-                      match spec.exported with
-                      | None -> (snd spec.local, fst spec.local)
-                      | Some remote -> (snd remote, fst remote)
-                    in
-                    let export =
-                      ( stmt_loc,
-                        ExportNamed
-                          {
-                            loc;
-                            kind =
-                              NamedSpecifier
-                                { local = Flow_ast_utils.source_of_ident spec.local; source };
-                          } )
-                    in
-                    (name, export) :: acc)
-                []
-                specs
-            in
-            this#add_exports stmt_loc kind bindings [] None)
+        let open Ast.Statement.ExportNamedDeclaration in
+        function
+        | ExportBatchSpecifier (star_loc, Some (loc, { Ast.Identifier.name; comments = _ })) ->
+          (* export type * as X from "foo" unsupported *)
+          assert (kind = Ast.Statement.ExportValue);
+          let mref =
+            match source with
+            | Some mref -> mref
+            | None -> failwith "export batch without source"
+          in
+          let export = (stmt_loc, ExportNs { loc; star_loc; source = mref }) in
+          this#add_exports stmt_loc kind [(name, export)] [] None
+        | ExportBatchSpecifier (star_loc, None) ->
+          let mref =
+            match source with
+            | Some mref -> mref
+            | _ -> failwith "batch export missing source"
+          in
+          let export = (stmt_loc, ExportStar { star_loc; source = mref }) in
+          this#add_exports stmt_loc kind [] [] (Some export)
+        | ExportSpecifiers specs ->
+          let bindings =
+            List.fold_left
+              ExportSpecifier.(
+                fun acc (_, spec) ->
+                  let ({ Ast.Identifier.name; comments = _ }, loc) =
+                    match spec.exported with
+                    | None -> (snd spec.local, fst spec.local)
+                    | Some remote -> (snd remote, fst remote)
+                  in
+                  let export =
+                    ( stmt_loc,
+                      ExportNamed
+                        {
+                          loc;
+                          kind =
+                            NamedSpecifier
+                              { local = Flow_ast_utils.source_of_ident spec.local; source };
+                        } )
+                  in
+                  (name, export) :: acc)
+              []
+              specs
+          in
+          this#add_exports stmt_loc kind bindings [] None
 
       method! toplevel_statement_list (stmts : (L.t, L.t) Ast.Statement.t list) =
-        Ast.(
-          let id = Flow_ast_mapper.id in
-          let map_expression (expr : (L.t, L.t) Expression.t) =
-            Expression.(
-              match expr with
-              | (loc, Assignment assg) ->
-                this#handle_assignment ~is_toplevel:true loc assg;
-                expr
-              | _ -> this#expression expr)
-          in
-          let map_expression_statement (stmt : (L.t, L.t) Statement.Expression.t) =
-            Statement.Expression.(
-              let { expression; _ } = stmt in
-              id map_expression expression stmt (fun expr -> { stmt with expression = expr }))
-          in
-          let map_statement (stmt : (L.t, L.t) Statement.t) =
-            Statement.(
-              match stmt with
-              | (loc, Expression expr) ->
-                id map_expression_statement expr stmt (fun expr -> (loc, Expression expr))
-              | _ -> this#statement stmt)
-          in
-          ListUtils.ident_map map_statement stmts)
+        let open Ast in
+        let id = Flow_ast_mapper.id in
+        let map_expression (expr : (L.t, L.t) Expression.t) =
+          let open Expression in
+          match expr with
+          | (loc, Assignment assg) ->
+            this#handle_assignment ~is_toplevel:true loc assg;
+            expr
+          | _ -> this#expression expr
+        in
+        let map_expression_statement (stmt : (L.t, L.t) Statement.Expression.t) =
+          Statement.Expression.(
+            let { expression; _ } = stmt in
+            id map_expression expression stmt (fun expr -> { stmt with expression = expr }))
+        in
+        let map_statement (stmt : (L.t, L.t) Statement.t) =
+          let open Statement in
+          match stmt with
+          | (loc, Expression expr) ->
+            id map_expression_statement expr stmt (fun expr -> (loc, Expression expr))
+          | _ -> this#statement stmt
+        in
+        ListUtils.ident_map map_statement stmts
     end
 
   type toplevel_names_and_exports_info = {

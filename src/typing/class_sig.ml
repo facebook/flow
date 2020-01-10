@@ -860,10 +860,10 @@ module Make (F : Func_sig.S) = struct
         inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
         method! generic_identifier_type (git : (ALoc.t, ALoc.t) Ast.Type.Generic.Identifier.t) =
-          Ast.Type.Generic.Identifier.(
-            match git with
-            | Unqualified (_, { Ast.Identifier.name = "this"; comments = _ }) -> raise FoundInClass
-            | _ -> super#generic_identifier_type git)
+          let open Ast.Type.Generic.Identifier in
+          match git with
+          | Unqualified (_, { Ast.Identifier.name = "this"; comments = _ }) -> raise FoundInClass
+          | _ -> super#generic_identifier_type git
       end
 
     let in_class c =

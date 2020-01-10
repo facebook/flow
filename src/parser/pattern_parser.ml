@@ -20,49 +20,48 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
    *)
   let rec object_from_expr =
     let rec properties env acc =
-      Ast.Expression.Object.(
-        function
-        | [] -> List.rev acc
-        | Property (loc, prop) :: remaining ->
-          let acc =
-            match prop with
-            | Property.Init { key; value; shorthand } ->
-              Ast.Expression.(
-                let key =
-                  match key with
-                  | Property.Literal lit -> Pattern.Object.Property.Literal lit
-                  | Property.Identifier id -> Pattern.Object.Property.Identifier id
-                  | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
-                  | Property.Computed expr -> Pattern.Object.Property.Computed expr
-                in
-                let (pattern, default) =
-                  match value with
-                  | (_loc, Assignment { Assignment.operator = None; left; right }) ->
-                    (left, Some right)
-                  | _ -> (from_expr env value, None)
-                in
-                Pattern.Object.Property
-                  (loc, { Pattern.Object.Property.key; pattern; default; shorthand })
-                :: acc)
-            | Property.Method { key = _; value = (loc, _) } ->
-              error_at env (loc, Parse_error.MethodInDestructuring);
-              acc
-            | Property.Get { key = _; value = (loc, _) }
-            | Property.Set { key = _; value = (loc, _) } ->
-              (* these should never happen *)
-              error_at env (loc, Parse_error.Unexpected "identifier");
-              acc
-          in
-          properties env acc remaining
-        | [SpreadProperty (loc, { SpreadProperty.argument })] ->
-          let acc =
-            Pattern.Object.(RestProperty (loc, { RestProperty.argument = from_expr env argument }))
+      let open Ast.Expression.Object in
+      function
+      | [] -> List.rev acc
+      | Property (loc, prop) :: remaining ->
+        let acc =
+          match prop with
+          | Property.Init { key; value; shorthand } ->
+            let open Ast.Expression in
+            let key =
+              match key with
+              | Property.Literal lit -> Pattern.Object.Property.Literal lit
+              | Property.Identifier id -> Pattern.Object.Property.Identifier id
+              | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
+              | Property.Computed expr -> Pattern.Object.Property.Computed expr
+            in
+            let (pattern, default) =
+              match value with
+              | (_loc, Assignment { Assignment.operator = None; left; right }) -> (left, Some right)
+              | _ -> (from_expr env value, None)
+            in
+            Pattern.Object.Property
+              (loc, { Pattern.Object.Property.key; pattern; default; shorthand })
             :: acc
-          in
-          properties env acc []
-        | SpreadProperty (loc, _) :: remaining ->
-          error_at env (loc, Parse_error.PropertyAfterRestProperty);
-          properties env acc remaining)
+          | Property.Method { key = _; value = (loc, _) } ->
+            error_at env (loc, Parse_error.MethodInDestructuring);
+            acc
+          | Property.Get { key = _; value = (loc, _) }
+          | Property.Set { key = _; value = (loc, _) } ->
+            (* these should never happen *)
+            error_at env (loc, Parse_error.Unexpected "identifier");
+            acc
+        in
+        properties env acc remaining
+      | [SpreadProperty (loc, { SpreadProperty.argument })] ->
+        let acc =
+          Pattern.Object.(RestProperty (loc, { RestProperty.argument = from_expr env argument }))
+          :: acc
+        in
+        properties env acc []
+      | SpreadProperty (loc, _) :: remaining ->
+        error_at env (loc, Parse_error.PropertyAfterRestProperty);
+        properties env acc remaining
     in
     fun env (loc, { Ast.Expression.Object.properties = props; comments = _ (* TODO *) }) ->
       ( loc,
@@ -83,48 +82,46 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       )
     in
     let rec elements env acc =
-      Ast.Expression.(
-        function
-        | [] -> List.rev acc
-        | [Some (Spread (loc, { SpreadElement.argument }))] ->
-          (* AssignmentRestElement is a DestructuringAssignmentTarget, see
+      let open Ast.Expression in
+      function
+      | [] -> List.rev acc
+      | [Some (Spread (loc, { SpreadElement.argument }))] ->
+        (* AssignmentRestElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentRestElement *)
-          let acc =
-            match assignment_target env argument with
-            | Some argument ->
-              Some Pattern.Array.(RestElement (loc, { RestElement.argument })) :: acc
-            | None -> acc
-          in
-          elements env acc []
-        | Some (Spread (loc, _)) :: remaining ->
-          error_at env (loc, Parse_error.ElementAfterRestElement);
-          elements env acc remaining
-        | Some (Expression (loc, Assignment { Assignment.operator = None; left; right }))
-          :: remaining ->
-          (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
+        let acc =
+          match assignment_target env argument with
+          | Some argument -> Some Pattern.Array.(RestElement (loc, { RestElement.argument })) :: acc
+          | None -> acc
+        in
+        elements env acc []
+      | Some (Spread (loc, _)) :: remaining ->
+        error_at env (loc, Parse_error.ElementAfterRestElement);
+        elements env acc remaining
+      | Some (Expression (loc, Assignment { Assignment.operator = None; left; right })) :: remaining
+        ->
+        (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
              #prod-AssignmentElement *)
-          let acc =
-            Some
-              (Pattern.Array.Element
-                 (loc, { Pattern.Array.Element.argument = left; default = Some right }))
-            :: acc
-          in
-          elements env acc remaining
-        | Some (Expression expr) :: remaining ->
-          (* AssignmentElement is a DestructuringAssignmentTarget, see
+        let acc =
+          Some
+            (Pattern.Array.Element
+               (loc, { Pattern.Array.Element.argument = left; default = Some right }))
+          :: acc
+        in
+        elements env acc remaining
+      | Some (Expression expr) :: remaining ->
+        (* AssignmentElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentElement *)
-          let acc =
-            match assignment_target env expr with
-            | Some ((loc, _) as expr) ->
-              let element =
-                Pattern.Array.Element
-                  (loc, { Pattern.Array.Element.argument = expr; default = None })
-              in
-              Some element :: acc
-            | None -> acc
-          in
-          elements env acc remaining
-        | None :: remaining -> elements env (None :: acc) remaining)
+        let acc =
+          match assignment_target env expr with
+          | Some ((loc, _) as expr) ->
+            let element =
+              Pattern.Array.Element (loc, { Pattern.Array.Element.argument = expr; default = None })
+            in
+            Some element :: acc
+          | None -> acc
+        in
+        elements env acc remaining
+      | None :: remaining -> elements env (None :: acc) remaining
     in
     fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       ( loc,
@@ -132,32 +129,32 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
           { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments } )
 
   and from_expr env (loc, expr) =
-    Ast.Expression.(
-      match expr with
-      | Object obj -> object_from_expr env (loc, obj)
-      | Array arr -> array_from_expr env (loc, arr)
-      | Identifier ((id_loc, { Identifier.name = string_val; comments = _ }) as name) ->
-        (* per #sec-destructuring-assignment-static-semantics-early-errors,
+    let open Ast.Expression in
+    match expr with
+    | Object obj -> object_from_expr env (loc, obj)
+    | Array arr -> array_from_expr env (loc, arr)
+    | Identifier ((id_loc, { Identifier.name = string_val; comments = _ }) as name) ->
+      (* per #sec-destructuring-assignment-static-semantics-early-errors,
            it is a syntax error if IsValidSimpleAssignmentTarget of this
            IdentifierReference is false. That happens when `string_val` is
            "eval" or "arguments" in strict mode. *)
-        if in_strict_mode env && is_restricted string_val then
-          error_at env (id_loc, Parse_error.StrictLHSAssignment)
-        (* per #prod-IdentifierReference, yield is only a valid
+      if in_strict_mode env && is_restricted string_val then
+        error_at env (id_loc, Parse_error.StrictLHSAssignment)
+      (* per #prod-IdentifierReference, yield is only a valid
            IdentifierReference when [~Yield], and await is only valid
            when [~Await]. but per #sec-identifiers-static-semantics-early-errors,
            they are already invalid in strict mode, which we should have
            already errored about when parsing the expression that we're now
            converting into a pattern. *)
-        else if not (in_strict_mode env) then
-          if allow_yield env && string_val = "yield" then
-            error_at env (id_loc, Parse_error.YieldAsIdentifierReference)
-          else if allow_await env && string_val = "await" then
-            error_at env (id_loc, Parse_error.AwaitAsIdentifierReference);
-        ( loc,
-          Pattern.Identifier
-            { Pattern.Identifier.name; annot = missing_annot env; optional = false } )
-      | expr -> (loc, Pattern.Expression (loc, expr)))
+      else if not (in_strict_mode env) then
+        if allow_yield env && string_val = "yield" then
+          error_at env (id_loc, Parse_error.YieldAsIdentifierReference)
+        else if allow_await env && string_val = "await" then
+          error_at env (id_loc, Parse_error.AwaitAsIdentifierReference);
+      ( loc,
+        Pattern.Identifier { Pattern.Identifier.name; annot = missing_annot env; optional = false }
+      )
+    | expr -> (loc, Pattern.Expression (loc, expr))
 
   (* Parse object destructuring pattern *)
   let rec object_ restricted_error =
@@ -197,12 +194,12 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
               env
           in
           let key =
-            Ast.Expression.Object.Property.(
-              match raw_key with
-              | (_, Literal lit) -> Pattern.Object.Property.Literal lit
-              | (_, Identifier id) -> Pattern.Object.Property.Identifier id
-              | (_, PrivateName _) -> failwith "Internal Error: Found object private prop"
-              | (_, Computed expr) -> Pattern.Object.Property.Computed expr)
+            let open Ast.Expression.Object.Property in
+            match raw_key with
+            | (_, Literal lit) -> Pattern.Object.Property.Literal lit
+            | (_, Identifier id) -> Pattern.Object.Property.Identifier id
+            | (_, PrivateName _) -> failwith "Internal Error: Found object private prop"
+            | (_, Computed expr) -> Pattern.Object.Property.Computed expr
           in
           Some
             Pattern.Object.(Property (loc, Property.{ key; pattern; default; shorthand = false }))

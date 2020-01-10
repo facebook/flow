@@ -49,10 +49,10 @@ class type_parameter_mapper =
      explicitly added to bound_tparams *)
     method! class_ cls =
       let this_tparam =
-        Ast.Class.(
-          let { body = (body_loc, _); id; _ } = cls in
-          let id_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
-          (id_loc, "this"))
+        let open Ast.Class in
+        let { body = (body_loc, _); id; _ } = cls in
+        let id_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
+        (id_loc, "this")
       in
       let originally_bound_tparams = bound_tparams in
       bound_tparams <- this_tparam :: bound_tparams;
@@ -136,27 +136,26 @@ module Type_at_pos = struct
           super#type_param_identifier id
 
       method! object_key key =
-        Ast.Expression.Object.Property.(
-          match key with
-          | Literal ((loc, t), _) when self#covers_target loc ->
-            self#annot_with_tparams (self#find_loc loc t)
-          | _ -> super#object_key key)
+        let open Ast.Expression.Object.Property in
+        match key with
+        | Literal ((loc, t), _) when self#covers_target loc ->
+          self#annot_with_tparams (self#find_loc loc t)
+        | _ -> super#object_key key
 
       method! expression expr =
-        Ast.Expression.(
-          match expr with
-          | ((loc, t), (This | Super))
-          | ((_, t), Member { Member.property = Member.PropertyPrivateName (loc, _); _ })
-          | ( (_, t),
-              OptionalMember
-                {
-                  OptionalMember.member =
-                    { Member.property = Member.PropertyPrivateName (loc, _); _ };
-                  _;
-                } )
-            when self#covers_target loc ->
-            self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
-          | _ -> super#expression expr)
+        let open Ast.Expression in
+        match expr with
+        | ((loc, t), (This | Super))
+        | ((_, t), Member { Member.property = Member.PropertyPrivateName (loc, _); _ })
+        | ( (_, t),
+            OptionalMember
+              {
+                OptionalMember.member = { Member.property = Member.PropertyPrivateName (loc, _); _ };
+                _;
+              } )
+          when self#covers_target loc ->
+          self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
+        | _ -> super#expression expr
 
       method! implicit (loc, t) =
         if self#covers_target loc then
