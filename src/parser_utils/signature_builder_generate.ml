@@ -241,19 +241,19 @@ module T = struct
 
   and summarize_object_pair =
     let abs_object_key object_key =
-      Ast.Expression.Object.Property.(
-        match object_key with
-        | Literal (_, x) -> `Literal x
-        | Identifier (_, x) -> `Identifier x
-        | PrivateName (_, (_, x)) -> `PrivateName x
-        | _ -> assert false)
+      let open Ast.Expression.Object.Property in
+      match object_key with
+      | Literal (_, x) -> `Literal x
+      | Identifier (_, x) -> `Identifier x
+      | PrivateName (_, (_, x)) -> `PrivateName x
+      | _ -> assert false
     in
     let object_key loc abs_object_key =
-      Ast.Expression.Object.Property.(
-        match abs_object_key with
-        | `Literal x -> Literal (loc, x)
-        | `Identifier x -> Identifier (loc, x)
-        | `PrivateName x -> PrivateName (loc, (loc, x)))
+      let open Ast.Expression.Object.Property in
+      match abs_object_key with
+      | `Literal x -> Literal (loc, x)
+      | `Identifier x -> Identifier (loc, x)
+      | `PrivateName x -> PrivateName (loc, (loc, x))
     in
     let compare_object_property =
       let abs_object_key = function
@@ -714,18 +714,18 @@ module T = struct
         Base.List.rev_map
           ~f:(fun (id, expr) ->
             let annot = type_of_expr_type outlined expr in
-            Ast.Type.Object.(
-              Property
-                ( fst id,
-                  {
-                    Property.key = Ast.Expression.Object.Property.Identifier id;
-                    value = Property.Init annot;
-                    optional = false;
-                    static = false;
-                    proto = false;
-                    _method = false;
-                    variance = None;
-                  } )))
+            let open Ast.Type.Object in
+            Property
+              ( fst id,
+                {
+                  Property.key = Ast.Expression.Object.Property.Identifier id;
+                  value = Property.Init annot;
+                  optional = false;
+                  static = false;
+                  proto = false;
+                  _method = false;
+                  variance = None;
+                } ))
           statics
       in
       let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
@@ -834,31 +834,31 @@ module T = struct
         | Ast.Class.Method.Set ->
           (Ast.Type.Object.Property.Set (type_of_function_t outlined f), false)
       in
-      Ast.Type.Object.(
-        Property
-          ( loc,
-            {
-              Property.key = object_key;
-              value;
-              optional = false;
-              static;
-              proto = false;
-              _method;
-              variance = None;
-            } ))
+      let open Ast.Type.Object in
+      Property
+        ( loc,
+          {
+            Property.key = object_key;
+            value;
+            optional = false;
+            static;
+            proto = false;
+            _method;
+            variance = None;
+          } )
     | (loc, CProperty (object_key, static, variance, t)) ->
-      Ast.Type.Object.(
-        Property
-          ( loc,
-            {
-              Property.key = object_key;
-              value = Property.Init t;
-              optional = false;
-              static;
-              proto = false;
-              _method = false;
-              variance;
-            } ))
+      let open Ast.Type.Object in
+      Property
+        ( loc,
+          {
+            Property.key = object_key;
+            value = Property.Init t;
+            optional = false;
+            static;
+            proto = false;
+            _method = false;
+            variance;
+          } )
     | (_loc, CPrivateField (_x, _static, _variance, _t)) -> assert false
 end
 
@@ -951,33 +951,33 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Ast.Type.Available (_, t) -> type_ t
 
   and pattern ?(default = false) patt =
-    Ast.Pattern.(
-      match patt with
-      | (loc, Identifier { Identifier.annot; name; optional }) ->
-        (loc, Some name, default || optional, annotated_type annot)
-      | (loc, Object { Object.annot; properties = _ }) ->
-        if default then
-          (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
-        else
-          (loc, None, false, annotated_type annot)
-      | (loc, Array { Array.annot; elements = _; comments = _ }) ->
-        if default then
-          (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
-        else
-          (loc, None, false, annotated_type annot)
-      | (loc, Expression _) -> T.FixMe.mk_pattern default loc)
+    let open Ast.Pattern in
+    match patt with
+    | (loc, Identifier { Identifier.annot; name; optional }) ->
+      (loc, Some name, default || optional, annotated_type annot)
+    | (loc, Object { Object.annot; properties = _ }) ->
+      if default then
+        (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
+      else
+        (loc, None, false, annotated_type annot)
+    | (loc, Array { Array.annot; elements = _; comments = _ }) ->
+      if default then
+        (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
+      else
+        (loc, None, false, annotated_type annot)
+    | (loc, Expression _) -> T.FixMe.mk_pattern default loc
 
   and literal_expr =
     let string_value_of_object_key object_key =
-      Ast.Expression.Object.Property.(
-        match object_key with
-        | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }) ->
-          (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
-        | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
-          let value = name in
-          let raw = Printf.sprintf "'%s'" name in
-          (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
-        | _ -> assert false)
+      let open Ast.Expression.Object.Property in
+      match object_key with
+      | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }) ->
+        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
+      | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+        let value = name in
+        let raw = Printf.sprintf "'%s'" name in
+        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
+      | _ -> assert false
     in
     let keys_as_string_values_of_object_properties object_properties =
       try
@@ -989,324 +989,320 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
              object_properties)
       with _ -> None
     in
-    Ast.Expression.(
-      function
-      | (loc, Literal { Ast.Literal.value; raw; comments = _ }) ->
-        begin
-          match value with
-          | Ast.Literal.String value -> (loc, T.StringLiteral { Ast.StringLiteral.value; raw })
-          | Ast.Literal.Number value -> (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw })
-          | Ast.Literal.Boolean b -> (loc, T.BooleanLiteral b)
-          | Ast.Literal.Null -> (loc, T.Null)
-          | _ -> T.FixMe.mk_expr_type loc
-        end
-      | (loc, TemplateLiteral _) -> (loc, T.String)
-      | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
-      | (loc, Class stuff) ->
-        Ast.Class.(
-          let { tparams; body; extends; implements; id; classDecorators = _; comments = _ } =
-            stuff
-          in
-          let (super, super_targs) =
-            match extends with
-            | None -> (None, None)
-            | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
-          in
-          ( loc,
-            T.Outline
-              (T.Class
-                 ( Option.map ~f:Flow_ast_utils.source_of_ident id,
-                   class_ tparams body super super_targs implements )) ))
-      | ( loc,
-          Function
-            {
-              Ast.Function.generator;
-              tparams;
-              params;
-              return;
-              body;
-              id = _;
-              async;
-              predicate = _;
-              sig_loc = _;
-            } ) ->
-        (loc, T.Function (function_ generator async tparams params return body))
-      | ( loc,
-          ArrowFunction
-            {
-              Ast.Function.tparams;
-              params;
-              return;
-              body;
-              async;
-              predicate = _;
-              sig_loc = _;
-              (* TODO: arrow functions can't have ids or be generators: *)
-              id = _;
-              generator = _;
-            } ) ->
-        (loc, T.Function (function_ false async tparams params return body))
-      | (loc, Object stuff) ->
-        Ast.Expression.Object.(
-          let { properties; comments = _ } = stuff in
-          begin
-            match object_ properties with
-            | Some o -> (loc, T.ObjectLiteral { frozen = false; properties = o })
-            | None -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Array stuff) ->
-        Ast.Expression.Array.(
-          let { elements; comments = _ } = stuff in
-          begin
-            match array_ elements with
-            | Some a -> (loc, T.ArrayLiteral a)
-            | None -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, TypeCast stuff) ->
-        Ast.Expression.TypeCast.(
-          let { annot; expression = _ } = stuff in
-          let (_, t) = annot in
-          (loc, T.TypeCast (type_ t)))
-      | (loc, Member stuff) ->
-        begin
-          match member stuff with
-          | Some ref_expr -> (loc, T.ValueRef ref_expr)
-          | None -> T.FixMe.mk_expr_type loc
-        end
-      | ( loc,
-          Import
-            ( source_loc,
-              ( Literal { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }
-              | TemplateLiteral
+    let open Ast.Expression in
+    function
+    | (loc, Literal { Ast.Literal.value; raw; comments = _ }) ->
+      begin
+        match value with
+        | Ast.Literal.String value -> (loc, T.StringLiteral { Ast.StringLiteral.value; raw })
+        | Ast.Literal.Number value -> (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw })
+        | Ast.Literal.Boolean b -> (loc, T.BooleanLiteral b)
+        | Ast.Literal.Null -> (loc, T.Null)
+        | _ -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, TemplateLiteral _) -> (loc, T.String)
+    | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
+    | (loc, Class stuff) ->
+      let open Ast.Class in
+      let { tparams; body; extends; implements; id; classDecorators = _; comments = _ } = stuff in
+      let (super, super_targs) =
+        match extends with
+        | None -> (None, None)
+        | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
+      in
+      ( loc,
+        T.Outline
+          (T.Class
+             ( Option.map ~f:Flow_ast_utils.source_of_ident id,
+               class_ tparams body super super_targs implements )) )
+    | ( loc,
+        Function
+          {
+            Ast.Function.generator;
+            tparams;
+            params;
+            return;
+            body;
+            id = _;
+            async;
+            predicate = _;
+            sig_loc = _;
+          } ) ->
+      (loc, T.Function (function_ generator async tparams params return body))
+    | ( loc,
+        ArrowFunction
+          {
+            Ast.Function.tparams;
+            params;
+            return;
+            body;
+            async;
+            predicate = _;
+            sig_loc = _;
+            (* TODO: arrow functions can't have ids or be generators: *)
+            id = _;
+            generator = _;
+          } ) ->
+      (loc, T.Function (function_ false async tparams params return body))
+    | (loc, Object stuff) ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = stuff in
+      begin
+        match object_ properties with
+        | Some o -> (loc, T.ObjectLiteral { frozen = false; properties = o })
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Array stuff) ->
+      let open Ast.Expression.Array in
+      let { elements; comments = _ } = stuff in
+      begin
+        match array_ elements with
+        | Some a -> (loc, T.ArrayLiteral a)
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, TypeCast stuff) ->
+      let open Ast.Expression.TypeCast in
+      let { annot; expression = _ } = stuff in
+      let (_, t) = annot in
+      (loc, T.TypeCast (type_ t))
+    | (loc, Member stuff) ->
+      begin
+        match member stuff with
+        | Some ref_expr -> (loc, T.ValueRef ref_expr)
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | ( loc,
+        Import
+          ( source_loc,
+            ( Literal { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }
+            | TemplateLiteral
+                {
+                  TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          TemplateLiteral.Element.value =
+                            { TemplateLiteral.Element.cooked = value; raw };
+                          _;
+                        } );
+                    ];
+                  _;
+                } ) ) ) ->
+      (loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw })))
+    | ( loc,
+        Call
+          {
+            Ast.Expression.Call.callee =
+              (_, Identifier (_, { Ast.Identifier.name = "require"; comments = _ }));
+            _;
+          } ) as expr ->
+      (loc, T.Outline (T.DynamicRequire expr))
+    | ( _,
+        Call
+          {
+            Ast.Expression.Call.callee =
+              ( _,
+                Member
                   {
-                    TemplateLiteral.quasis =
-                      [
-                        ( _,
-                          {
-                            TemplateLiteral.Element.value =
-                              { TemplateLiteral.Element.cooked = value; raw };
-                            _;
-                          } );
-                      ];
-                    _;
-                  } ) ) ) ->
-        (loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw })))
-      | ( loc,
-          Call
-            {
-              Ast.Expression.Call.callee =
-                (_, Identifier (_, { Ast.Identifier.name = "require"; comments = _ }));
-              _;
-            } ) as expr ->
-        (loc, T.Outline (T.DynamicRequire expr))
-      | ( _,
-          Call
-            {
-              Ast.Expression.Call.callee =
-                ( _,
-                  Member
-                    {
-                      Ast.Expression.Member._object =
-                        (_, Identifier (_, { Ast.Identifier.name = "Object"; comments = _ }));
-                      property =
-                        Ast.Expression.Member.PropertyIdentifier
-                          (_, { Ast.Identifier.name = "freeze"; comments = _ });
-                    } );
-              targs = None;
-              arguments = [Expression (loc, Object stuff)];
-            } ) ->
-        Ast.Expression.Object.(
-          let { properties; comments = _ } = stuff in
+                    Ast.Expression.Member._object =
+                      (_, Identifier (_, { Ast.Identifier.name = "Object"; comments = _ }));
+                    property =
+                      Ast.Expression.Member.PropertyIdentifier
+                        (_, { Ast.Identifier.name = "freeze"; comments = _ });
+                  } );
+            targs = None;
+            arguments = [Expression (loc, Object stuff)];
+          } ) ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = stuff in
+      begin
+        match object_ properties with
+        | Some o -> (loc, T.ObjectLiteral { frozen = true; properties = o })
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | ( _,
+        Call
+          {
+            Ast.Expression.Call.callee =
+              (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
+            targs = None;
+            arguments = [Expression (loc, Object stuff)];
+          } ) ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = stuff in
+      begin
+        match object_ properties with
+        | Some o ->
           begin
-            match object_ properties with
-            | Some o -> (loc, T.ObjectLiteral { frozen = true; properties = o })
+            match keys_as_string_values_of_object_properties o with
+            | Some o' -> (loc, T.ObjectLiteral { frozen = false; properties = o' })
             | None -> T.FixMe.mk_expr_type loc
-          end)
-      | ( _,
-          Call
-            {
-              Ast.Expression.Call.callee =
-                (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
-              targs = None;
-              arguments = [Expression (loc, Object stuff)];
-            } ) ->
-        Ast.Expression.Object.(
-          let { properties; comments = _ } = stuff in
-          begin
-            match object_ properties with
-            | Some o ->
-              begin
-                match keys_as_string_values_of_object_properties o with
-                | Some o' -> (loc, T.ObjectLiteral { frozen = false; properties = o' })
-                | None -> T.FixMe.mk_expr_type loc
-              end
-            | None -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Unary stuff) ->
-        Ast.Expression.Unary.(
-          let { operator; argument; comments = _ } = stuff in
-          arith_unary operator loc argument)
-      | (loc, Binary stuff) ->
-        Ast.Expression.Binary.(
-          let { operator; left; right } = stuff in
-          arith_binary operator loc left right)
-      | (loc, Sequence stuff) ->
-        Ast.Expression.Sequence.(
-          let { expressions } = stuff in
-          begin
-            match List.rev expressions with
-            | expr :: _ -> literal_expr expr
-            | [] -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Assignment stuff) ->
-        Ast.Expression.Assignment.(
-          let { operator; left = _; right } = stuff in
-          begin
-            match operator with
-            | None -> literal_expr right
-            | Some _ -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Update stuff) ->
-        Ast.Expression.Update.(
-          (* This operation has a simple result type. *)
-          let { operator = _; argument = _; prefix = _ } = stuff in
-          (loc, T.Number))
-      | (loc, JSXElement e) ->
-        Ast.JSX.(
-          let { openingElement; closingElement = _; children = _ } = e in
-          let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
-          begin
-            match (name, Env.facebook_fbt) with
-            | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some custom_jsx_type) ->
+          end
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Unary stuff) ->
+      let open Ast.Expression.Unary in
+      let { operator; argument; comments = _ } = stuff in
+      arith_unary operator loc argument
+    | (loc, Binary stuff) ->
+      let open Ast.Expression.Binary in
+      let { operator; left; right } = stuff in
+      arith_binary operator loc left right
+    | (loc, Sequence stuff) ->
+      let open Ast.Expression.Sequence in
+      let { expressions } = stuff in
+      begin
+        match List.rev expressions with
+        | expr :: _ -> literal_expr expr
+        | [] -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Assignment stuff) ->
+      let open Ast.Expression.Assignment in
+      let { operator; left = _; right } = stuff in
+      begin
+        match operator with
+        | None -> literal_expr right
+        | Some _ -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Update stuff) ->
+      let open Ast.Expression.Update in
+      (* This operation has a simple result type. *)
+      let { operator = _; argument = _; prefix = _ } = stuff in
+      (loc, T.Number)
+    | (loc, JSXElement e) ->
+      let open Ast.JSX in
+      let { openingElement; closingElement = _; children = _ } = e in
+      let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
+      begin
+        match (name, Env.facebook_fbt) with
+        | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some custom_jsx_type) ->
+          ( loc,
+            T.JSXLiteral
               ( loc,
-                T.JSXLiteral
-                  ( loc,
-                    {
-                      Ast.Type.Generic.id =
-                        Ast.Type.Generic.Identifier.Unqualified
-                          (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
-                      targs = None;
-                    } ) )
-            | _ -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Call _)
-      | (loc, Comprehension _)
-      | (loc, Conditional _)
-      | (loc, Generator _)
-      | (loc, Import _)
-      | (loc, JSXFragment _)
-      | (loc, Logical _)
-      | (loc, MetaProperty _)
-      | (loc, New _)
-      | (loc, OptionalCall _)
-      | (loc, OptionalMember _)
-      | (loc, Super)
-      | (loc, TaggedTemplate _)
-      | (loc, This)
-      | (loc, Yield _) ->
-        T.FixMe.mk_expr_type loc)
+                {
+                  Ast.Type.Generic.id =
+                    Ast.Type.Generic.Identifier.Unqualified
+                      (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
+                  targs = None;
+                } ) )
+        | _ -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Call _)
+    | (loc, Comprehension _)
+    | (loc, Conditional _)
+    | (loc, Generator _)
+    | (loc, Import _)
+    | (loc, JSXFragment _)
+    | (loc, Logical _)
+    | (loc, MetaProperty _)
+    | (loc, New _)
+    | (loc, OptionalCall _)
+    | (loc, OptionalMember _)
+    | (loc, Super)
+    | (loc, TaggedTemplate _)
+    | (loc, This)
+    | (loc, Yield _) ->
+      T.FixMe.mk_expr_type loc
 
   and identifier stuff =
     let (loc, { Ast.Identifier.name; comments = _ }) = stuff in
     T.RLexical (loc, name)
 
   and member stuff =
-    Ast.Expression.Member.(
-      let { _object; property } = stuff in
-      let ref_expr_opt = ref_expr _object in
-      let name_opt =
-        match property with
-        | PropertyIdentifier (loc, x) -> Some (loc, x)
-        | PropertyPrivateName (_, (loc, x)) -> Some (loc, x)
-        | PropertyExpression _ -> None
-      in
-      match (ref_expr_opt, name_opt) with
-      | (Some (path_loc, t), Some name) ->
-        Some (T.RPath (path_loc, t, Flow_ast_utils.source_of_ident name))
-      | (None, _)
-      | (_, None) ->
-        None)
+    let open Ast.Expression.Member in
+    let { _object; property } = stuff in
+    let ref_expr_opt = ref_expr _object in
+    let name_opt =
+      match property with
+      | PropertyIdentifier (loc, x) -> Some (loc, x)
+      | PropertyPrivateName (_, (loc, x)) -> Some (loc, x)
+      | PropertyExpression _ -> None
+    in
+    match (ref_expr_opt, name_opt) with
+    | (Some (path_loc, t), Some name) ->
+      Some (T.RPath (path_loc, t, Flow_ast_utils.source_of_ident name))
+    | (None, _)
+    | (_, None) ->
+      None
 
   and ref_expr expr =
-    Ast.Expression.(
-      match expr with
-      | (loc, Identifier stuff) -> Some (loc, identifier stuff)
-      | (loc, Member stuff) ->
-        begin
-          match member stuff with
-          | Some ref_expr -> Some (loc, ref_expr)
-          | None -> None
-        end
-      | _ -> None)
+    let open Ast.Expression in
+    match expr with
+    | (loc, Identifier stuff) -> Some (loc, identifier stuff)
+    | (loc, Member stuff) ->
+      begin
+        match member stuff with
+        | Some ref_expr -> Some (loc, ref_expr)
+        | None -> None
+      end
+    | _ -> None
 
   and arith_unary operator loc argument =
-    Ast.Expression.Unary.(
-      match operator with
-      (* These operations have simple result types. *)
-      | Plus -> (loc, T.Number)
-      | BitNot -> (loc, T.Number)
-      | Typeof -> (loc, T.String)
-      | Void -> (loc, T.Void)
-      | Delete -> (loc, T.Boolean)
-      (* These operations may or may not have simple result types. See associated TODO: comment in
+    let open Ast.Expression.Unary in
+    match operator with
+    (* These operations have simple result types. *)
+    | Plus -> (loc, T.Number)
+    | BitNot -> (loc, T.Number)
+    | Typeof -> (loc, T.String)
+    | Void -> (loc, T.Void)
+    | Delete -> (loc, T.Boolean)
+    (* These operations may or may not have simple result types. See associated TODO: comment in
          Signature_builder_verify. *)
-      | Minus ->
-        begin
-          match literal_expr argument with
-          | (_, T.NumberLiteral { Ast.NumberLiteral.value; raw }) ->
-            (loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-" ^ raw })
-          | _ -> (loc, T.Number)
-        end
-      | Not ->
-        begin
-          match literal_expr argument with
-          | (_, T.BooleanLiteral b) -> (loc, T.BooleanLiteral (not b))
-          | (_, T.Function _)
-          | (_, T.ObjectLiteral _)
-          | (_, T.ArrayLiteral _)
-          | (_, T.JSXLiteral _) ->
-            (loc, T.BooleanLiteral false)
-          | (_, T.Void)
-          | (_, T.Null) ->
-            (loc, T.BooleanLiteral true)
-          | (_, T.NumberLiteral { Ast.NumberLiteral.value; _ }) ->
-            (loc, T.BooleanLiteral (value = 0.))
-          | (_, T.StringLiteral { Ast.StringLiteral.value; _ }) ->
-            (loc, T.BooleanLiteral (value = ""))
-          | _ -> (loc, T.Boolean)
-        end
-      | Await ->
-        (* The result type of this operation depends in a complicated way on the argument type. *)
-        T.FixMe.mk_expr_type loc)
+    | Minus ->
+      begin
+        match literal_expr argument with
+        | (_, T.NumberLiteral { Ast.NumberLiteral.value; raw }) ->
+          (loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-" ^ raw })
+        | _ -> (loc, T.Number)
+      end
+    | Not ->
+      begin
+        match literal_expr argument with
+        | (_, T.BooleanLiteral b) -> (loc, T.BooleanLiteral (not b))
+        | (_, T.Function _)
+        | (_, T.ObjectLiteral _)
+        | (_, T.ArrayLiteral _)
+        | (_, T.JSXLiteral _) ->
+          (loc, T.BooleanLiteral false)
+        | (_, T.Void)
+        | (_, T.Null) ->
+          (loc, T.BooleanLiteral true)
+        | (_, T.NumberLiteral { Ast.NumberLiteral.value; _ }) -> (loc, T.BooleanLiteral (value = 0.))
+        | (_, T.StringLiteral { Ast.StringLiteral.value; _ }) -> (loc, T.BooleanLiteral (value = ""))
+        | _ -> (loc, T.Boolean)
+      end
+    | Await ->
+      (* The result type of this operation depends in a complicated way on the argument type. *)
+      T.FixMe.mk_expr_type loc
 
   and arith_binary operator loc _left _right =
-    Ast.Expression.Binary.(
-      match operator with
-      | Plus ->
-        (* The result type of this operation depends in a complicated way on the argument type. *)
-        T.FixMe.mk_expr_type loc
-      (* These operations have simple result types. *)
-      | Equal -> (loc, T.Boolean)
-      | NotEqual -> (loc, T.Boolean)
-      | StrictEqual -> (loc, T.Boolean)
-      | StrictNotEqual -> (loc, T.Boolean)
-      | LessThan -> (loc, T.Boolean)
-      | LessThanEqual -> (loc, T.Boolean)
-      | GreaterThan -> (loc, T.Boolean)
-      | GreaterThanEqual -> (loc, T.Boolean)
-      | LShift -> (loc, T.Number)
-      | RShift -> (loc, T.Number)
-      | RShift3 -> (loc, T.Number)
-      | Minus -> (loc, T.Number)
-      | Mult -> (loc, T.Number)
-      | Exp -> (loc, T.Number)
-      | Div -> (loc, T.Number)
-      | Mod -> (loc, T.Number)
-      | BitOr -> (loc, T.Number)
-      | Xor -> (loc, T.Number)
-      | BitAnd -> (loc, T.Number)
-      | In -> (loc, T.Boolean)
-      | Instanceof -> (loc, T.Boolean))
+    let open Ast.Expression.Binary in
+    match operator with
+    | Plus ->
+      (* The result type of this operation depends in a complicated way on the argument type. *)
+      T.FixMe.mk_expr_type loc
+    (* These operations have simple result types. *)
+    | Equal -> (loc, T.Boolean)
+    | NotEqual -> (loc, T.Boolean)
+    | StrictEqual -> (loc, T.Boolean)
+    | StrictNotEqual -> (loc, T.Boolean)
+    | LessThan -> (loc, T.Boolean)
+    | LessThanEqual -> (loc, T.Boolean)
+    | GreaterThan -> (loc, T.Boolean)
+    | GreaterThanEqual -> (loc, T.Boolean)
+    | LShift -> (loc, T.Number)
+    | RShift -> (loc, T.Number)
+    | RShift3 -> (loc, T.Number)
+    | Minus -> (loc, T.Number)
+    | Mult -> (loc, T.Number)
+    | Exp -> (loc, T.Number)
+    | Div -> (loc, T.Number)
+    | Mod -> (loc, T.Number)
+    | BitOr -> (loc, T.Number)
+    | Xor -> (loc, T.Number)
+    | BitAnd -> (loc, T.Number)
+    | In -> (loc, T.Boolean)
+    | Instanceof -> (loc, T.Boolean)
 
   and function_param (_, { Ast.Function.Param.argument; default }) =
     pattern ~default:(default <> None) argument
@@ -1314,15 +1310,15 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_rest_param (loc, { Ast.Function.RestParam.argument }) = (loc, pattern argument)
 
   and function_params params =
-    Ast.Function.(
-      let (params_loc, { Params.params; rest }) = params in
-      let params = Base.List.map ~f:function_param params in
-      let rest =
-        match rest with
-        | None -> None
-        | Some param -> Some (function_rest_param param)
-      in
-      (params_loc, params, rest))
+    let open Ast.Function in
+    let (params_loc, { Params.params; rest }) = params in
+    let params = Base.List.map ~f:function_param params in
+    let rest =
+      match rest with
+      | None -> None
+      | Some param -> Some (function_rest_param param)
+    in
+    (params_loc, params, rest)
 
   and function_return ~is_missing_ok ~async return =
     match return with
@@ -1369,103 +1365,101 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and class_ =
     let class_element acc element =
-      Ast.Class.(
-        match element with
-        | Body.Method
-            ( _,
+      let open Ast.Class in
+      match element with
+      | Body.Method
+          ( _,
+            {
+              Method.key =
+                Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ });
+              _;
+            } )
+      | Body.Property
+          ( _,
+            {
+              Property.key =
+                Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ });
+              _;
+            } )
+        when (not Env.prevent_munge) && Signature_utils.is_munged_property_name name ->
+        acc
+      | Body.Property
+          ( _,
+            {
+              Property.key =
+                Ast.Expression.Object.Property.Identifier
+                  (_, { Ast.Identifier.name = "propTypes"; comments = _ });
+              static = true;
+              _;
+            } )
+        when Env.ignore_static_propTypes ->
+        acc
+      | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _ }) ->
+        let x = object_key key in
+        let ( loc,
               {
-                Method.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name; comments = _ });
-                _;
-              } )
-        | Body.Property
-            ( _,
-              {
-                Property.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name; comments = _ });
-                _;
-              } )
-          when (not Env.prevent_munge) && Signature_utils.is_munged_property_name name ->
-          acc
-        | Body.Property
-            ( _,
-              {
-                Property.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name = "propTypes"; comments = _ });
-                static = true;
-                _;
-              } )
-          when Env.ignore_static_propTypes ->
-          acc
-        | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _ }) ->
-          let x = object_key key in
-          let ( loc,
-                {
-                  Ast.Function.generator;
-                  tparams;
-                  params;
-                  return;
-                  body;
-                  id = _;
-                  async;
-                  predicate = _;
-                  sig_loc = _;
-                } ) =
-            value
-          in
+                Ast.Function.generator;
+                tparams;
+                params;
+                return;
+                body;
+                id = _;
+                async;
+                predicate = _;
+                sig_loc = _;
+              } ) =
+          value
+        in
+        ( elem_loc,
+          T.CMethod (x, kind, static, (loc, function_ generator async tparams params return body))
+        )
+        :: acc
+      | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
+        let x = object_key key in
+        (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
+      | Body.PrivateField
           ( elem_loc,
-            T.CMethod (x, kind, static, (loc, function_ generator async tparams params return body))
-          )
-          :: acc
-        | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
-          let x = object_key key in
-          (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
-        | Body.PrivateField
-            ( elem_loc,
-              {
-                PrivateField.key = (_, (_, { Ast.Identifier.name = x; comments = _ }));
-                annot;
-                static;
-                variance;
-                value = _;
-              } ) ->
-          (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc)
+            {
+              PrivateField.key = (_, (_, { Ast.Identifier.name = x; comments = _ }));
+              annot;
+              static;
+              variance;
+              value = _;
+            } ) ->
+        (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc
     in
     fun tparams body super super_targs implements ->
-      Ast.Class.(
-        let (body_loc, { Body.body }) = body in
-        let tparams = type_params tparams in
-        let body = List.rev @@ List.fold_left class_element [] body in
-        let extends =
-          match super with
-          | None -> None
-          | Some expr ->
-            let ref_expr_opt = ref_expr expr in
-            begin
-              match ref_expr_opt with
-              | Some (loc, reference) ->
-                Some
-                  ( loc,
-                    {
-                      Ast.Type.Generic.id = T.generic_id_of_reference reference;
-                      targs = type_args super_targs;
-                    } )
-              | None -> T.FixMe.mk_extends (fst expr)
-            end
-        in
-        let implements = Base.List.map ~f:class_implement implements in
-        T.CLASS { tparams; extends; implements; body = (body_loc, body) })
+      let open Ast.Class in
+      let (body_loc, { Body.body }) = body in
+      let tparams = type_params tparams in
+      let body = List.rev @@ List.fold_left class_element [] body in
+      let extends =
+        match super with
+        | None -> None
+        | Some expr ->
+          let ref_expr_opt = ref_expr expr in
+          begin
+            match ref_expr_opt with
+            | Some (loc, reference) ->
+              Some
+                ( loc,
+                  {
+                    Ast.Type.Generic.id = T.generic_id_of_reference reference;
+                    targs = type_args super_targs;
+                  } )
+            | None -> T.FixMe.mk_extends (fst expr)
+          end
+      in
+      let implements = Base.List.map ~f:class_implement implements in
+      T.CLASS { tparams; extends; implements; body = (body_loc, body) }
 
   and array_ =
     let array_element expr_or_spread_opt =
-      Ast.Expression.(
-        match expr_or_spread_opt with
-        | None -> assert false
-        | Some (Expression expr) -> T.AInit (literal_expr expr)
-        | Some (Spread _spread) -> assert false)
+      let open Ast.Expression in
+      match expr_or_spread_opt with
+      | None -> assert false
+      | Some (Expression expr) -> T.AInit (literal_expr expr)
+      | Some (Spread _spread) -> assert false
     in
     function
     | [] -> None
@@ -1475,76 +1469,76 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and object_ =
     let object_property =
-      Ast.Expression.Object.Property.(
-        function
-        | (loc, Init { key; value; shorthand = _ }) ->
-          let x = object_key key in
-          (loc, T.OInit (x, literal_expr value))
-        | (loc, Method { key; value = (fn_loc, fn) }) ->
-          let x = object_key key in
-          let {
-            Ast.Function.generator;
-            tparams;
-            params;
-            return;
-            body;
-            id = _;
-            async;
-            predicate = _;
-            sig_loc = _;
-          } =
-            fn
-          in
-          (loc, T.OMethod (x, (fn_loc, function_ generator async tparams params return body)))
-        | (loc, Get { key; value = (fn_loc, fn) }) ->
-          let x = object_key key in
-          let {
-            Ast.Function.generator;
-            tparams;
-            params;
-            return;
-            body;
-            id = _;
-            async;
-            predicate = _;
-            sig_loc = _;
-          } =
-            fn
-          in
-          (loc, T.OGet (x, (fn_loc, function_ generator async tparams params return body)))
-        | (loc, Set { key; value = (fn_loc, fn) }) ->
-          let x = object_key key in
-          let {
-            Ast.Function.generator;
-            tparams;
-            params;
-            return;
-            body;
-            id = _;
-            async;
-            predicate = _;
-            sig_loc = _;
-          } =
-            fn
-          in
-          (loc, T.OSet (x, (fn_loc, function_ generator async tparams params return body))))
+      let open Ast.Expression.Object.Property in
+      function
+      | (loc, Init { key; value; shorthand = _ }) ->
+        let x = object_key key in
+        (loc, T.OInit (x, literal_expr value))
+      | (loc, Method { key; value = (fn_loc, fn) }) ->
+        let x = object_key key in
+        let {
+          Ast.Function.generator;
+          tparams;
+          params;
+          return;
+          body;
+          id = _;
+          async;
+          predicate = _;
+          sig_loc = _;
+        } =
+          fn
+        in
+        (loc, T.OMethod (x, (fn_loc, function_ generator async tparams params return body)))
+      | (loc, Get { key; value = (fn_loc, fn) }) ->
+        let x = object_key key in
+        let {
+          Ast.Function.generator;
+          tparams;
+          params;
+          return;
+          body;
+          id = _;
+          async;
+          predicate = _;
+          sig_loc = _;
+        } =
+          fn
+        in
+        (loc, T.OGet (x, (fn_loc, function_ generator async tparams params return body)))
+      | (loc, Set { key; value = (fn_loc, fn) }) ->
+        let x = object_key key in
+        let {
+          Ast.Function.generator;
+          tparams;
+          params;
+          return;
+          body;
+          id = _;
+          async;
+          predicate = _;
+          sig_loc = _;
+        } =
+          fn
+        in
+        (loc, T.OSet (x, (fn_loc, function_ generator async tparams params return body)))
     in
     let object_spread_property =
-      Ast.Expression.Object.SpreadProperty.(
-        (fun (loc, { argument }) -> (loc, T.OSpread (literal_expr argument))))
+      let open Ast.Expression.Object.SpreadProperty in
+      (fun (loc, { argument }) -> (loc, T.OSpread (literal_expr argument)))
     in
     function
     | [] -> None
     | property :: properties ->
-      Ast.Expression.Object.(
-        (try
-           Some
-             (Nel.map
-                (function
-                  | Property p -> object_property p
-                  | SpreadProperty p -> object_spread_property p)
-                (property, properties))
-         with _ -> None))
+      let open Ast.Expression.Object in
+      (try
+         Some
+           (Nel.map
+              (function
+                | Property p -> object_property p
+                | SpreadProperty p -> object_spread_property p)
+              (property, properties))
+       with _ -> None)
 end
 
 module Generator (Env : Signature_builder_verify.EvalEnv) = struct
@@ -1661,19 +1655,19 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       Base.List.rev_map
         ~f:(fun (id, expr) ->
           let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
-          Ast.Type.Object.(
-            Property
-              ( fst id,
-                {
-                  Property.key =
-                    Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
-                  value = Property.Init annot;
-                  optional = false;
-                  static = false;
-                  proto = false;
-                  _method = false;
-                  variance = None;
-                } )))
+          let open Ast.Type.Object in
+          Property
+            ( fst id,
+              {
+                Property.key =
+                  Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
+                value = Property.Init annot;
+                optional = false;
+                static = false;
+                proto = false;
+                _method = false;
+                variance = None;
+              } ))
         add_module_exports_list
     in
     let set_module_exports mod_exp_loc outlined expr add_module_exports_list =
@@ -1735,55 +1729,53 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           add_module_exports mod_exp_loc outlined add_module_exports_list)
 
   let eval_export_default_declaration =
-    Ast.Statement.ExportDefaultDeclaration.(
-      function
-      | Declaration
-          ( loc,
-            Ast.Statement.FunctionDeclaration
-              ({ Ast.Function.id = Some _; _ } as function_declaration) ) ->
-        `Decl (Entry.function_declaration loc function_declaration)
-      | Declaration
-          ( loc,
-            Ast.Statement.FunctionDeclaration
-              {
-                Ast.Function.id = None;
-                generator;
-                tparams;
-                params;
-                return;
-                body;
-                async;
-                predicate = _;
-                sig_loc = _;
-              } ) ->
-        `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
-      | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
-        ->
-        `Decl (Entry.class_ loc class_)
-      | Declaration
-          ( loc,
-            Ast.Statement.ClassDeclaration
-              {
-                Ast.Class.id = None;
-                tparams;
-                body;
-                extends;
-                implements;
-                classDecorators = _;
-                comments = _;
-              } ) ->
-        let (super, super_targs) =
-          match extends with
-          | None -> (None, None)
-          | Some (_, { Ast.Class.Extends.expr; targs }) -> (Some expr, targs)
-        in
-        `Expr
-          (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
-      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> `Decl (Entry.enum loc enum)
-      | Declaration _stmt -> assert false
-      | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-        `Decl (Entry.function_declaration loc function_)
-      | Expression expr -> `Expr (Eval.literal_expr expr))
+    let open Ast.Statement.ExportDefaultDeclaration in
+    function
+    | Declaration
+        ( loc,
+          Ast.Statement.FunctionDeclaration ({ Ast.Function.id = Some _; _ } as function_declaration)
+        ) ->
+      `Decl (Entry.function_declaration loc function_declaration)
+    | Declaration
+        ( loc,
+          Ast.Statement.FunctionDeclaration
+            {
+              Ast.Function.id = None;
+              generator;
+              tparams;
+              params;
+              return;
+              body;
+              async;
+              predicate = _;
+              sig_loc = _;
+            } ) ->
+      `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
+    | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
+      `Decl (Entry.class_ loc class_)
+    | Declaration
+        ( loc,
+          Ast.Statement.ClassDeclaration
+            {
+              Ast.Class.id = None;
+              tparams;
+              body;
+              extends;
+              implements;
+              classDecorators = _;
+              comments = _;
+            } ) ->
+      let (super, super_targs) =
+        match extends with
+        | None -> (None, None)
+        | Some (_, { Ast.Class.Extends.expr; targs }) -> (Some expr, targs)
+      in
+      `Expr (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
+    | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> `Decl (Entry.enum loc enum)
+    | Declaration _stmt -> assert false
+    | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
+      `Decl (Entry.function_declaration loc function_)
+    | Expression expr -> `Expr (Eval.literal_expr expr)
 
   let export_name export_loc ?exported ?source local exportKind =
     ( export_loc,

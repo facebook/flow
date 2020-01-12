@@ -138,37 +138,37 @@ let parse_json_file ~fail content file =
      into a `module.exports = {...}` statement *)
   let (expr, parse_errors) = Parser_flow.json_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
-  Ast.(
-    let loc_none = Loc.none in
-    let module_exports =
-      ( loc_none,
-        Expression.(
-          Member
-            {
-              Member._object =
-                (loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module")));
-              property =
-                Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
-            }) )
-    in
-    let loc = fst expr in
-    let statement =
-      ( loc,
-        Statement.Expression
-          {
-            Statement.Expression.expression =
-              ( loc,
-                Expression.Assignment
-                  {
-                    Expression.Assignment.operator = None;
-                    left = (loc_none, Pattern.Expression module_exports);
-                    right = expr;
-                  } );
-            directive = None;
-          } )
-    in
-    let comments = ([] : Loc.t Comment.t list) in
-    ((loc, [statement], comments), parse_errors))
+  let open Ast in
+  let loc_none = Loc.none in
+  let module_exports =
+    ( loc_none,
+      let open Expression in
+      Member
+        {
+          Member._object =
+            (loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module")));
+          property =
+            Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
+        } )
+  in
+  let loc = fst expr in
+  let statement =
+    ( loc,
+      Statement.Expression
+        {
+          Statement.Expression.expression =
+            ( loc,
+              Expression.Assignment
+                {
+                  Expression.Assignment.operator = None;
+                  left = (loc_none, Pattern.Expression module_exports);
+                  right = expr;
+                } );
+          directive = None;
+        } )
+  in
+  let comments = ([] : Loc.t Comment.t list) in
+  ((loc, [statement], comments), parse_errors)
 
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10

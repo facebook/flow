@@ -49,77 +49,77 @@ module Signature = struct
   let add_enum env loc enum = add_env env (Entry.enum loc enum)
 
   let add_declare_export_declaration env =
-    Ast.Statement.DeclareExportDeclaration.(
-      function
-      | Variable (loc, declare_variable) -> add_declare_variable env loc declare_variable
-      | Function (loc, declare_function) -> add_declare_function env loc declare_function
-      | Class (loc, declare_class) -> add_declare_class env loc declare_class
-      | NamedType (loc, type_alias) -> add_type_alias env loc type_alias
-      | NamedOpaqueType (loc, opaque_type) -> add_opaque_type env loc opaque_type
-      | Interface (loc, interface) -> add_interface env loc interface
-      | DefaultType _ -> assert false)
+    let open Ast.Statement.DeclareExportDeclaration in
+    function
+    | Variable (loc, declare_variable) -> add_declare_variable env loc declare_variable
+    | Function (loc, declare_function) -> add_declare_function env loc declare_function
+    | Class (loc, declare_class) -> add_declare_class env loc declare_class
+    | NamedType (loc, type_alias) -> add_type_alias env loc type_alias
+    | NamedOpaqueType (loc, opaque_type) -> add_opaque_type env loc opaque_type
+    | Interface (loc, interface) -> add_interface env loc interface
+    | DefaultType _ -> assert false
 
   let add_export_default_declaration env =
-    Ast.Statement.ExportDefaultDeclaration.(
-      function
-      | Declaration
-          ( loc,
-            Ast.Statement.FunctionDeclaration
-              ({ Ast.Function.id = Some _; _ } as function_declaration) ) ->
-        add_function_declaration env loc function_declaration
-      | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
-        ->
-        add_class env loc class_
-      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> add_enum env loc enum
-      | Declaration _ -> assert false
-      | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-        add_function_expression env loc function_
-      | Expression _ -> assert false
-      (* TODO: class? *))
+    let open Ast.Statement.ExportDefaultDeclaration in
+    function
+    | Declaration
+        ( loc,
+          Ast.Statement.FunctionDeclaration ({ Ast.Function.id = Some _; _ } as function_declaration)
+        ) ->
+      add_function_declaration env loc function_declaration
+    | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
+      add_class env loc class_
+    | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> add_enum env loc enum
+    | Declaration _ -> assert false
+    | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
+      add_function_expression env loc function_
+    | Expression _ -> assert false
+
+  (* TODO: class? *)
 
   let add_stmt env =
-    Ast.Statement.(
-      function
-      | (loc, VariableDeclaration variable_declaration) ->
-        add_variable_declaration env loc variable_declaration
-      | (loc, DeclareVariable declare_variable) -> add_declare_variable env loc declare_variable
-      | (loc, FunctionDeclaration function_declaration) ->
-        add_function_declaration env loc function_declaration
-      | (loc, DeclareFunction declare_function) -> add_declare_function env loc declare_function
-      | (loc, ClassDeclaration class_) -> add_class env loc class_
-      | (loc, DeclareClass declare_class) -> add_declare_class env loc declare_class
-      | (loc, TypeAlias type_alias) -> add_type_alias env loc type_alias
-      | (loc, DeclareTypeAlias type_alias) -> add_type_alias env loc type_alias
-      | (loc, OpaqueType opaque_type) -> add_opaque_type env loc opaque_type
-      | (loc, DeclareOpaqueType opaque_type) -> add_opaque_type env loc opaque_type
-      | (loc, InterfaceDeclaration interface) -> add_interface env loc interface
-      | (loc, DeclareInterface interface) -> add_interface env loc interface
-      | (loc, EnumDeclaration enum) -> add_enum env loc enum
-      | (_, Block _)
-      | (_, DoWhile _)
-      | (_, For _)
-      | (_, ForIn _)
-      | (_, ForOf _)
-      | (_, If _)
-      | (_, Labeled _)
-      | (_, Switch _)
-      | (_, Try _)
-      | (_, While _)
-      | (_, DeclareExportDeclaration _)
-      | (_, ExportDefaultDeclaration _)
-      | (_, ExportNamedDeclaration _)
-      | (_, ImportDeclaration _)
-      | (_, DeclareModule _)
-      | (_, DeclareModuleExports _)
-      | (_, Empty)
-      | (_, Expression _)
-      | (_, Break _)
-      | (_, Continue _)
-      | (_, Throw _)
-      | (_, Return _)
-      | (_, Debugger)
-      | (_, With _) ->
-        assert false)
+    let open Ast.Statement in
+    function
+    | (loc, VariableDeclaration variable_declaration) ->
+      add_variable_declaration env loc variable_declaration
+    | (loc, DeclareVariable declare_variable) -> add_declare_variable env loc declare_variable
+    | (loc, FunctionDeclaration function_declaration) ->
+      add_function_declaration env loc function_declaration
+    | (loc, DeclareFunction declare_function) -> add_declare_function env loc declare_function
+    | (loc, ClassDeclaration class_) -> add_class env loc class_
+    | (loc, DeclareClass declare_class) -> add_declare_class env loc declare_class
+    | (loc, TypeAlias type_alias) -> add_type_alias env loc type_alias
+    | (loc, DeclareTypeAlias type_alias) -> add_type_alias env loc type_alias
+    | (loc, OpaqueType opaque_type) -> add_opaque_type env loc opaque_type
+    | (loc, DeclareOpaqueType opaque_type) -> add_opaque_type env loc opaque_type
+    | (loc, InterfaceDeclaration interface) -> add_interface env loc interface
+    | (loc, DeclareInterface interface) -> add_interface env loc interface
+    | (loc, EnumDeclaration enum) -> add_enum env loc enum
+    | (_, Block _)
+    | (_, DoWhile _)
+    | (_, For _)
+    | (_, ForIn _)
+    | (_, ForOf _)
+    | (_, If _)
+    | (_, Labeled _)
+    | (_, Switch _)
+    | (_, Try _)
+    | (_, While _)
+    | (_, DeclareExportDeclaration _)
+    | (_, ExportDefaultDeclaration _)
+    | (_, ExportNamedDeclaration _)
+    | (_, ImportDeclaration _)
+    | (_, DeclareModule _)
+    | (_, DeclareModuleExports _)
+    | (_, Empty)
+    | (_, Expression _)
+    | (_, Break _)
+    | (_, Continue _)
+    | (_, Throw _)
+    | (_, Return _)
+    | (_, Debugger)
+    | (_, With _) ->
+      assert false
 
   let add_export_value_bindings named named_infos env =
     File_sig.(
@@ -258,24 +258,24 @@ module Signature = struct
             | Require { source; bindings = Some require_bindings; require_loc } ->
               add_require_bindings toplevel_names require_loc source require_bindings env
             | Import { import_loc; source; named; ns; types; typesof; typesof_ns } ->
-              Ast.Statement.ImportDeclaration.(
-                let env = add_named_imports import_loc source ImportValue named env in
-                let env =
-                  add_ns_imports
-                    import_loc
-                    source
-                    ImportValue
-                    (Option.map ~f:Flow_ast_utils.ident_of_source ns)
-                    env
-                in
-                let env = add_named_imports import_loc source ImportType types env in
-                let env = add_named_imports import_loc source ImportTypeof typesof env in
+              let open Ast.Statement.ImportDeclaration in
+              let env = add_named_imports import_loc source ImportValue named env in
+              let env =
                 add_ns_imports
                   import_loc
                   source
-                  ImportTypeof
-                  (Option.map ~f:Flow_ast_utils.ident_of_source typesof_ns)
-                  env)
+                  ImportValue
+                  (Option.map ~f:Flow_ast_utils.ident_of_source ns)
+                  env
+              in
+              let env = add_named_imports import_loc source ImportType types env in
+              let env = add_named_imports import_loc source ImportTypeof typesof env in
+              add_ns_imports
+                import_loc
+                source
+                ImportTypeof
+                (Option.map ~f:Flow_ast_utils.ident_of_source typesof_ns)
+                env
             | _ -> env)
           env
           imports_info
@@ -411,136 +411,136 @@ class type_hoister =
     method! toplevel_statement_list (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
       stmts
       |> ListUtils.ident_map (fun stmt ->
-             Ast.Statement.(
-               match stmt with
-               (* process bindings *)
-               | (_, VariableDeclaration _)
-               | (_, DeclareVariable _)
-               | (_, FunctionDeclaration _)
-               | (_, DeclareFunction _)
-               | (_, ClassDeclaration _)
-               | (_, DeclareClass _)
-               | (_, EnumDeclaration _)
-               | (_, TypeAlias _)
-               | (_, DeclareTypeAlias _)
-               | (_, OpaqueType _)
-               | (_, DeclareOpaqueType _)
-               | (_, InterfaceDeclaration _)
-               | (_, DeclareInterface _) ->
-                 super#statement stmt
-               (* recurse through control-flow *)
-               | (_, Block _)
-               | (_, DoWhile _)
-               | (_, For _)
-               | (_, ForIn _)
-               | (_, ForOf _)
-               | (_, If _)
-               | (_, Labeled _)
-               | (_, Switch _)
-               | (_, Try _)
-               | (_, While _) ->
-                 this#next (lazy (ignore @@ super#statement stmt));
-                 stmt
-               | ( _,
-                   Expression
-                     {
-                       Expression.expression =
-                         ( _,
-                           Ast.Expression.Assignment
-                             {
-                               Ast.Expression.Assignment.operator = None;
-                               left =
-                                 ( _,
-                                   Ast.Pattern.Expression
-                                     ( _,
-                                       Ast.Expression.Member
-                                         {
-                                           Ast.Expression.Member._object =
-                                             ( _,
-                                               Ast.Expression.Identifier
-                                                 (_, { Ast.Identifier.name = x; _ }) );
-                                           property = Ast.Expression.Member.PropertyIdentifier id;
-                                         } ) );
-                               right = expr;
-                             } );
-                       _;
-                     } ) ->
-                 this#update_binding (x, id, expr);
-                 stmt
-               (* shortcut *)
-               | (_, DeclareExportDeclaration _)
-               | (_, ExportDefaultDeclaration _)
-               | (_, ExportNamedDeclaration _)
-               | (_, ImportDeclaration _)
-               | (_, DeclareModule _)
-               | (_, DeclareModuleExports _)
-               | (_, Empty)
-               | (_, Expression _)
-               | (_, Break _)
-               | (_, Continue _)
-               | (_, Throw _)
-               | (_, Return _)
-               | (_, Debugger)
-               | (_, With _) ->
-                 stmt))
+             let open Ast.Statement in
+             match stmt with
+             (* process bindings *)
+             | (_, VariableDeclaration _)
+             | (_, DeclareVariable _)
+             | (_, FunctionDeclaration _)
+             | (_, DeclareFunction _)
+             | (_, ClassDeclaration _)
+             | (_, DeclareClass _)
+             | (_, EnumDeclaration _)
+             | (_, TypeAlias _)
+             | (_, DeclareTypeAlias _)
+             | (_, OpaqueType _)
+             | (_, DeclareOpaqueType _)
+             | (_, InterfaceDeclaration _)
+             | (_, DeclareInterface _) ->
+               super#statement stmt
+             (* recurse through control-flow *)
+             | (_, Block _)
+             | (_, DoWhile _)
+             | (_, For _)
+             | (_, ForIn _)
+             | (_, ForOf _)
+             | (_, If _)
+             | (_, Labeled _)
+             | (_, Switch _)
+             | (_, Try _)
+             | (_, While _) ->
+               this#next (lazy (ignore @@ super#statement stmt));
+               stmt
+             | ( _,
+                 Expression
+                   {
+                     Expression.expression =
+                       ( _,
+                         Ast.Expression.Assignment
+                           {
+                             Ast.Expression.Assignment.operator = None;
+                             left =
+                               ( _,
+                                 Ast.Pattern.Expression
+                                   ( _,
+                                     Ast.Expression.Member
+                                       {
+                                         Ast.Expression.Member._object =
+                                           ( _,
+                                             Ast.Expression.Identifier
+                                               (_, { Ast.Identifier.name = x; _ }) );
+                                         property = Ast.Expression.Member.PropertyIdentifier id;
+                                       } ) );
+                             right = expr;
+                           } );
+                     _;
+                   } ) ->
+               this#update_binding (x, id, expr);
+               stmt
+             (* shortcut *)
+             | (_, DeclareExportDeclaration _)
+             | (_, ExportDefaultDeclaration _)
+             | (_, ExportNamedDeclaration _)
+             | (_, ImportDeclaration _)
+             | (_, DeclareModule _)
+             | (_, DeclareModuleExports _)
+             | (_, Empty)
+             | (_, Expression _)
+             | (_, Break _)
+             | (_, Continue _)
+             | (_, Throw _)
+             | (_, Return _)
+             | (_, Debugger)
+             | (_, With _) ->
+               stmt)
 
     method! statement (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
-      Ast.Statement.(
-        match stmt with
-        (* ignore block-scoped bindings and type bindings *)
-        | (_, ClassDeclaration _)
-        | (_, DeclareClass _)
-        | (_, EnumDeclaration _)
-        | (_, TypeAlias _)
-        | (_, DeclareTypeAlias _)
-        | (_, OpaqueType _)
-        | (_, DeclareOpaqueType _)
-        | (_, InterfaceDeclaration _)
-        | (_, DeclareInterface _) ->
-          stmt
-        (* process function-scoped bindings *)
-        | (_, VariableDeclaration decl) ->
-          Ast.Statement.VariableDeclaration.(
-            let { kind; _ } = decl in
-            begin
-              match kind with
-              | Ast.Statement.VariableDeclaration.Var -> super#statement stmt
-              | Ast.Statement.VariableDeclaration.Let
-              | Ast.Statement.VariableDeclaration.Const ->
-                stmt
-            end)
-        | (_, DeclareVariable _)
-        | (_, FunctionDeclaration _)
-        | (_, DeclareFunction _) ->
-          super#statement stmt
-        (* recurse through control flow *)
-        | (_, Block _)
-        | (_, DoWhile _)
-        | (_, For _)
-        | (_, ForIn _)
-        | (_, ForOf _)
-        | (_, If _)
-        | (_, Labeled _)
-        | (_, Switch _)
-        | (_, Try _)
-        | (_, While _) ->
-          super#statement stmt
-        (* shortcut *)
-        | (_, DeclareExportDeclaration _)
-        | (_, ExportDefaultDeclaration _)
-        | (_, ExportNamedDeclaration _)
-        | (_, ImportDeclaration _)
-        | (_, DeclareModule _)
-        | (_, DeclareModuleExports _)
-        | (_, Empty)
-        | (_, Expression _)
-        | (_, Break _)
-        | (_, Continue _)
-        | (_, Throw _)
-        | (_, Return _)
-        | (_, Debugger)
-        | (_, With _) ->
-          stmt)
+      let open Ast.Statement in
+      match stmt with
+      (* ignore block-scoped bindings and type bindings *)
+      | (_, ClassDeclaration _)
+      | (_, DeclareClass _)
+      | (_, EnumDeclaration _)
+      | (_, TypeAlias _)
+      | (_, DeclareTypeAlias _)
+      | (_, OpaqueType _)
+      | (_, DeclareOpaqueType _)
+      | (_, InterfaceDeclaration _)
+      | (_, DeclareInterface _) ->
+        stmt
+      (* process function-scoped bindings *)
+      | (_, VariableDeclaration decl) ->
+        let open Ast.Statement.VariableDeclaration in
+        let { kind; _ } = decl in
+        begin
+          match kind with
+          | Ast.Statement.VariableDeclaration.Var -> super#statement stmt
+          | Ast.Statement.VariableDeclaration.Let
+          | Ast.Statement.VariableDeclaration.Const ->
+            stmt
+        end
+      | (_, DeclareVariable _)
+      | (_, FunctionDeclaration _)
+      | (_, DeclareFunction _) ->
+        super#statement stmt
+      (* recurse through control flow *)
+      | (_, Block _)
+      | (_, DoWhile _)
+      | (_, For _)
+      | (_, ForIn _)
+      | (_, ForOf _)
+      | (_, If _)
+      | (_, Labeled _)
+      | (_, Switch _)
+      | (_, Try _)
+      | (_, While _) ->
+        super#statement stmt
+      (* shortcut *)
+      | (_, DeclareExportDeclaration _)
+      | (_, ExportDefaultDeclaration _)
+      | (_, ExportNamedDeclaration _)
+      | (_, ImportDeclaration _)
+      | (_, DeclareModule _)
+      | (_, DeclareModuleExports _)
+      | (_, Empty)
+      | (_, Expression _)
+      | (_, Break _)
+      | (_, Continue _)
+      | (_, Throw _)
+      | (_, Return _)
+      | (_, Debugger)
+      | (_, With _) ->
+        stmt
 
     method! variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
       this#add_binding_list (Entry.variable_declaration loc decl);

@@ -101,16 +101,16 @@ with type t = Impl.t = struct
           []
       in
       let comments =
-        Ast.Syntax.(
-          match (Config.include_interned_comments, comments) with
-          | (true, Some c) ->
-            (match c with
-            | { leading = _ :: _ as l; trailing = _ :: _ as t; _ } ->
-              [("leadingComments", comment_list l); ("trailingComments", comment_list t)]
-            | { leading = _ :: _ as l; trailing = []; _ } -> [("leadingComments", comment_list l)]
-            | { leading = []; trailing = _ :: _ as t; _ } -> [("trailingComments", comment_list t)]
-            | _ -> [])
-          | (_, _) -> [])
+        let open Ast.Syntax in
+        match (Config.include_interned_comments, comments) with
+        | (true, Some c) ->
+          (match c with
+          | { leading = _ :: _ as l; trailing = _ :: _ as t; _ } ->
+            [("leadingComments", comment_list l); ("trailingComments", comment_list t)]
+          | { leading = _ :: _ as l; trailing = []; _ } -> [("leadingComments", comment_list l)]
+          | { leading = []; trailing = _ :: _ as t; _ } -> [("trailingComments", comment_list t)]
+          | _ -> [])
+        | (_, _) -> []
       in
       let prefix = locs @ comments @ [("type", string _type)] in
       obj (List.rev_append prefix props)
@@ -125,455 +125,442 @@ with type t = Impl.t = struct
       node "Program" loc props
     and statement_list statements = array_of_list statement statements
     and statement =
-      Statement.(
-        function
-        | (loc, Empty) -> node "EmptyStatement" loc []
-        | (loc, Block b) -> block (loc, b)
-        | (loc, Expression { Expression.expression = expr; directive }) ->
-          node
-            "ExpressionStatement"
-            loc
-            [("expression", expression expr); ("directive", option string directive)]
-        | (loc, If { If.test; consequent; alternate; comments }) ->
-          node
-            ?comments
-            "IfStatement"
-            loc
-            [
-              ("test", expression test);
-              ("consequent", statement consequent);
-              ("alternate", option statement alternate);
-            ]
-        | (loc, Labeled { Labeled.label; body }) ->
-          node "LabeledStatement" loc [("label", identifier label); ("body", statement body)]
-        | (loc, Break { Break.label; comments }) ->
-          node ?comments "BreakStatement" loc [("label", option identifier label)]
-        | (loc, Continue { Continue.label; comments }) ->
-          node ?comments "ContinueStatement" loc [("label", option identifier label)]
-        | (loc, With { With._object; body }) ->
-          node "WithStatement" loc [("object", expression _object); ("body", statement body)]
-        | (loc, TypeAlias alias) -> type_alias (loc, alias)
-        | (loc, OpaqueType opaque_t) -> opaque_type ~declare:false (loc, opaque_t)
-        | (loc, Switch { Switch.discriminant; cases }) ->
-          node
-            "SwitchStatement"
-            loc
-            [("discriminant", expression discriminant); ("cases", array_of_list case cases)]
-        | (loc, Return { Return.argument; comments }) ->
-          node ?comments "ReturnStatement" loc [("argument", option expression argument)]
-        | (loc, Throw { Throw.argument }) ->
-          node "ThrowStatement" loc [("argument", expression argument)]
-        | (loc, Try { Try.block = block_; handler; finalizer; comments }) ->
-          node
-            ?comments
-            "TryStatement"
-            loc
-            [
-              ("block", block block_);
-              ("handler", option catch handler);
-              ("finalizer", option block finalizer);
-            ]
-        | (loc, While { While.test; body }) ->
-          node "WhileStatement" loc [("test", expression test); ("body", statement body)]
-        | (loc, DoWhile { DoWhile.body; test; comments }) ->
-          node
-            ?comments
-            "DoWhileStatement"
-            loc
-            [("body", statement body); ("test", expression test)]
-        | (loc, For { For.init = init_; test; update; body }) ->
-          let init = function
-            | For.InitDeclaration init -> variable_declaration init
-            | For.InitExpression expr -> expression expr
-          in
-          node
-            "ForStatement"
-            loc
-            [
-              ("init", option init init_);
-              ("test", option expression test);
-              ("update", option expression update);
-              ("body", statement body);
-            ]
-        | (loc, ForIn { ForIn.left; right; body; each }) ->
-          let left =
-            match left with
-            | ForIn.LeftDeclaration left -> variable_declaration left
-            | ForIn.LeftPattern left -> pattern left
-          in
-          node
-            "ForInStatement"
-            loc
-            [
-              ("left", left);
-              ("right", expression right);
-              ("body", statement body);
-              ("each", bool each);
-            ]
-        | (loc, ForOf { ForOf.async; left; right; body }) ->
-          let type_ =
-            if async then
-              "ForAwaitStatement"
-            else
-              "ForOfStatement"
-          in
-          let left =
-            match left with
-            | ForOf.LeftDeclaration left -> variable_declaration left
-            | ForOf.LeftPattern left -> pattern left
-          in
-          node type_ loc [("left", left); ("right", expression right); ("body", statement body)]
-        | (loc, EnumDeclaration enum) -> enum_declaration (loc, enum)
-        | (loc, Debugger) -> node "DebuggerStatement" loc []
-        | (loc, ClassDeclaration c) -> class_declaration (loc, c)
-        | (loc, InterfaceDeclaration i) -> interface_declaration (loc, i)
-        | (loc, VariableDeclaration var) -> variable_declaration (loc, var)
-        | (loc, FunctionDeclaration fn) -> function_declaration (loc, fn)
-        | (loc, DeclareVariable d) -> declare_variable (loc, d)
-        | (loc, DeclareFunction d) -> declare_function (loc, d)
-        | (loc, DeclareClass d) -> declare_class (loc, d)
-        | (loc, DeclareInterface i) -> declare_interface (loc, i)
-        | (loc, DeclareTypeAlias a) -> declare_type_alias (loc, a)
-        | (loc, DeclareOpaqueType t) -> opaque_type ~declare:true (loc, t)
-        | (loc, DeclareModule { DeclareModule.id; body; kind }) ->
-          let id =
-            match id with
-            | DeclareModule.Literal lit -> string_literal lit
-            | DeclareModule.Identifier id -> identifier id
-          in
-          node
-            "DeclareModule"
-            loc
-            [
-              ("id", id);
-              ("body", block body);
-              ( "kind",
-                match kind with
-                | DeclareModule.CommonJS _ -> string "CommonJS"
-                | DeclareModule.ES _ -> string "ES" );
-            ]
-        | ( loc,
-            DeclareExportDeclaration
-              { DeclareExportDeclaration.specifiers; declaration; default; source } ) ->
-          begin
-            match specifiers with
-            | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
-              node "DeclareExportAllDeclaration" loc [("source", option string_literal source)]
-            | _ ->
-              let declaration =
-                match declaration with
-                | Some (DeclareExportDeclaration.Variable v) -> declare_variable v
-                | Some (DeclareExportDeclaration.Function f) -> declare_function f
-                | Some (DeclareExportDeclaration.Class c) -> declare_class c
-                | Some (DeclareExportDeclaration.DefaultType t) -> _type t
-                | Some (DeclareExportDeclaration.NamedType t) -> type_alias t
-                | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
-                | Some (DeclareExportDeclaration.Interface i) -> interface_declaration i
-                | None -> null
-              in
-              node
-                "DeclareExportDeclaration"
-                loc
-                [
-                  ( "default",
-                    bool
-                      (match default with
-                      | Some _ -> true
-                      | None -> false) );
-                  ("declaration", declaration);
-                  ("specifiers", export_specifiers specifiers);
-                  ("source", option string_literal source);
-                ]
-          end
-        | (loc, DeclareModuleExports annot) ->
-          node "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
-        | ( loc,
-            ExportNamedDeclaration
-              { ExportNamedDeclaration.specifiers; declaration; source; exportKind } ) ->
-          begin
-            match specifiers with
-            | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
-              node
-                "ExportAllDeclaration"
-                loc
-                [
-                  ("source", option string_literal source);
-                  ("exportKind", string (export_kind exportKind));
-                ]
-            | _ ->
-              node
-                "ExportNamedDeclaration"
-                loc
-                [
-                  ("declaration", option statement declaration);
-                  ("specifiers", export_specifiers specifiers);
-                  ("source", option string_literal source);
-                  ("exportKind", string (export_kind exportKind));
-                ]
-          end
-        | ( loc,
-            ExportDefaultDeclaration
-              {
-                ExportDefaultDeclaration.declaration;
-                default = _ (* TODO: confirm we shouldn't use this *);
-              } ) ->
-          let declaration =
-            match declaration with
-            | ExportDefaultDeclaration.Declaration stmt -> statement stmt
-            | ExportDefaultDeclaration.Expression expr -> expression expr
-          in
-          node
-            "ExportDefaultDeclaration"
-            loc
-            [
-              ("declaration", declaration);
-              ("exportKind", string (export_kind Statement.ExportValue));
-            ]
-        | (loc, ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source }) ->
-          let specifiers =
-            match specifiers with
-            | Some (ImportDeclaration.ImportNamedSpecifiers specifiers) ->
-              List.map
-                (fun { ImportDeclaration.local; remote; kind } ->
-                  import_named_specifier local remote kind)
-                specifiers
-            | Some (ImportDeclaration.ImportNamespaceSpecifier id) ->
-              [import_namespace_specifier id]
-            | None -> []
-          in
-          let specifiers =
-            match default with
-            | Some default -> import_default_specifier default :: specifiers
-            | None -> specifiers
-          in
-          let import_kind =
-            match importKind with
-            | ImportDeclaration.ImportType -> "type"
-            | ImportDeclaration.ImportTypeof -> "typeof"
-            | ImportDeclaration.ImportValue -> "value"
-          in
-          node
-            "ImportDeclaration"
-            loc
-            [
-              ("specifiers", array specifiers);
-              ("source", string_literal source);
-              ("importKind", string import_kind);
-            ])
+      let open Statement in
+      function
+      | (loc, Empty) -> node "EmptyStatement" loc []
+      | (loc, Block b) -> block (loc, b)
+      | (loc, Expression { Expression.expression = expr; directive }) ->
+        node
+          "ExpressionStatement"
+          loc
+          [("expression", expression expr); ("directive", option string directive)]
+      | (loc, If { If.test; consequent; alternate; comments }) ->
+        node
+          ?comments
+          "IfStatement"
+          loc
+          [
+            ("test", expression test);
+            ("consequent", statement consequent);
+            ("alternate", option statement alternate);
+          ]
+      | (loc, Labeled { Labeled.label; body }) ->
+        node "LabeledStatement" loc [("label", identifier label); ("body", statement body)]
+      | (loc, Break { Break.label; comments }) ->
+        node ?comments "BreakStatement" loc [("label", option identifier label)]
+      | (loc, Continue { Continue.label; comments }) ->
+        node ?comments "ContinueStatement" loc [("label", option identifier label)]
+      | (loc, With { With._object; body }) ->
+        node "WithStatement" loc [("object", expression _object); ("body", statement body)]
+      | (loc, TypeAlias alias) -> type_alias (loc, alias)
+      | (loc, OpaqueType opaque_t) -> opaque_type ~declare:false (loc, opaque_t)
+      | (loc, Switch { Switch.discriminant; cases }) ->
+        node
+          "SwitchStatement"
+          loc
+          [("discriminant", expression discriminant); ("cases", array_of_list case cases)]
+      | (loc, Return { Return.argument; comments }) ->
+        node ?comments "ReturnStatement" loc [("argument", option expression argument)]
+      | (loc, Throw { Throw.argument }) ->
+        node "ThrowStatement" loc [("argument", expression argument)]
+      | (loc, Try { Try.block = block_; handler; finalizer; comments }) ->
+        node
+          ?comments
+          "TryStatement"
+          loc
+          [
+            ("block", block block_);
+            ("handler", option catch handler);
+            ("finalizer", option block finalizer);
+          ]
+      | (loc, While { While.test; body }) ->
+        node "WhileStatement" loc [("test", expression test); ("body", statement body)]
+      | (loc, DoWhile { DoWhile.body; test; comments }) ->
+        node ?comments "DoWhileStatement" loc [("body", statement body); ("test", expression test)]
+      | (loc, For { For.init = init_; test; update; body }) ->
+        let init = function
+          | For.InitDeclaration init -> variable_declaration init
+          | For.InitExpression expr -> expression expr
+        in
+        node
+          "ForStatement"
+          loc
+          [
+            ("init", option init init_);
+            ("test", option expression test);
+            ("update", option expression update);
+            ("body", statement body);
+          ]
+      | (loc, ForIn { ForIn.left; right; body; each }) ->
+        let left =
+          match left with
+          | ForIn.LeftDeclaration left -> variable_declaration left
+          | ForIn.LeftPattern left -> pattern left
+        in
+        node
+          "ForInStatement"
+          loc
+          [
+            ("left", left);
+            ("right", expression right);
+            ("body", statement body);
+            ("each", bool each);
+          ]
+      | (loc, ForOf { ForOf.async; left; right; body }) ->
+        let type_ =
+          if async then
+            "ForAwaitStatement"
+          else
+            "ForOfStatement"
+        in
+        let left =
+          match left with
+          | ForOf.LeftDeclaration left -> variable_declaration left
+          | ForOf.LeftPattern left -> pattern left
+        in
+        node type_ loc [("left", left); ("right", expression right); ("body", statement body)]
+      | (loc, EnumDeclaration enum) -> enum_declaration (loc, enum)
+      | (loc, Debugger) -> node "DebuggerStatement" loc []
+      | (loc, ClassDeclaration c) -> class_declaration (loc, c)
+      | (loc, InterfaceDeclaration i) -> interface_declaration (loc, i)
+      | (loc, VariableDeclaration var) -> variable_declaration (loc, var)
+      | (loc, FunctionDeclaration fn) -> function_declaration (loc, fn)
+      | (loc, DeclareVariable d) -> declare_variable (loc, d)
+      | (loc, DeclareFunction d) -> declare_function (loc, d)
+      | (loc, DeclareClass d) -> declare_class (loc, d)
+      | (loc, DeclareInterface i) -> declare_interface (loc, i)
+      | (loc, DeclareTypeAlias a) -> declare_type_alias (loc, a)
+      | (loc, DeclareOpaqueType t) -> opaque_type ~declare:true (loc, t)
+      | (loc, DeclareModule { DeclareModule.id; body; kind }) ->
+        let id =
+          match id with
+          | DeclareModule.Literal lit -> string_literal lit
+          | DeclareModule.Identifier id -> identifier id
+        in
+        node
+          "DeclareModule"
+          loc
+          [
+            ("id", id);
+            ("body", block body);
+            ( "kind",
+              match kind with
+              | DeclareModule.CommonJS _ -> string "CommonJS"
+              | DeclareModule.ES _ -> string "ES" );
+          ]
+      | ( loc,
+          DeclareExportDeclaration
+            { DeclareExportDeclaration.specifiers; declaration; default; source } ) ->
+        begin
+          match specifiers with
+          | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
+            node "DeclareExportAllDeclaration" loc [("source", option string_literal source)]
+          | _ ->
+            let declaration =
+              match declaration with
+              | Some (DeclareExportDeclaration.Variable v) -> declare_variable v
+              | Some (DeclareExportDeclaration.Function f) -> declare_function f
+              | Some (DeclareExportDeclaration.Class c) -> declare_class c
+              | Some (DeclareExportDeclaration.DefaultType t) -> _type t
+              | Some (DeclareExportDeclaration.NamedType t) -> type_alias t
+              | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
+              | Some (DeclareExportDeclaration.Interface i) -> interface_declaration i
+              | None -> null
+            in
+            node
+              "DeclareExportDeclaration"
+              loc
+              [
+                ( "default",
+                  bool
+                    (match default with
+                    | Some _ -> true
+                    | None -> false) );
+                ("declaration", declaration);
+                ("specifiers", export_specifiers specifiers);
+                ("source", option string_literal source);
+              ]
+        end
+      | (loc, DeclareModuleExports annot) ->
+        node "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
+      | ( loc,
+          ExportNamedDeclaration
+            { ExportNamedDeclaration.specifiers; declaration; source; exportKind } ) ->
+        begin
+          match specifiers with
+          | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
+            node
+              "ExportAllDeclaration"
+              loc
+              [
+                ("source", option string_literal source);
+                ("exportKind", string (export_kind exportKind));
+              ]
+          | _ ->
+            node
+              "ExportNamedDeclaration"
+              loc
+              [
+                ("declaration", option statement declaration);
+                ("specifiers", export_specifiers specifiers);
+                ("source", option string_literal source);
+                ("exportKind", string (export_kind exportKind));
+              ]
+        end
+      | ( loc,
+          ExportDefaultDeclaration
+            {
+              ExportDefaultDeclaration.declaration;
+              default = _ (* TODO: confirm we shouldn't use this *);
+            } ) ->
+        let declaration =
+          match declaration with
+          | ExportDefaultDeclaration.Declaration stmt -> statement stmt
+          | ExportDefaultDeclaration.Expression expr -> expression expr
+        in
+        node
+          "ExportDefaultDeclaration"
+          loc
+          [("declaration", declaration); ("exportKind", string (export_kind Statement.ExportValue))]
+      | (loc, ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source }) ->
+        let specifiers =
+          match specifiers with
+          | Some (ImportDeclaration.ImportNamedSpecifiers specifiers) ->
+            List.map
+              (fun { ImportDeclaration.local; remote; kind } ->
+                import_named_specifier local remote kind)
+              specifiers
+          | Some (ImportDeclaration.ImportNamespaceSpecifier id) -> [import_namespace_specifier id]
+          | None -> []
+        in
+        let specifiers =
+          match default with
+          | Some default -> import_default_specifier default :: specifiers
+          | None -> specifiers
+        in
+        let import_kind =
+          match importKind with
+          | ImportDeclaration.ImportType -> "type"
+          | ImportDeclaration.ImportTypeof -> "typeof"
+          | ImportDeclaration.ImportValue -> "value"
+        in
+        node
+          "ImportDeclaration"
+          loc
+          [
+            ("specifiers", array specifiers);
+            ("source", string_literal source);
+            ("importKind", string import_kind);
+          ]
     and expression =
-      Expression.(
-        function
-        | (loc, This) -> node "ThisExpression" loc []
-        | (loc, Super) -> node "Super" loc []
-        | (loc, Array { Array.elements; comments }) ->
-          node
-            ?comments
-            "ArrayExpression"
-            loc
-            [("elements", array_of_list (option expression_or_spread) elements)]
-        | (loc, Object { Object.properties; comments }) ->
-          node
-            ?comments
-            "ObjectExpression"
-            loc
-            [("properties", array_of_list object_property properties)]
-        | (loc, Function _function) -> function_expression (loc, _function)
-        | ( loc,
-            ArrowFunction
-              {
-                Function.params;
-                async;
-                predicate = predicate_;
-                tparams;
-                return;
-                body;
-                sig_loc = _;
-                (* TODO: arrows shouldn't have these: *)
-                id = _;
-                generator = _;
-              } ) ->
-          let (body, expression) =
-            match body with
-            | Function.BodyBlock b -> (block b, false)
-            | Function.BodyExpression expr -> (expression expr, true)
-          in
-          let return =
-            match return with
-            | Ast.Type.Missing _ -> None
-            | Ast.Type.Available t -> Some t
-          in
-          node
-            "ArrowFunctionExpression"
-            loc
-            [
-              ("id", null);
-              ("params", function_params params);
-              ("body", body);
-              ("async", bool async);
-              ("generator", bool false);
-              ("predicate", option predicate predicate_);
-              ("expression", bool expression);
-              ("returnType", option type_annotation return);
-              ("typeParameters", option type_parameter_declaration tparams);
-            ]
-        | (loc, Sequence { Sequence.expressions }) ->
-          node "SequenceExpression" loc [("expressions", array_of_list expression expressions)]
-        | (loc, Unary { Unary.operator; argument; comments }) ->
-          Unary.(
-            (match operator with
-            | Await ->
-              (* await is defined as a separate expression in ast-types
-               *
-               * TODO
-               * 1) Send a PR to ast-types
-               *    (https://github.com/benjamn/ast-types/issues/113)
-               * 2) Output a UnaryExpression
-               * 3) Modify the esprima test runner to compare AwaitExpression and
-               *    our UnaryExpression
-               * *)
-              node ?comments "AwaitExpression" loc [("argument", expression argument)]
-            | _ ->
-              let operator =
-                match operator with
-                | Minus -> "-"
-                | Plus -> "+"
-                | Not -> "!"
-                | BitNot -> "~"
-                | Typeof -> "typeof"
-                | Void -> "void"
-                | Delete -> "delete"
-                | Await -> failwith "matched above"
-              in
-              node
-                ?comments
-                "UnaryExpression"
-                loc
-                [
-                  ("operator", string operator);
-                  ("prefix", bool true);
-                  ("argument", expression argument);
-                ]))
-        | (loc, Binary { Binary.left; operator; right }) ->
-          node
-            "BinaryExpression"
-            loc
-            [
-              ("operator", string (Flow_ast_utils.string_of_binary_operator operator));
-              ("left", expression left);
-              ("right", expression right);
-            ]
-        | (loc, TypeCast { TypeCast.expression = expr; annot }) ->
-          node
-            "TypeCastExpression"
-            loc
-            [("expression", expression expr); ("typeAnnotation", type_annotation annot)]
-        | (loc, Assignment { Assignment.left; operator; right }) ->
-          let operator =
-            match operator with
-            | None -> "="
-            | Some op -> Flow_ast_utils.string_of_assignment_operator op
-          in
-          node
-            "AssignmentExpression"
-            loc
-            [("operator", string operator); ("left", pattern left); ("right", expression right)]
-        | (loc, Update { Update.operator; argument; prefix }) ->
-          let operator =
-            match operator with
-            | Update.Increment -> "++"
-            | Update.Decrement -> "--"
-          in
-          node
-            "UpdateExpression"
-            loc
-            [
-              ("operator", string operator);
-              ("argument", expression argument);
-              ("prefix", bool prefix);
-            ]
-        | (loc, Logical { Logical.left; operator; right }) ->
-          let operator =
-            match operator with
-            | Logical.Or -> "||"
-            | Logical.And -> "&&"
-            | Logical.NullishCoalesce -> "??"
-          in
-          node
-            "LogicalExpression"
-            loc
-            [("operator", string operator); ("left", expression left); ("right", expression right)]
-        | (loc, Conditional { Conditional.test; consequent; alternate }) ->
-          node
-            "ConditionalExpression"
-            loc
-            [
-              ("test", expression test);
-              ("consequent", expression consequent);
-              ("alternate", expression alternate);
-            ]
-        | (loc, New { New.callee; targs; arguments; comments }) ->
-          node
-            ?comments
-            "NewExpression"
-            loc
-            [
-              ("callee", expression callee);
-              ("typeArguments", option call_type_args targs);
-              ("arguments", array_of_list expression_or_spread arguments);
-            ]
-        | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
-        | (loc, OptionalCall { OptionalCall.call; optional }) ->
-          node
-            "OptionalCallExpression"
-            loc
-            (call_node_properties call @ [("optional", bool optional)])
-        | (loc, Member member) -> node "MemberExpression" loc (member_node_properties member)
-        | (loc, OptionalMember { OptionalMember.member; optional }) ->
-          node
-            "OptionalMemberExpression"
-            loc
-            (member_node_properties member @ [("optional", bool optional)])
-        | (loc, Yield { Yield.argument; delegate; comments }) ->
-          node
-            ?comments
-            "YieldExpression"
-            loc
-            [("argument", option expression argument); ("delegate", bool delegate)]
-        | (loc, Comprehension { Comprehension.blocks; filter }) ->
-          node
-            "ComprehensionExpression"
-            loc
-            [
-              ("blocks", array_of_list comprehension_block blocks);
-              ("filter", option expression filter);
-            ]
-        | (loc, Generator { Generator.blocks; filter }) ->
-          node
-            "GeneratorExpression"
-            loc
-            [
-              ("blocks", array_of_list comprehension_block blocks);
-              ("filter", option expression filter);
-            ]
-        | (_loc, Identifier id) -> identifier id
-        | (loc, Literal ({ Literal.value = Ast.Literal.BigInt _; _ } as lit)) ->
-          bigint_literal (loc, lit)
-        | (loc, Literal lit) -> literal (loc, lit)
-        | (loc, TemplateLiteral lit) -> template_literal (loc, lit)
-        | (loc, TaggedTemplate tagged) -> tagged_template (loc, tagged)
-        | (loc, Class c) -> class_expression (loc, c)
-        | (loc, JSXElement element) -> jsx_element (loc, element)
-        | (loc, JSXFragment fragment) -> jsx_fragment (loc, fragment)
-        | (loc, MetaProperty { MetaProperty.meta; property }) ->
-          node "MetaProperty" loc [("meta", identifier meta); ("property", identifier property)]
-        | (loc, Import arg) ->
-          node
-            "CallExpression"
-            loc
-            [
-              ("callee", node "Import" (Loc.btwn loc (fst arg)) []);
-              ("arguments", array_of_list expression [arg]);
-            ])
+      let open Expression in
+      function
+      | (loc, This) -> node "ThisExpression" loc []
+      | (loc, Super) -> node "Super" loc []
+      | (loc, Array { Array.elements; comments }) ->
+        node
+          ?comments
+          "ArrayExpression"
+          loc
+          [("elements", array_of_list (option expression_or_spread) elements)]
+      | (loc, Object { Object.properties; comments }) ->
+        node
+          ?comments
+          "ObjectExpression"
+          loc
+          [("properties", array_of_list object_property properties)]
+      | (loc, Function _function) -> function_expression (loc, _function)
+      | ( loc,
+          ArrowFunction
+            {
+              Function.params;
+              async;
+              predicate = predicate_;
+              tparams;
+              return;
+              body;
+              sig_loc = _;
+              (* TODO: arrows shouldn't have these: *)
+              id = _;
+              generator = _;
+            } ) ->
+        let (body, expression) =
+          match body with
+          | Function.BodyBlock b -> (block b, false)
+          | Function.BodyExpression expr -> (expression expr, true)
+        in
+        let return =
+          match return with
+          | Ast.Type.Missing _ -> None
+          | Ast.Type.Available t -> Some t
+        in
+        node
+          "ArrowFunctionExpression"
+          loc
+          [
+            ("id", null);
+            ("params", function_params params);
+            ("body", body);
+            ("async", bool async);
+            ("generator", bool false);
+            ("predicate", option predicate predicate_);
+            ("expression", bool expression);
+            ("returnType", option type_annotation return);
+            ("typeParameters", option type_parameter_declaration tparams);
+          ]
+      | (loc, Sequence { Sequence.expressions }) ->
+        node "SequenceExpression" loc [("expressions", array_of_list expression expressions)]
+      | (loc, Unary { Unary.operator; argument; comments }) ->
+        Unary.(
+          (match operator with
+          | Await ->
+            (* await is defined as a separate expression in ast-types
+             *
+             * TODO
+             * 1) Send a PR to ast-types
+             *    (https://github.com/benjamn/ast-types/issues/113)
+             * 2) Output a UnaryExpression
+             * 3) Modify the esprima test runner to compare AwaitExpression and
+             *    our UnaryExpression
+             * *)
+            node ?comments "AwaitExpression" loc [("argument", expression argument)]
+          | _ ->
+            let operator =
+              match operator with
+              | Minus -> "-"
+              | Plus -> "+"
+              | Not -> "!"
+              | BitNot -> "~"
+              | Typeof -> "typeof"
+              | Void -> "void"
+              | Delete -> "delete"
+              | Await -> failwith "matched above"
+            in
+            node
+              ?comments
+              "UnaryExpression"
+              loc
+              [
+                ("operator", string operator);
+                ("prefix", bool true);
+                ("argument", expression argument);
+              ]))
+      | (loc, Binary { Binary.left; operator; right }) ->
+        node
+          "BinaryExpression"
+          loc
+          [
+            ("operator", string (Flow_ast_utils.string_of_binary_operator operator));
+            ("left", expression left);
+            ("right", expression right);
+          ]
+      | (loc, TypeCast { TypeCast.expression = expr; annot }) ->
+        node
+          "TypeCastExpression"
+          loc
+          [("expression", expression expr); ("typeAnnotation", type_annotation annot)]
+      | (loc, Assignment { Assignment.left; operator; right }) ->
+        let operator =
+          match operator with
+          | None -> "="
+          | Some op -> Flow_ast_utils.string_of_assignment_operator op
+        in
+        node
+          "AssignmentExpression"
+          loc
+          [("operator", string operator); ("left", pattern left); ("right", expression right)]
+      | (loc, Update { Update.operator; argument; prefix }) ->
+        let operator =
+          match operator with
+          | Update.Increment -> "++"
+          | Update.Decrement -> "--"
+        in
+        node
+          "UpdateExpression"
+          loc
+          [
+            ("operator", string operator); ("argument", expression argument); ("prefix", bool prefix);
+          ]
+      | (loc, Logical { Logical.left; operator; right }) ->
+        let operator =
+          match operator with
+          | Logical.Or -> "||"
+          | Logical.And -> "&&"
+          | Logical.NullishCoalesce -> "??"
+        in
+        node
+          "LogicalExpression"
+          loc
+          [("operator", string operator); ("left", expression left); ("right", expression right)]
+      | (loc, Conditional { Conditional.test; consequent; alternate }) ->
+        node
+          "ConditionalExpression"
+          loc
+          [
+            ("test", expression test);
+            ("consequent", expression consequent);
+            ("alternate", expression alternate);
+          ]
+      | (loc, New { New.callee; targs; arguments; comments }) ->
+        node
+          ?comments
+          "NewExpression"
+          loc
+          [
+            ("callee", expression callee);
+            ("typeArguments", option call_type_args targs);
+            ("arguments", array_of_list expression_or_spread arguments);
+          ]
+      | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
+      | (loc, OptionalCall { OptionalCall.call; optional }) ->
+        node "OptionalCallExpression" loc (call_node_properties call @ [("optional", bool optional)])
+      | (loc, Member member) -> node "MemberExpression" loc (member_node_properties member)
+      | (loc, OptionalMember { OptionalMember.member; optional }) ->
+        node
+          "OptionalMemberExpression"
+          loc
+          (member_node_properties member @ [("optional", bool optional)])
+      | (loc, Yield { Yield.argument; delegate; comments }) ->
+        node
+          ?comments
+          "YieldExpression"
+          loc
+          [("argument", option expression argument); ("delegate", bool delegate)]
+      | (loc, Comprehension { Comprehension.blocks; filter }) ->
+        node
+          "ComprehensionExpression"
+          loc
+          [
+            ("blocks", array_of_list comprehension_block blocks);
+            ("filter", option expression filter);
+          ]
+      | (loc, Generator { Generator.blocks; filter }) ->
+        node
+          "GeneratorExpression"
+          loc
+          [
+            ("blocks", array_of_list comprehension_block blocks);
+            ("filter", option expression filter);
+          ]
+      | (_loc, Identifier id) -> identifier id
+      | (loc, Literal ({ Literal.value = Ast.Literal.BigInt _; _ } as lit)) ->
+        bigint_literal (loc, lit)
+      | (loc, Literal lit) -> literal (loc, lit)
+      | (loc, TemplateLiteral lit) -> template_literal (loc, lit)
+      | (loc, TaggedTemplate tagged) -> tagged_template (loc, tagged)
+      | (loc, Class c) -> class_expression (loc, c)
+      | (loc, JSXElement element) -> jsx_element (loc, element)
+      | (loc, JSXFragment fragment) -> jsx_fragment (loc, fragment)
+      | (loc, MetaProperty { MetaProperty.meta; property }) ->
+        node "MetaProperty" loc [("meta", identifier meta); ("property", identifier property)]
+      | (loc, Import arg) ->
+        node
+          "CallExpression"
+          loc
+          [
+            ("callee", node "Import" (Loc.btwn loc (fst arg)) []);
+            ("arguments", array_of_list expression [arg]);
+          ]
     and function_declaration
         ( loc,
           {
@@ -989,14 +976,14 @@ with type t = Impl.t = struct
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | None -> pattern argument
     and function_params =
-      Ast.Function.Params.(
-        function
-        | (_, { params; rest = Some (rest_loc, { Function.RestParam.argument }) }) ->
-          let rest = node "RestElement" rest_loc [("argument", pattern argument)] in
-          let rev_params = List.rev_map function_param params in
-          let params = List.rev (rest :: rev_params) in
-          array params
-        | (_, { params; rest = None }) -> array_of_list function_param params)
+      let open Ast.Function.Params in
+      function
+      | (_, { params; rest = Some (rest_loc, { Function.RestParam.argument }) }) ->
+        let rest = node "RestElement" rest_loc [("argument", pattern argument)] in
+        let rev_params = List.rev_map function_param params in
+        let params = List.rev (rest :: rev_params) in
+        array params
+      | (_, { params; rest = None }) -> array_of_list function_param params
     and array_pattern_element =
       Pattern.Array.(
         function
@@ -1071,11 +1058,11 @@ with type t = Impl.t = struct
         | RestProperty (loc, { RestProperty.argument }) ->
           node "RestProperty" loc [("argument", pattern argument)])
     and expression_or_spread =
-      Expression.(
-        function
-        | Expression expr -> expression expr
-        | Spread (loc, { SpreadElement.argument }) ->
-          node "SpreadElement" loc [("argument", expression argument)])
+      let open Expression in
+      function
+      | Expression expr -> expression expr
+      | Spread (loc, { SpreadElement.argument }) ->
+        node "SpreadElement" loc [("argument", expression argument)]
     and comprehension_block (loc, { Expression.Comprehension.Block.left; right; each }) =
       node
         "ComprehensionBlock"
@@ -1555,13 +1542,13 @@ with type t = Impl.t = struct
         in
         node _type loc [("value", string value)])
     and predicate (loc, p) =
-      Ast.Type.Predicate.(
-        let (_type, value) =
-          match p with
-          | Declared e -> ("DeclaredPredicate", [("value", expression e)])
-          | Inferred -> ("InferredPredicate", [])
-        in
-        node _type loc value)
+      let open Ast.Type.Predicate in
+      let (_type, value) =
+        match p with
+        | Declared e -> ("DeclaredPredicate", [("value", expression e)])
+        | Inferred -> ("InferredPredicate", [])
+      in
+      node _type loc value
     and call_node_properties { Expression.Call.callee; targs; arguments } =
       [
         ("callee", expression callee);

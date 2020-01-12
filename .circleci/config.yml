@@ -10,6 +10,51 @@ aliases:
       tags:
         only: /.*/
 
+orbs:
+  win: circleci/windows@2.2.0
+
+  opam_windows:
+    commands:
+      install:
+        steps:
+          - run:
+              name: Install dependencies
+              command: |
+                choco install --no-progress cygwin
+                if (-not $?) { throw "Failed to install cygwin" }
+                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core --source=cygwin
+                if (-not $?) { throw "Failed to install deps from cygwin" }
+          - run:
+              name: Install opam
+              command: |
+                $install_dir = "$Env:TEMP\flow\opam_installer"
+                New-Item -ItemType Directory $install_dir
+                echo "Downloading opam64.tar.xz"
+                (New-Object System.Net.WebClient).DownloadFile("https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz", "$install_dir\opam64.tar.xz")
+                echo "Extracting opam64.tar.xz"
+                $out_dir = "$install_dir".Replace("\", "/")
+                C:\tools\cygwin\bin\tar.exe -x --force-local -f $install_dir\opam64.tar.xz -C "$out_dir"
+                echo "Installing opam"
+                C:\tools\cygwin\bin\bash.exe -l "$install_dir\opam64\install.sh"
+                echo "Done"
+      init:
+        steps:
+          - run:
+              name: Init opam
+              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              command: |
+                export PATH=$PATH:/usr/local/bin:/usr/bin
+                [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
+      create_switch:
+        steps:
+          - run:
+              name: Create opam switch
+              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              environment:
+                PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+              command: |
+                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes
+
 executors:
   linux-opam:
     docker:
@@ -207,6 +252,50 @@ jobs:
           path: src/parser/dist/libflowparser.zip
           destination: libflowparser-osx.zip
 
+  build_win:
+    executor: win/default
+    environment:
+      - FLOW_TMP_DIR: 'C:\tmp\flow'
+    steps:
+      - run:
+          name: Set up workspace
+          command: |
+            New-Item -ItemType Directory $Env:FLOW_TMP_DIR
+      - opam_windows/install
+      - run:
+          name: Calculate opam version
+          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          command: /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamversion
+      - checkout
+      - restore_cache:
+          keys:
+          - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+      - opam_windows/init
+      - opam_windows/create_switch
+      - save_cache:
+          key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          paths:
+            - C:/tools/cygwin/home/circleci/.opam
+            - _opam
+      - run:
+          name: Build flow.exe
+          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          environment:
+            PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+          command: |
+             eval $(opam env)
+             make bin/flow.exe dist/flow.zip
+             mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
+             cp dist/flow.zip dist/flow-win64.zip
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/win64/flow.exe
+            - dist/flow-win64.zip
+      - store_artifacts:
+          path: .\dist\flow-win64.zip
+          destination: flow-win64.zip
+
   runtests_linux:
     executor: linux-node
     environment:
@@ -250,6 +339,25 @@ jobs:
       - run:
           name: Run tool tests
           command: ./tool test --bin bin/macos/flow | cat
+
+  tool_test_win:
+    executor: win/default
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: Install Yarn
+          command: choco install yarn
+      - run:
+          name: Install tool deps from yarn
+          command: |
+            cd packages/flow-dev-tools
+            yarn install
+      - run:
+          name: Run tool tests
+          shell: bash
+          command: ./tool test --bin artifacts/bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
 
   npm_pack:
     executor: linux-node
@@ -396,6 +504,8 @@ workflows:
           <<: *run_on_tags
           requires:
             - checkout
+      - build_win:
+          <<: *run_on_tags
       - runtests_linux:
           <<: *run_on_tags
           requires:
@@ -412,6 +522,10 @@ workflows:
           <<: *run_on_tags
           requires:
             - build_macos
+      - tool_test_win:
+          <<: *run_on_tags
+          requires:
+            - build_win
       - npm_pack:
           <<: *run_on_tags
           requires:

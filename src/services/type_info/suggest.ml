@@ -58,77 +58,77 @@ class visitor ~ty_query =
       | Query_types.FailureNoMatch -> this#warn blame_loc MissingFromTypeTables
 
     method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
-      Ast.Expression.(
-        let expr' = super#expression expr in
-        match expr' with
-        | (loc, Function x) ->
-          Flow_ast_mapper.id (this#callable_return loc) x expr' (fun x -> (loc, Function x))
-        | (loc, ArrowFunction x) ->
-          Flow_ast_mapper.id (this#callable_return loc) x expr' (fun x -> (loc, ArrowFunction x))
-        | _ -> expr')
+      let open Ast.Expression in
+      let expr' = super#expression expr in
+      match expr' with
+      | (loc, Function x) ->
+        Flow_ast_mapper.id (this#callable_return loc) x expr' (fun x -> (loc, Function x))
+      | (loc, ArrowFunction x) ->
+        Flow_ast_mapper.id (this#callable_return loc) x expr' (fun x -> (loc, ArrowFunction x))
+      | _ -> expr'
 
     method! statement (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
-      Ast.Statement.(
-        let stmt' = super#statement stmt in
-        match stmt' with
-        | (loc, FunctionDeclaration x) ->
-          Flow_ast_mapper.id (this#callable_return loc) x stmt' (fun x ->
-              (loc, FunctionDeclaration x))
-        | _ -> stmt')
+      let open Ast.Statement in
+      let stmt' = super#statement stmt in
+      match stmt' with
+      | (loc, FunctionDeclaration x) ->
+        Flow_ast_mapper.id (this#callable_return loc) x stmt' (fun x ->
+            (loc, FunctionDeclaration x))
+      | _ -> stmt'
 
     method! object_property (prop : (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
-      Ast.Expression.Object.Property.(
-        let prop' = super#object_property prop in
-        match prop' with
-        | (loc, Method { value = (fn_loc, fn); key }) ->
-          (* NOTE here we are indexing the type tables through the location of
+      let open Ast.Expression.Object.Property in
+      let prop' = super#object_property prop in
+      match prop' with
+      | (loc, Method { value = (fn_loc, fn); key }) ->
+        (* NOTE here we are indexing the type tables through the location of
          the entire method. The coverage tables should account for that.
          Alternatively, we could have used the location of the identifier,
          that gets logged in the type_info tables. (This would require some
          deeper unfolding.) For the moment we need both tables, but revisit
          this if this changes.
       *)
-          let key' = this#object_key key in
-          let fn' = this#callable_return fn_loc fn in
-          if key == key' && fn == fn' then
-            prop'
-          else
-            (loc, Method { key = key'; value = (fn_loc, fn') })
-        | _ -> prop')
+        let key' = this#object_key key in
+        let fn' = this#callable_return fn_loc fn in
+        if key == key' && fn == fn' then
+          prop'
+        else
+          (loc, Method { key = key'; value = (fn_loc, fn') })
+      | _ -> prop'
 
     method! class_method loc (meth : (Loc.t, Loc.t) Ast.Class.Method.t') =
-      Ast.Class.Method.(
-        Ast.Expression.Object.Property.(
-          let meth' = super#class_method loc meth in
-          let { key; value = (loc, func); _ } = meth' in
-          match key with
-          | Identifier (id_loc, _) ->
-            let func' = this#callable_return id_loc func in
-            { meth' with value = (loc, func') }
-          | _ -> meth'))
+      let open Ast.Class.Method in
+      let open Ast.Expression.Object.Property in
+      let meth' = super#class_method loc meth in
+      let { key; value = (loc, func); _ } = meth' in
+      match key with
+      | Identifier (id_loc, _) ->
+        let func' = this#callable_return id_loc func in
+        { meth' with value = (loc, func') }
+      | _ -> meth'
 
     method! function_param_pattern (patt : (Loc.t, Loc.t) Ast.Pattern.t) =
-      Ast.Pattern.(
-        Identifier.(
-          let patt' = super#function_param_pattern patt in
-          match patt' with
-          | (loc, Identifier ({ annot = Ast.Type.Missing _; _ } as id)) ->
-            begin
-              match this#inferred_type loc with
-              | Some annot -> (loc, Identifier { id with annot = Ast.Type.Available annot })
-              | None -> patt'
-            end
-          | _ -> patt'))
+      let open Ast.Pattern in
+      Identifier.(
+        let patt' = super#function_param_pattern patt in
+        match patt' with
+        | (loc, Identifier ({ annot = Ast.Type.Missing _; _ } as id)) ->
+          begin
+            match this#inferred_type loc with
+            | Some annot -> (loc, Identifier { id with annot = Ast.Type.Available annot })
+            | None -> patt'
+          end
+        | _ -> patt')
 
     method callable_return loc func =
-      Ast.Function.(
-        let { return; _ } = func in
-        match return with
-        | Ast.Type.Available _ -> func
-        | Ast.Type.Missing missing_loc ->
-          begin
-            match this#inferred_type ~blame_loc:loc ~annotate_bottom:true missing_loc with
-            | Some annot -> { func with return = Ast.Type.Available annot }
-            | None -> func
-          end)
+      let open Ast.Function in
+      let { return; _ } = func in
+      match return with
+      | Ast.Type.Available _ -> func
+      | Ast.Type.Missing missing_loc ->
+        begin
+          match this#inferred_type ~blame_loc:loc ~annotate_bottom:true missing_loc with
+          | Some annot -> { func with return = Ast.Type.Available annot }
+          | None -> func
+        end
   end

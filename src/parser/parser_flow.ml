@@ -170,90 +170,90 @@ module rec Parse : PARSER = struct
 
   and statement_list_item ?(decorators = []) env =
     if not (Peek.is_class env) then error_on_decorators env decorators;
-    Statement.(
-      match Peek.token env with
-      (* Remember kids, these look like statements but they're not
+    let open Statement in
+    match Peek.token env with
+    (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
-      | T_LET -> let_ env
-      | T_CONST -> const env
-      | _ when Peek.is_function env -> Declaration._function env
-      | _ when Peek.is_class env -> class_declaration env decorators
-      | T_INTERFACE -> interface env
-      | T_DECLARE -> declare env
-      | T_TYPE -> type_alias env
-      | T_OPAQUE -> opaque_type env
-      | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
-      | _ -> statement env)
+    | T_LET -> let_ env
+    | T_CONST -> const env
+    | _ when Peek.is_function env -> Declaration._function env
+    | _ when Peek.is_class env -> class_declaration env decorators
+    | T_INTERFACE -> interface env
+    | T_DECLARE -> declare env
+    | T_TYPE -> type_alias env
+    | T_OPAQUE -> opaque_type env
+    | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
+    | _ -> statement env
 
   and statement env =
-    Statement.(
-      match Peek.token env with
-      | T_EOF ->
-        error_unexpected ~expected:"the start of a statement" env;
-        (Peek.loc env, Ast.Statement.Empty)
-      | T_SEMICOLON -> empty env
-      | T_LCURLY -> block env
-      | T_VAR -> var env
-      | T_BREAK -> break env
-      | T_CONTINUE -> continue env
-      | T_DEBUGGER -> debugger env
-      | T_DO -> do_while env
-      | T_FOR -> for_ env
-      | T_IF -> if_ env
-      | T_RETURN -> return env
-      | T_SWITCH -> switch env
-      | T_THROW -> throw env
-      | T_TRY -> try_ env
-      | T_WHILE -> while_ env
-      | T_WITH -> with_ env
-      (* If we see an else then it's definitely an error, but we can probably
-       * assume that this is a malformed if statement that is missing the if *)
-      | T_ELSE -> if_ env
-      (* There are a bunch of tokens that aren't the start of any valid
-       * statement. We list them here in order to skip over them, rather than
-       * getting stuck *)
-      | T_COLON
-      | T_RPAREN
-      | T_RCURLY
-      | T_RBRACKET
-      | T_COMMA
-      | T_PERIOD
-      | T_PLING_PERIOD
-      | T_ARROW
-      | T_IN
-      | T_INSTANCEOF
-      | T_CATCH
-      | T_FINALLY
-      | T_CASE
-      | T_DEFAULT
-      | T_EXTENDS
-      | T_STATIC
-      | T_EXPORT
-      (* TODO *)
-      | T_ELLIPSIS ->
-        error_unexpected ~expected:"the start of a statement" env;
-        Eat.token env;
-        statement env
-      (* The rest of these patterns handle ExpressionStatement and its negative
+    let open Statement in
+    match Peek.token env with
+    | T_EOF ->
+      error_unexpected ~expected:"the start of a statement" env;
+      (Peek.loc env, Ast.Statement.Empty)
+    | T_SEMICOLON -> empty env
+    | T_LCURLY -> block env
+    | T_VAR -> var env
+    | T_BREAK -> break env
+    | T_CONTINUE -> continue env
+    | T_DEBUGGER -> debugger env
+    | T_DO -> do_while env
+    | T_FOR -> for_ env
+    | T_IF -> if_ env
+    | T_RETURN -> return env
+    | T_SWITCH -> switch env
+    | T_THROW -> throw env
+    | T_TRY -> try_ env
+    | T_WHILE -> while_ env
+    | T_WITH -> with_ env
+    (* If we see an else then it's definitely an error, but we can probably
+     * assume that this is a malformed if statement that is missing the if *)
+    | T_ELSE -> if_ env
+    (* There are a bunch of tokens that aren't the start of any valid
+     * statement. We list them here in order to skip over them, rather than
+     * getting stuck *)
+    | T_COLON
+    | T_RPAREN
+    | T_RCURLY
+    | T_RBRACKET
+    | T_COMMA
+    | T_PERIOD
+    | T_PLING_PERIOD
+    | T_ARROW
+    | T_IN
+    | T_INSTANCEOF
+    | T_CATCH
+    | T_FINALLY
+    | T_CASE
+    | T_DEFAULT
+    | T_EXTENDS
+    | T_STATIC
+    | T_EXPORT
+    (* TODO *)
+    | T_ELLIPSIS ->
+      error_unexpected ~expected:"the start of a statement" env;
+      Eat.token env;
+      statement env
+    (* The rest of these patterns handle ExpressionStatement and its negative
        lookaheads, which prevent ambiguities.
        See https://tc39.github.io/ecma262/#sec-expression-statement *)
-      | _ when Peek.is_function env ->
-        let func = Declaration._function env in
-        function_as_statement_error_at env (fst func);
-        func
-      | T_LET when Peek.ith_token ~i:1 env = T_LBRACKET ->
-        (* `let [foo]` is ambiguous: either a let binding pattern, or a
+    | _ when Peek.is_function env ->
+      let func = Declaration._function env in
+      function_as_statement_error_at env (fst func);
+      func
+    | T_LET when Peek.ith_token ~i:1 env = T_LBRACKET ->
+      (* `let [foo]` is ambiguous: either a let binding pattern, or a
            member expression, so it is banned. *)
-        let loc = Loc.btwn (Peek.loc env) (Peek.ith_loc ~i:1 env) in
-        error_at env (loc, Parse_error.AmbiguousLetBracket);
-        Statement.expression env
-      (* recover as a member expression *)
-      | _ when Peek.is_identifier env -> maybe_labeled env
-      | _ when Peek.is_class env ->
-        error_unexpected env;
-        Eat.token env;
-        Statement.expression env
-      | _ -> Statement.expression env)
+      let loc = Loc.btwn (Peek.loc env) (Peek.ith_loc ~i:1 env) in
+      error_at env (loc, Parse_error.AmbiguousLetBracket);
+      Statement.expression env
+    (* recover as a member expression *)
+    | _ when Peek.is_identifier env -> maybe_labeled env
+    | _ when Peek.is_class env ->
+      error_unexpected env;
+      Eat.token env;
+      Statement.expression env
+    | _ -> Statement.expression env
 
   and expression env =
     let expr = Expression.assignment env in

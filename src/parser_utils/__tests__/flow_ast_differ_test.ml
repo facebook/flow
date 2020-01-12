@@ -31,44 +31,44 @@ class useless_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
-      Ast.Literal.(
-        match expr.value with
-        | Number 4.0 ->
-          { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
-        | _ -> expr)
+      let open Ast.Literal in
+      match expr.value with
+      | Number 4.0 ->
+        { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
+      | _ -> expr
 
     method! string_literal_type _loc (lit : Ast.StringLiteral.t) =
-      Ast.StringLiteral.(
-        let { value; _ } = lit in
-        if String.equal "RenameSL" value then
-          { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\"" }
-        else
-          lit)
+      let open Ast.StringLiteral in
+      let { value; _ } = lit in
+      if String.equal "RenameSL" value then
+        { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\"" }
+      else
+        lit
 
     method! logical loc (expr : (Loc.t, Loc.t) Ast.Expression.Logical.t) =
-      Ast.Expression.Logical.(
-        let expr = super#logical loc expr in
-        let { operator; _ } = expr in
-        match operator with
-        | NullishCoalesce -> { expr with operator = Or }
-        | _ -> expr)
+      let open Ast.Expression.Logical in
+      let expr = super#logical loc expr in
+      let { operator; _ } = expr in
+      match operator with
+      | NullishCoalesce -> { expr with operator = Or }
+      | _ -> expr
 
     method! binary loc (expr : (Loc.t, Loc.t) Ast.Expression.Binary.t) =
-      Ast.Expression.Binary.(
-        let expr = super#binary loc expr in
-        let { operator; _ } = expr in
-        match operator with
-        | Plus -> { expr with operator = Minus }
-        | Mult -> { expr with operator = Plus }
-        | _ -> expr)
+      let open Ast.Expression.Binary in
+      let expr = super#binary loc expr in
+      let { operator; _ } = expr in
+      match operator with
+      | Plus -> { expr with operator = Minus }
+      | Mult -> { expr with operator = Plus }
+      | _ -> expr
 
     method! unary_expression loc (expr : (Loc.t, Loc.t) Ast.Expression.Unary.t) =
-      Ast.Expression.Unary.(
-        let expr = super#unary_expression loc expr in
-        let { operator; _ } = expr in
-        match operator with
-        | Minus -> expr
-        | _ -> { expr with operator = Minus })
+      let open Ast.Expression.Unary in
+      let expr = super#unary_expression loc expr in
+      let { operator; _ } = expr in
+      match operator with
+      | Minus -> expr
+      | _ -> { expr with operator = Minus }
 
     method! identifier id =
       let (loc, { Ast.Identifier.name; comments = _ }) = id in
@@ -79,121 +79,115 @@ class useless_mapper =
       | _ -> id
 
     method! variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
-      Ast.Statement.VariableDeclaration.(
-        let decl = super#variable_declaration loc decl in
-        let { declarations; kind } = decl in
-        if kind = Var then
-          { declarations; kind = Const }
-        else
-          decl)
+      let open Ast.Statement.VariableDeclaration in
+      let decl = super#variable_declaration loc decl in
+      let { declarations; kind } = decl in
+      if kind = Var then
+        { declarations; kind = Const }
+      else
+        decl
 
     method! template_literal_element (elem : 'loc Ast.Expression.TemplateLiteral.Element.t) =
-      Ast.Expression.TemplateLiteral.Element.(
-        let (loc, { value; tail }) = elem in
-        if value.raw = "rename" then
-          (loc, { value = { raw = "gotRenamed"; cooked = "gotRenamed" }; tail })
-        else
-          elem)
+      let open Ast.Expression.TemplateLiteral.Element in
+      let (loc, { value; tail }) = elem in
+      if value.raw = "rename" then
+        (loc, { value = { raw = "gotRenamed"; cooked = "gotRenamed" }; tail })
+      else
+        elem
 
     method! type_ (annot : (Loc.t, Loc.t) Type.t) =
-      Ast.NumberLiteral.(
-        let annot = super#type_ annot in
-        let (loc, typ) = annot in
-        match typ with
-        | Type.Number -> (loc, Type.String)
-        | Type.NumberLiteral _ -> (loc, Type.NumberLiteral { value = 4.0; raw = "4.0" })
-        | _ -> annot)
+      let open Ast.NumberLiteral in
+      let annot = super#type_ annot in
+      let (loc, typ) = annot in
+      match typ with
+      | Type.Number -> (loc, Type.String)
+      | Type.NumberLiteral _ -> (loc, Type.NumberLiteral { value = 4.0; raw = "4.0" })
+      | _ -> annot
 
     method! jsx_element _loc (elem : (Loc.t, Loc.t) Ast.JSX.element) =
-      Ast.JSX.(
-        let { openingElement = (_, open_elem) as openingElement; closingElement; children } =
-          elem
-        in
-        let openingElement' = this#jsx_opening_element openingElement in
-        let closingElement' =
-          let (loc, open_elem') = openingElement' in
-          if open_elem'.Opening.selfClosing then
-            None
-          (* if selfClosing changed from true to false, construct a closing element *)
-          else if open_elem.Opening.selfClosing then
-            Some (loc, { Closing.name = open_elem'.Opening.name })
-          else
-            Flow_ast_mapper.map_opt super#jsx_closing_element closingElement
-        in
-        let children' = this#jsx_children children in
-        if
-          openingElement == openingElement'
-          && closingElement == closingElement'
-          && children == children'
-        then
-          elem
+      let open Ast.JSX in
+      let { openingElement = (_, open_elem) as openingElement; closingElement; children } = elem in
+      let openingElement' = this#jsx_opening_element openingElement in
+      let closingElement' =
+        let (loc, open_elem') = openingElement' in
+        if open_elem'.Opening.selfClosing then
+          None
+        (* if selfClosing changed from true to false, construct a closing element *)
+        else if open_elem.Opening.selfClosing then
+          Some (loc, { Closing.name = open_elem'.Opening.name })
         else
-          {
-            openingElement = openingElement';
-            closingElement = closingElement';
-            children = children';
-          })
+          Flow_ast_mapper.map_opt super#jsx_closing_element closingElement
+      in
+      let children' = this#jsx_children children in
+      if
+        openingElement == openingElement'
+        && closingElement == closingElement'
+        && children == children'
+      then
+        elem
+      else
+        { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
     method! jsx_opening_element (elem : (Loc.t, Loc.t) Ast.JSX.Opening.t) =
-      Ast.JSX.Opening.(
-        let (loc, { name; selfClosing; attributes }) = elem in
-        let name' = this#jsx_name name in
-        let selfClosing' =
-          match name' with
-          | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name = id_name }) ->
-            if id_name = "selfClosing" then
-              true
-            else if id_name = "notSelfClosing" then
-              false
-            else
-              selfClosing
-          | _ -> selfClosing
-        in
-        let attributes' = ListUtils.ident_map super#jsx_opening_attribute attributes in
-        if name == name' && selfClosing == selfClosing' && attributes == attributes' then
-          elem
-        else
-          (loc, { name = name'; selfClosing = selfClosing'; attributes = attributes' }))
+      let open Ast.JSX.Opening in
+      let (loc, { name; selfClosing; attributes }) = elem in
+      let name' = this#jsx_name name in
+      let selfClosing' =
+        match name' with
+        | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name = id_name }) ->
+          if id_name = "selfClosing" then
+            true
+          else if id_name = "notSelfClosing" then
+            false
+          else
+            selfClosing
+        | _ -> selfClosing
+      in
+      let attributes' = ListUtils.ident_map super#jsx_opening_attribute attributes in
+      if name == name' && selfClosing == selfClosing' && attributes == attributes' then
+        elem
+      else
+        (loc, { name = name'; selfClosing = selfClosing'; attributes = attributes' })
 
     method! jsx_identifier (id : Loc.t Ast.JSX.Identifier.t) =
-      Ast.JSX.Identifier.(
-        let (loc, { name }) = id in
-        match name with
-        | "rename" -> (loc, { name = "gotRenamed" })
-        | "Rename" -> (loc, { name = "GotRenamed" })
-        | "RENAME" -> (loc, { name = "GOT_RENAMED" })
-        | _ -> id)
+      let open Ast.JSX.Identifier in
+      let (loc, { name }) = id in
+      match name with
+      | "rename" -> (loc, { name = "gotRenamed" })
+      | "Rename" -> (loc, { name = "GotRenamed" })
+      | "RENAME" -> (loc, { name = "GOT_RENAMED" })
+      | _ -> id
 
     method! jsx_attribute (attr : (Loc.t, Loc.t) Ast.JSX.Attribute.t) =
-      Ast.JSX.Attribute.(
-        let (loc, { name; value }) = attr in
-        let name' =
-          match name with
-          | Identifier id -> Identifier (this#jsx_identifier id)
-          | _ -> name
-        in
-        let value' = Flow_ast_mapper.map_opt super#jsx_attribute_value value in
-        if name == name' && value == value' then
-          attr
-        else
-          (loc, { name = name'; value = value' }))
+      let open Ast.JSX.Attribute in
+      let (loc, { name; value }) = attr in
+      let name' =
+        match name with
+        | Identifier id -> Identifier (this#jsx_identifier id)
+        | _ -> name
+      in
+      let value' = Flow_ast_mapper.map_opt super#jsx_attribute_value value in
+      if name == name' && value == value' then
+        attr
+      else
+        (loc, { name = name'; value = value' })
 
     method! jsx_child (child : (Loc.t, Loc.t) Ast.JSX.child) =
-      Ast.JSX.(
-        match child with
-        | (loc, Text txt) ->
-          let { Text.value; _ } = txt in
-          if value = "rename" then
-            (loc, Text { Text.value = "gotRenamed"; Text.raw = "gotRenamed" })
-          else
-            child
-        | _ -> super#jsx_child child)
+      let open Ast.JSX in
+      match child with
+      | (loc, Text txt) ->
+        let { Text.value; _ } = txt in
+        if value = "rename" then
+          (loc, Text { Text.value = "gotRenamed"; Text.raw = "gotRenamed" })
+        else
+          child
+      | _ -> super#jsx_child child
 
     method! variance (variance : Loc.t Ast.Variance.t option) =
-      Ast.Variance.(
-        match variance with
-        | Some (loc, Minus) -> Some (loc, Plus)
-        | _ -> variance)
+      let open Ast.Variance in
+      match variance with
+      | Some (loc, Minus) -> Some (loc, Plus)
+      | _ -> variance
 
     method! call_type_args (loc, targs) =
       let open Ast.Expression.CallTypeArg in
@@ -205,33 +199,33 @@ class useless_mapper =
       (loc, Base.List.map ~f targs)
 
     method! function_param_type (fpt : (Loc.t, Loc.t) Ast.Type.Function.Param.t) =
-      Ast.Type.Function.Param.(
-        let ((loc, fpt') as fpt) = super#function_param_type fpt in
-        let { name; _ } = fpt' in
-        let name' = Flow_ast_mapper.map_opt this#identifier name in
-        if name' == name then
-          fpt
-        else
-          (loc, { fpt' with name = name' }))
+      let open Ast.Type.Function.Param in
+      let ((loc, fpt') as fpt) = super#function_param_type fpt in
+      let { name; _ } = fpt' in
+      let name' = Flow_ast_mapper.map_opt this#identifier name in
+      if name' == name then
+        fpt
+      else
+        (loc, { fpt' with name = name' })
 
     method! update_expression loc (expr : (Loc.t, Loc.t) Ast.Expression.Update.t) =
-      Ast.Expression.Update.(
-        let expr = super#update_expression loc expr in
-        let { operator; _ } = expr in
-        match operator with
-        | Increment -> expr
-        | _ -> { expr with operator = Increment })
+      let open Ast.Expression.Update in
+      let expr = super#update_expression loc expr in
+      let { operator; _ } = expr in
+      match operator with
+      | Increment -> expr
+      | _ -> { expr with operator = Increment }
 
     method! object_property_type (opt : (Loc.t, Loc.t) Ast.Type.Object.Property.t) =
-      Ast.Type.Object.Property.(
-        let ((loc, opt') as opt) = super#object_property_type opt in
-        let { key; variance; _ } = opt' in
-        let key' = this#object_key key in
-        let variance' = this#variance variance in
-        if key' == key && variance' == variance then
-          opt
-        else
-          (loc, { opt' with key = key'; variance = variance' }))
+      let open Ast.Type.Object.Property in
+      let ((loc, opt') as opt) = super#object_property_type opt in
+      let { key; variance; _ } = opt' in
+      let key' = this#object_key key in
+      let variance' = this#variance variance in
+      if key' == key && variance' == variance then
+        opt
+      else
+        (loc, { opt' with key = key'; variance = variance' })
   end
 
 class literal_mapper =
@@ -239,26 +233,22 @@ class literal_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper
 
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
-      Ast.Literal.(
-        match expr.value with
-        | String "rename" ->
-          {
-            value = String "gotRenamed";
-            raw = "gotRenamed";
-            comments = Flow_ast_utils.mk_comments_opt ();
-          }
-        | Boolean false ->
-          { value = Boolean true; raw = "true"; comments = Flow_ast_utils.mk_comments_opt () }
-        | Null ->
-          {
-            value = String "wasNull";
-            raw = "wasNull";
-            comments = Flow_ast_utils.mk_comments_opt ();
-          }
-        | Number 4.0 ->
-          { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
-        (* TODO: add test for RegExp case? *)
-        | _ -> expr)
+      let open Ast.Literal in
+      match expr.value with
+      | String "rename" ->
+        {
+          value = String "gotRenamed";
+          raw = "gotRenamed";
+          comments = Flow_ast_utils.mk_comments_opt ();
+        }
+      | Boolean false ->
+        { value = Boolean true; raw = "true"; comments = Flow_ast_utils.mk_comments_opt () }
+      | Null ->
+        { value = String "wasNull"; raw = "wasNull"; comments = Flow_ast_utils.mk_comments_opt () }
+      | Number 4.0 ->
+        { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
+      (* TODO: add test for RegExp case? *)
+      | _ -> expr
   end
 
 class insert_variance_mapper =
@@ -266,21 +256,21 @@ class insert_variance_mapper =
     inherit useless_mapper as super
 
     method! type_param (tparam : (Loc.t, Loc.t) Ast.Type.TypeParam.t) =
-      Ast.Type.TypeParam.(
-        let ((loc, tparam') as orig) = super#type_param tparam in
-        let { variance; _ } = tparam' in
-        let variance' = this#variance_ loc variance in
-        if variance == variance' then
-          orig
-        else
-          (loc, { tparam' with variance = variance' }))
+      let open Ast.Type.TypeParam in
+      let ((loc, tparam') as orig) = super#type_param tparam in
+      let { variance; _ } = tparam' in
+      let variance' = this#variance_ loc variance in
+      if variance == variance' then
+        orig
+      else
+        (loc, { tparam' with variance = variance' })
 
     (* New variance method with a different type signature that allows us to insert a loc *)
     method variance_ (loc : Loc.t) (variance : Loc.t Ast.Variance.t option) =
-      Ast.Variance.(
-        match variance with
-        | None -> Some (loc, Plus)
-        | _ -> variance)
+      let open Ast.Variance in
+      match variance with
+      | None -> Some (loc, Plus)
+      | _ -> variance
   end
 
 class delete_variance_mapper =
@@ -288,10 +278,10 @@ class delete_variance_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper
 
     method! variance (variance : Loc.t Ast.Variance.t option) =
-      Ast.Variance.(
-        match variance with
-        | Some (_loc, Minus) -> None
-        | _ -> variance)
+      let open Ast.Variance in
+      match variance with
+      | Some (_loc, Minus) -> None
+      | _ -> variance
   end
 
 class insert_end_mapper =
@@ -337,30 +327,30 @@ class insert_import_mapper =
 
     method! statement_list stmts =
       if List.length stmts > 0 then
-        Ast.Statement.ImportDeclaration.(
-          Ast.StringLiteral.(
-            let stmts = super#statement_list stmts in
-            let (loc, _) = List.hd stmts in
-            let imp =
-              ( loc,
-                Ast.Statement.ImportDeclaration
-                  {
-                    importKind = Ast.Statement.ImportDeclaration.ImportValue;
-                    source = (loc, { value = "baz"; raw = "\"baz\"" });
-                    default = None;
-                    specifiers =
-                      Some
-                        (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
-                           [
-                             {
-                               kind = None;
-                               local = None;
-                               remote = Flow_ast_utils.ident_of_source (loc, "baz");
-                             };
-                           ]);
-                  } )
-            in
-            imp :: stmts))
+        let open Ast.Statement.ImportDeclaration in
+        let open Ast.StringLiteral in
+        let stmts = super#statement_list stmts in
+        let (loc, _) = List.hd stmts in
+        let imp =
+          ( loc,
+            Ast.Statement.ImportDeclaration
+              {
+                importKind = Ast.Statement.ImportDeclaration.ImportValue;
+                source = (loc, { value = "baz"; raw = "\"baz\"" });
+                default = None;
+                specifiers =
+                  Some
+                    (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
+                       [
+                         {
+                           kind = None;
+                           local = None;
+                           remote = Flow_ast_utils.ident_of_source (loc, "baz");
+                         };
+                       ]);
+              } )
+        in
+        imp :: stmts
       else
         super#statement_list stmts
   end
@@ -371,30 +361,30 @@ class insert_second_import_mapper =
 
     method! statement_list stmts =
       if List.length stmts > 0 then
-        Ast.Statement.ImportDeclaration.(
-          Ast.StringLiteral.(
-            let stmts = super#statement_list stmts in
-            let (loc, _) = List.hd stmts in
-            let imp =
-              ( loc,
-                Ast.Statement.ImportDeclaration
-                  {
-                    importKind = Ast.Statement.ImportDeclaration.ImportValue;
-                    source = (loc, { value = "baz"; raw = "\"baz\"" });
-                    default = None;
-                    specifiers =
-                      Some
-                        (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
-                           [
-                             {
-                               kind = None;
-                               local = None;
-                               remote = Flow_ast_utils.ident_of_source (loc, "baz");
-                             };
-                           ]);
-                  } )
-            in
-            List.hd stmts :: imp :: List.tl stmts))
+        let open Ast.Statement.ImportDeclaration in
+        let open Ast.StringLiteral in
+        let stmts = super#statement_list stmts in
+        let (loc, _) = List.hd stmts in
+        let imp =
+          ( loc,
+            Ast.Statement.ImportDeclaration
+              {
+                importKind = Ast.Statement.ImportDeclaration.ImportValue;
+                source = (loc, { value = "baz"; raw = "\"baz\"" });
+                default = None;
+                specifiers =
+                  Some
+                    (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
+                       [
+                         {
+                           kind = None;
+                           local = None;
+                           remote = Flow_ast_utils.ident_of_source (loc, "baz");
+                         };
+                       ]);
+              } )
+        in
+        List.hd stmts :: imp :: List.tl stmts
       else
         super#statement_list stmts
   end
@@ -405,40 +395,40 @@ class insert_second_cjsimport_mapper =
 
     method! statement_list stmts =
       if List.length stmts > 0 then
-        Ast.Statement.Expression.(
-          Ast.Expression.Call.(
-            Ast.Literal.(
-              let stmts = super#statement_list stmts in
-              let (loc, _) = List.hd stmts in
-              let imp =
-                ( loc,
-                  Ast.Statement.Expression
-                    {
-                      expression =
-                        ( loc,
-                          Ast.Expression.Call
-                            {
-                              callee =
-                                ( loc,
-                                  Ast.Expression.Identifier
-                                    (Flow_ast_utils.ident_of_source (loc, "require")) );
-                              targs = None;
-                              arguments =
-                                [
-                                  Ast.Expression.Expression
-                                    ( loc,
-                                      Ast.Expression.Literal
-                                        {
-                                          value = Ast.Literal.String "baz";
-                                          raw = "\"baz\"";
-                                          comments = Flow_ast_utils.mk_comments_opt ();
-                                        } );
-                                ];
-                            } );
-                      directive = None;
-                    } )
-              in
-              List.hd stmts :: imp :: List.tl stmts)))
+        let open Ast.Statement.Expression in
+        let open Ast.Expression.Call in
+        let open Ast.Literal in
+        let stmts = super#statement_list stmts in
+        let (loc, _) = List.hd stmts in
+        let imp =
+          ( loc,
+            Ast.Statement.Expression
+              {
+                expression =
+                  ( loc,
+                    Ast.Expression.Call
+                      {
+                        callee =
+                          ( loc,
+                            Ast.Expression.Identifier
+                              (Flow_ast_utils.ident_of_source (loc, "require")) );
+                        targs = None;
+                        arguments =
+                          [
+                            Ast.Expression.Expression
+                              ( loc,
+                                Ast.Expression.Literal
+                                  {
+                                    value = Ast.Literal.String "baz";
+                                    raw = "\"baz\"";
+                                    comments = Flow_ast_utils.mk_comments_opt ();
+                                  } );
+                          ];
+                      } );
+                directive = None;
+              } )
+        in
+        List.hd stmts :: imp :: List.tl stmts
       else
         super#statement_list stmts
   end
@@ -449,40 +439,40 @@ class add_body_mapper =
 
     method! statement_list stmts =
       if List.length stmts > 0 then
-        Ast.Statement.Expression.(
-          Ast.Expression.Call.(
-            Ast.Literal.(
-              let stmts = super#statement_list stmts in
-              let (loc, _) = List.rev stmts |> List.hd in
-              let imp =
-                ( loc,
-                  Ast.Statement.Expression
-                    {
-                      expression =
-                        ( loc,
-                          Ast.Expression.Call
-                            {
-                              callee =
-                                ( loc,
-                                  Ast.Expression.Identifier
-                                    (Flow_ast_utils.ident_of_source (loc, "foo")) );
-                              targs = None;
-                              arguments =
-                                [
-                                  Ast.Expression.Expression
-                                    ( loc,
-                                      Ast.Expression.Literal
-                                        {
-                                          value = Ast.Literal.String "baz";
-                                          raw = "\"baz\"";
-                                          comments = Flow_ast_utils.mk_comments_opt ();
-                                        } );
-                                ];
-                            } );
-                      directive = None;
-                    } )
-              in
-              stmts @ [imp])))
+        let open Ast.Statement.Expression in
+        let open Ast.Expression.Call in
+        let open Ast.Literal in
+        let stmts = super#statement_list stmts in
+        let (loc, _) = List.rev stmts |> List.hd in
+        let imp =
+          ( loc,
+            Ast.Statement.Expression
+              {
+                expression =
+                  ( loc,
+                    Ast.Expression.Call
+                      {
+                        callee =
+                          ( loc,
+                            Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "foo"))
+                          );
+                        targs = None;
+                        arguments =
+                          [
+                            Ast.Expression.Expression
+                              ( loc,
+                                Ast.Expression.Literal
+                                  {
+                                    value = Ast.Literal.String "baz";
+                                    raw = "\"baz\"";
+                                    comments = Flow_ast_utils.mk_comments_opt ();
+                                  } );
+                          ];
+                      } );
+                directive = None;
+              } )
+        in
+        stmts @ [imp]
       else
         super#statement_list stmts
   end
@@ -506,13 +496,13 @@ class delete_annot_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method! pattern ?kind expr =
-      Ast.Pattern.(
-        Ast.Pattern.Identifier.(
-          let expr = super#pattern ?kind expr in
-          let (loc, patt) = expr in
-          match patt with
-          | Identifier id -> (loc, Identifier { id with annot = Type.Missing Loc.none })
-          | _ -> expr))
+      let open Ast.Pattern in
+      let open Ast.Pattern.Identifier in
+      let expr = super#pattern ?kind expr in
+      let (loc, patt) = expr in
+      match patt with
+      | Identifier id -> (loc, Identifier { id with annot = Type.Missing Loc.none })
+      | _ -> expr
 
     method! type_annotation_hint return =
       match super#type_annotation_hint return with
@@ -525,14 +515,14 @@ class insert_annot_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method! pattern ?kind expr =
-      Ast.Pattern.(
-        Ast.Pattern.Identifier.(
-          let expr = super#pattern ?kind expr in
-          let (loc, patt) = expr in
-          match patt with
-          | Identifier id ->
-            (loc, Identifier { id with annot = Type.Available (loc, (loc, Type.Number)) })
-          | _ -> expr))
+      let open Ast.Pattern in
+      let open Ast.Pattern.Identifier in
+      let expr = super#pattern ?kind expr in
+      let (loc, patt) = expr in
+      match patt with
+      | Identifier id ->
+        (loc, Identifier { id with annot = Type.Available (loc, (loc, Type.Number)) })
+      | _ -> expr
 
     method! type_annotation_hint return =
       match super#type_annotation_hint return with
@@ -609,15 +599,15 @@ class prop_annot_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method! class_property _loc (prop : (Loc.t, Loc.t) Ast.Class.Property.t') =
-      Ast.Class.Property.(
-        let prop = super#class_property _loc prop in
-        let { annot; _ } = prop in
-        let annot' =
-          match annot with
-          | Type.Available _ -> annot
-          | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number))
-        in
-        { prop with annot = annot' })
+      let open Ast.Class.Property in
+      let prop = super#class_property _loc prop in
+      let { annot; _ } = prop in
+      let annot' =
+        match annot with
+        | Type.Available _ -> annot
+        | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number))
+      in
+      { prop with annot = annot' }
   end
 
 class insert_typecast_mapper =
@@ -663,19 +653,19 @@ class true_to_false_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper
 
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
-      Ast.Literal.(
-        match expr.value with
-        | Boolean true ->
-          { value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt () }
-        | _ -> expr)
+      let open Ast.Literal in
+      match expr.value with
+      | Boolean true ->
+        { value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt () }
+      | _ -> expr
 
     method! type_annotation (annot : (Loc.t, Loc.t) Ast.Type.annotation) =
-      Ast.Type.(
-        let (t1, a) = annot in
-        let (t2, right_var) = a in
-        match right_var with
-        | BooleanLiteral true -> (t1, (t2, BooleanLiteral false))
-        | _ -> annot)
+      let open Ast.Type in
+      let (t1, a) = annot in
+      let (t2, right_var) = a in
+      match right_var with
+      | BooleanLiteral true -> (t1, (t2, BooleanLiteral false))
+      | _ -> annot
   end
 
 class remove_annotation_rest_mapper =

@@ -375,18 +375,18 @@ let utf8_escape =
     str |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str)) |> Buffer.contents
 
 let layout_from_comment anchor loc_node (loc_cm, comment) =
-  Ast.Comment.(
-    let comment_text =
-      match comment with
-      | Line txt -> Printf.sprintf "//%s\n" txt
-      | Block txt ->
-        (match (Loc.lines_intersect loc_node loc_cm, anchor) with
-        | (false, Preceding) -> Printf.sprintf "\n/*%s*/" txt
-        | (false, Following) -> Printf.sprintf "/*%s*/\n" txt
-        | (false, Enclosing) -> Printf.sprintf "/*%s*/\n" txt
-        | _ -> Printf.sprintf "/*%s*/" txt)
-    in
-    SourceLocation (loc_cm, Atom comment_text))
+  let open Ast.Comment in
+  let comment_text =
+    match comment with
+    | Line txt -> Printf.sprintf "//%s\n" txt
+    | Block txt ->
+      (match (Loc.lines_intersect loc_node loc_cm, anchor) with
+      | (false, Preceding) -> Printf.sprintf "\n/*%s*/" txt
+      | (false, Following) -> Printf.sprintf "/*%s*/\n" txt
+      | (false, Enclosing) -> Printf.sprintf "/*%s*/\n" txt
+      | _ -> Printf.sprintf "/*%s*/" txt)
+  in
+  SourceLocation (loc_cm, Atom comment_text)
 
 let with_attached_comments : comment_map option ref = ref None
 
@@ -1130,16 +1130,16 @@ and number_literal ~in_member_object raw num =
     IfPretty (Atom raw, Atom str)
 
 and literal { Ast.Literal.raw; value; comments = _ (* handled by caller *) } =
-  Ast.Literal.(
-    match value with
-    | Number num -> number_literal ~in_member_object:false raw num
-    | String str ->
-      let quote = better_quote str in
-      fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
-    | RegExp { RegExp.pattern; flags } ->
-      let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
-      fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
-    | _ -> Atom raw)
+  let open Ast.Literal in
+  match value with
+  | Number num -> number_literal ~in_member_object:false raw num
+  | String str ->
+    let quote = better_quote str in
+    fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
+  | RegExp { RegExp.pattern; flags } ->
+    let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
+    fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
+  | _ -> Atom raw
 
 and string_literal_type { Ast.StringLiteral.raw; _ } = Atom raw
 
@@ -1191,12 +1191,12 @@ and string_literal (loc, { Ast.StringLiteral.value; _ }) =
   source_location_with_comments (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
 
 and pattern_object_property_key =
-  Ast.Pattern.Object.(
-    function
-    | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
-    | Property.Identifier ident -> identifier ident
-    | Property.Computed expr ->
-      fuse [Atom "["; Sequence ({ seq with break = Break_if_needed }, [expression expr]); Atom "]"])
+  let open Ast.Pattern.Object in
+  function
+  | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
+  | Property.Identifier ident -> identifier ident
+  | Property.Computed expr ->
+    fuse [Atom "["; Sequence ({ seq with break = Break_if_needed }, [expression expr]); Atom "]"]
 
 and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t) =
   let module P = Ast.Pattern in
@@ -1322,10 +1322,10 @@ and variable_declaration
   let has_init =
     List.exists
       (fun var ->
-        Ast.Statement.VariableDeclaration.Declarator.(
-          match var with
-          | (_, { id = _; init = Some _ }) -> true
-          | _ -> false))
+        let open Ast.Statement.VariableDeclaration.Declarator in
+        match var with
+        | (_, { id = _; init = Some _ }) -> true
+        | _ -> false)
       declarations
   in
   let sep =
@@ -1734,70 +1734,70 @@ and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorato
   group [decorator_parts; group parts]
 
 and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
-  Ast.Statement.EnumDeclaration.(
-    let representation_type name explicit =
-      if explicit then
-        fuse [space; Atom "of"; space; Atom name]
+  let open Ast.Statement.EnumDeclaration in
+  let representation_type name explicit =
+    if explicit then
+      fuse [space; Atom "of"; space; Atom name]
+    else
+      Empty
+  in
+  let wrap_body members =
+    wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
+  in
+  let defaulted_member (_, { DefaultedMember.id }) = fuse [identifier id; Atom ","] in
+  let initialized_member id value_str =
+    fuse [identifier id; pretty_space; Atom "="; pretty_space; Atom value_str; Atom ","]
+  in
+  let boolean_member (_, { InitializedMember.id; init = (_, init_value) }) =
+    initialized_member
+      id
+      ( if init_value then
+        "true"
       else
-        Empty
-    in
-    let wrap_body members =
-      wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
-    in
-    let defaulted_member (_, { DefaultedMember.id }) = fuse [identifier id; Atom ","] in
-    let initialized_member id value_str =
-      fuse [identifier id; pretty_space; Atom "="; pretty_space; Atom value_str; Atom ","]
-    in
-    let boolean_member (_, { InitializedMember.id; init = (_, init_value) }) =
-      initialized_member
-        id
-        ( if init_value then
-          "true"
-        else
-          "false" )
-    in
-    let number_member (_, { InitializedMember.id; init = (_, { Ast.NumberLiteral.raw; _ }) }) =
-      initialized_member id raw
-    in
-    let string_member (_, { InitializedMember.id; init = (_, { Ast.StringLiteral.raw; _ }) }) =
-      initialized_member id raw
-    in
-    let body =
-      match body with
-      | (_, BooleanBody { BooleanBody.members; explicitType }) ->
-        fuse
-          [
-            representation_type "boolean" explicitType;
-            pretty_space;
-            wrap_body @@ Base.List.map ~f:boolean_member members;
-          ]
-      | (_, NumberBody { NumberBody.members; explicitType }) ->
-        fuse
-          [
-            representation_type "number" explicitType;
-            pretty_space;
-            wrap_body @@ Base.List.map ~f:number_member members;
-          ]
-      | (_, StringBody { StringBody.members; explicitType }) ->
-        fuse
-          [
-            representation_type "string" explicitType;
-            pretty_space;
-            ( wrap_body
-            @@
-            match members with
-            | StringBody.Defaulted members -> Base.List.map ~f:defaulted_member members
-            | StringBody.Initialized members -> Base.List.map ~f:string_member members );
-          ]
-      | (_, SymbolBody { SymbolBody.members }) ->
-        fuse
-          [
-            representation_type "symbol" true;
-            pretty_space;
-            wrap_body @@ Base.List.map ~f:defaulted_member members;
-          ]
-    in
-    fuse [Atom "enum"; space; identifier id; body])
+        "false" )
+  in
+  let number_member (_, { InitializedMember.id; init = (_, { Ast.NumberLiteral.raw; _ }) }) =
+    initialized_member id raw
+  in
+  let string_member (_, { InitializedMember.id; init = (_, { Ast.StringLiteral.raw; _ }) }) =
+    initialized_member id raw
+  in
+  let body =
+    match body with
+    | (_, BooleanBody { BooleanBody.members; explicitType }) ->
+      fuse
+        [
+          representation_type "boolean" explicitType;
+          pretty_space;
+          wrap_body @@ Base.List.map ~f:boolean_member members;
+        ]
+    | (_, NumberBody { NumberBody.members; explicitType }) ->
+      fuse
+        [
+          representation_type "number" explicitType;
+          pretty_space;
+          wrap_body @@ Base.List.map ~f:number_member members;
+        ]
+    | (_, StringBody { StringBody.members; explicitType }) ->
+      fuse
+        [
+          representation_type "string" explicitType;
+          pretty_space;
+          ( wrap_body
+          @@
+          match members with
+          | StringBody.Defaulted members -> Base.List.map ~f:defaulted_member members
+          | StringBody.Initialized members -> Base.List.map ~f:string_member members );
+        ]
+    | (_, SymbolBody { SymbolBody.members }) ->
+      fuse
+        [
+          representation_type "symbol" true;
+          pretty_space;
+          wrap_body @@ Base.List.map ~f:defaulted_member members;
+        ]
+  in
+  fuse [Atom "enum"; space; identifier id; body]
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
 and list_with_newlines (nodes : (Loc.t * Layout.layout_node) list) =
@@ -2146,17 +2146,17 @@ and jsx_child (loc, child) =
     end
 
 and partition_specifiers default specifiers =
-  Ast.Statement.ImportDeclaration.(
-    let (special, named) =
-      match specifiers with
-      | Some (ImportNamespaceSpecifier (loc, id)) -> ([import_namespace_specifier (loc, id)], None)
-      | Some (ImportNamedSpecifiers named_specifiers) ->
-        ([], Some (import_named_specifiers named_specifiers))
-      | None -> ([], None)
-    in
-    match default with
-    | Some default -> (identifier default :: special, named)
-    | None -> (special, named))
+  let open Ast.Statement.ImportDeclaration in
+  let (special, named) =
+    match specifiers with
+    | Some (ImportNamespaceSpecifier (loc, id)) -> ([import_namespace_specifier (loc, id)], None)
+    | Some (ImportNamedSpecifiers named_specifiers) ->
+      ([], Some (import_named_specifiers named_specifiers))
+    | None -> ([], None)
+  in
+  match default with
+  | Some default -> (identifier default :: special, named)
+  | None -> (special, named)
 
 and import_namespace_specifier (loc, id) =
   source_location_with_comments (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier id])
@@ -2223,43 +2223,42 @@ and export_source ~prefix = function
   | None -> Empty
 
 and export_specifier source =
-  Ast.Statement.ExportNamedDeclaration.(
-    function
-    | ExportSpecifiers specifiers ->
-      fuse
-        [
-          group
-            [
-              new_list
-                ~wrap:(Atom "{", Atom "}")
-                ~sep:(Atom ",")
-                (List.map
-                   (fun (loc, { ExportSpecifier.local; exported }) ->
-                     source_location_with_comments
-                       ( loc,
-                         fuse
-                           [
-                             identifier local;
-                             begin
-                               match exported with
-                               | Some export -> fuse [space; Atom "as"; space; identifier export]
-                               | None -> Empty
-                             end;
-                           ] ))
-                   specifiers);
-            ];
-          export_source ~prefix:pretty_space source;
-        ]
-    | ExportBatchSpecifier (loc, Some ident) ->
-      fuse
-        [
-          source_location_with_comments
-            (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier ident]);
-          export_source ~prefix:space source;
-        ]
-    | ExportBatchSpecifier (loc, None) ->
-      fuse
-        [source_location_with_comments (loc, Atom "*"); export_source ~prefix:pretty_space source])
+  let open Ast.Statement.ExportNamedDeclaration in
+  function
+  | ExportSpecifiers specifiers ->
+    fuse
+      [
+        group
+          [
+            new_list
+              ~wrap:(Atom "{", Atom "}")
+              ~sep:(Atom ",")
+              (List.map
+                 (fun (loc, { ExportSpecifier.local; exported }) ->
+                   source_location_with_comments
+                     ( loc,
+                       fuse
+                         [
+                           identifier local;
+                           begin
+                             match exported with
+                             | Some export -> fuse [space; Atom "as"; space; identifier export]
+                             | None -> Empty
+                           end;
+                         ] ))
+                 specifiers);
+          ];
+        export_source ~prefix:pretty_space source;
+      ]
+  | ExportBatchSpecifier (loc, Some ident) ->
+    fuse
+      [
+        source_location_with_comments
+          (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier ident]);
+        export_source ~prefix:space source;
+      ]
+  | ExportBatchSpecifier (loc, None) ->
+    fuse [source_location_with_comments (loc, Atom "*"); export_source ~prefix:pretty_space source]
 
 and export_declaration
     { Ast.Statement.ExportNamedDeclaration.declaration; specifiers; source; exportKind } =
@@ -2292,10 +2291,10 @@ and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.default 
       space;
       Atom "default";
       space;
-      Ast.Statement.ExportDefaultDeclaration.(
-        match declaration with
-        | Declaration stat -> statement stat
-        | Expression expr -> with_semicolon (expression expr));
+      (let open Ast.Statement.ExportDefaultDeclaration in
+      match declaration with
+      | Declaration stat -> statement stat
+      | Expression expr -> with_semicolon (expression expr));
     ]
 
 and variance (loc, var) =
@@ -2421,10 +2420,10 @@ and type_predicate (loc, pred) =
       fuse
         [
           Atom "%checks";
-          Ast.Type.Predicate.(
-            match pred with
-            | Declared expr -> wrap_in_parens (expression expr)
-            | Inferred -> Empty);
+          (let open Ast.Type.Predicate in
+          match pred with
+          | Declared expr -> wrap_in_parens (expression expr)
+          | Inferred -> Empty);
         ] )
 
 and type_union_or_intersection ~sep ts =
@@ -2498,113 +2497,111 @@ and type_function
     ]
 
 and type_object_property =
-  Ast.Type.Object.(
-    function
-    | Property (loc, { Property.key; value; optional; static; proto; variance = variance_; _method })
-      ->
-      let s_static =
-        if static then
-          fuse [Atom "static"; space]
-        else
-          Empty
-      in
-      let s_proto =
-        if proto then
-          fuse [Atom "proto"; space]
-        else
-          Empty
-      in
-      source_location_with_comments
-        ( loc,
-          match (value, _method, proto, optional) with
-          (* Functions with no special properties can be rendered as methods *)
-          | (Property.Init (loc, Ast.Type.Function func), true, false, false) ->
-            source_location_with_comments
-              (loc, fuse [s_static; object_property_key key; type_function ~sep:(Atom ":") func])
-          (* Normal properties *)
-          | (Property.Init t, _, _, _) ->
-            fuse
-              [
-                s_static;
-                s_proto;
-                option variance variance_;
-                object_property_key key;
-                ( if optional then
-                  Atom "?"
-                else
-                  Empty );
-                Atom ":";
-                pretty_space;
-                type_ t;
-              ]
-          (* Getters/Setters *)
-          | (Property.Get (loc, func), _, _, _) ->
-            source_location_with_comments
-              ( loc,
-                fuse
-                  [Atom "get"; space; object_property_key key; type_function ~sep:(Atom ":") func]
-              )
-          | (Property.Set (loc, func), _, _, _) ->
-            source_location_with_comments
-              ( loc,
-                fuse
-                  [Atom "set"; space; object_property_key key; type_function ~sep:(Atom ":") func]
-              ) )
-    | SpreadProperty (loc, { SpreadProperty.argument }) ->
-      source_location_with_comments (loc, fuse [Atom "..."; type_ argument])
-    | Indexer (loc, { Indexer.id; key; value; static; variance = variance_ }) ->
-      source_location_with_comments
-        ( loc,
+  let open Ast.Type.Object in
+  function
+  | Property (loc, { Property.key; value; optional; static; proto; variance = variance_; _method })
+    ->
+    let s_static =
+      if static then
+        fuse [Atom "static"; space]
+      else
+        Empty
+    in
+    let s_proto =
+      if proto then
+        fuse [Atom "proto"; space]
+      else
+        Empty
+    in
+    source_location_with_comments
+      ( loc,
+        match (value, _method, proto, optional) with
+        (* Functions with no special properties can be rendered as methods *)
+        | (Property.Init (loc, Ast.Type.Function func), true, false, false) ->
+          source_location_with_comments
+            (loc, fuse [s_static; object_property_key key; type_function ~sep:(Atom ":") func])
+        (* Normal properties *)
+        | (Property.Init t, _, _, _) ->
           fuse
             [
-              ( if static then
-                fuse [Atom "static"; space]
-              else
-                Empty );
+              s_static;
+              s_proto;
               option variance variance_;
-              Atom "[";
-              begin
-                match id with
-                | Some id -> fuse [identifier id; Atom ":"; pretty_space]
-                | None -> Empty
-              end;
-              type_ key;
-              Atom "]";
-              Atom ":";
-              pretty_space;
-              type_ value;
-            ] )
-    | CallProperty (loc, { CallProperty.value = (call_loc, func); static }) ->
-      source_location_with_comments
-        ( loc,
-          fuse
-            [
-              ( if static then
-                fuse [Atom "static"; space]
-              else
-                Empty );
-              source_location_with_comments (call_loc, type_function ~sep:(Atom ":") func);
-            ] )
-    | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method = _ }) ->
-      source_location_with_comments
-        ( loc,
-          fuse
-            [
-              ( if static then
-                fuse [Atom "static"; space]
-              else
-                Empty );
-              Atom "[[";
-              identifier id;
-              Atom "]]";
+              object_property_key key;
               ( if optional then
                 Atom "?"
               else
                 Empty );
               Atom ":";
               pretty_space;
-              type_ value;
-            ] ))
+              type_ t;
+            ]
+        (* Getters/Setters *)
+        | (Property.Get (loc, func), _, _, _) ->
+          source_location_with_comments
+            ( loc,
+              fuse [Atom "get"; space; object_property_key key; type_function ~sep:(Atom ":") func]
+            )
+        | (Property.Set (loc, func), _, _, _) ->
+          source_location_with_comments
+            ( loc,
+              fuse [Atom "set"; space; object_property_key key; type_function ~sep:(Atom ":") func]
+            ) )
+  | SpreadProperty (loc, { SpreadProperty.argument }) ->
+    source_location_with_comments (loc, fuse [Atom "..."; type_ argument])
+  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_ }) ->
+    source_location_with_comments
+      ( loc,
+        fuse
+          [
+            ( if static then
+              fuse [Atom "static"; space]
+            else
+              Empty );
+            option variance variance_;
+            Atom "[";
+            begin
+              match id with
+              | Some id -> fuse [identifier id; Atom ":"; pretty_space]
+              | None -> Empty
+            end;
+            type_ key;
+            Atom "]";
+            Atom ":";
+            pretty_space;
+            type_ value;
+          ] )
+  | CallProperty (loc, { CallProperty.value = (call_loc, func); static }) ->
+    source_location_with_comments
+      ( loc,
+        fuse
+          [
+            ( if static then
+              fuse [Atom "static"; space]
+            else
+              Empty );
+            source_location_with_comments (call_loc, type_function ~sep:(Atom ":") func);
+          ] )
+  | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method = _ }) ->
+    source_location_with_comments
+      ( loc,
+        fuse
+          [
+            ( if static then
+              fuse [Atom "static"; space]
+            else
+              Empty );
+            Atom "[[";
+            identifier id;
+            Atom "]]";
+            ( if optional then
+              Atom "?"
+            else
+              Empty );
+            Atom ":";
+            pretty_space;
+            type_ value;
+          ] )
 
 and type_object ?(sep = Atom ",") { Ast.Type.Object.exact; properties; inexact } =
   let s_exact =
@@ -2648,12 +2645,12 @@ and interface_extends = function
 
 and type_generic { Ast.Type.Generic.id; targs } =
   let rec generic_identifier =
-    Ast.Type.Generic.Identifier.(
-      function
-      | Unqualified id -> identifier id
-      | Qualified (loc, { qualification; id }) ->
-        source_location_with_comments
-          (loc, fuse [generic_identifier qualification; Atom "."; identifier id]))
+    let open Ast.Type.Generic.Identifier in
+    function
+    | Unqualified id -> identifier id
+    | Qualified (loc, { qualification; id }) ->
+      source_location_with_comments
+        (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
   in
   fuse [generic_identifier id; option type_args targs]
 
@@ -2844,32 +2841,32 @@ and declare_export_declaration
   in
   match (declaration, specifiers) with
   | (Some decl, None) ->
-    Ast.Statement.DeclareExportDeclaration.(
-      (match decl with
-      (* declare export var *)
-      | Variable (loc, var) ->
-        source_location_with_comments (loc, declare_variable ~s_type:s_export var)
-      (* declare export function *)
-      | Function (loc, func) ->
-        source_location_with_comments (loc, declare_function ~s_type:s_export func)
-      (* declare export class *)
-      | Class (loc, c) -> source_location_with_comments (loc, declare_class ~s_type:s_export c)
-      (* declare export default [type]
-       * this corresponds to things like
-       * export default 1+1; *)
-      | DefaultType t -> with_semicolon (fuse [Atom "declare"; space; s_export; type_ t])
-      (* declare export type *)
-      | NamedType (loc, typeAlias) ->
-        source_location_with_comments
-          (loc, fuse [Atom "declare"; space; s_export; type_alias ~declare:false typeAlias])
-      (* declare export opaque type *)
-      | NamedOpaqueType (loc, opaqueType) ->
-        source_location_with_comments
-          (loc, fuse [Atom "declare"; space; s_export; opaque_type ~declare:false opaqueType])
-      (* declare export interface *)
-      | Interface (loc, interface) ->
-        source_location_with_comments
-          (loc, fuse [Atom "declare"; space; s_export; interface_declaration interface])))
+    let open Ast.Statement.DeclareExportDeclaration in
+    (match decl with
+    (* declare export var *)
+    | Variable (loc, var) ->
+      source_location_with_comments (loc, declare_variable ~s_type:s_export var)
+    (* declare export function *)
+    | Function (loc, func) ->
+      source_location_with_comments (loc, declare_function ~s_type:s_export func)
+    (* declare export class *)
+    | Class (loc, c) -> source_location_with_comments (loc, declare_class ~s_type:s_export c)
+    (* declare export default [type]
+     * this corresponds to things like
+     * export default 1+1; *)
+    | DefaultType t -> with_semicolon (fuse [Atom "declare"; space; s_export; type_ t])
+    (* declare export type *)
+    | NamedType (loc, typeAlias) ->
+      source_location_with_comments
+        (loc, fuse [Atom "declare"; space; s_export; type_alias ~declare:false typeAlias])
+    (* declare export opaque type *)
+    | NamedOpaqueType (loc, opaqueType) ->
+      source_location_with_comments
+        (loc, fuse [Atom "declare"; space; s_export; opaque_type ~declare:false opaqueType])
+    (* declare export interface *)
+    | Interface (loc, interface) ->
+      source_location_with_comments
+        (loc, fuse [Atom "declare"; space; s_export; interface_declaration interface]))
   | (None, Some specifier) ->
     fuse [Atom "declare"; space; Atom "export"; pretty_space; export_specifier source specifier]
   | (_, _) -> failwith "Invalid declare export declaration"

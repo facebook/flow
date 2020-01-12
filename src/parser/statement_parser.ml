@@ -88,13 +88,13 @@ module Statement
     ( if in_strict_mode env then
       function_as_statement_error_at env (fst func)
     else
-      Ast.Statement.(
-        match func with
-        | (loc, FunctionDeclaration { Ast.Function.async = true; _ }) ->
-          error_at env (loc, Parse_error.AsyncFunctionAsStatement)
-        | (loc, FunctionDeclaration { Ast.Function.generator = true; _ }) ->
-          error_at env (loc, Parse_error.GeneratorFunctionAsStatement)
-        | _ -> ()) );
+      let open Ast.Statement in
+      match func with
+      | (loc, FunctionDeclaration { Ast.Function.async = true; _ }) ->
+        error_at env (loc, Parse_error.AsyncFunctionAsStatement)
+      | (loc, FunctionDeclaration { Ast.Function.generator = true; _ }) ->
+        error_at env (loc, Parse_error.GeneratorFunctionAsStatement)
+      | _ -> () );
     func
 
   (* https://tc39.es/ecma262/#sec-exports-static-semantics-early-errors *)
@@ -274,16 +274,16 @@ module Statement
         (* If `async` is true, this must be a for-await-of loop. *)
         | t when t = T_OF || async ->
           let left =
-            Statement.(
-              match init with
-              | Some (For_declaration decl) ->
-                assert_can_be_forin_or_forof env Parse_error.InvalidLHSInForOf decl;
-                ForOf.LeftDeclaration decl
-              | Some (For_expression expr) ->
-                (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
-                let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForOf env expr in
-                ForOf.LeftPattern patt
-              | None -> assert false)
+            let open Statement in
+            match init with
+            | Some (For_declaration decl) ->
+              assert_can_be_forin_or_forof env Parse_error.InvalidLHSInForOf decl;
+              ForOf.LeftDeclaration decl
+            | Some (For_expression expr) ->
+              (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
+              let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForOf env expr in
+              ForOf.LeftPattern patt
+            | None -> assert false
           in
           (* This is a for of loop *)
           Expect.token env T_OF;
@@ -457,7 +457,8 @@ module Statement
         if Peek.is_line_terminator env then error_at env (start_loc, Parse_error.NewlineAfterThrow);
         let argument = Parse.expression env in
         Eat.semicolon env;
-        Statement.(Throw { Throw.argument }))
+        let open Statement in
+        Throw { Throw.argument })
 
   and try_ =
     with_loc (fun env ->
@@ -594,7 +595,8 @@ module Statement
           Statement.Labeled { Statement.Labeled.label; body }
         | (expression, _) ->
           Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
-          Statement.(Expression { Expression.expression; directive = None }))
+          let open Statement in
+          Expression { Expression.expression; directive = None })
 
   and expression =
     with_loc (fun env ->
@@ -807,50 +809,50 @@ module Statement
         let stmt = declare ~in_module:true env in
         (* TODO: This is a semantic analysis and shouldn't be in the parser *)
         let module_kind =
-          Statement.(
-            let (loc, stmt) = stmt in
-            match (module_kind, stmt) with
-            (*
-             * The first time we see either a `declare export` or a
-             * `declare module.exports`, we lock in the kind of the module.
-             *
-             * `declare export type` and `declare export interface` are the two
-             * exceptions to this rule because they are valid in both CommonJS
-             * and ES modules (and thus do not indicate an intent for either).
-             *)
-            | (None, DeclareModuleExports _) -> Some (DeclareModule.CommonJS loc)
-            | (None, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
-              (match declaration with
-              | Some (DeclareExportDeclaration.NamedType _)
-              | Some (DeclareExportDeclaration.Interface _) ->
-                module_kind
-              | _ -> Some (DeclareModule.ES loc))
-            (*
-             * There should never be more than one `declare module.exports`
-             * statement *)
-            | (Some (DeclareModule.CommonJS _), DeclareModuleExports _) ->
-              error env Parse_error.DuplicateDeclareModuleExports;
+          let open Statement in
+          let (loc, stmt) = stmt in
+          match (module_kind, stmt) with
+          (*
+           * The first time we see either a `declare export` or a
+           * `declare module.exports`, we lock in the kind of the module.
+           *
+           * `declare export type` and `declare export interface` are the two
+           * exceptions to this rule because they are valid in both CommonJS
+           * and ES modules (and thus do not indicate an intent for either).
+           *)
+          | (None, DeclareModuleExports _) -> Some (DeclareModule.CommonJS loc)
+          | (None, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
+            (match declaration with
+            | Some (DeclareExportDeclaration.NamedType _)
+            | Some (DeclareExportDeclaration.Interface _) ->
               module_kind
-            (*
-             * It's never ok to mix and match `declare export` and
-             * `declare module.exports` in the same module because it leaves the
-             * kind of the module (CommonJS vs ES) ambiguous.
-             *
-             * The 1 exception to this rule is that `export type/interface` are
-             * both ok in CommonJS modules.
-             *)
-            | (Some (DeclareModule.ES _), DeclareModuleExports _) ->
-              error env Parse_error.AmbiguousDeclareModuleKind;
-              module_kind
-            | ( Some (DeclareModule.CommonJS _),
-                DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ } ) ->
-              (match declaration with
-              | Some (DeclareExportDeclaration.NamedType _)
-              | Some (DeclareExportDeclaration.Interface _) ->
-                ()
-              | _ -> error env Parse_error.AmbiguousDeclareModuleKind);
-              module_kind
-            | _ -> module_kind)
+            | _ -> Some (DeclareModule.ES loc))
+          (*
+           * There should never be more than one `declare module.exports`
+           * statement *)
+          | (Some (DeclareModule.CommonJS _), DeclareModuleExports _) ->
+            error env Parse_error.DuplicateDeclareModuleExports;
+            module_kind
+          (*
+           * It's never ok to mix and match `declare export` and
+           * `declare module.exports` in the same module because it leaves the
+           * kind of the module (CommonJS vs ES) ambiguous.
+           *
+           * The 1 exception to this rule is that `export type/interface` are
+           * both ok in CommonJS modules.
+           *)
+          | (Some (DeclareModule.ES _), DeclareModuleExports _) ->
+            error env Parse_error.AmbiguousDeclareModuleKind;
+            module_kind
+          | ( Some (DeclareModule.CommonJS _),
+              DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ } ) ->
+            (match declaration with
+            | Some (DeclareExportDeclaration.NamedType _)
+            | Some (DeclareExportDeclaration.Interface _) ->
+              ()
+            | _ -> error env Parse_error.AmbiguousDeclareModuleKind);
+            module_kind
+          | _ -> module_kind
         in
         module_items env ~module_kind (stmt :: acc)
     in
@@ -1123,26 +1125,26 @@ module Statement
           Statement.ExportNamedDeclaration.(
             let stmt = Parse.statement_list_item env ~decorators in
             let names =
-              Statement.(
-                match stmt with
-                | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
-                  List.fold_left
-                    (fun names (_, declaration) ->
-                      let id = declaration.VariableDeclaration.Declarator.id in
-                      extract_pattern_binding_names names [id])
-                    []
-                    declarations
-                | (loc, ClassDeclaration { Class.id = Some id; _ })
-                | (loc, FunctionDeclaration { Function.id = Some id; _ })
-                | (loc, EnumDeclaration { EnumDeclaration.id; _ }) ->
-                  [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
-                | (loc, ClassDeclaration { Class.id = None; _ }) ->
-                  error_at env (loc, Parse_error.ExportNamelessClass);
+              let open Statement in
+              match stmt with
+              | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
+                List.fold_left
+                  (fun names (_, declaration) ->
+                    let id = declaration.VariableDeclaration.Declarator.id in
+                    extract_pattern_binding_names names [id])
                   []
-                | (loc, FunctionDeclaration { Function.id = None; _ }) ->
-                  error_at env (loc, Parse_error.ExportNamelessFunction);
-                  []
-                | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!")
+                  declarations
+              | (loc, ClassDeclaration { Class.id = Some id; _ })
+              | (loc, FunctionDeclaration { Function.id = Some id; _ })
+              | (loc, EnumDeclaration { EnumDeclaration.id; _ }) ->
+                [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
+              | (loc, ClassDeclaration { Class.id = None; _ }) ->
+                error_at env (loc, Parse_error.ExportNamelessClass);
+                []
+              | (loc, FunctionDeclaration { Function.id = None; _ }) ->
+                error_at env (loc, Parse_error.ExportNamelessFunction);
+                []
+              | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
             in
             List.iter (record_export env) names;
             Statement.ExportNamedDeclaration

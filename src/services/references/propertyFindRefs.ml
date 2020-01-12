@@ -27,14 +27,14 @@ end = struct
 
       method! private visit_object_key
           (literal_loc : Loc.t) (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
-        Ast.Expression.Object.(
-          match key with
-          | Property.Identifier (prop_loc, { Ast.Identifier.name; comments = _ })
-            when name = prop_name ->
-            this#update_acc (fun map -> LocMap.add literal_loc prop_loc map)
-          (* TODO consider supporting other property keys (e.g. literals). Also update the
-           * optimization in property_access_searcher below when this happens. *)
-          | _ -> ())
+        let open Ast.Expression.Object in
+        match key with
+        | Property.Identifier (prop_loc, { Ast.Identifier.name; comments = _ })
+          when name = prop_name ->
+          this#update_acc (fun map -> LocMap.add literal_loc prop_loc map)
+        (* TODO consider supporting other property keys (e.g. literals). Also update the
+         * optimization in property_access_searcher below when this happens. *)
+        | _ -> ()
     end
 
   let make ast ~prop_name =

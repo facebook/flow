@@ -54,51 +54,45 @@ module Object
         []
 
   let key ?(class_body = false) env =
-    Ast.Expression.Object.Property.(
-      let leading = Peek.comments env in
-      let tkn = Peek.token env in
-      let trailing = Peek.comments env in
-      match tkn with
-      | T_STRING (loc, value, raw, octal) ->
-        if octal then strict_error env Parse_error.StrictOctalLiteral;
-        Expect.token env (T_STRING (loc, value, raw, octal));
-        let value = Literal.String value in
-        ( loc,
-          Literal
-            ( loc,
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              } ) )
-      | T_NUMBER { kind; raw } ->
-        let loc = Peek.loc env in
-        let value = Expression.number env kind raw in
-        let value = Literal.Number value in
-        ( loc,
-          Literal
-            ( loc,
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              } ) )
-      | T_LBRACKET ->
-        with_loc
-          (fun env ->
-            Expect.token env T_LBRACKET;
-            let expr = Parse.assignment (env |> with_no_in false) in
-            Expect.token env T_RBRACKET;
-            Ast.Expression.Object.Property.Computed expr)
-          env
-      | T_POUND when class_body ->
-        let (loc, id, _is_private) = Expression.property_name_include_private env in
-        add_declared_private env (Flow_ast_utils.name_of_ident id);
-        (loc, PrivateName (loc, id))
-      | _ ->
-        let (loc, id, is_private) = Expression.property_name_include_private env in
-        if is_private then error_at env (loc, Parse_error.PrivateNotInClass);
-        (loc, Identifier id))
+    let open Ast.Expression.Object.Property in
+    let leading = Peek.comments env in
+    let tkn = Peek.token env in
+    let trailing = Peek.comments env in
+    match tkn with
+    | T_STRING (loc, value, raw, octal) ->
+      if octal then strict_error env Parse_error.StrictOctalLiteral;
+      Expect.token env (T_STRING (loc, value, raw, octal));
+      let value = Literal.String value in
+      ( loc,
+        Literal
+          ( loc,
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+          ) )
+    | T_NUMBER { kind; raw } ->
+      let loc = Peek.loc env in
+      let value = Expression.number env kind raw in
+      let value = Literal.Number value in
+      ( loc,
+        Literal
+          ( loc,
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+          ) )
+    | T_LBRACKET ->
+      with_loc
+        (fun env ->
+          Expect.token env T_LBRACKET;
+          let expr = Parse.assignment (env |> with_no_in false) in
+          Expect.token env T_RBRACKET;
+          Ast.Expression.Object.Property.Computed expr)
+        env
+    | T_POUND when class_body ->
+      let (loc, id, _is_private) = Expression.property_name_include_private env in
+      add_declared_private env (Flow_ast_utils.name_of_ident id);
+      (loc, PrivateName (loc, id))
+    | _ ->
+      let (loc, id, is_private) = Expression.property_name_include_private env in
+      if is_private then error_at env (loc, Parse_error.PrivateNotInClass);
+      (loc, Identifier id)
 
   let getter_or_setter env ~in_class_body is_getter =
     (* this is a getter or setter, it cannot be async *)
@@ -161,204 +155,205 @@ module Object
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:false true) env
       in
-      Ast.Expression.Object.(Property (loc, Property.Get { key; value }))
+      let open Ast.Expression.Object in
+      Property (loc, Property.Get { key; value })
     in
     let set env start_loc =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:false false) env
       in
-      Ast.Expression.Object.(Property (loc, Property.Set { key; value }))
+      let open Ast.Expression.Object in
+      Property (loc, Property.Set { key; value })
     in
     (* #prod-PropertyDefinition *)
     let init =
-      Ast.Expression.Object.Property.(
-        (* #prod-IdentifierReference *)
-        let parse_shorthand env key =
-          match key with
-          | Literal (loc, lit) ->
-            error_at env (loc, Parse_error.LiteralShorthandProperty);
-            (loc, Ast.Expression.Literal lit)
-          | Identifier ((loc, { Identifier.name; comments = _ }) as id) ->
-            (* #sec-identifiers-static-semantics-early-errors *)
-            if is_reserved name && name <> "yield" && name <> "await" then
-              (* it is a syntax error if `name` is a reserved word other than await or yield *)
-              error_at env (loc, Parse_error.UnexpectedReserved)
-            else if is_strict_reserved name then
-              (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
-              strict_error_at env (loc, Parse_error.StrictReservedWord);
-            (loc, Ast.Expression.Identifier id)
-          | PrivateName _ -> failwith "Internal Error: private name found in object props"
-          | Computed expr ->
-            error_at env (fst expr, Parse_error.ComputedShorthandProperty);
-            expr
-        in
-        (* #prod-MethodDefinition *)
-        let parse_method ~async ~generator =
-          with_loc (fun env ->
-              (* #sec-function-definitions-static-semantics-early-errors *)
-              let env = env |> with_allow_super Super_prop in
-              let (sig_loc, (tparams, params, return)) =
-                with_loc
-                  (fun env ->
-                    let tparams = Type.type_params env in
-                    let params =
-                      let (yield, await) =
-                        match (async, generator) with
-                        | (true, true) ->
-                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-                        | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
-                        | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
-                        | (false, false) -> (false, false)
-                        (* #prod-MethodDefinition *)
-                      in
-                      Declaration.function_params ~await ~yield env
+      let open Ast.Expression.Object.Property in
+      (* #prod-IdentifierReference *)
+      let parse_shorthand env key =
+        match key with
+        | Literal (loc, lit) ->
+          error_at env (loc, Parse_error.LiteralShorthandProperty);
+          (loc, Ast.Expression.Literal lit)
+        | Identifier ((loc, { Identifier.name; comments = _ }) as id) ->
+          (* #sec-identifiers-static-semantics-early-errors *)
+          if is_reserved name && name <> "yield" && name <> "await" then
+            (* it is a syntax error if `name` is a reserved word other than await or yield *)
+            error_at env (loc, Parse_error.UnexpectedReserved)
+          else if is_strict_reserved name then
+            (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
+            strict_error_at env (loc, Parse_error.StrictReservedWord);
+          (loc, Ast.Expression.Identifier id)
+        | PrivateName _ -> failwith "Internal Error: private name found in object props"
+        | Computed expr ->
+          error_at env (fst expr, Parse_error.ComputedShorthandProperty);
+          expr
+      in
+      (* #prod-MethodDefinition *)
+      let parse_method ~async ~generator =
+        with_loc (fun env ->
+            (* #sec-function-definitions-static-semantics-early-errors *)
+            let env = env |> with_allow_super Super_prop in
+            let (sig_loc, (tparams, params, return)) =
+              with_loc
+                (fun env ->
+                  let tparams = Type.type_params env in
+                  let params =
+                    let (yield, await) =
+                      match (async, generator) with
+                      | (true, true) ->
+                        (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                      | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
+                      | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
+                      | (false, false) -> (false, false)
+                      (* #prod-MethodDefinition *)
                     in
-                    let return = Type.annotation_opt env in
-                    (tparams, params, return))
-                  env
-              in
-              let (body, strict) = Declaration.function_body env ~async ~generator in
-              let simple = Declaration.is_simple_function_params params in
-              Declaration.strict_post_check env ~strict ~simple None params;
-              {
-                Function.id = None;
-                params;
-                body;
-                generator;
-                async;
-                (* TODO: add support for object method predicates *)
-                predicate = None;
-                return;
-                tparams;
-                sig_loc;
-              })
-        in
-        (* PropertyName `:` AssignmentExpression *)
-        let parse_value env =
-          Expect.token env T_COLON;
-          parse_assignment_cover env
-        in
-        (* #prod-CoverInitializedName *)
-        let parse_assignment_pattern ~key env =
-          Ast.Expression.Object.(
-            match key with
-            | Property.Identifier id ->
-              let assignment_loc = Peek.loc env in
-              let ast =
-                with_loc
-                  ~start_loc:(fst id)
-                  (fun env ->
-                    Expect.token env T_ASSIGN;
-                    let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
-                    let right = Parse.assignment env in
-                    Ast.Expression.Assignment
-                      { Ast.Expression.Assignment.operator = None; left; right })
-                  env
-              in
-              let errs =
-                {
-                  if_expr = [(assignment_loc, Parse_error.Unexpected (Token.quote_token_value "="))];
-                  if_patt = [];
-                }
-              in
-              (ast, errs)
-            | Property.Literal _
-            | Property.PrivateName _
-            | Property.Computed _ ->
-              parse_value env)
-        in
-        let parse_init ~key ~async ~generator env =
-          if async || generator then
-            (* the `async` and `*` modifiers are only valid on methods *)
+                    Declaration.function_params ~await ~yield env
+                  in
+                  let return = Type.annotation_opt env in
+                  (tparams, params, return))
+                env
+            in
+            let (body, strict) = Declaration.function_body env ~async ~generator in
+            let simple = Declaration.is_simple_function_params params in
+            Declaration.strict_post_check env ~strict ~simple None params;
+            {
+              Function.id = None;
+              params;
+              body;
+              generator;
+              async;
+              (* TODO: add support for object method predicates *)
+              predicate = None;
+              return;
+              tparams;
+              sig_loc;
+            })
+      in
+      (* PropertyName `:` AssignmentExpression *)
+      let parse_value env =
+        Expect.token env T_COLON;
+        parse_assignment_cover env
+      in
+      (* #prod-CoverInitializedName *)
+      let parse_assignment_pattern ~key env =
+        let open Ast.Expression.Object in
+        match key with
+        | Property.Identifier id ->
+          let assignment_loc = Peek.loc env in
+          let ast =
+            with_loc
+              ~start_loc:(fst id)
+              (fun env ->
+                Expect.token env T_ASSIGN;
+                let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
+                let right = Parse.assignment env in
+                Ast.Expression.Assignment { Ast.Expression.Assignment.operator = None; left; right })
+              env
+          in
+          let errs =
+            {
+              if_expr = [(assignment_loc, Parse_error.Unexpected (Token.quote_token_value "="))];
+              if_patt = [];
+            }
+          in
+          (ast, errs)
+        | Property.Literal _
+        | Property.PrivateName _
+        | Property.Computed _ ->
+          parse_value env
+      in
+      let parse_init ~key ~async ~generator env =
+        if async || generator then
+          (* the `async` and `*` modifiers are only valid on methods *)
+          let value = parse_method env ~async ~generator in
+          let prop = Method { key; value } in
+          (prop, Pattern_cover.empty_errors)
+        else
+          match Peek.token env with
+          | T_RCURLY
+          | T_COMMA ->
+            let value = parse_shorthand env key in
+            let prop = Init { key; value; shorthand = true } in
+            (prop, Pattern_cover.empty_errors)
+          | T_LESS_THAN
+          | T_LPAREN ->
             let value = parse_method env ~async ~generator in
             let prop = Method { key; value } in
             (prop, Pattern_cover.empty_errors)
-          else
-            match Peek.token env with
-            | T_RCURLY
-            | T_COMMA ->
-              let value = parse_shorthand env key in
-              let prop = Init { key; value; shorthand = true } in
-              (prop, Pattern_cover.empty_errors)
-            | T_LESS_THAN
-            | T_LPAREN ->
-              let value = parse_method env ~async ~generator in
-              let prop = Method { key; value } in
-              (prop, Pattern_cover.empty_errors)
-            | T_ASSIGN ->
-              let (value, errs) = parse_assignment_pattern ~key env in
-              let prop = Init { key; value; shorthand = true } in
-              (prop, errs)
-            | _ ->
-              let (value, errs) = parse_value env in
-              let prop = Init { key; value; shorthand = false } in
-              (prop, errs)
-        in
-        fun env start_loc key async generator ->
-          let (loc, (prop, errs)) = with_loc ~start_loc (parse_init ~key ~async ~generator) env in
-          (Ast.Expression.Object.Property (loc, prop), errs))
+          | T_ASSIGN ->
+            let (value, errs) = parse_assignment_pattern ~key env in
+            let prop = Init { key; value; shorthand = true } in
+            (prop, errs)
+          | _ ->
+            let (value, errs) = parse_value env in
+            let prop = Init { key; value; shorthand = false } in
+            (prop, errs)
+      in
+      fun env start_loc key async generator ->
+        let (loc, (prop, errs)) = with_loc ~start_loc (parse_init ~key ~async ~generator) env in
+        (Ast.Expression.Object.Property (loc, prop), errs)
     in
     let property env =
-      Ast.Expression.Object.(
-        if Peek.token env = T_ELLIPSIS then
-          (* Spread property *)
-          let (loc, (argument, errs)) =
-            with_loc
-              (fun env ->
-                Expect.token env T_ELLIPSIS;
-                parse_assignment_cover env)
-              env
-          in
-          (SpreadProperty (loc, { SpreadProperty.argument }), errs)
-        else
-          let start_loc = Peek.loc env in
-          let async =
-            match Peek.ith_token ~i:1 env with
+      let open Ast.Expression.Object in
+      if Peek.token env = T_ELLIPSIS then
+        (* Spread property *)
+        let (loc, (argument, errs)) =
+          with_loc
+            (fun env ->
+              Expect.token env T_ELLIPSIS;
+              parse_assignment_cover env)
+            env
+        in
+        (SpreadProperty (loc, { SpreadProperty.argument }), errs)
+      else
+        let start_loc = Peek.loc env in
+        let async =
+          match Peek.ith_token ~i:1 env with
+          | T_ASSIGN
+          (* { async = true } (destructuring) *)
+          | T_COLON
+          (* { async: true } *)
+          | T_LESS_THAN
+          (* { async<T>() {} } *)
+          | T_LPAREN
+          (* { async() {} } *)
+          | T_COMMA
+          (* { async, other, shorthand } *)
+          | T_RCURLY (* { async } *) ->
+            false
+          | _ -> Declaration.async env
+        in
+        let generator = Declaration.generator env in
+        match (async, generator, Peek.token env) with
+        | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
+          let (_, key) = key env in
+          begin
+            match Peek.token env with
             | T_ASSIGN
-            (* { async = true } (destructuring) *)
             | T_COLON
-            (* { async: true } *)
             | T_LESS_THAN
-            (* { async<T>() {} } *)
             | T_LPAREN
-            (* { async() {} } *)
             | T_COMMA
-            (* { async, other, shorthand } *)
-            | T_RCURLY (* { async } *) ->
-              false
-            | _ -> Declaration.async env
-          in
-          let generator = Declaration.generator env in
-          match (async, generator, Peek.token env) with
-          | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
-            let (_, key) = key env in
-            begin
-              match Peek.token env with
-              | T_ASSIGN
-              | T_COLON
-              | T_LESS_THAN
-              | T_LPAREN
-              | T_COMMA
-              | T_RCURLY ->
-                init env start_loc key false false
-              | _ -> (get env start_loc, Pattern_cover.empty_errors)
-            end
-          | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
-            let (_, key) = key env in
-            begin
-              match Peek.token env with
-              | T_ASSIGN
-              | T_COLON
-              | T_LESS_THAN
-              | T_LPAREN
-              | T_COMMA
-              | T_RCURLY ->
-                init env start_loc key false false
-              | _ -> (set env start_loc, Pattern_cover.empty_errors)
-            end
-          | (async, generator, _) ->
-            let (_, key) = key env in
-            init env start_loc key async generator)
+            | T_RCURLY ->
+              init env start_loc key false false
+            | _ -> (get env start_loc, Pattern_cover.empty_errors)
+          end
+        | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
+          let (_, key) = key env in
+          begin
+            match Peek.token env with
+            | T_ASSIGN
+            | T_COLON
+            | T_LESS_THAN
+            | T_LPAREN
+            | T_COMMA
+            | T_RCURLY ->
+              init env start_loc key false false
+            | _ -> (set env start_loc, Pattern_cover.empty_errors)
+          end
+        | (async, generator, _) ->
+          let (_, key) = key env in
+          init env start_loc key async generator
     in
     let rec properties env ~rest_trailing_comma (props, errs) =
       match Peek.token env with
@@ -475,13 +470,15 @@ module Object
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
       in
-      Ast.Class.(Body.Method (loc, { Method.key; value; kind = Method.Get; static; decorators }))
+      let open Ast.Class in
+      Body.Method (loc, { Method.key; value; kind = Method.Get; static; decorators })
     in
     let set env start_loc decorators static =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true false) env
       in
-      Ast.Class.(Body.Method (loc, { Method.key; value; kind = Method.Set; static; decorators }))
+      let open Ast.Class in
+      Body.Method (loc, { Method.key; value; kind = Method.Set; static; decorators })
     in
     let error_unsupported_variance env = function
       | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
@@ -517,9 +514,8 @@ module Object
       in
       match key with
       | Ast.Expression.Object.Property.PrivateName private_name ->
-        Ast.Class.(
-          Body.PrivateField
-            (loc, { PrivateField.key = private_name; value; annot; static; variance }))
+        let open Ast.Class in
+        Body.PrivateField (loc, { PrivateField.key = private_name; value; annot; static; variance })
       | _ -> Ast.Class.(Body.Property (loc, { Property.key; value; annot; static; variance }))
     in
     let rec init env start_loc decorators key async generator static variance =
@@ -591,9 +587,8 @@ module Object
               })
             env
         in
-        Ast.Class.(
-          Body.Method
-            (Loc.btwn start_loc (fst value), { Method.key; value; kind; static; decorators }))
+        let open Ast.Class in
+        Body.Method (Loc.btwn start_loc (fst value), { Method.key; value; kind; static; decorators })
     in
     let ith_implies_identifier ~i env =
       match Peek.ith_token ~i env with
@@ -666,56 +661,54 @@ module Object
         let (seen_constructor', private_names') =
           match element with
           | Ast.Class.Body.Method (loc, m) ->
-            Ast.Class.Method.(
-              begin
-                match m.kind with
-                | Constructor ->
-                  if m.static then
-                    (seen_constructor, private_names)
-                  else (
-                    if seen_constructor then error_at env (loc, Parse_error.DuplicateConstructor);
-                    (true, private_names)
-                  )
-                | Method ->
-                  ( seen_constructor,
-                    begin
-                      match m.key with
-                      | Ast.Expression.Object.Property.PrivateName _ ->
-                        error_at env (loc, Parse_error.PrivateMethod);
-                        private_names
-                      | _ -> private_names
-                    end )
-                | Get ->
-                  let private_names =
-                    match m.key with
-                    | Ast.Expression.Object.Property.PrivateName name ->
-                      check_private_names env private_names name `Getter
-                    | _ -> private_names
-                  in
-                  (seen_constructor, private_names)
-                | Set ->
-                  let private_names =
-                    match m.key with
-                    | Ast.Expression.Object.Property.PrivateName name ->
-                      check_private_names env private_names name `Setter
-                    | _ -> private_names
-                  in
-                  (seen_constructor, private_names)
-              end)
-          | Ast.Class.Body.Property (_, { Ast.Class.Property.key; static; _ }) ->
-            Ast.Expression.Object.Property.(
-              begin
-                match key with
-                | Identifier (loc, { Identifier.name; comments = _ })
-                | Literal (loc, { Literal.value = Literal.String name; _ }) ->
-                  check_property_name env loc name static
-                | Literal _
-                | Computed _ ->
-                  ()
-                | PrivateName _ ->
-                  failwith "unexpected PrivateName in Property, expected a PrivateField"
-              end;
+            let open Ast.Class.Method in
+            (match m.kind with
+            | Constructor ->
+              if m.static then
+                (seen_constructor, private_names)
+              else (
+                if seen_constructor then error_at env (loc, Parse_error.DuplicateConstructor);
+                (true, private_names)
+              )
+            | Method ->
+              ( seen_constructor,
+                begin
+                  match m.key with
+                  | Ast.Expression.Object.Property.PrivateName _ ->
+                    error_at env (loc, Parse_error.PrivateMethod);
+                    private_names
+                  | _ -> private_names
+                end )
+            | Get ->
+              let private_names =
+                match m.key with
+                | Ast.Expression.Object.Property.PrivateName name ->
+                  check_private_names env private_names name `Getter
+                | _ -> private_names
+              in
+              (seen_constructor, private_names)
+            | Set ->
+              let private_names =
+                match m.key with
+                | Ast.Expression.Object.Property.PrivateName name ->
+                  check_private_names env private_names name `Setter
+                | _ -> private_names
+              in
               (seen_constructor, private_names))
+          | Ast.Class.Body.Property (_, { Ast.Class.Property.key; static; _ }) ->
+            let open Ast.Expression.Object.Property in
+            begin
+              match key with
+              | Identifier (loc, { Identifier.name; comments = _ })
+              | Literal (loc, { Literal.value = Literal.String name; _ }) ->
+                check_property_name env loc name static
+              | Literal _
+              | Computed _ ->
+                ()
+              | PrivateName _ ->
+                failwith "unexpected PrivateName in Property, expected a PrivateField"
+            end;
+            (seen_constructor, private_names)
           | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.key; _ }) ->
             let private_names = check_private_names env private_names key `Field in
             (seen_constructor, private_names)

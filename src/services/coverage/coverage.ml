@@ -300,14 +300,14 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
 
     method! object_property prop =
       let prop = super#object_property prop in
-      Ast.Expression.Object.(
-        match prop with
-        | ( loc,
-            Property.Method
-              { key = Property.Literal ((_, t), _) | Property.Identifier ((_, t), _); _ } ) ->
-          acc <- f loc t acc;
-          prop
-        | _ -> prop)
+      let open Ast.Expression.Object in
+      match prop with
+      | ( loc,
+          Property.Method
+            { key = Property.Literal ((_, t), _) | Property.Identifier ((_, t), _); _ } ) ->
+        acc <- f loc t acc;
+        prop
+      | _ -> prop
 
     method! statement stmt =
       let stmt = super#statement stmt in
@@ -347,23 +347,23 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
 
     (* skip this *)
     method! jsx_name name =
-      Ast.JSX.(
-        let name = super#jsx_name name in
-        match name with
-        | MemberExpression (loc, { MemberExpression.property = ((_, t), _); _ }) ->
-          acc <- f loc t acc;
-          name
-        | Identifier _
-        | NamespacedName _ ->
-          name)
+      let open Ast.JSX in
+      let name = super#jsx_name name in
+      match name with
+      | MemberExpression (loc, { MemberExpression.property = ((_, t), _); _ }) ->
+        acc <- f loc t acc;
+        name
+      | Identifier _
+      | NamespacedName _ ->
+        name
 
     method! jsx_member_expression_object _object =
-      Ast.JSX.MemberExpression.(
-        match _object with
-        | Identifier ((loc, t), _) ->
-          acc <- f loc t acc;
-          _object
-        | MemberExpression _ -> super#jsx_member_expression_object _object)
+      let open Ast.JSX.MemberExpression in
+      match _object with
+      | Identifier ((loc, t), _) ->
+        acc <- f loc t acc;
+        _object
+      | MemberExpression _ -> super#jsx_member_expression_object _object
 
     method! t_pattern_identifier ?kind i =
       let ((loc, t), _) = i in

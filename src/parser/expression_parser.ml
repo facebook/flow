@@ -52,49 +52,49 @@ module Expression
     a_prec >= b_prec
 
   let is_assignable_lhs =
-    Expression.(
-      function
-      | ( _,
-          MetaProperty
-            {
-              MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
-              property = (_, { Identifier.name = "target"; comments = _ });
-            } ) ->
-        false
-      (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
-      | (_, Array _)
-      | (_, Identifier _)
-      | (_, Member _)
-      | (_, MetaProperty _)
-      | (_, Object _) ->
-        true
-      | (_, ArrowFunction _)
-      | (_, Assignment _)
-      | (_, Binary _)
-      | (_, Call _)
-      | (_, Class _)
-      | (_, Comprehension _)
-      | (_, Conditional _)
-      | (_, Function _)
-      | (_, Generator _)
-      | (_, Import _)
-      | (_, JSXElement _)
-      | (_, JSXFragment _)
-      | (_, Literal _)
-      | (_, Logical _)
-      | (_, New _)
-      | (_, OptionalCall _)
-      | (_, OptionalMember _)
-      | (_, Sequence _)
-      | (_, Super)
-      | (_, TaggedTemplate _)
-      | (_, TemplateLiteral _)
-      | (_, This)
-      | (_, TypeCast _)
-      | (_, Unary _)
-      | (_, Update _)
-      | (_, Yield _) ->
-        false)
+    let open Expression in
+    function
+    | ( _,
+        MetaProperty
+          {
+            MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
+            property = (_, { Identifier.name = "target"; comments = _ });
+          } ) ->
+      false
+    (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    | (_, Array _)
+    | (_, Identifier _)
+    | (_, Member _)
+    | (_, MetaProperty _)
+    | (_, Object _) ->
+      true
+    | (_, ArrowFunction _)
+    | (_, Assignment _)
+    | (_, Binary _)
+    | (_, Call _)
+    | (_, Class _)
+    | (_, Comprehension _)
+    | (_, Conditional _)
+    | (_, Function _)
+    | (_, Generator _)
+    | (_, Import _)
+    | (_, JSXElement _)
+    | (_, JSXFragment _)
+    | (_, Literal _)
+    | (_, Logical _)
+    | (_, New _)
+    | (_, OptionalCall _)
+    | (_, OptionalMember _)
+    | (_, Sequence _)
+    | (_, Super)
+    | (_, TaggedTemplate _)
+    | (_, TemplateLiteral _)
+    | (_, This)
+    | (_, TypeCast _)
+    | (_, Unary _)
+    | (_, Update _)
+    | (_, Yield _) ->
+      false
 
   let as_expression = Pattern_cover.as_expression
 
@@ -214,60 +214,56 @@ module Expression
           | None -> Peek.comments env
           | Some _ -> []
         in
-        Expression.(
-          Yield
-            Yield.
-              {
-                argument;
-                delegate;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }))
+        let open Expression in
+        Yield
+          Yield.
+            { argument; delegate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
       env
 
   and is_lhs =
-    Expression.(
-      function
-      | ( _,
-          MetaProperty
-            {
-              MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
-              property = (_, { Identifier.name = "target"; comments = _ });
-            } ) ->
-        false
-      (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
-      | (_, Identifier _)
-      | (_, Member _)
-      | (_, MetaProperty _) ->
-        true
-      | (_, Array _)
-      | (_, ArrowFunction _)
-      | (_, Assignment _)
-      | (_, Binary _)
-      | (_, Call _)
-      | (_, Class _)
-      | (_, Comprehension _)
-      | (_, Conditional _)
-      | (_, Function _)
-      | (_, Generator _)
-      | (_, Import _)
-      | (_, JSXElement _)
-      | (_, JSXFragment _)
-      | (_, Literal _)
-      | (_, Logical _)
-      | (_, New _)
-      | (_, Object _)
-      | (_, OptionalCall _)
-      | (_, OptionalMember _)
-      | (_, Sequence _)
-      | (_, Super)
-      | (_, TaggedTemplate _)
-      | (_, TemplateLiteral _)
-      | (_, This)
-      | (_, TypeCast _)
-      | (_, Unary _)
-      | (_, Update _)
-      | (_, Yield _) ->
-        false)
+    let open Expression in
+    function
+    | ( _,
+        MetaProperty
+          {
+            MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
+            property = (_, { Identifier.name = "target"; comments = _ });
+          } ) ->
+      false
+    (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    | (_, Identifier _)
+    | (_, Member _)
+    | (_, MetaProperty _) ->
+      true
+    | (_, Array _)
+    | (_, ArrowFunction _)
+    | (_, Assignment _)
+    | (_, Binary _)
+    | (_, Call _)
+    | (_, Class _)
+    | (_, Comprehension _)
+    | (_, Conditional _)
+    | (_, Function _)
+    | (_, Generator _)
+    | (_, Import _)
+    | (_, JSXElement _)
+    | (_, JSXFragment _)
+    | (_, Literal _)
+    | (_, Logical _)
+    | (_, New _)
+    | (_, Object _)
+    | (_, OptionalCall _)
+    | (_, OptionalMember _)
+    | (_, Sequence _)
+    | (_, Super)
+    | (_, TaggedTemplate _)
+    | (_, TemplateLiteral _)
+    | (_, This)
+    | (_, TypeCast _)
+    | (_, Unary _)
+    | (_, Update _)
+    | (_, Yield _) ->
+      false
 
   and assignment_op env =
     let op =
@@ -309,8 +305,8 @@ module Expression
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr
         ( loc,
-          Expression.(
-            Conditional { Conditional.test = as_expression env expr; consequent; alternate }) )
+          let open Expression in
+          Conditional { Conditional.test = as_expression env expr; consequent; alternate } )
     ) else
       expr
 
@@ -330,69 +326,69 @@ module Expression
    *   LogicalORExpression
    *)
   and logical_cover =
-    Expression.(
-      let make_logical env left right operator loc =
-        let left = as_expression env left in
-        let right = as_expression env right in
-        Cover_expr (loc, Logical { Logical.operator; left; right })
-      in
-      let rec logical_and env left lloc =
-        match Peek.token env with
-        | T_AND ->
-          Expect.token env T_AND;
-          let (rloc, right) = with_loc binary_cover env in
-          let loc = Loc.btwn lloc rloc in
-          let left = make_logical env left right Logical.And loc in
-          (* `a && b ?? c` is an error, but to recover, try to parse it like `(a && b) ?? c`. *)
-          let (loc, left) = coalesce ~allowed:false env left loc in
-          logical_and env left loc
-        | _ -> (lloc, left)
-      and logical_or env left lloc =
-        match Peek.token env with
-        | T_OR ->
-          Expect.token env T_OR;
-          let (rloc, right) = with_loc binary_cover env in
-          let (rloc, right) = logical_and env right rloc in
-          let loc = Loc.btwn lloc rloc in
-          let left = make_logical env left right Logical.Or loc in
-          (* `a || b ?? c` is an error, but to recover, try to parse it like `(a || b) ?? c`. *)
-          let (loc, left) = coalesce ~allowed:false env left loc in
-          logical_or env left loc
-        | _ -> (lloc, left)
-      and coalesce ~allowed env left lloc =
-        match Peek.token env with
-        | T_PLING_PLING ->
-          let options = parse_options env in
-          if not options.esproposal_nullish_coalescing then
-            error env Parse_error.NullishCoalescingDisabled;
+    let open Expression in
+    let make_logical env left right operator loc =
+      let left = as_expression env left in
+      let right = as_expression env right in
+      Cover_expr (loc, Logical { Logical.operator; left; right })
+    in
+    let rec logical_and env left lloc =
+      match Peek.token env with
+      | T_AND ->
+        Expect.token env T_AND;
+        let (rloc, right) = with_loc binary_cover env in
+        let loc = Loc.btwn lloc rloc in
+        let left = make_logical env left right Logical.And loc in
+        (* `a && b ?? c` is an error, but to recover, try to parse it like `(a && b) ?? c`. *)
+        let (loc, left) = coalesce ~allowed:false env left loc in
+        logical_and env left loc
+      | _ -> (lloc, left)
+    and logical_or env left lloc =
+      match Peek.token env with
+      | T_OR ->
+        Expect.token env T_OR;
+        let (rloc, right) = with_loc binary_cover env in
+        let (rloc, right) = logical_and env right rloc in
+        let loc = Loc.btwn lloc rloc in
+        let left = make_logical env left right Logical.Or loc in
+        (* `a || b ?? c` is an error, but to recover, try to parse it like `(a || b) ?? c`. *)
+        let (loc, left) = coalesce ~allowed:false env left loc in
+        logical_or env left loc
+      | _ -> (lloc, left)
+    and coalesce ~allowed env left lloc =
+      match Peek.token env with
+      | T_PLING_PLING ->
+        let options = parse_options env in
+        if not options.esproposal_nullish_coalescing then
+          error env Parse_error.NullishCoalescingDisabled;
 
-          if not allowed then error env (Parse_error.NullishCoalescingUnexpectedLogical "??");
+        if not allowed then error env (Parse_error.NullishCoalescingUnexpectedLogical "??");
 
-          Expect.token env T_PLING_PLING;
-          let (rloc, right) = with_loc binary_cover env in
-          let (rloc, right) =
-            match Peek.token env with
-            | (T_AND | T_OR) as t ->
-              (* `a ?? b || c` is an error. To recover, treat it like `a ?? (b || c)`. *)
-              error env (Parse_error.NullishCoalescingUnexpectedLogical (Token.value_of_token t));
-              let (rloc, right) = logical_and env right rloc in
-              logical_or env right rloc
-            | _ -> (rloc, right)
-          in
-          let loc = Loc.btwn lloc rloc in
-          coalesce ~allowed:true env (make_logical env left right Logical.NullishCoalesce loc) loc
-        | _ -> (lloc, left)
-      in
-      fun env ->
-        let (loc, left) = with_loc binary_cover env in
-        let (_, left) =
+        Expect.token env T_PLING_PLING;
+        let (rloc, right) = with_loc binary_cover env in
+        let (rloc, right) =
           match Peek.token env with
-          | T_PLING_PLING -> coalesce ~allowed:true env left loc
-          | _ ->
-            let (loc, left) = logical_and env left loc in
-            logical_or env left loc
+          | (T_AND | T_OR) as t ->
+            (* `a ?? b || c` is an error. To recover, treat it like `a ?? (b || c)`. *)
+            error env (Parse_error.NullishCoalescingUnexpectedLogical (Token.value_of_token t));
+            let (rloc, right) = logical_and env right rloc in
+            logical_or env right rloc
+          | _ -> (rloc, right)
         in
-        left)
+        let loc = Loc.btwn lloc rloc in
+        coalesce ~allowed:true env (make_logical env left right Logical.NullishCoalesce loc) loc
+      | _ -> (lloc, left)
+    in
+    fun env ->
+      let (loc, left) = with_loc binary_cover env in
+      let (_, left) =
+        match Peek.token env with
+        | T_PLING_PLING -> coalesce ~allowed:true env left loc
+        | _ ->
+          let (loc, left) = logical_and env left loc in
+          logical_or env left loc
+      in
+      left
 
   and binary_cover =
     let binary_op env =
@@ -523,22 +519,21 @@ module Expression
       Eat.token env;
       let (end_loc, argument) = with_loc unary env in
       let loc = Loc.btwn begin_loc end_loc in
-      Expression.(
-        match (operator, argument) with
-        | (Unary.Delete, (_, Identifier _)) -> strict_error_at env (loc, Parse_error.StrictDelete)
-        | (Unary.Delete, (_, Member member)) ->
-          begin
-            match member.Ast.Expression.Member.property with
-            | Ast.Expression.Member.PropertyPrivateName _ ->
-              error_at env (loc, Parse_error.PrivateDelete)
-            | _ -> ()
-          end
-        | _ -> ());
+      let open Expression in
+      (match (operator, argument) with
+      | (Unary.Delete, (_, Identifier _)) -> strict_error_at env (loc, Parse_error.StrictDelete)
+      | (Unary.Delete, (_, Member member)) ->
+        begin
+          match member.Ast.Expression.Member.property with
+          | Ast.Expression.Member.PropertyPrivateName _ ->
+            error_at env (loc, Parse_error.PrivateDelete)
+          | _ -> ()
+        end
+      | _ -> ());
       Cover_expr
         ( loc,
-          Expression.(
-            Unary
-              { Unary.operator; argument; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+          let open Expression in
+          Unary { Unary.operator; argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         )
 
   and unary env = as_expression env (unary_cover env)
@@ -643,7 +638,8 @@ module Expression
       let call = { Expression.Call.callee = as_expression env left; targs; arguments } in
       let call =
         if optional || in_optional_chain then
-          Expression.(OptionalCall { OptionalCall.call; optional })
+          let open Expression in
+          OptionalCall { OptionalCall.call; optional }
         else
           Expression.Call call
       in
@@ -773,7 +769,8 @@ module Expression
         Expect.token env T_ELLIPSIS;
         let argument = assignment env in
         let loc = Loc.btwn start_loc (fst argument) in
-        Expression.(Spread (loc, SpreadElement.{ argument }))
+        let open Expression in
+        Spread (loc, SpreadElement.{ argument })
       | _ -> Expression.Expression (assignment env)
     in
     let rec arguments' env acc =
@@ -812,7 +809,8 @@ module Expression
       in
       let member =
         if in_optional_chain then
-          Expression.(OptionalMember { OptionalMember.member; optional })
+          let open Expression in
+          OptionalMember { OptionalMember.member; optional }
         else
           Expression.Member member
       in
@@ -845,7 +843,8 @@ module Expression
         let member = Expression.Member.{ _object = as_expression env left; property } in
         let member =
           if in_optional_chain then
-            Expression.(OptionalMember { OptionalMember.member; optional })
+            let open Expression in
+            OptionalMember { OptionalMember.member; optional }
           else
             Expression.Member member
         in
@@ -1004,25 +1003,19 @@ module Expression
       let trailing = Peek.comments env in
       Cover_expr
         ( loc,
-          Expression.(
-            Literal
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }) )
+          let open Expression in
+          Literal
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
     | T_BIGINT { kind; raw } ->
       let value = Literal.BigInt (bigint env kind raw) in
       let trailing = Peek.comments env in
       Cover_expr
         ( loc,
-          Expression.(
-            Literal
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }) )
+          let open Expression in
+          Literal
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Expect.token env (T_STRING (loc, value, raw, octal));
@@ -1030,13 +1023,10 @@ module Expression
       let trailing = Peek.comments env in
       Cover_expr
         ( loc,
-          Expression.(
-            Literal
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }) )
+          let open Expression in
+          Literal
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
     | (T_TRUE | T_FALSE) as token ->
       Expect.token env token;
       let truthy = token = T_TRUE in
@@ -1050,13 +1040,10 @@ module Expression
       let trailing = Peek.comments env in
       Cover_expr
         ( loc,
-          Expression.(
-            Literal
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }) )
+          let open Expression in
+          Literal
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
     | T_NULL ->
       Expect.token env T_NULL;
       let raw = "null" in
@@ -1064,13 +1051,10 @@ module Expression
       let trailing = Peek.comments env in
       Cover_expr
         ( loc,
-          Expression.(
-            Literal
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }) )
+          let open Expression in
+          Literal
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
     | T_LPAREN -> Cover_expr (group env)
     | T_LCURLY ->
       let (loc, obj, errs) = Parse.object_initializer env in
@@ -1112,13 +1096,10 @@ module Expression
       let trailing = [] in
       Cover_expr
         ( loc,
-          Expression.(
-            Literal
-              {
-                Literal.value;
-                raw;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }) )
+          let open Expression in
+          Literal
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
 
   and primary env = as_expression env (primary_cover env)
 
@@ -1132,9 +1113,9 @@ module Expression
         let (loc, part, is_tail) =
           match Peek.token env with
           | T_TEMPLATE_PART (loc, { cooked; raw; _ }, tail) ->
-            Ast.Expression.TemplateLiteral.(
-              Eat.token env;
-              (loc, { Element.value = { Element.cooked; raw }; tail }, tail))
+            let open Ast.Expression.TemplateLiteral in
+            Eat.token env;
+            (loc, { Element.value = { Element.cooked; raw }; tail }, tail)
           | _ -> assert false
         in
         Eat.pop_lex_mode env;
@@ -1183,7 +1164,8 @@ module Expression
       | T_COMMA -> sequence env [expression]
       | T_COLON ->
         let annot = Type.annotation env in
-        Expression.(Loc.btwn (fst expression) (fst annot), TypeCast TypeCast.{ expression; annot })
+        let open Expression in
+        (Loc.btwn (fst expression) (fst annot), TypeCast TypeCast.{ expression; annot })
       | _ -> expression
     in
     Expect.token env T_RPAREN;
@@ -1279,10 +1261,9 @@ module Expression
     if flags <> raw_flags then error env (Parse_error.InvalidRegExpFlags raw_flags);
     let value = Literal.(RegExp { RegExp.pattern; flags }) in
     ( loc,
-      Expression.(
-        Literal
-          { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
-    )
+      let open Expression in
+      Literal
+        { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
 
   and try_arrow_function =
     (* Certain errors (almost all errors) cause a rollback *)
@@ -1384,20 +1365,20 @@ module Expression
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr
         ( loc,
-          Expression.(
-            ArrowFunction
-              {
-                Function.id = None;
-                params;
-                body;
-                async;
-                generator = false;
-                (* arrow functions cannot be generators *)
-                predicate;
-                return;
-                tparams;
-                sig_loc;
-              }) )
+          let open Expression in
+          ArrowFunction
+            {
+              Function.id = None;
+              params;
+              body;
+              async;
+              generator = false;
+              (* arrow functions cannot be generators *)
+              predicate;
+              return;
+              tparams;
+              sig_loc;
+            } )
 
   and sequence env acc =
     match Peek.token env with

@@ -150,23 +150,6 @@ static int win32_getpagesize(void) {
 #define getpagesize win32_getpagesize
 #endif
 
-
-/*****************************************************************************/
-/* Config settings (essentially constants, so they don't need to live in shared
- * memory), initialized in hh_shared_init */
-/*****************************************************************************/
-
-/* Convention: .*_b = Size in bytes. */
-
-static size_t heap_size;
-
-/* Used for the shared hashtable */
-static uint64_t hashtbl_size;
-static size_t hashtbl_size_b;
-
-/* Used for worker-local data */
-static size_t locals_size_b;
-
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
 
@@ -174,9 +157,47 @@ static size_t locals_size_b;
 #define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
 #define CACHE_ALIGN(x)          ALIGN(x,CACHE_LINE_SIZE)
 
+/* Each process reserves a range of values at a time from the shared counter.
+ * Should be a power of two for more efficient modulo calculation. */
+#define COUNTER_RANGE 2048
+
 /*****************************************************************************/
 /* Types */
 /*****************************************************************************/
+
+/* Convention: .*_b = Size in bytes. */
+
+typedef struct {
+  /* Logging level for shared memory statistics
+   * 0 = nothing
+   * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
+   * 2+ = log size of deserialized values in OCaml heap
+   */
+  size_t log_level;
+
+  /* Initially 0; set to 1 to signal that workers should exit */
+  size_t workers_should_exit;
+
+  size_t wasted_heap_size;
+
+  /* Useful to add assertions */
+  pid_t master_pid;
+
+  /* A counter increasing globally across all forks. */
+  alignas(128) uintnat counter;
+
+  /* The number of nonempty slots in the hashtable. A nonempty slot has a
+   * non-zero hash. We never clear hashes so this monotonically increases */
+  alignas(128) uintnat hcounter;
+
+  /* The number of nonempty filled slots in the hashtable. A nonempty filled slot
+   * has a non-zero hash AND a non-null addr. It increments when we write data
+   * into a slot with addr==NULL and decrements when we clear data from a slot */
+  alignas(128) uintnat hcounter_filled;
+
+  /* The top of the heap, offset from hashtbl pointer */
+  alignas(128) size_t heap;
+} shmem_info_t;
 
 /* Per-worker data which can be quickly updated non-atomically. Will be placed
  * in cache-aligned array in the first few pages of shared memory, indexed by
@@ -255,48 +276,34 @@ typedef struct {
 /* Total size of allocated shared memory */
 static size_t shared_mem_size = 0;
 
+/* Size of local storage */
+static size_t num_workers = 0;
+static size_t locals_size_b = 0;
+
+/* Size of shared hash table */
+static size_t hashtbl_size = 0;
+static size_t hashtbl_size_b = 0;
+
+/* Size of shared heap */
+static size_t heap_size_b = 0;
+
 /* Beginning of shared memory */
 static char* shared_mem = NULL;
 
-/* The hashtable containing the shared values. */
-static helt_t* hashtbl = NULL;
-/* The number of nonempty slots in the hashtable. A nonempty slot has a
- * non-zero hash. We never clear hashes so this monotonically increases */
-static uint64_t* hcounter = NULL;
-/* The number of nonempty filled slots in the hashtable. A nonempty filled slot
- * has a non-zero hash AND a non-null addr. It increments when we write data
- * into a slot with addr==NULL and decrements when we clear data from a slot */
-static uint64_t* hcounter_filled = NULL;
-
-/* A counter increasing globally across all forks. */
-static uintptr_t* counter = NULL;
-
-/* Each process reserves a range of values at a time from the shared counter.
- * Should be a power of two for more efficient modulo calculation. */
-#define COUNTER_RANGE 2048
-
-/* Logging level for shared memory statistics
- * 0 = nothing
- * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
- */
-static size_t* log_level = NULL;
-
-static size_t* workers_should_exit = NULL;
+/* Shared memory metadata */
+static shmem_info_t* info = NULL;
 
 /* Worker-local storage is cache line aligned. */
-static local_t* locals;
+static local_t* locals = NULL;
+
+/* The hashtable containing the shared values. */
+static helt_t* hashtbl = NULL;
 
 /* This should only be used before forking */
-static uintptr_t early_counter = 0;
-
-/* The top of the heap, offset from hashtbl pointer */
-static size_t* heap = NULL;
+static uintnat early_counter = 0;
 
 /* Useful to add assertions */
-static pid_t* master_pid = NULL;
 static pid_t my_pid = 0;
-
-static size_t num_workers;
 
 /* This is a process-local value. The master process is 0, workers are numbered
  * starting at 1. This is an offset into the worker local values in the heap. */
@@ -306,13 +313,12 @@ static size_t worker_can_exit = 1;
 
 /* Where the heap started (bottom), offset from hashtbl pointer */
 static size_t heap_init = 0;
+
 /* Where the heap will end (top), offset from hashtbl pointer */
 static size_t heap_max = 0;
 
-static size_t* wasted_heap_size = NULL;
-
 static size_t used_heap_size(void) {
-  return *heap - heap_init;
+  return info->heap - heap_init;
 }
 
 static long removed_count = 0;
@@ -325,12 +331,12 @@ CAMLprim value hh_used_heap_size(void) {
 /* Part of the heap not reachable from hashtable entries. Can be reclaimed with
  * hh_collect. */
 CAMLprim value hh_wasted_heap_size(void) {
-  assert(wasted_heap_size != NULL);
-  return Val_long(*wasted_heap_size);
+  assert(info != NULL);
+  return Val_long(info->wasted_heap_size);
 }
 
 CAMLprim value hh_log_level(void) {
-  return Val_long(*log_level);
+  return Val_long(info->log_level);
 }
 
 CAMLprim value hh_hash_used_slots(void) {
@@ -338,8 +344,8 @@ CAMLprim value hh_hash_used_slots(void) {
   CAMLlocal1(connector);
 
   connector = caml_alloc_tuple(2);
-  Store_field(connector, 0, Val_long(*hcounter_filled));
-  Store_field(connector, 1, Val_long(*hcounter));
+  Store_field(connector, 0, Val_long(info->hcounter_filled));
+  Store_field(connector, 1, Val_long(info->hcounter));
 
   CAMLreturn(connector);
 }
@@ -609,46 +615,17 @@ static void define_globals(char * shared_mem_init) {
     madvise(shared_mem, shared_mem_size, MADV_DONTDUMP);
   #endif
 
-  /* BEGINNING OF THE SMALL OBJECTS PAGE
-   * We keep all the small objects in this page.
-   * They are on different cache lines because we modify them atomically.
-   */
-
-  /* The pointer to the top of the heap.
-   * We will atomically increment *heap every time we want to allocate.
-   */
-  heap = (size_t*)mem;
-
-  // The number of elements in the hashtable
-  assert(CACHE_LINE_SIZE >= sizeof(uint64_t));
-  hcounter = (uint64_t*)(mem + CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(uintptr_t));
-  counter = (uintptr_t*)(mem + 2*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(pid_t));
-  master_pid = (pid_t*)(mem + 3*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  log_level = (size_t*)(mem + 4*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  workers_should_exit = (size_t*)(mem + 5*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  wasted_heap_size = (size_t*)(mem + 6*CACHE_LINE_SIZE);
-
-  assert (CACHE_LINE_SIZE >= sizeof(uint64_t));
-  hcounter_filled = (uint64_t*)(mem + 7*CACHE_LINE_SIZE);
-
+  // The first page of shared memory contains (1) size information describing
+  // the layout of the rest of the shared file; (2) values which are atomically
+  // updated by workers, like the heap pointer; and (3) various configuration
+  // which is convenient to stick here, like the master process pid.
+  assert(page_size >= sizeof(shmem_info_t));
+  info = (shmem_info_t*)mem;
   mem += page_size;
-  // Just checking that the page is large enough.
-  assert(page_size > 8*CACHE_LINE_SIZE + (int)sizeof(int));
 
+  /* Process-local storage */
   locals = (local_t *)mem;
   mem += locals_size_b;
-
-  /* END OF THE SMALL OBJECTS PAGE */
 
   /* Hashtable */
   hashtbl = (helt_t*)mem;
@@ -656,13 +633,13 @@ static void define_globals(char * shared_mem_init) {
 
   /* Heap */
   heap_init = hashtbl_size_b;
-  heap_max = heap_init + heap_size;
+  heap_max = heap_init + heap_size_b;
 
 #ifdef _WIN32
   /* Reserve all memory space. This is required for Windows but we don't do this
    * for Linux since it lets us run more processes in parallel without running
    * out of memory immediately (though we do risk it later on) */
-  memfd_reserve((char *)heap, page_size + locals_size_b + hashtbl_size_b);
+  memfd_reserve(shared_mem, page_size + locals_size_b + hashtbl_size_b);
 #endif
 
 }
@@ -671,27 +648,27 @@ static void define_globals(char * shared_mem_init) {
  * virtual. */
 static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
-  return (hashtbl_size_b + heap_size + page_size + locals_size_b);
+  return (page_size + locals_size_b + hashtbl_size_b + heap_size_b);
 }
 
 static void init_shared_globals(
   size_t config_log_level
 ) {
   // Initialize the number of element in the table
-  *hcounter = 0;
-  *hcounter_filled = 0;
+  info->hcounter = 0;
+  info->hcounter_filled = 0;
   // Ensure the global counter starts on a COUNTER_RANGE boundary
-  *counter = ALIGN(early_counter + 1, COUNTER_RANGE);
-  *log_level = config_log_level;
-  *workers_should_exit = 0;
-  *wasted_heap_size = 0;
+  info->counter = ALIGN(early_counter + 1, COUNTER_RANGE);
+  info->log_level = config_log_level;
+  info->workers_should_exit = 0;
+  info->wasted_heap_size = 0;
 
   for (uint64_t i = 0; i <= num_workers; i++) {
     locals[i].counter = 0;
   }
 
   // Initialize top heap pointers
-  *heap = heap_init;
+  info->heap = heap_init;
 }
 
 static void set_sizes(
@@ -701,7 +678,7 @@ static void set_sizes(
 
   size_t page_size = getpagesize();
 
-  heap_size = config_heap_size;
+  heap_size_b = config_heap_size;
 
   hashtbl_size    = 1ul << config_hash_table_pow;
   hashtbl_size_b  = hashtbl_size * sizeof(hashtbl[0]);
@@ -756,17 +733,17 @@ CAMLprim value hh_shared_init(
 
   // Keeping the pids around to make asserts.
 #ifdef _WIN32
-  *master_pid = 0;
-  my_pid = *master_pid;
+  info->master_pid = 0;
+  my_pid = info->master_pid;
 #else
-  *master_pid = getpid();
-  my_pid = *master_pid;
+  info->master_pid = getpid();
+  my_pid = info->master_pid;
 #endif
 
   init_shared_globals(
     Long_val(Field(config_val, 4)));
   // Checking that we did the maths correctly.
-  assert(Ptr_of_offset(*heap) + heap_size == shared_mem + shared_mem_size);
+  assert(Ptr_of_offset(info->heap) + heap_size_b == shared_mem + shared_mem_size);
 
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
@@ -827,10 +804,10 @@ CAMLprim value hh_counter_next(void) {
   CAMLlocal1(result);
 
   uintptr_t v = 0;
-  if (counter) {
+  if (info) {
     v = locals[worker_id].counter;
     if (v % COUNTER_RANGE == 0) {
-      v = __atomic_fetch_add(counter, COUNTER_RANGE, __ATOMIC_RELAXED);
+      v = __atomic_fetch_add(&info->counter, COUNTER_RANGE, __ATOMIC_RELAXED);
     }
     ++v;
     locals[worker_id].counter = v;
@@ -849,11 +826,11 @@ CAMLprim value hh_counter_next(void) {
  */
 /*****************************************************************************/
 void assert_master(void) {
-  assert(my_pid == *master_pid);
+  assert(my_pid == info->master_pid);
 }
 
 void assert_not_master(void) {
-  assert(my_pid != *master_pid);
+  assert(my_pid != info->master_pid);
 }
 
 /*****************************************************************************/
@@ -861,14 +838,14 @@ void assert_not_master(void) {
 CAMLprim value hh_stop_workers(void) {
   CAMLparam0();
   assert_master();
-  *workers_should_exit = 1;
+  info->workers_should_exit = 1;
   CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_resume_workers(void) {
   CAMLparam0();
   assert_master();
-  *workers_should_exit = 0;
+  info->workers_should_exit = 0;
   CAMLreturn(Val_unit);
 }
 
@@ -879,8 +856,8 @@ CAMLprim value hh_set_can_worker_stop(value val) {
 }
 
 void check_should_exit(void) {
-  assert(workers_should_exit != NULL);
-  if(worker_can_exit && *workers_should_exit) {
+  assert(info != NULL);
+  if(worker_can_exit && info->workers_should_exit) {
     static value *exn = NULL;
     if (!exn) exn = caml_named_value("worker_should_exit");
     caml_raise_constant(*exn);
@@ -943,7 +920,7 @@ CAMLprim value hh_collect(void) {
 
   // Pointer that walks the heap from bottom to top.
   char *src = Ptr_of_offset(heap_init);
-  char *heap_ptr = Ptr_of_offset(*heap);
+  char *heap_ptr = Ptr_of_offset(info->heap);
 
   size_t aligned_size;
   hh_header_t header;
@@ -984,8 +961,8 @@ CAMLprim value hh_collect(void) {
   // which allows the kernel to reclaim the memory lazily under pressure, but
   // would not force page faults under healthy operation.
 
-  *heap = dest;
-  *wasted_heap_size = 0;
+  info->heap = dest;
+  info->wasted_heap_size = 0;
 
   return Val_unit;
 }
@@ -1004,7 +981,7 @@ static addr_t hh_alloc(hh_header_t header, char *data) {
   // the size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(header));
-  size_t offset = __sync_fetch_and_add(heap, slot_size);
+  size_t offset = __sync_fetch_and_add(&info->heap, slot_size);
   if (offset + slot_size > heap_max) {
     raise_heap_full();
   }
@@ -1113,7 +1090,7 @@ static value write_at(unsigned int slot, value data) {
     hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
     Store_field(result, 0, Val_long(alloc_size));
     Store_field(result, 1, Val_long(orig_size));
-    __sync_fetch_and_add(hcounter_filled, 1);
+    __sync_fetch_and_add(&info->hcounter_filled, 1);
   } else {
     Store_field(result, 0, Min_long);
     Store_field(result, 1, Min_long);
@@ -1148,7 +1125,7 @@ value hh_add(value key, value data) {
       CAMLreturn(write_at(slot, data));
     }
 
-    if (*hcounter >= hashtbl_size) {
+    if (info->hcounter >= hashtbl_size) {
       // We're never going to find a spot
       raise_hash_table_full();
     }
@@ -1156,7 +1133,7 @@ value hh_add(value key, value data) {
     if(slot_hash == 0) {
       // We think we might have a free slot, try to atomically grab it.
       if(__sync_bool_compare_and_swap(&(hashtbl[slot].hash), 0, hash)) {
-        uint64_t size = __sync_fetch_and_add(hcounter, 1);
+        uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
         // Sanity check
         assert(size < hashtbl_size);
         CAMLreturn(write_at(slot, data));
@@ -1359,7 +1336,7 @@ void hh_move(value key1, value key2) {
   // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
   // filled.
   if (hashtbl[slot2].hash == 0) {
-    *hcounter += 1;
+    info->hcounter += 1;
   }
   hashtbl[slot2].hash = get_hash(key2);
   hashtbl[slot2].addr = hashtbl[slot1].addr;
@@ -1379,10 +1356,10 @@ void hh_remove(value key) {
   // see hh_alloc for the source of this size
   heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(entry->header));
-  *wasted_heap_size += slot_size;
+  info->wasted_heap_size += slot_size;
   hashtbl[slot].addr = NULL_ADDR;
   removed_count++;
-  *hcounter_filled -= 1;
+  info->hcounter_filled -= 1;
 }
 
 CAMLprim value hh_removed_count(value unit) {

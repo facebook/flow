@@ -111,29 +111,28 @@ class mapper_type_printing_hardcoded_fixes =
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method private normalize_function ff =
-      Flow_ast.Type.Function.(
-        let { params = (loc, { Params.params; rest }); _ } = ff in
-        let (normalized_params_rev, _) =
-          List.fold_left
-            (fun (p, c) param ->
-              match param with
-              | (loc, { Param.name = None; annot; optional }) ->
-                let normalized_param =
-                  ( loc,
-                    {
-                      Param.name =
-                        Some (Flow_ast_utils.ident_of_source (loc, Printf.sprintf "_%d" c));
-                      annot;
-                      optional;
-                    } )
-                in
-                (normalized_param :: p, c + 1)
-              | _ -> (param :: p, c + 1))
-            ([], 0)
-            params
-        in
-        let normalized_params = List.rev normalized_params_rev in
-        { ff with params = (loc, { Params.params = normalized_params; rest }) })
+      let open Flow_ast.Type.Function in
+      let { params = (loc, { Params.params; rest }); _ } = ff in
+      let (normalized_params_rev, _) =
+        List.fold_left
+          (fun (p, c) param ->
+            match param with
+            | (loc, { Param.name = None; annot; optional }) ->
+              let normalized_param =
+                ( loc,
+                  {
+                    Param.name = Some (Flow_ast_utils.ident_of_source (loc, Printf.sprintf "_%d" c));
+                    annot;
+                    optional;
+                  } )
+              in
+              (normalized_param :: p, c + 1)
+            | _ -> (param :: p, c + 1))
+          ([], 0)
+          params
+      in
+      let normalized_params = List.rev normalized_params_rev in
+      { ff with params = (loc, { Params.params = normalized_params; rest }) }
 
     method private type_generic_normalize (t : ('loc, 'loc) Flow_ast.Type.t) =
       super#type_
