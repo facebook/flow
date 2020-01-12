@@ -5167,11 +5167,16 @@ struct
         | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
             MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), action, prop_t) )
           ->
+          let funtype =
+            match action with
+            | CallM funtype -> funtype
+            | ChainM (_, _, _, funtype, _) -> funtype
+          in
           let instance_desc = DescFormat.name_of_instance_reason reason_c in
           if instance_desc = "Promise" && x = "then" then
-            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length action.call_args_tlist) >= 2);
+            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length funtype.call_args_tlist) >= 2);
           if instance_desc = "Promise" && x = "catch" then
-            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length action.call_args_tlist) >= 1);
+            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length funtype.call_args_tlist) >= 1);
           (* TODO: closure *)
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
@@ -7770,7 +7775,8 @@ struct
      this can be handled by the pre-existing rules *)
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, OpenT _) ->
+    | UseT (_, OpenT _)
+    | NoFloatingPromisesT _ ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
      true *)

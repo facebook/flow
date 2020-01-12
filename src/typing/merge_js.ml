@@ -200,8 +200,8 @@ let detect_unnecessary_invariants cx =
 
 let detect_floating_promises cx =
   let expr_map = Context.bare_expressions cx in
-  Core_list.iter
-    ~f:(fun (loc, reason) -> match (Loc_collections.ALocMap.get loc expr_map) with
+  Base.List.iter
+    ~f:(fun (loc, reason) -> match (Loc_collections.ALocMap.find_opt loc expr_map) with
       | Some _ -> Flow_js.add_output cx (Error_message.ENoFloatingPromises (loc, reason))
       | None -> ()
     )
