@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,7 @@ let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error lazy_table_of_aloc
-  |> Flow_error.make_error_printable lazy_table_of_aloc
+  |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
   File_sig.With_Loc.(
@@ -23,7 +23,7 @@ let error_of_file_sig_error source_file e =
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error lazy_table_of_aloc
-  |> Flow_error.make_error_printable lazy_table_of_aloc
+  |> Flow_error.make_error_printable
 
 let parse_content file content =
   let parse_options =
@@ -116,7 +116,6 @@ let load_lib_files
                  ~exclude_syms
                  ~file_sig:(File_sig.abstractify_locs file_sig)
                  ~lint_severities:LintSettings.empty_severities
-                 ~file_options:None
              in
              Context.merge_into (Context.sig_cx master_cx) sig_cx;
 
@@ -169,6 +168,7 @@ let stub_metadata ~root ~checked =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    babel_loose_array_spread = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
@@ -264,11 +264,10 @@ let infer_and_merge ~root filename ast file_sig =
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, _, comments) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let ((cx, tast, _), _other_cxs) =
+  let ((cx, tast), _other_cxs) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options:None
       ~strict_mode
       ~file_sigs
       ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
@@ -309,8 +308,16 @@ let check_content ~filename ~content =
           aloc_tables
           severity_cover
       in
-      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
-      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
+      let errors =
+        errors
+        |> Flow_error.concretize_errors lazy_table_of_aloc
+        |> Flow_error.make_errors_printable
+      in
+      let warnings =
+        warnings
+        |> Flow_error.concretize_errors lazy_table_of_aloc
+        |> Flow_error.make_errors_printable
+      in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors
           ~root
@@ -334,6 +341,7 @@ let check_content ~filename ~content =
   Errors.Json_output.json_of_errors_with_context
     ~strip_root
     ~stdin_file
+    ~offset_kind:Offset_utils.Utf8
     ~suppressed_errors:[]
     ~errors
     ~warnings
@@ -379,6 +387,8 @@ let infer_type filename content line col =
           ~expand_aliases:false
           ~omit_targ_defaults:false
           ~typed_ast
+          ~evaluate_type_destructors:false
+          ~verbose_normalizer:false
           loc
       in
       (match result with
@@ -412,7 +422,15 @@ let dump_types js_file js_content =
     let file_sig = File_sig.abstractify_locs file_sig in
     let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
     let printer = Ty_printer.string_of_t in
-    let types = Query_types.dump_types ~printer cx file_sig typed_ast in
+    let types =
+      Query_types.dump_types
+        ~printer
+        ~evaluate_type_destructors:false
+        ~expand_aliases:false
+        cx
+        file_sig
+        typed_ast
+    in
     let strip_root = None in
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json

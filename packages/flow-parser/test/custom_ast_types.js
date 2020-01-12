@@ -282,6 +282,9 @@ def("BigIntLiteralTypeAnnotation")
   .field("value", or(def("BigInt"), null))
   .field("raw", String);
 
+def("SymbolTypeAnnotation")
+  .bases("Type");
+
 // Enums
 def("EnumDeclaration")
   .bases("Declaration")

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -124,12 +124,13 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             (match pole with
             | Polarity.Neutral
             | Polarity.Negative ->
-              AnyT.locationless AnyError |> unify_opt cx ~unify_any:true (OpenT (r, id));
+              AnyT.locationless AnyError
+              |> unify_opt cx ~use_op:unknown_use ~unify_any:true (OpenT (r, id));
               let trace_reasons =
                 if max_reasons = 0 then
                   []
                 else
-                  Core_list.map
+                  Base.List.map
                     ~f:(fun reason -> repos_reason (def_aloc_of_reason reason) reason)
                     (Nel.to_list !reason_stack)
               in
@@ -193,9 +194,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | DefT (r, _, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
                 self#arrlit cx pole seen t ts
               | DefT (r, _, ObjT o) when is_literal_object_reason r ->
-                let refcnt =
-                  (try Properties.Map.find_unsafe o.props_tmap objlits with Not_found -> 0)
-                in
+                let refcnt = (try Properties.Map.find o.props_tmap objlits with Not_found -> 0) in
                 objlits <- Properties.Map.add o.props_tmap (refcnt + 1) objlits;
                 let seen = super#type_ cx pole seen t in
                 objlits <-
@@ -211,17 +210,16 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                   | _ -> None
                 in
                 let own_refcnt =
-                  (try fst (Properties.Map.find_unsafe i.own_props insts) with Not_found -> 0)
+                  (try fst (Properties.Map.find i.own_props insts) with Not_found -> 0)
                 in
                 let proto_refcnt =
-                  (try fst (Properties.Map.find_unsafe i.proto_props insts) with Not_found -> 0)
+                  (try fst (Properties.Map.find i.proto_props insts) with Not_found -> 0)
                 in
                 let static_refcnt =
                   Option.value_map static_props_id ~default:0 ~f:(fun id ->
-                      (try fst (Properties.Map.find_unsafe id insts) with Not_found -> 0))
+                      (try fst (Properties.Map.find id insts) with Not_found -> 0))
                 in
-                insts <-
-                  Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
+                insts <- Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
                 insts <- Properties.Map.add i.proto_props (proto_refcnt + 1, SSet.empty) insts;
                 Option.iter static_props_id (fun id ->
                     insts <-
@@ -247,9 +245,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | DefT (r, _, FunT (static, prototype, ft)) ->
                 (* This won't propagate to any other types because this happens post-merge *)
                 let any kind = AnyT.locationless (Unsound kind) in
-                any DummyStatic |> unify_opt cx ~unify_any:true static;
-                any FunctionPrototype |> unify_opt cx ~unify_any:true prototype;
-                any BoundFunctionThis |> unify_opt cx ~unify_any:true ft.this_t;
+                any DummyStatic |> unify_opt cx ~use_op:unknown_use ~unify_any:true static;
+                any FunctionPrototype |> unify_opt cx ~use_op:unknown_use ~unify_any:true prototype;
+                any BoundFunctionThis |> unify_opt cx ~use_op:unknown_use ~unify_any:true ft.this_t;
                 super#type_
                   cx
                   pole
@@ -269,7 +267,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
         if Properties.Map.mem id objlits then
           self#objlit_props cx pole seen id
         else
-          match Properties.Map.get id insts with
+          match Properties.Map.find_opt id insts with
           | Some (_, init) -> self#inst_props cx pole seen id init
           | _ -> super#props cx pole seen id
 
@@ -329,16 +327,17 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               ( _,
                 _,
                 PolyT
-                  ( _,
-                    tparams,
-                    DefT
-                      ( _,
-                        _,
-                        TypeT
-                          ( _,
-                            EvalT ((BoundT (_, s, _) as t), TypeDestructorT (_, _, destructor), _)
-                          ) ),
-                    _ ) ) ->
+                  {
+                    tparams;
+                    t_out =
+                      DefT
+                        ( _,
+                          _,
+                          TypeT
+                            (_, EvalT ((BoundT (_, s) as t), TypeDestructorT (_, _, destructor), _))
+                        );
+                    _;
+                  } ) ->
             if (new type_finder t)#destructor cx false destructor then
               loop cx pole seen (Nel.to_list tparams, targs)
             else
@@ -348,7 +347,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                 seen
                 (Nel.to_list tparams, targs)
                 ~constant_polarity_param:(s, Polarity.Positive)
-          | DefT (_, _, PolyT (_, tparams, _, _)) -> loop cx pole seen (Nel.to_list tparams, targs)
+          | DefT (_, _, PolyT { tparams; _ }) -> loop cx pole seen (Nel.to_list tparams, targs)
           | DefT (_, _, EmptyT _) -> seen
           | AnyT _ -> seen
           | _ ->

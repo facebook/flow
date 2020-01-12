@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,7 +18,7 @@ module type LOOP = sig
 
   (* Wraps each iteration of the loop. On an exception, the most recent acc is passed in and the
    * loop is canceled *)
-  val catch : acc -> exn -> unit Lwt.t
+  val catch : acc -> Exception.t -> unit Lwt.t
 end
 
 module Make (Loop : LOOP) : sig
@@ -28,7 +28,7 @@ end = struct
     match exn with
     (* Automatically handle Canceled. No one ever seems to want to handle it manually. *)
     | Lwt.Canceled -> Lwt.return_unit
-    | exn -> Loop.catch acc exn
+    | exn -> Loop.catch acc (Exception.wrap exn)
 
   let rec loop acc = Lwt.try_bind (fun () -> Loop.main acc) loop (catch acc)
 

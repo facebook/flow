@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -28,8 +28,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             | ( _,
                 Call
                   {
-                    Call.callee =
-                      (_, Identifier (_, { Ast.Identifier.name = "eval"; comments = _ }));
+                    Call.callee = (_, Identifier (_, { Ast.Identifier.name = "eval"; comments = _ }));
                     _;
                   } ) ->
               this#set_acc true;
@@ -84,7 +83,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       | [] -> None
       | hd :: rest ->
         begin
-          match SMap.get x hd with
+          match SMap.find_opt x hd with
           | Some def -> Some def
           | None -> get x rest
         end
@@ -145,7 +144,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           uses <- [];
           current_scope_opt <- Some child;
           env <- Env.mk_env (fun () -> this#next) old_env bindings;
-          let result = Core_result.try_with (fun () -> visit node) in
+          let result = Base.Result.try_with (fun () -> visit node) in
           this#update_acc (fun acc ->
               let defs = Env.defs env in
               let locals =
@@ -172,7 +171,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           current_scope_opt <- parent;
           env <- old_env;
           counter <- save_counter;
-          Core_result.ok_exn result
+          Base.Result.ok_exn result
 
       method! identifier (expr : (L.t, L.t) Ast.Identifier.t) =
         uses <- expr :: uses;
@@ -260,16 +259,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
             | _ -> Bindings.empty
           in
-          this#with_bindings
-            ~lexical:true
-            loc
-            lexical_bindings
-            (this#scoped_for_statement loc)
-            stmt)
+          this#with_bindings ~lexical:true loc lexical_bindings (this#scoped_for_statement loc) stmt)
 
       method! catch_clause loc (clause : (L.t, L.t) Ast.Statement.Try.CatchClause.t') =
         Ast.Statement.Try.CatchClause.(
-          let { param; body = _ } = clause in
+          let { param; body = _; comments = _ } = clause in
           (* hoisting *)
           let lexical_bindings =
             match param with

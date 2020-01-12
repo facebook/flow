@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -132,10 +132,7 @@ let to_string =
        String.concat "; " (List.rev refi_refs))
   in
   fun (changed_vars, changed_refis) ->
-    Utils.spf
-      "%s, %s"
-      (string_of_changed_vars changed_vars)
-      (string_of_changed_refis changed_refis)
+    Utils.spf "%s, %s" (string_of_changed_vars changed_vars) (string_of_changed_refis changed_refis)
 
 (*************************************************************)
 

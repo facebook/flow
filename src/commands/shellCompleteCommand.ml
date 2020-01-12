@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -35,7 +35,7 @@ module Command (CommandList : COMMAND_LIST) = struct
       None
     else
       try
-        let metadata = SMap.find_unsafe key flags in
+        let metadata = SMap.find key flags in
         Some metadata.CommandSpec.ArgSpec.arg_count
       with Not_found -> None
 
@@ -65,7 +65,7 @@ module Command (CommandList : COMMAND_LIST) = struct
     in
     if current <= 1 then
       let commands =
-        CommandList.commands |> Core_list.map ~f:(fun command -> CommandSpec.name command)
+        CommandList.commands |> Base.List.map ~f:(fun command -> CommandSpec.name command)
       in
       print_endline (String.concat " " commands)
     else

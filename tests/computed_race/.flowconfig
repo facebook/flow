@@ -1,2 +1,5 @@
 [libs]
 lib.js
+
+[options]
+all=true

@@ -8,5 +8,6 @@
     flow_common_utils
     flow_common_utils_loc_utils
     flow_parser
+    flow_parser_utils_signature_builder
     hh_json ; hack
     ))

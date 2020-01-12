@@ -72,3 +72,18 @@ Found 1 error
 unsaved_foo.js depends on bar.js which is still checked against foo.js
 
 No errors!
+
+
+bad_exports.js
+
+Error ---------------------------------------------------------------------------------------------- bad_exports.js:1:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: (`signature-verification-failure`)
+
+   1| export function foo(x: number) { return x; } // Error, missing return type
+                                    
+
+
+
+Found 1 error

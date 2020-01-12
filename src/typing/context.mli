@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -34,6 +34,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  babel_loose_array_spread: bool;
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
@@ -64,6 +65,7 @@ type metadata = {
 type phase =
   | Checking
   | Merging
+  | Normalizing
 
 type type_assert_kind =
   | Is
@@ -75,6 +77,10 @@ type voidable_check = {
   private_property_map: Type.Properties.id;
   errors: ALoc.t Property_assignment.errors;
 }
+
+type computed_property_state =
+  | ResolvedOnce of Reason.t
+  | ResolvedMultipleTimes
 
 val make_sig : unit -> sig_t
 
@@ -109,6 +115,8 @@ val metadata : t -> metadata
 
 val max_literal_length : t -> int
 
+val babel_loose_array_spread : t -> bool
+
 val enable_const_params : t -> bool
 
 val enable_enums : t -> bool
@@ -133,7 +141,9 @@ val esproposal_optional_chaining : t -> Options.esproposal_feature_mode
 
 val esproposal_nullish_coalescing : t -> Options.esproposal_feature_mode
 
-val evaluated : t -> Type.t IMap.t
+val evaluated : t -> Type.t Type.Eval.Map.t
+
+val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
 
@@ -155,7 +165,9 @@ val find_module : t -> string -> Type.t
 
 val find_tvar : t -> Constraint.ident -> Constraint.node
 
-val mem_nominal_id : t -> Constraint.ident -> bool
+val mem_nominal_prop_id : t -> Constraint.ident -> bool
+
+val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 
 val graph : t -> Constraint.node IMap.t
 
@@ -186,6 +198,8 @@ val module_kind : t -> Module_info.kind
 val require_map : t -> Type.t ALocMap.t
 
 val module_map : t -> Type.t SMap.t
+
+val exported_locals : t -> ALocSet.t SMap.t option
 
 val module_ref : t -> string
 
@@ -285,8 +299,6 @@ val add_tvar : t -> Constraint.ident -> Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
-val add_nominal_id : t -> Constraint.ident -> unit
-
 val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
@@ -301,7 +313,9 @@ val remove_tvar : t -> Constraint.ident -> unit
 
 val set_envs : t -> env IMap.t -> unit
 
-val set_evaluated : t -> Type.t IMap.t -> unit
+val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
+
+val set_goals : t -> Type.t IMap.t -> unit
 
 val set_type_graph : t -> Graph_explorer.graph -> unit
 
@@ -324,6 +338,8 @@ val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 val set_use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values -> unit
 
 val set_module_map : t -> Type.t SMap.t -> unit
+
+val set_local_env : t -> ALocSet.t SMap.t option -> unit
 
 val clear_intermediates : t -> unit
 
@@ -348,6 +364,16 @@ val test_prop_miss :
 
 val test_prop_get_never_hit : t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
 
+val computed_property_state_for_id : t -> Constraint.ident -> computed_property_state option
+
+val computed_property_add_lower_bound : t -> Constraint.ident -> Reason.t -> unit
+
+val computed_property_add_multiple_lower_bounds : t -> Constraint.ident -> unit
+
+val spread_widened_types_get_widest : t -> Constraint.ident -> Type.Object.slice option
+
+val spread_widened_types_add_widest : t -> Constraint.ident -> Type.Object.slice -> unit
+
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_optional_chains : t -> (ALoc.t * Reason.t) list
@@ -364,10 +390,16 @@ val mark_bare_expression : t -> ALoc.t -> Reason.t -> unit
 
 val bare_expressions : t -> (Reason.t * bool) ALocMap.t
 
+val add_possible_exhaustive_check : t -> Type.t -> Reason.t * Type.exhaustive_check_t -> unit
+
+val possible_exhaustive_checks : t -> (Type.t * (Reason.t * Type.exhaustive_check_t)) list
+
 (* utils *)
 val iter_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 
 val iter_real_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
+
+val fold_real_props : t -> Type.Properties.id -> (string -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
 
 val has_prop : t -> Type.Properties.id -> string -> bool
 
@@ -380,6 +412,8 @@ val has_export : t -> Type.Exports.id -> string -> bool
 val set_export : t -> Type.Exports.id -> string -> ALoc.t option * Type.t -> unit
 
 (* constructors *)
+val make_aloc_id : t -> ALoc.t -> ALoc.id
+
 val generate_property_map : t -> Type.Properties.t -> Type.Properties.id
 
 val make_source_property_map : t -> Type.Properties.t -> ALoc.t -> Type.Properties.id
@@ -388,7 +422,9 @@ val make_call_prop : t -> Type.t -> int
 
 val make_export_map : t -> Type.Exports.t -> Type.Exports.id
 
-val make_nominal : t -> int
+val generate_poly_id : t -> Type.Poly.id
+
+val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
 
 val find_constraints : t -> Constraint.ident -> Constraint.ident * Constraint.constraints
 
@@ -404,3 +440,7 @@ val find_trust_constraints :
 val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constraints
 
 val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
+
+val with_normalizer_mode : t -> (t -> 'a) -> 'a
+
+val in_normalizer_mode : t -> bool

@@ -30,3 +30,7 @@ const numLitArray = [1, 2, 3, 4, 5];
 class A<X> {}
 const a_n = new A<number>();
 const a_1 = new A<1>();
+
+const flattened = [[0, 1], [2, 3], [4, 5]].reduce(function(a, b) {
+  return a.concat(b);
+});

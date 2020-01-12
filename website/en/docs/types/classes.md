@@ -62,7 +62,7 @@ class MyClass {
 }
 ```
 
-Fields added ouside of the class definition need to be annotated within the body
+Fields added outside of the class definition need to be annotated within the body
 of the class.
 
 ```js

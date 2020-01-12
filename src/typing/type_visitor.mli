@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -26,7 +26,7 @@ class ['a] t :
 
     method exports : Context.t -> Polarity.t -> 'a -> Type.Exports.id -> 'a
 
-    method eval_id : Context.t -> Polarity.t -> 'a -> int -> 'a
+    method eval_id : Context.t -> Polarity.t -> 'a -> Type.Eval.id -> 'a
 
     method fun_type : Context.t -> Polarity.t -> 'a -> Type.funtype -> 'a
 

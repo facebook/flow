@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -319,10 +319,10 @@ end = struct
     | SourceLocation (loc, child) ->
       spf "SourceLocation (%s, %s)" (debug_string_of_loc loc) (string_of_layout child)
     | Concat items ->
-      let items = items |> Core_list.map ~f:string_of_layout |> String.concat "; " in
+      let items = items |> Base.List.map ~f:string_of_layout |> String.concat "; " in
       spf "Concat [%s]" items
     | Group items ->
-      let items = items |> Core_list.map ~f:string_of_layout |> String.concat "; " in
+      let items = items |> Base.List.map ~f:string_of_layout |> String.concat "; " in
       spf "Group [%s]" items
     | Sequence ({ break; inline = (inline_before, inline_after); indent }, node_list) ->
       let config =
@@ -333,7 +333,7 @@ end = struct
           inline_after
           indent
       in
-      let nodes = node_list |> Core_list.map ~f:string_of_layout |> String.concat "; " in
+      let nodes = node_list |> Base.List.map ~f:string_of_layout |> String.concat "; " in
       spf "Sequence (%s, [%s])" config nodes
     | Atom str -> spf "Atom %S" str
     | Identifier (loc, str) -> spf "Identifier (%s, %S)" (debug_string_of_loc loc) str
@@ -361,14 +361,14 @@ end = struct
         [
           Atom "Concat";
           pretty_space;
-          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Core_list.map ~f:layout_of_layout items);
+          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Base.List.map ~f:layout_of_layout items);
         ]
     | Group items ->
       Concat
         [
           Atom "Group";
           pretty_space;
-          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Core_list.map ~f:layout_of_layout items);
+          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Base.List.map ~f:layout_of_layout items);
         ]
     | Sequence ({ break; inline = (inline_before, inline_after); indent }, node_list) ->
       let config =
@@ -385,7 +385,7 @@ end = struct
         list
           ~wrap:(Atom "[", Atom "]")
           ~sep:(Atom ";")
-          (Core_list.map ~f:layout_of_layout node_list)
+          (Base.List.map ~f:layout_of_layout node_list)
       in
       Concat
         [

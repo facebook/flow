@@ -6,7 +6,7 @@ function foo(map: { [key: string]: mixed }) {
   return Object.assign (
     {
       first,
-      ...map
+      ...map // Error, can't spread indexer second
     },
     options
   );

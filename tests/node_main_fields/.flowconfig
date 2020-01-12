@@ -1,0 +1,4 @@
+[options]
+module.system.node.main_field=foo
+module.system.node.main_field=bar
+all=true

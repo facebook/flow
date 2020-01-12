@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -141,10 +141,10 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT
       ( _,
         _,
-        InstanceT
-          (static, super, _, { class_id; type_args; own_props; proto_props; inst_call_t; _ }) ) ->
+        InstanceT (static, super, _, { class_id; type_args; own_props; proto_props; inst_call_t; _ })
+      ) ->
     let ts =
-      if class_id = ALoc.none then
+      if class_id = ALoc.id_none then
         []
       else
         [super; static]
@@ -160,7 +160,7 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, PolyT (_, _, t, _)) -> collect_of_type ?log_unresolved cx acc t
+  | DefT (_, _, PolyT { t_out = t; _ }) -> collect_of_type ?log_unresolved cx acc t
   | BoundT _ -> acc
   (* TODO: The following kinds of types are not walked out of laziness. It's
      not immediately clear what we'd gain (or lose) by walking them. *)
@@ -175,7 +175,7 @@ and collect_of_type ?log_unresolved cx acc = function
      would be quite nice (as long as we confirm that the resulting
      virtualization of calls to this function doesn't lead to perf
      degradation: this function is expected to be quite hot). *)
-  | OptionalT (_, t)
+  | OptionalT { reason = _; type_ = t; use_desc = _ }
   | MaybeT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
   | UnionT (_, rep) ->
@@ -190,8 +190,6 @@ and collect_of_type ?log_unresolved cx acc = function
     let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     acc
-  | AnyWithUpperBoundT t
-  | AnyWithLowerBoundT t
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)
@@ -204,10 +202,10 @@ and collect_of_type ?log_unresolved cx acc = function
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     collect_of_type ?log_unresolved cx acc t
-  | InternalT (OptionalChainVoidT _) -> acc
   | DefT (_, _, NumT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)
+  | DefT (_, _, SymbolT)
   | DefT (_, _, VoidT)
   | DefT (_, _, NullT)
   | DefT (_, _, EmptyT _)
@@ -216,6 +214,8 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, SingletonNumT _)
   | DefT (_, _, SingletonStrT _)
   | DefT (_, _, CharSetT _)
+  | DefT (_, _, EnumT _)
+  | DefT (_, _, EnumObjectT _)
   | AnyT _ ->
     acc
   (* Since MergedT only arises from context opt, we can be certain that its
@@ -316,7 +316,7 @@ and collect_of_use ?log_unresolved cx acc = function
   | UseT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | CallT (_, _, fct) ->
     let arg_types =
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Arg t
           | SpreadArg t ->

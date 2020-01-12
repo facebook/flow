@@ -17,6 +17,7 @@ can be overridden with command line flags.
 ### Available options <a class="toc" id="toc-available-options" href="#toc-available-options"></a>
 
 * [`all`](#toc-all-boolean)
+* [`babel_loose_array_spread`](#toc-babel-loose-array-spread-boolean)
 * [`emoji`](#toc-emoji-boolean)
 * [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
 * [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
@@ -35,6 +36,7 @@ can be overridden with command line flags.
 * [`module.name_mapper`](#toc-module-name-mapper-regex-string)
 * [`module.name_mapper.extension`](#toc-module-name-mapper-extension-string-string)
 * [`module.system`](#toc-module-system-node-haste)
+* [`module.system.node.main_field`](#toc-module-system-node-main-field-string)
 * [`module.system.node.resolve_dirname`](#toc-module-system-node-resolve-dirname-string)
 * [`module.use_strict`](#toc-module-use-strict-boolean)
 * [`munge_underscores`](#toc-munge-underscores-boolean)
@@ -42,7 +44,6 @@ can be overridden with command line flags.
 * [`server.max_workers`](#toc-server-max-workers-integer)
 * [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string)
 * [`sharedmemory.minimum_available`](#toc-sharedmemory-minimum-available-unsigned-integer)
-* [`sharedmemory.dep_table_pow`](#toc-sharedmemory-dep-table-pow-unsigned-integer)
 * [`sharedmemory.hash_table_pow`](#toc-sharedmemory-hash-table-pow-unsigned-integer)
 * [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
@@ -57,6 +58,19 @@ can be overridden with command line flags.
 Set this to `true` to check all files, not just those with `@flow`.
 
 The default value for `all` is `false`.
+
+#### `babel_loose_array_spread` _`(boolean)`_ <a class="toc" id="toc-babel-loose-array-spread-boolean" href="#toc-babel-loose-array-spread-boolean"></a>
+
+Set this to `true` to check that array spread syntax is only used with arrays, not arbitrary iterables (such as `Map` or `Set`). This is useful if you transform your code with Babel in [loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose) which makes this non-spec-compliant assumption at runtime.
+
+For example:
+
+```js
+const set = new Set();
+const values = [...set]; // Valid ES2015, but Set is not compatible with $ReadOnlyArray in Babel loose mode
+```
+
+The default value for `babel_loose_array_spread` is `false`.
 
 #### `emoji` _`(boolean)`_ <a class="toc" id="toc-emoji-boolean" href="#toc-emoji-boolean"></a>
 
@@ -266,6 +280,38 @@ The module system to use to resolve `import` and `require`.
 
 The default is `node`.
 
+#### `module.system.node.main_field` _`(string)`_ <a class="toc" id="toc-module-system-node-main-field-string" href="#toc-module-system-node-main-field-string"></a>
+
+Flow reads `package.json` files for the `"name"` and `"main"` fields to figure
+out the name of the module and which file should be used to provide that
+module.
+
+So if Flow sees this in the `.flowconfig`:
+
+```
+[options]
+module.system.node.main_field=foo
+module.system.node.main_field=bar
+module.system.node.main_field=baz
+```
+
+and then it comes across a `package.json` with
+
+```
+{
+  "name": "kittens",
+  "main": "main.js",
+  "bar": "bar.js",
+  "baz": "baz.js"
+}
+```
+
+Flow will use `bar.js` to provide the `"kittens"` module.
+
+If this option is unspecified, Flow will always use the `"main"` field.
+
+See [this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
+
 #### `module.system.node.resolve_dirname` _`(string)`_ <a class="toc" id="toc-module-system-node-resolve-dirname-string" href="#toc-module-system-node-resolve-dirname-string"></a>
 
 By default, Flow will look in directories named `node_modules` for node
@@ -340,17 +386,6 @@ and tries the next. This option lets you configure the minimum amount of space
 needed on a filesystem for shared memory.
 
 By default it is 536870912 (2^29 bytes, which is half a gigabyte).
-
-#### `sharedmemory.dep_table_pow` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-dep-table-pow-unsigned-integer" href="#toc-sharedmemory-dep-table-pow-unsigned-integer"></a>
-
-The 3 largest parts of the shared memory are a dependency table, a hash table,
-and a heap. While the heap grows and shrinks, the two tables are allocated in
-full. This option lets you change the size of the dependency table.
-
-Setting this option to X means the table will support up to 2^X elements,
-which is 16*2^X bytes.
-
-By default, this is set to 17 (Table size is 2^17, which is 2 megabytes)
 
 #### `sharedmemory.hash_table_pow` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-hash-table-pow-unsigned-integer" href="#toc-sharedmemory-hash-table-pow-unsigned-integer"></a>
 

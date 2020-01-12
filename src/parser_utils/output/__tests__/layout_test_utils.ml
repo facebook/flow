@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -136,8 +136,7 @@ module Layout_builder = struct
       | IfBreak (Newline, Atom " ") -> word "line"
       | IfBreak (Newline, IfPretty (Atom " ", Empty)) -> word "pretty_line"
       | IfBreak (Newline, Empty) -> word "softline"
-      | IfBreak (left, right) ->
-        phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
+      | IfBreak (left, right) -> phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
       | Indent node -> phrase "indent (%s)" (helper ~i node)
       | Newline -> word "hardline"
       | Empty -> word "empty"
@@ -149,7 +148,7 @@ module Layout_builder = struct
         | Phrase str ->
           spf "  %s%s;" indent str
       in
-      let str = nodes |> Core_list.map ~f |> String.concat "\n" in
+      let str = nodes |> Base.List.map ~f |> String.concat "\n" in
       spf "[\n%s\n%s]" str indent
     and helper ~i node =
       match top ~i node with

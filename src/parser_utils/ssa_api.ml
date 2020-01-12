@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -59,12 +59,12 @@ let print_values =
   fun values ->
     let kvlist = Loc_collections.LocMap.bindings values in
     let strlist =
-      Core_list.map
+      Base.List.map
         ~f:(fun (read_loc, write_locs) ->
           Printf.sprintf
             "%s => { %s }"
             (Loc.debug_to_string read_loc)
-            (String.concat ", " @@ Core_list.map ~f:print_write_loc write_locs))
+            (String.concat ", " @@ Base.List.map ~f:print_write_loc write_locs))
         kvlist
     in
     Printf.sprintf "[ %s ]" (String.concat "; " strlist)

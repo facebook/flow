@@ -1,5 +1,0 @@
-(library
-  (name build_mode_dev)
-  (wrapped false)
-  (modules build_mode)
-)

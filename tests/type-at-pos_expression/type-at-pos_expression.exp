@@ -44,7 +44,7 @@ facebookism.js:3:8 = {
   "end":9
 }
 jsx.js:7:12 = {
-  "type":"any (implicit)",
+  "type":"\"div\"",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -179,7 +179,7 @@ jsx.js:8:23 = {
   "end":26
 }
 jsx.js:8:30 = {
-  "type":"any (implicit)",
+  "type":"\"div\"",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -522,6 +522,21 @@ literals.js:32:7 = {
   "endline":32,
   "start":7,
   "end":9
+}
+literals.js:34:7 = {
+  "type":"Array<(any | number)> | Array<(any | number)>",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":7,"offset":507},
+    "end":{"line":34,"column":15,"offset":516}
+  },
+  "path":"literals.js",
+  "line":34,
+  "endline":34,
+  "start":7,
+  "end":15
 }
 new-array.js:3:15 = {
   "type":"class Array<T>",

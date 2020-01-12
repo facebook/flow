@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,6 +14,7 @@ module Action = struct
   type t =
     | Flow of Type.t * Type.use_t
     | Unify of Type.use_op * Type.t * Type.t
+    | UnsealedObjectProperty of Type.Properties.id * string * Type.Property.t
     | Error of Error_message.t
 
   (* Extract tvars involved in an action. *)
@@ -33,6 +34,7 @@ module Action = struct
       | Flow (t1, UseT (_, t2)) -> f cx t1 (f cx t2 IMap.empty)
       | Flow (t1, _) -> f cx t1 IMap.empty
       | Unify (_, t1, t2) -> f cx t1 (f cx t2 IMap.empty)
+      | UnsealedObjectProperty _ -> failwith "unsealed object property writes are always benign"
       | Error _ -> failwith "tvars of error actions don't make sense")
 
   (* Decide when two actions are the same. We use reasonless compare for types
@@ -193,12 +195,15 @@ end = struct
     let { ignore; speculation_id; case } = branch in
     Case.(
       match action with
+      | Action.UnsealedObjectProperty _ ->
+        case.actions <- case.actions @ [(true, action)];
+        true
       | Action.Error _ ->
         case.actions <- case.actions @ [(true, action)];
         true
       | _ ->
         let action_tvars = Action.tvars cx action in
-        let all_unresolved = IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
+        let all_unresolved = IMap.find speculation_id (Context.all_unresolved cx) in
         let relevant_action_tvars =
           IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars
         in

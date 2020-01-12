@@ -11,3 +11,4 @@ suppress_comment=.*\\$FlowIssue
 suppress_comment=\\(.\\|\n\\)*\\$FlowNewLine
 suppress_comment=.*\\$WithVersion <VERSION>
 include_warnings=true
+all=true

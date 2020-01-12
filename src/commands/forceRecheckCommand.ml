@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -53,7 +53,7 @@ type args = {
 }
 
 let force_recheck flowconfig_name (args : args) connect_flags =
-  let files = Core_list.map ~f:get_path_of_file args.files in
+  let files = Base.List.map ~f:get_path_of_file args.files in
   let request =
     ServerProt.Request.FORCE_RECHECK { files; focus = args.focus; profile = args.profile }
   in

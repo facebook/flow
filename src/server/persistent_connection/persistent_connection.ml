@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,18 +7,35 @@
 
 module Prot = LspProt
 
+type type_contents_artifacts =
+  Context.t
+  * Docblock.t
+  * File_sig.With_Loc.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+  * (Loc.t * Parse_error.t) list
+
 type single_client = {
   client_id: Prot.client_id;
   lsp_initialize_params: Lsp.Initialize.params;
   mutable subscribed: bool;
-  mutable opened_files: string SMap.t; (* map from filename to content *)
+  (* map from filename to content *)
+  mutable opened_files: string SMap.t;
+  type_contents_cache: (type_contents_artifacts, string) result Lwt.t FilenameCache.t;
 }
 
 type t = Prot.client_id list
 
+let cache_max_size = 10
+
+let remove_cache_entry client filename =
+  (* get_def, coverage, etc. all construct a File_key.SourceFile, which is then used as a key
+    * here. *)
+  let file_key = File_key.SourceFile filename in
+  FilenameCache.remove_entry file_key client.type_contents_cache
+
 let active_clients : single_client IMap.t ref = ref IMap.empty
 
-let get_client client_id = IMap.get client_id !active_clients
+let get_client client_id = IMap.find_opt client_id !active_clients
 
 let empty = []
 
@@ -38,7 +55,7 @@ let send_errors =
     let rec get_first_contained warn_map = function
       | [] -> Errors.ConcreteLocPrintableErrorSet.empty
       | filename :: filenames ->
-        (match Utils_js.FilenameMap.get filename warn_map with
+        (match Utils_js.FilenameMap.find_opt filename warn_map with
         | Some errs -> errs
         | None -> get_first_contained warn_map filenames)
     in
@@ -53,7 +70,7 @@ let send_errors =
         ]
   in
   fun ~errors_reason ~errors ~warnings client ->
-    let opened_filenames = SMap.bindings client.opened_files |> Core_list.map ~f:fst in
+    let opened_filenames = SMap.bindings client.opened_files |> Base.List.map ~f:fst in
     let warnings =
       List.fold_right
         (fun filename warn_acc ->
@@ -77,7 +94,13 @@ let send_single_end_recheck ~lazy_stats client =
 
 let add_client client_id lsp_initialize_params =
   let new_client =
-    { subscribed = false; opened_files = SMap.empty; client_id; lsp_initialize_params }
+    {
+      subscribed = false;
+      opened_files = SMap.empty;
+      client_id;
+      lsp_initialize_params;
+      type_contents_cache = FilenameCache.make ~max_size:cache_max_size;
+    }
   in
   active_clients := IMap.add client_id new_client !active_clients;
   Hh_logger.info "Adding new persistent connection #%d" new_client.client_id
@@ -146,6 +169,7 @@ let client_did_open (client : single_client) ~(files : (string * string) Nel.t) 
   (match Nel.length files with
   | 1 -> Hh_logger.info "Client #%d opened %s" client.client_id (files |> Nel.hd |> fst)
   | len -> Hh_logger.info "Client #%d opened %d files" client.client_id len);
+  Nel.iter (fun (filename, _content) -> remove_cache_entry client filename) files;
   let add_file acc (filename, content) = SMap.add filename content acc in
   let new_opened_files = Nel.fold_left add_file client.opened_files files in
   (* SMap.add ensures physical equality if the map is unchanged, since 4.0.3,
@@ -163,6 +187,7 @@ let client_did_change
     (fn : string)
     (changes : Lsp.DidChange.textDocumentContentChangeEvent list) :
     (unit, string * Utils.callstack) result =
+  remove_cache_entry client fn;
   try
     let content = SMap.find fn client.opened_files in
     match Lsp_helpers.apply_changes content changes with
@@ -180,6 +205,7 @@ let client_did_close (client : single_client) ~(filenames : string Nel.t) : bool
   (match Nel.length filenames with
   | 1 -> Hh_logger.info "Client #%d closed %s" client.client_id (filenames |> Nel.hd)
   | len -> Hh_logger.info "Client #%d closed %d files" client.client_id len);
+  Nel.iter (remove_cache_entry client) filenames;
   let remove_file acc filename = SMap.remove filename acc in
   let new_opened_files = Nel.fold_left remove_file client.opened_files filenames in
   (* SMap.remove ensures physical equality if the set is unchanged,
@@ -193,7 +219,7 @@ let client_did_close (client : single_client) ~(filenames : string Nel.t) : bool
   )
 
 let get_file (client : single_client) (fn : string) : File_input.t =
-  let content_opt = SMap.get fn client.opened_files in
+  let content_opt = SMap.find_opt fn client.opened_files in
   match content_opt with
   | None -> File_input.FileName fn
   | Some content -> File_input.FileContent (Some fn, content)
@@ -213,3 +239,8 @@ let client_snippet_support (client : single_client) =
   Lsp.Initialize.(
     client.lsp_initialize_params.client_capabilities.textDocument.completion.completionItem
       .snippetSupport)
+
+let type_contents_cache client = client.type_contents_cache
+
+let clear_type_contents_caches () =
+  IMap.iter (fun _key client -> FilenameCache.clear client.type_contents_cache) !active_clients

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,7 +9,7 @@ module LocSet = Loc_collections.LocSet
 
 let set_of_fixable_signature_verification_locations file_sig =
   File_sig.With_Loc.(
-    Signature_builder_deps.Error.(
+    Signature_error.(
       let tolerable_errors = file_sig.File_sig.With_Loc.tolerable_errors in
       let add_fixable_sig_ver_error acc = function
         | SignatureVerificationError

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -73,7 +73,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     count_calls ~counter:size ~default:crop_atom (fun () -> type_impl ~depth t)
   and type_impl ~depth (t : Ty.t) =
     match t with
-    | TVar (v, ts) -> type_reference ~depth (type_var v) ts
+    | TVar (v, targs) -> type_reference ~depth (type_var v) targs
     | Bound (_, name) -> Atom name
     | Any k -> any ~depth k
     | Top -> Atom "mixed"
@@ -83,6 +83,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Num _ -> Atom "number"
     | Str _ -> Atom "string"
     | Bool _ -> Atom "boolean"
+    | Symbol -> Atom "symbol"
     | Fun func -> type_function ~depth ~sep:(fuse [pretty_space; Atom "=>"]) func
     | Obj obj -> type_object ~depth obj
     | Arr arr -> type_array ~depth arr
@@ -91,6 +92,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Inter (t1, t2, ts) -> type_intersection ~depth (t1 :: t2 :: ts)
     | ClassDecl (n, ps) -> class_decl ~depth n ps
     | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
+    | EnumDecl n -> enum_decl n
     | Utility s -> utility ~depth s
     | Tup ts ->
       list
@@ -135,14 +137,14 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       ]
   and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
-    let ({ name; _ }, _, params) = g in
+    let ({ name; _ }, _, targs) = g in
     let name = identifier name in
-    type_reference ~depth name params
-  and type_reference ~depth name params =
-    let params = option (type_parameter_instantiation ~depth) params in
-    fuse [name; params]
-  and type_parameter_instantiation ~depth params =
-    list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (counted_map (type_ ~depth) params)
+    type_reference ~depth name targs
+  and type_reference ~depth name targs =
+    let targs = option (type_args ~depth) targs in
+    fuse [name; targs]
+  and type_args ~depth targs =
+    list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (counted_map (type_ ~depth) targs)
   and identifier name = Atom name
   and any ~depth kind =
     let kind =
@@ -169,7 +171,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       | [] -> Empty
       | _ ->
         fuse_with_space
-          [Atom "extends"; list ~sep:(Atom ",") (Core_list.map ~f:(type_generic ~depth) extends)]
+          [Atom "extends"; list ~sep:(Atom ",") (Base.List.map ~f:(type_generic ~depth) extends)]
     in
     let body = type_object ~depth body in
     fuse_with_space [Atom "interface"; extends; body]
@@ -178,8 +180,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     let params =
       match fun_rest_param with
       | Some (name, t) ->
-        params
-        @ [fuse [Atom "..."; type_function_param ~depth (name, t, { prm_optional = false })]]
+        params @ [fuse [Atom "..."; type_function_param ~depth (name, t, { prm_optional = false })]]
       | None -> params
     in
     fuse
@@ -324,7 +325,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       else
         None
     in
-    let elts = Core_list.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "|") in
+    let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "|") in
     fuse [prefix; list ?wrap ~inline:(false, true) elts]
   and type_intersection ~depth ts =
     let wrap =
@@ -333,7 +334,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       else
         None
     in
-    let elts = Core_list.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "&") in
+    let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "&") in
     list ?wrap ~inline:(false, true) elts
   and type_with_parens ~depth t =
     match t with
@@ -346,6 +347,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     fuse [Atom "class"; space; identifier name; option (type_parameter ~depth) typeParameters]
   and interface_decl ~depth { name; _ } typeParameters =
     fuse [Atom "interface"; space; identifier name; option (type_parameter ~depth) typeParameters]
+  and enum_decl { name; _ } = fuse [Atom "enum"; space; identifier name]
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in
@@ -381,7 +383,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
   (* Main call *)
   let type_layout = type_ ~depth:0 t in
   (* Run type_ first so that env_map has been populated *)
-  let env_layout = Core_list.map ~f:env_ (IMap.bindings !env_map) in
+  let env_layout = Base.List.map ~f:env_ (IMap.bindings !env_map) in
   Layout.(join Newline (env_layout @ [type_layout]))
 
 (* Same as Compact_printer with the exception of:

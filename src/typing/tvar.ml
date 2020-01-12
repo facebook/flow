@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -21,7 +21,7 @@ let mk cx reason = Type.OpenT (reason, mk_no_wrap cx reason)
 
 let mk_where cx reason f =
   let tvar = mk cx reason in
-  f tvar;
+  let () = f tvar in
   tvar
 
 (* This function is used in lieu of mk_where or mk when the reason must be

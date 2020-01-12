@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -48,10 +48,10 @@ let regenerate ~reader =
                 let msg = Error_message.EUnusedSuppression (ALoc.of_loc loc) in
                 Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
                 |> Flow_error.concretize_error lazy_table_of_aloc
-                |> Flow_error.make_error_printable lazy_table_of_aloc
+                |> Flow_error.make_error_printable
               in
               let file_warnings =
-                FilenameMap.get source_file warnings
+                FilenameMap.find_opt source_file warnings
                 |> Option.value ~default:ConcreteLocPrintableErrorSet.empty
                 |> ConcreteLocPrintableErrorSet.add err
               in
@@ -72,7 +72,9 @@ let regenerate ~reader =
         let root = Options.root options in
         let file_options = Some (Options.file_options options) in
         let (file_errs, file_suppressed, unused) =
-          Flow_error.make_errors_printable lazy_table_of_aloc file_errs
+          file_errs
+          |> Flow_error.concretize_errors lazy_table_of_aloc
+          |> Flow_error.make_errors_printable
           |> filter_suppressed_errors ~root ~file_options suppressions ~unused
         in
         let errors = f filename file_errs errors in
@@ -133,9 +135,7 @@ let get_with_separate_warnings ~reader ~options env =
         collated_errors
       | Some collated_errors -> collated_errors
     in
-    let { collated_errorset; collated_warning_map; collated_suppressed_errors } =
-      collated_errors
-    in
+    let { collated_errorset; collated_warning_map; collated_suppressed_errors } = collated_errors in
     (collated_errorset, collated_warning_map, collated_suppressed_errors))
 
 (* combine error maps into a single error set and a single warning set *)

@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 # shellcheck disable=SC2094
 
 printf "foo_parse_fail.js = "
@@ -12,10 +17,6 @@ assert_ok \
 printf "bar.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty bar.js 4 5 < bar.js
-
-printf "qux.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty qux.js 6 3 < qux.js
 
 printf "str.js = "
 assert_ok \
@@ -49,9 +50,17 @@ printf "this.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty this.js 8 10 < this.js
 
+printf "this2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this2.js 5 6 < this2.js
+
 printf "typeparams.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty typeparams.js 6 16 < typeparams.js
+
+printf "typeparams_function.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty typeparams_function.js 3 2 < typeparams_function.js
 
 printf "generics.js = "
 assert_ok \
@@ -63,15 +72,43 @@ assert_ok \
 
 printf "jsx1.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx1.js 8 4 < jsx1.js
+  "$FLOW" autocomplete --strip-root --pretty jsx1.js 7 4 < jsx1.js
 
 printf "jsx2.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx2.js 8 11 < jsx2.js
+  "$FLOW" autocomplete --strip-root --pretty jsx2.js 7 9 < jsx2.js
 
 printf "jsx3.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx3.js 10 4 < jsx3.js
+  "$FLOW" autocomplete --strip-root --pretty jsx3.js 9 4 < jsx3.js
+
+printf "jsx4.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx4.js 7 3 < jsx4.js
+
+printf "jsx-function-component.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-function-component.js 9 4 < jsx-function-component.js
+
+printf "jsx-function-component-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-function-component-2.js 9 11 < jsx-function-component-2.js
+
+printf "jsx-function-component-3.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-function-component-3.js 10 4 < jsx-function-component-3.js
+
+printf "jsx-abstract-component.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-abstract-component.js 8 4 < jsx-abstract-component.js
+
+printf "jsx-with-children.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-with-children.js 10 4 < jsx-with-children.js
+
+printf "jsx-text.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-text.js 1 11 < jsx-text.js
 
 printf "customfun.js = "
 assert_ok \
@@ -89,9 +126,13 @@ printf "override.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty override.js 10 16 < override.js
 
-printf "class.js = "
+printf "member_class_property.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty class.js 7 5 < class.js
+  "$FLOW" autocomplete --strip-root --pretty member_class_property.js 8 5 < member_class_property.js
+
+printf "member_class_static.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty member_class_static.js 7 5 < member_class_static.js
 
 printf "optional_chaining_new.js = "
 assert_ok \
@@ -120,7 +161,7 @@ assert_ok \
 printf "optional_object.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty optional_object.js 3 5 < optional_object.js
-  
+
 printf "indirect_array.js:5:3 = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty indirect_array.js 5 3 < indirect_array.js
@@ -148,3 +189,81 @@ assert_ok \
 printf "poly_no_args.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty poly_no_args.js 5 3 < poly_no_args.js
+
+printf "identifier.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty identifier.js 10 18 < identifier.js
+
+printf "super.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty super.js 4 8 < super.js
+
+printf "this-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 5 10 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 8 3 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 11 15 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 14 9 < this-2.js
+
+printf "pattern.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 3 8 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 6 4 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 9 14 < pattern.js
+
+printf "normalize-1.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-1.js 4 12 < normalize-1.js
+
+printf "normalize-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-2.js 5 10 < normalize-2.js
+
+printf "unqualified-type-annotation.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty unqualified-type-annotation.js 28 19 < unqualified-type-annotation.js
+
+printf "qualified-type-annotation.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation.js 5 23 < qualified-type-annotation.js
+
+printf "qualified-type-annotation-require.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation-require.js 5 23 < qualified-type-annotation-require.js
+
+printf "inherited-class-properties.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty inherited-class-properties.js 16 13 < inherited-class-properties.js
+
+printf "function-added-properties.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty function-added-properties.js 6 5 < function-added-properties.js
+
+printf "comments.js (line) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 3 8 < comments.js
+
+printf "comments.js (block) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 5 8 < comments.js
+
+printf "literal.js (inside string) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 3 16 < literal.js
+
+printf "literal.js (inside regex) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 5 16 < literal.js
+
+printf "literal.js (inside template literal) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 7 16 < literal.js
+
+printf "import_source.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty import_source.js 3 17 < import_source.js

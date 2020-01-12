@@ -1,9 +1,20 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+class type_parameter_mapper :
+  object
+    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot : ALoc.t -> ALoc.t
+
+    method on_type_annot : ALoc.t * Type.t -> ALoc.t * Type.t
+
+    method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a
+  end
 
 val find_exact_match_annotation :
   (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> ALoc.t -> Type.TypeScheme.t option
@@ -30,18 +41,6 @@ val find_type_at_pos_annotation :
  * in direct response to a client query, which are typically concrete locations.
  *)
 
-type get_def_object_source =
-  | GetDefType of Type.t
-  | GetDefRequireLoc of ALoc.t
-
-type get_def_member_info = {
-  get_def_prop_name: string;
-  get_def_object_source: get_def_object_source;
-}
-
-val find_get_def_info :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> Loc.t -> get_def_member_info option
-
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   Type.TypeScheme.t Loc_collections.ALocMap.t
@@ -49,12 +48,6 @@ val typed_ast_to_map :
 val typed_ast_to_list :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   (ALoc.t * Type.TypeScheme.t) list
-
-val coverage_fold_tast :
-  f:('l -> 't -> 'acc -> 'acc) ->
-  init:'acc ->
-  ('l, 'l * 't) Flow_polymorphic_ast_mapper.Ast.program ->
-  'acc
 
 val error_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
 

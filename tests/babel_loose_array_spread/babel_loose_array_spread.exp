@@ -1,0 +1,211 @@
+Error --------------------------------------------------------------------------------------------------- apply.js:11:15
+
+Property `length` is missing in `$Iterable` [1] but exists in `$ArrayLike` [2].
+
+   apply.js:11:15
+    11| f.apply(null, it); // Error
+                      ^^
+
+References:
+   apply.js:3:11
+     3| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:308:22
+                             v
+   308| type $ArrayLike<T> = {
+   309|   [indexer: number]: T,
+   310|   length: number,
+   311|   ...
+   312| }
+        ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- compose.js:7:6
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   compose.js:7:6
+     7|   ...fns1, // Error
+             ^^^^
+
+References:
+   compose.js:4:19
+     4| declare var fns1: Iterable<(number) => number>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- iterables.js:2:5
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   iterables.js:2:5
+     2| [...it]; // Error
+            ^^
+
+References:
+   iterables.js:1:11
+     1| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- iterables.js:3:6
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   iterables.js:3:6
+     3| f(...it); // Error
+             ^^
+
+References:
+   iterables.js:1:11
+     1| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ iterables.js:4:17
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   iterables.js:4:17
+     4| f.bind(null, ...it); // Error
+                        ^^
+
+References:
+   iterables.js:1:11
+     1| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ iterables.js:12:5
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   iterables.js:12:5
+    12| [...oit]; // Error
+            ^^^
+
+References:
+   opaque.js:6:30
+     6| export const opaqueIterable: OpaqueIterable = [];
+                                     ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ iterables.js:13:6
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   iterables.js:13:6
+    13| f(...oit); // Error
+             ^^^
+
+References:
+   opaque.js:6:30
+     6| export const opaqueIterable: OpaqueIterable = [];
+                                     ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- iterables.js:14:17
+
+`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   iterables.js:14:17
+    14| f.bind(null, ...oit); // Error
+                        ^^^
+
+References:
+   opaque.js:6:30
+     6| export const opaqueIterable: OpaqueIterable = [];
+                                     ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ maps.js:4:6
+
+`Map` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   maps.js:4:6
+     4|   ...map1, // Error
+             ^^^^
+
+References:
+   maps.js:1:14
+     1| const map1 = new Map();
+                     ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ maps.js:5:6
+
+`Map` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   maps.js:5:6
+     5|   ...map2 // Error
+             ^^^^
+
+References:
+   maps.js:2:14
+     2| const map2 = new Map();
+                     ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ maps.js:9:6
+
+`Map` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   maps.js:9:6
+     9|   ...map1, // Error
+             ^^^^
+
+References:
+   maps.js:1:14
+     1| const map1 = new Map();
+                     ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- maps.js:10:6
+
+`Map` [1] is incompatible with `$ReadOnlyArray` [2].
+
+   maps.js:10:6
+    10|   ...map2 // Error
+             ^^^^
+
+References:
+   maps.js:2:14
+     2| const map2 = new Map();
+                     ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:218:15
+   218| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [2]
+
+
+
+Found 12 errors

@@ -1,3 +1,1092 @@
+Error ----------------------------------------------------------------------------------------------------- cast.js:37:2
+
+Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2].
+
+   cast.js:37:2
+   37| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
+        ^^^
+
+References:
+   cast.js:13:1
+       v-----------------
+   13| enum S of string {
+   14|   A,
+   15|   B,
+   16| }
+       ^ [1]
+   cast.js:37:8
+   37| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:51:2
+
+Cannot cast `B.A` to number because `B` [1] is incompatible with number [2].
+
+   cast.js:51:2
+   51| (B.A: number); // Error
+        ^^^
+
+References:
+   cast.js:3:1
+       v------------------
+    3| enum B of boolean {
+    4|   A = true,
+    5|   B = false,
+    6| }
+       ^ [1]
+   cast.js:51:7
+   51| (B.A: number); // Error
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:52:2
+
+Cannot cast `S.A` to boolean because `S` [1] is incompatible with boolean [2].
+
+   cast.js:52:2
+   52| (S.A: boolean); // Error
+        ^^^
+
+References:
+   cast.js:13:1
+       v-----------------
+   13| enum S of string {
+   14|   A,
+   15|   B,
+   16| }
+       ^ [1]
+   cast.js:52:7
+   52| (S.A: boolean); // Error
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:53:2
+
+Cannot cast `N.A` to boolean because `N` [1] is incompatible with boolean [2].
+
+   cast.js:53:2
+   53| (N.A: boolean); // Error
+        ^^^
+
+References:
+   cast.js:8:1
+       v-----------------
+    8| enum N of number {
+    9|   A = 1,
+   10|   B = 2,
+   11| }
+       ^ [1]
+   cast.js:53:7
+   53| (N.A: boolean); // Error
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:54:2
+
+Cannot cast `Y.A` to boolean because `Y` [1] is incompatible with boolean [2].
+
+   cast.js:54:2
+   54| (Y.A: boolean); // Error
+        ^^^
+
+References:
+   cast.js:18:1
+       v-----------------
+   18| enum Y of symbol {
+   19|   A,
+   20|   B,
+   21| }
+       ^ [1]
+   cast.js:54:7
+   54| (Y.A: boolean); // Error
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:55:2
+
+Cannot cast `X.A` to string because `B` [1] is incompatible with string [2].
+
+   cast.js:55:2
+   55| (X.A: string); // Error
+        ^^^
+
+References:
+   cast.js:3:1
+       v------------------
+    3| enum B of boolean {
+    4|   A = true,
+    5|   B = false,
+    6| }
+       ^ [1]
+   cast.js:55:7
+   55| (X.A: string); // Error
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:63:2
+
+Cannot cast `BS.A` to union type because:
+ - all branches are incompatible:
+    - Either `B` [1] is incompatible with string [2].
+    - Or `B` [1] is incompatible with boolean [3].
+ - all branches are incompatible:
+    - Either `S` [4] is incompatible with string [2].
+    - Or `S` [4] is incompatible with boolean [3].
+
+   cast.js:63:2
+   63| (BS.A: string | boolean); // Error
+        ^^^^
+
+References:
+   cast.js:3:1
+       v------------------
+    3| enum B of boolean {
+    4|   A = true,
+    5|   B = false,
+    6| }
+       ^ [1]
+   cast.js:63:8
+   63| (BS.A: string | boolean); // Error
+              ^^^^^^ [2]
+   cast.js:63:17
+   63| (BS.A: string | boolean); // Error
+                       ^^^^^^^ [3]
+   cast.js:13:1
+       v-----------------
+   13| enum S of string {
+   14|   A,
+   15|   B,
+   16| }
+       ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
+
+Cannot cast `sb` to union type because:
+ - all branches are incompatible:
+    - Either `S` [1] is incompatible with string [2].
+    - Or `S` [1] is incompatible with boolean [3].
+ - all branches are incompatible:
+    - Either `B` [4] is incompatible with string [2].
+    - Or `B` [4] is incompatible with boolean [3].
+
+   cast.js:66:2
+   66| (sb: string | boolean); // Error
+        ^^
+
+References:
+   cast.js:65:17
+   65| declare var sb: S | B;
+                       ^ [1]
+   cast.js:66:6
+   66| (sb: string | boolean); // Error
+            ^^^^^^ [2]
+   cast.js:66:15
+   66| (sb: string | boolean); // Error
+                     ^^^^^^^ [3]
+   cast.js:65:21
+   65| declare var sb: S | B;
+                           ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
+
+Cannot cast `bs` to boolean because:
+ - `B` [1] is incompatible with boolean [2].
+ - `B2` [3] is incompatible with boolean [2].
+
+   cast.js:69:2
+   69| (bs: boolean); // Error
+        ^^
+
+References:
+   cast.js:68:17
+   68| declare var bs: B | B2;
+                       ^ [1]
+   cast.js:69:6
+   69| (bs: boolean); // Error
+            ^^^^^^^ [2]
+   cast.js:68:21
+   68| declare var bs: B | B2;
+                           ^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
+
+Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2].
+
+   enum-object.js:16:2
+   16| (F: EO); // Error: types are incompatible
+        ^
+
+References:
+   enum-object.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [1]
+   enum-object.js:16:5
+   16| (F: EO); // Error: types are incompatible
+           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:19:1
+
+Cannot reference type `EO` [1] from a value position.
+
+   enum-object.js:19:1
+   19| EO.A;
+       ^^
+
+References:
+   enum-object.js:14:6
+   14| type EO = typeof E;
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:28:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:28:4
+   28|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:28:7
+   28|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:32:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:32:4
+   32|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:32:7
+   32|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:37:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:37:4
+   37|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:37:7
+   37|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:43:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:43:4
+   43|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:43:7
+   43|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:47:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:47:4
+   47|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:47:7
+   47|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:53:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:53:4
+   53|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:53:7
+   53|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:21:1
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:21:1
+   21| s == e; // Error
+       ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:22:1
+
+Cannot compare `E` [1] to string [2].
+
+   equality.js:22:1
+   22| e == s; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:24:1
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:24:1
+   24| s != e; // Error
+       ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:25:1
+
+Cannot compare `E` [1] to string [2].
+
+   equality.js:25:1
+   25| e != s; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:27:1
+
+Cannot compare `E` [1] to `E` [1].
+
+   equality.js:27:1
+   27| e == E.A; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:28:1
+
+Cannot compare `E` [1] to `E` [2].
+
+   equality.js:28:1
+   28| ef == E.A; // Error
+       ^^
+
+References:
+   equality.js:16:11
+   16| const ef: E | F = E.A;
+                 ^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:28:1
+
+Cannot compare `F` [1] to `E` [2].
+
+   equality.js:28:1
+   28| ef == E.A; // Error
+       ^^
+
+References:
+   equality.js:16:15
+   16| const ef: E | F = E.A;
+                     ^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:29:1
+
+Cannot compare `F` [1] to `E` [2].
+
+   equality.js:29:1
+   29| F.A == E.A; // Error
+       ^^^
+
+References:
+   equality.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:31:1
+
+Cannot compare enum `E` [1] to string [2].
+
+   equality.js:31:1
+   31| eo == s; // Error
+       ^^
+
+References:
+   equality.js:14:11
+   14| const eo: typeof E = E;
+                 ^^^^^^^^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:38:1
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:38:1
+   38| s === e; // Error
+       ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:39:1
+
+Cannot compare `E` [1] to string [2].
+
+   equality.js:39:1
+   39| e === s; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:41:1
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:41:1
+   41| s !== e; // Error
+       ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:42:1
+
+Cannot compare `E` [1] to string [2].
+
+   equality.js:42:1
+   42| e !== s; // Error
+       ^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ equality.js:47:11
+
+Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
+
+   equality.js:47:11
+   47| if (e === E.A) { } // Error
+                 ^^^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:48:5
+
+Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
+
+   equality.js:48:5
+   48| if (E.A === e) { } // Error
+           ^^^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ equality.js:49:27
+
+Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
+
+   equality.js:49:27
+   49| if (s.length > 0 && e === E.A) { } // Error
+                                 ^^^
+
+References:
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- equality.js:58:8
+
+Cannot compare string [1] to `E` [2].
+
+   equality.js:58:8
+   58|   case s === E.A: break; // Error
+              ^
+
+References:
+   equality.js:18:10
+   18| const s: string = "hi";
+                ^^^^^^ [1]
+   equality.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:9:11
+
+Cannot access `E.C` because `C` is not a member of enum `E` [1].
+
+   error-access.js:9:11
+   9| const x = E.C;
+                ^^^
+
+References:
+   error-access.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:14:1
+
+Cannot access computed property on enum `E` [1] because computed access is not allowed on enums.
+
+   error-access.js:14:1
+   14| E["A"];
+       ^^^^^^
+
+References:
+   error-access.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:22:1
+
+Cannot access `F.Car` because `Car` is not a member of enum `F` [1]. Did you mean the member `Cart`?
+
+   error-access.js:22:1
+   22| F.Car; // Error: suggest `Cart`
+       ^^^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:23:1
+
+Cannot access `F.Foobr` because `Foobr` is not a member of enum `F` [1]. Did you mean the member `Foobar`?
+
+   error-access.js:23:1
+   23| F.Foobr; // Error: suggest `Foobar`
+       ^^^^^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:24:1
+
+Cannot access `F.Bar` because `Bar` is not a member of enum `F` [1]. Did you mean the member `Bart`?
+
+   error-access.js:24:1
+   24| F.Bar; // Error: suggest `Bart`
+       ^^^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:25:1
+
+Cannot access `F.X` because `X` is not a member of enum `F` [1].
+
+   error-access.js:25:1
+   25| F.X; // Error: no suggestion
+       ^^^
+
+References:
+   error-access.js:16:1
+       v-------
+   16| enum F {
+   17|   Cart,
+   18|   Bart,
+   19|   Foobar,
+   20| }
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19
+
+Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2].
+
+   error-coercion.js:9:19
+   9| const a: string = E.A;
+                        ^^^
+
+References:
+   error-coercion.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+   error-coercion.js:9:10
+   9| const a: string = E.A;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:12:14
+
+Cannot assign `'B'` to `b` because string [1] is incompatible with `E` [2].
+
+   error-coercion.js:12:14
+   12| const b: E = 'B';
+                    ^^^ [1]
+
+References:
+   error-coercion.js:12:10
+   12| const b: E = 'B';
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------ error-duplicate-values.js:6:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `E` [2].
+
+   error-duplicate-values.js:6:7
+   6|   C = true, // Error: duplicate member initializer
+            ^^^^
+
+References:
+   error-duplicate-values.js:4:3
+   4|   A = true,
+        ^^^^^^^^ [1]
+   error-duplicate-values.js:3:1
+      v-------
+   3| enum E {
+   4|   A = true,
+   5|   B = false,
+   6|   C = true, // Error: duplicate member initializer
+   7|   D = true, // Error: duplicate member initializer
+   8| }
+      ^ [2]
+
+
+Error ------------------------------------------------------------------------------------ error-duplicate-values.js:7:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `E` [2].
+
+   error-duplicate-values.js:7:7
+   7|   D = true, // Error: duplicate member initializer
+            ^^^^
+
+References:
+   error-duplicate-values.js:4:3
+   4|   A = true,
+        ^^^^^^^^ [1]
+   error-duplicate-values.js:3:1
+      v-------
+   3| enum E {
+   4|   A = true,
+   5|   B = false,
+   6|   C = true, // Error: duplicate member initializer
+   7|   D = true, // Error: duplicate member initializer
+   8| }
+      ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:12:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `F` [2].
+
+   error-duplicate-values.js:12:7
+   12|   B = 1, // Error: duplicate member initializer
+             ^
+
+References:
+   error-duplicate-values.js:11:3
+   11|   A = 1,
+         ^^^^^ [1]
+   error-duplicate-values.js:10:1
+       v-------
+   10| enum F {
+   11|   A = 1,
+   12|   B = 1, // Error: duplicate member initializer
+   13|   C = 1.0, // Error: duplicate member initializer
+   14|   D = 2,
+   15| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:13:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `F` [2].
+
+   error-duplicate-values.js:13:7
+   13|   C = 1.0, // Error: duplicate member initializer
+             ^^^
+
+References:
+   error-duplicate-values.js:11:3
+   11|   A = 1,
+         ^^^^^ [1]
+   error-duplicate-values.js:10:1
+       v-------
+   10| enum F {
+   11|   A = 1,
+   12|   B = 1, // Error: duplicate member initializer
+   13|   C = 1.0, // Error: duplicate member initializer
+   14|   D = 2,
+   15| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:20:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `G` [2].
+
+   error-duplicate-values.js:20:7
+   20|   C = "a", // Error: duplicate member initializer
+             ^^^
+
+References:
+   error-duplicate-values.js:19:3
+   19|   B = "a",
+         ^^^^^^^ [1]
+   error-duplicate-values.js:17:1
+       v-------
+   17| enum G {
+   18|   A = "b",
+   19|   B = "a",
+   20|   C = "a", // Error: duplicate member initializer
+   21|   D = "a", // Error: duplicate member initializer
+   22| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:21:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `G` [2].
+
+   error-duplicate-values.js:21:7
+   21|   D = "a", // Error: duplicate member initializer
+             ^^^
+
+References:
+   error-duplicate-values.js:19:3
+   19|   B = "a",
+         ^^^^^^^ [1]
+   error-duplicate-values.js:17:1
+       v-------
+   17| enum G {
+   18|   A = "b",
+   19|   B = "a",
+   20|   C = "a", // Error: duplicate member initializer
+   21|   D = "a", // Error: duplicate member initializer
+   22| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:28:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `H` [2].
+
+   error-duplicate-values.js:28:7
+   28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   error-duplicate-values.js:27:3
+   27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error-duplicate-values.js:24:1
+       v-------
+   24| enum H {
+   25|   A = 0,
+   26|   // Due to IEEE 754, both below values are the same in JS
+   27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
+   28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
+   29| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:35:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `I` [2].
+
+   error-duplicate-values.js:35:7
+   35|   C = 9007199254740993, // Error: duplicate member initializer
+             ^^^^^^^^^^^^^^^^
+
+References:
+   error-duplicate-values.js:34:3
+   34|   B = 9007199254740992,
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+   error-duplicate-values.js:31:1
+       v-------
+   31| enum I {
+   32|   A = 9007199254740991, // Number.MAX_SAFE_INTEGER
+   33|   // Due to IEEE 754, both below values are the same in JS
+   34|   B = 9007199254740992,
+   35|   C = 9007199254740993, // Error: duplicate member initializer
+   36| }
+       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
+
+Cannot change member of enum `E` [1] because enums are frozen.
+
+   error-modification.js:9:1
+   9| E.A = 1;
+      ^^^
+
+References:
+   error-modification.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- error-modification.js:12:1
+
+Cannot change member of enum `E` [1] because enums are frozen.
+
+   error-modification.js:12:1
+   12| E["A"] = 1;
+       ^^^^^^
+
+References:
+   error-modification.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- error-modification.js:15:8
+
+Cannot change member of enum `E` [1] because enums are frozen.
+
+   error-modification.js:15:8
+   15| delete E.A;
+              ^^^
+
+References:
+   error-modification.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- error-reassign.js:4:1
 
 Cannot reassign enum `E` [1].
@@ -12,5 +1101,1940 @@ References:
            ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:1
 
-Found 1 error
+Invalid exhaustive check: the member `B` of `E` [1] has not been checked in switch.
+
+   exhaustive-check.js:51:1
+       v---------------------
+   51| switch (x)  { // Error
+   52|   case E.A:
+   53|     'A';
+   54| }
+       ^
+
+References:
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:58:3
+
+Invalid enum member check at case. Check must be in the form `case E.A`.
+
+         v---------------
+   58|   case x: // Error
+   59|     'A';
+           ---^
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:65:5
+
+Invalid enum member check at case. Check must be in the form `case G.A`.
+
+   65|     case g:; // Error
+           ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:77:3
+
+Invalid exhaustive check: case checks for enum member `A` of `E` [1], but member `A` was already checked at case [2].
+
+   exhaustive-check.js:77:3
+         v-----------------
+   77|   case E.A: // Error
+   78|     'A2';
+   79|     break;
+           -----^
+
+References:
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   exhaustive-check.js:71:3
+         v--------
+   71|   case E.A:
+   72|     'A1';
+   73|     break;
+           -----^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:89:3
+
+Invalid exhaustive check: default case checks for additional enum members of `E` [1], but all of its members have
+already been checked.
+
+   exhaustive-check.js:89:3
+         v----------------
+   89|   default: // Error
+   90|     'default';
+           ---------^
+
+References:
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:94:1
+
+Invalid exhaustive check: 2 members of `E` [1] have not been checked in switch. For example, the member `A`.
+
+   exhaustive-check.js:94:1
+        v------------
+    94| switch (x)  {
+    95|   case F.A:
+    96|     'A';
+    97|     break;
+    98|   case F.B:
+    99|     'B';
+   100|     break;
+   101| }
+        ^
+
+References:
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:8
+
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
+
+   exhaustive-check.js:95:8
+   95|   case F.A:
+              ^^^
+
+References:
+   exhaustive-check.js:94:9
+   94| switch (x)  {
+               ^ [1]
+   exhaustive-check.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [2]
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:8
+
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
+
+   exhaustive-check.js:98:8
+   98|   case F.B:
+              ^^^
+
+References:
+   exhaustive-check.js:94:9
+   94| switch (x)  {
+               ^ [1]
+   exhaustive-check.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [2]
+   exhaustive-check.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:105:8
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:105:8
+   105|   case E.A:
+               ^^^
+
+References:
+   exhaustive-check.js:104:9
+   104| switch (s)  {
+                ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:103:16
+   103| declare var s: string;
+                       ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:108:8
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:108:8
+   108|   case E.B:
+               ^^^
+
+References:
+   exhaustive-check.js:104:9
+   104| switch (s)  {
+                ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:103:16
+   103| declare var s: string;
+                       ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:116:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
+
+   exhaustive-check.js:116:10
+   116|     case E.A:
+                 ^^^
+
+References:
+   exhaustive-check.js:115:11
+   115|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:114:16
+   114| function a(x?: E) {
+                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:118:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
+
+   exhaustive-check.js:118:10
+   118|     case E.B:
+                 ^^^
+
+References:
+   exhaustive-check.js:115:11
+   115|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:114:16
+   114| function a(x?: E) {
+                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:125:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
+
+   exhaustive-check.js:125:10
+   125|     case E.A:
+                 ^^^
+
+References:
+   exhaustive-check.js:124:11
+   124|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:123:15
+   123| function a(x: ?E) {
+                      ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:127:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
+
+   exhaustive-check.js:127:10
+   127|     case E.B:
+                 ^^^
+
+References:
+   exhaustive-check.js:124:11
+   124|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:123:15
+   123| function a(x: ?E) {
+                      ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:134:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
+
+   exhaustive-check.js:134:10
+   134|     case E.A:
+                 ^^^
+
+References:
+   exhaustive-check.js:133:11
+   133|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:132:19
+   132| function b(x: E | F) {
+                          ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:136:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
+
+   exhaustive-check.js:136:10
+   136|     case E.B:
+                 ^^^
+
+References:
+   exhaustive-check.js:133:11
+   133|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:132:19
+   132| function b(x: E | F) {
+                          ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:143:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:143:10
+   143|     case E.A:
+                 ^^^
+
+References:
+   exhaustive-check.js:142:11
+   142|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:141:19
+   141| function c(x: E | string) {
+                          ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:145:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:145:10
+   145|     case E.B:
+                 ^^^
+
+References:
+   exhaustive-check.js:142:11
+   142|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:141:19
+   141| function c(x: E | string) {
+                          ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:150:1
+
+Invalid exhaustive check: the member `B` of `E` [1] has not been checked in switch.
+
+   exhaustive-check.js:150:1
+        v-----------
+   150| switch (x) {
+   151|   case E.A:
+   152|     'E.A';
+   153|     break;
+   154|   case F.A:
+   155|     'F.A';
+   156|     break;
+   157| }
+        ^
+
+References:
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:154:8
+
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
+
+   exhaustive-check.js:154:8
+   154|   case F.A:
+               ^^^
+
+References:
+   exhaustive-check.js:150:9
+   150| switch (x) {
+                ^ [1]
+   exhaustive-check.js:8:1
+        v-------
+     8| enum F {
+     9|   A,
+    10|   B,
+    11| }
+        ^ [2]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- member-as-type.js:8:16
+
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
+
+   8| declare var x: E.A;
+                     ^^^
+
+
+Error ------------------------------------------------------------------------------------------ member-as-type.js:10:15
+
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
+
+   10| function f(x: E.A) {
+                     ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:23:1
+
+Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
+
+   methods.js:23:1
+    23| E.nonExistent; // Error
+        ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:927:43
+                                                  v-
+   927| type $EnumProto<TEnum, TRepresentation> = {|
+   928|   cast(TRepresentation): void | TEnum,
+   929|   isValid(TRepresentation): boolean,
+   930|   members(): Iterable<TEnum>,
+   931|   __proto__: null,
+   932| |}
+        -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:26:1
+
+Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
+
+   methods.js:26:1
+    26| E.nonExistent(); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:927:43
+                                                  v-
+   927| type $EnumProto<TEnum, TRepresentation> = {|
+   928|   cast(TRepresentation): void | TEnum,
+   929|   isValid(TRepresentation): boolean,
+   930|   members(): Iterable<TEnum>,
+   931|   __proto__: null,
+   932| |}
+        -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:29:3
+
+An index signature declaring the expected key / value type is missing in enum `E` [1].
+
+   methods.js:29:3
+   29| E['members'](); // Error
+         ^^^^^^^^^
+
+References:
+   methods.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:32:1
+
+Cannot call `E.A` because property `A` is missing in `$EnumProto` [1].
+
+   methods.js:32:1
+    32| E.A(); // Error
+        ^^^^^
+
+References:
+   <BUILTINS>/core.js:927:43
+                                                  v-
+   927| type $EnumProto<TEnum, TRepresentation> = {|
+   928|   cast(TRepresentation): void | TEnum,
+   929|   isValid(TRepresentation): boolean,
+   930|   members(): Iterable<TEnum>,
+   931|   __proto__: null,
+   932| |}
+        -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:35:1
+
+Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1].
+
+   methods.js:35:1
+    35| E.toString(); // Error
+        ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:927:43
+                                                  v-
+   927| type $EnumProto<TEnum, TRepresentation> = {|
+   928|   cast(TRepresentation): void | TEnum,
+   929|   isValid(TRepresentation): boolean,
+   930|   members(): Iterable<TEnum>,
+   931|   __proto__: null,
+   932| |}
+        -^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
+
+Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
+
+   refinement.js:15:4
+   15|   (bVoidable: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:24
+   11| declare var bVoidable: void | B;
+                              ^^^^ [1]
+   refinement.js:15:15
+   15|   (bVoidable: B); // Error
+                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:19:4
+
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:19:4
+   19|   (bVoidable: void); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
+                                     ^ [1]
+   refinement.js:19:15
+   19|   (bVoidable: void); // Error
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:24:4
+
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:24:4
+   24|   (bVoidable: void); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
+                                     ^ [1]
+   refinement.js:24:15
+   24|   (bVoidable: void); // Error
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:30:4
+
+Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
+
+   refinement.js:30:4
+   30|   (bVoidable: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:24
+   11| declare var bVoidable: void | B;
+                              ^^^^ [1]
+   refinement.js:30:15
+   30|   (bVoidable: B); // Error
+                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:35:4
+
+Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
+
+   refinement.js:35:4
+   35|   (bVoidable: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:24
+   11| declare var bVoidable: void | B;
+                              ^^^^ [1]
+   refinement.js:35:15
+   35|   (bVoidable: B); // Error
+                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:39:4
+
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:39:4
+   39|   (bVoidable: void); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
+                                     ^ [1]
+   refinement.js:39:15
+   39|   (bVoidable: void); // Error
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:47:4
+
+Cannot cast `bMaybe` to `B` because null or undefined [1] is incompatible with `B` [2].
+
+   refinement.js:47:4
+   47|   (bMaybe: B); // Error
+          ^^^^^^
+
+References:
+   refinement.js:43:21
+   43| declare var bMaybe: ?B;
+                           ^^ [1]
+   refinement.js:47:12
+   47|   (bMaybe: B); // Error
+                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:51:4
+
+Cannot cast `bMaybe` to null because `B` [1] is incompatible with null [2].
+
+   refinement.js:51:4
+   51|   (bMaybe: null); // Error
+          ^^^^^^
+
+References:
+   refinement.js:43:22
+   43| declare var bMaybe: ?B;
+                            ^ [1]
+   refinement.js:51:12
+   51|   (bMaybe: null); // Error
+                  ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:52:4
+
+Cannot cast `bMaybe` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:52:4
+   52|   (bMaybe: void); // Error
+          ^^^^^^
+
+References:
+   refinement.js:43:22
+   43| declare var bMaybe: ?B;
+                            ^ [1]
+   refinement.js:52:12
+   52|   (bMaybe: void); // Error
+                  ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:58:4
+
+Cannot cast `bMaybe` to `B` because null or undefined [1] is incompatible with `B` [2].
+
+   refinement.js:58:4
+   58|   (bMaybe: B); // Error
+          ^^^^^^
+
+References:
+   refinement.js:43:21
+   43| declare var bMaybe: ?B;
+                           ^^ [1]
+   refinement.js:58:12
+   58|   (bMaybe: B); // Error
+                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:62:4
+
+Cannot cast `bMaybe` to null because `B` [1] is incompatible with null [2].
+
+   refinement.js:62:4
+   62|   (bMaybe: null); // Error
+          ^^^^^^
+
+References:
+   refinement.js:43:22
+   43| declare var bMaybe: ?B;
+                            ^ [1]
+   refinement.js:62:12
+   62|   (bMaybe: null); // Error
+                  ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:63:4
+
+Cannot cast `bMaybe` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:63:4
+   63|   (bMaybe: void); // Error
+          ^^^^^^
+
+References:
+   refinement.js:43:22
+   43| declare var bMaybe: ?B;
+                            ^ [1]
+   refinement.js:63:12
+   63|   (bMaybe: void); // Error
+                  ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:70:4
+
+Cannot cast `bBoolVoid` to undefined because:
+ - `B` [1] is incompatible with undefined [2].
+ - boolean [3] is incompatible with undefined [2].
+
+   refinement.js:70:4
+   70|   (bBoolVoid: void); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:67:24
+   67| declare var bBoolVoid: B | boolean | void;
+                              ^ [1]
+   refinement.js:70:15
+   70|   (bBoolVoid: void); // Error
+                     ^^^^ [2]
+   refinement.js:67:28
+   67| declare var bBoolVoid: B | boolean | void;
+                                  ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:72:4
+
+Cannot cast `bBoolVoid` to `B` because boolean [1] is incompatible with `B` [2].
+
+   refinement.js:72:4
+   72|   (bBoolVoid: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:67:28
+   67| declare var bBoolVoid: B | boolean | void;
+                                  ^^^^^^^ [1]
+   refinement.js:72:15
+   72|   (bBoolVoid: B); // Error
+                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:78:4
+
+Cannot cast `bBoolVoid` to boolean because undefined [1] is incompatible with boolean [2].
+
+   refinement.js:78:4
+   78|   (bBoolVoid: boolean); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:67:38
+   67| declare var bBoolVoid: B | boolean | void;
+                                            ^^^^ [1]
+   refinement.js:78:15
+   78|   (bBoolVoid: boolean); // Error
+                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:79:4
+
+Cannot cast `bBoolVoid` to `B` because undefined [1] is incompatible with `B` [2].
+
+   refinement.js:79:4
+   79|   (bBoolVoid: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:67:38
+   67| declare var bBoolVoid: B | boolean | void;
+                                            ^^^^ [1]
+   refinement.js:79:15
+   79|   (bBoolVoid: B); // Error
+                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:80:4
+
+Cannot cast `bBoolVoid` to union type because:
+ - Either undefined [1] is incompatible with `B` [2].
+ - Or undefined [1] is incompatible with boolean [3].
+
+   refinement.js:80:4
+   80|   (bBoolVoid: B | boolean); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:67:38
+   67| declare var bBoolVoid: B | boolean | void;
+                                            ^^^^ [1]
+   refinement.js:80:15
+   80|   (bBoolVoid: B | boolean); // Error
+                     ^ [2]
+   refinement.js:80:19
+   80|   (bBoolVoid: B | boolean); // Error
+                         ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:84:4
+
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:84:4
+   84|   (bVoidable: void); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
+                                     ^ [1]
+   refinement.js:84:15
+   84|   (bVoidable: void); // Error
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:90:4
+
+Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
+
+   refinement.js:90:4
+   90|   (bVoidable: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:24
+   11| declare var bVoidable: void | B;
+                              ^^^^ [1]
+   refinement.js:90:15
+   90|   (bVoidable: B); // Error
+                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:91:4
+
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
+
+   refinement.js:91:4
+   91|   (bVoidable: void); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
+                                     ^ [1]
+   refinement.js:91:15
+   91|   (bVoidable: void); // Error
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:98:4
+
+Cannot cast `bEmpty` to undefined because `BEmpty` [1] is incompatible with undefined [2].
+
+   refinement.js:98:4
+   98|   (bEmpty: void); // Error
+          ^^^^^^
+
+References:
+   refinement.js:95:21
+   95| declare var bEmpty: BEmpty | void;
+                           ^^^^^^ [1]
+   refinement.js:98:12
+   98|   (bEmpty: void); // Error
+                  ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:104:4
+
+Cannot cast `bEmpty` to `BEmpty` because undefined [1] is incompatible with `BEmpty` [2].
+
+   refinement.js:104:4
+   104|   (bEmpty: BEmpty); // Error
+           ^^^^^^
+
+References:
+   refinement.js:95:30
+    95| declare var bEmpty: BEmpty | void;
+                                     ^^^^ [1]
+   refinement.js:104:12
+   104|   (bEmpty: BEmpty); // Error
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:113:4
+
+Cannot cast `bTrue` to undefined because `BTrue` [1] is incompatible with undefined [2].
+
+   refinement.js:113:4
+   113|   (bTrue: void); // Error
+           ^^^^^
+
+References:
+   refinement.js:110:20
+   110| declare var bTrue: BTrue | void;
+                           ^^^^^ [1]
+   refinement.js:113:11
+   113|   (bTrue: void); // Error
+                  ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:119:4
+
+Cannot cast `bTrue` to `BTrue` because undefined [1] is incompatible with `BTrue` [2].
+
+   refinement.js:119:4
+   119|   (bTrue: BTrue); // Error
+           ^^^^^
+
+References:
+   refinement.js:110:28
+   110| declare var bTrue: BTrue | void;
+                                   ^^^^ [1]
+   refinement.js:119:11
+   119|   (bTrue: BTrue); // Error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:129:4
+
+Cannot cast `bFalse` to `BFalse` because boolean literal `true` [1] is incompatible with `BFalse` [2].
+
+   refinement.js:129:4
+   129|   (bFalse: BFalse); // Error
+           ^^^^^^
+
+References:
+   refinement.js:125:30
+   125| declare var bFalse: BFalse | true;
+                                     ^^^^ [1]
+   refinement.js:129:12
+   129|   (bFalse: BFalse); // Error
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:133:4
+
+Cannot cast `bFalse` to boolean literal `true` because `BFalse` [1] is incompatible with boolean literal `true` [2].
+
+   refinement.js:133:4
+   133|   (bFalse: true); // Error
+           ^^^^^^
+
+References:
+   refinement.js:125:21
+   125| declare var bFalse: BFalse | true;
+                            ^^^^^^ [1]
+   refinement.js:133:12
+   133|   (bFalse: true); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:149:4
+
+Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
+
+   refinement.js:149:4
+   149|   (nVoidable: N); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:24
+   145| declare var nVoidable: void | N;
+                               ^^^^ [1]
+   refinement.js:149:15
+   149|   (nVoidable: N); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:153:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:153:4
+   153|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:31
+   145| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:153:15
+   153|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:158:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:158:4
+   158|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:31
+   145| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:158:15
+   158|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:164:4
+
+Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
+
+   refinement.js:164:4
+   164|   (nVoidable: N); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:24
+   145| declare var nVoidable: void | N;
+                               ^^^^ [1]
+   refinement.js:164:15
+   164|   (nVoidable: N); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:171:4
+
+Cannot cast `nMaybe` to `N` because null or undefined [1] is incompatible with `N` [2].
+
+   refinement.js:171:4
+   171|   (nMaybe: N); // Error
+           ^^^^^^
+
+References:
+   refinement.js:167:21
+   167| declare var nMaybe: ?N;
+                            ^^ [1]
+   refinement.js:171:12
+   171|   (nMaybe: N); // Error
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:175:4
+
+Cannot cast `nMaybe` to null because `N` [1] is incompatible with null [2].
+
+   refinement.js:175:4
+   175|   (nMaybe: null); // Error
+           ^^^^^^
+
+References:
+   refinement.js:167:22
+   167| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:175:12
+   175|   (nMaybe: null); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:176:4
+
+Cannot cast `nMaybe` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:176:4
+   176|   (nMaybe: void); // Error
+           ^^^^^^
+
+References:
+   refinement.js:167:22
+   167| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:176:12
+   176|   (nMaybe: void); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:183:4
+
+Cannot cast `nNumVoid` to undefined because:
+ - `N` [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
+
+   refinement.js:183:4
+   183|   (nNumVoid: void); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:180:23
+   180| declare var nNumVoid: N | number | void;
+                              ^ [1]
+   refinement.js:183:14
+   183|   (nNumVoid: void); // Error
+                     ^^^^ [2]
+   refinement.js:180:27
+   180| declare var nNumVoid: N | number | void;
+                                  ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:185:4
+
+Cannot cast `nNumVoid` to `N` because number [1] is incompatible with `N` [2].
+
+   refinement.js:185:4
+   185|   (nNumVoid: N); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:180:27
+   180| declare var nNumVoid: N | number | void;
+                                  ^^^^^^ [1]
+   refinement.js:185:14
+   185|   (nNumVoid: N); // Error
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:191:4
+
+Cannot cast `nNumVoid` to number because undefined [1] is incompatible with number [2].
+
+   refinement.js:191:4
+   191|   (nNumVoid: number); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:180:36
+   180| declare var nNumVoid: N | number | void;
+                                           ^^^^ [1]
+   refinement.js:191:14
+   191|   (nNumVoid: number); // Error
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:192:4
+
+Cannot cast `nNumVoid` to `N` because undefined [1] is incompatible with `N` [2].
+
+   refinement.js:192:4
+   192|   (nNumVoid: N); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:180:36
+   180| declare var nNumVoid: N | number | void;
+                                           ^^^^ [1]
+   refinement.js:192:14
+   192|   (nNumVoid: N); // Error
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:193:4
+
+Cannot cast `nNumVoid` to union type because:
+ - Either undefined [1] is incompatible with `N` [2].
+ - Or undefined [1] is incompatible with number [3].
+
+   refinement.js:193:4
+   193|   (nNumVoid: N | number); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:180:36
+   180| declare var nNumVoid: N | number | void;
+                                           ^^^^ [1]
+   refinement.js:193:14
+   193|   (nNumVoid: N | number); // Error
+                     ^ [2]
+   refinement.js:193:18
+   193|   (nNumVoid: N | number); // Error
+                         ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:197:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:197:4
+   197|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:31
+   145| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:197:15
+   197|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:203:4
+
+Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
+
+   refinement.js:203:4
+   203|   (nVoidable: N); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:24
+   145| declare var nVoidable: void | N;
+                               ^^^^ [1]
+   refinement.js:203:15
+   203|   (nVoidable: N); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:204:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:204:4
+   204|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:145:31
+   145| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:204:15
+   204|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:214:4
+
+Cannot cast `nTruthy` to undefined because `NTruthy` [1] is incompatible with undefined [2].
+
+   refinement.js:214:4
+   214|   (nTruthy: void); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:211:22
+   211| declare var nTruthy: NTruthy | void;
+                             ^^^^^^^ [1]
+   refinement.js:214:13
+   214|   (nTruthy: void); // Error
+                    ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:220:4
+
+Cannot cast `nTruthy` to `NTruthy` because undefined [1] is incompatible with `NTruthy` [2].
+
+   refinement.js:220:4
+   220|   (nTruthy: NTruthy); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:211:32
+   211| declare var nTruthy: NTruthy | void;
+                                       ^^^^ [1]
+   refinement.js:220:13
+   220|   (nTruthy: NTruthy); // Error
+                    ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:235:4
+
+Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:235:4
+   235|   (sVoidable: S); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:24
+   231| declare var sVoidable: void | S;
+                               ^^^^ [1]
+   refinement.js:235:15
+   235|   (sVoidable: S); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:239:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:239:4
+   239|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:31
+   231| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:239:15
+   239|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:244:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:244:4
+   244|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:31
+   231| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:244:15
+   244|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:250:4
+
+Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:250:4
+   250|   (sVoidable: S); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:24
+   231| declare var sVoidable: void | S;
+                               ^^^^ [1]
+   refinement.js:250:15
+   250|   (sVoidable: S); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:257:4
+
+Cannot cast `sMaybe` to `S` because null or undefined [1] is incompatible with `S` [2].
+
+   refinement.js:257:4
+   257|   (sMaybe: S); // Error
+           ^^^^^^
+
+References:
+   refinement.js:253:21
+   253| declare var sMaybe: ?S;
+                            ^^ [1]
+   refinement.js:257:12
+   257|   (sMaybe: S); // Error
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:261:4
+
+Cannot cast `sMaybe` to null because `S` [1] is incompatible with null [2].
+
+   refinement.js:261:4
+   261|   (sMaybe: null); // Error
+           ^^^^^^
+
+References:
+   refinement.js:253:22
+   253| declare var sMaybe: ?S;
+                             ^ [1]
+   refinement.js:261:12
+   261|   (sMaybe: null); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:262:4
+
+Cannot cast `sMaybe` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:262:4
+   262|   (sMaybe: void); // Error
+           ^^^^^^
+
+References:
+   refinement.js:253:22
+   253| declare var sMaybe: ?S;
+                             ^ [1]
+   refinement.js:262:12
+   262|   (sMaybe: void); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:269:4
+
+Cannot cast `sStrVoid` to undefined because:
+ - `S` [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
+
+   refinement.js:269:4
+   269|   (sStrVoid: void); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:266:23
+   266| declare var sStrVoid: S | string | void;
+                              ^ [1]
+   refinement.js:269:14
+   269|   (sStrVoid: void); // Error
+                     ^^^^ [2]
+   refinement.js:266:27
+   266| declare var sStrVoid: S | string | void;
+                                  ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:271:4
+
+Cannot cast `sStrVoid` to `S` because string [1] is incompatible with `S` [2].
+
+   refinement.js:271:4
+   271|   (sStrVoid: S); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:266:27
+   266| declare var sStrVoid: S | string | void;
+                                  ^^^^^^ [1]
+   refinement.js:271:14
+   271|   (sStrVoid: S); // Error
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:277:4
+
+Cannot cast `sStrVoid` to string because undefined [1] is incompatible with string [2].
+
+   refinement.js:277:4
+   277|   (sStrVoid: string); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:266:36
+   266| declare var sStrVoid: S | string | void;
+                                           ^^^^ [1]
+   refinement.js:277:14
+   277|   (sStrVoid: string); // Error
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:278:4
+
+Cannot cast `sStrVoid` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:278:4
+   278|   (sStrVoid: S); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:266:36
+   266| declare var sStrVoid: S | string | void;
+                                           ^^^^ [1]
+   refinement.js:278:14
+   278|   (sStrVoid: S); // Error
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:279:4
+
+Cannot cast `sStrVoid` to union type because:
+ - Either undefined [1] is incompatible with `S` [2].
+ - Or undefined [1] is incompatible with string [3].
+
+   refinement.js:279:4
+   279|   (sStrVoid: S | string); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:266:36
+   266| declare var sStrVoid: S | string | void;
+                                           ^^^^ [1]
+   refinement.js:279:14
+   279|   (sStrVoid: S | string); // Error
+                     ^ [2]
+   refinement.js:279:18
+   279|   (sStrVoid: S | string); // Error
+                         ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:283:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:283:4
+   283|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:31
+   231| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:283:15
+   283|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:289:4
+
+Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:289:4
+   289|   (sVoidable: S); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:24
+   231| declare var sVoidable: void | S;
+                               ^^^^ [1]
+   refinement.js:289:15
+   289|   (sVoidable: S); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:290:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:290:4
+   290|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:231:31
+   231| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:290:15
+   290|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:300:4
+
+Cannot cast `sTruthy` to undefined because `STruthy` [1] is incompatible with undefined [2].
+
+   refinement.js:300:4
+   300|   (sTruthy: void); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:297:22
+   297| declare var sTruthy: STruthy | void;
+                             ^^^^^^^ [1]
+   refinement.js:300:13
+   300|   (sTruthy: void); // Error
+                    ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:306:4
+
+Cannot cast `sTruthy` to `STruthy` because undefined [1] is incompatible with `STruthy` [2].
+
+   refinement.js:306:4
+   306|   (sTruthy: STruthy); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:297:32
+   297| declare var sTruthy: STruthy | void;
+                                       ^^^^ [1]
+   refinement.js:306:13
+   306|   (sTruthy: STruthy); // Error
+                    ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:316:4
+
+Cannot cast `bn` to `N` because `B` [1] is incompatible with `N` [2].
+
+   refinement.js:316:4
+   316|   (bn: N); // Error
+           ^^
+
+References:
+   refinement.js:312:17
+   312| declare var bn: B | N;
+                        ^ [1]
+   refinement.js:316:8
+   316|   (bn: N); // Error
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:320:4
+
+Cannot cast `bn` to `B` because `N` [1] is incompatible with `B` [2].
+
+   refinement.js:320:4
+   320|   (bn: B); // Error
+           ^^
+
+References:
+   refinement.js:312:21
+   312| declare var bn: B | N;
+                            ^ [1]
+   refinement.js:320:8
+   320|   (bn: B); // Error
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:329:5
+
+Sketchy null check on boolean enum [1] which is potentially false at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-bool`)
+
+   refinement.js:329:5
+   329| if (bMaybe) { } // Error
+            ^^^^^^
+
+References:
+   refinement.js:43:22
+    43| declare var bMaybe: ?B;
+                             ^ [1]
+   refinement.js:43:21
+    43| declare var bMaybe: ?B;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:330:6
+
+Sketchy null check on boolean enum [1] which is potentially false at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-bool`)
+
+   refinement.js:330:6
+   330| if (!bMaybe) { } // Error
+             ^^^^^^
+
+References:
+   refinement.js:43:22
+    43| declare var bMaybe: ?B;
+                             ^ [1]
+   refinement.js:43:21
+    43| declare var bMaybe: ?B;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:332:5
+
+Sketchy null check on number enum [1] which is potentially 0 at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-number`)
+
+   refinement.js:332:5
+   332| if (nMaybe) { } // Error
+            ^^^^^^
+
+References:
+   refinement.js:167:22
+   167| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:167:21
+   167| declare var nMaybe: ?N;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:333:6
+
+Sketchy null check on number enum [1] which is potentially 0 at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-number`)
+
+   refinement.js:333:6
+   333| if (!nMaybe) { } // Error
+             ^^^^^^
+
+References:
+   refinement.js:167:22
+   167| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:167:21
+   167| declare var nMaybe: ?N;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:335:5
+
+Sketchy null check on string enum [1] which is potentially an empty string at runtime. Perhaps you meant to check for
+null or undefined [2]? (`sketchy-null-string`)
+
+   refinement.js:335:5
+   335| if (sMaybe) { } // Error
+            ^^^^^^
+
+References:
+   refinement.js:253:22
+   253| declare var sMaybe: ?S;
+                             ^ [1]
+   refinement.js:253:21
+   253| declare var sMaybe: ?S;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:336:6
+
+Sketchy null check on string enum [1] which is potentially an empty string at runtime. Perhaps you meant to check for
+null or undefined [2]? (`sketchy-null-string`)
+
+   refinement.js:336:6
+   336| if (!sMaybe) { } // Error
+             ^^^^^^
+
+References:
+   refinement.js:253:22
+   253| declare var sMaybe: ?S;
+                             ^ [1]
+   refinement.js:253:21
+   253| declare var sMaybe: ?S;
+                            ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:8:11
+
+Cannot spread object literal because enum `E` [1] is not an object.
+
+   spread.js:8:11
+   8| const x = {...E}; // Error
+                ^^^^^^
+
+References:
+   spread.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
+
+Cannot access `$PropertyType` because `X` is not a member of enum `E` [1].
+
+   utility-types.js:12:11
+   12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:12:25
+   12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
+                               ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:15:11
+
+Cannot access `$ElementType` on enum `E` [1] because computed access is not allowed on enums.
+
+   utility-types.js:15:11
+   15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:15:24
+   15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
+                              ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:18:11
+
+Cannot instantiate `$Diff` because enum `E` [1] is not an object.
+
+   utility-types.js:18:11
+   18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:18:17
+   18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                       ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:21:11
+
+Cannot instantiate `$ReadOnly` because enum `E` [1] is not an object.
+
+   utility-types.js:21:11
+   21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
+                 ^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:21:21
+   21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
+                           ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- utility-types.js:24:2
+
+Cannot cast `"A"` to key set because property `A` is missing in enum `E` [1].
+
+   utility-types.js:24:2
+   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
+        ^^^
+
+References:
+   utility-types.js:24:13
+   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
+                   ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:27:11
+
+enum `E` [1] is not an object.
+
+   utility-types.js:27:11
+   27| (trigger: $Values<typeof E>); // Error: enum `E` is not an object
+                 ^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:27:19
+   27| (trigger: $Values<typeof E>); // Error: enum `E` is not an object
+                         ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- utility-types.js:30:2
+
+Cannot cast `E` to `typeof E` because inexact enum `E` [1] is incompatible with exact `typeof E` [2].
+
+   utility-types.js:30:2
+   30| (E: $Exact<typeof E>); // Error: TODO: improve error
+        ^
+
+References:
+   utility-types.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   utility-types.js:30:5
+   30| (E: $Exact<typeof E>); // Error: TODO: improve error
+           ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:33:11
+
+Cannot instantiate `$Rest` because enum `E` [1] is not an object.
+
+   utility-types.js:33:11
+   33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:33:17
+   33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                       ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:36:11
+
+Cannot instantiate `$ObjMap` because enum `E` [1] is not a valid argument of `$ObjMap` [2].
+
+   utility-types.js:36:11
+   36| (trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   utility-types.js:36:19
+   36| (trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
+                         ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:39:11
+
+Cannot instantiate `$ObjMapi` because enum `E` [1] is not a valid argument of `$ObjMapi` [2].
+
+   utility-types.js:39:11
+   39| (trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   utility-types.js:39:20
+   39| (trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
+                          ^^^^^^^^ [1]
+
+
+
+Found 166 errors

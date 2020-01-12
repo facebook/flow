@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -173,6 +173,8 @@ val enter_function : env -> async:bool -> generator:bool -> env
 
 val is_reserved : string -> bool
 
+val token_is_reserved : Token.t -> bool
+
 val is_future_reserved : string -> bool
 
 val is_strict_reserved : string -> bool
@@ -240,6 +242,8 @@ module Eat : sig
 end
 
 module Expect : sig
+  val error : env -> Token.t -> unit
+
   val token : env -> Token.t -> unit
 
   val identifier : env -> string -> unit

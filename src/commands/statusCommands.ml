@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -34,6 +34,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> base_flags
             |> connect_and_json_flags
             |> json_version_flag
+            |> offset_style_flag
             |> error_flags
             |> strip_root_flag
             |> from_flag
@@ -43,7 +44,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     else
       let command_info =
         CommandList.commands
-        |> Core_list.map ~f:(fun command -> (CommandSpec.name command, CommandSpec.doc command))
+        |> Base.List.map ~f:(fun command -> (CommandSpec.name command, CommandSpec.doc command))
         |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
         |> List.sort (fun (a, _) (b, _) -> String.compare a b)
       in
@@ -52,7 +53,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       in
       let cmd_usage =
         command_info
-        |> Core_list.map ~f:(fun (cmd, doc) -> Utils_js.spf "  %-*s  %s" col_width cmd doc)
+        |> Base.List.map ~f:(fun (cmd, doc) -> Utils_js.spf "  %-*s  %s" col_width cmd doc)
         |> String.concat "\n"
       in
       {
@@ -69,6 +70,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> base_flags
             |> connect_and_json_flags
             |> json_version_flag
+            |> offset_style_flag
             |> error_flags
             |> strip_root_flag
             |> from_flag
@@ -80,6 +82,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     output_json: bool;
     output_json_version: Errors.Json_output.json_version option;
+    offset_style: CommandUtils.offset_style option;
     pretty: bool;
     error_flags: Errors.Cli_output.error_flags;
     strip_root: bool;
@@ -100,12 +103,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       else
         None
     in
+    let offset_kind = CommandUtils.offset_kind_of_offset_style args.offset_style in
     let print_json =
       Errors.Json_output.print_errors
         ~out_channel:stdout
         ~strip_root
         ~pretty:args.pretty
         ?version:args.output_json_version
+        ~offset_kind
     in
     let lazy_msg =
       match lazy_stats.ServerProt.Response.lazy_mode with
@@ -176,8 +181,18 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  let main base_flags connect_flags json pretty json_version error_flags strip_root version root ()
-      =
+  let main
+      base_flags
+      connect_flags
+      json
+      pretty
+      json_version
+      offset_style
+      error_flags
+      strip_root
+      version
+      root
+      () =
     if version then (
       print_version ();
       FlowExitStatus.(exit No_error)
@@ -191,6 +206,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         root;
         output_json = json;
         output_json_version = json_version;
+        offset_style;
         pretty;
         error_flags;
         strip_root;

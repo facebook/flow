@@ -29,11 +29,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
+   <BUILTINS>/core.js:601:22
+   601|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:545:11
+   545| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -46,11 +46,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
+   <BUILTINS>/core.js:601:22
+   601|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:545:11
+   545| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -63,11 +63,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
+   <BUILTINS>/core.js:601:22
+   601|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:545:11
+   545| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -80,11 +80,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
+   <BUILTINS>/core.js:601:22
+   601|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:545:11
+   545| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -144,6 +144,14 @@ References:
    issue6155.js:5:17
     5| type C = {kind: 'c'};
                        ^^^ [6]
+
+
+Error ------------------------------------------------------------------------------- recursive_react_component.js:21:11
+
+Cannot resolve name `DoesntMatter`.
+
+   21|   return <DoesntMatter
+                 ^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
@@ -287,4 +295,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors

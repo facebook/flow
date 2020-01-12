@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 # Workloads can't be canceled anymore by files changing. But in this test
 # find-refs starts a recheck which is cancelable. So this test still works.

@@ -217,5 +217,238 @@ References:
                                ^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- error_messages.js:4:20
 
-Found 12 errors
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:4:20
+   4| declare var w: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                         ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:4:16
+   4| declare var w: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:4:56
+   4| declare var w: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                                                             ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:8:20
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:8:20
+   8| declare var x: {...{a: number}, c: number, ...{| b?: number |}}; // Error
+                         ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:8:16
+   8| declare var x: {...{a: number}, c: number, ...{| b?: number |}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:8:47
+   8| declare var x: {...{a: number}, c: number, ...{| b?: number |}}; // Error
+                                                    ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:12:40
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:12:40
+   12| declare var y: {...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                              ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:12:16
+   12| declare var y: {...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:12:56
+   12| declare var y: {...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                                              ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:16:36
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:16:36
+   16| declare var z: {...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                          ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:16:16
+   16| declare var z: {...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:16:52
+   16| declare var z: {...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                                          ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:22:20
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:22:20
+   22| declare var a: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                          ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:22:16
+   22| declare var a: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:22:56
+   22| declare var a: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                                                              ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:26:31
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:26:31
+   26| declare var b: {a: number, ...{a: number}, c: number, ...{| b?: number |}}; // Error
+                                     ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:26:16
+   26| declare var b: {a: number, ...{a: number}, c: number, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:26:58
+   26| declare var b: {a: number, ...{a: number}, c: number, ...{| b?: number |}}; // Error
+                                                                ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:30:51
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:30:51
+   30| declare var c: {a: number, ...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                                         ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:30:16
+   30| declare var c: {a: number, ...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:30:67
+   30| declare var c: {a: number, ...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                                                         ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:34:47
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Can you make object type [2] exact?
+
+   error_messages.js:34:47
+   34| declare var d: {a: number, ...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                                     ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:34:16
+   34| declare var d: {a: number, ...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:34:63
+   34| declare var d: {a: number, ...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                                                     ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:40:49
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts with
+`c`'s definition in object type [1]. Can you make `B` [2] exact?
+
+   error_messages.js:40:49
+   40| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                                                       ^ [2]
+
+References:
+   error_messages.js:40:17
+   40| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:46:21
+
+Cannot determine a type for object type [1]. `C` [2] is inexact, so it may contain `b` with a type that conflicts with
+`b`'s definition in `D` [3]. Can you make `C` [2] exact?
+
+   error_messages.js:46:21
+   46| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                           ^ [2]
+
+References:
+   error_messages.js:46:17
+   46| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:46:49
+   46| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                                                       ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:53:6
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
+conflicts with `d`'s definition in object type [1]. Can you make object type [2] exact?
+
+   error_messages.js:53:6
+   53|   ...{b: number},
+            ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:50:17
+                       v---------------------------------------------
+   50| declare var x3: { // Error, but message could use improvement.
+   51|   ...{a: number},
+   52|   d: number,
+   53|   ...{b: number},
+   54|   e: number,
+   55|   ...{c: number},
+   56|   f: number,
+   57| };
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:60:27
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts with
+`b`'s definition in `A` [3]. Can you make `B` [2] exact?
+
+   error_messages.js:60:27
+   60| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                                 ^ [2]
+
+References:
+   error_messages.js:60:17
+   60| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:60:21
+   60| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                           ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:63:47
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts with
+`foo`'s definition in object type [1]. Can you make `B` [2] exact?
+
+   error_messages.js:63:47
+   63| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                                                     ^ [2]
+
+References:
+   error_messages.js:63:17
+   63| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 25 errors

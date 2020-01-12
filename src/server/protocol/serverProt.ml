@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,7 +12,10 @@ module Request = struct
 
   type command =
     | AUTOCOMPLETE of {
-        input: File_input.t;
+        filename: string option;
+        contents: string;
+        cursor: int * int;
+        trigger_character: string option;
         wait_for_recheck: bool option;
       }
     | AUTOFIX_EXPORTS of {
@@ -44,6 +47,8 @@ module Request = struct
       }
     | DUMP_TYPES of {
         input: File_input.t;
+        expand_aliases: bool;
+        evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
       }
     | FIND_MODULE of {
@@ -86,7 +91,9 @@ module Request = struct
         verbose: Verbose.t option;
         expand_aliases: bool;
         omit_targ_defaults: bool;
+        evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
+        verbose_normalizer: bool;
       }
     | INSERT_TYPE of {
         input: File_input.t;
@@ -119,8 +126,14 @@ module Request = struct
     | RENAME new_name -> Printf.sprintf "rename(%s)" new_name
 
   let to_string = function
-    | AUTOCOMPLETE { input; wait_for_recheck = _ } ->
-      Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
+    | AUTOCOMPLETE
+        { filename; contents = _; cursor = _; wait_for_recheck = _; trigger_character = _ } ->
+      let filename =
+        match filename with
+        | None -> "-"
+        | Some filename -> filename
+      in
+      Printf.sprintf "autocomplete %s" filename
     | AUTOFIX_EXPORTS { input; _ } ->
       Printf.sprintf "autofix exports %s" (File_input.filename_of_file_input input)
     | CHECK_FILE { input; verbose = _; force = _; include_warnings = _; wait_for_recheck = _ } ->
@@ -132,7 +145,8 @@ module Request = struct
     | CYCLE { filename; types_only } ->
       Printf.sprintf "cycle (types_only: %b) %s" types_only filename
     | GRAPH_DEP_GRAPH _ -> Printf.sprintf "dep-graph"
-    | DUMP_TYPES { input; wait_for_recheck = _ } ->
+    | DUMP_TYPES { input; expand_aliases = _; evaluate_type_destructors = _; wait_for_recheck = _ }
+      ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename
@@ -158,7 +172,9 @@ module Request = struct
           verbose = _;
           expand_aliases = _;
           omit_targ_defaults = _;
+          evaluate_type_destructors = _;
           wait_for_recheck = _;
+          verbose_normalizer = _;
         } ->
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char
     | INSERT_TYPE { input; target; _ } ->
@@ -212,6 +228,7 @@ module Response = struct
     res_ty: Loc.t * string;
     res_kind: Lsp.Completion.completionItemKind option;
     res_name: string;
+    res_insert_text: string option;
     func_details: func_details_result option;
   }
 

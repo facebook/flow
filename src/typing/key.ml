@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +20,7 @@ let rec string_of_key (base, projs) =
   ^ String.concat
       ""
       ( List.rev projs
-      |> Core_list.map ~f:(function
+      |> Base.List.map ~f:(function
              | Prop name -> spf ".%s" name
              | PrivateField name -> spf "private.%s" name
              | Elem expr -> spf "[%s]" (string_of_key expr)) )

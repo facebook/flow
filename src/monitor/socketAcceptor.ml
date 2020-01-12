@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -39,10 +39,10 @@ module StatusLoop (Writer : STATUS_WRITER) = LwtLoop.Make (struct
 
   let catch _ exn =
     begin
-      match exn with
+      match Exception.unwrap exn with
       (* The connection closed its write stream, likely it is closed or closing *)
       | Lwt_stream.Closed -> ()
-      | exn -> Logger.error ~exn "StatusLoop threw an exception"
+      | _ -> Logger.error ~exn:(Exception.to_exn exn) "StatusLoop threw an exception"
     end;
     Lwt.return_unit
 end)
@@ -118,7 +118,8 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    PersistentConnection.write LspProt.(NotificationFromServer EOF) conn;
+    (try PersistentConnection.write LspProt.(NotificationFromServer EOF) conn
+     with Lwt_stream.Closed -> ());
     PersistentConnection.flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
@@ -284,8 +285,8 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
     Lwt.return (autostop, socket_fd)
 
   let catch _ exn =
-    Logger.fatal ~exn "Uncaught exception in the socket acceptor";
-    raise exn
+    Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in the socket acceptor";
+    Exception.reraise exn
 end)
 
 module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
@@ -309,7 +310,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
         | Some { client_type = Persistent { lsp_init_params }; _ } ->
           create_persistent_connection ~client_fd ~close ~lsp_init_params
-        | None -> Lwt.return_unit)
+        | None -> close_without_autostop ())
     with exn -> catch close_without_autostop exn
 
   (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)

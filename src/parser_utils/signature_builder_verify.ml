@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,9 +12,9 @@ module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
 module Deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
-module Error = Deps.Error
+module Error = Signature_error
 module Dep = Deps.Dep
-module EASort = Signature_builder_deps.ExpectedAnnotationSort
+module EASort = Expected_annotation_sort
 
 module type EvalEnv = sig
   val prevent_munge : bool
@@ -138,6 +138,7 @@ module Eval (Env : EvalEnv) = struct
       | (_, Empty)
       | (_, Void)
       | (_, Null)
+      | (_, Symbol)
       | (_, Number)
       | (_, BigInt)
       | (_, String)
@@ -274,7 +275,7 @@ module Eval (Env : EvalEnv) = struct
 
   and type_params =
     let type_param tps tparam =
-      Ast.Type.ParameterDeclaration.TypeParam.(
+      Ast.Type.TypeParam.(
         let (_, { name = (_, { Ast.Identifier.name = x; comments = _ }); bound; default; _ }) =
           tparam
         in
@@ -697,9 +698,18 @@ module Eval (Env : EvalEnv) = struct
           in
           function_ tps generator tparams params return body predicate
         | Body.Property (loc, { Property.annot; key; _ }) ->
-          annotated_type ~sort:(EASort.Property key) tps loc annot
+          let name =
+            let open Ast.Expression.Object.Property in
+            match key with
+            | Literal (_, lit) -> EASort.Literal (Reason.code_desc_of_literal lit)
+            | Identifier (_, { Ast.Identifier.name; _ }) -> EASort.Identifier name
+            | PrivateName (_, (_, { Ast.Identifier.name; _ })) -> EASort.PrivateName name
+            | Computed e -> EASort.Computed (Reason.code_desc_of_expression ~wrap:false e)
+          in
+          annotated_type ~sort:(EASort.Property { name }) tps loc annot
         | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
-          annotated_type ~sort:(EASort.PrivateField key) tps loc annot)
+          let (_, (_, { Ast.Identifier.name; _ })) = key in
+          annotated_type ~sort:(EASort.PrivateField { name }) tps loc annot)
     in
     fun tparams body super super_targs implements ->
       Ast.Class.(
@@ -796,7 +806,8 @@ module Verifier (Env : EvalEnv) = struct
         | None -> eval id_loc (loc, base)
       end
     | Kind.VariableDef { id; annot; init } ->
-      Eval.annotation ~sort:(EASort.VariableDefinition id) ?init SSet.empty (id_loc, annot)
+      let (_, { Ast.Identifier.name; _ }) = id in
+      Eval.annotation ~sort:(EASort.VariableDefinition { name }) ?init SSet.empty (id_loc, annot)
     | Kind.FunctionDef { generator; async = _; tparams; params; return; body; predicate } ->
       Eval.function_ SSet.empty generator tparams params return body predicate
     | Kind.DeclareFunctionDef { annot = (_, t); predicate } ->
@@ -815,6 +826,7 @@ module Verifier (Env : EvalEnv) = struct
       in
       let deps = List.fold_left (Deps.reduce_join (Eval.value_ref tps)) deps mixins in
       List.fold_left (Deps.reduce_join (Eval.implement tps)) deps implements
+    | Kind.EnumDef _ -> Deps.bot
     | Kind.TypeDef { tparams; right } ->
       let (tps, deps) = Eval.type_params SSet.empty tparams in
       Deps.join (deps, Eval.type_ tps right)
@@ -828,10 +840,9 @@ module Verifier (Env : EvalEnv) = struct
       List.fold_left (Deps.reduce_join (Eval.type_ref tps)) deps extends
     | Kind.ImportNamedDef { kind; source; name } ->
       Deps.import_named (Kind.Sort.of_import_kind kind) source name
-    | Kind.ImportStarDef { kind; source } ->
-      Deps.import_star (Kind.Sort.of_import_kind kind) source
+    | Kind.ImportStarDef { kind; source } -> Deps.import_star (Kind.Sort.of_import_kind kind) source
     | Kind.RequireDef { source; name } -> Deps.require ?name source
-    | Kind.SketchyToplevelDef -> Deps.top (Deps.Error.SketchyToplevelDef loc)
+    | Kind.SketchyToplevelDef -> Deps.top (Error.SketchyToplevelDef loc)
 
   let cjs_exports =
     let tps = SSet.empty in
@@ -894,6 +905,7 @@ module Verifier (Env : EvalEnv) = struct
       | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
         ->
         eval_class loc class_
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> eval_entry (Entry.enum loc enum)
       | Declaration
           ( _,
             Ast.Statement.ClassDeclaration
@@ -940,8 +952,7 @@ module Verifier (Env : EvalEnv) = struct
                     | Some id -> Deps.value (snd id)
                     | None -> eval_export_default_declaration decl
                   end
-                | (ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt) ->
-                  Deps.value n
+                | (ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt) -> Deps.value n
                 | _ -> assert false ))
           Deps.bot
           named
@@ -1019,19 +1030,19 @@ module Verifier (Env : EvalEnv) = struct
   let dynamic_validator env (dynamic_imports, dynamic_requires) = function
     | Dep.Class (loc, x) ->
       if SMap.mem x env then
-        Deps.top (Deps.Error.SketchyToplevelDef loc)
+        Deps.top (Error.SketchyToplevelDef loc)
       else
         Deps.bot
     | Dep.DynamicImport loc ->
       begin
-        match LocMap.get loc dynamic_imports with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
+        match LocMap.find_opt loc dynamic_imports with
+        | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
         | Some source -> Deps.import_star Kind.Sort.Value source
       end
     | Dep.DynamicRequire loc ->
       begin
-        match LocMap.get loc dynamic_requires with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
+        match LocMap.find_opt loc dynamic_requires with
+        | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
         | Some source -> Deps.require source
       end
 
@@ -1040,7 +1051,7 @@ module Verifier (Env : EvalEnv) = struct
     | Dep.Local local ->
       let (sort, x) = local in
       begin
-        match SMap.get x env with
+        match SMap.find_opt x env with
         | Some entries ->
           let validate = Kind.validator sort in
           Loc_collections.LocMap.fold

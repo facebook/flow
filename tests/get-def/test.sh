@@ -1,5 +1,32 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 assert_ok "$FLOW" get-def example.js 12 10 --strip-root --json
+
+# foo;
+#  ^
+printf "use of const binding = "
+assert_ok "$FLOW" get-def const.js 7 4 --strip-root --pretty
+printf "use of shadowed const binding = "
+assert_ok "$FLOW" get-def const.js 10 2 --strip-root --pretty
+
+printf "let binding = "
+assert_ok "$FLOW" get-def let.js 3 6 --strip-root --pretty
+printf "use of let binding = "
+assert_ok "$FLOW" get-def let.js 7 4 --strip-root --pretty
+printf "use of shadowed let binding = "
+assert_ok "$FLOW" get-def let.js 10 2 --strip-root --pretty
+printf "uninitialized let binding = "
+assert_ok "$FLOW" get-def let.js 12 6 --strip-root --pretty
+printf "conditional write of let binding = "
+assert_ok "$FLOW" get-def let.js 14 4 --strip-root --pretty
+printf "use of conditionally initialized let binding = "
+assert_ok "$FLOW" get-def let.js 18 2 --strip-root --pretty
+printf "let binding initialized to member expression = "
+assert_ok "$FLOW" get-def let.js 28 8 --strip-root --pretty
 
 # import thing from "./exports_default.js";
 #           ^
@@ -73,6 +100,8 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
 
+printf "class name (should be itself) = "
+assert_ok "$FLOW" get-def class.js 3 8 --strip-root --pretty
 printf "class property read = "
 assert_ok "$FLOW" get-def class.js 13 6 --strip-root --pretty
 printf "class property write = "
@@ -122,11 +151,21 @@ printf "destructuring without type alias = "
 assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
 printf "destructuring a shadow prop = "
 assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
-# This one should return no results
+# This one should return itself
 printf "bogus array destructuring of an object = "
 assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty
+printf "property access assigned to a variable = "
+assert_ok "$FLOW" get-def objects.js 25 10 --strip-root --pretty
 
 printf "property access on the arg to the idx callback = "
 assert_ok "$FLOW" get-def idx.js 12 25 --strip-root --pretty
 printf "nested property access on the arg to the idx callback = "
 assert_ok "$FLOW" get-def idx.js 12 29 --strip-root --pretty
+
+printf "global (builtin) variable = "
+assert_ok "$FLOW" get-def global.js 3 3 --strip-root --pretty
+
+printf "object destructuring key = "
+assert_ok "$FLOW" get-def destructuring.js 5 9 --strip-root --pretty
+printf "object destructuring binding = "
+assert_ok "$FLOW" get-def destructuring.js 5 14 --strip-root --pretty

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -114,8 +114,7 @@ let rec iter_get_next ~f get_next =
     List.iter f result;
     iter_get_next ~f get_next
 
-let make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag
-    =
+let make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
   let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
   let temp_dir = FlowConfig.temp_dir flowconfig in
   let includes = CommandUtils.list_of_string_arg include_flag in
@@ -240,7 +239,7 @@ let main
     | [] -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary None
     | files_or_dirs ->
       files_or_dirs
-      |> Core_list.map ~f:(fun f ->
+      |> Base.List.map ~f:(fun f ->
              get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
       |> concat_get_next
   in

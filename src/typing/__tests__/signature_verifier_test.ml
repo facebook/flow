@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -330,10 +330,7 @@ let tests_data =
       ["module.exports = [1, ...[2, 3], 4]"],
       ["Unexpected array spread @ (1, 21) to (1, 30)"],
       [] );
-    ( name "array_hole",
-      ["module.exports = [,]"],
-      ["Unexpected array hole @ (1, 17) to (1, 20)"],
-      [] );
+    (name "array_hole", ["module.exports = [,]"], ["Unexpected array hole @ (1, 17) to (1, 20)"], []);
     (name "object_spread", ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"], [], []);
     (name "reference_expression1", ["module.exports = Number.NaN"], [], ["global value: Number"]);
     ( name "reference_expression2",
@@ -463,9 +460,13 @@ let mk_signature_verifier_test
     expected_msgs
     ctxt =
   let contents = String.concat "\n" contents in
+  let ast = parse contents in
+  let { File_sig.With_Loc.toplevel_names; exports_info } =
+    File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix:None
+  in
   let signature =
-    match Signature_builder.program ~module_ref_prefix:None (parse contents) with
-    | Ok signature -> signature
+    match exports_info with
+    | Ok exports_info -> Signature_builder.program ast ~exports_info ~toplevel_names
     | Error _ -> failwith "Signature builder failure!"
   in
   let (errors, remote_dependencies, env) =
@@ -477,11 +478,11 @@ let mk_signature_verifier_test
       signature
   in
   let error_msgs =
-    Core_list.map ~f:Signature_builder_deps.Error.debug_to_string
+    Base.List.map ~f:(Debug_js.string_of_signature_error Loc.debug_to_string)
     @@ Signature_builder_deps.PrintableErrorSet.elements errors
   in
   let remote_dependency_msgs =
-    Core_list.map ~f:Signature_builder_deps.Dep.to_string
+    Base.List.map ~f:Signature_builder_deps.Dep.to_string
     @@ Signature_builder_deps.DepSet.elements remote_dependencies
   in
   let reachable_msg_opt =
@@ -496,7 +497,7 @@ let mk_signature_verifier_test
 
 let tests =
   "signature_verifier"
-  >::: Core_list.map
+  >::: Base.List.map
          ~f:
            (fun ( (prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, name),
                   contents,

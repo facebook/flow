@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -75,13 +75,8 @@ let satisfies ?(include_prereleases = false) range version =
                 acc
               else
                 match allowed with
-                | {
-                 major = major';
-                 minor = minor';
-                 patch = patch';
-                 prerelease = _ :: _;
-                 build = _;
-                } ->
+                | { major = major'; minor = minor'; patch = patch'; prerelease = _ :: _; build = _ }
+                  ->
                   major = major' && minor = minor' && patch = patch'
                 | _ -> false)
             false

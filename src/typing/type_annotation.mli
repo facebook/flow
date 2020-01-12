@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -45,9 +45,8 @@ val mk_super :
   Type.t SMap.t ->
   ALoc.t ->
   Type.t ->
-  (ALoc.t, ALoc.t) Flow_ast.Type.ParameterInstantiation.t option ->
-  (ALoc.t * Type.t * Type.t list option)
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.ParameterInstantiation.t option
+  (ALoc.t, ALoc.t) Flow_ast.Type.TypeArgs.t option ->
+  (ALoc.t * Type.t * Type.t list option) * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeArgs.t option
 
 val mk_type_annotation :
   Context.t ->
@@ -74,16 +73,14 @@ val mk_nominal_type :
   Context.t ->
   Reason.t ->
   Type.t SMap.t ->
-  Type.t * (ALoc.t, ALoc.t) Flow_ast.Type.ParameterInstantiation.t option ->
-  Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.ParameterInstantiation.t option
+  Type.t * (ALoc.t, ALoc.t) Flow_ast.Type.TypeArgs.t option ->
+  Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeArgs.t option
 
 val mk_type_param_declarations :
   Context.t ->
   ?tparams_map:Type.t SMap.t ->
-  (ALoc.t, ALoc.t) Flow_ast.Type.ParameterDeclaration.t option ->
-  Type.typeparams
-  * Type.t SMap.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.ParameterDeclaration.t option
+  (ALoc.t, ALoc.t) Flow_ast.Type.TypeParams.t option ->
+  Type.typeparams * Type.t SMap.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParams.t option
 
 val mk_interface_sig :
   Context.t ->

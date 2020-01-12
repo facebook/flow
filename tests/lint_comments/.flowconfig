@@ -1,11 +1,6 @@
-[ignore]
-
-[include]
-
-[libs]
-
 [options]
 include_warnings=true
+all=true
 
 [lints]
 all=error

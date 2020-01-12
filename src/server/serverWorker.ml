@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -11,7 +11,9 @@ open Core_kernel
    at toplevel, in order to be executed before
    [Daemon.check_entry_point]. *)
 let entry =
-  WorkerController.register_entry_point ~restore:(fun (logger_level, log_filename, profile_id) ->
+  WorkerController.register_entry_point
+    ~restore:(fun (logger_level, log_filename, profile_id) ~(worker_id : int) ->
+      Hh_logger.set_id (Printf.sprintf "flow serverWorker %d" worker_id);
       Hh_logger.Level.set_min_level logger_level;
       Flow_server_profile.init_from_id profile_id;
 

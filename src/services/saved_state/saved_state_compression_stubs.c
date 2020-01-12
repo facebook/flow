@@ -1,14 +1,13 @@
-/**
- * Copyright (c) 2015, Facebook, Inc.
- * All rights reserved.
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
- * LICENSE file in the "hack" directory of this source tree.
- *
+ * LICENSE file in the root directory of this source tree.
  */
 
 #include <string.h>
 
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/callback.h>
 #include <caml/memory.h>

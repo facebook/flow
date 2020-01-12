@@ -128,8 +128,8 @@ Cannot cast `Object(...)` to `Number` because object type [1] is incompatible wi
         ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:45:24
-   45|     static (o: ?void): { [key: any]: any, ... };
+   <BUILTINS>/core.js:46:24
+   46|     static (o: ?void): { [key: any]: any, ... };
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    conversion.js:10:21
    10| (Object(undefined): Number); // error
@@ -145,8 +145,8 @@ Cannot call `z.charAt` because property `charAt` is missing in `Number` [1].
         ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:47:25
-   47|     static (o: number): Number;
+   <BUILTINS>/core.js:48:25
+   48|     static (o: number): Number;
                                ^^^^^^ [1]
 
 
@@ -277,8 +277,8 @@ Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompa
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:80:5
-   80|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:81:5
+   81|     hasOwnProperty(prop: mixed): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    objects.js:18:23
    18| (y['hasOwnProperty']: string); // error, prototype method is not a string

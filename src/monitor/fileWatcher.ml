@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -93,8 +93,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             Lwt.return_unit
           with
           | Sys_error msg as exn when msg = "Broken pipe" -> raise (FileWatcherDied exn)
-          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as exn ->
-            raise (FileWatcherDied exn))
+          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as exn -> raise (FileWatcherDied exn))
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in
@@ -159,51 +158,12 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
 module WatchmanFileWatcher : sig
   class watchman : FlowServerMonitorOptions.t -> watcher
 end = struct
-  (* We need to keep track of when hg transactions start and end. It's generally unsafe to read the
-   * state of the repo in the middle of a transaction, so we often need to avoid reading scm info
-   * until all transactions are done *)
-  module HgTransaction : sig
-    type t
-
-    val empty : t
-
-    val enter : t -> t
-
-    val leave : t -> t Lwt.t
-
-    val register_callback : t -> (unit -> unit Lwt.t) -> t Lwt.t
-  end = struct
-    type t = {
-      count: int;
-      callbacks: (unit -> unit Lwt.t) list;
-    }
-
-    let empty = { count = 0; callbacks = [] }
-
-    let enter t = { t with count = t.count + 1 }
-
-    let leave t =
-      let t = { t with count = t.count - 1 } in
-      if t.count = 0 then
-        let%lwt () = Lwt_list.iter_s (fun f -> f ()) (List.rev t.callbacks) in
-        Lwt.return { t with callbacks = [] }
-      else
-        Lwt.return t
-
-    let register_callback t f =
-      if t.count = 0 then
-        let%lwt () = f () in
-        Lwt.return t
-      else
-        Lwt.return { t with callbacks = f :: t.callbacks }
-  end
-
   type env = {
     mutable instance: Watchman_lwt.watchman_instance;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
     mutable mergebase: string option;
-    mutable hg_transactions: HgTransaction.t;
+    mutable finished_an_hg_update: bool;
     listening_thread: unit Lwt.t;
     changes_condition: unit Lwt_condition.t;
     init_settings: Watchman_lwt.init_settings;
@@ -255,6 +215,53 @@ end = struct
           match pushed_changes with
           | Watchman_lwt.Files_changed new_files ->
             env.files <- SSet.union env.files new_files;
+            let%lwt () =
+              (*
+               ******* GOAL *******
+               *
+               * We want to know when an N-files-changed notification is due to the user changing
+               * their mergebase with master. This could be due to pulling master & rebasing their
+               * work onto the new master, or just moving from one commit to another.
+               *
+               ******* PREVIOUS SOLUTION *******
+               *
+               * Unfortunately, Watchman's mercurial integration is racy and not to be trusted.
+               * Previously we tried this:
+               *
+               * 1. Keep a count of how many transactions are currently in progress
+               * 2. When hg.update ends, wait for the transaction count to drop to 0
+               * 3. When there are 0 in-progress transactions, then query for the mergebase
+               *
+               * This worked pretty well, but looking at some logs I would see step 3 would not
+               * always fire. Maybe we were missing some state_leave notifications. Also, the
+               * source control people aren't confident that waiting for the transactions to
+               * is a strong guarantee.
+               *
+               ******* CURRENT SOLUTION *******
+               *
+               * So this is a more simple solution. It's based around the assumption that once
+               * Watchman tells us that N files have changed, things have settled down enough
+               * that it's safe to query for the mergebase. And since querying for the mergebase
+               * is expensive, we only do so when we see an hg.update. After an hg.update it's
+               * more acceptable to delay a file-changed notification than after a user saves a
+               * file in the IDE
+               *)
+              if env.finished_an_hg_update then
+                let%lwt new_mergebase = get_mergebase env in
+                match (new_mergebase, env.mergebase) with
+                | (Some new_mergebase, Some old_mergebase) when new_mergebase <> old_mergebase ->
+                  Logger.info
+                    "Watchman reports mergebase changed from %S to %S"
+                    old_mergebase
+                    new_mergebase;
+                  env.mergebase <- Some new_mergebase;
+                  env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
+                  env.finished_an_hg_update <- false;
+                  Lwt.return_unit
+                | _ -> Lwt.return_unit
+              else
+                Lwt.return_unit
+            in
             broadcast env;
             Lwt.return env
           | Watchman_lwt.State_enter (name, metadata) ->
@@ -265,7 +272,6 @@ end = struct
                 "Watchman reports an hg.update just started. Moving %s revs from %s"
                 distance
                 rev
-            | "hg.transaction" -> env.hg_transactions <- HgTransaction.enter env.hg_transactions
             | _ -> ());
             Lwt.return env
           | Watchman_lwt.State_leave (name, metadata) ->
@@ -279,38 +285,11 @@ end = struct
                     total_update_distance =
                       env.metadata.total_update_distance + int_of_string distance;
                   };
+              env.finished_an_hg_update <- true;
               Logger.info
                 "Watchman reports an hg.update just finished. Moved %s revs to %s"
                 distance
                 rev;
-
-              let old_mergebase = env.mergebase in
-              let%lwt hg_trans =
-                HgTransaction.register_callback env.hg_transactions
-                @@ fun () ->
-                (* If the mergebase has changed for some reason before this callback runs, then
-                 * don't run this callback. For example, I could imagine multiple hg.update's inside a
-                 * single transaction queueing up multiple callbacks. *)
-                if env.mergebase <> old_mergebase then
-                  Lwt.return_unit
-                else
-                  let%lwt new_mergebase = get_mergebase env in
-                  match (new_mergebase, old_mergebase) with
-                  | (Some new_mergebase, Some old_mergebase) when new_mergebase <> old_mergebase ->
-                    Logger.info
-                      "Watchman reports mergebase changed from %S to %S"
-                      old_mergebase
-                      new_mergebase;
-                    env.mergebase <- Some new_mergebase;
-                    env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
-                    Lwt.return_unit
-                  | _ -> Lwt.return_unit
-              in
-              env.hg_transactions <- hg_trans;
-              Lwt.return env
-            | "hg.transaction" ->
-              let%lwt hg_trans = HgTransaction.leave env.hg_transactions in
-              env.hg_transactions <- hg_trans;
               Lwt.return env
             | _ -> Lwt.return env)
           | Watchman_lwt.Changed_merge_base _ ->
@@ -329,6 +308,7 @@ end = struct
         Lwt.return env
 
     let catch _ exn =
+      let exn = Exception.to_exn exn in
       Logger.error ~exn "Uncaught exception in Watchman listening loop";
 
       (* By exiting this loop we'll let the server know that something went wrong with Watchman *)
@@ -390,7 +370,7 @@ end = struct
                 (let%lwt env = waiter in
                  WatchmanListenLoop.run env);
               mergebase = None;
-              hg_transactions = HgTransaction.empty;
+              finished_an_hg_update = false;
               changes_condition = Lwt_condition.create ();
               metadata = MonitorProt.empty_file_watcher_metadata;
               init_settings = Option.value_exn init_settings;

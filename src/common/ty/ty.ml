@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,6 +20,7 @@ type t =
   | Bot of bot_kind
   | Void
   | Null
+  | Symbol
   | Num of string option
   | Str of string option
   | Bool of bool option
@@ -37,6 +38,7 @@ type t =
   | TypeOf of builtin_value
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
+  | EnumDecl of symbol
   | Utility of utility
   | Module of symbol option * export_t
   | Mu of int * t
@@ -98,6 +100,7 @@ and gen_kind =
   | ClassKind
   | InterfaceKind
   | TypeAliasKind
+  | EnumKind
 
 and export_t = {
   exports: (string * t) list;
@@ -187,8 +190,6 @@ and utility =
   | Call of t * t list
   | Class of t
   | Shape of t
-  | Supertype of t
-  | Subtype of t
   | Exists
   (* React utils *)
   | ReactElementPropsType of t
@@ -368,29 +369,32 @@ class ['A] comparator_ty =
       | Num _ -> 8
       | StrLit _ -> 9
       | Str _ -> 10
-      | TVar _ -> 11
-      | Bound _ -> 12
-      | Generic _ -> 13
-      | TypeAlias _ -> 14
-      | TypeOf _ -> 15
-      | ClassDecl _ -> 16
-      | Utility _ -> 17
-      | Tup _ -> 18
-      | Arr _ -> 19
-      | Fun _ -> 20
-      | Obj _ -> 21
-      | Inter _ -> 22
-      | Union _ -> 23
-      | InterfaceDecl _ -> 24
-      | Module _ -> 25
-      | Mu _ -> 26
-      | InlineInterface _ -> 27
+      | Symbol -> 11
+      | TVar _ -> 12
+      | Bound _ -> 13
+      | Generic _ -> 14
+      | TypeAlias _ -> 15
+      | TypeOf _ -> 16
+      | ClassDecl _ -> 17
+      | EnumDecl _ -> 18
+      | Utility _ -> 19
+      | Tup _ -> 20
+      | Arr _ -> 21
+      | Fun _ -> 22
+      | Obj _ -> 23
+      | Inter _ -> 24
+      | Union _ -> 25
+      | InterfaceDecl _ -> 26
+      | Module _ -> 27
+      | Mu _ -> 28
+      | InlineInterface _ -> 29
 
     method tag_of_gen_kind _ =
       function
       | ClassKind -> 0
       | InterfaceKind -> 1
       | TypeAliasKind -> 2
+      | EnumKind -> 3
 
     method tag_of_any_kind _ =
       function
@@ -448,8 +452,6 @@ class ['A] comparator_ty =
       | Call _ -> 12
       | Class _ -> 13
       | Shape _ -> 14
-      | Supertype _ -> 15
-      | Subtype _ -> 16
       | Exists -> 17
       | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
@@ -511,7 +513,7 @@ let is_dynamic = function
 let mk_maybe t = mk_union (Null, [Void; t])
 
 let mk_field_props prop_list =
-  Core_list.map
+  Base.List.map
     ~f:(fun (id, t, opt) ->
       NamedProp (id, Field (t, { fld_polarity = Neutral; fld_optional = opt })))
     prop_list
@@ -538,6 +540,7 @@ let rec mk_exact ty =
   | Bot _
   | Void
   | Null
+  | Symbol
   | Num _
   | Str _
   | Bool _
@@ -547,7 +550,8 @@ let rec mk_exact ty =
   | Fun _
   | Arr _
   | Tup _
-  | InlineInterface _ ->
+  | InlineInterface _
+  | EnumDecl _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
@@ -573,7 +577,8 @@ let debug_string_of_provenance_ctor = function
   | Local -> "Local"
   | Remote { imported_as = Some _ } -> "Imported"
   | Remote { imported_as = None } -> "Remote"
-  | Library -> "Library"
+  | Library { imported_as = Some _ } -> "Library (Imported)"
+  | Library { imported_as = None } -> "Library (Remote)"
   | Builtin -> "Builtin"
 
 let debug_string_of_symbol { provenance; def_loc; name; _ } =
@@ -587,6 +592,7 @@ let debug_string_of_generic_kind = function
   | ClassKind -> "class"
   | InterfaceKind -> "interface"
   | TypeAliasKind -> "type alias"
+  | EnumKind -> "enum"
 
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"
@@ -604,8 +610,6 @@ let string_of_utility_ctor = function
   | Call _ -> "$Call"
   | Class _ -> "Class"
   | Shape _ -> "$Shape"
-  | Supertype _ -> "$Supertype"
-  | Subtype _ -> "$Subtype"
   | Exists -> "*"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
@@ -628,8 +632,6 @@ let types_of_utility = function
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
   | Shape t -> Some [t]
-  | Supertype t -> Some [t]
-  | Subtype t -> Some [t]
   | Exists -> None
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]

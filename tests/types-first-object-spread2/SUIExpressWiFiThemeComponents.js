@@ -14,8 +14,8 @@ const SUIBusinessThemeComponents = {
 class SUITheme {}
 
 const SUIExpressWiFiThemeComponents = {
-  ...SUIBusinessThemeComponents,
   ...SUITheme,
+  ...SUIBusinessThemeComponents,
   SUIButton: require('./SUIButtonUniform'),
 };
 

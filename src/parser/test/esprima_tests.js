@@ -1480,57 +1480,7 @@ module.exports = {
         '<n:a n:v />',
         '<a n:foo="bar"> {value} <b><c /></b></a>',
         '<a b={" "} c=" " d="&amp;" />',
-        {
-          content: '<日本語></日本語>',
-          explanation: 'Flow reports offsets based on bytes',
-          expected_differences: {
-            'root.body.0.expression.openingElement.name.range.1': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 10,
-            },
-            'root.body.0.expression.openingElement.range.1': {
-              type: 'Wrong number',
-              expected: 5,
-              actual: 11,
-            },
-            'root.body.0.expression.closingElement.name.range.0': {
-              type: 'Wrong number',
-              expected: 7,
-              actual: 13,
-            },
-            'root.body.0.expression.closingElement.name.range.1': {
-              type: 'Wrong number',
-              expected: 10,
-              actual: 22,
-            },
-            'root.body.0.expression.closingElement.range.0': {
-              type: 'Wrong number',
-              expected: 5,
-              actual: 11,
-            },
-            'root.body.0.expression.closingElement.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-          },
-        },
+        '<日本語></日本語>',
         '<AbC-def\n  test="&#x0026;&#38;">\nbar\nbaz\n</AbC-def>',
         '<a b={x ? <c /> : <d />} />',
         '<div>@test content</div>',

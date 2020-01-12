@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,10 @@ type acc =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage FilenameMap.t
+  * Coverage_response.file_coverage FilenameMap.t option
+  * float
+
+(* Time to check *)
 
 type 'a merge_job_results = 'a file_keyed_result list
 
@@ -39,7 +42,7 @@ type merge_context_result = {
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
-  coverage_map: Coverage_response.file_coverage FilenameMap.t;
+  coverage_map: Coverage_response.file_coverage FilenameMap.t option;
 }
 
 val merge_context :
@@ -62,7 +65,7 @@ val merge_runner :
   intermediate_result_callback:('a merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_set:FilenameSet.t ->
   'a merge_results Lwt.t
@@ -74,7 +77,7 @@ val merge :
   intermediate_result_callback:(acc merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_set:FilenameSet.t ->
   acc merge_results Lwt.t

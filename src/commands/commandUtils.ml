@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,7 +19,7 @@ let run_command command argv =
     begin
       try
         let json_arg =
-          Core_list.find_exn
+          Base.List.find_exn
             ~f:(fun s ->
               String_utils.string_starts_with s "--pretty"
               || String_utils.string_starts_with s "--json")
@@ -40,7 +40,7 @@ let run_command command argv =
     FlowExitStatus.(exit ~msg Commandline_usage_error)
 
 let expand_file_list ?options filenames =
-  let paths = Core_list.map ~f:Path.make filenames in
+  let paths = Base.List.map ~f:Path.make filenames in
   let next_files =
     match paths with
     | [] -> (fun () -> [])
@@ -50,7 +50,7 @@ let expand_file_list ?options filenames =
         | Some options -> Files.is_valid_path ~options
         | _ -> (fun filename -> Filename.check_suffix filename ".js")
       in
-      Find.make_next_files ~filter ~others:(Core_list.tl_exn paths) (Core_list.hd_exn paths)
+      Find.make_next_files ~filter ~others:(Base.List.tl_exn paths) (Base.List.hd_exn paths)
   in
   Files.get_all next_files
 
@@ -173,8 +173,7 @@ let error_flags prev =
     |> flag
          "--unicode"
          (required ~default:`Auto (enum [("never", `Never); ("always", `Always); ("auto", `Auto)]))
-         ~doc:
-           "Display terminal output with unicode decoration. never, always, auto (default: auto)"
+         ~doc:"Display terminal output with unicode decoration. never, always, auto (default: auto)"
     |> flag
          "--message-width"
          int
@@ -246,14 +245,12 @@ let input_file_flag verb prev =
 type shared_mem_params = {
   shm_dirs: string option;
   shm_min_avail: int option;
-  shm_dep_table_pow: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
 }
 
-let collect_shm_flags
-    main shm_dirs shm_min_avail shm_dep_table_pow shm_hash_table_pow shm_log_level =
-  main { shm_dirs; shm_min_avail; shm_dep_table_pow; shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_dirs shm_min_avail shm_hash_table_pow shm_log_level =
+  main { shm_dirs; shm_min_avail; shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
@@ -269,11 +266,6 @@ let shm_flags prev =
          ~doc:
            "Flow will only use a filesystem for shared memory if it has at least these many bytes available (default: 536870912 - which is 512MB)"
     |> flag
-         "--sharedmemory-dep-table-pow"
-         int
-         ~doc:
-           "The exponent for the size of the shared memory dependency table. The default is 17, implying a size of 2^17 bytes"
-    |> flag
          "--sharedmemory-hash-table-pow"
          int
          ~doc:
@@ -284,9 +276,6 @@ let shm_flags prev =
          ~doc:"The logging level for shared memory statistics. 0=none, 1=some")
 
 let shm_config shm_flags flowconfig =
-  let dep_table_pow =
-    Option.value shm_flags.shm_dep_table_pow ~default:(FlowConfig.shm_dep_table_pow flowconfig)
-  in
   let hash_table_pow =
     Option.value shm_flags.shm_hash_table_pow ~default:(FlowConfig.shm_hash_table_pow flowconfig)
   in
@@ -295,7 +284,7 @@ let shm_config shm_flags flowconfig =
       shm_flags.shm_dirs
       ~default:(FlowConfig.shm_dirs flowconfig)
       ~f:(Str.split (Str.regexp ","))
-    |> Core_list.map ~f:Path.(make %> to_string)
+    |> Base.List.map ~f:Path.(make %> to_string)
   in
   let shm_min_avail =
     Option.value shm_flags.shm_min_avail ~default:(FlowConfig.shm_min_avail flowconfig)
@@ -303,17 +292,12 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  let sample_rate = 0.0 in
   {
-    SharedMem_js.global_size = 0;
-    (* we don't use GlobalStorage, don't waste space on it *)
-    heap_size = FlowConfig.shm_heap_size flowconfig;
-    dep_table_pow;
+    SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig;
     hash_table_pow;
     shm_dirs;
     shm_min_avail;
     log_level;
-    sample_rate;
   }
 
 let from_flag =
@@ -322,13 +306,12 @@ let from_flag =
       match from with
       | Some from -> Some from
       | None ->
-        Core_result.(
+        Base.Result.(
           let parent_cmdline =
-            Proc.get_proc_stat (Unix.getpid ())
-            >>= fun proc_stat ->
+            Proc.get_proc_stat (Unix.getpid ()) >>= fun proc_stat ->
             let ppid = proc_stat.Proc.ppid in
-            Proc.get_proc_stat ppid
-            >>| (fun parent_proc_stat -> String.trim parent_proc_stat.Proc.cmdline)
+            Proc.get_proc_stat ppid >>| fun parent_proc_stat ->
+            String.trim parent_proc_stat.Proc.cmdline
           in
           (match parent_cmdline with
           | Ok cmdline -> Some ("parent cmdline: " ^ cmdline)
@@ -465,10 +448,28 @@ let log_file_flags =
            ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
            ~env:"FLOW_MONITOR_LOG_FILE")
 
+type offset_style =
+  | Utf8_offsets
+  | JavaScript_offsets
+
+let offset_style_flag prev =
+  CommandSpec.ArgSpec.(
+    prev
+    |> flag
+         "--offset-style"
+         (enum [("utf8-bytes", Utf8_offsets); ("js-indices", JavaScript_offsets)])
+         ~doc:"How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
+
+let offset_kind_of_offset_style = function
+  | None
+  | Some Utf8_offsets ->
+    Offset_utils.Utf8
+  | Some JavaScript_offsets -> Offset_utils.JavaScript
+
 let flowconfig_multi_error rev_errs =
   let msg =
     rev_errs
-    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> Base.List.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   FlowExitStatus.(exit ~msg Invalid_flowconfig)
@@ -476,7 +477,7 @@ let flowconfig_multi_error rev_errs =
 let flowconfig_multi_warn rev_errs =
   let msg =
     rev_errs
-    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> Base.List.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   prerr_endline msg
@@ -569,8 +570,8 @@ let file_options =
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
   let ignores_of_arg root patterns extras =
-    let patterns = Core_list.rev_append extras patterns in
-    Core_list.map
+    let patterns = Base.List.rev_append extras patterns in
+    Base.List.map
       ~f:(fun s ->
         let root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
         let reg =
@@ -586,7 +587,7 @@ let file_options =
   let includes_of_arg ~root ~lib_paths paths =
     (* Explicitly included paths are always added to the path_matcher *)
     let path_matcher =
-      Core_list.fold_left
+      Base.List.fold_left
         ~f:(fun acc path -> Path_matcher.add acc (Files.make_path_absolute root path))
         ~init:Path_matcher.empty
         paths
@@ -594,10 +595,10 @@ let file_options =
     (* Implicitly included paths are added only if they're not already being watched *)
     let path_len path = path |> Path.to_string |> String.length in
     let implicitly_included_paths_sorted =
-      Core_list.sort ~cmp:(fun a b -> path_len a - path_len b) (root :: lib_paths)
+      Base.List.sort ~compare:(fun a b -> path_len a - path_len b) (root :: lib_paths)
       (* Shortest path first *)
     in
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun acc path ->
         (* If this include is already covered by an explicit include or a shorter implicit include,
          * then skip it *)
@@ -612,7 +613,7 @@ let file_options =
     let flowtyped_path = Files.get_flowtyped_path root in
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
-      Core_list.fold_right
+      Base.List.fold_right
         ~f:(fun lib abs_libs ->
           let abs_lib = Files.make_path_absolute root lib in
           (*
@@ -625,15 +626,14 @@ let file_options =
         ~init:[]
     in
     let config_libs =
-      if !has_explicit_flowtyped_lib = false && Sys.file_exists (Path.to_string flowtyped_path)
-      then
+      if !has_explicit_flowtyped_lib = false && Sys.file_exists (Path.to_string flowtyped_path) then
         flowtyped_path :: config_libs
       else
         config_libs
     in
     match extras with
     | [] -> config_libs
-    | _ -> config_libs @ Core_list.map ~f:(Files.make_path_absolute root) extras
+    | _ -> config_libs @ Base.List.map ~f:(Files.make_path_absolute root) extras
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
@@ -646,7 +646,7 @@ let file_options =
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
-      |> Core_list.rev_append (FlowConfig.includes flowconfig)
+      |> Base.List.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg ~root ~lib_paths
     in
     {
@@ -664,10 +664,7 @@ let file_options =
 let ignore_flag prev =
   CommandSpec.ArgSpec.(
     prev
-    |> flag
-         "--ignore"
-         (optional string)
-         ~doc:"Specify one or more ignore patterns, comma separated")
+    |> flag "--ignore" (optional string) ~doc:"Specify one or more ignore patterns, comma separated")
 
 let untyped_flag prev =
   CommandSpec.ArgSpec.(
@@ -785,10 +782,7 @@ let connect_flags_with_lazy_collector collector =
          "--retry-if-init"
          (optional bool)
          ~doc:"retry if the server is initializing (default: true)"
-    |> flag
-         "--no-auto-start"
-         no_arg
-         ~doc:"If the server is not running, do not start it; just exit"
+    |> flag "--no-auto-start" no_arg ~doc:"If the server is not running, do not start it; just exit"
     |> temp_dir_flag
     |> shm_flags
     |> from_flag
@@ -857,7 +851,7 @@ end
 let parse_lints_flag =
   let number =
     let rec number' index acc = function
-      | [] -> Core_list.rev acc
+      | [] -> Base.List.rev acc
       | head :: tail -> number' (index + 1) ((index, head) :: acc) tail
     in
     number' 1 []
@@ -1174,13 +1168,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       | timeout -> timeout)
       |> Option.map ~f:float_of_int
     in
-    let expand_project_root_token path root =
-      let str_root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
-      Path.to_string path
-      |> Str.split_delim Files.project_root_token
-      |> String.concat str_root
-      |> Path.make
-    in
     (* The CLI flag overrides the .flowconfig *)
     let opt_saved_state_fetcher =
       Option.value
@@ -1188,9 +1175,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
         ~default:(FlowConfig.saved_state_fetcher flowconfig)
     in
     let opt_lazy_mode =
-      let default =
-        Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE
-      in
+      let default = Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE in
       Option.value lazy_mode ~default
     in
     let opt_arch =
@@ -1214,6 +1199,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_debug = options_flags.debug;
       opt_verbose = options_flags.verbose;
       opt_all = options_flags.all || FlowConfig.all flowconfig;
+      opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
       opt_wait_for_recheck;
       opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
       opt_traces = Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
@@ -1223,13 +1209,9 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_profile = options_flags.profile;
       opt_strip_root = options_flags.strip_root;
       opt_module = FlowConfig.module_system flowconfig;
-      opt_module_resolver =
-        Option.value_map
-          (FlowConfig.module_resolver flowconfig)
-          ~default:None
-          ~f:(fun module_resolver -> Some (expand_project_root_token module_resolver root));
       opt_munge_underscores =
         options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+      opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
       opt_temp_dir = temp_dir;
       opt_max_workers =
         Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
@@ -1273,14 +1255,21 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
       opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
       opt_no_saved_state = options_flags.no_saved_state;
+      opt_node_resolver_allow_root_relative =
+        FlowConfig.node_resolver_allow_root_relative flowconfig;
+      opt_node_resolver_root_relative_dirnames =
+        FlowConfig.node_resolver_root_relative_dirnames flowconfig;
       opt_arch;
       opt_abstract_locations;
-      opt_cache_direct_dependents = FlowConfig.cache_direct_dependents flowconfig;
+      opt_minimal_merge = FlowConfig.minimal_merge flowconfig;
       opt_include_suppressions = options_flags.include_suppressions;
       opt_trust_mode =
         Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
       opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
       opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
+      opt_max_rss_bytes_for_check_per_worker =
+        FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
+      opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
     })
 
@@ -1293,7 +1282,7 @@ let make_env flowconfig_name connect_flags root =
   in
   let shm_dirs =
     Option.map
-      ~f:(Str.split (Str.regexp ",") %> Core_list.map ~f:normalize)
+      ~f:(Str.split (Str.regexp ",") %> Base.List.map ~f:normalize)
       connect_flags.shm_flags.shm_dirs
   in
   let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
@@ -1322,7 +1311,6 @@ let make_env flowconfig_name connect_flags root =
     tmp_dir;
     shm_dirs;
     shm_min_avail = connect_flags.shm_flags.shm_min_avail;
-    shm_dep_table_pow = connect_flags.shm_flags.shm_dep_table_pow;
     shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
     shm_log_level = connect_flags.shm_flags.shm_log_level;
     log_file;
@@ -1524,9 +1512,7 @@ let rec connect_and_make_request flowconfig_name =
   let rec wait_for_response ?timeout ~quiet ~root (ic : Timeout.in_channel) =
     let use_emoji =
       Tty.supports_emoji ()
-      && Server_files_js.config_file flowconfig_name root
-         |> read_config_or_exit
-         |> FlowConfig.emoji
+      && Server_files_js.config_file flowconfig_name root |> read_config_or_exit |> FlowConfig.emoji
     in
     let response : MonitorProt.monitor_to_client_message =
       try Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic) with
@@ -1663,11 +1649,11 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
 let json_of_loc_with_offset ?stdin_file ~strip_root loc =
   Option.(
     let file_content =
-      let path = Loc.source loc >>= File_key.to_path %> Core_result.ok in
+      let path = Loc.source loc >>= File_key.to_path %> Base.Result.ok in
       match stdin_file with
       | Some fileinput when path = File_input.path_of_file_input fileinput ->
         Some (File_input.content_of_file_input_unsafe fileinput)
       | _ -> path >>= Sys_utils.cat_or_failed
     in
-    let offset_table = Option.map file_content ~f:Offset_utils.make in
+    let offset_table = Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8) in
     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)

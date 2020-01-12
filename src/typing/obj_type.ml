@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,6 +6,10 @@
  *)
 
 open Type
+
+let mk_seal reason = function
+  | true -> Sealed
+  | false -> UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
 
 let mk_with_proto
     cx
@@ -18,12 +22,7 @@ let mk_with_proto
     ?(props = SMap.empty)
     ?loc
     proto =
-  let sealed =
-    if sealed then
-      Sealed
-    else
-      UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
-  in
+  let sealed = mk_seal reason sealed in
   let flags = { sealed; exact; frozen } in
   let call = Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =

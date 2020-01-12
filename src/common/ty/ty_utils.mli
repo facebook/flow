@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,6 +19,8 @@
  * appears as the top-level constructor, and is ignored otherwise.
  *)
 val tvar_appears_in_type : is_toplevel:bool -> Ty.tvar -> Ty.t -> bool
+
+val free_vars_of_type : Ty.t -> ISet.t
 
 (* Returns the number of nodes in a type. Will return None if the number of nodes
  * exceeds the max parameter.

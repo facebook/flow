@@ -238,7 +238,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:10
 
-Cannot get `t.bar` because property `bar` is missing in object type [1].
+Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in object type [1].
 
    cond_prop.js:36:10
    36|         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
@@ -374,6 +374,14 @@ References:
    eq.js:18:35
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
                                          ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- exists.js:18:9
+
+Property `current` is not readable.
+
+   18| if (TDR.current) { }
+               ^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
@@ -2432,8 +2440,8 @@ number [1] is incompatible with function type [2].
                                ^ [1]
 
 References:
-   <BUILTINS>/core.js:164:5
-   164|     toString(radix?: number): string;
+   <BUILTINS>/core.js:165:5
+   165|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2482,8 +2490,8 @@ number [1] is incompatible with function type [2].
                               ^ [1]
 
 References:
-   <BUILTINS>/core.js:139:5
-   139|     valueOf(): boolean;
+   <BUILTINS>/core.js:140:5
+   140|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2566,8 +2574,8 @@ number [1] is incompatible with function type [2].
                            ^ [1]
 
 References:
-   <BUILTINS>/core.js:128:17
-   128|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
+   <BUILTINS>/core.js:129:17
+   129|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
                         ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3131,6 +3139,20 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- tuple.js:32:6
+
+Cannot get `a[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
+
+   tuple.js:32:6
+   32|     (a[2]: number); // Error: one of the variants has only 2 elements.
+            ^^^^
+
+References:
+   tuple.js:25:17
+   25|   a: [string] | [number, number] | [number, number, number]
+                       ^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- typeof.js:5:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
@@ -3371,8 +3393,8 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
             ^^^^
 
 References:
-   <BUILTINS>/core.js:136:15
-   136| declare class Boolean {
+   <BUILTINS>/core.js:137:15
+   137| declare class Boolean {
                       ^^^^^^^ [1]
 
 
@@ -3533,4 +3555,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 256 errors
+Found 258 errors

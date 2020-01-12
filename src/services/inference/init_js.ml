@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -35,7 +35,11 @@ let parse_lib_file ~reader options file =
       ( if not (FilenameMap.is_empty results.Parsing.parse_ok) then
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
-        Parsing.Parse_ok (Parsing.Classic (ast, file_sig))
+        (* Parsing_service_js.result only returns tolerable file sig errors, dropping parse
+           errors. So there may actually have been some, but they were ignored.
+           TODO: where do we surface lib parse errors? *)
+        let parse_errors = [] in
+        Parsing.Parse_ok (Parsing.Classic (ast, file_sig), parse_errors)
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
@@ -64,12 +68,12 @@ let load_lib_files ~sig_cx ~options ~reader files =
          (fun (exclude_syms, results) file ->
            let lib_file = File_key.LibFile file in
            let lint_severities = options.Options.opt_lint_severities in
-           let file_options = Options.file_options options in
            let%lwt result = parse_lib_file ~reader options file in
            Lwt.return
              (match result with
-             | Parsing.Parse_ok parse_ok ->
-               let (ast, file_sig) = Parsing.basic parse_ok in
+             | Parsing.Parse_ok (parse_result, _parse_errors) ->
+               (* parse_lib_file doesn't return any parse errors right now *)
+               let (ast, file_sig) = Parsing.basic parse_result in
                let file_sig = File_sig.abstractify_locs file_sig in
                let metadata =
                  Context.(
@@ -89,15 +93,7 @@ let load_lib_files ~sig_cx ~options ~reader files =
                    Files.lib_module_ref
                    Context.Checking
                in
-               let syms =
-                 Infer.infer_lib_file
-                   cx
-                   ast
-                   ~exclude_syms
-                   ~lint_severities
-                   ~file_options:(Some file_options)
-                   ~file_sig
-               in
+               let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
                let errors = Context.errors cx in
                let errors =
                  if Inference_utils.well_formed_exports_enabled options lib_file then

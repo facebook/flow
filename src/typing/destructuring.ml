@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -82,7 +82,7 @@ let array_element cx acc i loc =
                           } );
                 }) ))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
@@ -98,7 +98,7 @@ let array_rest_element cx acc i loc =
   let default = Option.map default (Default.arr_rest i reason) in
   { acc with parent; current; default }
 
-let object_named_property cx acc loc x comments =
+let object_named_property ~has_default cx acc loc x comments =
   let { current; init; default; annot; _ } = acc in
   let reason = mk_reason (RProperty (Some x)) loc in
   let init =
@@ -112,7 +112,15 @@ let object_named_property cx acc loc x comments =
                   property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
                 }) ))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
+  let default =
+    Option.map default (fun default ->
+        let d = Default.prop x reason has_default default in
+        if has_default then
+          Default.default reason d
+        else
+          d)
+  in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
@@ -120,9 +128,8 @@ let object_named_property cx acc loc x comments =
       (* use the same reason for the prop name and the lookup.
        given `var {foo} = ...`, `foo` is both. compare to `a.foo`
        where `foo` is the name and `a.foo` is the lookup. *)
-      (Some current, destruct cx reason ~annot (Prop x) current)
+      (Some current, destruct cx reason ~annot (Prop (x, has_default)) current)
   in
-  let default = Option.map default (Default.prop x reason) in
   let () =
     match parent with
     | None -> () (* TODO: get-def when object property is refined *)
@@ -145,7 +152,7 @@ let object_computed_property cx ~expr acc e =
     Option.map init (fun init ->
         (loc, Ast.Expression.(Member Member.{ _object = init; property = PropertyExpression e })))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
@@ -162,17 +169,15 @@ let object_rest_property cx acc xs loc =
   { acc with parent; current; default }
 
 let object_property
-    cx ~expr (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key) :
-    state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
+    cx ~expr ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key)
+    : state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
   Ast.Pattern.Object.(
     match key with
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
-      let acc = object_named_property cx acc loc x comments in
-      ( acc,
-        x :: xs,
-        Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }) )
+      let acc = object_named_property ~has_default cx acc loc x comments in
+      (acc, x :: xs, Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }))
     | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
-      let acc = object_named_property cx acc loc x None in
+      let acc = object_named_property ~has_default cx acc loc x None in
       (acc, x :: xs, Property.Literal (loc, lit))
     | Property.Computed e ->
       let (acc, e) = object_computed_property cx ~expr acc e in
@@ -279,7 +284,8 @@ and object_properties =
     let prop cx ~expr ~f acc xs p =
       match p with
       | Property (loc, { Property.key; pattern = p; default = d; shorthand }) ->
-        let (acc, xs, key) = object_property cx ~expr acc xs key in
+        let has_default = d <> None in
+        let (acc, xs, key) = object_property cx ~expr ~has_default acc xs key in
         let (acc, d) = pattern_default cx ~expr acc d in
         let p = pattern cx ~expr ~f acc p in
         (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))

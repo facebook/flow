@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -58,44 +58,54 @@ type trust_mode =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
-  opt_cache_direct_dependents: bool;
+  opt_arch: arch;
+  opt_babel_loose_array_spread: bool;
   opt_debug: bool;
-  opt_max_literal_length: int;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
   opt_enforce_well_formed_exports_whitelist: string list;
   opt_enums: bool;
-  opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
+  opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
-  opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
+  opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
-  opt_flowconfig_name: string;
   opt_file_options: Files.options;
+  opt_flowconfig_name: string;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
   opt_haste_paths_whitelist: string list;
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
+  opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_lazy_mode: lazy_mode;
+  opt_lint_severities: Severity.severity LintSettings.t;
+  opt_lsp_code_actions: bool;
   opt_max_files_checked_per_worker: int;
+  opt_max_header_tokens: int;
+  opt_max_literal_length: int;
+  opt_max_rss_bytes_for_check_per_worker: int;
+  opt_max_seconds_for_check_per_worker: float;
   opt_max_workers: int;
   opt_merge_timeout: float option;
+  opt_minimal_merge: bool;
   opt_module: module_system;
   opt_module_name_mappers: (Str.regexp * string) list;
-  opt_module_resolver: Path.t option;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
+  opt_node_resolver_allow_root_relative: bool;
+  opt_node_resolver_root_relative_dirnames: string list;
   opt_no_saved_state: bool;
+  opt_node_main_fields: string list;
   opt_profile: bool;
-  opt_lazy_mode: lazy_mode;
   opt_quiet: bool;
   opt_recursion_limit: int;
   opt_root: Path.t;
@@ -103,31 +113,26 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
+  opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
   opt_suppress_comments: Str.regexp list;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_traces: int;
+  opt_trust_mode: trust_mode;
+  opt_type_asserts: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
   opt_weak: bool;
-  opt_max_header_tokens: int;
-  opt_lint_severities: Severity.severity LintSettings.t;
-  opt_lsp_code_actions: bool;
-  opt_strict_mode: StrictModeSettings.t;
-  opt_arch: arch;
-  opt_include_suppressions: bool;
-  opt_trust_mode: trust_mode;
-  opt_type_asserts: bool;
 }
 
 let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
 
-let arch opts = opts.opt_arch
+let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
-let cache_direct_dependents opts = opts.opt_cache_direct_dependents
+let arch opts = opts.opt_arch
 
 let max_literal_length opts = opts.opt_max_literal_length
 
@@ -181,21 +186,31 @@ let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
 let max_header_tokens opts = opts.opt_max_header_tokens
 
+let max_rss_bytes_for_check_per_worker opts = opts.opt_max_rss_bytes_for_check_per_worker
+
+let max_seconds_for_check_per_worker opts = opts.opt_max_seconds_for_check_per_worker
+
 let max_trace_depth opts = opts.opt_traces
 
 let max_workers opts = opts.opt_max_workers
 
 let merge_timeout opts = opts.opt_merge_timeout
 
-let module_name_mappers opts = opts.opt_module_name_mappers
+let minimal_merge opts = opts.opt_minimal_merge
 
-let module_resolver opts = opts.opt_module_resolver
+let module_name_mappers opts = opts.opt_module_name_mappers
 
 let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let no_saved_state opts = opts.opt_no_saved_state
+
+let node_main_fields opts = opts.opt_node_main_fields
+
+let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
+
+let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
 
 let recursion_limit opts = opts.opt_recursion_limit
 

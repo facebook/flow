@@ -194,8 +194,8 @@ Cannot assign `this.props.x` to `_` because number [1] is incompatible with stri
                             ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:470:36
-   470|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    classes.js:57:12
     57|     var _: string = this.props.x;
@@ -397,8 +397,8 @@ Cannot assign `this.props.z` to `qux` because:
                                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:470:36
-   470|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    new_react.js:19:18
     19|         var qux: string = this.props.z;
@@ -414,8 +414,8 @@ Cannot assign `this.props.x` to `w` because string [1] is incompatible with numb
                                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:472:36
-   472|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    new_react.js:20:15
     20|         var w:number = this.props.x;
@@ -449,8 +449,8 @@ References:
    new_react.js:29:23
     29| var element = <C x = {0}/>;
                               ^ [1]
-   <BUILTINS>/react.js:472:36
-   472|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 
@@ -512,7 +512,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_component.js:17:12
 
-Cannot create `Component` element because property `baz` is missing in object type [1] but exists in props [2].
+Cannot create `Component` element because property `baz` (did you mean `bar`?) is missing in object type [1] but exists
+in props [2].
 
    object_component.js:17:12
    17| const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the config
@@ -555,8 +556,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_component.js:24:57
 
-Cannot assign object literal to `_badProps2` because property `baz` is missing in object type [1] but exists in object
-literal [2].
+Cannot assign object literal to `_badProps2` because property `baz` (did you mean `bar`?) is missing in object type [1]
+but exists in object literal [2].
 
    object_component.js:24:57
    24| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
@@ -579,8 +580,8 @@ Cannot assign `this.props.x` to `a` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:472:36
-   472|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    props.js:14:16
     14|         var a: number = this.props.x; // error
@@ -616,8 +617,8 @@ Cannot assign `this.props.z` to `c` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:470:36
-   470|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    props.js:16:16
     16|         var c: string = this.props.z; // error
@@ -638,14 +639,14 @@ References:
    props.js:20:29
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                     ^^^^^ [1]
-   <BUILTINS>/react.js:472:36
-   472|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props.js:20:49
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                         ^^^^^ [3]
-   <BUILTINS>/react.js:470:36
-   470|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [4]
 
 
@@ -702,8 +703,8 @@ References:
    props2.js:9:41
      9|     getInitialState: function(): { bar: number } {
                                                 ^^^^^^ [1]
-   <BUILTINS>/react.js:472:36
-   472|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props2.js:15:42
     15|         return <C {...this.state} foo = {0} />;
@@ -726,7 +727,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- props3.js:50:16
 
-Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is missing in
+Cannot get `React.PropTypes.string.inRequired` because property `inRequired` (did you mean `isRequired`?) is missing in
 `ReactPropsChainableTypeChecker` [1].
 
    props3.js:50:16
@@ -734,13 +735,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is 
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:445:39
+   <BUILTINS>/react.js:461:39
                                               v
-   445| type ReactPropsChainableTypeChecker = {
-   446|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   447|   isRequired: ReactPropsCheckType,
-   448|   ...
-   449| };
+   461| type ReactPropsChainableTypeChecker = {
+   462|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   463|   isRequired: ReactPropsCheckType,
+   464|   ...
+   465| };
         ^ [1]
 
 
@@ -785,8 +786,8 @@ Cannot call `ReactDOM.render` with `document.body` bound to `container` because 
           ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:733:27
-   733|   body: HTMLBodyElement | null;
+   <BUILTINS>/dom.js:738:27
+   738|   body: HTMLBodyElement | null;
                                   ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,

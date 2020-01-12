@@ -1,2 +1,6 @@
+[libs]
+lib
+
 [options]
 no_flowlib=false
+all=true

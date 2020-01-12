@@ -1,9 +1,16 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+val json_of_aloc :
+  ?strip_root:Path.t option ->
+  ?catch_offset_errors:bool ->
+  offset_table:Offset_utils.t option ->
+  ALoc.t ->
+  Hh_json.json
 
 val json_of_t :
   ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.t -> Hh_json.json
@@ -47,6 +54,8 @@ val string_of_destructor : Type.TypeTerm.destructor -> string
 
 val string_of_default : (Loc.t, Loc.t) Flow_ast.Expression.t Default.t -> string
 
+val string_of_signature_error : ('loc -> string) -> 'loc Signature_error.t -> string
+
 val dump_t : ?depth:int -> Context.t -> Type.t -> string
 
 val dump_use_t : ?depth:int -> Context.t -> Type.use_t -> string
@@ -65,8 +74,7 @@ module Verbose : sig
   val print_if_verbose_lazy :
     Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string Lazy.t list -> unit
 
-  val print_if_verbose :
-    Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string list -> unit
+  val print_if_verbose : Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string list -> unit
 
   val print_types_if_verbose : Context.t -> Trace.t -> ?note:string -> Type.t * Type.use_t -> unit
 end

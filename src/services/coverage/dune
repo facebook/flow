@@ -1,0 +1,8 @@
+(library
+  (name flow_coverage)
+  (wrapped false)
+  (libraries
+    flow_typing
+    flow_typing_type
+  )
+)

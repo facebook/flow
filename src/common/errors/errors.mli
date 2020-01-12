@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -102,8 +102,7 @@ module ConcreteLocPrintableErrorSet : Set.S with type elt = Loc.t printable_erro
 
 type stdin_file = (Path.t * string) option
 
-val deprecated_json_props_of_loc :
-  strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
+val deprecated_json_props_of_loc : strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
 
 (* Some of the error printing functions consist only of named and optional arguments,
  * requiring an extra unit argument for disambiguation on partial application. For
@@ -157,6 +156,7 @@ module Json_output : sig
     stdin_file:stdin_file ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
@@ -167,6 +167,7 @@ module Json_output : sig
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
@@ -179,6 +180,7 @@ module Json_output : sig
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
+    offset_kind:Offset_utils.offset_kind ->
     ?stdin_file:stdin_file ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
@@ -192,6 +194,7 @@ module Json_output : sig
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->

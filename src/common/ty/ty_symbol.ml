@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -11,14 +11,15 @@ type import_mode =
   | TypeofMode
 
 and imported_ident =
-  (ALoc.t * string * import_mode[@printer (fun fmt (_, id, _) -> fprintf fmt "%s" id)])
+  (ALoc.t * string * import_mode
+  [@printer (fun fmt (_, id, _) -> fprintf fmt "%s" id)])
 
 and remote_info = { imported_as: imported_ident option }
 
 and provenance =
   | Local
   | Remote of remote_info
-  | Library
+  | Library of remote_info
   | Builtin
 
 and symbol = {

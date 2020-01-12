@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -75,7 +75,7 @@ end = struct
   let remove_lint_suppression lint_suppression ({ lint_suppressions; _ } as orig) =
     { orig with lint_suppressions = LocSet.remove lint_suppression lint_suppressions }
 
-  let suppression_at_loc loc { suppressions; _ } = SpanMap.get loc suppressions
+  let suppression_at_loc loc { suppressions; _ } = SpanMap.find_opt loc suppressions
 
   let all_locs { suppressions; lint_suppressions } =
     suppressions |> SpanMap.values |> List.fold_left LocSet.union lint_suppressions
@@ -105,7 +105,7 @@ let add_lint_suppressions lint_suppressions map =
       fun loc acc ->
       let file = file_of_loc_unsafe loc in
       let file_suppressions =
-        FilenameMap.get file acc |> Option.value ~default:FileSuppressions.empty
+        FilenameMap.find_opt file acc |> Option.value ~default:FileSuppressions.empty
       in
       let file_suppressions = FileSuppressions.add_lint_suppression loc file_suppressions in
       FilenameMap.add file file_suppressions acc
@@ -118,7 +118,7 @@ let remove = FilenameMap.remove
 (* raises if `loc` has no filename *)
 let file_suppressions_of_loc loc suppressions_map =
   let file = file_of_loc_unsafe loc in
-  match FilenameMap.get file suppressions_map with
+  match FilenameMap.find_opt file suppressions_map with
   | Some x -> x
   | None -> FileSuppressions.empty
 
@@ -131,7 +131,7 @@ let suppression_at_loc loc suppressions_map =
  * no-op if suppressions_map does not contain an entry for that file. *)
 let update_file_suppressions f loc suppressions_map =
   let file = file_of_loc_unsafe loc in
-  match FilenameMap.get file suppressions_map with
+  match FilenameMap.find_opt file suppressions_map with
   | None -> suppressions_map
   | Some file_suppressions ->
     let file_suppressions = f file_suppressions in
@@ -167,8 +167,12 @@ let in_node_modules ~root ~file_options loc =
   | None -> false
   | Some (file, options) -> Files.is_within_node_modules ~root ~options (File_key.to_string file)
 
-let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t)
-    =
+let in_declarations ~file_options loc =
+  match Option.both (Loc.source loc) file_options with
+  | None -> false
+  | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
+
+let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t) =
   let locs =
     Errors.locs_of_printable_error err
     (* It is possible for errors to contain locations without a source, but suppressions always
@@ -176,11 +180,11 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
      * without a source. *)
     |> List.filter (fun loc -> Option.is_some (Loc.source loc))
   in
-  (* Ignore lint errors from node modules. *)
+  (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
     match Errors.kind_of_printable_error err with
     | Errors.LintError _ -> in_node_modules ~root ~file_options (Errors.loc_of_printable_error err)
-    | _ -> false
+    | _ -> in_declarations ~file_options (Errors.loc_of_printable_error err)
   in
   if ignore then
     None
@@ -198,10 +202,7 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
 (* Gets the locations of the suppression comments that are yet unused *)
 
 let all_locs map =
-  FilenameMap.fold
-    (fun _k v acc -> LocSet.union acc (FileSuppressions.all_locs v))
-    map
-    LocSet.empty
+  FilenameMap.fold (fun _k v acc -> LocSet.union acc (FileSuppressions.all_locs v)) map LocSet.empty
 
 let filter_suppressed_errors ~root ~file_options suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
@@ -230,8 +231,8 @@ let update_suppressions current_suppressions new_suppressions =
 
 let get_lint_settings severity_cover loc =
   Option.Monad_infix.(
-    Loc.source loc
-    >>= (fun source -> Utils_js.FilenameMap.get source severity_cover >>= ExactCover.find_opt loc))
+    Loc.source loc >>= fun source ->
+    Utils_js.FilenameMap.find_opt source severity_cover >>= ExactCover.find_opt loc)
 
 (* Filter out lint errors which are definitely suppressed or were never
  * enabled in the first place. *)

@@ -366,32 +366,6 @@ References:
                              ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:53:1
-
-Cannot call `f` because:
- - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or object literal [1] is incompatible with read-only array type [3].
- - Or object literal [1] is incompatible with tuple type [4].
-
-   intersection-function.js:53:1
-   53| f({});
-       ^^^^^
-
-References:
-   intersection-function.js:53:3
-   53| f({});
-         ^^ [1]
-   intersection-function.js:48:23
-   48| declare function f(x: {p: string}): void;
-                             ^^^^^^^^^^^ [2]
-   intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   intersection-function.js:50:23
-   50| declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ [4]
-
-
 Error ------------------------------------------------------------------------------------ intersection-function.js:54:1
 
 Cannot call `f` because:
@@ -1101,29 +1075,6 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:43:2
-
-Cannot cast object literal to `F` because:
- - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or object literal [1] is incompatible with read-only array type [3].
- - Or object literal [1] is incompatible with tuple type [4].
-
-   union.js:43:2
-   43| ({}: F);
-        ^^ [1]
-
-References:
-   union.js:40:10
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                ^^^^^^^^^^^ [2]
-   union.js:40:24
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                              ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   union.js:40:49
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^^^^^^^^^^^ [4]
-
-
 Error ---------------------------------------------------------------------------------------------------- union.js:44:2
 
 Cannot cast `new Y()` to `F` because:
@@ -1368,4 +1319,4 @@ References:
 
 
 
-Found 54 errors
+Found 52 errors

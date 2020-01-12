@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -109,7 +109,7 @@ module Make (F : Func_params.S) = struct
       }
     in
     let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
-    let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
+    let t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
     Flow.unify cx t knot;
     t
 
@@ -127,7 +127,7 @@ module Make (F : Func_params.S) = struct
               dummy_prototype,
               mk_boundfunctiontype params_tlist ~rest_param ~def_reason ~params_names return_t ) )
     in
-    poly_type_of_tparams (Context.make_nominal cx) tparams t
+    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
   let gettertype ({ return_t; _ } : t) = return_t
 
@@ -213,9 +213,8 @@ module Make (F : Func_params.S) = struct
               bogus_trust (),
               MixedT Mixed_everything ),
           DefT
-            ( replace_desc_reason (RCustom "no next") reason,
-              bogus_trust (),
-              MixedT Mixed_everything ) )
+            (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
+        )
     in
     let (yield, next, return) =
       Scope.(
@@ -240,8 +239,8 @@ module Make (F : Func_params.S) = struct
         | Some (Ast.Function.BodyExpression expr) ->
           ( [
               ( fst expr,
-                Return
-                  { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () } );
+                Return { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () }
+              );
             ],
             (function
             | [(_, Return { Return.argument = Some expr; comments = _ })]
@@ -296,25 +295,23 @@ module Make (F : Func_params.S) = struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
           | Async ->
-            let reason = annot_reason (mk_reason (RType "Promise") loc) in
+            let reason = mk_annot_reason (RType "Promise") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Generator ->
-            let reason = annot_reason (mk_reason (RType "Generator") loc) in
+            let reason = mk_annot_reason (RType "Generator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | AsyncGenerator ->
-            let reason = annot_reason (mk_reason (RType "AsyncGenerator") loc) in
+            let reason = mk_annot_reason (RType "AsyncGenerator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t =
-              Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t]
-            in
+            let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)

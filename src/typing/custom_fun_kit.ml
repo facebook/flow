@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -55,7 +55,7 @@ module Kit (Flow : Flow_common.S) = struct
       run_compose cx trace ~use_op reason_op reverse fns spread_fn tvar tout
     (* If there are no functions and no spread function then we are an identity
      * function. *)
-    | (_, [], None) -> rec_flow_t cx trace (tin, tout)
+    | (_, [], None) -> rec_flow_t ~use_op:unknown_use cx trace (tin, tout)
     (* Correctly implementing spreads of unknown arity for the compose function
      * is a little tricky. Let's look at a couple of cases.
      *
@@ -131,7 +131,7 @@ module Kit (Flow : Flow_common.S) = struct
             dummy_prototype,
             mk_functiontype reason_op [tin] ~rest_param:None ~def_reason:reason_op tvar )
       in
-      rec_flow_t cx trace (DefT (reason_op, bogus_trust (), funt), tout)
+      rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), funt), tout)
     | ReactCreateElement ->
       (match args with
       (* React.createElement(component) *)
@@ -144,8 +144,7 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
-          )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
       (* React.createElement(component, config, ...children) *)
       | component :: config :: children ->
         rec_flow
@@ -153,9 +152,8 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 (false, config, (children, spread_arg), tout) ) )
+              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+          )
       (* React.createElement() *)
       | _ ->
         (* If we don't have the arguments we need, add an arity error. *)
@@ -167,24 +165,20 @@ module Kit (Flow : Flow_common.S) = struct
         (* Create the expected type for our element with a fresh tvar in the
          * component position. *)
         let expected_element =
-          get_builtin_typeapp
-            cx
-            ~trace
-            (reason_of_t element)
-            "React$Element"
-            [Tvar.mk cx reason_op]
+          get_builtin_typeapp cx ~trace (reason_of_t element) "React$Element" [Tvar.mk cx reason_op]
         in
         (* Flow the element arg to our expected element. *)
-        rec_flow_t cx trace (element, expected_element);
+        rec_flow_t ~use_op:unknown_use cx trace (element, expected_element);
 
         (* Flow our expected element to the return type. *)
-        rec_flow_t cx trace (expected_element, tout)
+        rec_flow_t ~use_op:unknown_use cx trace (expected_element, tout)
       (* React.cloneElement(element, config, ...children) *)
       | element :: config :: children ->
         (* Create a tvar for our component. *)
         let component = Tvar.mk cx reason_op in
         (* Flow the element arg to the element type we expect. *)
         rec_flow_t
+          ~use_op:unknown_use
           cx
           trace
           (element, get_builtin_typeapp cx ~trace reason_op "React$Element" [component]);
@@ -213,8 +207,7 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
-          )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
       (* React.createFactory(component)(config, ...children) *)
       | config :: children ->
         rec_flow
@@ -222,9 +215,8 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 (false, config, (children, spread_arg), tout) ) ))
+              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+          ))
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf

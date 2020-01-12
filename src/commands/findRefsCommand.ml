@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -66,7 +66,7 @@ let print_json result ~stdin_file ~pretty ~strip_root =
             ("kind", JSON_String "symbol-found");
             ("name", JSON_String name);
             ( "locs",
-              JSON_Array (Core_list.map ~f:(json_of_loc_with_offset ~stdin_file ~strip_root) locs)
+              JSON_Array (Base.List.map ~f:(json_of_loc_with_offset ~stdin_file ~strip_root) locs)
             );
           ]
     in
@@ -82,9 +82,9 @@ let to_string result ~strip_root =
   String.concat "\n"
   @@
   if from = Some "vim" || from = Some "emacs" then
-    Core_list.map ~f:(Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
+    Base.List.map ~f:(Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
   else
-    Core_list.map ~f:(range_string_of_loc ~strip_root) locs
+    Base.List.map ~f:(range_string_of_loc ~strip_root) locs
 
 (* find-refs command handler.
    - json toggles JSON output

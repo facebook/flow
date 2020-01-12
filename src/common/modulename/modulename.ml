@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -38,4 +38,4 @@ module Key = struct
 end
 
 module Set = Set.Make (Key)
-module Map = MyMap.Make (Key)
+module Map = WrappedMap.Make (Key)

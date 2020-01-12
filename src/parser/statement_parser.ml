@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -97,6 +97,40 @@ module Statement
         | _ -> ()) );
     func
 
+  (* https://tc39.es/ecma262/#sec-exports-static-semantics-early-errors *)
+  let assert_identifier_name_is_identifier
+      ?restricted_error env (loc, { Ast.Identifier.name; comments = _ }) =
+    match name with
+    | "let" ->
+      (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
+         lists them out. It is always disallowed in strict mode *)
+      if in_strict_mode env then
+        strict_error_at env (loc, Parse_error.StrictReservedWord)
+      else if no_let env then
+        error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
+    | "await" ->
+      (* `allow_await` means that `await` is allowed to be a keyword,
+          which makes it illegal to use as an identifier.
+          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+      if allow_await env then error_at env (loc, Parse_error.UnexpectedReserved)
+    | "yield" ->
+      (* `allow_yield` means that `yield` is allowed to be a keyword,
+          which makes it illegal to use as an identifier.
+          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+      if allow_yield env then
+        error_at env (loc, Parse_error.UnexpectedReserved)
+      else
+        strict_error_at env (loc, Parse_error.StrictReservedWord)
+    | _ when is_strict_reserved name -> strict_error_at env (loc, Parse_error.StrictReservedWord)
+    | _ when is_reserved name ->
+      error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
+    | _ ->
+      begin
+        match restricted_error with
+        | Some err when is_restricted name -> strict_error_at env (loc, err)
+        | _ -> ()
+      end
+
   let rec empty env =
     let loc = Peek.loc env in
     Expect.token env T_SEMICOLON;
@@ -104,7 +138,7 @@ module Statement
 
   and break env =
     let leading = Peek.comments env in
-    let (loc, (label, trailing)) =
+    let (loc, label) =
       with_loc
         (fun env ->
           Expect.token env T_BREAK;
@@ -116,11 +150,11 @@ module Statement
               if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
               Some label
           in
-          let trailingComments = Peek.comments env in
           Eat.semicolon env;
-          (label, trailingComments))
+          label)
         env
     in
+    let trailing = Peek.comments env in
     if label = None && not (in_loop env || in_switch env) then
       error_at env (loc, Parse_error.IllegalBreak);
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
@@ -128,12 +162,10 @@ module Statement
 
   and continue env =
     let leading = Peek.comments env in
-    let trailingComments = ref [] in
     let (loc, label) =
       with_loc
         (fun env ->
           Expect.token env T_CONTINUE;
-          trailingComments := Peek.comments env;
           let label =
             if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
               None
@@ -147,7 +179,7 @@ module Statement
         env
     in
     if not (in_loop env) then error_at env (loc, Parse_error.IllegalContinue);
-    let trailing = !trailingComments in
+    let trailing = Peek.comments env in
     ( loc,
       Statement.Continue
         {
@@ -405,9 +437,7 @@ module Statement
           | last_stmt :: _ -> fst last_stmt
           | _ -> end_loc
         in
-        let acc =
-          (Loc.btwn start_loc end_loc, Statement.Switch.Case.{ test; consequent }) :: acc
-        in
+        let acc = (Loc.btwn start_loc end_loc, Statement.Switch.Case.{ test; consequent }) :: acc in
         case_list env (seen_default, acc)
     in
     with_loc (fun env ->
@@ -441,7 +471,9 @@ module Statement
             let catch =
               with_loc
                 (fun env ->
+                  let leading = Peek.comments env in
                   Expect.token env T_CATCH;
+                  let trailing = Peek.comments env in
                   let param =
                     if Peek.token env = T_LPAREN then (
                       Expect.token env T_LPAREN;
@@ -452,7 +484,11 @@ module Statement
                       None
                   in
                   let body = Parse.block_body env in
-                  { Ast.Statement.Try.CatchClause.param; body })
+                  {
+                    Ast.Statement.Try.CatchClause.param;
+                    body;
+                    comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                  })
                 env
             in
             Some catch
@@ -580,7 +616,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.semicolon env;
@@ -608,7 +644,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     let supertype =
       match Peek.token env with
       | T_COLON ->
@@ -646,7 +682,7 @@ module Statement
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     let { Ast.Type.Interface.extends; body } = Type.interface_helper env in
     Statement.Interface.{ id; tparams; body; extends }
 
@@ -682,7 +718,7 @@ module Statement
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
-      let tparams = Type.type_parameter_declaration env in
+      let tparams = Type.type_params env in
       let extends =
         if Expect.maybe env T_EXTENDS then
           Some (Type.generic env)
@@ -718,7 +754,7 @@ module Statement
     Expect.token env T_FUNCTION;
     let id = Parse.identifier env in
     let start_sig_loc = Peek.loc env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     let params = Type.function_param_list env in
     Expect.token env T_COLON;
     let return = Type._type env in
@@ -969,10 +1005,7 @@ module Statement
       List.iter
         (function
           | (_, { local = id; exported = None }) ->
-            Parse.assert_identifier_name_is_identifier
-              ~restricted_error:Parse_error.StrictVarName
-              env
-              id
+            assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id
           | _ -> ())
         specifiers)
 
@@ -1080,12 +1113,10 @@ module Statement
         | T_VAR
         (* not using Peek.is_class here because it would guard all of the
       * cases *)
-        
         | T_AT
         | T_CLASS
         (* not using Peek.is_function here because it would guard all of the
       * cases *)
-        
         | T_ASYNC
         | T_FUNCTION
         | T_ENUM ->
@@ -1383,6 +1414,7 @@ module Statement
         or "typeof", and the third IdentifierName's StringValue is not "as"
     *)
       in
+
       let specifier env =
         let kind =
           match Peek.token env with
@@ -1401,7 +1433,7 @@ module Statement
           | T_COMMA ->
             let remote = type_keyword_or_remote in
             (* `type` becomes a value *)
-            Parse.assert_identifier_name_is_identifier env remote;
+            assert_identifier_name_is_identifier env remote;
             { remote; local = None; kind = None }
           (* `type as foo` (value named `type`) or `type as,` (type named `as`) *)
           | T_IDENTIFIER { raw = "as"; _ } ->
@@ -1426,7 +1458,7 @@ module Statement
                 (* `type as foo` *)
                 let remote = type_keyword_or_remote in
                 (* `type` becomes a value *)
-                Parse.assert_identifier_name_is_identifier env remote;
+                assert_identifier_name_is_identifier env remote;
                 Eat.token env;
 
                 (* `as` *)
@@ -1556,7 +1588,6 @@ module Statement
               | T_COMMA
               (* Importing the exported value named "type." This is not a type-import.
                * `import type from "ModuleName";` *)
-              
               | T_IDENTIFIER { raw = "from"; _ } ->
                 with_default ImportValue env
               | T_MULT ->

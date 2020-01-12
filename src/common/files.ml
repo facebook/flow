@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -37,7 +37,15 @@ let module_resource_exts options = options.module_resource_exts
 
 let node_resolver_dirnames options = options.node_resolver_dirnames
 
-let node_modules_containers = ref SSet.empty
+(* During node module resolution, we need to look for node_modules/ directories
+ * as we walk up the path. But checking each directory for them would be expensive.
+ * So instead we memorize which directories contain node_modules/ directories.
+ *
+ * This is complicated by the node_resolver_dirnames option, which means
+ * node_modules/ directories might go by other names. So we need to keep track
+ * of which directories contain node_modules/ directories and which aliases we've
+ * seen *)
+let node_modules_containers = ref SMap.empty
 
 let global_file_name = "(global)"
 
@@ -186,7 +194,7 @@ let max_files = 1000
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
-  let prefix_checkers = Core_list.map ~f:is_prefix paths in
+  let prefix_checkers = Base.List.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
       ((acc, symlinks), S_Dir (files, dir, stack))
@@ -208,7 +216,12 @@ let make_next_files_and_symlinks
             process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
           if node_module_filter file then
-            node_modules_containers := SSet.add (Filename.dirname file) !node_modules_containers;
+            node_modules_containers :=
+              SMap.add
+                ~combine:SSet.union
+                (Filename.dirname file)
+                (file |> Filename.basename |> SSet.singleton)
+                !node_modules_containers;
           let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
             (* accumulates all of the symlinks that point to
@@ -244,7 +257,7 @@ let make_next_files_and_symlinks
    of `paths`. *)
 let make_next_files_following_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
-  let paths = Core_list.map ~f:Path.to_string paths in
+  let paths = Base.List.map ~f:Path.to_string paths in
   let cb =
     ref
       (make_next_files_and_symlinks
@@ -333,7 +346,7 @@ let init ?(flowlibs_only = false) (options : options) =
           ~error_filter:(fun _ -> true)
           [lib]
       in
-      libs |> Core_list.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
+      libs |> Base.List.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
   in
   (libs, SSet.of_list libs)
 
@@ -597,7 +610,7 @@ let imaginary_realpath =
     | Some abs -> List.fold_left Filename.concat abs rev_suffix
 
 let canonicalize_filenames ~cwd ~handle_imaginary filenames =
-  Core_list.map
+  Base.List.map
     ~f:(fun filename ->
       let filename = Sys_utils.expanduser filename in
       (* normalize ~ *)

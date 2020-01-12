@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,6 +6,12 @@
  *)
 
 open Reason
+
+(* exceptions *)
+
+exception Not_expect_bound of string
+
+exception Attempted_operation_on_bound of string
 
 (* propagates sources to sinks following a subtype relation *)
 val flow : Context.t -> Type.t * Type.use_t -> unit
@@ -19,7 +25,7 @@ val unify : Context.t -> Type.t -> Type.t -> unit
 
 val flow_p :
   Context.t ->
-  ?use_op:Type.use_op ->
+  use_op:Type.use_op ->
   reason ->
   (* lreason *)
   reason ->
@@ -66,19 +72,29 @@ val generate_tests : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -
 
 val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
 
-val check_polarity : Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
+val check_polarity :
+  Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
 
 (* selectors *)
 
 val eval_selector :
   Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
 
-val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
+val visit_eval_id : Context.t -> Type.Eval.id -> (Type.t -> unit) -> unit
 
 (* destructors *)
-exception Not_expect_bound of string
 
-val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> int -> Type.t
+val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
+
+val mk_type_destructor :
+  Context.t ->
+  trace:Trace.t ->
+  Type.use_op ->
+  Reason.reason ->
+  Type.t ->
+  Type.destructor ->
+  Type.Eval.id ->
+  bool * Type.t
 
 (* ... *)
 
@@ -125,3 +141,6 @@ val possible_uses : Context.t -> Constraint.ident -> Type.use_t list
 val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 
 val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
+
+val widen_obj_type :
+  Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t

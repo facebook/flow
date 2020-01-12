@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -39,6 +39,7 @@ type hash =
   | NumH
   | StrH
   | BoolH
+  | SymbolH
   | EmptyH
   | MixedH
   | AnyH
@@ -67,6 +68,8 @@ type hash =
   | OptionalH
   | EvalH
   | TypeAppH
+  | TypeCastH
+  | EnumCastH
   | ThisClassH
   | ThisTypeAppH
   | BoundH
@@ -75,8 +78,6 @@ type hash =
   | MaybeH
   | IntersectionH
   | UnionH
-  | AnyWithLowerBoundH
-  | AnyWithUpperBoundH
   | MergedH
   | ShapeH
   | KeysH
@@ -115,6 +116,8 @@ type hash =
   | OpenPredH
   | CharSetH
   | ReposH
+  | EnumObjectH
+  | EnumH
   (* use types *)
   | BindH
   | CallH
@@ -146,6 +149,7 @@ type hash =
   | AssertForInRHSH
   | PredicateH
   | GuardH
+  | StrictEqH
   | EqH
   | AndH
   | OrH
@@ -210,7 +214,11 @@ type hash =
   | ReactPropsToOutH
   | ReactInToPropsH
   | DestructuringH
+  | CreateObjWithComputedPropH
+  | ResolveUnionH
   | ModuleExportsAssignH
+  | FilterOptionalH
+  | FilterMaybeH
 
 let hash_of_def_ctor =
   Type.(
@@ -225,10 +233,13 @@ let hash_of_def_ctor =
     | CharSetT _ -> CharSetH
     | ClassT _ -> ClassH
     | EmptyT _ -> EmptyH
+    | EnumT _ -> EnumH
+    | EnumObjectT _ -> EnumObjectH
     | FunT _ -> FunH
     | MixedT _ -> MixedH
     | NullT -> NullH
     | NumT _ -> NumH
+    | SymbolT -> SymbolH
     | ObjT { flags = { frozen; sealed; exact }; _ } ->
       begin
         match (frozen, sealed, exact) with
@@ -257,8 +268,6 @@ let hash_of_ctor =
     | OpaqueT _ -> failwith "undefined hash of OpaqueT"
     | AnyT _ -> AnyH
     | AnnotT _ -> AnnotH
-    | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
-    | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
     | MergedT _ -> MergedH
     | BoundT _ -> BoundH
     | TypeDestructorTriggerT _ -> TvarDestructorH
@@ -350,6 +359,7 @@ let hash_of_use_ctor =
     | AssertForInRHST _ -> AssertForInRHSH
     | PredicateT _ -> PredicateH
     | GuardT _ -> GuardH
+    | StrictEqT _ -> StrictEqH
     | EqT _ -> EqH
     | AndT _ -> AndH
     | OrT _ -> OrH
@@ -359,6 +369,8 @@ let hash_of_use_ctor =
     | ThisSpecializeT _ -> ThisSpecializeH
     | VarianceCheckT _ -> VarianceCheckH
     | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
+    | TypeCastT _ -> TypeCastH
+    | EnumCastT _ -> EnumCastH
     | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH
@@ -413,7 +425,11 @@ let hash_of_use_ctor =
     | ReactPropsToOut _ -> ReactPropsToOutH
     | ReactInToProps _ -> ReactInToPropsH
     | DestructuringT _ -> DestructuringH
-    | ModuleExportsAssignT _ -> ModuleExportsAssignH)
+    | CreateObjWithComputedPropT _ -> CreateObjWithComputedPropH
+    | ResolveUnionT _ -> ResolveUnionH
+    | ModuleExportsAssignT _ -> ModuleExportsAssignH
+    | FilterOptionalT _ -> FilterOptionalH
+    | FilterMaybeT _ -> FilterMaybeH)
 
 let add = Xx.update
 

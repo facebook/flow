@@ -15,14 +15,6 @@ References:
                          ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:3:7
-
-Cannot spread `i` because property `p` is not readable.
-
-   3| ({ ...i });
-            ^
-
-
 Error ---------------------------------------------------------------------------------------------------- test3.js:5:14
 
 Cannot assign `x` to `a` because rest of object pattern [1] is incompatible with string [2].
@@ -41,4 +33,4 @@ References:
 
 
 
-Found 3 errors
+Found 2 errors

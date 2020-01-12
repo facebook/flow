@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -46,33 +46,40 @@ let less_than_or_equal_to_version =
     else
       "\\(" ^ String.concat "\\|" parts ^ "\\)"
   in
-  let rec range part =
+  let n_digits n = List.init n (fun _ -> "[0-9]") |> String.concat "" in
+  let n_or_fewer_digits n = "[0-9]" ^ (List.init (n - 1) (fun _ -> "[0-9]?") |> String.concat "") in
+  let rec range ~pad part =
     let len = String.length part in
     if len = 1 then
       [range_of_digit part.[0]]
     else if all_nines part 0 len then
-      let rest = range (String.sub part 1 (len - 1)) in
-      ("[0-9]" ^ union rest) :: rest
+      [n_or_fewer_digits len]
     else
       let msd_str = String.sub part 0 1 in
       let rest = String.sub part 1 (len - 1) in
       let msd = int_of_string msd_str in
-      let x = msd_str ^ union (range rest) in
+      (* for "234", match 200-234 *)
+      let x = msd_str ^ union (range ~pad:true rest) in
       if msd > 1 then
+        (* for 234, match [0-1][0-9][0-9] *)
         let prev_msd_range = range_of_digit (Char.chr (Char.code '0' + pred msd)) in
-        let rest = String.make (len - 1) '9' in
-        let rest_range = range rest in
-        let prev_range = prev_msd_range ^ union rest_range in
-        x :: prev_range :: rest_range
+        let prev_range = prev_msd_range ^ n_digits (len - 1) in
+        (* for 234, match [0-9][0-9] and [0-9] *)
+        let rest_range = n_or_fewer_digits (len - 1) in
+        [x; prev_range; rest_range]
       else if msd = 1 then
-        let rest = String.make (len - 1) '9' in
-        x :: range rest
+        let rest_range = range ~pad:false (String.make (len - 1) '9') in
+        if pad then
+          let prev_range = "0" ^ n_digits (len - 1) in
+          x :: prev_range :: rest_range
+        else
+          x :: rest_range
       else
         [x]
   in
   let rec helper : int list -> string = function
     | [] -> ""
-    | [part] -> union (range (string_of_int part))
+    | [part] -> union (range ~pad:false (string_of_int part))
     | part :: rest ->
       let str = string_of_int part in
       let x = str ^ "\\(\\." ^ helper rest ^ "\\)?" in
@@ -80,8 +87,8 @@ let less_than_or_equal_to_version =
         x
       else
         let prev = pred part |> string_of_int in
-        let rest = Core_list.map ~f:(fun _ -> "\\(\\.[0-9]+\\)?") rest in
-        union [x; union (range prev) ^ String.concat "" rest]
+        let rest = Base.List.map ~f:(fun _ -> "\\(\\.[0-9]+\\)?") rest in
+        union [x; union (range ~pad:false prev) ^ String.concat "" rest]
   in
   fun version ->
     let parts =

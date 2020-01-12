@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,6 +20,7 @@ type 'loc virtual_reason_desc =
   | REmpty
   | RVoid
   | RNull
+  | RVoidedNull
   | RSymbol
   | RExports
   | RNullOrVoid
@@ -41,6 +42,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
@@ -60,7 +62,8 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | RUnionEnum
-  | REnum
+  | REnum of string
+  | REnumRepresentation of 'loc virtual_reason_desc
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -147,7 +150,6 @@ type 'loc virtual_reason_desc =
   | RSuperOf of 'loc virtual_reason_desc
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
-  | RVarianceCheck of 'loc virtual_reason_desc
   | RPredicateOf of 'loc virtual_reason_desc
   | RPredicateCall of 'loc virtual_reason_desc
   | RPredicateCallNeg of 'loc virtual_reason_desc
@@ -172,6 +174,8 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
+  | RWidenedObjProp of 'loc virtual_reason_desc
 
 and reason_desc_function =
   | RAsync
@@ -280,6 +284,8 @@ val string_of_reason : ?strip_root:Path.t option -> reason -> string
 val dump_reason : ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
+val poly_loc_of_reason : 'loc virtual_reason -> 'loc
+
 val loc_of_reason : concrete_reason -> Loc.t
 
 val aloc_of_reason : reason -> ALoc.t
@@ -312,14 +318,21 @@ val update_desc_new_reason :
 val replace_desc_reason : 'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
 
 (* replace desc, keep loc, but clobber def_loc, annot_loc as in new reason *)
-val replace_desc_new_reason :
-  'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
+val replace_desc_new_reason : 'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
 
-val repos_reason : 'loc -> ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+(* replace loc, but keep def_loc *)
+val repos_reason : 'loc -> 'loc virtual_reason -> 'loc virtual_reason
 
-val annot_reason : 'loc virtual_reason -> 'loc virtual_reason
+(* add / replace annot_loc, but keep loc and def_loc *)
+val annot_reason : annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
 
-module ReasonMap : MyMap.S with type key = reason
+(* when annot_loc is given, same as annot_reason; otherwise, identity *)
+val opt_annot_reason : ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+
+(* create a new reason with annot_loc = loc: same as mk_reason followed by annot_reason *)
+val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
+
+module ReasonMap : WrappedMap.S with type key = reason
 
 val mk_expression_reason : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
 

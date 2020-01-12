@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -56,7 +56,7 @@ let path_patt =
     (* because we accept both * and **, convert in 2 steps *)
     let results = Str.full_split star2 str in
     let results =
-      Core_list.map
+      Base.List.map
         ~f:(fun r ->
           match r with
           | Str.Text s ->

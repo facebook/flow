@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25,14 +25,18 @@ type trigger =
   | PushedErrorsRecheckStreaming of LspProt.recheck_reason
   | Rage
   | Rename
+  | ServerConnected
   | TypeCoverage
   | UnknownTrigger
 
 type ux =
   | Canceled
+  | CanceledPushingLiveNonParseErrors
   | Errored
+  | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveNonParseErrors
   | PushedLiveParseErrors
   | Responded
   | Timeout

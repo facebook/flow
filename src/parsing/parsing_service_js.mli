@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25,7 +25,7 @@ val basic : parse_ok -> t
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of parse_ok
+  | Parse_ok of parse_ok * parse_error list
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -33,9 +33,11 @@ and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_error = Loc.t * Parse_error.t
+
 and parse_failure =
   | Docblock_errors of docblock_error list
-  | Parse_error of (Loc.t * Parse_error.t)
+  | Parse_error of parse_error
   | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
@@ -119,10 +121,7 @@ val parse_docblock :
   docblock_error list * Docblock.t
 
 val parse_json_file :
-  fail:bool ->
-  string ->
-  File_key.t ->
-  Loc.t * (Loc.t * (Loc.t, Loc.t) Flow_ast.Statement.t') list * Loc.t Flow_ast.Comment.t list
+  fail:bool -> string -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program * parse_error list
 
 (* parse contents of a file *)
 val do_parse :

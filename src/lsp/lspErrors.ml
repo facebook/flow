@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,7 +6,7 @@
  *)
 
 open Lsp
-module List = Core_list
+module List = Base.List
 
 (* This module is how the Flow lsp stores and reasons about Flow errors. This is tricky because
  * Flow errors might come from a few different places.
@@ -83,7 +83,7 @@ let empty = { dirty_files = SSet.empty; file_to_errors_map = SMap.empty }
  * out. The one exception is in limit_errors, to ensure consistent results *)
 let sort_errors =
   PublishDiagnostics.(
-    List.sort ~cmp:(fun d1 d2 -> Lsp_helpers.pos_compare d1.range.start d2.range.start))
+    List.sort ~compare:(fun d1 d2 -> Lsp_helpers.pos_compare d1.range.start d2.range.start))
 
 (* If we have too many errors then limit them to the first N errors *)
 let limit_errors errors =
@@ -157,12 +157,13 @@ let have_errors_changed before after =
  * send. *)
 let send_errors_for_file state (send_json : Hh_json.json -> unit) uri =
   let (parse_errors, non_parse_errors) =
-    SMap.get uri state.file_to_errors_map
+    SMap.find_opt uri state.file_to_errors_map
     |> Option.value ~default:empty_per_file_errors
     |> choose_errors
   in
   let errors = parse_errors @ non_parse_errors in
   let diagnostics = limit_errors errors in
+  let uri = Lsp.uri_of_string uri in
   PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics }
   |> Lsp_fmt.print_lsp_notification
   |> send_json
@@ -178,7 +179,7 @@ let send_all_errors send_json state =
 (* Helper function to modify the data for a specific file *)
 let modify_per_file_errors uri state f =
   let old_per_file_errors =
-    SMap.get uri state.file_to_errors_map |> Option.value ~default:empty_per_file_errors
+    SMap.find_opt uri state.file_to_errors_map |> Option.value ~default:empty_per_file_errors
   in
   let new_per_file_errors = f old_per_file_errors in
   let dirty = have_errors_changed old_per_file_errors new_per_file_errors in
@@ -217,18 +218,11 @@ let set_live_parse_errors_and_send send_json uri live_parse_errors state =
 
 (* We've run check-contents on a modified open file and now want to record the errors reported by
  * check-contents *)
-let set_live_non_parse_errors_and_send send_json uri_to_live_error_map state =
-  SMap.fold
-    (fun uri live_non_parse_errors state ->
-      (* If the caller passes in some parse errors then we'll just ignore them *)
-      let live_non_parse_errors = List.filter live_non_parse_errors ~f:is_not_parse_error in
-      modify_per_file_errors uri state (fun per_file_errors ->
-          {
-            per_file_errors with
-            live_non_parse_errors = Some (NonParseErrors live_non_parse_errors);
-          }))
-    uri_to_live_error_map
-    state
+let set_live_non_parse_errors_and_send send_json uri live_non_parse_errors state =
+  (* If the caller passes in some parse errors then we'll just ignore them *)
+  let live_non_parse_errors = List.filter live_non_parse_errors ~f:is_not_parse_error in
+  modify_per_file_errors uri state (fun per_file_errors ->
+      { per_file_errors with live_non_parse_errors = Some (NonParseErrors live_non_parse_errors) })
   |> send_all_errors send_json
 
 (* When we close a file we clear all the live parse errors or non-parse errors for that file, but we
@@ -314,6 +308,7 @@ let clear_all_errors_and_send send_json state =
 (* Basically a best-effort attempt to update the locations of errors after a didChange *)
 let update_errors_due_to_change_and_send send_json params state =
   let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
+  let uri = Lsp.string_of_uri uri in
   modify_per_file_errors uri state (fun per_file_errors ->
       let { live_parse_errors; live_non_parse_errors; server_errors } = per_file_errors in
       let live_parse_errors =
@@ -322,8 +317,7 @@ let update_errors_due_to_change_and_send send_json params state =
         | Some (ParseErrors []) ->
           live_parse_errors
         | Some (ParseErrors live_parse_errors) ->
-          Some
-            (ParseErrors (Lsp_helpers.update_diagnostics_due_to_change live_parse_errors params))
+          Some (ParseErrors (Lsp_helpers.update_diagnostics_due_to_change live_parse_errors params))
       in
       let live_non_parse_errors =
         match live_non_parse_errors with

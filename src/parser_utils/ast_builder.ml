@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -92,7 +92,7 @@ module Patterns = struct
 
   let array elements =
     let elements =
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Some i ->
             Some (Array.Element (Loc.none, { Array.Element.argument = i; default = None }))
@@ -169,7 +169,7 @@ module Classes = struct
   let implements ?targs id = (Loc.none, { Implements.id; targs })
 
   (* TODO: add method_ and property *)
-  let make ?super ?(implements = []) ?id elements =
+  let make ?comments ?super ?(implements = []) ?id elements =
     let extends =
       match super with
       | None -> None
@@ -182,6 +182,7 @@ module Classes = struct
       extends;
       implements;
       classDecorators = [];
+      comments;
     }
 end
 
@@ -295,21 +296,21 @@ module Statements = struct
 
     let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
 
-    let boolean_body ?(explicit_type = false) members =
-      BooleanBody { BooleanBody.members; explicitType = explicit_type }
+    let boolean_body ?(loc = Loc.none) ?(explicit_type = false) members =
+      (loc, BooleanBody { BooleanBody.members; explicitType = explicit_type })
 
-    let number_body ?(explicit_type = false) members =
-      NumberBody { NumberBody.members; explicitType = explicit_type }
+    let number_body ?(loc = Loc.none) ?(explicit_type = false) members =
+      (loc, NumberBody { NumberBody.members; explicitType = explicit_type })
 
-    let string_defaulted_body ?(explicit_type = false) members =
+    let string_defaulted_body ?(loc = Loc.none) ?(explicit_type = false) members =
       let members = StringBody.Defaulted members in
-      StringBody { StringBody.members; explicitType = explicit_type }
+      (loc, StringBody { StringBody.members; explicitType = explicit_type })
 
-    let string_initialized_body ?(explicit_type = false) members =
+    let string_initialized_body ?(loc = Loc.none) ?(explicit_type = false) members =
       let members = StringBody.Initialized members in
-      StringBody { StringBody.members; explicitType = explicit_type }
+      (loc, StringBody { StringBody.members; explicitType = explicit_type })
 
-    let symbol_body members = SymbolBody { SymbolBody.members }
+    let symbol_body ?(loc = Loc.none) members = (loc, SymbolBody { SymbolBody.members })
   end
 end
 
@@ -423,7 +424,8 @@ module Expressions = struct
   let optional_member_expression ~optional expr =
     (Loc.none, OptionalMember { OptionalMember.member = expr; optional })
 
-  let new_ ?targs ?(args = []) callee = (Loc.none, New { New.callee; targs; arguments = args })
+  let new_ ?comments ?targs ?(args = []) callee =
+    (Loc.none, New { New.callee; targs; arguments = args; comments })
 
   let sequence exprs = (Loc.none, Sequence { Sequence.expressions = exprs })
 
@@ -494,7 +496,5 @@ let statement_of_string str =
   | _ -> failwith "Multiple statements found"
 
 let program_of_string str =
-  let stmts =
-    ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str
-  in
+  let stmts = ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
   (Loc.none, stmts, [])

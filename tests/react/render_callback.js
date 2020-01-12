@@ -10,16 +10,16 @@ const Example = React.createClass({
   }
 });
 
-ReactDOM.render(<Example/>, document.querySelector('#site'), () => {
+ReactDOM.render(<Example/>, test$querySelector('#site'), () => {
 	console.log('Rendered - arrow callback');
 });
 
-ReactDOM.render(<Example/>, document.querySelector('#site'), function() {
+ReactDOM.render(<Example/>, test$querySelector('#site'), function() {
 	console.log('Rendered - function callback');
 });
 
 // These should raise a warning
-ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
-ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-ReactDOM.render(<Example/>, document.querySelector('#site'), '');
-ReactDOM.render(<Example/>, document.querySelector('#site'), null);
+ReactDOM.render(<Example/>, test$querySelector('#site'), 1);
+ReactDOM.render(<Example/>, test$querySelector('#site'), {});
+ReactDOM.render(<Example/>, test$querySelector('#site'), '');
+ReactDOM.render(<Example/>, test$querySelector('#site'), null);

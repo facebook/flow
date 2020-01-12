@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +20,7 @@ let () =
     | Js.Error e -> Js.raise_js_error e
     | exn ->
       let msg = "Internal error: " ^ Printexc.to_string exn in
-      Js.raise_js_error (Js.Unsafe.new_obj Js.error_constr [|Js.Unsafe.inject (Js.string msg)|])
+      Js.raise_js_error (Js.Unsafe.new_obj Js.error_constr [| Js.Unsafe.inject (Js.string msg) |])
   in
   let parse content options =
     (try Flow_parser_js.parse content options with exn -> js_error_of_exn exn)

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -42,6 +42,8 @@ module Entry : sig
     | VarBinding
     | ConstlikeVarBinding
 
+  val string_of_let_binding_kind : let_binding_kind -> string
+
   val string_of_value_kind : value_kind -> string
 
   type value_binding = {
@@ -69,7 +71,7 @@ module Entry : sig
     | Type of type_binding
     | Class of Type.class_binding
 
-  val new_class : ALoc.t -> Type.Properties.id -> Type.Properties.id -> t
+  val new_class : ALoc.id -> Type.Properties.id -> Type.Properties.id -> t
 
   val new_value : value_kind -> State.t -> Type.t -> Type.t -> ALoc.t -> t
 

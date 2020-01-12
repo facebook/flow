@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,7 +7,7 @@
 
 type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
 
-module RequireMap = MyMap.Make (struct
+module RequireMap = WrappedMap.Make (struct
   (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
   type t = string * File_key.t
 
@@ -49,9 +49,7 @@ module Reqs = struct
     }
 
   let add_impl require requirer require_locs reqs =
-    let impls =
-      RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls
-    in
+    let impls = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls in
     { reqs with impls }
 
   let add_dep_impl =
@@ -152,7 +150,7 @@ let detect_sketchy_null_checks cx =
   let detect_function exists_excuses loc exists_check =
     ExistsCheck.(
       let exists_excuse =
-        Loc_collections.ALocMap.get loc exists_excuses |> Option.value ~default:empty
+        Loc_collections.ALocMap.find_opt loc exists_excuses |> Option.value ~default:empty
       in
       match exists_check.null_loc with
       | None -> ()
@@ -166,6 +164,12 @@ let detect_sketchy_null_checks cx =
           Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
         if Option.is_none exists_excuse.mixed_loc then
           Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
+        if Option.is_none exists_excuse.enum_bool_loc then
+          Option.iter exists_check.enum_bool_loc ~f:(add_error Lints.SketchyNullEnumBool);
+        if Option.is_none exists_excuse.enum_number_loc then
+          Option.iter exists_check.enum_number_loc ~f:(add_error Lints.SketchyNullEnumNumber);
+        if Option.is_none exists_excuse.enum_string_loc then
+          Option.iter exists_check.enum_string_loc ~f:(add_error Lints.SketchyNullEnumString);
         ())
   in
   Loc_collections.ALocMap.iter
@@ -174,19 +178,22 @@ let detect_sketchy_null_checks cx =
 
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
-  Core_list.iter
-    ~f:(fun (name, reasons, use_op) ->
-      Flow_js.add_output cx (Error_message.EPropNotFound (name, reasons, use_op)))
+  Base.List.iter
+    ~f:(fun (prop_name, (reason_prop, reason_obj), use_op) ->
+      Flow_js.add_output
+        cx
+        (Error_message.EPropNotFound
+           { prop_name; reason_prop; reason_obj; use_op; suggestion = None }))
     misses
 
 let detect_unnecessary_optional_chains cx =
-  Core_list.iter
+  Base.List.iter
     ~f:(fun (loc, lhs_reason) ->
       Flow_js.add_output cx (Error_message.EUnnecessaryOptionalChain (loc, lhs_reason)))
     (Context.unnecessary_optional_chains cx)
 
 let detect_unnecessary_invariants cx =
-  Core_list.iter
+  Base.List.iter
     ~f:(fun (loc, reason) ->
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
@@ -203,8 +210,11 @@ let detect_floating_promises cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
+let detect_invalid_exhaustive_checks cx =
+  List.iter (Enum_exhaustive_check.detect_invalid_check cx) (Context.possible_exhaustive_checks cx)
+
 let force_annotations leader_cx other_cxs =
-  Core_list.iter
+  Base.List.iter
     ~f:(fun cx ->
       let should_munge_underscores = Context.should_munge_underscores cx in
       Context.module_ref cx
@@ -301,7 +311,7 @@ let detect_non_voidable_properties cx =
     let pmap = Context.find_props cx property_map in
     SMap.iter (fun name errors ->
         let should_error =
-          match SMap.get name pmap with
+          match SMap.find_opt name pmap with
           | Some (Type.Field (_, t, _)) -> not @@ is_voidable ISet.empty t
           | _ -> true
         in
@@ -356,7 +366,6 @@ let detect_non_voidable_properties cx =
 let merge_component
     ~metadata
     ~lint_severities
-    ~file_options
     ~strict_mode
     ~file_sigs
     ~get_ast_unsafe
@@ -417,55 +426,47 @@ let merge_component
           else
             lint_severities
         in
-        let file_sig = FilenameMap.find_unsafe filename file_sigs in
+        let file_sig = FilenameMap.find filename file_sigs in
         let tast =
-          Type_inference_js.infer_ast
-            cx
-            filename
-            comments
-            ast
-            ~lint_severities
-            ~file_options
-            ~file_sig
+          Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
         in
         (cx :: cxs, tast :: tasts, FilenameMap.add filename cx impl_cxs))
       ([], [], FilenameMap.empty)
       component
   in
-  let cxs = Core_list.rev rev_cxs in
-  let tasts = Core_list.rev rev_tasts in
-  let (cx, other_cxs) = (Core_list.hd_exn cxs, Core_list.tl_exn cxs) in
+  let cxs = Base.List.rev rev_cxs in
+  let tasts = Base.List.rev rev_tasts in
+  let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
   Flow_js.Cache.clear ();
 
-  dep_cxs |> Core_list.iter ~f:(Context.merge_into sig_cx);
+  dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
 
   Reqs.(
     reqs.impls
     |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
 
     reqs.dep_impls
     |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
 
     reqs.res
     |> RequireMap.iter (fun (f, fn_to) locs ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
 
     reqs.decls
     |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
 
     reqs.unchecked
     |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs);
 
-    let coverages = Query_types.component_coverage ~full_cx:cx tasts in
     (* Post-merge errors.
      *
      * At this point, all dependencies have been merged and the component has been
@@ -480,10 +481,11 @@ let merge_component
     detect_unnecessary_invariants cx;
     detect_floating_promises cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
+    detect_invalid_exhaustive_checks cx;
 
     force_annotations cx other_cxs;
 
-    match ListUtils.combine3 (cxs, tasts, coverages) with
+    match Base.List.zip_exn cxs tasts with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
 
@@ -491,7 +493,7 @@ let merge_tvar =
   Type.(
     let possible_types = Flow_js.possible_types in
     let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Core_list.rev acc
+      | [] -> Base.List.rev acc
       | t :: ts ->
         (match t with
         (* Recursively unwrap unseen tvars *)
@@ -624,7 +626,7 @@ module ContextOptimizer = struct
 
       val mutable reduced_export_maps = Exports.Map.empty
 
-      val mutable reduced_evaluated = IMap.empty
+      val mutable reduced_evaluated = Eval.Map.empty
 
       val mutable export_reason = None
 
@@ -667,7 +669,7 @@ module ContextOptimizer = struct
         let (root_id, _) = Context.find_constraints cx id in
         if id == root_id then (
           if IMap.mem id reduced_graph then (
-            let stable_id = IMap.find_unsafe root_id stable_tvar_ids in
+            let stable_id = IMap.find root_id stable_tvar_ids in
             SigHash.add_int sig_hash stable_id;
             id
           ) else
@@ -693,7 +695,7 @@ module ContextOptimizer = struct
         let (root_id, constr) = Context.find_trust_constraints cx id in
         if id == root_id then (
           if IMap.mem id reduced_trust_graph then (
-            let stable_id = IMap.find_unsafe root_id stable_trust_var_ids in
+            let stable_id = IMap.find root_id stable_trust_var_ids in
             SigHash.add_int sig_hash stable_id;
             id
           ) else
@@ -718,8 +720,8 @@ module ContextOptimizer = struct
             Option.iter
               ~f:(fun id_int ->
                 let stable_id =
-                  if Context.mem_nominal_id cx id_int then
-                    IMap.find_unsafe id_int stable_props_ids
+                  if Context.mem_nominal_prop_id cx id_int then
+                    IMap.find id_int stable_props_ids
                   else
                     id_int
                 in
@@ -732,7 +734,7 @@ module ContextOptimizer = struct
             Option.iter
               ~f:(fun id_int ->
                 let stable_id =
-                  if Context.mem_nominal_id cx id_int then (
+                  if Context.mem_nominal_prop_id cx id_int then (
                     let stable_id = self#fresh_stable_id in
                     stable_props_ids <- IMap.add id_int stable_id stable_props_ids;
                     stable_id
@@ -751,7 +753,7 @@ module ContextOptimizer = struct
 
       method call_prop cx pole id =
         if IMap.mem id reduced_call_props then
-          let stable_id = IMap.find_unsafe id stable_call_prop_ids in
+          let stable_id = IMap.find id stable_call_prop_ids in
           let () = SigHash.add_int sig_hash stable_id in
           id
         else
@@ -801,25 +803,37 @@ module ContextOptimizer = struct
           id
 
       method eval_id cx pole id =
-        if IMap.mem id reduced_evaluated then (
-          let stable_id = IMap.find_unsafe id stable_eval_ids in
-          SigHash.add_int sig_hash stable_id;
+        if Eval.Map.mem id reduced_evaluated then (
+          Eval.id_as_int id
+          |> Base.Option.iter ~f:(fun int_id ->
+                 IMap.find int_id stable_eval_ids |> SigHash.add_int sig_hash);
           id
         ) else
           let stable_id = self#fresh_stable_id in
-          stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
-          match IMap.get id (Context.evaluated cx) with
+          Eval.id_as_int id
+          |> Base.Option.iter ~f:(fun int_id ->
+                 stable_eval_ids <- IMap.add int_id stable_id stable_eval_ids);
+          match Eval.Map.find_opt id (Context.evaluated cx) with
           | None -> id
           | Some t ->
-            reduced_evaluated <- IMap.add id t reduced_evaluated;
+            reduced_evaluated <- Eval.Map.add id t reduced_evaluated;
             let t' = self#type_ cx pole t in
-            reduced_evaluated <- IMap.add id t' reduced_evaluated;
+            reduced_evaluated <- Eval.Map.add id t' reduced_evaluated;
             id
 
       method! dict_type cx pole dicttype =
         let dicttype' = super#dict_type cx pole dicttype in
         SigHash.add_polarity sig_hash dicttype'.dict_polarity;
         dicttype'
+
+      method! enum cx pole e =
+        let { enum_id; members; _ } = e in
+        let e' = super#enum cx pole e in
+        SigHash.add_aloc sig_hash (enum_id :> ALoc.t);
+        Base.List.iter
+          ~f:(SigHash.add sig_hash)
+          (SSet.elements members |> Base.List.stable_sort ~compare:String.compare);
+        e'
 
       method! type_ cx pole t =
         SigHash.add_reason sig_hash (reason_of_t t);
@@ -833,31 +847,31 @@ module ContextOptimizer = struct
         | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
         | OpenT _ -> super#type_ cx pole t
         | DefT (_, _, InstanceT (_, _, _, { class_id; _ })) ->
-          let id = class_id in
-          SigHash.add_aloc sig_hash id;
+          SigHash.add_aloc sig_hash (class_id :> ALoc.t);
           super#type_ cx pole t
         | OpaqueT (_, { opaque_id; _ }) ->
-          let id = opaque_id in
-          SigHash.add_aloc sig_hash id;
+          SigHash.add_aloc sig_hash (opaque_id :> ALoc.t);
           super#type_ cx pole t
         | AnyT (r, src) when Unsoundness.banned_in_exports src && Option.is_some export_reason ->
           self#warn_dynamic_exports cx r (Option.value_exn export_reason);
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';
           t'
-        | DefT (_, _, PolyT (_, _, _, poly_id)) ->
-          let id =
-            if Context.mem_nominal_id cx poly_id then
-              match IMap.get poly_id stable_poly_ids with
-              | None ->
-                let id = self#fresh_stable_id in
-                stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
-                id
-              | Some id -> id
-            else
-              poly_id
-          in
-          SigHash.add_int sig_hash id;
+        | DefT (_, _, PolyT { id = poly_id; _ }) ->
+          if Context.mem_nominal_poly_id cx poly_id then
+            Poly.id_as_int poly_id
+            |> Base.Option.iter ~f:(fun poly_id ->
+                   let id =
+                     match IMap.find_opt poly_id stable_poly_ids with
+                     | None ->
+                       let id = self#fresh_stable_id in
+                       stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
+                       id
+                     | Some id -> id
+                   in
+                   SigHash.add_int sig_hash id)
+          else
+            Poly.id_as_int poly_id |> Base.Option.iter ~f:(SigHash.add_int sig_hash);
           super#type_ cx pole t
         | _ ->
           let t' = super#type_ cx pole t in
@@ -886,6 +900,11 @@ module ContextOptimizer = struct
          in the heap. *)
         Utils_js.assert_false "choice kit uses should not appear in signatures"
 
+      (* We need to make sure to hash the keys in any spread intermediate types! *)
+      method! object_kit_spread_operand_slice cx map_cx slice =
+        SMap.iter (fun k _ -> SigHash.add sig_hash k) slice.Object.Spread.prop_map;
+        super#object_kit_spread_operand_slice cx map_cx slice
+
       method get_reduced_module_map = reduced_module_map
 
       method get_reduced_graph = reduced_graph
@@ -904,7 +923,7 @@ module ContextOptimizer = struct
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    Core_list.iter ~f:(reducer#reduce cx) module_refs;
+    Base.List.iter ~f:(reducer#reduce cx) module_refs;
     (reducer#sig_hash (), reducer)
 
   (* reduce a context to a "signature context" *)

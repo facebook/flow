@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,6 +20,7 @@ let metadata =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    babel_loose_array_spread = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
@@ -131,7 +132,7 @@ let before_and_after_stmts file_name =
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env cx module_scope;
-    let stmts = Core_list.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
+    let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;
@@ -192,9 +193,7 @@ let system_diff ~f prefix =
         Disk.mkdir_p diff_dir;
         let stmts1_file = dump_stmts (prefix ^ "_A.js") stmts1 in
         let stmts2_file = dump_stmts (prefix ^ "_B.js") stmts2 in
-        let out_file =
-          prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string
-        in
+        let out_file = prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string in
         let cmd = Utils_js.spf "diff -U7 %s %s > %s" stmts1_file stmts2_file out_file in
         match Sys.command cmd with
         | 0
@@ -224,7 +223,7 @@ let pp_diff =
   in
   let string_of_src stmts =
     let none_mapper = new loc_none_mapper in
-    let prog = (Loc.none, Core_list.map ~f:none_mapper#statement stmts, []) in
+    let prog = (Loc.none, Base.List.map ~f:none_mapper#statement stmts, []) in
     let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
     layout |> Pretty_printer.print ~source_maps:None |> Source.contents
   in

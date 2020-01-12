@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 # This test is intended to complement the ensure_parsed_saved_state test and
 # demonstrate the different behavior of ensure_parsed when saved state is not

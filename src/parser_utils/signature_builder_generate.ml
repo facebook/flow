@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,21 +27,22 @@ module T = struct
   and decl =
     (* type definitions *)
     | Type of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         right: type_;
       }
     | OpaqueType of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         impltype: type_ option;
         supertype: type_ option;
       }
     | Interface of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic list;
         body: Loc.t * object_type;
       }
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
+    | EnumDecl of { body: Loc.t Ast.Statement.EnumDeclaration.body }
     | FunctionDecl of {
         annot: little_annotation;
         predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
@@ -109,7 +110,7 @@ module T = struct
 
   and function_t =
     | FUNCTION of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         params: function_params;
         return: little_annotation;
       }
@@ -120,13 +121,13 @@ module T = struct
 
   and class_t =
     | CLASS of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
         implements: class_implement list;
         body: Loc.t * (Loc.t * class_element_t) list;
       }
     | DECLARE_CLASS of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
         mixins: generic list;
         implements: class_implement list;
@@ -374,7 +375,7 @@ module T = struct
            {
              Ast.Type.Object.exact = true;
              inexact = false;
-             properties = Core_list.map ~f:(type_of_object_property outlined) (pt :: pts);
+             properties = Base.List.map ~f:(type_of_object_property outlined) (pt :: pts);
            })
     | (loc, ArrayLiteral ets) ->
       temporary_type
@@ -386,7 +387,7 @@ module T = struct
           Ast.Type.Union
             ( type_of_array_element outlined et1,
               type_of_array_element outlined et2,
-              Core_list.map ~f:(type_of_array_element outlined) ets ))
+              Base.List.map ~f:(type_of_array_element outlined) ets ))
     | (loc, ValueRef reference) ->
       ( loc,
         Ast.Type.Typeof
@@ -394,8 +395,7 @@ module T = struct
              (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None })) )
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
     | (loc, StringLiteral st) -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
-    | (loc, BooleanLiteral b) ->
-      temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
+    | (loc, BooleanLiteral b) -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
     | (loc, Number) -> (loc, Ast.Type.Number)
     | (loc, String) -> (loc, Ast.Type.String)
     | (loc, Boolean) -> (loc, Ast.Type.Boolean)
@@ -568,7 +568,7 @@ module T = struct
     | ( loc,
         FUNCTION
           {
-            tparams : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+            tparams : (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
             params : function_params;
             return : little_annotation;
           } ) ->
@@ -579,7 +579,7 @@ module T = struct
           params =
             ( params_loc,
               {
-                Ast.Type.Function.Params.params = Core_list.map ~f:param_of_type params;
+                Ast.Type.Function.Params.params = Base.List.map ~f:param_of_type params;
                 rest =
                   (match rest with
                   | None -> None
@@ -669,12 +669,11 @@ module T = struct
         Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id; tparams; impltype; supertype } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
-        Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body }
-      )
+        Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body } )
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =
-        Core_list.filter
+        Base.List.filter
           ~f:(fun prop ->
             match prop with
             | (_loc, CPrivateField _) -> false
@@ -687,7 +686,7 @@ module T = struct
             Ast.Type.Object.exact = false;
             inexact = false;
             properties =
-              Core_list.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
+              Base.List.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
           } )
       in
       let mixins = [] in
@@ -698,6 +697,9 @@ module T = struct
       ( decl_loc,
         Ast.Statement.DeclareClass
           { Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body } )
+    | EnumDecl { body } ->
+      let open Ast.Statement.EnumDeclaration in
+      (decl_loc, Ast.Statement.EnumDeclaration { id; body })
     | FunctionDecl { annot = little_annotation; predicate } ->
       ( decl_loc,
         Ast.Statement.DeclareFunction
@@ -709,7 +711,7 @@ module T = struct
     | FunctionWithStaticsDecl { base; statics } ->
       let annot = type_of_expr_type outlined base in
       let properties =
-        Core_list.rev_map
+        Base.List.rev_map
           ~f:(fun (id, expr) ->
             let annot = type_of_expr_type outlined expr in
             Ast.Type.Object.(
@@ -821,17 +823,27 @@ module T = struct
           { Ast.Statement.VariableDeclaration.kind; declarations = [(decl_loc, declaration)] } )
 
   and object_type_property_of_class_element outlined = function
-    | (loc, CMethod (object_key, _kind, static, f)) ->
+    | (loc, CMethod (object_key, kind, static, f)) ->
+      let (value, _method) =
+        match kind with
+        | Ast.Class.Method.Constructor
+        | Ast.Class.Method.Method ->
+          (Ast.Type.Object.Property.Init (type_of_function outlined f), true)
+        | Ast.Class.Method.Get ->
+          (Ast.Type.Object.Property.Get (type_of_function_t outlined f), false)
+        | Ast.Class.Method.Set ->
+          (Ast.Type.Object.Property.Set (type_of_function_t outlined f), false)
+      in
       Ast.Type.Object.(
         Property
           ( loc,
             {
               Property.key = object_key;
-              value = Property.Init (type_of_function outlined f);
+              value;
               optional = false;
               static;
               proto = false;
-              _method = true;
+              _method;
               variance = None;
             } ))
     | (loc, CProperty (object_key, static, variance, t)) ->
@@ -907,7 +919,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and type_args = function
     | None -> None
-    | Some (loc, ts) -> Some (loc, Core_list.map ~f:type_ ts)
+    | Some (loc, ts) -> Some (loc, Base.List.map ~f:type_ ts)
 
   let rec annot_path = function
     | Kind.Annot_path.Annot (_, t) -> T.TYPE (type_ t)
@@ -992,7 +1004,9 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
       | (loc, Class stuff) ->
         Ast.Class.(
-          let { tparams; body; extends; implements; id; classDecorators = _ } = stuff in
+          let { tparams; body; extends; implements; id; classDecorators = _; comments = _ } =
+            stuff
+          in
           let (super, super_targs) =
             match extends with
             | None -> (None, None)
@@ -1302,7 +1316,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_params params =
     Ast.Function.(
       let (params_loc, { Params.params; rest }) = params in
-      let params = Core_list.map ~f:function_param params in
+      let params = Base.List.map ~f:function_param params in
       let rest =
         match rest with
         | None -> None
@@ -1442,7 +1456,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
               | None -> T.FixMe.mk_extends (fst expr)
             end
         in
-        let implements = Core_list.map ~f:class_implement implements in
+        let implements = Base.List.map ~f:class_implement implements in
         T.CLASS { tparams; extends; implements; body = (body_loc, body) })
 
   and array_ =
@@ -1546,7 +1560,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
             {
               base = (loc, T.Function (Eval.function_ generator async tparams params return body));
               statics =
-                Core_list.map properties ~f:(fun (id_prop, expr) ->
+                Base.List.map properties ~f:(fun (id_prop, expr) ->
                     (id_prop, Eval.literal_expr expr));
             }
         | None -> eval (loc, base)
@@ -1570,10 +1584,11 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         | None -> None
         | Some r -> Some (Eval.generic r)
       in
-      let mixins = Core_list.map ~f:Eval.generic mixins in
-      let implements = Core_list.map ~f:Eval.class_implement implements in
+      let mixins = Base.List.map ~f:Eval.generic mixins in
+      let implements = Base.List.map ~f:Eval.class_implement implements in
       T.ClassDecl
         (T.DECLARE_CLASS { tparams; extends; mixins; implements; body = (body_loc, body) })
+    | Kind.EnumDef { body } -> T.EnumDecl { body }
     | Kind.TypeDef { tparams; right } ->
       let tparams = Eval.type_params tparams in
       let right = Eval.type_ right in
@@ -1593,7 +1608,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       T.OpaqueType { tparams; impltype; supertype }
     | Kind.InterfaceDef { tparams; extends; body = (body_loc, body) } ->
       let tparams = Eval.type_params tparams in
-      let extends = Core_list.map ~f:Eval.generic extends in
+      let extends = Base.List.map ~f:Eval.generic extends in
       let body = Eval.object_type body in
       T.Interface { tparams; extends; body = (body_loc, body) }
     | Kind.ImportNamedDef { kind; source; name } -> T.ImportNamed { kind; source; name }
@@ -1601,26 +1616,49 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Kind.RequireDef { source; name } -> T.Require { source; name }
     | Kind.SketchyToplevelDef -> T.FixMe.mk_decl loc
 
-  let make_env outlined env =
-    SMap.fold
-      (fun n entries acc ->
-        Loc_collections.LocMap.fold
-          (fun loc kind acc ->
-            let id = (loc, n) in
-            let dt = eval kind in
-            let decl_loc = fst kind in
-            T.stmt_of_decl outlined decl_loc id dt :: acc)
-          entries
-          acc)
-      env
-      []
+  let make_env_entry outlined n entries acc =
+    let entries = Loc_collections.LocMap.bindings entries in
+    let (acc, _) =
+      List.fold_left
+        (fun (acc_stmt, acc_ctor) (loc, kind) ->
+          let ctor = Signature_builder_kind.kind_to_ctor (snd kind) in
+          let (add_entry, acc_ctor) =
+            match acc_ctor with
+            | None ->
+              (* Include the first occurrence, and set the kind of the entries *)
+              (true, Some ctor)
+            | Some Signature_builder_kind.DeclareFunctionDefKind
+              when ctor = Signature_builder_kind.DeclareFunctionDefKind ->
+              (* Multiple function declarations correspond to function overloads.
+               * Only allow these if this is a "function declaration" kind. *)
+              (true, acc_ctor)
+            | Some _ ->
+              (* Ignore any other entry *)
+              (false, acc_ctor)
+          in
+          let acc_stmt =
+            if add_entry then
+              let id = (loc, n) in
+              let dt = eval kind in
+              let decl_loc = fst kind in
+              T.stmt_of_decl outlined decl_loc id dt :: acc_stmt
+            else
+              acc_stmt
+          in
+          (acc_stmt, acc_ctor))
+        (acc, None)
+        entries
+    in
+    acc
+
+  let make_env outlined env = SMap.fold (make_env_entry outlined) env []
 
   let cjs_exports =
     let declare_module_exports mod_exp_loc loc t =
       (mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t))
     in
     let additional_properties_of_module_exports outlined add_module_exports_list =
-      Core_list.rev_map
+      Base.List.rev_map
         ~f:(fun (id, expr) ->
           let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
           Ast.Type.Object.(
@@ -1643,9 +1681,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       if ListUtils.is_empty add_module_exports_list then
         (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot))
       else
-        let properties =
-          additional_properties_of_module_exports outlined add_module_exports_list
-        in
+        let properties = additional_properties_of_module_exports outlined add_module_exports_list in
         let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
         let assign = (mod_exp_loc, Ast.Type.Object ot) in
         let t =
@@ -1655,8 +1691,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               (Flow_ast_utils.ident_of_source (mod_exp_loc, name))
           in
           ( mod_exp_loc,
-            Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (mod_exp_loc, [annot; assign]) }
-          )
+            Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (mod_exp_loc, [annot; assign]) } )
         in
         (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, t))
     in
@@ -1728,7 +1763,15 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       | Declaration
           ( loc,
             Ast.Statement.ClassDeclaration
-              { Ast.Class.id = None; tparams; body; extends; implements; classDecorators = _ } ) ->
+              {
+                Ast.Class.id = None;
+                tparams;
+                body;
+                extends;
+                implements;
+                classDecorators = _;
+                comments = _;
+              } ) ->
         let (super, super_targs) =
           match extends with
           | None -> (None, None)
@@ -1736,6 +1779,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         in
         `Expr
           (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> `Decl (Entry.enum loc enum)
       | Declaration _stmt -> assert false
       | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
         `Decl (Entry.function_declaration loc function_)

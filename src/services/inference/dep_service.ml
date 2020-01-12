@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -109,8 +109,8 @@ let calc_direct_dependents_utils ~reader workers fileset root_fileset =
               (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_dependents downstream). *)
-              resolved_requires.phantom_dependents
-              |> SSet.exists (fun f -> SSet.mem f root_fileset) )
+              resolved_requires.phantom_dependents |> SSet.exists (fun f -> SSet.mem f root_fileset)
+            )
           in
           (f, entry) :: utils)
     in
@@ -217,7 +217,7 @@ let file_dependencies ~audit ~reader file =
   in
   SSet.fold
     (fun mref (sig_files, all_files) ->
-      let m = SMap.find_unsafe mref resolved_modules in
+      let m = SMap.find mref resolved_modules in
       match implementation_file ~reader m ~audit:Expensive.ok with
       | Some f ->
         if SSet.mem mref sig_require_set then
@@ -228,12 +228,14 @@ let file_dependencies ~audit ~reader file =
     require_set
     (FilenameSet.empty, FilenameSet.empty)
 
-type dependency_graph = FilenameSet.t FilenameMap.t
+let dependency_info_of_dependency_graph = function
+  | Partial_dependency_graph.PartialClassicDepGraph map -> Dependency_info.of_classic_map map
+  | Partial_dependency_graph.PartialTypesFirstDepGraph map -> Dependency_info.of_types_first_map map
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
-let calc_partial_dependency_info ~options ~reader workers files ~parsed =
-  let%lwt dependency_info =
+let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
+  let%lwt dependency_graph =
     MultiWorkerLwt.call
       workers
       ~job:
@@ -246,21 +248,24 @@ let calc_partial_dependency_info ~options ~reader workers files ~parsed =
       ~merge:FilenameMap.union
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
-  let dependency_info =
+  let dependency_graph =
     match Options.arch options with
     | Options.Classic ->
-      Dependency_info.Classic
+      Partial_dependency_graph.PartialClassicDepGraph
         (FilenameMap.map
            (fun (_sig_files, all_files) -> FilenameSet.inter parsed all_files)
-           dependency_info)
+           dependency_graph)
     | Options.TypesFirst ->
-      Dependency_info.TypesFirst
+      Partial_dependency_graph.PartialTypesFirstDepGraph
         (FilenameMap.map
            (fun (sig_files, all_files) ->
              (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
-           dependency_info)
+           dependency_graph)
   in
-  Lwt.return dependency_info
+  Lwt.return dependency_graph
 
 let calc_dependency_info ~options ~reader workers ~parsed =
-  calc_partial_dependency_info ~options ~reader workers parsed ~parsed
+  let%lwt dependency_graph =
+    calc_partial_dependency_graph ~options ~reader workers parsed ~parsed
+  in
+  Lwt.return (dependency_info_of_dependency_graph dependency_graph)

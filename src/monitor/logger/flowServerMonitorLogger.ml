@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -45,7 +45,6 @@ module WriteLoop = LwtLoop.Make (struct
   (* If we failed to write to an fd throw an exception and exit. I'm not 100% sure this is the
    * best behavior - should logging errors cause the monitor (and server) to crash? *)
   let catch _ exn =
-    let exn = Exception.wrap exn in
     Printf.eprintf "Logger.WriteLoop exception:\n%s" (Exception.to_string exn);
     Exception.reraise exn
 end)
@@ -70,9 +69,7 @@ let init_logger log_fd =
 
   let min_level = Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level in
   let template = "$(date).$(milliseconds) [$(level)] $(message)" in
-  let log_fd =
-    Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true)
-  in
+  let log_fd = Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true) in
   let fds = Lwt_unix.stderr :: Option.value_map log_fd ~default:[] ~f:(fun fd -> [fd]) in
   Lwt.async (fun () -> WriteLoop.run fds);
 
@@ -80,7 +77,7 @@ let init_logger log_fd =
   let output section level messages =
     let buffer = Buffer.create 42 in
     let formatted_messages =
-      Core_list.map
+      Base.List.map
         ~f:(fun message ->
           Buffer.clear buffer;
           Lwt_log.render ~buffer ~template ~section ~level ~message;

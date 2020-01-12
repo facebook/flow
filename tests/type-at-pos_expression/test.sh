@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 # dictionary
 printf "dictionary.js:3:7 = "
@@ -80,6 +84,8 @@ printf "literals.js:31:7 = "
 assert_ok "$FLOW" type-at-pos literals.js 31 7 --strip-root --pretty
 printf "literals.js:32:7 = "
 assert_ok "$FLOW" type-at-pos literals.js 32 7 --strip-root --pretty
+printf "literals.js:34:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 34 7 --strip-root --pretty
 
 # new-array.js
 printf "new-array.js:3:15 = "

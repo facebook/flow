@@ -1,9 +1,10 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
 class virtual ['a] t :
   object
     method arr_type : Context.t -> 'a -> Type.arrtype -> Type.arrtype
@@ -20,7 +21,9 @@ class virtual ['a] t :
 
     method dict_type : Context.t -> 'a -> Type.dicttype -> Type.dicttype
 
-    method virtual eval_id : Context.t -> 'a -> int -> int
+    method enum : Context.t -> 'a -> Type.enum_t -> Type.enum_t
+
+    method virtual eval_id : Context.t -> 'a -> Type.Eval.id -> Type.Eval.id
 
     method export_types : Context.t -> 'a -> Type.exporttypes -> Type.exporttypes
 
@@ -89,6 +92,8 @@ class virtual ['a] t_with_uses :
     method elem_action : Context.t -> 'a -> Type.elem_action -> Type.elem_action
 
     method fun_call_type : Context.t -> 'a -> Type.funcalltype -> Type.funcalltype
+
+    method method_action : Context.t -> 'a -> Type.method_action -> Type.method_action
 
     method initial_state :
       Context.t ->

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -70,6 +70,7 @@ type 'loc virtual_reason_desc =
   | REmpty
   | RVoid
   | RNull
+  | RVoidedNull
   | RSymbol
   | RExports
   | RNullOrVoid
@@ -91,6 +92,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
@@ -110,7 +112,8 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | RUnionEnum
-  | REnum
+  | REnum of string (* name *)
+  | REnumRepresentation of 'loc virtual_reason_desc
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -199,7 +202,6 @@ type 'loc virtual_reason_desc =
   | RSuperOf of 'loc virtual_reason_desc
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
-  | RVarianceCheck of 'loc virtual_reason_desc
   | RPredicateOf of 'loc virtual_reason_desc
   | RPredicateCall of 'loc virtual_reason_desc
   | RPredicateCallNeg of 'loc virtual_reason_desc
@@ -224,6 +226,8 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
+  | RWidenedObjProp of 'loc virtual_reason_desc
 [@@deriving eq]
 
 and reason_desc_function =
@@ -236,12 +240,12 @@ and reason_desc_function =
 type reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
-  | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty
-    | RVoid | RNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
+  | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
+    | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RROArrayType | RTupleType | RTupleElement | RTupleOutOfBoundsAccess | RFunction _
-    | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
       ) as r ->
     r
@@ -249,7 +253,7 @@ let rec map_desc_locs f = function
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
-  | ( RTemplateString | RUnknownString | RUnionEnum | REnum | RGetterSetterProperty | RThis
+  | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RGetterSetterProperty | RThis
     | RThisType | RExistential | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest
     | RConstructorReturn | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType
     | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype
@@ -257,12 +261,13 @@ let rec map_desc_locs f = function
     | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
     | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RIdentifier _
     | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
-    | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
-    | RUnknownProperty _ | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _
-    | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
-    | RImportStar _ | RDefaultImportedType _ | RCode _ | RCustom _ | RIncompatibleInstantiation _
-    | ROpaqueType _ | RObjectMapi ) as r ->
+    | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
+    | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _ | RUntypedModule _
+    | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
+    | RDefaultImportedType _ | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
+    | RObjectMapi ) as r ->
     r
+  | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RImplicitReturn desc -> RImplicitReturn (map_desc_locs f desc)
   | RTypeAlias (s, b, d) -> RTypeAlias (s, b, map_desc_locs f d)
@@ -287,7 +292,6 @@ let rec map_desc_locs f = function
   | RSuperOf desc -> RSuperOf (map_desc_locs f desc)
   | RFrozen desc -> RFrozen (map_desc_locs f desc)
   | RBound desc -> RBound (map_desc_locs f desc)
-  | RVarianceCheck desc -> RVarianceCheck (map_desc_locs f desc)
   | RPredicateOf desc -> RPredicateOf (map_desc_locs f desc)
   | RPredicateCall desc -> RPredicateCall (map_desc_locs f desc)
   | RPredicateCallNeg desc -> RPredicateCallNeg (map_desc_locs f desc)
@@ -297,12 +301,15 @@ let rec map_desc_locs f = function
   | RTrusted desc -> RTrusted (map_desc_locs f desc)
   | RPrivate desc -> RPrivate (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _
-    | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent
-    | RReactStatics | RReactDefaultProps | RReactState | RReactPropTypes | RReactChildren ) as r ->
+    | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
+    | RReactDefaultProps | RReactState | RReactPropTypes | RReactChildren ) as r ->
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
   | (RReactSFC | RReactConfig) as r -> r
+  | RPossiblyMissingPropFromObj (propname, desc) ->
+    RPossiblyMissingPropFromObj (propname, map_desc_locs f desc)
+  | RWidenedObjProp desc -> RWidenedObjProp (map_desc_locs f desc)
 
 type 'loc virtual_reason = {
   test_id: int option;
@@ -404,7 +411,7 @@ let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offse
           ("line", int_ loc.start.line);
           (* It's not ideal that we use a different column numbering system here
            * versus other places (like the estree translator) *)
-            ("column", int_ (loc.start.column + 1));
+          ("column", int_ (loc.start.column + 1));
         ]
         @
         match offset_table with
@@ -517,6 +524,7 @@ let rec string_of_desc = function
   | RAnyExplicit -> "explicit 'any'"
   | RVoid -> "undefined"
   | RNull -> "null"
+  | RVoidedNull -> "undefined (result of null short-circuiting an optional chain)"
   | RNullOrVoid -> "null or undefined"
   | RSymbol -> "symbol"
   | RExports -> "exports"
@@ -539,6 +547,7 @@ let rec string_of_desc = function
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
+  | RTupleLength i -> spf "length `%d` (number) of tuple" i
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
@@ -562,7 +571,8 @@ let rec string_of_desc = function
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | RUnionEnum -> "enum"
-  | REnum -> "Enums are not yet implemented."
+  | REnum name -> spf "enum `%s`" name
+  | REnumRepresentation representation -> spf "%s enum" (string_of_desc representation)
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -663,7 +673,6 @@ let rec string_of_desc = function
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
-  | RVarianceCheck d -> spf "variance check: %s" (string_of_desc d)
   | RPredicateOf d -> spf "predicate of %s" (string_of_desc d)
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
@@ -691,6 +700,9 @@ let rec string_of_desc = function
   | RReactChildrenOrUndefinedOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactSFC -> "React stateless functional component"
   | RReactConfig -> "config of React component"
+  | RPossiblyMissingPropFromObj (propname, desc) ->
+    spf "possibly missing property `%s` in %s" propname (string_of_desc desc)
+  | RWidenedObjProp desc -> string_of_desc desc
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
@@ -872,7 +884,7 @@ let replace_desc_reason desc r =
 let replace_desc_new_reason desc r = mk_reason_with_test_id r.test_id desc r.loc None None
 
 (* returns reason with new location and description of original *)
-let repos_reason loc ?(annot_loc : 'loc option) reason =
+let repos_reason loc reason =
   let def_aloc_opt =
     let def_loc = def_poly_loc_of_reason reason in
     if loc = def_loc then
@@ -880,16 +892,18 @@ let repos_reason loc ?(annot_loc : 'loc option) reason =
     else
       Some def_loc
   in
-  let annot_aloc_opt =
-    match annot_loc with
-    | Some annot_loc -> Some annot_loc
-    | None -> reason.annot_loc_opt
-  in
-  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt annot_aloc_opt
+  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt reason.annot_loc_opt
 
-let annot_reason reason = { reason with annot_loc_opt = Some reason.loc }
+let annot_reason ~annot_loc reason = { reason with annot_loc_opt = Some annot_loc }
 
-module ReasonMap = MyMap.Make (struct
+let opt_annot_reason ?annot_loc reason =
+  match annot_loc with
+  | None -> reason
+  | Some annot_loc -> annot_reason ~annot_loc reason
+
+let mk_annot_reason desc annot_loc = annot_reason ~annot_loc (mk_reason desc annot_loc)
+
+module ReasonMap = WrappedMap.Make (struct
   type t = reason
 
   let compare = Pervasives.compare
@@ -987,7 +1001,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
           property = (_, { Ast.Identifier.name = p; comments = _ });
         } ->
       o ^ "." ^ p
-    | New { New.callee; targs; arguments } ->
+    | New { New.callee; targs; arguments; comments = _ } ->
       let targs =
         match targs with
         | None -> ""
@@ -1100,8 +1114,7 @@ and code_desc_of_operation =
           | `Binary Xor -> 3
           | `Binary BitAnd -> 4
           | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 5
-          | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof)
-            ->
+          | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) ->
             6
           | `Binary (LShift | RShift | RShift3) -> 7
           | `Binary (Plus | Minus) -> 8
@@ -1189,8 +1202,7 @@ and code_desc_of_property ~optional property =
     else
       "." )
     ^ x
-  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name = x; comments = _ }))
-    ->
+  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name = x; comments = _ })) ->
     ( if optional then
       "?.#"
     else
@@ -1271,6 +1283,7 @@ let classification_of_reason r =
     `Scalar
   | RVoid
   | RNull
+  | RVoidedNull
   | RNullOrVoid ->
     `Nullish
   | RArray
@@ -1293,6 +1306,7 @@ let classification_of_reason r =
   | RObjectClassName
   | RInterfaceType
   | RTupleElement
+  | RTupleLength _
   | RTupleOutOfBoundsAccess
   | RFunction _
   | RFunctionType
@@ -1388,7 +1402,6 @@ let classification_of_reason r =
   | RSuperOf _
   | RFrozen _
   | RBound _
-  | RVarianceCheck _
   | RPredicateOf _
   | RPredicateCall _
   | RPredicateCallNeg _
@@ -1412,9 +1425,12 @@ let classification_of_reason r =
   | RReactChildrenOrUndefinedOrType _
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj _
+  | RWidenedObjProp _
   | RTrusted _
   | RPrivate _
-  | REnum ->
+  | REnum _
+  | REnumRepresentation _ ->
     `Unclassified
 
 let is_nullish_reason r = classification_of_reason r = `Nullish

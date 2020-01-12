@@ -134,17 +134,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            15:       (ret[5]: 2);
                       ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
             References:
-              6:         return foo([...arr, 1]);
-                                             ^ [1]
-             15:       (ret[5]: 2);
-                                ^ [2]
-
-          test.js:15
-           15:       (ret[5]: 2);
-                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
-            References:
-              8:       const ret = foo([1]);
-                                        ^ [1]
+              4:         function foo<T: Array<*>>(arr: T) {
+                                               ^ [1]
              15:       (ret[5]: 2);
                                 ^ [2]
         `,
@@ -325,8 +316,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             3: const arr: Array<number> = [..."hello"];
                                           ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because string [1] is incompatible with number [2] in array element.
             References:
-            321:     @@iterator(): Iterator<string>;
-                                            ^^^^^^ [1]. See lib: [LIB] core.js:321
+            323:     @@iterator(): Iterator<string>;
+                                            ^^^^^^ [1]. See lib: [LIB] core.js:323
               3: const arr: Array<number> = [..."hello"];
                                   ^^^^^^ [2]
         `,

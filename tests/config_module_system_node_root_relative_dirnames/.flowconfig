@@ -1,0 +1,4 @@
+[options]
+module.system.node.allow_root_relative=true
+module.system.node.root_relative_dirname=first
+module.system.node.root_relative_dirname=second

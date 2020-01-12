@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -13,8 +13,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method arrow_function : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
-    method assignment :
-      ('M, 'T) Ast.Expression.Assignment.t -> ('N, 'U) Ast.Expression.Assignment.t
+    method assignment : ('M, 'T) Ast.Expression.Assignment.t -> ('N, 'U) Ast.Expression.Assignment.t
 
     method assignment_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
@@ -30,6 +29,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method break : 'M Ast.Statement.Break.t -> 'N Ast.Statement.Break.t
 
     method call : 'T -> ('M, 'T) Ast.Expression.Call.t -> ('N, 'U) Ast.Expression.Call.t
+
+    method call_type_args :
+      ('M, 'T) Ast.Expression.CallTypeArgs.t -> ('N, 'U) Ast.Expression.CallTypeArgs.t
+
+    method call_type_arg :
+      ('M, 'T) Ast.Expression.CallTypeArg.t -> ('N, 'U) Ast.Expression.CallTypeArg.t
 
     method catch_clause :
       ('M, 'T) Ast.Statement.Try.CatchClause.t' -> ('N, 'U) Ast.Statement.Try.CatchClause.t'
@@ -68,8 +73,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Expression.Comprehension.t -> ('N, 'U) Ast.Expression.Comprehension.t
 
     method comprehension_block :
-      ('M, 'T) Ast.Expression.Comprehension.Block.t ->
-      ('N, 'U) Ast.Expression.Comprehension.Block.t
+      ('M, 'T) Ast.Expression.Comprehension.Block.t -> ('N, 'U) Ast.Expression.Comprehension.Block.t
 
     method conditional :
       ('M, 'T) Ast.Expression.Conditional.t -> ('N, 'U) Ast.Expression.Conditional.t
@@ -123,16 +127,13 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'N Ast.Statement.EnumDeclaration.BooleanBody.t
 
     method enum_number_body :
-      'M Ast.Statement.EnumDeclaration.NumberBody.t ->
-      'N Ast.Statement.EnumDeclaration.NumberBody.t
+      'M Ast.Statement.EnumDeclaration.NumberBody.t -> 'N Ast.Statement.EnumDeclaration.NumberBody.t
 
     method enum_string_body :
-      'M Ast.Statement.EnumDeclaration.StringBody.t ->
-      'N Ast.Statement.EnumDeclaration.StringBody.t
+      'M Ast.Statement.EnumDeclaration.StringBody.t -> 'N Ast.Statement.EnumDeclaration.StringBody.t
 
     method enum_symbol_body :
-      'M Ast.Statement.EnumDeclaration.SymbolBody.t ->
-      'N Ast.Statement.EnumDeclaration.SymbolBody.t
+      'M Ast.Statement.EnumDeclaration.SymbolBody.t -> 'N Ast.Statement.EnumDeclaration.SymbolBody.t
 
     method enum_defaulted_member :
       'M Ast.Statement.EnumDeclaration.DefaultedMember.t ->
@@ -149,10 +150,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method enum_string_member :
       (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
       (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
-
-    method explicit_or_implicit :
-      ('M, 'T) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation ->
-      ('N, 'U) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation
 
     method export_default_declaration :
       'M ->
@@ -210,8 +207,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method function_expression : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
-    method function_identifier : ('M, 'M) Flow_ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
-
     method function_param : ('M, 'T) Flow_ast.Function.Param.t -> ('N, 'U) Ast.Function.Param.t
 
     method function_params : ('M, 'T) Flow_ast.Function.Params.t -> ('N, 'U) Ast.Function.Params.t
@@ -248,9 +243,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method import : 'T -> ('M, 'T) Ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
     method import_declaration :
-      'M ->
-      ('M, 'T) Ast.Statement.ImportDeclaration.t ->
-      ('N, 'U) Ast.Statement.ImportDeclaration.t
+      'M -> ('M, 'T) Ast.Statement.ImportDeclaration.t -> ('N, 'U) Ast.Statement.ImportDeclaration.t
 
     method import_default_specifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
@@ -258,7 +251,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier ->
       ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier
 
-    method import_namespace_specifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
+    method import_namespace_specifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method import_specifier :
       ('M, 'T) Ast.Statement.ImportDeclaration.specifier ->
@@ -412,11 +405,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method pattern_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
-    method pattern_identifier :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'M) Ast.Identifier.t ->
-      ('N, 'N) Ast.Identifier.t
-
     method pattern_literal :
       ?kind:Ast.Statement.VariableDeclaration.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
 
@@ -524,21 +512,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_cast : ('M, 'T) Ast.Expression.TypeCast.t -> ('N, 'U) Ast.Expression.TypeCast.t
 
-    method type_parameter_declaration_opt :
-      ('M, 'T) Ast.Type.ParameterDeclaration.t option ->
-      (('N, 'U) Ast.Type.ParameterDeclaration.t option -> 'a) ->
-      'a
+    method type_params_opt :
+      ('M, 'T) Ast.Type.TypeParams.t option -> (('N, 'U) Ast.Type.TypeParams.t option -> 'a) -> 'a
 
-    method type_parameter_declaration_type_param :
-      ('M, 'T) Ast.Type.ParameterDeclaration.TypeParam.t ->
-      ('N, 'U) Ast.Type.ParameterDeclaration.TypeParam.t
+    method type_param : ('M, 'T) Ast.Type.TypeParam.t -> ('N, 'U) Ast.Type.TypeParam.t
 
-    method type_parameter_instantiation :
-      ('M, 'T) Flow_ast.Type.ParameterInstantiation.t -> ('N, 'U) Ast.Type.ParameterInstantiation.t
+    method type_param_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
-    method type_parameter_instantiation_with_implicit :
-      ('M, 'T) Flow_ast.Expression.TypeParameterInstantiation.t ->
-      ('N, 'U) Ast.Expression.TypeParameterInstantiation.t
+    method type_args : ('M, 'T) Flow_ast.Type.TypeArgs.t -> ('N, 'U) Ast.Type.TypeArgs.t
 
     method type_predicate : ('M, 'T) Flow_ast.Type.Predicate.t -> ('N, 'U) Ast.Type.Predicate.t
 

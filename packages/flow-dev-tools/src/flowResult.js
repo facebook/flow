@@ -1,4 +1,11 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
 
 import {format} from 'util';
 
@@ -59,9 +66,12 @@ type FlowTiming = {
     }
   }
 }
-type FlowMemory = {
-  [key: string]: number;
-}
+type FlowMemoryStat = {| start: number; delta: number; hwm_delta: number |}
+type FlowMemoryGroup = {| [stat: string]: FlowMemoryStat |}
+type FlowMemory = {|
+  sub_results: { [key: string]: FlowMemory };
+  [group: string]: number | FlowMemoryGroup;
+|}
 
 export const noErrors: FlowResult = {
   passed: true,

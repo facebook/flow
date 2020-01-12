@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -54,12 +54,10 @@ val of_lines : severity t -> (int * string) list -> (severity t, int * string) r
 (* Intended for debugging purposes. *)
 val to_string : severity t -> string
 
-type lint_parse_error_kind =
+type lint_parse_error =
   | Invalid_setting
   | Malformed_argument
   | Naked_comment
   | Nonexistent_rule
   | Overwritten_argument
   | Redundant_argument
-
-type lint_parse_error = Loc.t * lint_parse_error_kind

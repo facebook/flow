@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -26,7 +26,6 @@ end
 val merge_component :
   metadata:Context.metadata ->
   lint_severities:Severity.severity LintSettings.t ->
-  file_options:Files.options option ->
   strict_mode:StrictModeSettings.t ->
   file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   get_ast_unsafe:(File_key.t -> get_ast_return) ->
@@ -42,7 +41,7 @@ val merge_component :
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
-  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program * Coverage_response.file_coverage) Nel.t
+  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
 
 val merge_tvar : Context.t -> Reason.t -> Constraint.ident -> Type.t
 

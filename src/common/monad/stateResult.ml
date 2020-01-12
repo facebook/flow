@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -70,7 +70,7 @@ module Make (S : State) : S with type s = S.t = struct
 
   let get s = (Ok s, s)
 
-  let modify f = get >>= (fun st -> put (f st))
+  let modify f = get >>= fun st -> put (f st)
 
   let option f = function
     | Some x -> f x >>| Option.some

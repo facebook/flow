@@ -54,5 +54,21 @@ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-
                      ^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- index.js:18:8
 
-Found 7 errors
+Cannot apply type because it is not a polymorphic type.
+
+   18| (null: Object<mixed>);
+              ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:19:8
+
+Cannot apply type because it is not a polymorphic type.
+
+   19| (null: Function<mixed>);
+              ^^^^^^^^^^^^^^^
+
+
+
+Found 9 errors

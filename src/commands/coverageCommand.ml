@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -157,9 +157,7 @@ let rec split_overlapping_ranges accum = function
         let head_loc = (loc1_start, loc2_start - 1) in
         let overlap_loc = (loc2_start, loc1_end) in
         let tail_loc = (loc1_end + 1, loc2_end) in
-        ( (head_loc, is_covered1)
-          :: (overlap_loc, Coverage.m_or (is_covered1, is_covered2))
-          :: accum,
+        ( (head_loc, is_covered1) :: (overlap_loc, Coverage.m_or (is_covered1, is_covered2)) :: accum,
           (tail_loc, is_covered2) :: rest )
       else
         (* range 2 is in the middle of range 1, so split range 1 and consume
@@ -168,7 +166,7 @@ let rec split_overlapping_ranges accum = function
         let head_loc = (loc1_start, loc2_start - 1) in
         let tail_loc = (loc2_end + 1, loc1_end) in
         let todo = (loc2, is_covered2) :: (tail_loc, is_covered1) :: rest in
-        ((head_loc, is_covered1) :: accum, Core_list.sort ~cmp:sort_ranges todo)
+        ((head_loc, is_covered1) :: accum, Base.List.sort ~compare:sort_ranges todo)
     in
     split_overlapping_ranges accum todo
 
@@ -181,25 +179,25 @@ let handle_response
     ~trust
     (types : (Loc.t * Coverage_response.expression_coverage) list)
     content =
-  if debug then Core_list.iter ~f:debug_range types;
+  if debug then Base.List.iter ~f:debug_range types;
 
-  let offset_table = lazy (Offset_utils.make content) in
+  let offset_table = lazy (Offset_utils.make ~kind:Offset_utils.Utf8 content) in
   if color then (
     let coverage_offsets =
       let offset_table = Lazy.force offset_table in
       let loc_to_offset_pair loc =
         Loc.(Offset_utils.offset offset_table loc.start, Offset_utils.offset offset_table loc._end)
       in
-      Core_list.map ~f:(fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
+      Base.List.map ~f:(fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
     in
-    let coverage_offsets = Core_list.rev (split_overlapping_ranges [] coverage_offsets) in
+    let coverage_offsets = Base.List.rev (split_overlapping_ranges [] coverage_offsets) in
     let (colors, _) = colorize_file content 0 [] coverage_offsets in
-    Tty.cprint ~color_mode:Tty.Color_Always (Core_list.rev colors);
+    Tty.cprint ~color_mode:Tty.Color_Always (Base.List.rev colors);
     print_endline ""
   );
 
   let (untainted, tainted, empty, total) =
-    Core_list.fold_left ~f:accum_coverage ~init:(0, 0, 0, 0) types
+    Base.List.fold_left ~f:accum_coverage ~init:(0, 0, 0, 0) types
   in
   (* In trust mode, we only consider untainted locations covered. In normal mode we consider both *)
   let covered =
@@ -218,9 +216,9 @@ let handle_response
     let offset_table = Some (Lazy.force offset_table) in
     let (untainted_locs, tainted_locs, empty_locs, uncovered_locs) =
       let (untainted, tainted, empty, uncovered) =
-        Core_list.fold_left ~f:accum_coverage_locs ~init:([], [], [], []) types
+        Base.List.fold_left ~f:accum_coverage_locs ~init:([], [], [], []) types
       in
-      (Core_list.rev untainted, Core_list.rev tainted, Core_list.rev empty, Core_list.rev uncovered)
+      (Base.List.rev untainted, Base.List.rev tainted, Base.List.rev empty, Base.List.rev uncovered)
     in
     Hh_json.(
       let covered_data =
@@ -229,19 +227,19 @@ let handle_response
             ("untainted_count", int_ untainted);
             ( "untainted_locs",
               JSON_Array
-                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs) );
+                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs) );
             ("tainted_count", int_ tainted);
             ( "tainted_locs",
               JSON_Array
-                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs) );
+                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs) );
           ]
         else
-          let covered_locs = untainted_locs @ tainted_locs |> Core_list.sort ~cmp:compare in
+          let covered_locs = untainted_locs @ tainted_locs |> Base.List.sort ~compare in
           [
             ("covered_count", int_ covered);
             ( "covered_locs",
               JSON_Array
-                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs) );
+                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs) );
           ]
       in
       JSON_Object
@@ -253,13 +251,13 @@ let handle_response
                   ("uncovered_count", int_ (total - covered));
                   ( "uncovered_locs",
                     JSON_Array
-                      (Core_list.map
+                      (Base.List.map
                          ~f:(Reason.json_of_loc ~strip_root ~offset_table)
                          uncovered_locs) );
                   ("empty_count", int_ empty);
                   ( "empty_locs",
                     JSON_Array
-                      (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs)
+                      (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs)
                   );
                 ] ) );
         ]

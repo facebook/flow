@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -129,8 +129,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
     fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       ( loc,
         Pattern.Array
-          { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments }
-      )
+          { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments } )
 
   and from_expr env (loc, expr) =
     Ast.Expression.(

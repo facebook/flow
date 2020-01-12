@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -67,20 +67,21 @@ let substituter =
       else
         let t_out =
           match t with
-          | BoundT (tp_reason, name, _) ->
+          | BoundT (tp_reason, name) ->
+            let annot_loc = aloc_of_reason tp_reason in
             begin
-              match SMap.get name map with
+              match SMap.find_opt name map with
               | None -> t
               | Some (ReposT (_, param_t)) when name = "this" ->
-                ReposT (annot_reason tp_reason, param_t)
-              | Some param_t when name = "this" -> ReposT (annot_reason tp_reason, param_t)
+                ReposT (annot_reason ~annot_loc tp_reason, param_t)
+              | Some param_t when name = "this" ->
+                ReposT (annot_reason ~annot_loc tp_reason, param_t)
               | Some param_t ->
                 (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
                 | RPolyTest _ ->
                   mod_reason_of_t
-                    (fun reason ->
-                      let loc = aloc_of_reason tp_reason in
-                      repos_reason loc ~annot_loc:loc reason)
+                    (fun param_reason ->
+                      annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
                     param_t
                 | _ -> param_t)
             end
@@ -89,7 +90,7 @@ let substituter =
               Tvar.mk cx reason
             else
               t
-          | DefT (reason, trust, PolyT (tparams_loc, xs, inner, _)) ->
+          | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; _ }) ->
             let (xs, map, changed) =
               Nel.fold_left
                 (fun (xs, map, changed) typeparam ->
@@ -119,7 +120,12 @@ let substituter =
             let inner_ = self#type_ cx (map, false, None) inner in
             let changed = changed || inner_ != inner in
             if changed then
-              DefT (reason, trust, PolyT (tparams_loc, xs, inner_, Context.make_nominal cx))
+              DefT
+                ( reason,
+                  trust,
+                  PolyT
+                    { tparams_loc; tparams = xs; t_out = inner_; id = Context.generate_poly_id cx }
+                )
             else
               t
           | ThisClassT (reason, this) ->
@@ -152,7 +158,7 @@ let substituter =
                * so we can point at the op which instantiated the types that
                * were substituted. *)
               let use_op = Option.value use_op ~default:op in
-              EvalT (x', TypeDestructorT (use_op, r, d'), Reason.mk_id ())
+              EvalT (x', TypeDestructorT (use_op, r, d'), Eval.generate_id ())
           (* We only want to change the EvalT id if the rest of the EvalT actually changed *)
           | EvalT (t', dt, _id) ->
             let t'' = self#type_ cx map_cx t' in
@@ -160,11 +166,10 @@ let substituter =
             if t' == t'' && dt == dt' then
               t
             else
-              EvalT (t'', dt', Reason.mk_id ())
+              EvalT (t'', dt', Eval.generate_id ())
           | ModuleT _
           | InternalT (ExtendsT _) ->
-            failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t))
-          (* TODO *)
+            failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
           | t -> super#type_ cx map_cx t
         in
         if t == t_out then

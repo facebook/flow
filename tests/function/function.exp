@@ -7,13 +7,13 @@ string [1] is incompatible with `$ArrayLike` [2].
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:306:22
+   <BUILTINS>/core.js:308:22
                              v
-   306| type $ArrayLike<T> = {
-   307|   [indexer: number]: T,
-   308|   length: number,
-   309|   ...
-   310| }
+   308| type $ArrayLike<T> = {
+   309|   [indexer: number]: T,
+   310|   length: number,
+   311|   ...
+   312| }
         ^ [2]
 
 
@@ -29,13 +29,13 @@ References:
    apply-array-like.js:15:17
     15| function * gen() {
                         ^ [1]
-   <BUILTINS>/core.js:306:22
+   <BUILTINS>/core.js:308:22
                              v
-   306| type $ArrayLike<T> = {
-   307|   [indexer: number]: T,
-   308|   length: number,
-   309|   ...
-   310| }
+   308| type $ArrayLike<T> = {
+   309|   [indexer: number]: T,
+   310|   length: number,
+   311|   ...
+   312| }
         ^ [2]
 
 
@@ -71,8 +71,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:126:18
-   126|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:127:18
+   127|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,13 +155,13 @@ string [1] is incompatible with `$ArrayLike` [2].
                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:306:22
+   <BUILTINS>/core.js:308:22
                              v
-   306| type $ArrayLike<T> = {
-   307|   [indexer: number]: T,
-   308|   length: number,
-   309|   ...
-   310| }
+   308| type $ArrayLike<T> = {
+   309|   [indexer: number]: T,
+   310|   length: number,
+   311|   ...
+   312| }
         ^ [2]
 
 
@@ -544,8 +544,8 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:133:13
+   133|     length: number;
                     ^^^^^^ [1]
    function.js:37:16
     37|     (x.length: void); // error, it's a number
@@ -561,8 +561,8 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:133:13
+   133|     length: number;
                     ^^^^^^ [1]
    function.js:38:16
     38|     (y.length: void); // error, it's a number
@@ -578,8 +578,8 @@ Cannot cast `x.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:134:11
+   134|     name: string;
                   ^^^^^^ [1]
    function.js:41:14
     41|     (x.name: void); // error, it's a string
@@ -595,8 +595,8 @@ Cannot cast `y.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:134:11
+   134|     name: string;
                   ^^^^^^ [1]
    function.js:42:14
     42|     (y.name: void); // error, it's a string
@@ -612,8 +612,8 @@ Cannot assign `'foo'` to `x.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:133:13
+   133|     length: number;
                     ^^^^^^ [2]
 
 
@@ -626,8 +626,8 @@ Cannot assign `'foo'` to `y.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:133:13
+   133|     length: number;
                     ^^^^^^ [2]
 
 
@@ -640,8 +640,8 @@ Cannot assign `123` to `x.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:134:11
+   134|     name: string;
                   ^^^^^^ [2]
 
 
@@ -654,8 +654,8 @@ Cannot assign `123` to `y.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:134:11
+   134|     name: string;
                   ^^^^^^ [2]
 
 

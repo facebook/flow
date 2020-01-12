@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -22,7 +22,7 @@ let error_of_docblock_error ~source_file (loc, err) =
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let set_of_docblock_errors ~source_file =
-  Core_list.fold_left
+  Base.List.fold_left
     ~f:(fun acc err -> Flow_error.ErrorSet.add (error_of_docblock_error ~source_file err) acc)
     ~init:Flow_error.ErrorSet.empty
 
@@ -62,7 +62,7 @@ let error_of_file_sig_tolerable_error ~source_file err =
     Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err)
 
 let set_of_file_sig_tolerable_errors ~source_file =
-  Core_list.map ~f:(error_of_file_sig_tolerable_error ~source_file) %> Flow_error.ErrorSet.of_list
+  Base.List.map ~f:(error_of_file_sig_tolerable_error ~source_file) %> Flow_error.ErrorSet.of_list
 
 (* This is an options-aware fold over the files in `m`. Function `f` will be applied
  * to a file FILE in `m` iff:
@@ -78,7 +78,7 @@ let fold_whitelisted_well_formed_exports ~f options m acc =
     | [] -> Utils_js.FilenameMap.fold f m acc
     | paths ->
       let root = Options.root options in
-      let paths = Core_list.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
+      let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
       Utils_js.FilenameMap.fold
         (fun file v b ->
           let file_str = File_key.to_string file in
@@ -96,6 +96,6 @@ let well_formed_exports_enabled options file =
   | [] -> true
   | paths ->
     let root = Options.root options in
-    let paths = Core_list.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
+    let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
     let file_str = File_key.to_string file in
     List.exists (fun r -> String_utils.is_substring r file_str) paths

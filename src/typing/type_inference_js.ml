@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -170,7 +170,9 @@ let scan_for_lint_suppressions =
     in
     List.rev parts
   in
-  let add_error cx (loc, kind) = Error_message.ELintSetting (loc, kind) |> Flow_js.add_output cx in
+  let add_error cx (loc, kind) =
+    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js.add_output cx
+  in
   let parse_kind loc_str =
     match Lints.kinds_of_string loc_str.value with
     | Some kinds -> Ok kinds
@@ -190,10 +192,10 @@ let scan_for_lint_suppressions =
       begin
         match (parse_kind rule, parse_value setting) with
         | (Ok kinds, Ok setting) ->
-          Some (Core_list.map ~f:(fun kind -> ({ value = kind; loc = arg.loc }, setting)) kinds)
+          Some (Base.List.map ~f:(fun kind -> ({ value = kind; loc = arg.loc }, setting)) kinds)
         | (rule_result, setting_result) ->
-          Core_result.iter_error rule_result ~f:(add_error cx);
-          Core_result.iter_error setting_result ~f:(add_error cx);
+          Base.Result.iter_error rule_result ~f:(add_error cx);
+          Base.Result.iter_error setting_result ~f:(add_error cx);
           None
       end
     | _ ->
@@ -203,7 +205,7 @@ let scan_for_lint_suppressions =
   (* parse arguments of the form lint1:setting1,lint2:setting2... *)
   let get_settings_list cx args =
     split_delim_locational ',' args
-    |> Core_list.map ~f:(fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
+    |> Base.List.map ~f:(fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
   in
   (* Doesn't preserve offset, but is only used in locations where offset isn't used,
    * so that's fine. *)
@@ -239,7 +241,7 @@ let scan_for_lint_suppressions =
         let new_loc = { loc with start = new_start } in
         { loc = new_loc; value = s })
   in
-  let nested_map f outer_list = Core_list.map ~f:(Core_list.map ~f) outer_list in
+  let nested_map f outer_list = Base.List.map ~f:(Base.List.map ~f) outer_list in
   let process_comment
       cx ((severity_cover_builder, running_settings, suppression_locs) as acc) comment =
     let loc_comment = comment |> convert_comment |> trim_and_stars_locational in
@@ -333,23 +335,9 @@ let scan_for_lint_suppressions =
     Context.add_severity_cover cx (Context.file cx) severity_cover;
     Context.add_lint_suppressions cx suppression_locs
 
-let scan_for_suppressions cx lint_severities file_options comments =
-  let filename = File_key.to_string (Context.file cx) in
-  let declaration =
-    match file_options with
-    | Some file_options -> Files.is_declaration file_options filename
-    | None -> false
-  in
-  if declaration then
-    (* Declaration mode.
-     * We don't report any warnings or errors. *)
-    Context.remove_all_errors cx
-  else
-    (* Scan comments for line suppressions. *)
-    scan_for_error_suppressions cx comments;
-  scan_for_lint_suppressions cx lint_severities comments;
-
-  ()
+let scan_for_suppressions cx lint_severities comments =
+  scan_for_error_suppressions cx comments;
+  scan_for_lint_suppressions cx lint_severities comments
 
 let add_require_tvars =
   let add cx desc loc =
@@ -385,13 +373,14 @@ let add_require_tvars =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc_ast =
+let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
   Flow_js.Cache.clear ();
 
   let (prog_aloc, aloc_statements, aloc_comments) = aloc_ast in
   add_require_tvars cx file_sig;
+  Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
 
   let module_ref = Context.module_ref cx in
   begin
@@ -432,7 +421,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
   (* infer *)
   Flow_js.flow_t cx (init_exports, local_exports_var);
   let typed_statements = infer_core cx aloc_statements in
-  scan_for_suppressions cx lint_severities file_options comments;
+  scan_for_suppressions cx lint_severities comments;
 
   let module_t = Import_export.mk_module_t cx reason in
   Context.add_module cx module_ref module_t;
@@ -471,7 +460,7 @@ let with_libdef_builtins cx f =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast =
+let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, _, comments) = ast in
   let (_, aloc_statements, _) = aloc_ast in
@@ -487,7 +476,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
-      scan_for_suppressions cx lint_severities file_options comments);
+      scan_for_suppressions cx lint_severities comments);
 
   ( module_scope
   |> Scope.(

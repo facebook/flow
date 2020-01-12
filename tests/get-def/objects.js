@@ -22,3 +22,4 @@ c.bar;
 { const {foo} = b; }
 { const {foo} = c; }
 { const [foo] = a; }
+{ const foo = a.foo; }

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -53,8 +53,7 @@ module InsertType = struct
             |> flag
                  "--omit-typearg-defaults"
                  no_arg
-                 ~doc:
-                   "Omit type arguments when defaults exist and match the provided type argument"
+                 ~doc:"Omit type arguments when defaults exist and match the provided type argument"
             |> anon "args" (required (list_of string)));
       })
 
@@ -256,7 +255,10 @@ let command =
     {
       CommandSpec.name = "autofix";
       doc = "";
-      usage = Printf.sprintf "Usage: %s autofix SUBCOMMAND [OPTIONS]...\n" CommandUtils.exe_name;
+      usage =
+        Printf.sprintf
+          "Usage: %s autofix SUBCOMMAND [OPTIONS]...\n\nSUBCOMMANDS:\nsuggest: Provides type annotation suggestions for a given program\ninsert-type: Insert type information at file and position\nexports: Automatically fix signature verification errors\n"
+          CommandUtils.exe_name;
       args =
         CommandSpec.ArgSpec.(
           empty

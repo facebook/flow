@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,18 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = Set.Make (File_key)
-module FilenameMap = MyMap.Make (File_key)
+module FilenameMap = WrappedMap.Make (File_key)
+module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
+
+let debug_string_of_filename_set set =
+  set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
+
+let debug_string_of_filename_map value_to_string map =
+  map
+  |> FilenameMap.map value_to_string
+  |> FilenameMap.elements
+  |> List.map (fun (file, value) -> spf "  %s: %s" (File_key.to_string file) value)
+  |> String.concat "\n"
 
 let assert_false s =
   let callstack = Exception.get_current_callstack_string 10 in
@@ -236,33 +247,36 @@ let ordinal = function
    explicit, and is implemented by simply passing the arguments in the correct
    order to Map.union.
 *)
-module Augmentable (M : MyMap.S) = struct
+module Augmentable (M : WrappedMap.S) = struct
   let augment map ~with_bindings = M.union with_bindings map
 end
 
 module AugmentableSMap = Augmentable (SMap)
 
-(* The problem with Core_result's >>= is that the function second argument cannot return
+(* The problem with Base.Result's >>= is that the function second argument cannot return
  * an Lwt.t. This helper infix operator handles that case *)
-let ( %>>= ) (result : ('ok, 'err) Core_result.t) (f : 'ok -> ('a, 'err) Core_result.t Lwt.t) :
-    ('a, 'err) Core_result.t Lwt.t =
+let ( %>>= ) (result : ('ok, 'err) result) (f : 'ok -> ('a, 'err) result Lwt.t) :
+    ('a, 'err) result Lwt.t =
   match result with
   | Error e -> Lwt.return (Error e)
   | Ok x -> f x
 
-let ( %>>| ) (result : ('ok, 'err) Core_result.t) (f : 'ok -> 'a Lwt.t) :
-    ('a, 'err) Core_result.t Lwt.t =
+let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) result Lwt.t =
   match result with
   | Error e -> Lwt.return (Error e)
   | Ok x ->
     let%lwt new_x = f x in
     Lwt.return (Ok new_x)
 
-let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
+let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
 
-let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
+let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
 
-let try_with_json f =
+(* Catch exceptions and promise rejections, stringify them, and return Error. Otherwise, return
+ * the unchanged result of calling `f`. *)
+let try_with_json : (unit -> ('a, string * 'json) result Lwt.t) -> ('a, string * 'json) result Lwt.t
+    =
+ fun f ->
   try%lwt f () with
   | Lwt.Canceled as exn ->
     let exn = Exception.wrap exn in
@@ -270,6 +284,18 @@ let try_with_json f =
   | exn ->
     let exn = Exception.wrap exn in
     Lwt.return (Error (Exception.to_string exn, None))
+
+(* Like try_with_json, but the JSON payload is outside of the `result` *)
+let try_with_json2 :
+    (unit -> (('a, string) result * 'json) Lwt.t) -> (('a, string) result * 'json) Lwt.t =
+ fun f ->
+  try%lwt f () with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn), None)
 
 let try_with f =
   try%lwt f () with
@@ -322,3 +348,38 @@ let get_next_power_of_two x =
       f (y * 2)
   in
   f 1
+
+(* Simple utility to log the amount of time an operation takes.
+ *
+ * Usage:
+ * Given some expression `foo bar baz` whose evaluation you want to time, transform it to
+ * `debug_time "some_identifying_string" (lazy (foo bar baz))`
+ *)
+let debug_time name x =
+  let start_time = Unix.gettimeofday () in
+  let (lazy result) = x in
+  let end_time = Unix.gettimeofday () in
+  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
+  result
+
+(* Same as above, but displays the time taken for the resulting `Lwt.t` to yield a result *)
+let debug_time_lwt name x =
+  let start_time = Unix.gettimeofday () in
+  let%lwt result = Lazy.force x in
+  let end_time = Unix.gettimeofday () in
+  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
+  Lwt.return result
+
+module BoolMap = Map.Make (struct
+  type t = bool
+
+  (* TODO: Switch to Bool.compare when we upgrade to OCaml 4.08 *)
+  let compare = Pervasives.compare
+end)
+
+module NumberMap = Map.Make (struct
+  type t = float
+
+  (* TODO: Switch to Float.compare when we upgrade to OCaml 4.08 *)
+  let compare = Pervasives.compare
+end)

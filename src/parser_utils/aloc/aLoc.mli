@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -28,7 +28,7 @@ val of_loc : Loc.t -> t
  *   - This also implies that locations with `None` as the source cannot be abstractified. This
  *     could be relaxed in the future if necessary.
  * *)
-val abstractify : table -> t -> t
+val abstractify : table -> reverse_table -> t -> t
 
 (* Takes an ALoc.t with a concrete underlying representation and finds
  * the existing abstract representation for it from a reverse table
@@ -36,7 +36,13 @@ val abstractify : table -> t -> t
  * Preconditions:
  * - The file key with which the table was created must match the `source` of the given location.
  * *)
-val lookup_key_if_possible : reverse_table Lazy.t -> t -> t
+type id = private t
+
+val id_none : id
+
+val id_of_aloc : reverse_table Lazy.t -> t -> id
+
+val equal_id : id -> id -> bool
 
 (* Converts an ALoc.t back to a Loc.t, looking up the underlying location in the given table if
  * necessary. We will have to look up tables in the shared heap at some point, so making it lazy

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -22,9 +22,11 @@ class abstractifier filename =
 
     val table = ALoc.make_table filename
 
+    val rev_table = ALoc.make_empty_reverse_table ()
+
     method get_table = table
 
-    method abstractify aloc = ALoc.abstractify table aloc
+    method abstractify aloc = ALoc.abstractify table rev_table aloc
 
     method on_loc_annot = this#abstractify
 

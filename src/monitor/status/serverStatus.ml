@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -160,8 +160,7 @@ let string_of_event = function
   | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
   | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
   | Merging_progress progress -> spf "Merging_progress %s" (string_of_progress progress)
-  | Merging_types_progress progress ->
-    spf "Merging_types_progress %s" (string_of_progress progress)
+  | Merging_types_progress progress -> spf "Merging_types_progress %s" (string_of_progress progress)
   | Checking_progress progress -> spf "Checking_progress files %s" (string_of_progress progress)
   | Canceling_progress progress -> spf "Canceling_progress %s" (string_of_progress progress)
   | Finishing_up _ -> "Finishing_up"
@@ -177,10 +176,7 @@ let string_of_typecheck_status ~use_emoji = function
   | Starting_typecheck -> spf "%sstarting up" (render_emoji ~use_emoji Sleeping_face)
   | Reading_saved_state -> spf "%sreading saved state" (render_emoji ~use_emoji Closed_book)
   | Loading_saved_state progress ->
-    spf
-      "%sloading saved state %s"
-      (render_emoji ~use_emoji Open_book)
-      (string_of_progress progress)
+    spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
   | Parsing progress ->
     spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
   | Resolving_dependencies -> spf "%sresolving dependencies" (render_emoji ~use_emoji Taco)
@@ -431,7 +427,7 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
         in
         acc
     in
-    Core_list.fold summaries ~init ~f)
+    Base.List.fold summaries ~init ~f)
 
 (* When the server is initializing it will publish statuses that say it is initializing. The
  * monitor might know that the server actually is restarting. This function turns a initializing

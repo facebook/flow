@@ -5,6 +5,7 @@
   (libraries
     flow_typing_key
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -15,6 +16,7 @@
     flow_common
     flow_common_utils
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -26,6 +28,7 @@
     flow_typing_trust
     flow_typing_type
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -35,12 +38,13 @@
   (libraries
     flow_common_utils
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
   (name flow_typing_type)
   (wrapped false)
-  (modules type)
+  (modules type source_or_generated_id)
   (libraries
     flow_common
     flow_typing_changeset
@@ -48,12 +52,13 @@
     flow_typing_polarity
     flow_typing_trust
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
   (name flow_typing)
   (wrapped false)
-  (modules (:standard \ changeset key key_map trust type scope))
+  (modules (:standard \ changeset key key_map trust type scope source_or_generated_id))
   (libraries
     flow_common
     flow_common_errors
@@ -62,7 +67,6 @@
     flow_common_tarjan
     flow_parser_utils
     flow_state_heaps_parsing_exceptions
-    flow_typing_coverage_response
     flow_typing_errors
     flow_typing_polarity
     flow_typing_ty
@@ -70,5 +74,6 @@
     worker_cancel ; hack
     xx
   )
-  (modules_without_implementation graph partition resolvable_type_job)
+  (modules_without_implementation partition resolvable_type_job)
+  (preprocess (pps ppx_let))
 )

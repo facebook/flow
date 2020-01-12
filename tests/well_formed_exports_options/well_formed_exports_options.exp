@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- a.js:4:18
 
-Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. (`signature-verification-failure`)
 
@@ -10,7 +10,7 @@ expression. (`signature-verification-failure`)
 
 Error --------------------------------------------------------------------------------------------------- dirA/a.js:4:16
 
-Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. (`signature-verification-failure`)
 
@@ -20,7 +20,7 @@ expression. (`signature-verification-failure`)
 
 Error --------------------------------------------------------------------------------------------------- dirA/b.js:4:16
 
-Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. (`signature-verification-failure`)
 

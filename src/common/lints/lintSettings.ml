@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,7 +9,7 @@ open Lints
 open Severity
 open Utils_js
 
-let ( >>= ) = Core_result.bind
+let ( >>= ) = Base.Result.( >>= )
 
 type 'a t = {
   (* The default value associated with a lint if the lint kind isn't found in the map *)
@@ -27,11 +27,12 @@ let ignored_by_all =
     Lints.DynamicExport;
     Lints.DeprecatedUtility;
     Lints.ImplicitInexactObject;
+    Lints.AmbiguousObjectType;
     Lints.UninitializedInstanceProperty;
   ]
 
 let config_default =
-  Core_list.Assoc.find default_lint_severities ~equal:( = )
+  Base.List.Assoc.find default_lint_severities ~equal:( = )
   %> Option.value ~default:(Severity.Off, None)
 
 let of_default default_value =
@@ -48,11 +49,11 @@ let set_all entries settings =
 let get_default settings = settings.default_value
 
 let get_value lint_kind settings =
-  LintMap.get lint_kind settings.explicit_values
+  LintMap.find_opt lint_kind settings.explicit_values
   |> Option.value_map ~f:fst ~default:settings.default_value
 
 let get_loc lint_kind settings =
-  LintMap.get lint_kind settings.explicit_values |> Option.value_map ~f:snd ~default:None
+  LintMap.find_opt lint_kind settings.explicit_values |> Option.value_map ~f:snd ~default:None
 
 let is_explicit lint_kind settings = LintMap.mem lint_kind settings.explicit_values
 
@@ -101,8 +102,7 @@ let of_lines base_settings =
     | [left; right] ->
       let left = left |> String.trim in
       let right = right |> String.trim in
-      parse_value label right
-      >>= fun value ->
+      parse_value label right >>= fun value ->
       begin
         match left with
         | "all" -> Ok (AllSetting (of_default value))
@@ -135,8 +135,7 @@ let of_lines base_settings =
   let rec loop acc = function
     | [] -> Ok acc
     | line :: lines ->
-      parse_line line
-      >>= fun result ->
+      parse_line line >>= fun result ->
       begin
         match result with
         | EntryList (keys, value) ->
@@ -169,10 +168,9 @@ let of_lines base_settings =
         res
     in
     (* Artificially locate the lines to detect unused lines *)
-    let located_lines = Core_list.map ~f:locate_fun lint_lines in
+    let located_lines = Base.List.map ~f:locate_fun lint_lines in
     let settings = loop base_settings located_lines in
-    settings
-    >>= fun settings ->
+    settings >>= fun settings ->
     let used_locs =
       fold
         (fun _kind (_enabled, loc) acc ->
@@ -216,12 +214,10 @@ let to_string settings =
     settings;
   Buffer.contents acc
 
-type lint_parse_error_kind =
+type lint_parse_error =
   | Invalid_setting
   | Malformed_argument
   | Naked_comment
   | Nonexistent_rule
   | Overwritten_argument
   | Redundant_argument
-
-type lint_parse_error = Loc.t * lint_parse_error_kind

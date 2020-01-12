@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -208,8 +208,7 @@ module Frontmatter = struct
         in
         let negative =
           if contains negative_regexp text then
-            Some
-              { phase = matched_group phase_regexp text; type_ = matched_group type_regexp text }
+            Some { phase = matched_group phase_regexp text; type_ = matched_group type_regexp text }
           else
             None
         in

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -10,6 +10,9 @@ type sketchy_null_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | SketchyNullEnumBool
+  | SketchyNullEnumString
+  | SketchyNullEnumNumber
 
 type sketchy_number_kind = SketchyNumberAnd
 
@@ -31,19 +34,18 @@ type lint_kind =
   | DeprecatedUtility
   | DynamicExport
   | UnsafeGettersSetters
-  | InexactSpread
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
-  | NonArraySpread
   | NoFloatingPromises
+  | AmbiguousObjectType
 
 val string_of_kind : lint_kind -> string
 
 val kinds_of_string : string -> lint_kind list option
 
-module LintMap : MyMap.S with type key = lint_kind
+module LintMap : WrappedMap.S with type key = lint_kind
 
 module LintSet : Set.S with type elt = lint_kind

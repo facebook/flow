@@ -1,11 +1,11 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-type 'a t = 'a * 'a list
+type 'a t = 'a * 'a list [@@deriving show]
 
 val to_list : 'a t -> 'a list
 
@@ -17,7 +17,7 @@ val one : 'a -> 'a t
 
 val cons : 'a -> 'a t -> 'a t
 
-val mem : 'a -> 'a t -> bool
+val mem : equal:('a -> 'a -> bool) -> 'a -> 'a t -> bool
 
 val exists : ('a -> bool) -> 'a t -> bool
 

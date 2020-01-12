@@ -17,7 +17,7 @@ export default suite(
       lspStartAndConnect(),
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/open.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -28,7 +28,7 @@ jones();
         },
       }).verifyAllLSPMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{open.js,line":2}'],
@@ -36,7 +36,7 @@ jones();
       ),
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/open.js',
           version: 2,
         },
         contentChanges: [
@@ -50,17 +50,17 @@ wilbur();
         ],
       }).verifyAllLSPMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{open.js,"line":1}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('textDocument/didClose', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
       }).verifyAllLSPMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{unexpected error}'],

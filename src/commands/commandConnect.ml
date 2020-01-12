@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,6 @@ type env = {
   tmp_dir: string;
   shm_dirs: string list option;
   shm_min_avail: int option;
-  shm_dep_table_pow: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
   log_file: string;
@@ -51,7 +50,6 @@ let start_flow_server env =
     autostop;
     shm_dirs;
     shm_min_avail;
-    shm_dep_table_pow;
     shm_hash_table_pow;
     shm_log_level;
     ignore_version;
@@ -67,7 +65,6 @@ let start_flow_server env =
   let args =
     [Path.to_string root]
     |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
-    |> arg_map "--sharedmemory-dep-table-pow" ~f:string_of_int shm_dep_table_pow
     |> arg_map "--sharedmemory-minimum-available" ~f:string_of_int shm_min_avail
     |> arg_map "--sharedmemory-log-level" ~f:string_of_int shm_log_level
     |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs

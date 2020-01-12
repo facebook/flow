@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -51,7 +51,7 @@ val update_env : Context.t -> ALoc.t -> t -> unit
 
 val promote_to_const_like : Context.t -> ALoc.t -> bool
 
-val bind_class : Context.t -> ALoc.t -> Type.Properties.id -> Type.Properties.id -> unit
+val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
 val bind_var : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 

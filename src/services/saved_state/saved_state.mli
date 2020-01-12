@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -33,7 +33,7 @@ type saved_state_data = {
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t;
+  node_modules_containers: SSet.t SMap.t;
 }
 
 type invalid_reason =

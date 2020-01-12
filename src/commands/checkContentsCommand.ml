@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,6 +27,7 @@ let spec =
         |> base_flags
         |> connect_and_json_flags
         |> json_version_flag
+        |> offset_style_flag
         |> root_flag
         |> error_flags
         |> strip_root_flag
@@ -44,6 +45,7 @@ let main
     json
     pretty
     json_version
+    offset_style
     root
     error_flags
     strip_root
@@ -64,6 +66,7 @@ let main
   in
   (* pretty implies json *)
   let json = json || Option.is_some json_version || pretty in
+  let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
   if (not option_values.quiet) && verbose <> None then
     prerr_endline "NOTE: --verbose writes to the server log file";
 
@@ -104,6 +107,7 @@ let main
       ~strip_root
       ~pretty
       ?version:json_version
+      ~offset_kind
       ~stdin_file
   in
   match response with

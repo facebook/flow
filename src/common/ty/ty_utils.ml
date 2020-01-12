@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -49,6 +49,8 @@ end
 let tvar_appears_in_type ~is_toplevel v t =
   let (Ty.RVar v) = v in
   ISet.mem v (FreeVars.of_type ~is_toplevel t)
+
+let free_vars_of_type t = FreeVars.of_type ~is_toplevel:false t
 
 module Size = struct
   exception SizeCutOff

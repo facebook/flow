@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -51,8 +51,8 @@ let set_saved_state_filename _ = ()
 
 let set_monitor_options ~file_watcher:_ = ()
 
-let set_server_options
-    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ =
+let set_server_options ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_
+    =
   ()
 
 let status_response ~num_errors:_ = ()
@@ -86,7 +86,10 @@ let recheck
     ~recheck_reasons:_
     ~modified:_
     ~deleted:_
-    ~dependent_files:_
+    ~to_merge:_
+    ~to_check:_
+    ~sig_dependent_files:_
+    ~all_dependent_files:_
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_
@@ -97,6 +100,8 @@ let recheck
     ~estimated_files_to_recheck:_
     ~estimated_files_to_init:_
     ~first_internal_error:_
+    ~slowest_file:_
+    ~num_slow_files:_
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ =
   ()
@@ -156,3 +161,7 @@ let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~inval
 let idle_heartbeat ~idle_time:_ ~profiling:_ = ()
 
 let live_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
+
+let live_non_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
+
+let live_non_parse_errors_failed ~request:_ ~data:_ ~wall_start:_ = ()

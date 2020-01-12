@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- class.js:11:1
 
-Cannot get `any.yep2` because property `yep2` is missing in `Foo` [1].
+Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in `Foo` [1].
 
    class.js:11:1
    11| (any: React$ElementRef<Class<Foo>>).yep2; // Error
@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:13:1
 
-Cannot get `any.yep1` because property `yep1` is missing in `Bar` [1].
+Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in `Bar` [1].
 
    class.js:13:1
    13| (any: React$ElementRef<Class<Bar>>).yep1; // Error
@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- intrinsic.js:6:1
 
-Cannot get `any.yep2` because property `yep2` is missing in object type [1].
+Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in object type [1].
 
    intrinsic.js:6:1
    6| (any: React$ElementRef<'foo'>).yep2; // Error
@@ -98,7 +98,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- intrinsic.js:8:1
 
-Cannot get `any.yep1` because property `yep1` is missing in object type [1].
+Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in object type [1].
 
    intrinsic.js:8:1
    8| (any: React$ElementRef<'bar'>).yep1; // Error

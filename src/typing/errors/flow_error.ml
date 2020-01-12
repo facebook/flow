@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -32,7 +32,7 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
     loc = Option.map ~f loc;
     msg = map_loc_of_error_message f msg;
     source_file;
-    trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
+    trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
   }
 
 let concretize_error lazy_table_of_aloc =
@@ -180,8 +180,8 @@ let score_of_msg msg =
      * a missing prop does not increase the likelihood that the user was close to
      * the right types. *)
     | EIncompatibleProp { use_op = Some (Frame (PropertyCompatibility _, _)); _ }
-    | EPropNotFound (_, _, Frame (PropertyCompatibility _, _))
-    | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _))) ->
+    | EPropNotFound { use_op = Frame (PropertyCompatibility _, _); _ }
+    | EStrictLookupFailed { use_op = Some (Frame (PropertyCompatibility _, _)); _ } ->
       -frame_score
     | _ -> 0
   in
@@ -232,10 +232,10 @@ let ordered_reasons ((rl, ru) as reasons) =
   else
     reasons
 
-let error_of_msg ~trace_reasons ~source_file (msg : ALoc.t Error_message.t') : ALoc.t t =
-  { loc = aloc_of_msg msg; msg; source_file; trace_reasons }
+let error_of_msg ~trace_reasons ~source_file (msg : 'loc Error_message.t') : 'loc t =
+  { loc = loc_of_msg msg; msg; source_file; trace_reasons }
 
-let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors.printable_error =
+let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
   Errors.(
     let {
       loc : Loc.t option;
@@ -266,7 +266,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       (loc_of_reason reason, desc :: extras)
     in
     let info_of_reason (r : concrete_reason) = mk_info r [] in
-    let trace_infos = Core_list.map ~f:info_of_reason trace_reasons in
+    let trace_infos = Base.List.map ~f:info_of_reason trace_reasons in
     (* Flip the lower/upper reasons of a frame_use_op. *)
     let flip_frame = function
       | ArrayElementCompatibility c ->
@@ -276,8 +276,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
       | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
       | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
-      | PropertyCompatibility c ->
-        PropertyCompatibility { c with lower = c.upper; upper = c.lower }
+      | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
       | ReactConfigCheck -> ReactConfigCheck
       | TupleElementCompatibility c ->
         TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
@@ -397,6 +396,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                   match var with
                   | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
                   | None -> [text "Cannot assign "; desc init; text " to variable"] )
+            | Op (DeleteVar { var }) -> `Root (var, None, [text "Cannot delete "; desc var])
             | Op (InitField { op; body }) ->
               `Root (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
             | Op (Cast { lower; upper }) ->
@@ -425,8 +425,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               `Root (op, Some prop, [text "Cannot call "; desc fn])
             | Frame
                 ( FunParam _,
-                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _)))
-                  as use_op ) ) ->
+                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
+                  use_op ) ) ->
               `Next use_op
             | Frame
                 ( FunParam { n; name; lower = lower'; _ },
@@ -446,12 +446,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                 ( lower,
                   None,
                   [
-                    text "Cannot call ";
-                    desc fn;
-                    text " with ";
-                    desc lower;
-                    text " bound to ";
-                    param;
+                    text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param;
                   ] )
             | Op (FunReturnStatement { value }) ->
               `Root (value, None, [text "Cannot return "; desc value])
@@ -480,6 +475,20 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                   value
               in
               `Root (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
+            | Op (UpdateProperty { prop; lhs }) ->
+              `Root (lhs, None, [text "Cannot update "; desc prop])
+            | Op (DeleteProperty { prop; lhs }) ->
+              `Root (lhs, None, [text "Cannot delete "; desc prop])
+            | Op (SwitchCheck { case_test; switch_discriminant }) ->
+              `Root
+                ( case_test,
+                  None,
+                  [
+                    text "Invalid check of ";
+                    desc case_test;
+                    text " against ";
+                    ref switch_discriminant;
+                  ] )
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; _ }, use_op) ->
@@ -641,14 +650,10 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     let mk_use_op_speculation_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) branches =
       let (root, loc, frames) = unwrap_use_ops loc use_op in
       let speculation_errors =
-        Core_list.map
-          ~f:(fun (_, (msg : Error_message.t)) ->
+        Base.List.map
+          ~f:(fun (_, (msg : Loc.t Error_message.t')) ->
             let score = score_of_msg msg in
-            let error =
-              error_of_msg ~trace_reasons:[] ~source_file msg
-              |> concretize_error lazy_table_of_aloc
-              |> make_error_printable lazy_table_of_aloc
-            in
+            let error = error_of_msg ~trace_reasons:[] ~source_file msg |> make_error_printable in
             (score, error))
           branches
       in
@@ -856,7 +861,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
      * If the use_op is a PropertyCompatibility frame then we encountered this
      * error while subtyping two objects. In this case we add a bit more
      * information to the error message. *)
-    let mk_prop_missing_error prop_loc prop lower use_op =
+    let mk_prop_missing_error prop_loc prop lower use_op suggestion =
       let (loc, lower, upper, use_op) =
         match use_op with
         (* If we are missing a property while performing property compatibility
@@ -870,11 +875,19 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       (* If we were subtyping that add to the error message so our user knows what
        * object required the missing property. *)
       let prop_message = mk_prop_message prop in
+      let suggestion =
+        match suggestion with
+        | Some suggestion -> [text " (did you mean "; code suggestion; text "?)"]
+        | None -> []
+      in
       let message =
         match upper with
         | Some upper ->
-          prop_message @ [text " is missing in "; ref lower; text " but exists in "] @ [ref upper]
-        | None -> prop_message @ [text " is missing in "; ref lower]
+          prop_message
+          @ suggestion
+          @ [text " is missing in "; ref lower; text " but exists in "]
+          @ [ref upper]
+        | None -> prop_message @ suggestion @ [text " is missing in "; ref lower]
       in
       (* Finally, create our error message. *)
       mk_use_op_error loc use_op message
@@ -926,11 +939,11 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       | IncompatibleMatchPropT (prop_loc, prop)
       | IncompatibleHasOwnPropT (prop_loc, prop)
       | IncompatibleMethodT (prop_loc, prop) ->
-        mk_prop_missing_error prop_loc prop lower use_op
+        mk_prop_missing_error prop_loc prop lower use_op None
       | IncompatibleGetElemT prop_loc
       | IncompatibleSetElemT prop_loc
       | IncompatibleCallElemT prop_loc ->
-        mk_prop_missing_error prop_loc None lower use_op
+        mk_prop_missing_error prop_loc None lower use_op None
       | IncompatibleGetStaticsT -> nope "is not an instance type"
       (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
@@ -979,28 +992,38 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
         @ [text (actual ^ " in "); ref upper] )
     in
     match (loc, friendly_message_of_msg msg) with
-    | (Some loc, Error_message.Normal msg) -> mk_error ~trace_infos ~kind loc msg
-    | (None, UseOp (loc, text, use_op)) -> mk_use_op_error loc use_op text
-    | (None, PropMissing (prop_loc, prop, lower, use_op)) ->
-      mk_prop_missing_error prop_loc prop lower use_op
-    | (None, PropPolarityMismatch (x, p1, p2, use_op)) ->
-      mk_prop_polarity_mismatch_error x p1 p2 use_op
-    | (None, IncompatibleUse (loc, use_kind, lower, upper, use_op)) ->
-      mk_incompatible_use_error loc use_kind lower upper use_op
-    | (None, Incompatible (lower, upper, use_op)) -> mk_incompatible_error lower upper use_op
-    | (None, IncompatibleTrust (lower, upper, use_op)) ->
-      mk_trust_incompatible_error lower upper use_op
-    | (None, Error_message.Speculation (loc, use_op, branches)) ->
+    | (Some loc, Error_message.Normal { features }) -> mk_error ~trace_infos ~kind loc features
+    | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
+    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
+      mk_prop_missing_error loc prop reason_obj use_op suggestion
+    | ( None,
+        PropPolarityMismatch
+          { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op } ) ->
+      mk_prop_polarity_mismatch_error
+        prop
+        (reason_lower, polarity_lower)
+        (reason_upper, polarity_upper)
+        use_op
+    | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
+      mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
+    | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
+      mk_incompatible_error reason_lower reason_upper use_op
+    | (None, IncompatibleTrust { reason_lower; reason_upper; use_op }) ->
+      mk_trust_incompatible_error reason_lower reason_upper use_op
+    | (None, Error_message.Speculation { loc; use_op; branches }) ->
       mk_use_op_speculation_error loc use_op branches
     | (None, Error_message.Normal _)
     | (Some _, _) ->
       raise (ImproperlyFormattedError msg))
 
-let make_errors_printable lazy_table_of_aloc set =
-  Errors.(
-    ErrorSet.fold
-      ( concretize_error lazy_table_of_aloc
-      %> make_error_printable lazy_table_of_aloc
-      %> ConcreteLocPrintableErrorSet.add )
-      set
-      ConcreteLocPrintableErrorSet.empty)
+let concretize_errors lazy_table_of_aloc set =
+  ErrorSet.fold
+    (concretize_error lazy_table_of_aloc %> ConcreteErrorSet.add)
+    set
+    ConcreteErrorSet.empty
+
+let make_errors_printable set =
+  ConcreteErrorSet.fold
+    (make_error_printable %> Errors.ConcreteLocPrintableErrorSet.add)
+    set
+    Errors.ConcreteLocPrintableErrorSet.empty

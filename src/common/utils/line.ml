@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -55,7 +55,7 @@ let split_nth s n =
     let j =
       match nth_line_opt 1 s len i with
       | Some j -> j
-      | None -> len - 1
+      | None -> len
     in
     Some String.(sub s 0 i, sub s i (j - i), sub s j (len - j))
   | None -> None
@@ -64,3 +64,25 @@ let transform_nth s n f =
   match split_nth s n with
   | Some (pre, s, post) -> pre ^ f s ^ post
   | None -> s
+
+let position_of_offset =
+  let rec iter acc str max i =
+    if i = max then
+      acc
+    else
+      let (line, column) = acc in
+      let eol = length_of_line_terminator str max i in
+      let (i, line, column) =
+        if eol > 0 then
+          (i + eol, line + 1, 0)
+        else
+          (i + 1, line, column + 1)
+      in
+      iter (line, column) str max i
+  in
+  fun str offset ->
+    let len = String.length str in
+    if offset >= len then
+      raise Not_found
+    else
+      iter (1, 0) str offset 0

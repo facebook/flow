@@ -69,8 +69,8 @@ Cannot cast `o.toString()` to boolean because string [1] is incompatible with bo
           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:84:17
-   84|     toString(): string;
+   <BUILTINS>/core.js:85:17
+   85|     toString(): string;
                        ^^^^^^ [1]
    dictionary.js:94:18
    94|   (o.toString(): boolean); // error: string ~> boolean

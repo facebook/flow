@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -200,12 +200,12 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams = Type.type_parameter_declaration env in
+                    let tparams = Type.type_params env in
                     let params =
                       let (yield, await) =
                         match (async, generator) with
-                        | (true, true) -> (true, true)
-                        (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                        | (true, true) ->
+                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
                         | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
                         | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
                         | (false, false) -> (false, false)
@@ -249,9 +249,7 @@ module Object
                   ~start_loc:(fst id)
                   (fun env ->
                     Expect.token env T_ASSIGN;
-                    let left =
-                      Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id)
-                    in
+                    let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
                     let right = Parse.assignment env in
                     Ast.Expression.Assignment
                       { Ast.Expression.Assignment.operator = None; left; right })
@@ -259,8 +257,7 @@ module Object
               in
               let errs =
                 {
-                  if_expr =
-                    [(assignment_loc, Parse_error.Unexpected (Token.quote_token_value "="))];
+                  if_expr = [(assignment_loc, Parse_error.Unexpected (Token.quote_token_value "="))];
                   if_patt = [];
                 }
               in
@@ -319,19 +316,14 @@ module Object
             match Peek.ith_token ~i:1 env with
             | T_ASSIGN
             (* { async = true } (destructuring) *)
-            
             | T_COLON
             (* { async: true } *)
-            
             | T_LESS_THAN
             (* { async<T>() {} } *)
-            
             | T_LPAREN
             (* { async() {} } *)
-            
             | T_COMMA
             (* { async, other, shorthand } *)
-            
             | T_RCURLY (* { async } *) ->
               false
             | _ -> Declaration.async env
@@ -375,10 +367,7 @@ module Object
         let errs =
           match rest_trailing_comma with
           | Some loc ->
-            {
-              errs with
-              if_patt = (loc, Parse_error.TrailingCommaAfterRestElement) :: errs.if_patt;
-            }
+            { errs with if_patt = (loc, Parse_error.TrailingCommaAfterRestElement) :: errs.if_patt }
           | None -> errs
         in
         (List.rev props, Pattern_cover.rev_errors errs)
@@ -414,51 +403,11 @@ module Object
       in
       (loc, expr, errs)
 
-  let rec class_implements env acc =
-    let implement =
-      with_loc
-        (fun env ->
-          let id = Type.type_identifier env in
-          let targs = Type.type_parameter_instantiation env in
-          { Ast.Class.Implements.id; targs })
-        env
-    in
-    let acc = implement :: acc in
-    match Peek.token env with
-    | T_COMMA ->
-      Expect.token env T_COMMA;
-      class_implements env acc
-    | _ -> List.rev acc
-
-  let class_extends =
-    with_loc (fun env ->
-        let expr = Expression.left_hand_side (env |> with_allow_yield false) in
-        let targs = Type.type_parameter_instantiation env in
-        { Class.Extends.expr; targs })
-
-  let rec _class env =
-    let extends =
-      if Expect.maybe env T_EXTENDS then
-        Some (class_extends env)
-      else
-        None
-    in
-    let implements =
-      if Peek.token env = T_IMPLEMENTS then (
-        if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
-        Expect.token env T_IMPLEMENTS;
-        class_implements env []
-      ) else
-        []
-    in
-    let body = class_body env in
-    (body, extends, implements)
-
-  and check_property_name env loc name static =
+  let check_property_name env loc name static =
     if String.equal name "constructor" || (String.equal name "prototype" && static) then
       error_at env (loc, Parse_error.InvalidFieldName { name; static; private_ = false })
 
-  and check_private_names env seen_names private_name (kind : [ `Field | `Getter | `Setter ]) =
+  let check_private_names env seen_names private_name (kind : [ `Field | `Getter | `Setter ]) =
     let (loc, (_, { Identifier.name; comments = _ })) = private_name in
     if String.equal name "constructor" then
       let () =
@@ -479,91 +428,49 @@ module Object
         SMap.add name `Field seen_names
       | None -> SMap.add name kind seen_names
 
-  and class_body =
-    let rec elements env seen_constructor private_names acc =
-      match Peek.token env with
-      | T_EOF
-      | T_RCURLY ->
-        List.rev acc
-      | T_SEMICOLON ->
-        (* Skip empty elements *)
-        Expect.token env T_SEMICOLON;
-        elements env seen_constructor private_names acc
-      | _ ->
-        let element = class_element env in
-        let (seen_constructor', private_names') =
-          match element with
-          | Ast.Class.Body.Method (loc, m) ->
-            Ast.Class.Method.(
-              begin
-                match m.kind with
-                | Constructor ->
-                  if m.static then
-                    (seen_constructor, private_names)
-                  else (
-                    if seen_constructor then error_at env (loc, Parse_error.DuplicateConstructor);
-                    (true, private_names)
-                  )
-                | Method ->
-                  ( seen_constructor,
-                    begin
-                      match m.key with
-                      | Ast.Expression.Object.Property.PrivateName _ ->
-                        error_at env (loc, Parse_error.PrivateMethod);
-                        private_names
-                      | _ -> private_names
-                    end )
-                | Get ->
-                  let private_names =
-                    match m.key with
-                    | Ast.Expression.Object.Property.PrivateName name ->
-                      check_private_names env private_names name `Getter
-                    | _ -> private_names
-                  in
-                  (seen_constructor, private_names)
-                | Set ->
-                  let private_names =
-                    match m.key with
-                    | Ast.Expression.Object.Property.PrivateName name ->
-                      check_private_names env private_names name `Setter
-                    | _ -> private_names
-                  in
-                  (seen_constructor, private_names)
-              end)
-          | Ast.Class.Body.Property (_, { Ast.Class.Property.key; static; _ }) ->
-            Ast.Expression.Object.Property.(
-              begin
-                match key with
-                | Identifier (loc, { Identifier.name; comments = _ })
-                | Literal (loc, { Literal.value = Literal.String name; _ }) ->
-                  check_property_name env loc name static
-                | Literal _
-                | Computed _ ->
-                  ()
-                | PrivateName _ ->
-                  failwith "unexpected PrivateName in Property, expected a PrivateField"
-              end;
-              (seen_constructor, private_names))
-          | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.key; _ }) ->
-            let private_names = check_private_names env private_names key `Field in
-            (seen_constructor, private_names)
-        in
-        elements env seen_constructor' private_names' (element :: acc)
-    in
-    fun env ->
+  let rec class_implements env acc =
+    let implement =
       with_loc
         (fun env ->
-          Expect.token env T_LCURLY;
-          enter_class env;
-          let body = elements env false SMap.empty [] in
-          exit_class env;
-          Expect.token env T_RCURLY;
-          { Ast.Class.Body.body })
+          let id = Type.type_identifier env in
+          let targs = Type.type_args env in
+          { Ast.Class.Implements.id; targs })
         env
+    in
+    let acc = implement :: acc in
+    match Peek.token env with
+    | T_COMMA ->
+      Expect.token env T_COMMA;
+      class_implements env acc
+    | _ -> List.rev acc
+
+  let class_extends =
+    with_loc (fun env ->
+        let expr = Expression.left_hand_side (env |> with_allow_yield false) in
+        let targs = Type.type_args env in
+        { Class.Extends.expr; targs })
+
+  (* https://tc39.es/ecma262/#prod-ClassHeritage *)
+  let class_heritage env =
+    let extends =
+      if Expect.maybe env T_EXTENDS then
+        Some (class_extends env)
+      else
+        None
+    in
+    let implements =
+      if Peek.token env = T_IMPLEMENTS then (
+        if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
+        Expect.token env T_IMPLEMENTS;
+        class_implements env []
+      ) else
+        []
+    in
+    (extends, implements)
 
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
-  and class_element =
+  let class_element =
     let get env start_loc decorators static =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
@@ -650,12 +557,12 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams = Type.type_parameter_declaration env in
+                    let tparams = Type.type_params env in
                     let params =
                       let (yield, await) =
                         match (async, generator) with
-                        | (true, true) -> (true, true)
-                        (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                        | (true, true) ->
+                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
                         | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
                         | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
                         | (false, false) -> (false, false)
@@ -744,44 +651,117 @@ module Object
         let (_, key) = key ~class_body:true env in
         init env start_loc decorators key async generator static variance
 
+  let class_body =
+    let rec elements env seen_constructor private_names acc =
+      match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        List.rev acc
+      | T_SEMICOLON ->
+        (* Skip empty elements *)
+        Expect.token env T_SEMICOLON;
+        elements env seen_constructor private_names acc
+      | _ ->
+        let element = class_element env in
+        let (seen_constructor', private_names') =
+          match element with
+          | Ast.Class.Body.Method (loc, m) ->
+            Ast.Class.Method.(
+              begin
+                match m.kind with
+                | Constructor ->
+                  if m.static then
+                    (seen_constructor, private_names)
+                  else (
+                    if seen_constructor then error_at env (loc, Parse_error.DuplicateConstructor);
+                    (true, private_names)
+                  )
+                | Method ->
+                  ( seen_constructor,
+                    begin
+                      match m.key with
+                      | Ast.Expression.Object.Property.PrivateName _ ->
+                        error_at env (loc, Parse_error.PrivateMethod);
+                        private_names
+                      | _ -> private_names
+                    end )
+                | Get ->
+                  let private_names =
+                    match m.key with
+                    | Ast.Expression.Object.Property.PrivateName name ->
+                      check_private_names env private_names name `Getter
+                    | _ -> private_names
+                  in
+                  (seen_constructor, private_names)
+                | Set ->
+                  let private_names =
+                    match m.key with
+                    | Ast.Expression.Object.Property.PrivateName name ->
+                      check_private_names env private_names name `Setter
+                    | _ -> private_names
+                  in
+                  (seen_constructor, private_names)
+              end)
+          | Ast.Class.Body.Property (_, { Ast.Class.Property.key; static; _ }) ->
+            Ast.Expression.Object.Property.(
+              begin
+                match key with
+                | Identifier (loc, { Identifier.name; comments = _ })
+                | Literal (loc, { Literal.value = Literal.String name; _ }) ->
+                  check_property_name env loc name static
+                | Literal _
+                | Computed _ ->
+                  ()
+                | PrivateName _ ->
+                  failwith "unexpected PrivateName in Property, expected a PrivateField"
+              end;
+              (seen_constructor, private_names))
+          | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.key; _ }) ->
+            let private_names = check_private_names env private_names key `Field in
+            (seen_constructor, private_names)
+        in
+        elements env seen_constructor' private_names' (element :: acc)
+    in
+    fun env ->
+      with_loc
+        (fun env ->
+          if Expect.maybe env T_LCURLY then (
+            enter_class env;
+            let body = elements env false SMap.empty [] in
+            exit_class env;
+            Expect.token env T_RCURLY;
+            { Ast.Class.Body.body }
+          ) else (
+            Expect.error env T_LCURLY;
+            { Ast.Class.Body.body = [] }
+          ))
+        env
+
+  let _class ?(decorators = []) env ~optional_id =
+    (* 10.2.1 says all parts of a class definition are strict *)
+    let env = env |> with_strict true in
+    let decorators = decorators @ decorator_list env in
+    let leading = Peek.comments env in
+    Expect.token env T_CLASS;
+    let id =
+      let tmp_env = env |> with_no_let true in
+      match (optional_id, Peek.token tmp_env) with
+      | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
+      | _ -> Some (Parse.identifier tmp_env)
+    in
+    let tparams = Type.type_params env in
+    let (extends, implements) = class_heritage env in
+    let body = class_body env in
+    let trailing = Peek.comments env in
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments }
+
   let class_declaration env decorators =
     with_loc
       (fun env ->
-        (* 10.2.1 says all parts of a class definition are strict *)
-        let env = env |> with_strict true in
-        let decorators = decorators @ decorator_list env in
-        Expect.token env T_CLASS;
-        let tmp_env = env |> with_no_let true in
-        let id =
-          match (in_export env, Peek.is_identifier tmp_env) with
-          | (true, false) -> None
-          | _ -> Some (Parse.identifier tmp_env)
-        in
-        let tparams = Type.type_parameter_declaration env in
-        let (body, extends, implements) = _class env in
-        Ast.Statement.ClassDeclaration
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators })
+        let optional_id = in_export env in
+        Ast.Statement.ClassDeclaration (_class env ~decorators ~optional_id))
       env
 
-  let class_expression =
-    with_loc (fun env ->
-        (* 10.2.1 says all parts of a class expression are strict *)
-        let env = env |> with_strict true in
-        let decorators = decorator_list env in
-        Expect.token env T_CLASS;
-        let (id, tparams) =
-          match Peek.token env with
-          | T_EXTENDS
-          | T_IMPLEMENTS
-          | T_LESS_THAN
-          | T_LCURLY ->
-            (None, None)
-          | _ ->
-            let id = Some (Parse.identifier env) in
-            let tparams = Type.type_parameter_declaration env in
-            (id, tparams)
-        in
-        let (body, extends, implements) = _class env in
-        Ast.Expression.Class
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators })
+  let class_expression = with_loc (fun env -> Ast.Expression.Class (_class env ~optional_id:true))
 end

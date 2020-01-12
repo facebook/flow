@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,6 +14,11 @@ module type ASSERT_GROUND = sig
   val enforce_strict : Context.t -> Type.t -> should_munge_underscores:bool -> unit
 end
 
+module type CHECK_POLARITY = sig
+  val check_polarity :
+    Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
+end
+
 module type TRUST_CHECKING = sig
   val trust_flow_to_use_t : Context.t -> Trace.t -> Type.t -> Type.use_t -> unit
 
@@ -21,29 +26,27 @@ module type TRUST_CHECKING = sig
 
   val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 
-  val strengthen_trust :
-    Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
+  val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
 end
 
 module type S = sig
   val add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit
 
-  val check_polarity : Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
-
-  val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> int -> Type.t
+  val eval_evalt :
+    Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
     Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
-
-  val filter_maybe : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
   val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
+  val flow_opt : Context.t -> ?trace:Trace.t -> Type.t * Type.use_t -> unit
+
   val flow_p :
     Context.t ->
-    ?use_op:use_op ->
+    use_op:use_op ->
     reason ->
     reason ->
     Type.propref ->
@@ -56,11 +59,9 @@ module type S = sig
 
   val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 
-  val get_builtin_type :
-    Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
+  val get_builtin_type : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 
-  val get_builtin_typeapp :
-    Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
+  val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
   val is_munged_prop_name : Context.t -> name -> bool
 
@@ -83,7 +84,7 @@ module type S = sig
     reason ->
     Type.t ->
     Type.destructor ->
-    int ->
+    Type.Eval.id ->
     bool * Type.t
 
   val reposition :
@@ -97,7 +98,7 @@ module type S = sig
 
   val rec_flow : Context.t -> Trace.t -> Type.t * Type.use_t -> unit
 
-  val rec_flow_t : Context.t -> Trace.t -> ?use_op:Type.use_op -> Type.t * Type.t -> unit
+  val rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
   val rec_unify :
     Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
@@ -119,17 +120,16 @@ module type S = sig
   val unify : Context.t -> Type.t -> Type.t -> unit
 
   val unify_opt :
-    Context.t ->
-    ?trace:Trace.t ->
-    ?use_op:Type.use_op ->
-    ?unify_any:bool ->
-    Type.t ->
-    Type.t ->
-    unit
+    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
 
   val union_of_ts : reason -> Type.t list -> Type.t
 
+  val widen_obj_type :
+    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+
   include ASSERT_GROUND
+
+  include CHECK_POLARITY
 
   include TRUST_CHECKING
 end

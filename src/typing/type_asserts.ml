@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -44,6 +44,7 @@ let check_type_visitor wrap =
         | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
         | Void
         | Null
+        | Symbol
         | Num _
         | Str _
         | Bool _
@@ -54,6 +55,7 @@ let check_type_visitor wrap =
         | Generic _
         | ClassDecl _
         | InterfaceDecl _
+        | EnumDecl _
         | Utility _
         | Module _
         | InlineInterface _ ->
@@ -61,19 +63,7 @@ let check_type_visitor wrap =
     end)
 
 let detect_invalid_calls ~full_cx file_sigs cxs tasts =
-  let options =
-    {
-      Ty_normalizer_env.fall_through_merged = false;
-      expand_internal_types = false;
-      expand_type_aliases = true;
-      flag_shadowed_type_params = false;
-      evaluate_type_destructors = true;
-      preserve_inferred_literal_types = false;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-    }
-  in
+  let options = Ty_normalizer_env.default_options in
   let check_valid_call ~genv (call_loc : ALoc.t) (_, targ_loc) =
     let typed_ast = genv.Ty_normalizer_env.typed_ast in
     let ty_opt = Typed_ast_utils.find_exact_match_annotation typed_ast targ_loc in
@@ -91,10 +81,10 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
           let { Type.TypeScheme.type_ = t; _ } = scheme in
           wrap (Type.desc_of_t t))
   in
-  Core_list.iter2_exn
+  Base.List.iter2_exn
     ~f:(fun cx typed_ast ->
       let file = Context.file cx in
-      let file_sig = FilenameMap.find_unsafe file file_sigs in
+      let file_sig = FilenameMap.find file file_sigs in
       let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
       Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts_map cx))
     cxs

@@ -4,7 +4,7 @@
         {
             "range": [
                 0,
-                8
+                4
             ],
             "loc": {
                 "start": {
@@ -20,7 +20,7 @@
             "expression": {
                 "range": [
                     0,
-                    8
+                    4
                 ],
                 "loc": {
                     "start": {
@@ -37,7 +37,7 @@
                 "left": {
                     "range": [
                         0,
-                        3
+                        1
                     ],
                     "loc": {
                         "start": {
@@ -54,8 +54,8 @@
                 },
                 "right": {
                     "range": [
-                        5,
-                        8
+                        3,
+                        4
                     ],
                     "loc": {
                         "start": {
@@ -132,7 +132,7 @@
     ],
     "range": [
         0,
-        8
+        4
     ],
     "loc": {
         "start": {

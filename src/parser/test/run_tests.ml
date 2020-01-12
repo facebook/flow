@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -43,11 +43,12 @@ end = struct
     Sys.os_type <> "Win32" && Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
 
   let print to_print =
-    if should_color then
+    ( if should_color then
       C.cprint to_print
     else
-      let strings = Core_list.map ~f:snd to_print in
-      List.iter (Printf.printf "%s") strings
+      let strings = Base.List.map ~f:snd to_print in
+      List.iter (Printf.printf "%s") strings );
+    flush stdout
 
   type case_expectation =
     | Module of string
@@ -101,13 +102,12 @@ end = struct
   let find_case name map = (try SMap.find name map with Not_found -> empty_case)
 
   let parse_options content =
-    Core_result.(
+    Base.Result.(
       let get_bool k v =
         try return (Hh_json.get_bool_exn v)
         with Assert_failure _ -> failf "invalid value for %S, expected bool" k
       in
-      return (Hh_json.json_of_string content)
-      >>= fun json ->
+      return (Hh_json.json_of_string content) >>= fun json ->
       begin
         match json with
         | Hh_json.JSON_Object props -> return props
@@ -116,39 +116,33 @@ end = struct
       >>= fun props ->
       List.fold_left
         (fun opts (k, v) ->
-          opts
-          >>= fun (test_opts, opts) ->
+          opts >>= fun (test_opts, opts) ->
           match k with
           | "enums" ->
-            get_bool k v >>= (fun v -> return (test_opts, { opts with Parser_env.enums = v }))
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.enums = v })
           | "esproposal_class_instance_fields" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_class_instance_fields = v })
           | "esproposal_class_static_fields" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_class_static_fields = v })
           | "esproposal_decorators" ->
-            get_bool k v
-            >>= (fun v -> return (test_opts, { opts with Parser_env.esproposal_decorators = v }))
+            get_bool k v >>= fun v ->
+            return (test_opts, { opts with Parser_env.esproposal_decorators = v })
           | "esproposal_export_star_as" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_export_star_as = v })
           | "esproposal_optional_chaining" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_optional_chaining = v })
           | "esproposal_nullish_coalescing" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_nullish_coalescing = v })
           | "types" ->
-            get_bool k v >>= (fun v -> return (test_opts, { opts with Parser_env.types = v }))
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.types = v })
           | "use_strict" ->
-            get_bool k v >>= (fun v -> return (test_opts, { opts with Parser_env.use_strict = v }))
-          | "intern_comments" -> get_bool k v >>= (fun v -> return ({ intern_comments = v }, opts))
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.use_strict = v })
+          | "intern_comments" -> get_bool k v >>= fun v -> return ({ intern_comments = v }, opts)
           | _ -> failf "unknown option %S" k)
         (return ({ intern_comments = false }, Parser_env.default_parse_options))
         props)
@@ -193,7 +187,7 @@ end = struct
                     | "failure" -> { case with expected = Some (Failure content) }
                     | "options" ->
                       (* TODO: propagate errors better *)
-                      let options = Core_result.ok_or_failwith (parse_options content) in
+                      let options = Base.Result.ok_or_failwith (parse_options content) in
                       { case with options = (fst options, Some (snd options)) }
                     | _ -> { case with skipped = file :: case.skipped }
                   in
@@ -230,7 +224,6 @@ end = struct
     | (_, None, Some "range")
     | (_, None, Some "source")
     (* Esprima doesn't support type annotations *)
-    
     | (_, None, Some "typeAnnotation")
     | (_, None, Some "typeParameters")
     | (_, None, Some "superTypeParameters")
@@ -242,19 +235,14 @@ end = struct
     | (_, None, Some "exportKind")
     (* Esprima doesn't support decorators *)
     (* https://github.com/estree/estree/blob/master/experimental/decorators.md *)
-    
     | (_, None, Some "decorators")
     (* Esprima doesn't support async functions *)
-    
     | (_, None, Some "async")
     (* TODO: Flow should include this *)
-    
     | ([], Some "sourceType", None)
     (* TODO: enable this in tests *)
-    
     | ([], Some "tokens", None)
     (* Flow doesn't support this *)
-    
     | (_, Some "leadingComments", None)
     | (_, Some "trailingComments", None)
     | (_, Some "innerComments", None) ->
@@ -345,8 +333,8 @@ end = struct
         else
           errors
       | ( JSON_Number actual,
-          (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ })
-        ) ->
+          (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ }) )
+        ->
         if actual <> expected then
           let path = string_of_path path in
           spf "%s: Expected %s, got %s." path expected actual :: errors
@@ -370,15 +358,14 @@ end = struct
         else
           errors
       | ( JSON_String actual,
-          (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ })
-        ) ->
+          (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ }) )
+        ->
         if not (string_value_matches expected actual) then
           let path = string_of_path path in
           spf "%s: Expected %S, got %S." path expected actual :: errors
         else
           errors
-      | (JSON_Null, (_, Literal { Ast.Literal.value = Ast.Literal.Null; raw = _; comments = _ }))
-        ->
+      | (JSON_Null, (_, Literal { Ast.Literal.value = Ast.Literal.Null; raw = _; comments = _ })) ->
         errors
       | (_, _) ->
         let path = string_of_path path in
@@ -523,7 +510,7 @@ end = struct
 
   let parse_file (test_options, parse_options) content =
     let (ast, errors) = Parser_flow.program_file ~fail:false ~parse_options content None in
-    let offset_table = Some (Offset_utils.make content) in
+    let offset_table = Some (Offset_utils.make ~kind:Offset_utils.JavaScript content) in
     let module Translate =
       Estree_translator.Translate
         (Json_of_estree)
@@ -565,17 +552,24 @@ end = struct
         match case.expected with
         | Some (Module _) -> (* TODO *) Case_skipped None
         | Some (Tree tree) ->
-          let (expected, json_errors) = Parser_flow.json_file ~fail:false tree None in
-          if json_errors <> [] then
-            let (loc, err) = List.hd json_errors in
+          let parse_result =
+            try
+              let (expected, json_errors) = Parser_flow.json_file ~fail:false tree None in
+              (Some expected, json_errors)
+            with Parse_error.Error errs -> (None, errs)
+          in
+          (match parse_result with
+          | (_, (loc, err) :: _) ->
             let str =
               Printf.sprintf
-                "Unable to parse .tree.json: %s: %s"
+                "Unable to parse .tree.json: %s: %s\n\nContents: %s"
                 (Loc.debug_to_string loc)
                 (Parse_error.PP.error err)
+                tree
             in
             Case_error [str]
-          else
+          | (None, []) -> Case_error ["Unable to parse .tree.json: unknown error"]
+          | (Some expected, []) ->
             let expected =
               match diff with
               | Some str ->
@@ -594,7 +588,7 @@ end = struct
               | ([], Some _) -> Case_error ["Skipped test passes"]
               | (_, Some reason) -> Case_skipped (Some reason)
               | (_, None) -> Case_error errors
-            end
+            end)
         | Some (Tokens _) -> (* TODO *) Case_skipped None
         | Some (Failure _) -> (* TODO *) Case_skipped None
         | None -> Case_error ["Nothing to do"]
@@ -704,12 +698,23 @@ end = struct
                     print [(C.Bold C.White, spf "=== %s ===\n" test_name)];
                   print
                     [
-                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL");
-                      (C.Normal C.Default, spf ": %s\n" key);
+                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL"); (C.Normal C.Default, spf ": %s\n" key);
                     ];
                   List.iter (fun err -> print [(C.Normal C.Default, spf "    %s\n" err)]) errs;
                   flush stdout;
                   if record then record_tree path test_name key case;
+                  ({ results with failed = results.failed + 1 }, true)
+                | exception exn ->
+                  let exn = Exception.wrap exn in
+                  if quiet && not shown_header then
+                    print [(C.Bold C.White, spf "=== %s ===\n" test_name)];
+                  print
+                    [
+                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL");
+                      (C.Normal C.Default, spf ": %s\n" key);
+                      (C.Normal C.Default, spf "    %s\n" (Exception.to_string exn));
+                    ];
+                  flush stdout;
                   ({ results with failed = results.failed + 1 }, true))
               cases
               ({ ok = 0; skipped = 0; failed = 0 }, false)

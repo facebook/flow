@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,7 @@ let rev_filter_map f lst =
   in
   loop lst []
 
-let filter_map f lst = rev_filter_map f lst |> Core_list.rev
+let filter_map f lst = rev_filter_map f lst |> Base.List.rev
 
 (** like List.fold_left, but f returns an option and so do we.
     f acc v = Some acc proceeds as usual; None stops the fold.
@@ -93,7 +93,7 @@ let rec first_some_map f = function
     is used to generated a final element e.g. "shown 5/200" *)
 let first_upto_n n f lst =
   let (first, total) =
-    Core_list.fold lst ~init:([], 0) ~f:(fun (first, total) s ->
+    Base.List.fold lst ~init:([], 0) ~f:(fun (first, total) s ->
         let first =
           if total < n then
             s :: first
@@ -110,27 +110,27 @@ let first_upto_n n f lst =
       | None -> first
       | Some e -> e :: first
   in
-  Core_list.rev r
+  Base.List.rev r
 
 (* truncate a list to first 0 < n <= len items *)
-let first_n n lst = fold_left_for n (Fn.flip Core_list.cons) [] lst |> Core_list.rev
+let first_n n lst = fold_left_for n (Base.Fn.flip Base.List.cons) [] lst |> Base.List.rev
 
 (* truncate a list to last 0 < n <= len items *)
-let last_n n lst = Core_list.rev lst |> fold_left_for n (Fn.flip Core_list.cons) []
+let last_n n lst = Base.List.rev lst |> fold_left_for n (Base.Fn.flip Base.List.cons) []
 
 (* split a list into a list of lists, each of length n except the last whose length is in [0, n) *)
 let bucket_n n lst =
   let (_, curr, all) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (i, curr, all) result ->
         if i = n then
-          (1, [result], Core_list.rev curr :: all)
+          (1, [result], Base.List.rev curr :: all)
         else
           (i + 1, result :: curr, all))
       ~init:(0, [], [])
       lst
   in
-  Core_list.rev curr :: all |> Core_list.rev
+  Base.List.rev curr :: all |> Base.List.rev
 
 (* make a list of n copies of a given value *)
 let copy_n n v =
@@ -157,7 +157,7 @@ let rec phys_uniq = function
 (** performs a map, but returns the original list if there is no change **)
 let ident_map f lst =
   let (rev_lst, changed) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (lst_, changed) item ->
         let item_ = f item in
         (item_ :: lst_, changed || item_ != item))
@@ -165,13 +165,13 @@ let ident_map f lst =
       lst
   in
   if changed then
-    Core_list.rev rev_lst
+    Base.List.rev rev_lst
   else
     lst
 
 let ident_mapi f lst =
   let (_, rev_lst, changed) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (index, lst_, changed) item ->
         let item_ = f index item in
         (index + 1, item_ :: lst_, changed || item_ != item))
@@ -179,30 +179,30 @@ let ident_mapi f lst =
       lst
   in
   if changed then
-    Core_list.rev rev_lst
+    Base.List.rev rev_lst
   else
     lst
 
 let ident_map_multiple f lst =
   let (rev_lst, changed) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (lst_, changed) item ->
         match f item with
         | [] -> (lst_, true)
         | [item_] -> (item_ :: lst_, changed || item != item_)
-        | items_ -> (Core_list.rev_append items_ lst_, true))
+        | items_ -> (Base.List.rev_append items_ lst_, true))
       ~init:([], false)
       lst
   in
   if changed then
-    Core_list.rev rev_lst
+    Base.List.rev rev_lst
   else
     lst
 
 (** performs a filter, but returns the original list if there is no change **)
 let ident_filter f lst =
   let (rev_lst, changed) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (lst', changed) item ->
         if f item then
           (item :: lst', changed)
@@ -212,7 +212,7 @@ let ident_filter f lst =
       lst
   in
   if changed then
-    Core_list.rev rev_lst
+    Base.List.rev rev_lst
   else
     lst
 
@@ -227,7 +227,7 @@ let rec split3 = function
     let (rx, ry, rz) = split3 l in
     (x :: rx, y :: ry, z :: rz)
 
-let zipi xs ys = Core_list.zip_exn xs ys |> Core_list.mapi ~f:(fun i (x, y) -> (i, x, y))
+let zipi xs ys = Base.List.zip_exn xs ys |> Base.List.mapi ~f:(fun i (x, y) -> (i, x, y))
 
 let range_with f a b =
   if a > b then
@@ -256,25 +256,25 @@ let rec cat_maybes = function
   *)
 let fold_map f acc xs =
   let (acc', ys) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (a, ys) x ->
         let (a', y) = f a x in
         (a', y :: ys))
       ~init:(acc, [])
       xs
   in
-  (acc', Core_list.rev ys)
+  (acc', Base.List.rev ys)
 
 let concat_fold f acc items =
   let (acc, lists) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun (acc, lists) item ->
         let (acc, list) = f acc item in
         (acc, list :: lists))
       ~init:(acc, [])
       items
   in
-  (acc, Core_list.concat lists)
+  (acc, Base.List.concat lists)
 
 let last_opt l =
   let rec last l v =
@@ -282,14 +282,14 @@ let last_opt l =
     | [] -> v
     | x :: xs -> last xs x
   in
-  Core_list.nth l 0 |> Option.map ~f:(last l)
+  Base.List.nth l 0 |> Base.Option.map ~f:(last l)
 
 let is_empty = function
   | [] -> true
   | _ -> false
 
 (* Stringify a list given a separator and a printer for the element type *)
-let to_string separator printer list = String.concat separator @@ Core_list.map ~f:printer list
+let to_string separator printer list = String.concat separator @@ Base.List.map ~f:printer list
 
 (* Stringify an association list given a separator, a printer for the key type, a key/value
    separator, and a printer for the value type *)
@@ -299,10 +299,10 @@ let assoc_to_string separator key_printer key_value_separator value_printer list
     (fun (k, v) -> Printf.sprintf "%s%s%s" (key_printer k) key_value_separator (value_printer v))
     list
 
-(* Dedups a list in O(n) time and space. Unlike Core_list.dedup, this
+(* Dedups a list in O(n) time and space. Unlike Base.List.dedup, this
    preserves order. Core's implementation is also O(n log n) *)
 let dedup l =
-  let tbl = Core_list.length l |> Hashtbl.create in
+  let tbl = Base.List.length l |> Hashtbl.create in
   let f l e =
     if Hashtbl.mem tbl e then
       l
@@ -311,4 +311,4 @@ let dedup l =
       e :: l
     )
   in
-  Core_list.fold_left ~f ~init:[] l |> Core_list.rev
+  Base.List.fold_left ~f ~init:[] l |> Base.List.rev

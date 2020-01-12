@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,6 @@ let hh_logger_level_of_env env =
   | Some "debug" -> Some Hh_logger.Level.Debug
   | Some _
   (* ignore invalid values *)
-  
   | None ->
     None
 

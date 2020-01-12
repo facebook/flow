@@ -15,12 +15,22 @@ export default suite(
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
+    test('initialize', [
+      lspStart({needsFlowServer: false}),
+      lspRequestAndWaitUntilResponse(
+        'initialize',
+        lspInitializeParams,
+      ).verifyAllLSPMessagesInStep(
+        ['initialize{"codeActionProvider":true}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('textDocument/codeAction #0', [
       addFile('error1.js.ignored', 'error1.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/error1.js',
         },
         range: {
           start: {
@@ -45,7 +55,7 @@ export default suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/error1.js',
         },
         range: {
           start: {
@@ -99,7 +109,7 @@ export default suite(
               ],
               edit: {
                 changes: {
-                  '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js': [
+                  '<PLACEHOLDER_PROJECT_URL>/error1.js': [
                     {
                       range: {
                         start: {line: 1, character: 22},
@@ -121,7 +131,7 @@ export default suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/error1.js',
         },
         range: {
           start: {
@@ -145,7 +155,7 @@ export default suite(
               diagnostics: [],
               edit: {
                 changes: {
-                  '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js': [
+                  '<PLACEHOLDER_PROJECT_URL>/error1.js': [
                     {
                       range: {
                         start: {

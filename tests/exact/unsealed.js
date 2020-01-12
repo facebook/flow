@@ -11,6 +11,6 @@ function f(o: {p: string} | $Exact<{}>): string {
 
 var o = {};
 g();
-f(o); // error: o incompatible with exact type
+f(o);
 
-function g() { o.p = 0 }
+function g() { o.p = 0 } // error: cannot write a number to o because it later expects a string

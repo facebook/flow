@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -32,7 +32,7 @@ type resolution_acc = {
 val imported_module :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
-  node_modules_containers:SSet.t ->
+  node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
   ALoc.t Nel.t ->
   ?resolution_acc:resolution_acc ->
@@ -88,11 +88,9 @@ val commit_modules :
   (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list ->
   (* dirty modules *)
-  ( File_key.t list
-  * (* providers *)
-    Modulename.Set.t
-  * (* changed modules *)
-  error list FilenameMap.t )
+  (File_key.t list * (* providers *)
+                     Modulename.Set.t * (* changed modules *)
+  error list FilenameMap.t)
   Lwt.t
 
 (* filenames to error sets *)
@@ -102,14 +100,37 @@ val add_parsed_resolved_requires :
   mutator:Module_heaps.Resolved_requires_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
-  node_modules_containers:SSet.t ->
+  node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
   bool * Flow_error.ErrorSet.t
 
 val add_package : string -> Loc.t Package_json.t_or_error -> unit
 
+type package_incompatible_reason =
+  (* Didn't exist before, now it exists *)
+  | New
+  (* Was valid, now is invalid *)
+  | Became_invalid
+  (* Was invalid, now is valid *)
+  | Became_valid
+  (* The `name` property changed from the former to the latter *)
+  | Name_changed of string option * string option
+  (* The `main` property changed from the former to the latter *)
+  | Main_changed of string option * string option
+  | Unknown
+
+val string_of_package_incompatible_reason : package_incompatible_reason -> string
+
+type package_incompatible_return =
+  | Compatible
+  | Incompatible of package_incompatible_reason
+
 val package_incompatible :
-  reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
+  options:Options.t ->
+  reader:State_reader.t ->
+  string ->
+  (Loc.t, Loc.t) Flow_ast.program ->
+  package_incompatible_return
 
 (***************************************************)
 

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,8 @@ type acc =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage FilenameMap.t
+  * Coverage_response.file_coverage FilenameMap.t option
+  * float
 
 type 'a merge_job_results = 'a file_keyed_result list
 
@@ -41,7 +42,7 @@ type merge_context_result = {
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
-  coverage_map: Coverage_response.file_coverage FilenameMap.t;
+  coverage_map: Coverage_response.file_coverage FilenameMap.t option;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -82,7 +83,7 @@ let reqs_of_component ~reader component required =
             if info.checked && info.parsed then
               (* checked implementation exists *)
               let m = Files.module_ref dep in
-              if Nel.mem dep component then
+              if Nel.mem ~equal:File_key.equal dep component then
                 (* impl is part of component *)
                 (dep_cxs, Reqs.add_impl m file locs reqs)
               else
@@ -124,16 +125,14 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~reader component required in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
-  let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let (((cx, _, _), other_cxs) as cx_nel) =
+  let (((full_cx, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options
       ~strict_mode
       ~file_sigs
       ~phase
@@ -145,16 +144,33 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
-  let (typed_asts, coverage_map) =
+  (* Only compute coverage on Types-First checking, or Classic merging phases *)
+  let coverage_map =
+    match (Options.arch options, phase) with
+    | (_, Context.Normalizing)
+    | (Options.TypesFirst, Context.Merging) ->
+      None
+    | (Options.TypesFirst, Context.Checking)
+    | (Options.Classic, _) ->
+      Some
+        (Nel.fold_left
+           (fun acc (ctx, typed_ast) ->
+             let file = Context.file ctx in
+             let cov = Coverage.file_coverage ~full_cx typed_ast in
+             FilenameMap.add file cov acc)
+           FilenameMap.empty
+           cx_nel)
+  in
+  let typed_asts =
     Nel.fold_left
-      (fun (typed_asts, cov_map) (ctx, typed_ast, cov) ->
+      (fun typed_asts (ctx, typed_ast) ->
         let file = Context.file ctx in
-        (FilenameMap.add file typed_ast typed_asts, FilenameMap.add file cov cov_map))
-      (FilenameMap.empty, FilenameMap.empty)
+        FilenameMap.add file typed_ast typed_asts)
+      FilenameMap.empty
       cx_nel
   in
-  let other_cxs = Core_list.map ~f:(fun (cx, _, _) -> cx) other_cxs in
-  { cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
+  let other_cxs = Base.List.map ~f:(fun (cx, _) -> cx) other_cxs in
+  { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
 
 let merge_context ~options ~reader component =
   merge_context_generic
@@ -220,16 +236,14 @@ let merge_contents_context ~reader options file ast info file_sig =
   in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
-  let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let ((cx, tast, _), _) =
+  let ((cx, tast), _) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options
       ~strict_mode
       ~file_sigs
       ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
@@ -245,7 +259,9 @@ let merge_contents_context ~reader options file ast info file_sig =
 
 (* Entry point for merging a component *)
 let merge_component ~worker_mutator ~options ~reader component =
+  let start_merge_time = Unix.gettimeofday () in
   let file = Nel.hd component in
+
   (* We choose file as the leader, and other_files are followers. It is always
      OK to choose file as leader, as explained below.
 
@@ -293,16 +309,17 @@ let merge_component ~worker_mutator ~options ~reader component =
       cx
       component
       md5;
-
-    Ok (errors, warnings, suppressions, coverage_map)
+    let merge_time = Unix.gettimeofday () -. start_merge_time in
+    Ok (errors, warnings, suppressions, coverage_map, merge_time)
   ) else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
-    let coverage = FilenameMap.empty in
-    Ok (errors, warnings, suppressions, coverage)
+    let coverage = None in
+    Ok (errors, warnings, suppressions, coverage, 0.0)
 
 let check_file options ~reader file =
+  let start_check_time = Unix.gettimeofday () in
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then
     let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -335,13 +352,14 @@ let check_file options ~reader file =
         aloc_tables
         severity_cover
     in
-    (errors, warnings, suppressions, coverage_map)
+    let check_time = Unix.gettimeofday () -. start_check_time in
+    (errors, warnings, suppressions, coverage_map, check_time)
   else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
-    let coverage = FilenameMap.empty in
-    (errors, warnings, suppressions, coverage)
+    let coverage = None in
+    (errors, warnings, suppressions, coverage, 0.0)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
@@ -373,7 +391,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
         (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
         let files =
-          component |> Nel.to_list |> Core_list.map ~f:File_key.to_string |> String.concat "\n\t"
+          component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
         in
         let merge_timeout = Options.merge_timeout options in
         let interval = Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
@@ -387,7 +405,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                  run_time
                  files;
                Option.iter merge_timeout ~f:(fun merge_timeout ->
-                   if run_time >= merge_timeout then raise (Error_message.EMergeTimeout run_time)))
+                   if run_time >= merge_timeout then
+                     raise (Error_message.EMergeTimeout (run_time, files))))
              ~f:(fun () ->
                let start_time = Unix.gettimeofday () in
                (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
@@ -402,8 +421,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                );
                (Nel.hd component, ret) :: merged)
          with
-        | ( SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full
-          | SharedMem_js.Hash_table_full | SharedMem_js.Dep_table_full ) as exc ->
+        | (SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full)
+          as exc ->
           raise exc
         (* A catch all suppression is probably a bad idea... *)
         | unwrapped_exc ->
@@ -437,7 +456,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
               Error_message.(
                 match unwrapped_exc with
                 | EDebugThrow loc -> (loc, DebugThrow)
-                | EMergeTimeout s -> (file_loc, MergeTimeout s)
+                | EMergeTimeout (s, _) -> (file_loc, MergeTimeout s)
                 | _ -> (file_loc, MergeJobException exc))
           in
           (file, result) :: merged))
@@ -452,7 +471,7 @@ let merge_runner
     ~intermediate_result_callback
     ~options
     ~workers
-    ~dependency_graph
+    ~sig_dependency_graph
     ~component_map
     ~recheck_set =
   let num_workers = Options.max_workers options in
@@ -484,7 +503,7 @@ let merge_runner
     Merge_stream.create
       ~num_workers
       ~arch:(Options.arch options)
-      ~dependency_graph
+      ~sig_dependency_graph
       ~leader_map
       ~component_map
       ~recheck_leader_set
@@ -527,11 +546,12 @@ let check options ~reader file =
             run_time
             file_str;
           Option.iter check_timeout ~f:(fun check_timeout ->
-              if run_time >= check_timeout then raise (Error_message.ECheckTimeout run_time)))
+              if run_time >= check_timeout then
+                raise (Error_message.ECheckTimeout (run_time, file_str))))
         ~f:(fun () -> Ok (check_file options ~reader file))
     with
-    | ( SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full
-      | SharedMem_js.Dep_table_full ) as exc ->
+    | (SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full) as
+      exc ->
       raise exc
     (* A catch all suppression is probably a bad idea... *)
     | unwrapped_exc ->
@@ -550,7 +570,7 @@ let check options ~reader file =
         Error_message.(
           match unwrapped_exc with
           | EDebugThrow loc -> (loc, DebugThrow)
-          | ECheckTimeout s -> (file_loc, CheckTimeout s)
+          | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
           | _ -> (file_loc, CheckJobException exc))
   in
   (file, result)

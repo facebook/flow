@@ -6,8 +6,6 @@ React.createElement(React.Fragment, null);
 
 < ></>; // success
 
-<>></>; // success
-
 <></>; // success
 
 <>hi</>; // success

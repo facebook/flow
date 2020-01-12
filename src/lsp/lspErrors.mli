@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -13,7 +13,7 @@ val set_live_parse_errors_and_send :
   (Hh_json.json -> unit) -> string -> Lsp.PublishDiagnostics.diagnostic list -> t -> t
 
 val set_live_non_parse_errors_and_send :
-  (Hh_json.json -> unit) -> Lsp.PublishDiagnostics.diagnostic list SMap.t -> t -> t
+  (Hh_json.json -> unit) -> string -> Lsp.PublishDiagnostics.diagnostic list -> t -> t
 
 val add_streamed_server_errors_and_send :
   (Hh_json.json -> unit) -> Lsp.PublishDiagnostics.diagnostic list SMap.t -> t -> t

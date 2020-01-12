@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -28,8 +28,7 @@ let run_mapper source =
 let tests =
   "polymorphic ast mapper"
   >::: [
-         ( "simple"
-         >:: fun _ ->
-         let source = "function foo() { (5 * 3); 4; (6 + 4); }" in
-         run_mapper source );
+         ( "simple" >:: fun _ ->
+           let source = "function foo() { (5 * 3); 4; (6 + 4); }" in
+           run_mapper source );
        ]

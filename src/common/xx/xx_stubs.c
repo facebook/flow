@@ -1,8 +1,16 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 #define XXH_STATIC_LINKING_ONLY
 #include <xxhash.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
@@ -21,7 +29,7 @@ static struct custom_operations xx_state_ops = {
 };
 
 static value alloc_xx_state(XXH64_state_t state) {
-  value v = alloc_custom(&xx_state_ops, sizeof(XXH64_state_t), 0, 1);
+  value v = caml_alloc_custom(&xx_state_ops, sizeof(XXH64_state_t), 0, 1);
   State_val(v) = state;
   return v;
 }
@@ -62,6 +70,14 @@ CAMLexport value caml_xx_digest(value state) {
   return caml_copy_int64(caml_xx_digest_unboxed(state));
 }
 
+CAMLexport XXH64_hash_t caml_xx_hash_unboxed(value v) {
+  return XXH64(String_val(v), caml_string_length(v), 0);
+}
+
+CAMLexport value caml_xx_hash(value v) {
+  return caml_copy_int64(caml_xx_hash_unboxed(v));
+}
+
 CAMLexport value caml_xx_to_string_unboxed(XXH64_hash_t hash) {
   CAMLparam0();
   CAMLlocal1(str);
@@ -82,7 +98,7 @@ CAMLexport value caml_xx_to_string_unboxed(XXH64_hash_t hash) {
    * wanted.
    */
   str = caml_alloc_string(16);
-  snprintf(String_val(str), 16, "%016llx", hash);
+  snprintf(String_val(str), 16, "%016llx", (unsigned long long)hash);
   CAMLreturn(str);
 }
 

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,34 +6,36 @@
  *)
 
 val type_at_pos :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
+  cx:Context.t ->
+  file_sig:File_sig.With_Loc.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
+  evaluate_type_destructors:bool ->
+  verbose_normalizer:bool ->
   File_key.t ->
-  string ->
   int ->
   int ->
-  ((Loc.t * Ty.t option) * Hh_json.json option, string * Hh_json.json option) Core_result.t Lwt.t
+  (Loc.t * Ty.t option) * (string * Hh_json.json) list
 
 val dump_types :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
+  expand_aliases:bool ->
+  evaluate_type_destructors:bool ->
   File_key.t ->
   string ->
-  ((Loc.t * string) list, string) Core_result.t Lwt.t
+  ((Loc.t * string) list, string) result Lwt.t
 
 val coverage :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
+  cx:Context.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   force:bool ->
   trust:bool ->
   File_key.t ->
   string ->
-  ((Loc.t * Coverage_response.expression_coverage) list, string) Core_result.t Lwt.t
+  (Loc.t * Coverage_response.expression_coverage) list
 
 val suggest :
   options:Options.t ->
@@ -50,7 +52,7 @@ val suggest :
       Replacement_printer.patch,
     (* Annotated program *)
     Errors.ConcreteLocPrintableErrorSet.t (* Parsing errors *) )
-  Core_result.t
+  result
   Lwt.t
 
 val insert_type :
@@ -64,7 +66,7 @@ val insert_type :
   omit_targ_defaults:bool ->
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
-  (Replacement_printer.patch, string) Core_result.t Lwt.t
+  (Replacement_printer.patch, string) result Lwt.t
 
 val autofix_exports :
   options:Options.t ->
@@ -72,7 +74,7 @@ val autofix_exports :
   profiling:Profiling_js.running ->
   file_key:File_key.t ->
   file_content:string ->
-  (Replacement_printer.patch * string list, string) Core_result.t Lwt.t
+  (Replacement_printer.patch * string list, string) result Lwt.t
 
 val code_actions_at_loc :
   options:Options.t ->
@@ -82,4 +84,4 @@ val code_actions_at_loc :
   file_key:File_key.t ->
   file_contents:string ->
   loc:Loc.t ->
-  (Lsp.CodeAction.command_or_action list, string) Core_result.t Lwt.t
+  (Lsp.CodeAction.command_or_action list, string) result Lwt.t

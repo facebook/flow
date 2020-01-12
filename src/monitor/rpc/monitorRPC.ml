@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,6 +16,8 @@ type state =
       outfd: Unix.file_descr;
     }
   | Disabled
+
+exception Monitor_died
 
 let state = ref Uninitialized
 
@@ -61,7 +63,9 @@ let read () =
 let send ~msg =
   with_outfd
     ~on_disabled:(fun () -> ())
-    ~f:(fun outfd -> Marshal_tools.to_fd_with_preamble outfd msg |> ignore)
+    ~f:(fun outfd ->
+      try Marshal_tools.to_fd_with_preamble outfd msg |> ignore
+      with Unix.Unix_error (Unix.EPIPE, _, _) -> raise Monitor_died)
 
 (* Respond to a request from an ephemeral client *)
 let respond_to_request ~request_id ~response = send ~msg:(Response (request_id, response))

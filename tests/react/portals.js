@@ -9,7 +9,7 @@ class MyComponent extends React.Component<{}> {
   render() {
     return ReactDOM.createPortal(
       <MyPortalComponent />,
-      document.getElementById('portal'),
+      test$getElementById('portal'),
     );
   }
 }

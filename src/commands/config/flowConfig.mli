@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -54,7 +54,9 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
-val cache_direct_dependents : config -> bool
+val babel_loose_array_spread : config -> bool
+
+val disable_live_non_parse_errors : config -> bool
 
 val emoji : config -> bool
 
@@ -114,15 +116,19 @@ val max_header_tokens : config -> int
 
 val max_literal_length : config -> int
 
+val max_rss_bytes_for_check_per_worker : config -> int
+
+val max_seconds_for_check_per_worker : config -> float
+
 val max_workers : config -> int
 
 val merge_timeout : config -> int option
 
+val minimal_merge : config -> bool
+
 val module_file_exts : config -> SSet.t
 
 val module_name_mappers : config -> (Str.regexp * string) list
-
-val module_resolver : config -> Path.t option
 
 val module_resource_exts : config -> SSet.t
 
@@ -134,7 +140,13 @@ val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
 
+val node_main_fields : config -> string list
+
+val node_resolver_allow_root_relative : config -> bool
+
 val node_resolver_dirnames : config -> string list
+
+val node_resolver_root_relative_dirnames : config -> string list
 
 val required_version : config -> string option
 
@@ -143,8 +155,6 @@ val recursion_limit : config -> int
 val root_name : config -> string option
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
-
-val shm_dep_table_pow : config -> int
 
 val shm_dirs : config -> string list
 

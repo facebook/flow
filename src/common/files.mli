@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -37,7 +37,7 @@ val module_resource_exts : options -> SSet.t
 
 val node_resolver_dirnames : options -> string list
 
-val node_modules_containers : SSet.t ref
+val node_modules_containers : SSet.t SMap.t ref
 
 val global_file_name : string
 
