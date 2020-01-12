@@ -1339,7 +1339,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         (* Convert the return expression's type T to Promise<T>. If the
          * expression type is itself a Promise<T>, ensure we still return
          * a Promise<T> via Promise.resolve. *)
-        let reason_typeapp = annot_reason (mk_reason (RType "Promise") type_loc) in
+        let reason_typeapp = mk_annot_reason (RType "Promise") type_loc in
         let t' =
           Flow.get_builtin_typeapp
             cx
@@ -1358,7 +1358,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | Scope.Generator ->
         (* Convert the return expression's type R to Generator<Y,R,N>, where
          * Y and R are internals, installed earlier. *)
-        let reason_typeapp = annot_reason (mk_reason (RType "Generator") type_loc) in
+        let reason_typeapp = mk_annot_reason (RType "Generator") type_loc in
         let t' =
           Flow.get_builtin_typeapp
             cx
@@ -1372,7 +1372,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         in
         Flow.reposition cx type_loc t'
       | Scope.AsyncGenerator ->
-        let reason_typeapp = annot_reason (mk_reason (RType "AsyncGenerator") type_loc) in
+        let reason_typeapp = mk_annot_reason (RType "AsyncGenerator") type_loc in
         let t' =
           Flow.get_builtin_typeapp
             cx
