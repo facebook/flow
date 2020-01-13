@@ -45,16 +45,6 @@ declare var s: symbol;
   const y: $SymbolMatch = Symbol.toPrimitive; // Error
 }
 
-// Temporary compatibility with `Symbol`,
-// before we codemod existing annotations to use `symbol` instead
-{
-  const x: Symbol = Symbol(); // OK
-  const y: Symbol = Symbol.for("b"); // OK
-  const z: Symbol = Symbol.match; // OK
-  Symbol.keyFor(s); // OK
-  Symbol.keyFor(x); // OK
-}
-
 // Non-strict equality
 {
   // Comparison with symbol is allowed

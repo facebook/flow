@@ -8,8 +8,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
 
 References:
    <BUILTINS>/core.js:104:3
-   104|   static (value?:any): symbol & Symbol;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   104|   static (value?:any): symbol;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:6
@@ -48,91 +48,88 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- symbol.js:45:27
 
-Cannot assign `Symbol.toPrimitive` to `y` because `Symbol` [1] is incompatible with `$SymbolMatch` [2].
+Cannot assign `Symbol.toPrimitive` to `y` because symbol [1] is incompatible with `$SymbolMatch` [2].
 
    symbol.js:45:27
-   45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
-                                 ^^^^^^^^^^^^^^^^^^
+    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
+                                  ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:99:50
-   99| declare opaque type $SymbolToPrimitive: symbol & Symbol;
-                                                        ^^^^^^ [1]
+   <BUILTINS>/core.js:118:23
+   118|   static toPrimitive: $SymbolToPrimitive;
+                              ^^^^^^^^^^^^^^^^^^ [1]
    symbol.js:45:12
-   45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
-                  ^^^^^^^^^^^^ [2]
+    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
+                   ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:72:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:62:3
 
 Cannot compare tuple type [1] to symbol [2].
 
-   symbol.js:72:3
-   72|   x == s; // Error
+   symbol.js:62:3
+   62|   x == s; // Error
          ^
 
 References:
-   symbol.js:71:12
-   71|   const x: [] = [];
+   symbol.js:61:12
+   61|   const x: [] = [];
                   ^^ [1]
-   symbol.js:69:12
-   69|   const s: symbol = Symbol();
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:73:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:63:3
 
 Cannot compare symbol [1] to tuple type [2].
 
-   symbol.js:73:3
-   73|   s == x; // Error
+   symbol.js:63:3
+   63|   s == x; // Error
          ^
 
 References:
-   symbol.js:69:12
-   69|   const s: symbol = Symbol();
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
                   ^^^^^^ [1]
-   symbol.js:71:12
-   71|   const x: [] = [];
+   symbol.js:61:12
+   61|   const x: [] = [];
                   ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:74:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:64:3
 
 Cannot compare tuple type [1] to symbol [2].
 
-   symbol.js:74:3
-   74|   x != s; // Error
+   symbol.js:64:3
+   64|   x != s; // Error
          ^
 
 References:
-   symbol.js:71:12
-   71|   const x: [] = [];
+   symbol.js:61:12
+   61|   const x: [] = [];
                   ^^ [1]
-   symbol.js:69:12
-   69|   const s: symbol = Symbol();
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:75:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:65:3
 
 Cannot compare symbol [1] to tuple type [2].
 
-   symbol.js:75:3
-   75|   s != x; // Error
+   symbol.js:65:3
+   65|   s != x; // Error
          ^
 
 References:
-   symbol.js:69:12
-   69|   const s: symbol = Symbol();
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
                   ^^^^^^ [1]
-   symbol.js:71:12
-   71|   const x: [] = [];
+   symbol.js:61:12
+   61|   const x: [] = [];
                   ^^ [2]
 
 
 
 Found 8 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
