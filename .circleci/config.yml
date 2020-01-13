@@ -439,6 +439,15 @@ jobs:
         name: Upload Mac libflowparser
         command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
 
+  github_win:
+    executor: curl
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Windows binary
+        command: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-$CIRCLE_TAG.zip"
+
   website_deploy:
     executor: flow-website
     steps:
@@ -555,6 +564,14 @@ workflows:
           requires:
             - runtests_macos
             - tool_test_macos
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - github_win:
+          requires:
+            - tool_test_win
           filters:
             tags:
               only: /^v.*/

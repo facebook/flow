@@ -34,12 +34,3 @@ cache:
 
 artifacts:
   - path: bin\*.zip
-
-deploy:
-  provider: GitHub
-  # flow-bot
-  auth_token:
-    secure: f1YgYz9csZ8QokY6+aXF10toZtXlFxicbm7uTcylqq+ILoRE6y5GUaf1TfoUalx5
-  artifact: /.*\.zip/
-  on:
-    APPVEYOR_REPO_TAG: true
