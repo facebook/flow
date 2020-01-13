@@ -17,7 +17,7 @@ val register_entry_point : start_function -> entry_point
 
 val daemonize :
   wait:bool ->
-  on_spawn:(int -> 'a) ->
+  on_spawn:(int -> unit) ->
   monitor_options:FlowServerMonitorOptions.t ->
   entry_point ->
   unit
