@@ -229,8 +229,7 @@ let extract_docblock =
         parse_attributes acc xs
       | (_, "@preventMunge") :: xs ->
         (* dupes are ok since they can only be truthy *)
-        let preventMunge = Some true in
-        parse_attributes (errors, { info with preventMunge }) xs
+        parse_attributes (errors, { info with preventMunge = true }) xs
       | (csx_loc, "@csx") :: xs ->
         let acc =
           if info.jsx <> None then
@@ -426,11 +425,7 @@ let do_parse ~parse_options ~info content file =
          * The only files which are parsed but not inferred are .flow files with
          * no @flow pragma. *)
         if types_checked then
-          let prevent_munge =
-            match Docblock.preventMunge info with
-            | Some db_prevent_munge -> db_prevent_munge
-            | None -> prevent_munge
-          in
+          let prevent_munge = Docblock.preventMunge info || prevent_munge in
           (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
              property named `propTypes` in any class. It should be killed with fire or replaced with
              something that only works for React classes, in which case we must make a corresponding
@@ -762,7 +757,7 @@ let make_parse_options_internal
   let prevent_munge =
     let default = not (Options.should_munge_underscores options) in
     match docblock with
-    | Some docblock -> Option.value (Docblock.preventMunge docblock) ~default
+    | Some docblock -> Docblock.preventMunge docblock || default
     | None -> default
   in
   {

@@ -254,9 +254,10 @@ let apply_docblock_overrides (mtdt : Context.metadata) docblock_info =
       | Some Docblock.OptOut -> metadata
     in
     let metadata =
-      match Docblock.preventMunge docblock_info with
-      | Some value -> { metadata with munge_underscores = not value }
-      | None -> metadata
+      if Docblock.preventMunge docblock_info then
+        { metadata with munge_underscores = false }
+      else
+        metadata
     in
     metadata)
 
