@@ -363,7 +363,7 @@ jobs:
           name: Install tool deps from yarn
           command: |
             cd packages/flow-dev-tools
-            yarn install
+            yarn install --ignore-scripts --pure-lockfile
       - run:
           name: Run tool tests
           shell: bash
