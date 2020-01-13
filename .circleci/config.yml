@@ -288,11 +288,21 @@ jobs:
              make bin/flow.exe dist/flow.zip
              mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
              cp dist/flow.zip dist/flow-win64.zip
+      - run:
+          name: Build parser test runner
+          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          environment:
+            PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+          command: |
+            eval $(opam env)
+            make -C src/parser/ ../../_build/src/parser/test/run_tests.native
+            cp _build/src/parser/test/run_tests.native bin/win64/run_parser_tests.exe
       - persist_to_workspace:
           root: .
           paths:
             - bin/win64/flow.exe
             - dist/flow-win64.zip
+            - bin/win64/run_parser_tests.exe
       - store_artifacts:
           path: .\dist\flow-win64.zip
           destination: flow-win64.zip
@@ -344,9 +354,8 @@ jobs:
   tool_test_win:
     executor: win/default
     steps:
-      - checkout
       - attach_workspace:
-          at: ./artifacts
+          at: .
       - run:
           name: Install Yarn
           command: choco install yarn
@@ -358,7 +367,20 @@ jobs:
       - run:
           name: Run tool tests
           shell: bash
-          command: ./tool test --bin artifacts/bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+          command: ./tool test --bin bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+
+  parser_test_win:
+    executor: win/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Test parser
+          command: |
+            .\bin\win64\run_parser_tests.exe .\src\parser\test\flow\
+            if ($LASTEXITCODE -gt 0) {
+              Throw "flow parser hardcoded ocaml tests exited with error code: $LASTEXITCODE"
+            }
 
   npm_pack:
     executor: linux-node
@@ -538,6 +560,10 @@ workflows:
           <<: *run_on_tags
           requires:
             - build_win
+      - parser_test_win:
+          <<: *run_on_tags
+          requires:
+            - build_win
       - npm_pack:
           <<: *run_on_tags
           requires:
@@ -572,6 +598,7 @@ workflows:
       - github_win:
           requires:
             - tool_test_win
+            - parser_test_win
           filters:
             tags:
               only: /^v.*/
