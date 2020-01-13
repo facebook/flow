@@ -53,7 +53,7 @@ orbs:
               environment:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
-                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes
+                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes -vvv
 
 executors:
   linux-opam:
