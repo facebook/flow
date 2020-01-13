@@ -266,7 +266,8 @@ jobs:
           name: Calculate opam version
           shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
           command: /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamversion
-      - checkout
+      - attach_workspace:
+          at: .
       - restore_cache:
           keys:
           - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
@@ -506,6 +507,8 @@ workflows:
             - checkout
       - build_win:
           <<: *run_on_tags
+          requires:
+            - checkout
       - runtests_linux:
           <<: *run_on_tags
           requires:
