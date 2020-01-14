@@ -25,7 +25,29 @@ type Enum =
 
 type Obj =  {foo: ?Enum};
 
-class A {
+class B {
     type: Foo = 'A';
 }
 
+
+type Node = number | string;
+
+declare class A<T> {
+    concat<S, Item: A<S> | S>(items: A<Item>): A<T | S>;
+    filter(callbackfn: typeof Boolean): A<$NonMaybeType<T>>;
+}
+
+declare function mkA<T> (x : T) : A<T>;
+
+declare function bar () : Node
+
+declare var props : { s : string };
+
+function f() {
+  let x = (this.props.s === 'S'
+    ? mkA(bar())
+    : mkA()
+  );
+  let y = x.concat(mkA(bar()));
+  let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
+}
