@@ -8,8 +8,6 @@
 type config = {
   heap_size: int;
   hash_table_pow: int;
-  shm_dirs: string list;
-  shm_min_avail: int;
   log_level: int;
 }
 
@@ -23,9 +21,6 @@ exception Out_of_shared_memory
 exception Hash_table_full
 
 exception Heap_full
-
-(* TODO - Hack only? *)
-exception Sql_assertion_failure of int
 
 val connect : handle -> worker_id:int -> unit
 

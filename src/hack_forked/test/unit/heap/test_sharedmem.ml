@@ -192,13 +192,7 @@ let tests () =
         let handle =
           SharedMem.init
             ~num_workers
-            {
-              SharedMem.heap_size = 409600;
-              hash_table_pow = 12;
-              shm_dirs = [];
-              shm_min_avail = 0;
-              log_level = 0;
-            }
+            { SharedMem.heap_size = 409600; hash_table_pow = 12; log_level = 0 }
         in
         ignore (handle : SharedMem.handle);
         test ();
