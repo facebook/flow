@@ -12,8 +12,6 @@
   (wrapped false)
   (modules
     mem_profile
-    multiThreadedCall
-    multiWorker
     worker
     workerController)
   (libraries

@@ -3,10 +3,10 @@
   (wrapped false)
   (libraries
     flow_common
-    flow_logging_stubs
+    flow_logging
     collections ; hack
     imported_core ; hack
-    logging_common_stubs ; hack
+    logging_common ; hack
     sys_utils ; hack
     utils_core ; hack
   )

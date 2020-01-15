@@ -8,7 +8,7 @@
 )
 
 (library
-  (name flow_logging_lwt_stubs)
+  (name logging_lwt_stubs)
   (wrapped false)
   (modules eventLoggerLwt)
   (libraries

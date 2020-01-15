@@ -1,4 +1,4 @@
-(copy_files ../../../scripts/get_build_id_gen.c)
+(copy_files ../../../../scripts/get_build_id_gen.c)
 
 (library
   (name utils_core)

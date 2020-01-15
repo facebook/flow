@@ -1004,7 +1004,7 @@ end)
         end
         cache;
       Hashtbl.clear cache;
-      l := List.sort (fun (_, x, _) (_, y, _) -> y - x) !l;
+      l := List.sort ~compare:(fun (_, x, _) (_, y, _) -> y - x) !l;
       let i = ref 0 in
       while !i < Config.capacity do
         match !l with

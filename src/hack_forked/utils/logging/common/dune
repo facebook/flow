@@ -23,12 +23,11 @@ let entry is_fb name =
 let () =
   (* test presence of fb subfolder *)
   let current_dir = Sys.getcwd () in
-  (* we are in src/logging/, locate src/facebook *)
-  let src_dir = Filename.dirname current_dir in
+  (* we are in src/hack_forked/utils/logging/common, locate src/facebook *)
+  let src_dir = Filename.(dirname @@ dirname @@ dirname @@ dirname current_dir) in
   let fb_dir = Filename.concat src_dir "facebook" in
   (* locate src/facebook/dune *)
   let fb_dune = Filename.concat fb_dir "dune" in
   let is_fb = Sys.file_exists fb_dune in
-  let logging = entry is_fb "flow_logging" in
-  let logging_lwt = entry is_fb "logging_common_lwt" in
-  Jbuild_plugin.V1.send (String.concat "\n\n" [logging; logging_lwt])
+  let logging_common = entry is_fb "logging_common" in
+  Jbuild_plugin.V1.send logging_common
