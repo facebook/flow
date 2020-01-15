@@ -19,6 +19,8 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
 
   let return = Lwt.return
 
+  let spf = Printf.sprintf
+
   let catch ~f ~catch =
     Lwt.catch f (fun exn ->
         let e = Exception.wrap exn in
@@ -38,20 +40,41 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
     Lwt_io.flush oc
 
   let get_sockname timeout =
-    let process =
-      Lwt_process.open_process_in ("", [| "watchman"; "--no-pretty"; "get-sockname" |])
-    in
-    let%lwt output =
+    let cmd = "watchman" in
+    let args = ["--no-pretty"; "get-sockname"] in
+    let%lwt { LwtSysUtils.status; stdout; stderr } =
       match timeout_to_secs timeout with
-      | None -> Lwt_io.read_line process#stdout
+      | None -> LwtSysUtils.exec cmd args
       | Some timeout ->
-        (try%lwt Lwt_unix.with_timeout timeout @@ fun () -> Lwt_io.read_line process#stdout
+        (try%lwt Lwt_unix.with_timeout timeout @@ fun () -> LwtSysUtils.exec cmd args
          with Lwt_unix.Timeout -> raise Timeout)
     in
-    let%lwt status = process#close in
-    assert (status = Unix.WEXITED 0);
-    let json = Hh_json.json_of_string output in
-    Lwt.return @@ J.get_string_val "sockname" json
+    match status with
+    | Unix.WEXITED 0 ->
+      let json = Hh_json.json_of_string stdout in
+      Lwt.return @@ J.get_string_val "sockname" json
+    | Unix.WEXITED 127 ->
+      let msg =
+        spf
+          "watchman not found on PATH: %s"
+          (Base.Option.value (Sys_utils.getenv_path ()) ~default:"(not set)")
+      in
+      let () = EventLogger.watchman_error msg in
+      let () = Hh_logger.error "%s" msg in
+      raise (Watchman_error "watchman not found on PATH")
+    | Unix.WEXITED code ->
+      let () =
+        EventLogger.watchman_error (spf "watchman exited code %d, stderr = %S" code stderr)
+      in
+      raise (Watchman_error (spf "watchman exited code %d" code))
+    | Unix.WSIGNALED signal ->
+      let msg = spf "watchman signaled with %s signal" (PrintSignal.string_of_signal signal) in
+      let () = EventLogger.watchman_error msg in
+      raise (Watchman_error msg)
+    | Unix.WSTOPPED signal ->
+      let msg = spf "watchman stopped with %s signal" (PrintSignal.string_of_signal signal) in
+      let () = EventLogger.watchman_error msg in
+      raise (Watchman_error msg)
 
   (* Opens a connection to the watchman process through the socket *)
   let open_connection ~timeout =
