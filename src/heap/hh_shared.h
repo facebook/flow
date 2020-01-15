@@ -18,7 +18,6 @@
 /* Must be called by the master BEFORE forking the workers! */
 CAMLprim value hh_shared_init(
     value config_val,
-    value shm_dir_val,
     value num_workers_val
 );
 value hh_check_heap_overflow(void);

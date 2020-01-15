@@ -15,8 +15,6 @@ type env = {
   lazy_mode: Options.lazy_mode option;
   autostop: bool;
   tmp_dir: string;
-  shm_dirs: string list option;
-  shm_min_avail: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
   log_file: string;
@@ -48,8 +46,6 @@ let start_flow_server env =
     tmp_dir;
     lazy_mode;
     autostop;
-    shm_dirs;
-    shm_min_avail;
     shm_hash_table_pow;
     shm_log_level;
     ignore_version;
@@ -65,9 +61,7 @@ let start_flow_server env =
   let args =
     [Path.to_string root]
     |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
-    |> arg_map "--sharedmemory-minimum-available" ~f:string_of_int shm_min_avail
     |> arg_map "--sharedmemory-log-level" ~f:string_of_int shm_log_level
-    |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs
     |> arg_map "--lazy-mode" lazy_mode ~f:Options.lazy_mode_to_string
     |> arg "--temp-dir" (Some tmp_dir)
     |> arg "--from" (FlowEventLogger.get_from_I_AM_A_CLOWN ())

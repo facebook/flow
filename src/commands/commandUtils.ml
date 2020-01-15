@@ -243,28 +243,17 @@ let input_file_flag verb prev =
            ^ "read from the standard input." ))
 
 type shared_mem_params = {
-  shm_dirs: string option;
-  shm_min_avail: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
 }
 
-let collect_shm_flags main shm_dirs shm_min_avail shm_hash_table_pow shm_log_level =
-  main { shm_dirs; shm_min_avail; shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_hash_table_pow shm_log_level =
+  main { shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_shm_flags
-    |> flag
-         "--sharedmemory-dirs"
-         string
-         ~doc:"Directory in which to store shared memory heap (default: /dev/shm/)"
-    |> flag
-         "--sharedmemory-minimum-available"
-         int
-         ~doc:
-           "Flow will only use a filesystem for shared memory if it has at least these many bytes available (default: 536870912 - which is 512MB)"
     |> flag
          "--sharedmemory-hash-table-pow"
          int
@@ -279,26 +268,10 @@ let shm_config shm_flags flowconfig =
   let hash_table_pow =
     Option.value shm_flags.shm_hash_table_pow ~default:(FlowConfig.shm_hash_table_pow flowconfig)
   in
-  let shm_dirs =
-    Option.value_map
-      shm_flags.shm_dirs
-      ~default:(FlowConfig.shm_dirs flowconfig)
-      ~f:(Str.split (Str.regexp ","))
-    |> Base.List.map ~f:Path.(make %> to_string)
-  in
-  let shm_min_avail =
-    Option.value shm_flags.shm_min_avail ~default:(FlowConfig.shm_min_avail flowconfig)
-  in
   let log_level =
     Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  {
-    SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig;
-    hash_table_pow;
-    shm_dirs;
-    shm_min_avail;
-    log_level;
-  }
+  { SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =
@@ -1280,11 +1253,6 @@ let make_env flowconfig_name connect_flags root =
   let tmp_dir =
     Option.value_map ~f:normalize ~default:(FlowConfig.temp_dir flowconfig) connect_flags.temp_dir
   in
-  let shm_dirs =
-    Option.map
-      ~f:(Str.split (Str.regexp ",") %> Base.List.map ~f:normalize)
-      connect_flags.shm_flags.shm_dirs
-  in
   let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
   let retries = connect_flags.retries in
   let expiry =
@@ -1309,8 +1277,6 @@ let make_env flowconfig_name connect_flags root =
     expiry;
     autostop = connect_flags.autostop;
     tmp_dir;
-    shm_dirs;
-    shm_min_avail = connect_flags.shm_flags.shm_min_avail;
     shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
     shm_log_level = connect_flags.shm_flags.shm_log_level;
     log_file;

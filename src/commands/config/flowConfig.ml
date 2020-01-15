@@ -19,13 +19,6 @@ type error = int * string
 
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 
-let default_shm_dirs =
-  try Sys.getenv "FLOW_SHMDIR" |> Str.(split (regexp ","))
-  with _ -> ["/dev/shm"; default_temp_dir]
-
-(* Half a gig *)
-let default_shm_min_avail = 1024 * 1024 * 512
-
 let version_regex = Str.regexp_string "<VERSION>"
 
 let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version Flow_version.version
@@ -99,11 +92,9 @@ module Opts = struct
     recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
-    shm_dirs: string list;
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
-    shm_min_avail: int;
     suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
     temp_dir: string;
@@ -200,12 +191,10 @@ module Opts = struct
       recursion_limit = 10000;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
-      shm_dirs = default_shm_dirs;
       shm_hash_table_pow = 19;
       shm_heap_size = 1024 * 1024 * 1024 * 25;
       (* 25 gigs *)
       shm_log_level = 0;
-      shm_min_avail = default_shm_min_avail;
       suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
@@ -522,10 +511,6 @@ module Opts = struct
             ("fb", Options.Fb_fetcher);
           ]
           (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }) );
-      ( "sharedmemory.dirs",
-        string ~multiple:true (fun opts v -> Ok { opts with shm_dirs = opts.shm_dirs @ [v] }) );
-      ( "sharedmemory.minimum_available",
-        uint (fun opts shm_min_avail -> Ok { opts with shm_min_avail }) );
       ( "sharedmemory.hash_table_pow",
         uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow }) );
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
@@ -1203,15 +1188,11 @@ let root_name c = c.options.Opts.root_name
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 
-let shm_dirs c = c.options.Opts.shm_dirs
-
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 
 let shm_heap_size c = c.options.Opts.shm_heap_size
 
 let shm_log_level c = c.options.Opts.shm_log_level
-
-let shm_min_avail c = c.options.Opts.shm_min_avail
 
 let suppress_comments c = c.options.Opts.suppress_comments
 

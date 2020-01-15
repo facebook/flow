@@ -156,15 +156,11 @@ val root_name : config -> string option
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
-val shm_dirs : config -> string list
-
 val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int
 
 val shm_log_level : config -> int
-
-val shm_min_avail : config -> int
 
 val suppress_comments : config -> Str.regexp list
 
