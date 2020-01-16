@@ -20,7 +20,7 @@ type single_client = {
   mutable subscribed: bool;
   (* map from filename to content *)
   mutable opened_files: string SMap.t;
-  type_contents_cache: (type_contents_artifacts, string) result Lwt.t FilenameCache.t;
+  type_contents_cache: (type_contents_artifacts, string) result FilenameCache.t;
 }
 
 type t = Prot.client_id list

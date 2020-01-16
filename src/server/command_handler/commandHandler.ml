@@ -20,8 +20,8 @@ let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache conte
     Lwt.return (result, None)
   | Some cache ->
     let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
-    let (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
-    Lwt.map (fun result -> (result, Some did_hit)) result
+    let%lwt (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
+    Lwt.return (result, Some did_hit)
 
 let add_cache_hit_data_to_json json_props did_hit =
   match did_hit with

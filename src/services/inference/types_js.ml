@@ -370,17 +370,15 @@ module DirectDependentFilesCache : sig
 end = struct
   let max_size = 100
 
-  (* I've written out the type here so that it's clear that we are caching the `Lwt.t`s, and not
-   * the results that they resolve to. *)
-  let cache : FilenameSet.t Lwt.t FilenameCache.t = FilenameCache.make ~max_size
+  let cache : FilenameSet.t FilenameCache.t = FilenameCache.make ~max_size
 
   let clear () = FilenameCache.clear cache
 
   let with_cache ~root_files ~on_miss =
     match FilenameSet.elements root_files with
     | [root_file] ->
-      let (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
-      result
+      let%lwt (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
+      Lwt.return result
     | _ ->
       (* Cache is only for when there is a single root file *)
       Lazy.force on_miss
