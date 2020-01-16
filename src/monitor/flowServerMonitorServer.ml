@@ -397,7 +397,13 @@ end = struct
     in
     (* This may block for quite awhile. No messages will be sent to the server process until the
      * file watcher is up and running *)
-    let%lwt () = watcher#wait_for_init in
+    let%lwt () =
+      match%lwt watcher#wait_for_init with
+      | Ok x -> Lwt.return x
+      | Error msg ->
+        Logger.fatal "%s" msg;
+        handle_file_watcher_exit watcher
+    in
     Logger.debug "File watcher (%s) ready!" watcher#name;
     let file_watcher_exit_thread =
       let%lwt () =
