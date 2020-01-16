@@ -71,6 +71,7 @@ executors:
       xcode: "9.0"
     environment:
       <<: *opam_env
+      OPAM_VERSION: 2.0.5
     working_directory: ~/flow
   curl:
     docker:
@@ -93,14 +94,15 @@ commands:
           command: opam --version > .circleci/opamversion
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          - v1-opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
 
   save-opam-cache:
     steps:
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          key: v1-opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
           paths:
             - ~/.opam
+            - _opam
 
   create-opam-switch:
     steps:
@@ -108,7 +110,9 @@ commands:
           name: Install deps from opam
           command: |
             eval $(opam env)
-            opam switch create . 4.07.1 --deps-only | cat
+            if [ ! -d _opam ]; then
+              opam switch create . 4.07.1 --deps-only | cat
+            fi
 
 jobs:
   checkout:
@@ -202,28 +206,20 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      # https://github.com/Homebrew/brew/issues/5513
-      - run:
-          name: Fix homebrew python
-          command: brew update
-      # https://github.com/Homebrew/homebrew-core/issues/26358
-      - run:
-          name: Fix homebrew python
-          command: brew upgrade python
       - run:
           name: Install opam
-          command: command -v opam || brew install opam aspcud
+          command: |
+            if ! [ -x "$(command -v opam)" ]; then
+              TMP=${TMPDIR:-/tmp}
+              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
+              install -m 755 "$TMP/opam" "/usr/local/bin/opam"
+              rm -f "$TMP/opam"
+            fi
       - restore-opam-cache
       - run:
-          name: Install ocaml
-          command: opam init --comp 4.07.1 -yn | cat
-      - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1
-          paths:
-            - ~/.opam
-      - run:
-          name: Update opam repo
-          command: opam update | cat
+          name: Init opam
+          command: |
+            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
       - create-opam-switch
       - save-opam-cache
       - run:
