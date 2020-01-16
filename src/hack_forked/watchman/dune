@@ -23,6 +23,7 @@
   (libraries
     watchman
     buffered_line_reader_lwt
+    flow_common_lwt
   )
   (preprocess (pps lwt_ppx))
 )
