@@ -256,6 +256,7 @@ jobs:
     executor: win/default
     environment:
       - FLOW_TMP_DIR: 'C:\tmp\flow'
+      - OPAMDOWNLOADJOBS: 1
     steps:
       - run:
           name: Set up workspace
@@ -270,11 +271,11 @@ jobs:
           at: .
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}-circle_{{ checksum ".circleci/config.yml" }}
       - opam_windows/init
       - opam_windows/create_switch
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}-circle_{{ checksum ".circleci/config.yml" }}
           paths:
             - C:/tools/cygwin/home/circleci/.opam
             - _opam
