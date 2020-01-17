@@ -21,7 +21,7 @@ class type watcher =
 
     method start_init : unit
 
-    method wait_for_init : unit Lwt.t
+    method wait_for_init : (unit, string) result Lwt.t
 
     method get_and_clear_changed_files : (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
 
@@ -40,7 +40,7 @@ class dummy : watcher =
 
     method start_init = ()
 
-    method wait_for_init = Lwt.return_unit
+    method wait_for_init = Lwt.return (Ok ())
 
     method get_and_clear_changed_files = Lwt.return (SSet.empty, None)
 
@@ -78,7 +78,9 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
       dfind_instance <- Some dfind
 
-    method wait_for_init = DfindLibLwt.wait_until_ready self#get_dfind
+    method wait_for_init =
+      let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
+      Lwt.return (Ok result)
 
     (* We don't want two threads to talk to dfind at the same time. And we don't want those two
      * threads to get the same file change events *)
@@ -382,8 +384,8 @@ end = struct
           let new_env = { new_env with mergebase } in
           env <- Some new_env;
           Lwt.wakeup wakener new_env;
-          Lwt.return_unit
-        | None -> failwith "Failed to initialize watchman"
+          Lwt.return (Ok ())
+        | None -> Lwt.return (Error "Failed to initialize watchman")
 
       (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we
        * probably don't care about hg updates or mergebase changing if no files were affected *)
