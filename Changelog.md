@@ -1,3 +1,9 @@
+### 0.116.1
+
+Notable bug fixes:
+
+* Fix #8259.
+
 ### 0.116.0
 
 New Features:
