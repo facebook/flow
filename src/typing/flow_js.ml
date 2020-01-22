@@ -11869,7 +11869,11 @@ struct
     get_builtin_type cx ?trace reason x
 
   and flow_all_in_union cx trace rep u =
-    UnionRep.members rep |> Base.List.iter ~f:(mk_tuple_swapped u %> rec_flow cx trace)
+    (* This is required so that our caches don't treat different branches of unions as the same type *)
+    let union_reason i r = replace_desc_reason (RUnionBranching (desc_of_reason r, i)) r in
+    UnionRep.members rep
+    |> Base.List.iteri ~f:(fun i ->
+           mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> rec_flow cx trace)
 
   and call_args_iter f =
     List.iter (function
