@@ -84,8 +84,6 @@ printf "literals.js:31:7 = "
 assert_ok "$FLOW" type-at-pos literals.js 31 7 --strip-root --pretty
 printf "literals.js:32:7 = "
 assert_ok "$FLOW" type-at-pos literals.js 32 7 --strip-root --pretty
-printf "literals.js:34:7 = "
-assert_ok "$FLOW" type-at-pos literals.js 34 7 --strip-root --pretty
 
 # new-array.js
 printf "new-array.js:3:15 = "

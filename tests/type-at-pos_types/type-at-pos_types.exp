@@ -946,7 +946,7 @@ recursive.js:23:12 = {
   "end":14
 }
 recursive.js:38:2 = {
-  "type":"type V$2 = (x: V$2) => V$3;\ntype V$3 = (x: V$2) => V$3;\ntype V$4 = (x: V$2) => V$4;\n(x: (x: V$2) => V$4) => (x: V$2) => V$4",
+  "type":"type V$2 = (x: V$2) => V$3;\ntype V$3 = (x: V$2) => V$3;\n(x: (x: V$2) => V$3) => (x: V$2) => V$3",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -961,7 +961,7 @@ recursive.js:38:2 = {
   "end":3
 }
 recursive.js:41:17 = {
-  "type":"type V$1 = (x: V$1) => V$2;\ntype V$2 = (x: V$1) => V$2;\ntype V$3 = (x: V$1) => V$3;\ntype Foo = {n: (x: (x: V$1) => V$3) => (x: V$1) => V$3}",
+  "type":"type V$1 = (x: V$1) => V$2;\ntype V$2 = (x: V$1) => V$2;\ntype Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2}",
   "reasons":[],
   "loc":{
     "source":"recursive.js",

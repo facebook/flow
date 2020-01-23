@@ -111,11 +111,6 @@ end = struct
       match i with
       | TVarKey i -> { c with open_ts = IMap.add i t c.open_ts }
       | EvalKey i -> { c with eval_ts = Type.Eval.Map.add i t c.eval_ts }
-
-    let remove i c =
-      match i with
-      | TVarKey i -> { c with open_ts = IMap.remove i c.open_ts }
-      | EvalKey i -> { c with eval_ts = Type.Eval.Map.remove i c.eval_ts }
   end
 
   module State = struct
@@ -190,24 +185,6 @@ end = struct
     let open State in
     let%bind state = get in
     put { state with cache = Cache.update i t state.cache }
-
-  (* It is safe to cache results, if there are no other OpenTs currently under
-   * normalization or the type we reconstructed does contain free recursive variable
-   * occurences. This is to avoid caching types like 'T<V$1>' since when this type
-   * will be recovered, we might no longer be in a context where 'V$1' is in scope,
-   * which could lead to an ill-formed type.
-   *)
-  let is_safe_to_cache free_tvars t_result =
-    VSet.is_empty free_tvars
-    ||
-    match t_result with
-    | Ok t -> ISet.is_empty (Ty_utils.free_vars_of_type t)
-    | Error _ -> true
-
-  let remove_from_cache i =
-    let open State in
-    let%bind state = get in
-    put { state with cache = Cache.remove i state.cache }
 
   let add_to_free_tvars v =
     let open State in
@@ -469,12 +446,7 @@ end = struct
         let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
         let%bind () = put out_st in
         (* Update cache with final result *)
-        let%bind () =
-          if is_safe_to_cache out_st.free_tvars result then
-            update_cache id result
-          else
-            remove_from_cache id
-        in
+        let%bind () = update_cache id result in
         (* Throw the error if one was encountered *)
         (match result with
         | Ok ty -> return ty
