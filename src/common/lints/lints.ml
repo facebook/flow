@@ -40,6 +40,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
+  | NullVoidAddition
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -73,6 +74,7 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | AmbiguousObjectType -> "ambiguous-object-type"
+  | NullVoidAddition -> "unsafe-addition"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -106,6 +108,7 @@ let kinds_of_string = function
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
+  | "unsafe-addition" -> Some [NullVoidAddition]
   | _ -> None
 
 module LintKind = struct

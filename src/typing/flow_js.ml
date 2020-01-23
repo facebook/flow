@@ -7037,8 +7037,7 @@ struct
       | (DefT (_, _, EmptyT Zeroed), t)
       | (t, DefT (_, _, EmptyT Zeroed)) ->
         rec_flow_t cx trace ~use_op:unknown_use (t, u)
-      | ( DefT (_, _, (NumT _ | BoolT _ | NullT | VoidT)),
-          DefT (_, _, (NumT _ | BoolT _ | NullT | VoidT)) ) ->
+      | (DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (DefT (_, _, StrT _), _) ->
         rec_flow cx trace (r, UseT (use_op, l));
@@ -7046,6 +7045,10 @@ struct
       | (_, DefT (_, _, StrT _)) ->
         rec_flow cx trace (l, UseT (use_op, r));
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
+      | (DefT (reason, _, (VoidT | NullT)), _)
+      | (_, DefT (reason, _, (VoidT | NullT))) ->
+        add_output cx ~trace (Error_message.ENullVoidAddition reason);
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (AnyT (_, src), _)
       | (_, AnyT (_, src)) ->
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)

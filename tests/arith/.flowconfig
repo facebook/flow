@@ -2,3 +2,6 @@
 module.system=haste
 no_flowlib=false
 all=true
+
+[lints]
+unsafe-addition=error

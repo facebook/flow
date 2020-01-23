@@ -43,6 +43,198 @@ References:
                  ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- Arith.js:21:7
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:21:7
+   21|   num(x + y);
+             ^
+
+References:
+   Arith.js:20:18
+   20| function bar0(x: ?number, y: number) {
+                        ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:24:11
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:24:11
+   24|   num(x + y);
+                 ^
+
+References:
+   Arith.js:23:29
+   23| function bar1(x: number, y: ?number) {
+                                   ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:29:7
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:29:7
+   29|   num(x + y);
+             ^
+
+References:
+   Arith.js:28:19
+   28| function bar2(x?: number, y: number) {
+                         ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:32:11
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:32:11
+   32|   num(x + y);
+                 ^
+
+References:
+   Arith.js:31:30
+   31| function bar3(x: number, y?: number) {
+                                    ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:37:7
+   37|   num(x + y);
+             ^
+
+References:
+   Arith.js:36:19
+   36| function bar4(x?: ?number, y: number) {
+                         ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:37:7
+   37|   num(x + y);
+             ^
+
+References:
+   Arith.js:36:19
+   36| function bar4(x?: ?number, y: number) {
+                         ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:40:11
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:40:11
+   40|   num(x + y);
+                 ^
+
+References:
+   Arith.js:39:30
+   39| function bar5(x: number, y?: ?number) {
+                                    ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:40:11
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   Arith.js:40:11
+   40|   num(x + y);
+                 ^
+
+References:
+   Arith.js:39:30
+   39| function bar5(x: number, y?: ?number) {
+                                    ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:43:5
+
+Cannot perform arithmetic operation because null [1] is not a number. (`unsafe-addition`)
+
+   43| num(null + null); // === 0
+           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:44:5
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   44| num(undefined + undefined); // === NaN
+           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:46:5
+
+Cannot perform arithmetic operation because null [1] is not a number. (`unsafe-addition`)
+
+   46| num(null + 1); // === 1
+           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:47:9
+
+Cannot perform arithmetic operation because null [1] is not a number. (`unsafe-addition`)
+
+   47| num(1 + null); // === 1
+               ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:48:5
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   48| num(undefined + 1); // === NaN
+           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:49:9
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   49| num(1 + undefined); // === NaN
+               ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:51:5
+
+Cannot perform arithmetic operation because null [1] is not a number. (`unsafe-addition`)
+
+   51| num(null + true); // === 1
+           ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:52:12
+
+Cannot perform arithmetic operation because null [1] is not a number. (`unsafe-addition`)
+
+   52| num(true + null); // === 1
+                  ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:53:5
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   53| num(undefined + true); // === NaN
+           ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:54:12
+
+Cannot perform arithmetic operation because undefined [1] is not a number. (`unsafe-addition`)
+
+   54| num(true + undefined); // === NaN
+                  ^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- Arith.js:56:5
 
 Cannot add `"foo"` and `true` because boolean [1] is incompatible with string [2].
@@ -715,4 +907,4 @@ References:
 
 
 
-Found 52 errors
+Found 70 errors
