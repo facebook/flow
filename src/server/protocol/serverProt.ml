@@ -225,7 +225,7 @@ module Response = struct
   (* Results ready to be displayed to the user *)
   type complete_autocomplete_result = {
     res_loc: Loc.t;
-    res_ty: Loc.t * string;
+    res_ty: string;
     res_kind: Lsp.Completion.completionItemKind option;
     res_name: string;
     res_insert_text: string option;

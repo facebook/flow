@@ -129,7 +129,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck a
         List.iter
           (fun res ->
             let name = res.ServerProt.Response.res_name in
-            let (_ty_loc, ty) = res.ServerProt.Response.res_ty in
+            let ty = res.ServerProt.Response.res_ty in
             print_endline (Printf.sprintf "%s %s" name ty))
           completions
     )

@@ -52,24 +52,13 @@ let autocomplete_result_to_json ~strip_root result =
     | None -> Hh_json.JSON_Null
   in
   let name = result.res_name in
-  let (ty_loc, ty) = result.res_ty in
-  (* This is deprecated for two reasons:
-   *   1) The props are still our legacy, flat format rather than grouped into
-   *      "loc" and "range" properties.
-   *   2) It's the location of the definition of the type (the "type loc"),
-   *      which may be interesting but should be its own field. The loc should
-   *      instead be the range to replace (usually but not always the token
-   *      being completed; perhaps we also want to replace the whole member
-   *      expression, for example). That's `result.res_loc`, but we're not
-   *      exposing it in the legacy `flow autocomplete` API; use
-   *      LSP instead.
-   *)
-  let deprecated_loc = Errors.deprecated_json_props_of_loc ~strip_root ty_loc in
+  Pervasives.ignore strip_root;
   Hh_json.JSON_Object
-    ( ("name", Hh_json.JSON_String name)
-    :: ("type", Hh_json.JSON_String ty)
-    :: ("func_details", func_details_to_json result.func_details)
-    :: deprecated_loc )
+    [
+      ("name", Hh_json.JSON_String name);
+      ("type", Hh_json.JSON_String result.res_ty);
+      ("func_details", func_details_to_json result.func_details);
+    ]
 
 let autocomplete_response_to_json ~strip_root response =
   Hh_json.(
@@ -123,8 +112,8 @@ let lsp_completion_of_type =
     | Mu _ ->
       Some Lsp.Completion.Variable)
 
-let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, loc) (ty, ty_loc) =
-  let res_ty = (ty_loc, Ty_printer.string_of_t ~with_comments:false ty) in
+let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, loc) ty =
+  let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   let func_details =
     match ty with
@@ -190,25 +179,22 @@ let autocomplete_member
           if (not (autocomplete_is_valid_member name)) || SSet.mem name exclude_keys then
             acc
           else
-            let loc = Type.loc_of_t type_ |> loc_of_aloc ~reader in
             let scheme = Type.TypeScheme.{ tparams; type_ } in
-            ((name, loc), scheme) :: acc)
+            (name, scheme) :: acc)
         result_map
         []
     in
     let (results, errors_to_log) =
       rev_result
       |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
-      |> Base.List.fold_left
-           ~init:([], [])
-           ~f:(fun (results, errors_to_log) ((name, ty_loc), ty_res) ->
+      |> Base.List.fold_left ~init:([], []) ~f:(fun (results, errors_to_log) (name, ty_res) ->
              match ty_res with
              | Ok ty ->
                let result =
                  autocomplete_create_result
                    ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
                    (name, ac_loc)
-                   (ty, ty_loc)
+                   ty
                in
                (result :: results, errors_to_log)
              | Error err ->
@@ -305,7 +291,7 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
   |> Base.List.filter_map ~f:(fun (name, loc) ->
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
-             ((name, loc), Type.TypeScheme.{ tparams; type_ })))
+             (name, Type.TypeScheme.{ tparams; type_ })))
   |> Ty_normalizer.from_schemes
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -317,14 +303,11 @@ let autocomplete_id
   let (results, errors_to_log) =
     local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, loc), normalization_result) ->
-           match normalization_result with
+         (fun (results, errors_to_log) (name, ty_result) ->
+           match ty_result with
            | Ok ty ->
              let result =
-               autocomplete_create_result
-                 ~show_func_details:(id_type <> JSXIdent)
-                 (name, ac_loc)
-                 (ty, loc)
+               autocomplete_create_result ~show_func_details:(id_type <> JSXIdent) (name, ac_loc) ty
              in
              (result :: results, errors_to_log)
            | Error err ->
@@ -339,7 +322,7 @@ let autocomplete_id
         res_loc = ac_loc;
         res_kind = Some Lsp.Completion.Variable;
         res_name = "this";
-        res_ty = (Loc.none, "this");
+        res_ty = "this";
         func_details = None;
         res_insert_text = None;
       }
@@ -354,7 +337,7 @@ let autocomplete_id
         res_loc = ac_loc;
         res_kind = Some Lsp.Completion.Variable;
         res_name = "super";
-        res_ty = (Loc.none, "super");
+        res_ty = "super";
         func_details = None;
         res_insert_text = None;
       }
@@ -451,7 +434,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
   Pervasives.ignore (search#program typed_ast);
   search#ids
-  |> List.map (fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
+  |> List.map (fun ((_, t), Flow_ast.Identifier.{ name; _ }) -> (name, t))
   |> Ty_normalizer.from_types
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -472,14 +455,14 @@ let type_exports_of_module_ty ~ac_loc =
   | Module (_, { exports; _ }) ->
     Base.List.filter_map exports ~f:(fun (name, ty) ->
         if is_type_export ty then
-          Some (autocomplete_create_result (name, ac_loc) (ty, Loc.none))
+          Some (autocomplete_create_result (name, ac_loc) ty)
         else
           None)
   (* workaround while the ty normalizer sometimes renders modules as objects *)
   | Obj { obj_props; _ } ->
     Base.List.filter_map obj_props ~f:(function
         | NamedProp (name, Field (ty, _)) when is_type_export ty ->
-          Some (autocomplete_create_result (name, ac_loc) (ty, Loc.none))
+          Some (autocomplete_create_result (name, ac_loc) ty)
         | _ -> None)
   | _ -> []
 
@@ -492,7 +475,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
           res_loc = ac_loc;
           res_kind = Some Lsp.Completion.TypeParameter;
           res_name = name;
-          res_ty = (Loc.none, name);
+          res_ty = name;
           func_details = None;
           res_insert_text = None;
         })
@@ -501,10 +484,10 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
   let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
     local_type_identifiers ~typed_ast ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, loc), ty_result) ->
+         (fun (results, errors_to_log) (name, ty_result) ->
            match ty_result with
            | Ok ty ->
-             let result = autocomplete_create_result (name, ac_loc) (ty, loc_of_aloc ~reader loc) in
+             let result = autocomplete_create_result (name, ac_loc) ty in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -517,18 +500,16 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
   let (results, errors_to_log) =
     local_value_identifiers ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, loc), ty_res) ->
+         (fun (results, errors_to_log) (name, ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (results, error_to_log :: errors_to_log)
            | Ok (Ty.ClassDecl _ as ty) ->
-             let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
+             let result = autocomplete_create_result (name, ac_loc) ty in
              (result :: results, errors_to_log)
            | Ok ty when type_exports_of_module_ty ~ac_loc ty <> [] ->
-             let result =
-               autocomplete_create_result (name, ac_loc) (ty, loc) ~insert_text:(name ^ ".")
-             in
+             let result = autocomplete_create_result (name, ac_loc) ty ~insert_text:(name ^ ".") in
              (result :: results, errors_to_log)
            | Ok _ -> (results, errors_to_log))
          (tparam_and_tident_results, tparam_and_tident_errors_to_log)

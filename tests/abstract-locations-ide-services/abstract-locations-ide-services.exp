@@ -27,12 +27,7 @@ Autocomplete class property:
     {
       "name":"foo",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"foo.js",
-      "line":4,
-      "endline":4,
-      "start":3,
-      "end":16
+      "func_details":{"return_type":"void","params":[]}
     }
   ]
 }
