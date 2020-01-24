@@ -33,7 +33,10 @@ type autocomplete_type =
   (* qualified type identifiers *)
   | Acqualifiedtype of Type.t
   (* member expressions *)
-  | Acmem of Type.t
+  | Acmem of {
+      obj_type: Type.t;
+      in_optional_chain: bool;
+    }
   (* JSX attributes *)
   | Acjsx of string * SSet.t * Type.t
   (* JSX text child *)
@@ -110,21 +113,36 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! member expr =
       let open Flow_ast.Expression.Member in
-      let { _object = ((_, obj_t), _); property } = expr in
+      let { _object = ((_, obj_type), _); property } = expr in
       begin
         match property with
         | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
           when is_autocomplete name ->
-          this#find prop_loc (Acmem obj_t)
+          this#find prop_loc (Acmem { obj_type; in_optional_chain = false })
         | _ -> ()
       end;
       super#member expr
+
+    method! optional_member expr =
+      let open Flow_ast.Expression.OptionalMember in
+      let open Flow_ast.Expression.Member in
+      let { member = { _object = ((_, obj_type), _) as obj; property }; optional } = expr in
+      begin
+        match property with
+        | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
+          when is_autocomplete name ->
+          this#find prop_loc (Acmem { obj_type; in_optional_chain = true })
+        | _ -> ()
+      end;
+      (* the reason we don't simply call `super#optional_member` is because that would
+       * call `this#member`, which would be redundant *)
+      { member = { _object = this#expression obj; property }; optional }
 
     method! pattern ?kind pat =
       let open Flow_ast.Pattern in
       begin
         match pat with
-        | ((_, obj_t), Object { Object.properties; _ }) ->
+        | ((_, obj_type), Object { Object.properties; _ }) ->
           List.iter
             (function
               | Object.(
@@ -136,7 +154,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                         _;
                       } ))
                 when is_autocomplete name ->
-                this#find prop_loc (Acmem obj_t)
+                this#find prop_loc (Acmem { obj_type; in_optional_chain = false })
               | _ -> ())
             properties
         | _ -> ()

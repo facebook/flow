@@ -87,6 +87,11 @@ str.js = {
       }
     },
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
       "name":"includes",
       "type":"(searchString: string, position?: number) => boolean",
       "func_details":{
@@ -101,6 +106,11 @@ str.js = {
         "return_type":"number",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       }
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"lastIndexOf",
@@ -164,6 +174,11 @@ str.js = {
         "return_type":"string",
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       }
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"repeat",
@@ -241,6 +256,11 @@ str.js = {
       }
     },
     {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
       "name":"toLocaleUpperCase",
       "type":"(locale?: (string | Array<string>)) => string",
       "func_details":{
@@ -298,6 +318,21 @@ str.js = {
 num.js = {
   "result":[
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
       "name":"toExponential",
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]}
@@ -338,21 +373,6 @@ num.js = {
 bool.js = {
   "result":[
     {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"valueOf",
-      "type":"() => boolean",
-      "func_details":{"return_type":"boolean","params":[]}
-    }
-  ]
-}
-union.js = {
-  "result":[
-    {"name":"bar","type":"string","func_details":null},
-    {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
@@ -379,15 +399,64 @@ union.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]}
+      "type":"() => boolean",
+      "func_details":{"return_type":"boolean","params":[]}
     }
+  ]
+}
+union.js = {
+  "result":[
+    {"name":"bar","type":"string | any","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"((prop: mixed) => boolean) | any",
+      "func_details":null
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"((o: mixed) => boolean) | any",
+      "func_details":null
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"((prop: mixed) => boolean) | any",
+      "func_details":null
+    },
+    {"name":"toLocaleString","type":"(() => string) | any","func_details":null},
+    {"name":"toString","type":"(() => string) | any","func_details":null},
+    {"name":"valueOf","type":"(() => mixed) | any","func_details":null}
   ]
 }
 object_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
 function_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
 fun.js = {
   "result":[
+    {
+      "name":"apply",
+      "type":"(thisArg: any, argArray?: any) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
+      }
+    },
+    {"name":"arguments","type":"any","func_details":null},
+    {
+      "name":"bind",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {
+      "name":"call",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {"name":"caller","type":"any | null","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
@@ -398,6 +467,8 @@ fun.js = {
       "type":"(o: mixed) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
+    {"name":"length","type":"number","func_details":null},
+    {"name":"name","type":"string","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
@@ -429,9 +500,39 @@ this.js = {
     },
     {"name":"baz","type":"string","func_details":null},
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
       "name":"hello",
       "type":"() => void",
       "func_details":{"return_type":"void","params":[]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -444,6 +545,21 @@ this2.js = {
 }
 typeparams.js = {
   "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
     {
       "name":"toExponential",
       "type":"(fractionDigits?: number) => string",
@@ -565,7 +681,7 @@ optional.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]}
     },
-    {"name":"x","type":"void | string","func_details":null}
+    {"name":"x","type":"string | void","func_details":null}
   ]
 }
 jsx1.js = {"result":[{"name":"x","type":"number","func_details":null}]}
@@ -631,11 +747,41 @@ issue-1368.js = {
   "result":[
     {"name":"extended","type":"string","func_details":null},
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
       "name":"method",
       "type":"() => void",
       "func_details":{"return_type":"void","params":[]}
     },
-    {"name":"prop","type":"number","func_details":null}
+    {"name":"prop","type":"number","func_details":null},
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
   ]
 }
 if.js = {
@@ -682,6 +828,11 @@ if.js = {
       }
     },
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
       "name":"includes",
       "type":"(searchString: string, position?: number) => boolean",
       "func_details":{
@@ -696,6 +847,11 @@ if.js = {
         "return_type":"number",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       }
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"lastIndexOf",
@@ -759,6 +915,11 @@ if.js = {
         "return_type":"string",
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       }
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"repeat",
@@ -836,6 +997,11 @@ if.js = {
       }
     },
     {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
       "name":"toLocaleUpperCase",
       "type":"(locale?: (string | Array<string>)) => string",
       "func_details":{
@@ -903,16 +1069,45 @@ override.js = {
       "func_details":{"return_type":"string","params":[]}
     },
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
       "name":"override",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
-member_class_property.js = {"result":[{"name":"baz","type":"string","func_details":null}]}
-member_class_static.js = {
+member_class_property.js = {
   "result":[
-    {"name":"bar","type":"string","func_details":null},
+    {"name":"baz","type":"string","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
@@ -923,6 +1118,68 @@ member_class_static.js = {
       "type":"(o: mixed) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+member_class_static.js = {
+  "result":[
+    {
+      "name":"apply",
+      "type":"(thisArg: any, argArray?: any) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
+      }
+    },
+    {"name":"arguments","type":"any","func_details":null},
+    {"name":"bar","type":"string","func_details":null},
+    {
+      "name":"bind",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {
+      "name":"call",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {"name":"caller","type":"any | null","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {"name":"length","type":"number","func_details":null},
     {"name":"name","type":"string","func_details":null},
     {
       "name":"propertyIsEnumerable",
@@ -946,8 +1203,52 @@ member_class_static.js = {
     }
   ]
 }
-optional_chaining_new.js = {"result":[{"name":"bar","type":"number","func_details":null}]}
-optional_chaining_continue.js = {"result":[{"name":"baz","type":"number","func_details":null}]}
+optional_chaining_new.js = {
+  "result":[
+    {"name":"bar","type":"void | number","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"void | ((o: mixed) => boolean)",
+      "func_details":null
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
+    },
+    {"name":"toLocaleString","type":"void | (() => string)","func_details":null},
+    {"name":"toString","type":"void | (() => string)","func_details":null},
+    {"name":"valueOf","type":"void | (() => mixed)","func_details":null}
+  ]
+}
+optional_chaining_continue.js = {
+  "result":[
+    {"name":"baz","type":"number | void","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"((prop: mixed) => boolean) | void",
+      "func_details":null
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"((o: mixed) => boolean) | void",
+      "func_details":null
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"((prop: mixed) => boolean) | void",
+      "func_details":null
+    },
+    {"name":"toLocaleString","type":"(() => string) | void","func_details":null},
+    {"name":"toString","type":"(() => string) | void","func_details":null},
+    {"name":"valueOf","type":"(() => mixed) | void","func_details":null}
+  ]
+}
 idx.js = {
   "result":[
     {"name":"bar","type":"string","func_details":null},
@@ -1020,323 +1321,28 @@ generic_alias.js = {
 }
 object_literal.js:5:16 = {"result":[]}
 object_literal.js:7:17 = {"result":[]}
-optional_object.js = {
-  "result":[
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]}
-    },
-    {"name":"z","type":"number","func_details":null}
-  ]
-}
-indirect_array.js:5:3 = {
-  "result":[
-    {
-      "name":"@@iterator",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]}
-    },
-    {
-      "name":"concat",
-      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(number | S)>",
-      "func_details":{
-        "return_type":"Array<(number | S)>",
-        "params":[{"name":"...items","type":"Array<Item>"}]
-      }
-    },
-    {
-      "name":"copyWithin",
-      "type":"(target: number, start: number, end?: number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[
-          {"name":"target","type":"number"},
-          {"name":"start","type":"number"},
-          {"name":"end?","type":"number"}
-        ]
-      }
-    },
-    {
-      "name":"entries",
-      "type":"() => Iterator<[number, number]>",
-      "func_details":{"return_type":"Iterator<[number, number]>","params":[]}
-    },
-    {
-      "name":"every",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
-      "func_details":{
-        "return_type":"boolean",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"fill",
-      "type":"(value: number, begin?: number, end?: number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[
-          {"name":"value","type":"number"},
-          {"name":"begin?","type":"number"},
-          {"name":"end?","type":"number"}
-        ]
-      }
-    },
-    {
-      "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
-      "func_details":null
-    },
-    {
-      "name":"find",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => (number | void)",
-      "func_details":{
-        "return_type":"number | void",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"findIndex",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => number",
-      "func_details":{
-        "return_type":"number",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"flat",
-      "type":"(depth?: number) => Array<mixed>",
-      "func_details":{"return_type":"Array<mixed>","params":[{"name":"depth?","type":"number"}]}
-    },
-    {
-      "name":"flatMap",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
-      "func_details":{
-        "return_type":"Array<U>",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U)"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"forEach",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => void",
-      "func_details":{
-        "return_type":"void",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"includes",
-      "type":"(searchElement: mixed, fromIndex?: number) => boolean",
-      "func_details":{
-        "return_type":"boolean",
-        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      }
-    },
-    {
-      "name":"indexOf",
-      "type":"(searchElement: mixed, fromIndex?: number) => number",
-      "func_details":{
-        "return_type":"number",
-        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      }
-    },
-    {
-      "name":"join",
-      "type":"(separator?: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"separator?","type":"string"}]}
-    },
-    {
-      "name":"keys",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]}
-    },
-    {
-      "name":"lastIndexOf",
-      "type":"(searchElement: mixed, fromIndex?: number) => number",
-      "func_details":{
-        "return_type":"number",
-        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      }
-    },
-    {"name":"length","type":"number","func_details":null},
-    {
-      "name":"map",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => U, thisArg?: any) => Array<U>",
-      "func_details":{
-        "return_type":"Array<U>",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => U"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"pop",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]}
-    },
-    {
-      "name":"push",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]}
-    },
-    {
-      "name":"reduce",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null
-    },
-    {
-      "name":"reduceRight",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null
-    },
-    {
-      "name":"reverse",
-      "type":"() => Array<number>",
-      "func_details":{"return_type":"Array<number>","params":[]}
-    },
-    {
-      "name":"shift",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]}
-    },
-    {
-      "name":"slice",
-      "type":"(start?: number, end?: number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
-      }
-    },
-    {
-      "name":"some",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
-      "func_details":{
-        "return_type":"boolean",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      }
-    },
-    {
-      "name":"sort",
-      "type":"(compareFn?: (a: number, b: number) => number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[{"name":"compareFn?","type":"(a: number, b: number) => number"}]
-      }
-    },
-    {
-      "name":"splice",
-      "type":"(start: number, deleteCount?: number, ...items: Array<number>) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[
-          {"name":"start","type":"number"},
-          {"name":"deleteCount?","type":"number"},
-          {"name":"...items","type":"Array<number>"}
-        ]
-      }
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"unshift",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]}
-    },
-    {
-      "name":"values",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]}
-    }
-  ]
-}
+optional_object.js = {"result":[]}
+indirect_array.js:5:3 = {"result":[]}
 indirect_array.js:10:3 = {
   "result":[
     {
       "name":"@@iterator",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]}
+      "type":"() => Iterator<T>",
+      "func_details":{"return_type":"Iterator<T>","params":[]}
     },
     {
       "name":"concat",
-      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(number | S)>",
+      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>",
       "func_details":{
-        "return_type":"Array<(number | S)>",
+        "return_type":"Array<(T | S)>",
         "params":[{"name":"...items","type":"Array<Item>"}]
       }
     },
     {
       "name":"copyWithin",
-      "type":"(target: number, start: number, end?: number) => Array<number>",
+      "type":"(target: number, start: number, end?: number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[
           {"name":"target","type":"number"},
           {"name":"start","type":"number"},
@@ -1346,18 +1352,18 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"entries",
-      "type":"() => Iterator<[number, number]>",
-      "func_details":{"return_type":"Iterator<[number, number]>","params":[]}
+      "type":"() => Iterator<[number, T]>",
+      "func_details":{"return_type":"Iterator<[number, T]>","params":[]}
     },
     {
       "name":"every",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean",
       "func_details":{
         "return_type":"boolean",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
@@ -1365,11 +1371,11 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"fill",
-      "type":"(value: number, begin?: number, end?: number) => Array<number>",
+      "type":"(value: T, begin?: number, end?: number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[
-          {"name":"value","type":"number"},
+          {"name":"value","type":"T"},
           {"name":"begin?","type":"number"},
           {"name":"end?","type":"number"}
         ]
@@ -1377,18 +1383,27 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
-      "func_details":null
-    },
-    {
-      "name":"find",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => (number | void)",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => Array<T>",
       "func_details":{
-        "return_type":"number | void",
+        "return_type":"Array<T>",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      }
+    },
+    {
+      "name":"find",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => (T | void)",
+      "func_details":{
+        "return_type":"T | void",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
@@ -1396,13 +1411,13 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"findIndex",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => number",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number",
       "func_details":{
         "return_type":"number",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
@@ -1415,13 +1430,13 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"flatMap",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
+      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
       "func_details":{
         "return_type":"Array<U>",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U)"
+            "type":"(value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U)"
           },
           {"name":"thisArg?","type":"any"}
         ]
@@ -1429,17 +1444,22 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"forEach",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => void",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => void",
       "func_details":{
         "return_type":"void",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
       }
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"includes",
@@ -1456,6 +1476,11 @@ indirect_array.js:10:3 = {
         "return_type":"number",
         "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
       }
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"join",
@@ -1478,65 +1503,81 @@ indirect_array.js:10:3 = {
     {"name":"length","type":"number","func_details":null},
     {
       "name":"map",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => U, thisArg?: any) => Array<U>",
+      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any) => Array<U>",
       "func_details":{
         "return_type":"Array<U>",
         "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => U"
-          },
+          {"name":"callbackfn","type":"(value: T, index: number, array: Array<T>) => U"},
           {"name":"thisArg?","type":"any"}
         ]
       }
     },
+    {"name":"pop","type":"() => T","func_details":{"return_type":"T","params":[]}},
     {
-      "name":"pop",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]}
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"push",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]}
+      "type":"(...items: Array<T>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<T>"}]}
     },
     {
       "name":"reduce",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null
+      "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U",
+      "func_details":{
+        "return_type":"U",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U"
+          },
+          {"name":"initialValue","type":"U"}
+        ]
+      }
     },
     {
       "name":"reduceRight",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null
+      "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U",
+      "func_details":{
+        "return_type":"U",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U"
+          },
+          {"name":"initialValue","type":"U"}
+        ]
+      }
     },
     {
       "name":"reverse",
-      "type":"() => Array<number>",
-      "func_details":{"return_type":"Array<number>","params":[]}
+      "type":"() => Array<T>",
+      "func_details":{"return_type":"Array<T>","params":[]}
     },
     {
       "name":"shift",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]}
+      "type":"() => T",
+      "func_details":{"return_type":"T","params":[]}
     },
     {
       "name":"slice",
-      "type":"(start?: number, end?: number) => Array<number>",
+      "type":"(start?: number, end?: number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
       }
     },
     {
       "name":"some",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean",
       "func_details":{
         "return_type":"boolean",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
@@ -1544,58 +1585,23 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"sort",
-      "type":"(compareFn?: (a: number, b: number) => number) => Array<number>",
+      "type":"(compareFn?: (a: T, b: T) => number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
-        "params":[{"name":"compareFn?","type":"(a: number, b: number) => number"}]
+        "return_type":"Array<T>",
+        "params":[{"name":"compareFn?","type":"(a: T, b: T) => number"}]
       }
     },
     {
       "name":"splice",
-      "type":"(start: number, deleteCount?: number, ...items: Array<number>) => Array<number>",
+      "type":"(start: number, deleteCount?: number, ...items: Array<T>) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[
           {"name":"start","type":"number"},
           {"name":"deleteCount?","type":"number"},
-          {"name":"...items","type":"Array<number>"}
+          {"name":"...items","type":"Array<T>"}
         ]
       }
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"unshift",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]}
-    },
-    {
-      "name":"values",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]}
-    }
-  ]
-}
-infer.js = {
-  "result":[
-    {"name":"b","type":"number","func_details":null},
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
@@ -1608,12 +1614,23 @@ infer.js = {
       "func_details":{"return_type":"string","params":[]}
     },
     {
+      "name":"unshift",
+      "type":"(...items: Array<T>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<T>"}]}
+    },
+    {
       "name":"valueOf",
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]}
+    },
+    {
+      "name":"values",
+      "type":"() => Iterator<T>",
+      "func_details":{"return_type":"Iterator<T>","params":[]}
     }
   ]
 }
+infer.js = {"result":[]}
 eval_predicate.js = {
   "result":[
     {"name":"a","type":"number","func_details":null},
@@ -1717,7 +1734,7 @@ poly.js = {
       "func_details":{"return_type":"mixed","params":[]}
     },
     {"name":"x","type":"number","func_details":null},
-    {"name":"y","type":"number","func_details":null}
+    {"name":"y","type":"T","func_details":null}
   ]
 }
 poly_no_args.js = {
@@ -1752,7 +1769,7 @@ poly_no_args.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]}
     },
-    {"name":"x","type":"number","func_details":null}
+    {"name":"x","type":"S","func_details":null}
   ]
 }
 identifier.js = {
@@ -1951,13 +1968,7 @@ inherited-class-properties.js = {
   "result":[
     {"name":"bar","type":"\"bar\"","func_details":null},
     {"name":"baz","type":"\"baz\"","func_details":null},
-    {"name":"foo","type":"\"oof\"","func_details":null}
-  ]
-}
-function-added-properties.js = {
-  "result":[
-    {"name":"bar","type":"string","func_details":null},
-    {"name":"baz","type":"string","func_details":null},
+    {"name":"foo","type":"\"oof\"","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
@@ -1968,6 +1979,69 @@ function-added-properties.js = {
       "type":"(o: mixed) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+function-added-properties.js = {
+  "result":[
+    {
+      "name":"apply",
+      "type":"(thisArg: any, argArray?: any) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
+      }
+    },
+    {"name":"arguments","type":"any","func_details":null},
+    {"name":"bar","type":"string","func_details":null},
+    {
+      "name":"bind",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {
+      "name":"call",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {"name":"caller","type":"any | null","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {"name":"length","type":"number","func_details":null},
+    {"name":"name","type":"string","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
@@ -2180,7 +2254,7 @@ intersection.js = {
   "result":[
     {"name":"bar","type":"B","func_details":null},
     {"name":"baz","type":"D","func_details":null},
-    {"name":"foo","type":"C","func_details":null},
+    {"name":"foo","type":"C & A","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
