@@ -291,3 +291,15 @@ assert_ok \
 printf "intersection.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty intersection.js 4 5 < intersection.js
+
+printf "rank.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp rank.js 7 11 < rank.js
+
+printf "rank_union.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp rank_union.js 8 3 < rank_union.js
+
+printf "rank_intersection.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp rank_intersection.js 8 3 < rank_intersection.js

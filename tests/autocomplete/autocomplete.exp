@@ -1110,6 +1110,7 @@ member_class_property.js = {
   "kind":6,
   "detail":"string",
   "inlineDetail":"string",
+  "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
 {
@@ -1118,6 +1119,7 @@ member_class_property.js = {
   "detail":"(prop: mixed) => boolean",
   "inlineDetail":"(prop: mixed)",
   "itemType":"boolean",
+  "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
@@ -1130,6 +1132,7 @@ member_class_property.js = {
   "detail":"(o: mixed) => boolean",
   "inlineDetail":"(o: mixed)",
   "itemType":"boolean",
+  "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
@@ -1142,6 +1145,7 @@ member_class_property.js = {
   "detail":"(prop: mixed) => boolean",
   "inlineDetail":"(prop: mixed)",
   "itemType":"boolean",
+  "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
@@ -1154,6 +1158,7 @@ member_class_property.js = {
   "detail":"() => string",
   "inlineDetail":"()",
   "itemType":"string",
+  "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
@@ -1166,6 +1171,7 @@ member_class_property.js = {
   "detail":"() => string",
   "inlineDetail":"()",
   "itemType":"string",
+  "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
@@ -1178,6 +1184,7 @@ member_class_property.js = {
   "detail":"() => mixed",
   "inlineDetail":"()",
   "itemType":"mixed",
+  "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
@@ -2330,4 +2337,223 @@ intersection.js = {
       "func_details":{"return_type":"mixed","params":[]}
     }
   ]
+}
+rank.js = {
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"valueOf()"
+  }
+}
+rank_union.js = {
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":13,
+  "detail":"(() => string) | number",
+  "inlineDetail":"(() => string) | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"valueOf()"
+  }
+}
+rank_intersection.js = {
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":6,
+  "detail":"(() => string) & number",
+  "inlineDetail":"(() => string) & number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"valueOf()"
+  }
 }

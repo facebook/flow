@@ -288,3 +288,10 @@ let expand_primitive_members e =
       Option.map e.member_expansion_info ~f:(fun (_, info) ->
           (true, { info with within_primitive = true; instance_member_expansion_mode = IMUnset }));
   }
+
+(* We let ty_normalizer access this separately from get_member_expansion_info
+ * because this is relevant after we've descended below the top level of the type *)
+let within_primitive e =
+  match e.member_expansion_info with
+  | None -> false
+  | Some (_, { within_primitive; _ }) -> within_primitive

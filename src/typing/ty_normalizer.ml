@@ -938,12 +938,7 @@ end = struct
     Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
   and obj_prop ~env (x, p) =
-    let from_proto =
-      Option.value_map
-        (Env.get_member_expansion_info env)
-        ~f:(fun (Env.{ within_primitive; _ }, _) -> within_primitive)
-        ~default:false
-    in
+    let from_proto = Env.within_primitive env in
     match p with
     | T.Field (_, t, polarity) ->
       let fld_polarity = type_polarity polarity in

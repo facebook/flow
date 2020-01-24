@@ -95,6 +95,7 @@ let flow_completion_to_lsp
           let detail = inlineDetail in
           (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
       in
+      let sortText = Some (Printf.sprintf "%020u" item.rank) in
       {
         label = item.res_name;
         kind = item.res_kind;
@@ -103,7 +104,7 @@ let flow_completion_to_lsp
         itemType;
         documentation = None;
         (* This will be filled in by completionItem/resolve. *)
-        sortText = None;
+        sortText;
         filterText = None;
         (* deprecated and should not be used *)
         insertText = None;

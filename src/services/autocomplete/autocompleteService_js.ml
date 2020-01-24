@@ -112,7 +112,7 @@ let lsp_completion_of_type =
     | Mu _ ->
       Some Lsp.Completion.Variable)
 
-let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, loc) ty =
+let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
   let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   let func_details =
@@ -121,7 +121,15 @@ let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, l
       Some (Signature_help.func_details fun_params fun_rest_param fun_return)
     | _ -> None
   in
-  { res_loc = loc; res_kind; res_name = name; res_insert_text = insert_text; res_ty; func_details }
+  {
+    res_loc = loc;
+    res_kind;
+    res_name = name;
+    res_insert_text = insert_text;
+    res_ty;
+    func_details;
+    rank;
+  }
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -161,7 +169,7 @@ let autocomplete_member
     ~tparams =
   let in_idx = ref false in
   let exception MembersOfTyFailure of string in
-  let rec members_of_ty : Ty.t -> Ty.t SMap.t =
+  let rec members_of_ty : Ty.t -> (Ty.t * bool) SMap.t =
     let open Ty in
     let ty_of_named_prop = function
       | Field (t, { fld_optional = false; _ })
@@ -190,7 +198,8 @@ let autocomplete_member
     let members_of_obj obj_props =
       obj_props
       |> List.map (function
-             | NamedProp { name; prop; _ } -> SMap.singleton name (ty_of_named_prop prop)
+             | NamedProp { name; prop; from_proto } ->
+               SMap.singleton name (ty_of_named_prop prop, from_proto)
              | SpreadProp ty -> members_of_ty ty
              | IndexProp _
              | CallProp _ ->
@@ -212,24 +221,25 @@ let autocomplete_member
       let (t1_members, t2_members, ts_members) =
         let f ty ty_members =
           match has_special_member_behavior ty with
-          | Some member_ty -> SMap.map (Fn.const member_ty) universe
+          | Some member_ty -> SMap.map (Fn.const (member_ty, true)) universe
           | None -> ty_members
         in
         (f t1 t1_members, f t2 t2_members, List.map2 f ts ts_members)
       in
       (* set intersection of members; type union upon overlaps *)
-      List.fold_right
-        (SMap.merge (fun _ ty_opt tys_opt ->
-             match (ty_opt, tys_opt) with
-             | (Some ty, Some tys) -> Some (Nel.cons ty tys)
-             | (None, _)
-             | (_, None) ->
-               None))
-        (t2_members :: ts_members)
-        (SMap.map Nel.one t1_members)
+      SMap.map (fun (t, fp) -> (Nel.one t, fp)) t1_members
+      |> List.fold_right
+           (SMap.merge (fun _ ty_opt tys_opt ->
+                match (ty_opt, tys_opt) with
+                | (Some (ty, fp), Some (tys, fps)) -> Some (Nel.cons ty tys, fp && fps)
+                | (None, _)
+                | (_, None) ->
+                  None))
+           (t2_members :: ts_members)
       |> SMap.map (function
-             | (t, []) -> t
-             | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts)))
+             | ((t, []), fp) -> (t, fp)
+             | ((t1, t2 :: ts), fp) ->
+               (Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts)), fp))
     in
     let members_of_intersection (t1, t2, ts) =
       let (t1_members, t2_members, ts_members) =
@@ -237,19 +247,20 @@ let autocomplete_member
       in
       let special_cases = Base.List.filter_map ~f:has_special_member_behavior (t1 :: t2 :: ts) in
       (* set union of members; type intersection upon overlaps *)
-      List.fold_right
-        (SMap.merge (fun _ ty_opt tys_opt ->
-             match (ty_opt, tys_opt) with
-             | (Some ty, Some tys) -> Some (Nel.cons ty tys)
-             | (Some ty, None) -> Some (Nel.one ty)
-             | (None, Some tys) -> Some tys
-             | (None, None) -> None))
-        (t2_members :: ts_members)
-        (SMap.map Nel.one t1_members)
-      |> SMap.map (List.fold_right Nel.cons special_cases)
+      SMap.map (fun (t, fp) -> (Nel.one t, fp)) t1_members
+      |> List.fold_right
+           (SMap.merge (fun _ ty_opt tys_opt ->
+                match (ty_opt, tys_opt) with
+                | (Some (ty, fp), Some (tys, fps)) -> Some (Nel.cons ty tys, fp && fps)
+                | (Some (ty, fp), None) -> Some (Nel.one ty, fp)
+                | (None, Some (tys, fps)) -> Some (tys, fps)
+                | (None, None) -> None))
+           (t2_members :: ts_members)
+      |> SMap.map (fun (ts, fp) -> (List.fold_right Nel.cons special_cases ts, fp))
       |> SMap.map (function
-             | (t, []) -> t
-             | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts)))
+             | ((t, []), fp) -> (t, fp)
+             | ((t1, t2 :: ts), fp) ->
+               (Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts)), fp))
     in
     function
     | Obj { obj_props; _ } -> members_of_obj obj_props
@@ -318,9 +329,16 @@ let autocomplete_member
              |> members_of_ty
              |> SMap.bindings
              |> List.filter is_valid_member
-             |> List.map (fun (name, ty) ->
+             |> List.map (fun (name, (ty, from_proto)) ->
+                    let rank =
+                      if from_proto then
+                        1
+                      else
+                        0
+                    in
                     autocomplete_create_result
                       ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
+                      ~rank
                       (name, ac_loc)
                       ty);
            errors_to_log = [];
@@ -449,6 +467,7 @@ let autocomplete_id
         res_ty = "this";
         func_details = None;
         res_insert_text = None;
+        rank = 0;
       }
       :: results
     else
@@ -464,6 +483,7 @@ let autocomplete_id
         res_ty = "super";
         func_details = None;
         res_insert_text = None;
+        rank = 0;
       }
       :: results
     else
@@ -603,6 +623,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
           res_ty = name;
           func_details = None;
           res_insert_text = None;
+          rank = 0;
         })
       tparams
   in

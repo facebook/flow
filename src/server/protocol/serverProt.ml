@@ -230,6 +230,7 @@ module Response = struct
     res_name: string;
     res_insert_text: string option;
     func_details: func_details_result option;
+    rank: int;
   }
 
   type autocomplete_response = (complete_autocomplete_result list, string) result
