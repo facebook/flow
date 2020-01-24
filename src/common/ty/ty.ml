@@ -142,7 +142,11 @@ and interface_t = {
 and fun_param = { prm_optional: bool }
 
 and prop =
-  | NamedProp of string * named_prop
+  | NamedProp of {
+      name: string;
+      prop: named_prop;
+      from_proto: bool;
+    }
   | IndexProp of dict
   | CallProp of fun_t
   | SpreadProp of t
@@ -516,7 +520,12 @@ let mk_maybe t = mk_union (Null, [Void; t])
 let mk_field_props prop_list =
   Base.List.map
     ~f:(fun (id, t, opt) ->
-      NamedProp (id, Field (t, { fld_polarity = Neutral; fld_optional = opt })))
+      NamedProp
+        {
+          name = id;
+          prop = Field (t, { fld_polarity = Neutral; fld_optional = opt });
+          from_proto = false;
+        })
     prop_list
 
 let mk_object ?(obj_exact = false) ?(obj_frozen = false) ?(obj_literal = false) obj_props =

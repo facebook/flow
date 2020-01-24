@@ -145,6 +145,7 @@ let ty_normalizer_options =
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
+      expand_toplevel_members = None;
     }
 
 type autocomplete_service_result =
@@ -461,7 +462,7 @@ let type_exports_of_module_ty ~ac_loc =
   (* workaround while the ty normalizer sometimes renders modules as objects *)
   | Obj { obj_props; _ } ->
     Base.List.filter_map obj_props ~f:(function
-        | NamedProp (name, Field (ty, _)) when is_type_export ty ->
+        | NamedProp { name; prop = Field (ty, _); _ } when is_type_export ty ->
           Some (autocomplete_create_result (name, ac_loc) ty)
         | _ -> None)
   | _ -> []

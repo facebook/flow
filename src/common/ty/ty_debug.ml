@@ -115,7 +115,7 @@ and dump_field ~depth name { fld_polarity; fld_optional } t =
     (dump_t ~depth t)
 
 and dump_prop ~depth = function
-  | NamedProp (s, p) -> dump_named_prop ~depth s p
+  | NamedProp { name; prop; _ } -> dump_named_prop ~depth name prop
   | IndexProp d -> dump_dict ~depth d
   | CallProp f -> dump_fun_t ~depth f
   | SpreadProp t -> dump_spread ~depth t
@@ -419,10 +419,16 @@ let json_of_t ~strip_root =
     Hh_json.(
       JSON_Object
         (match prop with
-        | NamedProp (name, p) ->
+        | NamedProp { name; prop; from_proto } ->
           [
             ("kind", JSON_String "NamedProp");
-            ("prop", JSON_Object [("name", JSON_String name); ("prop", json_of_named_prop p)]);
+            ( "prop",
+              JSON_Object
+                [
+                  ("name", JSON_String name);
+                  ("prop", json_of_named_prop prop);
+                  ("from_proto", JSON_Bool from_proto);
+                ] );
           ]
         | IndexProp d -> [("kind", JSON_String "IndexProp"); ("prop", json_of_dict d)]
         | CallProp ft ->

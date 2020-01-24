@@ -223,7 +223,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     Ty.(
       fun ~depth prop ->
         match prop with
-        | NamedProp (key, named_prop) ->
+        | NamedProp { name = key; prop = named_prop; _ } ->
           begin
             match named_prop with
             | Field (t, { fld_polarity; fld_optional }) ->

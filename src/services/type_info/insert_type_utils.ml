@@ -204,12 +204,12 @@ class patch_up_react_mapper ?(imports_react = false) () =
     method! on_prop loc prop =
       let prop =
         match prop with
-        | Ty.NamedProp (name, named_prop) when Reason.is_internal_name name ->
+        | Ty.NamedProp { name; prop = named_prop; from_proto } when Reason.is_internal_name name ->
           warn_shadow_prop name loc;
 
           (* Shadow props appear as regular props *)
           let name = String.sub name 1 (String.length name - 1) in
-          Ty.NamedProp (name, named_prop)
+          Ty.NamedProp { name; prop = named_prop; from_proto }
         | prop -> prop
       in
       super#on_prop loc prop

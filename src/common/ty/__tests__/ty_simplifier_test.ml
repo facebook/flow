@@ -28,9 +28,13 @@ module UnionSimplification = struct
                   obj_props =
                     [
                       Ty.NamedProp
-                        ( "f",
-                          Ty.Field
-                            (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false }) );
+                        {
+                          name = "f";
+                          prop =
+                            Ty.Field
+                              (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false });
+                          from_proto = false;
+                        };
                     ];
                 },
               Ty.Obj
@@ -41,9 +45,13 @@ module UnionSimplification = struct
                   obj_props =
                     [
                       Ty.NamedProp
-                        ( "f",
-                          Ty.Field
-                            (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false }) );
+                        {
+                          name = "f";
+                          prop =
+                            Ty.Field
+                              (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false });
+                          from_proto = false;
+                        };
                     ];
                 },
               [] )
@@ -58,9 +66,13 @@ module UnionSimplification = struct
               obj_props =
                 [
                   Ty.NamedProp
-                    ( "f",
-                      Ty.Field (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
-                    );
+                    {
+                      name = "f";
+                      prop =
+                        Ty.Field
+                          (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false });
+                      from_proto = false;
+                    };
                 ];
             }
         in
@@ -81,10 +93,13 @@ module UnionSimplification = struct
                   obj_props =
                     [
                       Ty.NamedProp
-                        ( "f",
-                          Ty.Field
-                            (Ty.Num None, { Ty.fld_polarity = Ty.Positive; fld_optional = false })
-                        );
+                        {
+                          name = "f";
+                          prop =
+                            Ty.Field
+                              (Ty.Num None, { Ty.fld_polarity = Ty.Positive; fld_optional = false });
+                          from_proto = false;
+                        };
                     ];
                 },
               Ty.Obj
@@ -95,10 +110,13 @@ module UnionSimplification = struct
                   obj_props =
                     [
                       Ty.NamedProp
-                        ( "f",
-                          Ty.Field
-                            (Ty.Num None, { Ty.fld_polarity = Ty.Negative; fld_optional = false })
-                        );
+                        {
+                          name = "f";
+                          prop =
+                            Ty.Field
+                              (Ty.Num None, { Ty.fld_polarity = Ty.Negative; fld_optional = false });
+                          from_proto = false;
+                        };
                     ];
                 },
               [] )
@@ -130,10 +148,14 @@ module BotAndTopSimplification = struct
                   obj_props =
                     [
                       Ty.NamedProp
-                        ( "f",
-                          Ty.Field
-                            ( Ty.Bot Ty.EmptyType,
-                              { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) );
+                        {
+                          name = "f";
+                          prop =
+                            Ty.Field
+                              ( Ty.Bot Ty.EmptyType,
+                                { Ty.fld_polarity = Ty.Neutral; fld_optional = false } );
+                          from_proto = false;
+                        };
                     ];
                 },
               Ty.Obj
@@ -144,10 +166,14 @@ module BotAndTopSimplification = struct
                   obj_props =
                     [
                       Ty.NamedProp
-                        ( "f",
-                          Ty.Field
-                            ( Ty.Bot Ty.EmptyMatchingPropT,
-                              { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) );
+                        {
+                          name = "f";
+                          prop =
+                            Ty.Field
+                              ( Ty.Bot Ty.EmptyMatchingPropT,
+                                { Ty.fld_polarity = Ty.Neutral; fld_optional = false } );
+                          from_proto = false;
+                        };
                     ];
                 },
               [] )
@@ -162,10 +188,14 @@ module BotAndTopSimplification = struct
               obj_props =
                 [
                   Ty.NamedProp
-                    ( "f",
-                      Ty.Field
-                        (Ty.Bot Ty.EmptyType, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
-                    );
+                    {
+                      name = "f";
+                      prop =
+                        Ty.Field
+                          ( Ty.Bot Ty.EmptyType,
+                            { Ty.fld_polarity = Ty.Neutral; fld_optional = false } );
+                      from_proto = false;
+                    };
                 ];
             }
         in
