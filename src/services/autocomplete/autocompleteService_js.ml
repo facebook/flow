@@ -155,154 +155,206 @@ type autocomplete_service_result =
   | AcEmpty of string
   | AcFatalError of string
 
-let autocomplete_member
-    ~reader
-    ~exclude_proto_members
-    ?(exclude_keys = SSet.empty)
-    ?compute_insert_text
-    cx
-    file_sig
-    typed_ast
-    this
-    in_optional_chain
-    ac_loc
-    ~tparams =
-  let in_idx = ref false in
-  let exception MembersOfTyFailure of string in
-  let rec members_of_ty : Ty.t -> (Ty.t * bool) SMap.t =
+(* helper types for autocomplete_member *)
+module MemberInfo = struct
+  type 'a t = {
+    ty: 'a;
+    (* Autocomplete ranks members from primitive prototypes below user-defined members.
+     * `from_proto` indicates that the member is from a primitive prototype. *)
+    from_proto: bool;
+    (* If a member came from a possibly-null/undefined object, autocomplete may suggest
+     * that the user use optional chaining to access it.
+     * `from_nullable` indicates that the member is from a possibly-null/undefined object. *)
+    from_nullable: bool;
+  }
+
+  let map f info = { info with ty = f info.ty }
+
+  (*  There are two special cases we'll consider when recursively getting the members of
+   *  a constituent type in a union/intersection:
+   *  - `EmptyOrAny`:
+   *    the given type's member set is the universal set,
+   *    where each member's type is the given type.
+   *  - `Nullish`:
+   *    the given type is Void or Null.
+   *  `Normal` indicates a type which falls into neither of these special cases. *)
+  type membership_behavior =
+    | EmptyOrAny
+    | Nullish
+    | Normal
+
+  let membership_behavior =
     let open Ty in
-    let ty_of_named_prop = function
-      | Field (t, { fld_optional = false; _ })
-      | Get t
-      | Set t ->
-        t
-      | Field (t, { fld_optional = true; _ }) -> Union (t, Void, [])
-      | Method ft -> Fun ft
-    in
-    (* Some types' member sets are the universal set, which we can't encode in an SMap.
-     * Instead, `has_special_member_behavior` says whether the given type is such a type,
-     * and if so, the type of its members. *)
-    let has_special_member_behavior = function
-      | (Bot _ | Any _) as ty -> Some ty
-      | Void
-      | Null ->
-        if in_optional_chain then
-          Some Void
-        else if !in_idx then
-          Some (Bot EmptyType)
-        else
-          None
-      (* TODO: suggest optional chaining *)
-      | _ -> None
-    in
-    let members_of_obj obj_props =
-      obj_props
-      |> List.map (function
+    function
+    | Bot _
+    | Any _ ->
+      EmptyOrAny
+    | Void
+    | Null ->
+      Nullish
+    | _ -> Normal
+end
+
+(* returns (members, errors to log) *)
+let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
+  let open Ty in
+  let ty_of_named_prop = function
+    | Field (t, { fld_optional = false; _ })
+    | Get t
+    | Set t ->
+      t
+    | Field (t, { fld_optional = true; _ }) -> Union (t, Void, [])
+    | Method ft -> Fun ft
+  in
+  let members_of_obj obj_props =
+    obj_props
+    |> Base.List.fold_left ~init:(SMap.empty, []) ~f:(fun (mems1, errs1) prop ->
+           let (mems2, errs2) =
+             match prop with
              | NamedProp { name; prop; from_proto } ->
-               SMap.singleton name (ty_of_named_prop prop, from_proto)
+               ( SMap.singleton
+                   name
+                   MemberInfo.{ ty = ty_of_named_prop prop; from_proto; from_nullable = false },
+                 [] )
              | SpreadProp ty -> members_of_ty ty
              | IndexProp _
              | CallProp _ ->
-               SMap.empty)
-      |> Base.List.fold_left ~init:SMap.empty ~f:(SMap.union ~combine:(fun _ _ snd -> Some snd))
+               (SMap.empty, [])
+           in
+           (SMap.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
+  in
+  let members_of_union (t1, t2, ts) =
+    let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
+      (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
     in
-    let members_of_union (t1, t2, ts) =
-      let (t1_members, t2_members, ts_members) =
-        (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts)
+    let errs = List.concat (errs1 :: errs2 :: errss) in
+    let universe =
+      (* set union of all child members *)
+      List.fold_right
+        (SMap.merge (fun _ _ _ -> Some ()))
+        (t1_members :: t2_members :: ts_members)
+        SMap.empty
+    in
+    (* empty and any have all possible members *)
+    let (t1_members, t2_members, ts_members) =
+      let f ty ty_members =
+        let open MemberInfo in
+        match membership_behavior ty with
+        | EmptyOrAny ->
+          SMap.map (Fn.const { ty; from_proto = true; from_nullable = false }) universe
+        | Nullish ->
+          SMap.map
+            (* Bot is the identity of type union *)
+            (Fn.const { ty = Bot EmptyType; from_proto = true; from_nullable = true })
+            universe
+        | Normal -> ty_members
       in
-      let universe =
-        (* set union of all child members *)
-        List.fold_right
-          (SMap.merge (fun _ _ _ -> Some ()))
-          (t1_members :: t2_members :: ts_members)
-          SMap.empty
-      in
-      (* empty and any have all possible members *)
-      let (t1_members, t2_members, ts_members) =
-        let f ty ty_members =
-          match has_special_member_behavior ty with
-          | Some member_ty -> SMap.map (Fn.const (member_ty, true)) universe
-          | None -> ty_members
-        in
-        (f t1 t1_members, f t2 t2_members, List.map2 f ts ts_members)
-      in
+      (f t1 t1_members, f t2 t2_members, List.map2 f ts ts_members)
+    in
+    let mems =
       (* set intersection of members; type union upon overlaps *)
-      SMap.map (fun (t, fp) -> (Nel.one t, fp)) t1_members
+      SMap.map (MemberInfo.map Nel.one) t1_members
       |> List.fold_right
            (SMap.merge (fun _ ty_opt tys_opt ->
+                let open MemberInfo in
                 match (ty_opt, tys_opt) with
-                | (Some (ty, fp), Some (tys, fps)) -> Some (Nel.cons ty tys, fp && fps)
+                | ( Some { ty; from_proto = fp; from_nullable = fn },
+                    Some { ty = tys; from_proto = fps; from_nullable = fns } ) ->
+                  (* We say that a member formed by unioning other members should be treated:
+                    * - as from a prototype only if all its constituent members are.
+                    * - as from a nullable object if any of its constituent members are. *)
+                  Some { ty = Nel.cons ty tys; from_proto = fp && fps; from_nullable = fn || fns }
                 | (None, _)
                 | (_, None) ->
                   None))
            (t2_members :: ts_members)
-      |> SMap.map (function
-             | ((t, []), fp) -> (t, fp)
-             | ((t1, t2 :: ts), fp) ->
-               (Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts)), fp))
+      |> SMap.map
+           (MemberInfo.map (function
+               | (t, []) -> t
+               | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))))
     in
-    let members_of_intersection (t1, t2, ts) =
-      let (t1_members, t2_members, ts_members) =
-        (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts)
-      in
-      let special_cases = Base.List.filter_map ~f:has_special_member_behavior (t1 :: t2 :: ts) in
+    (mems, errs)
+  in
+  let members_of_intersection (t1, t2, ts) =
+    let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
+      (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
+    in
+    let errs = List.concat (errs1 :: errs2 :: errss) in
+    let special_cases =
+      Base.List.filter_map
+        ~f:(fun ty ->
+          let open MemberInfo in
+          match membership_behavior ty with
+          | EmptyOrAny -> Some ty
+          | Nullish
+          | Normal ->
+            None)
+        (t1 :: t2 :: ts)
+    in
+    let mems =
       (* set union of members; type intersection upon overlaps *)
-      SMap.map (fun (t, fp) -> (Nel.one t, fp)) t1_members
+      SMap.map (MemberInfo.map Nel.one) t1_members
       |> List.fold_right
            (SMap.merge (fun _ ty_opt tys_opt ->
+                let open MemberInfo in
                 match (ty_opt, tys_opt) with
-                | (Some (ty, fp), Some (tys, fps)) -> Some (Nel.cons ty tys, fp && fps)
-                | (Some (ty, fp), None) -> Some (Nel.one ty, fp)
-                | (None, Some (tys, fps)) -> Some (tys, fps)
+                | ( Some { ty; from_proto = fp; from_nullable = fn },
+                    Some { ty = tys; from_proto = fps; from_nullable = fns } ) ->
+                  (* We say that a member formed by intersecting other members should be treated:
+                    * - as from a prototype only if all its constituent members are.
+                    * - as from a nullable object only if all its constituent members are. *)
+                  Some { ty = Nel.cons ty tys; from_proto = fp && fps; from_nullable = fn && fns }
+                | (Some info, None) -> Some (MemberInfo.map Nel.one info)
+                | (None, Some info) -> Some info
                 | (None, None) -> None))
            (t2_members :: ts_members)
-      |> SMap.map (fun (ts, fp) -> (List.fold_right Nel.cons special_cases ts, fp))
-      |> SMap.map (function
-             | ((t, []), fp) -> (t, fp)
-             | ((t1, t2 :: ts), fp) ->
-               (Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts)), fp))
+      |> SMap.map (MemberInfo.map (List.fold_right Nel.cons special_cases))
+      |> SMap.map
+           (MemberInfo.map (function
+               | (t, []) -> t
+               | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))))
     in
-    function
-    | Obj { obj_props; _ } -> members_of_obj obj_props
-    | Fun { fun_static; _ } -> members_of_ty fun_static
-    | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
-    | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
-    | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
-      | BoolLit _ | Arr _ | Tup _ | TypeAlias _ ) as t ->
-      raise
-        (MembersOfTyFailure
-           (Printf.sprintf
-              "expand_toplevel_members (%s)\nunexpectedly returned (%s)"
-              (Debug_js.dump_t cx this)
-              (Ty_debug.dump_t t)))
-    | Any _
-    | Top
-    | Bot _
-    | Void
-    | Null
-    | InlineInterface _
-    | TypeOf _
-    | ClassDecl _
-    | InterfaceDecl _
-    | EnumDecl _
-    | Utility _
-    | Module _
-    | Mu _ ->
-      SMap.empty
+    (mems, errs)
   in
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  function
+  | Obj { obj_props; _ } -> members_of_obj obj_props
+  | Fun { fun_static; _ } -> members_of_ty fun_static
+  | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
+  | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
+  | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
+    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ ) as t ->
+    (SMap.empty, [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)])
+  | Any _
+  | Top
+  | Bot _
+  | Void
+  | Null
+  | InlineInterface _
+  | TypeOf _
+  | ClassDecl _
+  | InterfaceDecl _
+  | EnumDecl _
+  | Utility _
+  | Module _
+  | Mu _ ->
+    (SMap.empty, [])
+
+let members_of_type
+    ~exclude_proto_members
+    ?(exclude_keys = SSet.empty)
+    ?(idx_hook = Pervasives.ignore)
+    cx
+    file_sig
+    typed_ast
+    this
+    ~tparams =
   let this_ty_res =
     Ty_normalizer.from_scheme
       ~options:
         {
           ty_normalizer_options with
           Ty_normalizer_env.expand_toplevel_members =
-            Some
-              Ty_normalizer_env.
-                {
-                  include_proto_members = not exclude_proto_members;
-                  idx_hook = (fun () -> in_idx := true);
-                };
+            Some Ty_normalizer_env.{ include_proto_members = not exclude_proto_members; idx_hook };
         }
       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       Type.TypeScheme.{ tparams; type_ = this }
@@ -318,32 +370,70 @@ let autocomplete_member
     not (SSet.mem s exclude_keys)
   in
   match this_ty_res with
-  | Error error -> AcResult { results = []; errors_to_log = [Ty_normalizer.error_to_string error] }
-  | Ok (Ty.Any _) -> AcFatalError "not enough type information to autocomplete"
+  | Error error -> return ([], [Ty_normalizer.error_to_string error])
+  | Ok (Ty.Any _) -> fail "not enough type information to autocomplete"
   | Ok this_ty ->
-    (try
-       AcResult
-         {
-           results =
-             this_ty
-             |> members_of_ty
-             |> SMap.bindings
-             |> List.filter is_valid_member
-             |> List.map (fun (name, (ty, from_proto)) ->
-                    let rank =
-                      if from_proto then
-                        1
-                      else
-                        0
-                    in
-                    autocomplete_create_result
-                      ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
-                      ~rank
-                      (name, ac_loc)
-                      ty);
-           errors_to_log = [];
-         }
-     with MembersOfTyFailure e -> AcFatalError e)
+    let (mems, errs) = members_of_ty this_ty in
+    return
+      ( mems |> SMap.bindings |> List.filter is_valid_member,
+        match errs with
+        | [] -> []
+        | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx this) :: errs )
+
+let autocomplete_member
+    ~reader
+    ~exclude_proto_members
+    ?exclude_keys
+    cx
+    file_sig
+    typed_ast
+    this
+    in_optional_chain
+    ac_loc
+    ~tparams =
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let in_idx = ref false in
+  let idx_hook () = in_idx := true in
+  match
+    members_of_type
+      ~exclude_proto_members
+      ?exclude_keys
+      ~idx_hook
+      cx
+      file_sig
+      typed_ast
+      this
+      ~tparams
+  with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log) ->
+    let results =
+      mems
+      |> List.map (fun (name, MemberInfo.{ ty; from_proto; from_nullable }) ->
+             let rank =
+               if from_proto then
+                 1
+               else
+                 0
+             in
+             let opt_chain_ty =
+               Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
+             in
+             match (from_nullable, in_optional_chain, !in_idx) with
+             | (false, _, _)
+             | (_, _, true) ->
+               autocomplete_create_result ~rank (name, ac_loc) ty
+             | (true, false, false) ->
+               let opt_chain_name = "?." ^ name in
+               let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
+               autocomplete_create_result
+                 ~insert_text:opt_chain_name
+                 ~rank
+                 (opt_chain_name, opt_chain_ac_loc)
+                 opt_chain_ty
+             | (true, true, false) -> autocomplete_create_result ~rank (name, ac_loc) opt_chain_ty)
+    in
+    AcResult { results; errors_to_log }
 
 (* turns typed AST into normal AST so we can run Scope_builder on it *)
 (* TODO(vijayramamurthy): make scope builder polymorphic *)
@@ -508,18 +598,26 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
    * it from the autocomplete results, along with already used attribute names. *)
   let exclude_keys = SSet.add "children" used_attr_names in
   (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
-  autocomplete_member
-    ~reader
-    ~exclude_proto_members:true
-    ~exclude_keys
-    ~compute_insert_text:(fun name -> name ^ "=")
-    cx
-    file_sig
-    typed_ast
-    props_object
-    false
-    ac_loc
-    ~tparams
+  let mems_result =
+    members_of_type
+      ~exclude_proto_members:true
+      ~exclude_keys
+      cx
+      file_sig
+      typed_ast
+      props_object
+      ~tparams
+  in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  match mems_result with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log) ->
+    let results =
+      mems
+      |> List.map (fun (name, MemberInfo.{ ty; _ }) ->
+             autocomplete_create_result ~insert_text:(name ^ "=") (name, ac_loc) ty)
+    in
+    AcResult { results; errors_to_log }
 
 (* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
 (* NOTE: excludes classes, because we'll get those from local_value_identifiers *)

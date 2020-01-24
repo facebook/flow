@@ -72,7 +72,7 @@ let flow_completion_to_lsp
       in
       let plaintext_text_edits =
         lazy
-          ( if item.res_name <> insert_text then
+          ( if Option.is_some item.res_insert_text then
             [text_edit item.res_loc insert_text]
           else
             [] )

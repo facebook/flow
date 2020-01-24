@@ -303,3 +303,15 @@ assert_ok \
 printf "rank_intersection.js = "
 assert_ok \
   "$FLOW" autocomplete --lsp rank_intersection.js 8 3 < rank_intersection.js
+
+printf "suggest_optional_chaining_1.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp suggest_optional_chaining_1.js 4 3 < suggest_optional_chaining_1.js
+
+printf "suggest_optional_chaining_2.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp suggest_optional_chaining_2.js 4 3 < suggest_optional_chaining_2.js
+
+printf "suggest_optional_chaining_3.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp suggest_optional_chaining_3.js 4 3 < suggest_optional_chaining_3.js
