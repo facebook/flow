@@ -128,7 +128,7 @@ assert_ok \
 
 printf "member_class_property.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty member_class_property.js 8 5 < member_class_property.js
+  "$FLOW" autocomplete --lsp member_class_property.js 8 5 < member_class_property.js
 
 printf "member_class_static.js = "
 assert_ok \

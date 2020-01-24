@@ -1106,39 +1106,83 @@ override.js = {
   ]
 }
 member_class_property.js = {
-  "result":[
-    {"name":"baz","type":"string","func_details":null},
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]}
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]}
-    }
-  ]
+  "label":"baz",
+  "kind":6,
+  "detail":"string",
+  "inlineDetail":"string",
+  "insertTextFormat":1
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toString()"
+  }
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"valueOf()"
+  }
 }
 member_class_static.js = {
   "result":[
