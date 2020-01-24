@@ -516,10 +516,16 @@ end = struct
 
   let non_opt_param = Ty.{ prm_optional = false }
 
-  let mk_fun ?(params = []) ?rest ?tparams ret =
+  let mk_fun ?(params = []) ?rest ?tparams ?(static = Ty.(TypeOf FunProto)) ret =
     Ty.(
       Fun
-        { fun_params = params; fun_rest_param = rest; fun_return = ret; fun_type_params = tparams })
+        {
+          fun_params = params;
+          fun_rest_param = rest;
+          fun_return = ret;
+          fun_type_params = tparams;
+          fun_static = static;
+        })
 
   let mk_tparam ?bound ?(pol = Ty.Neutral) ?default name =
     Ty.{ tp_name = name; tp_bound = bound; tp_polarity = pol; tp_default = default }
@@ -704,8 +710,8 @@ end = struct
     | OptionalT { reason = _; type_ = t; use_desc = _ } ->
       let%map t = type__ ~env t in
       Ty.mk_union (Ty.Void, [t])
-    | DefT (_, _, FunT (_, _, f)) ->
-      let%map t = fun_ty ~env f None in
+    | DefT (_, _, FunT (static, _, f)) ->
+      let%map t = fun_ty ~env static f None in
       Ty.Fun t
     | DefT (r, _, ObjT o) -> obj_ty ~env r o
     | DefT (r, _, ArrT a) -> arr_ty ~env r a
@@ -861,20 +867,21 @@ end = struct
     let { Ty.def_loc; name; _ } = symbol_from_reason env reason name in
     return (Ty.Bound (def_loc, name))
 
-  and fun_ty ~env f fun_type_params =
+  and fun_ty ~env static f fun_type_params =
+    let%bind fun_static = type__ ~env static in
     let { T.params; rest_param; return_t; _ } = f in
     let%bind fun_params = mapM (fun_param ~env) params in
     let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
     let%bind fun_return = type__ ~env return_t in
-    return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params }
+    return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static }
 
   and method_ty ~env t =
     Type.(
       match t with
-      | DefT (_, _, FunT (_, _, f)) -> fun_ty ~env f None
-      | DefT (_, _, PolyT { tparams = ps; t_out = DefT (_, _, FunT (_, _, f)); _ }) ->
+      | DefT (_, _, FunT (static, _, f)) -> fun_ty ~env static f None
+      | DefT (_, _, PolyT { tparams = ps; t_out = DefT (_, _, FunT (static, _, f)); _ }) ->
         let%bind ps = mapM (type_param ~env) (Nel.to_list ps) in
-        fun_ty ~env f (Some ps)
+        fun_ty ~env static f (Some ps)
       | _ -> terr ~kind:BadMethodType (Some t))
 
   and fun_param ~env (x, t) =
@@ -1165,8 +1172,8 @@ end = struct
     | T.DefT (_, _, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
     | T.DefT (r, _, T.TypeT (kind, t)) -> type_t ~env r kind t ps
-    | T.DefT (_, _, T.FunT (_, _, f)) ->
-      let%map fun_t = fun_ty ~env f ps in
+    | T.DefT (_, _, T.FunT (static, _, f)) ->
+      let%map fun_t = fun_ty ~env static f ps in
       Ty.Fun fun_t
     | _ -> terr ~kind:BadPoly (Some t)
 

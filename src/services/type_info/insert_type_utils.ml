@@ -75,6 +75,10 @@ class type_validator_visitor =
           Ty.explicit_any
         ) else
           super#on_t env t
+      | Ty.Fun f ->
+        (* skip validating fun_static to preserve behavior from before fun_static
+          was added to fun_t *)
+        super#on_t env Ty.(Fun { f with fun_static = Top })
       | _ -> super#on_t env t
   end
 

@@ -248,7 +248,14 @@ and num_lit lit =
   }
 
 and getter t =
-  function_ { fun_params = []; fun_rest_param = None; fun_return = t; fun_type_params = None }
+  function_
+    {
+      fun_params = [];
+      fun_rest_param = None;
+      fun_return = t;
+      fun_type_params = None;
+      fun_static = Ty.Top;
+    }
 
 and setter t =
   function_
@@ -257,6 +264,7 @@ and setter t =
       fun_rest_param = None;
       fun_return = Void;
       fun_type_params = None;
+      fun_static = Ty.Top;
     }
 
 and class_decl name = generic_type name None >>| fun name -> (Loc.none, T.Typeof name)
