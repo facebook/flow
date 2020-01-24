@@ -267,3 +267,27 @@ assert_ok \
 printf "import_source.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty import_source.js 3 17 < import_source.js
+
+printf "object-with-prototype.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object-with-prototype.js 9 11 < object-with-prototype.js
+
+printf "object-spread-1.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object-spread-1.js 9 3 < object-spread-1.js
+
+printf "object-spread-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object-spread-2.js 9 3 < object-spread-2.js
+
+printf "union-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty union-2.js 4 3 < union-2.js
+
+printf "type-alias.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty type-alias.js 7 3 < type-alias.js
+
+printf "intersection.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty intersection.js 4 5 < intersection.js
