@@ -1,3 +1,13 @@
+### 0.117.0
+
+Notable bug fixes:
+* Improved the behavior of `$Diff` and other type destructors when applied to unions.
+
+Misc:
+* Improved error messages when attempting to use watchman without watchman installed.
+* Removed uses of `Symbol` from libdefs in favor of `symbol`.
+* Fixed definition of `fs.promises.mkdir` (thanks @gabrielrumiranda!)
+
 ### 0.116.1
 
 Notable bug fixes:
