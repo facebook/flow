@@ -21,7 +21,7 @@ class type watcher =
 
     method start_init : unit
 
-    method wait_for_init : (unit, string) result Lwt.t
+    method wait_for_init : timeout:float option -> (unit, string) result Lwt.t
 
     method get_and_clear_changed_files : (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
 
@@ -40,7 +40,7 @@ class dummy : watcher =
 
     method start_init = ()
 
-    method wait_for_init = Lwt.return (Ok ())
+    method wait_for_init ~timeout:_ = Lwt.return (Ok ())
 
     method get_and_clear_changed_files = Lwt.return (SSet.empty, None)
 
@@ -78,7 +78,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
       dfind_instance <- Some dfind
 
-    method wait_for_init =
+    method wait_for_init ~timeout:_ =
       let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
       Lwt.return (Ok result)
 
@@ -349,9 +349,8 @@ end = struct
 
         init_thread <- Some (Watchman_lwt.init settings ())
 
-      method wait_for_init =
-        try%lwt
-          Lwt_unix.with_timeout 120. @@ fun () ->
+      method wait_for_init ~timeout =
+        let go () =
           let%lwt watchman = Option.value_exn init_thread in
           init_thread <- None;
 
@@ -387,8 +386,13 @@ end = struct
             | Error msg ->
               Lwt.return (Error (Printf.sprintf "Failed to initialize watchman: %s" msg)))
           | None -> Lwt.return (Error "Failed to initialize watchman")
-        with Lwt_unix.Timeout ->
-          Lwt.return (Error "Failed to initialize watchman: Watchman timed out")
+        in
+        match timeout with
+        | Some timeout ->
+          (try%lwt Lwt_unix.with_timeout timeout go
+           with Lwt_unix.Timeout ->
+             Lwt.return (Error "Failed to initialize watchman: Watchman timed out"))
+        | None -> go ()
 
       (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we
        * probably don't care about hg updates or mergebase changing if no files were affected *)

@@ -90,6 +90,8 @@ val facebook_fbt : config -> string option
 
 val file_watcher : config -> Options.file_watcher option
 
+val file_watcher_timeout : config -> int option
+
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
