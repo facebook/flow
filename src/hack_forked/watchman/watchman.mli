@@ -21,7 +21,3 @@ end
 
 module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
   Watchman_sig.S with type 'a result = 'a Watchman_process.result
-
-include Watchman_sig.S with type 'a result = 'a
-
-val get_reader : watchman_instance -> Buffered_line_reader.t option
