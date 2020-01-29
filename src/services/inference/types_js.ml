@@ -2945,15 +2945,18 @@ let init ~profiling ~workers options =
   in
   let%lwt (updates, files_to_focus) =
     let now = Unix.gettimeofday () in
-    (* Let's give Watchman another 15 seconds to finish. *)
-    let timeout = 15.0 in
-    let deadline = now +. timeout in
+    let timeout = Options.file_watcher_timeout options in
+    let deadline = Option.map ~f:(fun timeout -> now +. timeout) timeout in
     MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
     let%lwt (watchman_updates, files_to_focus) =
       try%lwt
-        Lwt_unix.with_timeout timeout @@ fun () ->
-        let%lwt get_watchman_updates = get_watchman_updates_thread in
-        get_watchman_updates ~libs:env.ServerEnv.libs
+        let go () =
+          let%lwt get_watchman_updates = get_watchman_updates_thread in
+          get_watchman_updates ~libs:env.ServerEnv.libs
+        in
+        match timeout with
+        | Some timeout -> Lwt_unix.with_timeout timeout go
+        | None -> go ()
       with
       | Lwt_unix.Timeout ->
         let msg =

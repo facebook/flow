@@ -103,6 +103,7 @@ let make_options () =
        ~flowconfig_name:".flowconfig"
        ~flowconfig
        ~lazy_mode:None
+       ~file_watcher_timeout:None
        ~root
        dummy_options_flags)
     with
