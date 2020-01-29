@@ -2861,10 +2861,6 @@ let query_watchman_for_changed_files ~options =
       {
         (* We're not setting up a subscription, we're just sending a single query *)
         Watchman_lwt.subscribe_mode = None;
-        (* Hack makes this configurable in their local config. Apparently buck & hgwatchman
-         * use 10 seconds. But I've seen 10s timeout, so let's not set a timeout. Instead we'll
-         * manually timeout later *)
-        init_timeout = Watchman_lwt.No_timeout;
         expression_terms = Watchman_expression_terms.make ~options;
         subscription_prefix = "flow_server_watcher";
         roots = Files.watched_paths (Options.file_options options);

@@ -28,6 +28,12 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
         | Lwt.Canceled -> Exception.reraise e
         | _ -> catch e)
 
+  let with_timeout timeout f =
+    match timeout_to_secs timeout with
+    | None -> f ()
+    | Some timeout ->
+      (try%lwt Lwt_unix.with_timeout timeout f with Lwt_unix.Timeout -> raise Timeout)
+
   let list_fold_values l ~init ~f = Lwt_list.fold_left_s f init l
 
   (* Send a request to the watchman process *)
@@ -39,16 +45,10 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
     let%lwt () = Lwt_io.fprintl oc json_str in
     Lwt_io.flush oc
 
-  let get_sockname timeout =
+  let get_sockname () =
     let cmd = "watchman" in
     let args = ["--no-pretty"; "get-sockname"] in
-    let%lwt { LwtSysUtils.status; stdout; stderr } =
-      match timeout_to_secs timeout with
-      | None -> LwtSysUtils.exec cmd args
-      | Some timeout ->
-        (try%lwt Lwt_unix.with_timeout timeout @@ fun () -> LwtSysUtils.exec cmd args
-         with Lwt_unix.Timeout -> raise Timeout)
-    in
+    let%lwt { LwtSysUtils.status; stdout; stderr } = LwtSysUtils.exec cmd args in
     match status with
     | Unix.WEXITED 0 ->
       let json = Hh_json.json_of_string stdout in
@@ -77,8 +77,8 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
       raise (Watchman_error msg)
 
   (* Opens a connection to the watchman process through the socket *)
-  let open_connection ~timeout =
-    let%lwt sockname = get_sockname timeout in
+  let open_connection () =
+    let%lwt sockname = get_sockname () in
     let (ic, oc) =
       if
         Sys.os_type = "Unix"
@@ -114,7 +114,7 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
     try%lwt Lwt_io.close oc with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
 
   let with_watchman_conn ~timeout f =
-    let%lwt conn = open_connection ~timeout in
+    let%lwt conn = with_timeout timeout open_connection in
     let%lwt result =
       try%lwt f conn
       with e ->
@@ -133,13 +133,7 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
     | Some (reader, oc) ->
       let%lwt () = send_request ~debug_logging oc json in
       let%lwt line =
-        match timeout_to_secs timeout with
-        | None -> Buffered_line_reader_lwt.get_next_line reader
-        | Some timeout ->
-          (try%lwt
-             Lwt_unix.with_timeout timeout @@ fun () ->
-             Buffered_line_reader_lwt.get_next_line reader
-           with Lwt_unix.Timeout -> raise Timeout)
+        with_timeout timeout @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
       in
       Lwt.return @@ sanitize_watchman_response ~debug_logging line
 
@@ -220,7 +214,6 @@ module Watchman_mock = struct
     let test_settings =
       {
         subscribe_mode = Some Defer_changes;
-        init_timeout = Watchman_sig.Types.No_timeout;
         expression_terms = [];
         debug_logging = false;
         roots = [Path.dummy_path];
