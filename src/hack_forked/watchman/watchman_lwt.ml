@@ -29,7 +29,7 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
         | _ -> catch e)
 
   let with_timeout timeout f =
-    match timeout_to_secs timeout with
+    match timeout with
     | None -> f ()
     | Some timeout ->
       (try%lwt Lwt_unix.with_timeout timeout f with Lwt_unix.Timeout -> raise Timeout)
@@ -127,7 +127,7 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
 
   (* Sends a request to watchman and returns the response. If we don't have a connection,
    * a new connection will be created before the request and destroyed after the response *)
-  let rec request ~debug_logging ?conn ?(timeout = Default_timeout) json =
+  let rec request ~debug_logging ?conn ~timeout json =
     match conn with
     | None -> with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
     | Some (reader, oc) ->
@@ -142,7 +142,7 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
 
   let has_input ~timeout reader =
     let fd = Buffered_line_reader_lwt.get_fd reader in
-    match timeout_to_secs timeout with
+    match timeout with
     | None -> Lwt.return @@ Lwt_unix.readable fd
     | Some timeout ->
       (try%lwt
@@ -151,11 +151,11 @@ module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result 
          Lwt.return true
        with Lwt_unix.Timeout -> Lwt.return false)
 
-  let blocking_read ~debug_logging ?(timeout = No_timeout) ~conn:(reader, _) =
+  let blocking_read ~debug_logging ~timeout ~conn:(reader, _) =
     let%lwt ready = has_input ~timeout reader in
     if not ready then
       match timeout with
-      | No_timeout -> Lwt.return None
+      | None -> Lwt.return None
       | _ -> raise Timeout
     else
       let%lwt output =
@@ -235,9 +235,9 @@ module Watchman_mock = struct
 
   let conn_of_instance _ = None
 
-  let get_changes_since_mergebase ?timeout:_ _ = Lwt.return []
+  let get_changes_since_mergebase ~timeout:_ _ = Lwt.return []
 
-  let get_mergebase ?timeout:_ instance = Lwt.return (instance, Ok "mergebase")
+  let get_mergebase ~timeout:_ instance = Lwt.return (instance, Ok "mergebase")
 
   let close _ = Lwt.return ()
 

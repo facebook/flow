@@ -176,7 +176,7 @@ end = struct
     if env.should_track_mergebase then (
       let%lwt (instance, mergebase) =
         (* callers should provide their own timeout *)
-        Watchman_lwt.(get_mergebase ~timeout:No_timeout env.instance)
+        Watchman_lwt.(get_mergebase ~timeout:None env.instance)
       in
       env.instance <- instance;
       match mergebase with

@@ -22,11 +22,6 @@ module Watchman_process_helpers = struct
   include Watchman_sig.Types
   module J = Hh_json_helpers.AdhocJsonHelpers
 
-  let timeout_to_secs = function
-    | No_timeout -> None
-    | Default_timeout -> Some 120.
-    | Explicit_timeout timeout -> Some timeout
-
   let debug = false
 
   (* Throw this exception when we know there is something to read from
@@ -363,7 +358,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     Watchman_process.request
       ~debug_logging
       ~conn
-      ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+      ~timeout:None (* the whole init process should be wrapped in a timeout *)
       (capability_check ~optional:[flush_subscriptions_cmd] ["relative_root"])
     >>= fun capabilities ->
     let supports_flush = has_capability flush_subscriptions_cmd capabilities in
@@ -385,7 +380,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
             Watchman_process.request
               ~debug_logging
               ~conn
-              ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+              ~timeout:None (* the whole init process should be wrapped in a timeout *)
               (watch_project (Path.to_string path))
             >|= fun response -> Some response)
           ~catch:(fun _ -> Watchman_process.return None)
@@ -431,7 +426,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       assert_watchman_has_not_restarted_since
         ~debug_logging
         ~conn
-        ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+        ~timeout:None (* the whole init process should be wrapped in a timeout *)
         ~watch_root
         ~clockspec
       >>= fun () -> Watchman_process.return clockspec
@@ -439,7 +434,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       Watchman_process.request
         ~debug_logging
         ~conn
-        ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+        ~timeout:None (* the whole init process should be wrapped in a timeout *)
         (clock watch_root)
       >|= J.get_string_val "clock")
     >>= fun clockspec ->
@@ -462,7 +457,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       Watchman_process.request
         ~debug_logging
         ~conn
-        ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+        ~timeout:None (* the whole init process should be wrapped in a timeout *)
         (subscribe ~mode env)
       >|= ignore)
     >|= fun () -> env
@@ -510,7 +505,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
         let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
         (* TODO: don't hardcode this timeout *)
-        Watchman_process.with_timeout Default_timeout @@ fun () ->
+        Watchman_process.with_timeout (Some 120.) @@ fun () ->
         re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings >|= function
         | None ->
           Hh_logger.log "Reestablishing watchman subscription failed.";
@@ -655,34 +650,34 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         let timeout =
           Option.map deadline (fun deadline ->
               let timeout = deadline -. Unix.time () in
-              Explicit_timeout (max timeout 0.0))
+              max timeout 0.0)
         in
         let debug_logging = env.settings.debug_logging in
         if env.settings.subscribe_mode <> None then
-          Watchman_process.blocking_read ~debug_logging ?timeout ~conn:env.conn >|= fun response ->
+          Watchman_process.blocking_read ~debug_logging ~timeout ~conn:env.conn >|= fun response ->
           let (env, result) = transform_asynchronous_get_changes_response env response in
           (env, Watchman_pushed result)
         else
           let query = since_query env in
-          Watchman_process.request ~debug_logging ~conn:env.conn ?timeout query >|= fun response ->
+          Watchman_process.request ~debug_logging ~conn:env.conn ~timeout query >|= fun response ->
           let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
           (env, Watchman_synchronous [changes]))
 
-  let get_changes_since_mergebase ?timeout env =
+  let get_changes_since_mergebase ~timeout env =
     Watchman_process.request
-      ?timeout
+      ~timeout
       ~debug_logging:env.settings.debug_logging
       (get_changes_since_mergebase_query env)
     >|= extract_file_names env
 
-  let get_mergebase ?timeout instance =
+  let get_mergebase ~timeout instance =
     call_on_instance
       instance
       "get_mergebase"
       ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
       ~on_alive:(fun env ->
         Watchman_process.request
-          ?timeout
+          ~timeout
           ~debug_logging:env.settings.debug_logging
           (get_changes_since_mergebase_query env)
         >|= fun response ->

@@ -2874,7 +2874,7 @@ let query_watchman_for_changed_files ~options =
       | Some watchman_env ->
         (* No timeout. We'll time this out ourselves after init if we need *)
         let%lwt changed_files =
-          Watchman_lwt.(get_changes_since_mergebase ~timeout:No_timeout watchman_env)
+          Watchman_lwt.(get_changes_since_mergebase ~timeout:None watchman_env)
         in
         let%lwt () = Watchman_lwt.close watchman_env in
         Lwt.return (SSet.of_list changed_files)
