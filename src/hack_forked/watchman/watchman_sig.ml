@@ -141,7 +141,10 @@ module type S = sig
 
   val get_changes_since_mergebase : ?timeout:timeout -> env -> string list result
 
-  val get_mergebase : ?timeout:timeout -> env -> string result
+  val get_mergebase :
+    ?timeout:timeout ->
+    watchman_instance ->
+    (watchman_instance * (string, string) Pervasives.result) result
 
   val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) result
 

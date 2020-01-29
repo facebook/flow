@@ -173,24 +173,18 @@ end = struct
   }
 
   let get_mergebase env =
-    if env.should_track_mergebase then
-      Watchman_lwt.with_instance
-        env.instance
-        ~try_to_restart:true
-        ~on_alive:(fun watchman_env ->
-          env.instance <- Watchman_lwt.Watchman_alive watchman_env;
-
-          (* scm queries can be a little slow, but they should usually be only a few seconds.
-           * Lets set our worst case to 30s before we exit *)
-          let%lwt mergebase =
-            Watchman_lwt.(get_mergebase ~timeout:(Explicit_timeout 30.) watchman_env)
-          in
-          Lwt.return (Some mergebase))
-        ~on_dead:(fun dead_env ->
-          env.instance <- Watchman_lwt.Watchman_dead dead_env;
-          failwith "Failed to connect to Watchman to get mergebase")
-    else
-      Lwt.return_none
+    if env.should_track_mergebase then (
+      (* scm queries can be a little slow, but they should usually be only a few seconds.
+       * Lets set our worst case to 30s before we exit *)
+        let%lwt (instance, mergebase) =
+          Watchman_lwt.(get_mergebase ~timeout:(Explicit_timeout 30.) env.instance)
+        in
+        env.instance <- instance;
+        match mergebase with
+        | Ok mergebase -> Lwt.return (Ok (Some mergebase))
+        | Error msg -> Lwt.return (Error msg)
+    ) else
+      Lwt.return (Ok None)
 
   module WatchmanListenLoop = LwtLoop.Make (struct
     module J = Hh_json_helpers.AdhocJsonHelpers
@@ -249,7 +243,13 @@ end = struct
                * file in the IDE
                *)
               if env.finished_an_hg_update then
-                let%lwt new_mergebase = get_mergebase env in
+                let%lwt new_mergebase =
+                  match%lwt get_mergebase env with
+                  | Ok mergebase -> Lwt.return mergebase
+                  | Error msg ->
+                    (* TODO: handle this more gracefully than `failwith` *)
+                    failwith msg
+                in
                 match (new_mergebase, env.mergebase) with
                 | (Some new_mergebase, Some old_mergebase) when new_mergebase <> old_mergebase ->
                   Logger.info
@@ -379,12 +379,14 @@ end = struct
               should_track_mergebase;
             }
           in
-          let%lwt mergebase = get_mergebase new_env in
-          Option.iter mergebase ~f:(Logger.info "Watchman reports the initial mergebase as %S");
-          let new_env = { new_env with mergebase } in
-          env <- Some new_env;
-          Lwt.wakeup wakener new_env;
-          Lwt.return (Ok ())
+          (match%lwt get_mergebase new_env with
+          | Ok mergebase ->
+            Option.iter mergebase ~f:(Logger.info "Watchman reports the initial mergebase as %S");
+            let new_env = { new_env with mergebase } in
+            env <- Some new_env;
+            Lwt.wakeup wakener new_env;
+            Lwt.return (Ok ())
+          | Error msg -> Lwt.return (Error (Printf.sprintf "Failed to initialize watchman: %s" msg)))
         | None -> Lwt.return (Error "Failed to initialize watchman")
 
       (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we

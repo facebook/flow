@@ -244,7 +244,7 @@ module Watchman_mock = struct
 
   let get_changes_since_mergebase ?timeout:_ _ = Lwt.return []
 
-  let get_mergebase ?timeout:_ _ = Lwt.return "mergebase"
+  let get_mergebase ?timeout:_ instance = Lwt.return (instance, Ok "mergebase")
 
   let close _ = Lwt.return ()
 
