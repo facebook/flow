@@ -662,15 +662,20 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       (get_changes_since_mergebase_query env)
     >|= extract_file_names env
 
-  let get_mergebase ?timeout env =
-    Watchman_process.request
-      ?timeout
-      ~debug_logging:env.settings.debug_logging
-      (get_changes_since_mergebase_query env)
-    >|= fun response ->
-    match extract_mergebase response with
-    | Some (_clock, mergebase) -> mergebase
-    | None -> raise (Watchman_error "Failed to extract mergebase from response")
+  let get_mergebase ?timeout instance =
+    call_on_instance
+      instance
+      "get_mergebase"
+      ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
+      ~on_alive:(fun env ->
+        Watchman_process.request
+          ?timeout
+          ~debug_logging:env.settings.debug_logging
+          (get_changes_since_mergebase_query env)
+        >|= fun response ->
+        match extract_mergebase response with
+        | Some (_clock, mergebase) -> (env, Ok mergebase)
+        | None -> (env, Error "Failed to extract mergebase from response"))
 
   let conn_of_instance = function
     | Watchman_dead _ -> None
