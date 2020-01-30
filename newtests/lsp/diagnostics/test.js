@@ -188,7 +188,7 @@ export default suite(
         },
       })
         .sleep(1000)
-        .verifyAllLSPMessagesInStep([], []),
+        .verifyAllLSPMessagesInStep([], ['window/showStatus']),
       // Edit it and add a type error. We should see the error.
       lspNotification('textDocument/didChange', {
         textDocument: {
@@ -227,7 +227,7 @@ export default suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
-          [],
+          ['window/showStatus'],
         ),
       // Make another change that doesn't introduce errors. We should get no reports.
       lspNotification('textDocument/didChange', {
@@ -244,7 +244,7 @@ export default suite(
         ],
       })
         .sleep(1000)
-        .verifyAllLSPMessagesInStep([], []),
+        .verifyAllLSPMessagesInStep([], ['window/showStatus']),
       // Make a change that introduces the error. We should get a report immediately.
       lspNotification('textDocument/didChange', {
         textDocument: {
@@ -265,7 +265,7 @@ export default suite(
           [
             'textDocument/publishDiagnostics{Cannot assign `123` to `y` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
-          [],
+          ['window/showStatus'],
         ),
       // Close the file. The live error should go away.
       lspNotification('textDocument/didClose', {
@@ -277,7 +277,7 @@ export default suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
-          [],
+          ['window/showStatus'],
         ),
     ]),
     test('live non-parse diagnostics with unchecked dependencies', [
