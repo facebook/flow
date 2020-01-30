@@ -1,3 +1,7 @@
+### 0.117.1
+
+* Improved timeouts related to Watchman that could cause the server to fail to start if Watchman is slow to respond. Added a `file_watcher_timeout` .flowconfig option and `--file-watcher-timeout` argument to `flow start` and `flow server`, which defaults to 120 seconds.
+
 ### 0.117.0
 
 Notable bug fixes:
