@@ -139,16 +139,11 @@ module type S = sig
 
   val init : ?since_clockspec:string -> init_settings -> unit -> env option result
 
-  val get_all_files : env -> string list result
-
   val get_changes_since_mergebase : ?timeout:timeout -> env -> string list result
 
   val get_mergebase : ?timeout:timeout -> env -> string result
 
   val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) result
-
-  val get_changes_synchronously :
-    timeout:int -> watchman_instance -> (watchman_instance * pushed_changes list) result
 
   val conn_of_instance : watchman_instance -> conn option
 

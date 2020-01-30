@@ -363,8 +363,6 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       let request = JSON_Array (header @ directives) in
       request)
 
-  let all_query env = request_json ~extra_expressions:[Hh_json.JSON_String "exists"] Query env
-
   let get_changes_since_mergebase_query env =
     let extra_kv =
       [
@@ -737,21 +735,6 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     fun instance source f ->
       with_instance instance ~try_to_restart:true ~on_dead ~on_alive:(on_alive source f)
 
-  (** This is a large >50MB payload, which could longer than 2 minutes for
-   * Watchman to generate and push down the channel. *)
-  let get_all_files env =
-    Watchman_process.catch
-      ~f:(fun () ->
-        with_crash_record_exn "get_all_files" @@ fun () ->
-        Watchman_process.request
-          ~debug_logging:env.settings.debug_logging
-          ~timeout:Default_timeout
-          (all_query env)
-        >|= fun response ->
-        env.clockspec <- J.get_string_val "clock" response;
-        extract_file_names env response)
-      ~catch:(fun _ -> raise Exit_status.(Exit_with Watchman_failed))
-
   let make_state_change_response state name data =
     let metadata = J.try_get_val "metadata" data in
     match state with
@@ -829,93 +812,6 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     | Some (_clock, mergebase) -> mergebase
     | None -> raise (Watchman_error "Failed to extract mergebase from response")
 
-  let flush_request ~(timeout : int) watch_root =
-    Hh_json.(
-      let directive =
-        JSON_Object
-          [
-            (* Watchman expects timeout milliseconds. *)
-            ("sync_timeout", JSON_Number (string_of_int @@ (timeout * 1000)));
-          ]
-      in
-      JSON_Array [JSON_String "flush-subscriptions"; JSON_String watch_root; directive])
-
-  let rec poll_until_sync ~deadline env acc =
-    let is_finished_flush_response json =
-      match json with
-      | None -> false
-      | Some json ->
-        Hh_json.Access.(
-          let is_synced =
-            lazy
-              (return json >>= get_array "synced" |> function
-               | Error _ -> false
-               | Ok (vs, _) ->
-                 List.exists vs ~f:(fun str -> Hh_json.get_string_exn str = env.subscription))
-          in
-          let is_not_needed =
-            lazy
-              (return json >>= get_array "no_sync_needed" |> function
-               | Error _ -> false
-               | Ok (vs, _) ->
-                 List.exists vs ~f:(fun str -> Hh_json.get_string_exn str = env.subscription))
-          in
-          Lazy.force is_synced || Lazy.force is_not_needed)
-    in
-    let timeout =
-      let timeout = deadline -. Unix.time () in
-      if timeout <= 0.0 then
-        raise Timeout
-      else
-        Explicit_timeout timeout
-    in
-    let debug_logging = env.settings.debug_logging in
-    Watchman_process.blocking_read ~debug_logging ~timeout ~conn:env.conn >>= fun json ->
-    if is_finished_flush_response json then
-      Watchman_process.return (env, acc)
-    else
-      let (env, acc) =
-        match json with
-        | None -> (env, acc)
-        | Some json ->
-          let (env, result) = transform_asynchronous_get_changes_response env (Some json) in
-          (env, result :: acc)
-      in
-      poll_until_sync ~deadline env acc
-
-  let poll_until_sync ~deadline env = poll_until_sync ~deadline env []
-
-  let get_changes_synchronously ~(timeout : int) instance =
-    ( call_on_instance instance "get_changes_synchronously" @@ fun env ->
-      if env.settings.subscribe_mode = None then
-        let timeout = Explicit_timeout (float timeout) in
-        let query = since_query env in
-        Watchman_process.request
-          ~debug_logging:env.settings.debug_logging
-          ~conn:env.conn
-          ~timeout
-          query
-        >|= fun response ->
-        let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
-        (env, Watchman_synchronous [changes])
-      else
-        let request = flush_request ~timeout env.watch_root in
-        let conn = env.conn in
-        Watchman_process.send_request_and_do_not_wait_for_response
-          ~debug_logging:env.settings.debug_logging
-          ~conn
-          request
-        >>= fun () ->
-        let deadline = Unix.time () +. float_of_int timeout in
-        poll_until_sync ~deadline env >|= fun (env, changes) ->
-        (env, Watchman_synchronous (List.rev changes)) )
-    >|= function
-    | (_, Watchman_unavailable) ->
-      raise (Watchman_error "Watchman unavailable for synchronous response")
-    | (_, Watchman_pushed _) ->
-      raise (Watchman_error "Wtf? pushed response from synchronous request")
-    | (instance, Watchman_synchronous files) -> (instance, files)
-
   let conn_of_instance = function
     | Watchman_dead _ -> None
     | Watchman_alive { conn; _ } -> Some conn
@@ -974,10 +870,6 @@ module Watchman_mock = struct
     let changes = ref Watchman_unavailable
 
     let get_changes_returns v = changes := v
-
-    let changes_synchronously = ref []
-
-    let all_files = ref []
   end
 
   module Testing = struct
@@ -996,20 +888,9 @@ module Watchman_mock = struct
     Mocking.changes := Watchman_unavailable;
     (instance, result)
 
-  let get_changes_synchronously ~timeout instance =
-    let _ = timeout in
-    let result = !Mocking.changes_synchronously in
-    Mocking.changes_synchronously := [];
-    (instance, result)
-
   let get_reader _ = None
 
   let conn_of_instance _ = None
-
-  let get_all_files _ =
-    let result = !Mocking.all_files in
-    Mocking.all_files := [];
-    result
 
   let get_changes_since_mergebase ?timeout:_ _ = []
 
