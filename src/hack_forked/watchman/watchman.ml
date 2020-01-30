@@ -311,7 +311,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
    * we'll instead send a small "query" request. It should always return 0 files, but it should
    * tell us whether the Watchman service has restarted since clockspec.
    *)
-  let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
+  let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~timeout ~watch_root ~clockspec =
     let hard_to_match_name = "irrelevant.potato" in
     let query =
       Hh_json.(
@@ -327,7 +327,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
               ];
           ])
     in
-    Watchman_process.request ~debug_logging ~conn query >>= fun response ->
+    Watchman_process.request ~debug_logging ~conn ~timeout query >>= fun response ->
     match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
     | Some false -> Watchman_process.return ()
     | Some true ->
@@ -357,14 +357,13 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
 
   let re_init
       ?prior_clockspec
-      { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix }
-      =
+      { subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
     with_crash_record_opt "init" @@ fun () ->
-    Watchman_process.open_connection ~timeout:init_timeout >>= fun conn ->
+    Watchman_process.open_connection () >>= fun conn ->
     Watchman_process.request
       ~debug_logging
       ~conn
-      ~timeout:Default_timeout
+      ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
       (capability_check ~optional:[flush_subscriptions_cmd] ["relative_root"])
     >>= fun capabilities ->
     let supports_flush = has_capability flush_subscriptions_cmd capabilities in
@@ -383,7 +382,11 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
          * the error and continue for now. *)
         Watchman_process.catch
           ~f:(fun () ->
-            Watchman_process.request ~debug_logging ~conn (watch_project (Path.to_string path))
+            Watchman_process.request
+              ~debug_logging
+              ~conn
+              ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+              (watch_project (Path.to_string path))
             >|= fun response -> Some response)
           ~catch:(fun _ -> Watchman_process.return None)
         >|= fun response ->
@@ -425,25 +428,27 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     (* If we don't have a prior clockspec, grab the current clock *)
     (match prior_clockspec with
     | Some clockspec ->
-      assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
+      assert_watchman_has_not_restarted_since
+        ~debug_logging
+        ~conn
+        ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+        ~watch_root
+        ~clockspec
       >>= fun () -> Watchman_process.return clockspec
     | None ->
-      Watchman_process.request ~debug_logging ~conn (clock watch_root) >|= J.get_string_val "clock")
+      Watchman_process.request
+        ~debug_logging
+        ~conn
+        ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+        (clock watch_root)
+      >|= J.get_string_val "clock")
     >>= fun clockspec ->
     let watched_path_expression_terms =
       Option.map watched_path_expression_terms ~f:(J.pred "anyof")
     in
     let env =
       {
-        settings =
-          {
-            init_timeout;
-            debug_logging;
-            subscribe_mode;
-            expression_terms;
-            roots;
-            subscription_prefix;
-          };
+        settings = { debug_logging; subscribe_mode; expression_terms; roots; subscription_prefix };
         conn;
         watch_root;
         watched_path_expression_terms;
@@ -453,7 +458,13 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     in
     (match subscribe_mode with
     | None -> Watchman_process.return ()
-    | Some mode -> Watchman_process.request ~debug_logging ~conn (subscribe ~mode env) >|= ignore)
+    | Some mode ->
+      Watchman_process.request
+        ~debug_logging
+        ~conn
+        ~timeout:No_timeout (* the whole init process should be wrapped in a timeout *)
+        (subscribe ~mode env)
+      >|= ignore)
     >|= fun () -> env
 
   let init ?since_clockspec settings () =
@@ -498,6 +509,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         raise Exit_status.(Exit_with Watchman_failed)
       else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
         let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
+        (* TODO: don't hardcode this timeout *)
+        Watchman_process.with_timeout Default_timeout @@ fun () ->
         re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings >|= function
         | None ->
           Hh_logger.log "Reestablishing watchman subscription failed.";
@@ -687,7 +700,6 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     let test_settings =
       {
         subscribe_mode = Some Defer_changes;
-        init_timeout = Watchman_sig.Types.No_timeout;
         expression_terms = [];
         debug_logging = false;
         roots = [Path.dummy_path];

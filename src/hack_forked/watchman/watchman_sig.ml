@@ -33,8 +33,6 @@ module Types = struct
   type init_settings = {
     (* None for query mode, otherwise specify subscriptions mode. *)
     subscribe_mode: subscribe_mode option;
-    (* Seconds used for init timeout - will be reused for reinitialization. None -> no timeout *)
-    init_timeout: timeout;
     (* See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     debug_logging: bool;
@@ -106,7 +104,9 @@ module type WATCHMAN_PROCESS = sig
 
   val list_fold_values : 'a list -> init:'b -> f:('b -> 'a -> 'b result) -> 'b result
 
-  val open_connection : timeout:Types.timeout -> conn result
+  val with_timeout : Types.timeout -> (unit -> 'a result) -> 'a result
+
+  val open_connection : unit -> conn result
 
   val request :
     debug_logging:bool ->
