@@ -515,7 +515,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
   let close_channel_on_instance env =
     close env >|= fun () ->
     EventLogger.watchman_died_caught ();
-    (Watchman_dead (dead_env_from_alive env), Watchman_unavailable)
+    dead_env_from_alive env
 
   let with_instance instance ~try_to_restart ~on_alive ~on_dead =
     ( if try_to_restart then
@@ -533,21 +533,27 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
    * Alternatively, we also proactively revert to a dead instance if it appears
    * to be unresponsive (Timeout), and if reading the payload from it is
    * taking too long. *)
-  let call_on_instance =
-    let on_dead dead_env = Watchman_process.return (Watchman_dead dead_env, Watchman_unavailable) in
-    let on_alive source f env =
+  let call_on_instance :
+      watchman_instance ->
+      string ->
+      on_dead:(dead_env -> 'a) ->
+      on_alive:(env -> (env * 'a) Watchman_process.result) ->
+      (watchman_instance * 'a) Watchman_process.result =
+    let on_dead' f dead_env = Watchman_process.return (Watchman_dead dead_env, f dead_env) in
+    let on_alive' ~on_dead source f env =
       Watchman_process.catch
         ~f:(fun () ->
           with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
           (Watchman_alive env, result))
         ~catch:(fun exn ->
+          let close_channel_on_instance' env = close_channel_on_instance env >>= on_dead' on_dead in
           match Exception.unwrap exn with
           | Sys_error msg when msg = "Broken pipe" ->
             Hh_logger.log "Watchman Pipe broken.";
-            close_channel_on_instance env
+            close_channel_on_instance' env
           | Sys_error msg when msg = "Connection reset by peer" ->
             Hh_logger.log "Watchman connection reset by peer.";
-            close_channel_on_instance env
+            close_channel_on_instance' env
           | Sys_error msg when msg = "Bad file descriptor" ->
             (* This happens when watchman is tearing itself down after we
              * retrieved a sock address and connected to the sock address. That's
@@ -560,26 +566,30 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
              * to start with. *)
             Hh_logger.log "Watchman bad file descriptor.";
             EventLogger.watchman_died_caught ();
-            Watchman_process.return (Watchman_dead (dead_env_from_alive env), Watchman_unavailable)
+            on_dead' on_dead (dead_env_from_alive env)
           | End_of_file ->
             Hh_logger.log "Watchman connection End_of_file. Closing channel";
-            close_channel_on_instance env
+            close_channel_on_instance' env
           | Watchman_process.Read_payload_too_long ->
             Hh_logger.log "Watchman reading payload too long. Closing channel";
-            close_channel_on_instance env
+            close_channel_on_instance' env
           | Timeout ->
             Hh_logger.log "Watchman reading Timeout. Closing channel";
-            close_channel_on_instance env
+            close_channel_on_instance' env
           | Watchman_error msg ->
             Hh_logger.log "Watchman error: %s. Closing channel" msg;
-            close_channel_on_instance env
+            close_channel_on_instance' env
           | _ ->
             let msg = Exception.to_string exn in
             EventLogger.watchman_uncaught_failure msg;
             raise Exit_status.(Exit_with Watchman_failed))
     in
-    fun instance source f ->
-      with_instance instance ~try_to_restart:true ~on_dead ~on_alive:(on_alive source f)
+    fun instance source ~on_dead ~on_alive ->
+      with_instance
+        instance
+        ~try_to_restart:true
+        ~on_dead:(on_dead' on_dead)
+        ~on_alive:(on_alive' ~on_dead source on_alive)
 
   let make_state_change_response state name data =
     let metadata = J.try_get_val "metadata" data in
@@ -624,22 +634,26 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       end
 
   let get_changes ?deadline instance =
-    call_on_instance instance "get_changes" @@ fun env ->
-    let timeout =
-      Option.map deadline (fun deadline ->
-          let timeout = deadline -. Unix.time () in
-          Explicit_timeout (max timeout 0.0))
-    in
-    let debug_logging = env.settings.debug_logging in
-    if env.settings.subscribe_mode <> None then
-      Watchman_process.blocking_read ~debug_logging ?timeout ~conn:env.conn >|= fun response ->
-      let (env, result) = transform_asynchronous_get_changes_response env response in
-      (env, Watchman_pushed result)
-    else
-      let query = since_query env in
-      Watchman_process.request ~debug_logging ~conn:env.conn ?timeout query >|= fun response ->
-      let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
-      (env, Watchman_synchronous [changes])
+    call_on_instance
+      instance
+      "get_changes"
+      ~on_dead:(fun _ -> Watchman_unavailable)
+      ~on_alive:(fun env ->
+        let timeout =
+          Option.map deadline (fun deadline ->
+              let timeout = deadline -. Unix.time () in
+              Explicit_timeout (max timeout 0.0))
+        in
+        let debug_logging = env.settings.debug_logging in
+        if env.settings.subscribe_mode <> None then
+          Watchman_process.blocking_read ~debug_logging ?timeout ~conn:env.conn >|= fun response ->
+          let (env, result) = transform_asynchronous_get_changes_response env response in
+          (env, Watchman_pushed result)
+        else
+          let query = since_query env in
+          Watchman_process.request ~debug_logging ~conn:env.conn ?timeout query >|= fun response ->
+          let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
+          (env, Watchman_synchronous [changes]))
 
   let get_changes_since_mergebase ?timeout env =
     Watchman_process.request
