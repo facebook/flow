@@ -18,21 +18,6 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-(** Stuff shared between Actual and Mocked implementations. *)
-module Testing_common = struct
-  open Watchman_sig.Types
-
-  let test_settings =
-    {
-      subscribe_mode = Some Defer_changes;
-      init_timeout = Watchman_sig.Types.No_timeout;
-      expression_terms = [];
-      debug_logging = false;
-      roots = [Path.dummy_path];
-      subscription_prefix = "dummy_prefix";
-    }
-end
-
 module Watchman_process_helpers = struct
   include Watchman_sig.Types
   module J = Hh_json_helpers.AdhocJsonHelpers
@@ -85,145 +70,6 @@ module Watchman_process_helpers = struct
     in
     assert_no_error response;
     response
-end
-
-module Regular_watchman_process : sig
-  include Watchman_sig.WATCHMAN_PROCESS with type 'a result = 'a
-
-  val get_reader : conn -> Buffered_line_reader.t
-end = struct
-  include Watchman_process_helpers
-
-  type 'a result = 'a
-
-  type conn = Buffered_line_reader.t * Out_channel.t
-
-  let ( >>= ) a f = f a
-
-  let ( >|= ) a f = f a
-
-  let return x = x
-
-  let catch ~f ~catch = (try f () with exn -> catch (Exception.wrap exn))
-
-  let list_fold_values = List.fold
-
-  (* Send a request to the watchman process *)
-  let send_request ~debug_logging oc json =
-    let json_str = Hh_json.(json_to_string json) in
-    if debug_logging then Hh_logger.info "Watchman request: %s" json_str;
-    Out_channel.output_string oc json_str;
-    Out_channel.output_string oc "\n";
-    Out_channel.flush oc
-
-  (***************************************************************************)
-  (* Handling requests and responses. *)
-  (***************************************************************************)
-
-  let has_input timeout reader =
-    if Buffered_line_reader.has_buffered_content reader then
-      true
-    else
-      (* Negative means "no timeout" to select *)
-      let timeout = Option.value (timeout_to_secs timeout) ~default:~-.1. in
-      match Sys_utils.select_non_intr [Buffered_line_reader.get_fd reader] [] [] timeout with
-      | ([], _, _) -> false
-      | _ -> true
-
-  let read_with_timeout timeout reader =
-    let start_t = Unix.time () in
-    if not (has_input timeout reader) then
-      raise Timeout
-    else
-      match timeout_to_secs timeout with
-      | None -> Buffered_line_reader.get_next_line reader
-      | Some timeout ->
-        let remaining = start_t +. timeout -. Unix.time () in
-        let timeout = int_of_float remaining in
-        let timeout = max timeout 10 in
-        Timeout.with_timeout
-          ~do_:(fun _ -> Buffered_line_reader.get_next_line reader)
-          ~timeout
-          ~on_timeout:(fun () ->
-            let () = EventLogger.watchman_timeout () in
-            raise Read_payload_too_long)
-
-  (* Asks watchman for the path to the socket file *)
-  let get_sockname timeout =
-    let ic = Timeout.open_process_in "watchman" [| "watchman"; "get-sockname"; "--no-pretty" |] in
-    let reader = Buffered_line_reader.create @@ Timeout.descr_of_in_channel ic in
-    let output = read_with_timeout timeout reader in
-    assert (Timeout.close_process_in ic = Unix.WEXITED 0);
-    let json = Hh_json.json_of_string output in
-    J.get_string_val "sockname" json
-
-  (* Opens a connection to the watchman process through the socket *)
-  let open_connection ~timeout =
-    let sockname = get_sockname timeout in
-    let (tic, oc) = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
-    let reader = Buffered_line_reader.create @@ Timeout.descr_of_in_channel @@ tic in
-    (reader, oc)
-
-  let close_connection conn =
-    let (reader, _) = conn in
-    Unix.close @@ Buffered_line_reader.get_fd reader
-
-  (** Open a connection to the watchman socket, call the continuation, then
-    * close. *)
-  let with_watchman_conn ~timeout f =
-    let conn = open_connection ~timeout in
-    let result =
-      try f conn
-      with e ->
-        let exn = Exception.wrap e in
-        Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
-        Exception.reraise exn
-    in
-    Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
-    result
-
-  (* Sends a request to watchman and returns the response. If we don't have a connection,
-   * a new connection will be created before the request and destroyed after the response *)
-  let rec request ~debug_logging ?conn ?(timeout = Default_timeout) json =
-    match conn with
-    | None -> with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
-    | Some (reader, oc) ->
-      send_request ~debug_logging oc json;
-      sanitize_watchman_response ~debug_logging (read_with_timeout timeout reader)
-
-  let send_request_and_do_not_wait_for_response ~debug_logging ~conn:(_, oc) json =
-    send_request ~debug_logging oc json
-
-  let blocking_read ~debug_logging ?(timeout = Explicit_timeout 0.) ~conn =
-    let ready = has_input timeout @@ fst conn in
-    if not ready then
-      match timeout with
-      | No_timeout -> None
-      | Explicit_timeout timeout when timeout = 0. -> None
-      | _ -> raise Timeout
-    else
-      (* Use the timeout mechanism to limit maximum time to read payload (cap
-       * data size) so we don't freeze if watchman sends an inordinate amount of
-       * data, or if it is malformed (i.e. doesn't end in a newline). *)
-      let timeout = 40 in
-      let output =
-        Timeout.with_timeout
-          ~do_:(fun _ -> Buffered_line_reader.get_next_line @@ fst conn)
-          ~timeout
-          ~on_timeout:
-            begin
-              fun () ->
-              let () = Hh_logger.log "Regular_watchman_process.blocking_read timed out" in
-              raise Read_payload_too_long
-            end
-      in
-      Some (sanitize_watchman_response ~debug_logging output)
-
-  let get_reader (reader, _) = reader
-
-  module Testing = struct
-    let get_test_conn () = (Buffered_line_reader.get_null_reader (), Out_channel.create "/dev/null")
-  end
 end
 
 module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
@@ -817,7 +663,17 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     | Watchman_alive { conn; _ } -> Some conn
 
   module Testing = struct
-    include Testing_common
+    open Watchman_sig.Types
+
+    let test_settings =
+      {
+        subscribe_mode = Some Defer_changes;
+        init_timeout = Watchman_sig.Types.No_timeout;
+        expression_terms = [];
+        debug_logging = false;
+        roots = [Path.dummy_path];
+        subscription_prefix = "dummy_prefix";
+      }
 
     let get_test_env () =
       Watchman_process.Testing.get_test_conn () >|= fun conn ->
@@ -835,82 +691,3 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       transform_asynchronous_get_changes_response env json
   end
 end
-
-module Watchman_actual = struct
-  include Functor (Regular_watchman_process)
-
-  let get_reader instance =
-    Option.map (conn_of_instance instance) ~f:Regular_watchman_process.get_reader
-end
-
-module Watchman_mock = struct
-  exception Not_available_in_mocking
-
-  type 'a result = 'a
-
-  type conn
-
-  include Watchman_sig.Types
-
-  type env = string
-
-  type dead_env = unit
-
-  type watchman_instance =
-    | Watchman_dead of dead_env
-    | Watchman_alive of env
-
-  module Mocking = struct
-    let print_env env = env
-
-    let init = ref None
-
-    let init_returns v = init := v
-
-    let changes = ref Watchman_unavailable
-
-    let get_changes_returns v = changes := v
-  end
-
-  module Testing = struct
-    include Testing_common
-
-    let get_test_env () = "test_env"
-
-    let transform_asynchronous_get_changes_response _ _ = raise Not_available_in_mocking
-  end
-
-  let init ?since_clockspec:_ _ () = !Mocking.init
-
-  let get_changes ?deadline instance =
-    let _ = deadline in
-    let result = !Mocking.changes in
-    Mocking.changes := Watchman_unavailable;
-    (instance, result)
-
-  let get_reader _ = None
-
-  let conn_of_instance _ = None
-
-  let get_changes_since_mergebase ?timeout:_ _ = []
-
-  let get_mergebase ?timeout:_ _ = "mergebase"
-
-  let close _ = ()
-
-  let with_instance instance ~try_to_restart:_ ~on_alive ~on_dead =
-    match instance with
-    | Watchman_dead dead_env -> on_dead dead_env
-    | Watchman_alive env -> on_alive env
-end
-
-module type S = sig
-  include Watchman_sig.S with type 'a result = 'a
-
-  val get_reader : watchman_instance -> Buffered_line_reader.t option
-end
-
-include ( val if Injector_config.use_test_stubbing then
-                (module Watchman_mock : S)
-              else
-                (module Watchman_actual : S) )
