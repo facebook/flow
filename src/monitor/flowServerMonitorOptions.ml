@@ -28,4 +28,6 @@ type t = {
   file_watcher: Options.file_watcher;
   (* Turn on debugging messages for the file watcher *)
   file_watcher_debug: bool;
+  (* How long to wait for the file watcher to initialize, in seconds *)
+  file_watcher_timeout: float option;
 }

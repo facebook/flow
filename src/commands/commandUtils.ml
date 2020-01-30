@@ -997,24 +997,31 @@ let base_flags =
   let collect_base_flags main flowconfig_name = main { Base_flags.flowconfig_name } in
   (fun prev -> CommandSpec.ArgSpec.(prev |> collect collect_base_flags |> flowconfig_name_flag))
 
+let default_file_watcher_timeout = 120
+
 let file_watcher_flag prev =
-  CommandSpec.ArgSpec.(
-    prev
-    |> flag
-         "--file-watcher"
-         (enum
-            [
-              ("none", Options.NoFileWatcher);
-              ("dfind", Options.DFind);
-              ("watchman", Options.Watchman);
-            ])
-         ~doc:
-           ( "Which file watcher Flow should use (none, dfind, watchman). "
-           ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )
-    |> flag
-         "--file-watcher-debug"
-         no_arg
-         ~doc:"Enable debug logging for the file watcher. This is very noisy")
+  let open CommandSpec.ArgSpec in
+  prev
+  |> flag
+       "--file-watcher"
+       (enum
+          [
+            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
+          ])
+       ~doc:
+         ( "Which file watcher Flow should use (none, dfind, watchman). "
+         ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )
+  |> flag
+       "--file-watcher-debug"
+       no_arg
+       ~doc:"Enable debug logging for the file watcher. This is very noisy"
+  |> flag
+       "--file-watcher-timeout"
+       uint
+       ~doc:
+         (Printf.sprintf
+            "Maximum time to wait for the file watcher to initialize, in seconds. 0 means no timeout (default: %d)"
+            default_file_watcher_timeout)
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let options_and_json_flags =
@@ -1607,6 +1614,12 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
     raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
   | (_, Some file_watcher) -> file_watcher
   | (_, None) -> Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+
+let choose_file_watcher_timeout ~flowconfig cli_timeout =
+  match Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with
+  | Some 0 -> None
+  | Some x -> Some (float x)
+  | None -> Some (float default_file_watcher_timeout)
 
 (* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
  * has changed since the location was constructed, the offset could be incorrect. If the file has

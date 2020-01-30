@@ -327,6 +327,7 @@ end = struct
       server_log_file = log_file;
       argv;
       file_watcher;
+      file_watcher_timeout;
       _;
     } =
       monitor_options
@@ -398,7 +399,7 @@ end = struct
     (* This may block for quite awhile. No messages will be sent to the server process until the
      * file watcher is up and running *)
     let%lwt () =
-      match%lwt watcher#wait_for_init with
+      match%lwt watcher#wait_for_init ~timeout:file_watcher_timeout with
       | Ok x -> Lwt.return x
       | Error msg ->
         Logger.fatal "%s" msg;

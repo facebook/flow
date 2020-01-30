@@ -60,6 +60,7 @@ module Opts = struct
     facebook_fbs: string option;
     facebook_fbt: string option;
     file_watcher: Options.file_watcher option;
+    file_watcher_timeout: int option;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_blacklist: string list;
@@ -157,6 +158,7 @@ module Opts = struct
       facebook_fbs = None;
       facebook_fbt = None;
       file_watcher = None;
+      file_watcher_timeout = None;
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -363,6 +365,7 @@ module Opts = struct
             ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
           ]
           (fun opts v -> Ok { opts with file_watcher = Some v }) );
+      ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ( "lazy_mode",
         enum
@@ -1121,6 +1124,8 @@ let esproposal_nullish_coalescing c = c.options.Opts.esproposal_nullish_coalesci
 let exact_by_default c = c.options.Opts.exact_by_default
 
 let file_watcher c = c.options.Opts.file_watcher
+
+let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
