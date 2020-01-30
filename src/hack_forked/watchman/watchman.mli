@@ -10,8 +10,6 @@ module Watchman_process_helpers : sig
 
   val debug : bool
 
-  val timeout_to_secs : Watchman_sig.Types.timeout -> float option
-
   exception Read_payload_too_long
 
   val assert_no_error : Hh_json.json -> unit

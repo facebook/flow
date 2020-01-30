@@ -25,10 +25,7 @@ module Types = struct
     | Drop_changes
     | Scm_aware
 
-  type timeout =
-    | No_timeout
-    | Default_timeout
-    | Explicit_timeout of float
+  type timeout = float option
 
   type init_settings = {
     (* None for query mode, otherwise specify subscriptions mode. *)
@@ -109,17 +106,13 @@ module type WATCHMAN_PROCESS = sig
   val open_connection : unit -> conn result
 
   val request :
-    debug_logging:bool ->
-    ?conn:conn ->
-    ?timeout:Types.timeout ->
-    Hh_json.json ->
-    Hh_json.json result
+    debug_logging:bool -> ?conn:conn -> timeout:Types.timeout -> Hh_json.json -> Hh_json.json result
 
   val send_request_and_do_not_wait_for_response :
     debug_logging:bool -> conn:conn -> Hh_json.json -> unit result
 
   val blocking_read :
-    debug_logging:bool -> ?timeout:Types.timeout -> conn:conn -> Hh_json.json option result
+    debug_logging:bool -> timeout:Types.timeout -> conn:conn -> Hh_json.json option result
 
   val close_connection : conn -> unit result
 
@@ -139,10 +132,10 @@ module type S = sig
 
   val init : ?since_clockspec:string -> init_settings -> unit -> env option result
 
-  val get_changes_since_mergebase : ?timeout:timeout -> env -> string list result
+  val get_changes_since_mergebase : timeout:timeout -> env -> string list result
 
   val get_mergebase :
-    ?timeout:timeout ->
+    timeout:timeout ->
     watchman_instance ->
     (watchman_instance * (string, string) Pervasives.result) result
 
