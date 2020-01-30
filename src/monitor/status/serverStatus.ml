@@ -48,7 +48,7 @@ type event =
   | Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
   | GC_start (* The server is starting to GC *)
   | Collating_errors_start (* The server is collating the errors *)
-  | Watchman_wait_start of (* deadline *) float
+  | Watchman_wait_start of (* deadline *) float option
 
 (* The server is now blocked waiting for Watchman *)
 
@@ -66,7 +66,7 @@ type typecheck_status =
   | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
   | Collating_errors (* We sometimes collate errors during typecheck *)
   | Finishing_typecheck of summary (* haven't reached free state yet *)
-  | Waiting_for_watchman of (* deadline *) float
+  | Waiting_for_watchman of (* deadline *) float option
 
 type restart_reason =
   | Server_out_of_date
@@ -168,7 +168,7 @@ let string_of_event = function
   | Handling_request_start -> "Handling_request_start"
   | GC_start -> "GC_start"
   | Collating_errors_start -> "Collating_errors_start"
-  | Watchman_wait_start deadline -> spf "Watchman_wait_start %f" deadline
+  | Watchman_wait_start _deadline -> "Watchman_wait_start"
 
 (* As a general rule, use past tense for status updates that show progress and present perfect
    progressive for those that don't. *)
@@ -199,10 +199,15 @@ let string_of_typecheck_status ~use_emoji = function
     spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
   | Collating_errors -> spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
   | Waiting_for_watchman deadline ->
-    spf
-      "%swaiting for Watchman - giving up in %d seconds"
-      (render_emoji ~use_emoji Eyes)
-      (max 0 (int_of_float @@ (deadline -. Unix.gettimeofday ())))
+    let timeout =
+      match deadline with
+      | Some deadline ->
+        spf
+          " - giving up in %d seconds"
+          (max 0 (int_of_float @@ (deadline -. Unix.gettimeofday ())))
+      | None -> ""
+    in
+    spf "%swaiting for Watchman%s" (render_emoji ~use_emoji Eyes) timeout
   | Finishing_typecheck _ -> spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
 let string_of_restart_reason = function

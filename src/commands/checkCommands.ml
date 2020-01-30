@@ -133,7 +133,8 @@ module CheckCommand = struct
     in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      let file_watcher_timeout = None in
+      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~file_watcher_timeout options_flags
     in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
@@ -219,7 +220,8 @@ module FocusCheckCommand = struct
     let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      let file_watcher_timeout = None in
+      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~file_watcher_timeout options_flags
     in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
