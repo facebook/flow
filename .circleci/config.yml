@@ -5,10 +5,12 @@ aliases:
     TERM: dumb
     OPAMYES: true
 
-  - &run_on_tags
+  - &run_on_release_tags
     filters:
       tags:
-        only: /.*/
+        only: /^v.*/
+      branches:
+        ignore: /.*/
 
 orbs:
   win: circleci/windows@2.2.0
@@ -504,6 +506,7 @@ jobs:
         name: Publish website
         command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
 
+  # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
     executor: awscli
     steps:
@@ -523,84 +526,38 @@ jobs:
 workflows:
   build_and_test:
     jobs:
-      - checkout:
-          <<: *run_on_tags
+      - checkout
       - build_linux:
-          <<: *run_on_tags
           requires:
             - checkout
       - build_macos:
-          <<: *run_on_tags
           requires:
             - checkout
       - build_win:
-          <<: *run_on_tags
           requires:
             - checkout
       - runtests_linux:
-          <<: *run_on_tags
           requires:
             - build_linux
       - runtests_macos:
-          <<: *run_on_tags
           requires:
             - build_macos
       - tool_test_linux:
-          <<: *run_on_tags
           requires:
             - build_linux
       - tool_test_macos:
-          <<: *run_on_tags
           requires:
             - build_macos
       - tool_test_win:
-          <<: *run_on_tags
           requires:
             - build_win
       - parser_test_win:
-          <<: *run_on_tags
           requires:
             - build_win
       - npm_pack:
-          <<: *run_on_tags
           requires:
             - build_linux
             - build_macos
-      - npm_deploy:
-          requires:
-            - npm_pack
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - github_linux:
-          requires:
-            - runtests_linux
-            - tool_test_linux
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - github_macos:
-          requires:
-            - runtests_macos
-            - tool_test_macos
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - github_win:
-          requires:
-            - tool_test_win
-            - parser_test_win
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
 
       # only deploy the website from master, so that it can include docs/blog
       # posts about an upcoming release, and so the release branch doesn't
@@ -612,12 +569,44 @@ workflows:
             branches:
               only: master
 
-      # deploys flow.js and the libdefs to Try Flow on release branches
-      - try_flow_deploy:
+  build_and_deploy:
+    jobs:
+      - checkout:
+          <<: *run_on_release_tags
+      - build_linux:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - build_macos:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - build_win:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - npm_pack:
+          <<: *run_on_release_tags
           requires:
             - build_linux
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+            - build_macos
+      - npm_deploy:
+          <<: *run_on_release_tags
+          requires:
+            - npm_pack
+      - github_linux:
+          <<: *run_on_release_tags
+          requires:
+            - build_linux
+      - github_macos:
+          <<: *run_on_release_tags
+          requires:
+            - build_macos
+      - github_win:
+          <<: *run_on_release_tags
+          requires:
+            - build_win
+      - try_flow_deploy:
+          <<: *run_on_release_tags
+          requires:
+            - build_linux
