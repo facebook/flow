@@ -21,7 +21,7 @@ class type watcher =
 
     method start_init : unit
 
-    method wait_for_init : unit Lwt.t
+    method wait_for_init : timeout:float option -> (unit, string) result Lwt.t
 
     method get_and_clear_changed_files : (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
 
@@ -40,7 +40,7 @@ class dummy : watcher =
 
     method start_init = ()
 
-    method wait_for_init = Lwt.return_unit
+    method wait_for_init ~timeout:_ = Lwt.return (Ok ())
 
     method get_and_clear_changed_files = Lwt.return (SSet.empty, None)
 
@@ -78,7 +78,9 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
       dfind_instance <- Some dfind
 
-    method wait_for_init = DfindLibLwt.wait_until_ready self#get_dfind
+    method wait_for_init ~timeout:_ =
+      let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
+      Lwt.return (Ok result)
 
     (* We don't want two threads to talk to dfind at the same time. And we don't want those two
      * threads to get the same file change events *)
@@ -171,24 +173,17 @@ end = struct
   }
 
   let get_mergebase env =
-    if env.should_track_mergebase then
-      Watchman_lwt.with_instance
-        env.instance
-        ~try_to_restart:true
-        ~on_alive:(fun watchman_env ->
-          env.instance <- Watchman_lwt.Watchman_alive watchman_env;
-
-          (* scm queries can be a little slow, but they should usually be only a few seconds.
-           * Lets set our worst case to 30s before we exit *)
-          let%lwt mergebase =
-            Watchman_lwt.(get_mergebase ~timeout:(Explicit_timeout 30.) watchman_env)
-          in
-          Lwt.return (Some mergebase))
-        ~on_dead:(fun dead_env ->
-          env.instance <- Watchman_lwt.Watchman_dead dead_env;
-          failwith "Failed to connect to Watchman to get mergebase")
-    else
-      Lwt.return_none
+    if env.should_track_mergebase then (
+      let%lwt (instance, mergebase) =
+        (* callers should provide their own timeout *)
+        Watchman_lwt.(get_mergebase ~timeout:None env.instance)
+      in
+      env.instance <- instance;
+      match mergebase with
+      | Ok mergebase -> Lwt.return (Ok (Some mergebase))
+      | Error msg -> Lwt.return (Error msg)
+    ) else
+      Lwt.return (Ok None)
 
   module WatchmanListenLoop = LwtLoop.Make (struct
     module J = Hh_json_helpers.AdhocJsonHelpers
@@ -247,7 +242,13 @@ end = struct
                * file in the IDE
                *)
               if env.finished_an_hg_update then
-                let%lwt new_mergebase = get_mergebase env in
+                let%lwt new_mergebase =
+                  match%lwt get_mergebase env with
+                  | Ok mergebase -> Lwt.return mergebase
+                  | Error msg ->
+                    (* TODO: handle this more gracefully than `failwith` *)
+                    failwith msg
+                in
                 match (new_mergebase, env.mergebase) with
                 | (Some new_mergebase, Some old_mergebase) when new_mergebase <> old_mergebase ->
                   Logger.info
@@ -338,9 +339,6 @@ end = struct
           {
             (* Defer updates during `hg.update` *)
             Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
-            (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
-             * use 10 seconds. *)
-            init_timeout = Watchman_lwt.Explicit_timeout 10.;
             expression_terms = watchman_expression_terms;
             subscription_prefix = "flow_watcher";
             roots = Files.watched_paths file_options;
@@ -351,39 +349,50 @@ end = struct
 
         init_thread <- Some (Watchman_lwt.init settings ())
 
-      method wait_for_init =
-        let%lwt watchman = Option.value_exn init_thread in
-        init_thread <- None;
+      method wait_for_init ~timeout =
+        let go () =
+          let%lwt watchman = Option.value_exn init_thread in
+          init_thread <- None;
 
-        let should_track_mergebase =
-          let server_options = monitor_options.FlowServerMonitorOptions.server_options in
-          Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
-        in
-        match watchman with
-        | Some watchman ->
-          let (waiter, wakener) = Lwt.task () in
-          let new_env =
-            {
-              instance = Watchman_lwt.Watchman_alive watchman;
-              files = SSet.empty;
-              listening_thread =
-                (let%lwt env = waiter in
-                 WatchmanListenLoop.run env);
-              mergebase = None;
-              finished_an_hg_update = false;
-              changes_condition = Lwt_condition.create ();
-              metadata = MonitorProt.empty_file_watcher_metadata;
-              init_settings = Option.value_exn init_settings;
-              should_track_mergebase;
-            }
+          let should_track_mergebase =
+            let server_options = monitor_options.FlowServerMonitorOptions.server_options in
+            Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
           in
-          let%lwt mergebase = get_mergebase new_env in
-          Option.iter mergebase ~f:(Logger.info "Watchman reports the initial mergebase as %S");
-          let new_env = { new_env with mergebase } in
-          env <- Some new_env;
-          Lwt.wakeup wakener new_env;
-          Lwt.return_unit
-        | None -> failwith "Failed to initialize watchman"
+          match watchman with
+          | Some watchman ->
+            let (waiter, wakener) = Lwt.task () in
+            let new_env =
+              {
+                instance = Watchman_lwt.Watchman_alive watchman;
+                files = SSet.empty;
+                listening_thread =
+                  (let%lwt env = waiter in
+                   WatchmanListenLoop.run env);
+                mergebase = None;
+                finished_an_hg_update = false;
+                changes_condition = Lwt_condition.create ();
+                metadata = MonitorProt.empty_file_watcher_metadata;
+                init_settings = Option.value_exn init_settings;
+                should_track_mergebase;
+              }
+            in
+            (match%lwt get_mergebase new_env with
+            | Ok mergebase ->
+              Option.iter mergebase ~f:(Logger.info "Watchman reports the initial mergebase as %S");
+              let new_env = { new_env with mergebase } in
+              env <- Some new_env;
+              Lwt.wakeup wakener new_env;
+              Lwt.return (Ok ())
+            | Error msg ->
+              Lwt.return (Error (Printf.sprintf "Failed to initialize watchman: %s" msg)))
+          | None -> Lwt.return (Error "Failed to initialize watchman")
+        in
+        match timeout with
+        | Some timeout ->
+          (try%lwt Lwt_unix.with_timeout timeout go
+           with Lwt_unix.Timeout ->
+             Lwt.return (Error "Failed to initialize watchman: Watchman timed out"))
+        | None -> go ()
 
       (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we
        * probably don't care about hg updates or mergebase changing if no files were affected *)

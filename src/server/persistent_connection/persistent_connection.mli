@@ -85,7 +85,6 @@ type type_contents_artifacts =
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
   * (Loc.t * Parse_error.t) list
 
-val type_contents_cache :
-  single_client -> (type_contents_artifacts, string) result Lwt.t FilenameCache.t
+val type_contents_cache : single_client -> (type_contents_artifacts, string) result FilenameCache.t
 
 val clear_type_contents_caches : unit -> unit

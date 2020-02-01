@@ -94,12 +94,13 @@ and dump_type_params ~depth = function
   | Some ps -> spf "TypeParams(%s)" (dump_list (dump_type_param ~depth) ps)
   | _ -> ""
 
-and dump_fun_t ~depth { fun_params; fun_rest_param; fun_return; fun_type_params } =
+and dump_fun_t ~depth { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static } =
   spf
-    "Fun(%s, %s, %s, out: %s)"
+    "Fun(%s, %s, %s, %s, out: %s)"
     (dump_type_params ~depth fun_type_params)
     (dump_list (dump_param ~depth) fun_params)
     (dump_rest_params ~depth fun_rest_param)
+    (dump_t ~depth fun_static)
     (dump_t ~depth fun_return)
 
 and dump_field ~depth name { fld_polarity; fld_optional } t =
@@ -114,7 +115,7 @@ and dump_field ~depth name { fld_polarity; fld_optional } t =
     (dump_t ~depth t)
 
 and dump_prop ~depth = function
-  | NamedProp (s, p) -> dump_named_prop ~depth s p
+  | NamedProp { name; prop; _ } -> dump_named_prop ~depth name prop
   | IndexProp d -> dump_dict ~depth d
   | CallProp f -> dump_fun_t ~depth f
   | SpreadProp t -> dump_spread ~depth t
@@ -357,7 +358,7 @@ let json_of_t ~strip_root =
     @ [
         ("type", json_of_symbol s); ("kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
       ]
-  and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
+  and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static } =
     Hh_json.(
       [("typeParams", json_of_type_params fun_type_params)]
       @ [("paramTypes", JSON_Array (Base.List.map ~f:(fun (_, t, _) -> json_of_t t) fun_params))]
@@ -382,7 +383,8 @@ let json_of_t ~strip_root =
                 | None -> []
                 | Some name -> [("restParamName", JSON_String name)] ) );
           ("returnType", json_of_t fun_return);
-        ])
+        ]
+      @ [("staticType", json_of_t fun_static)])
   and json_of_obj_t o =
     Hh_json.(
       let { obj_exact; obj_props; obj_literal; obj_frozen } = o in
@@ -417,10 +419,16 @@ let json_of_t ~strip_root =
     Hh_json.(
       JSON_Object
         (match prop with
-        | NamedProp (name, p) ->
+        | NamedProp { name; prop; from_proto } ->
           [
             ("kind", JSON_String "NamedProp");
-            ("prop", JSON_Object [("name", JSON_String name); ("prop", json_of_named_prop p)]);
+            ( "prop",
+              JSON_Object
+                [
+                  ("name", JSON_String name);
+                  ("prop", json_of_named_prop prop);
+                  ("from_proto", JSON_Bool from_proto);
+                ] );
           ]
         | IndexProp d -> [("kind", JSON_String "IndexProp"); ("prop", json_of_dict d)]
         | CallProp ft ->

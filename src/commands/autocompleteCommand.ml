@@ -12,6 +12,10 @@
 open CommandUtils
 open Utils_js
 
+let lsp_flag prev =
+  let open CommandSpec.ArgSpec in
+  prev |> flag "--lsp" no_arg ~doc:"Output results as LSP responses"
+
 let spec =
   {
     CommandSpec.name = "autocomplete";
@@ -33,6 +37,7 @@ let spec =
         |> strip_root_flag
         |> from_flag
         |> wait_for_recheck_flag
+        |> lsp_flag
         |> anon "args" (optional (list_of string)));
   }
 
@@ -85,7 +90,7 @@ let parse_args = function
     CommandSpec.usage spec;
     FlowExitStatus.(exit Commandline_usage_error)
 
-let main base_flags option_values json pretty root strip_root wait_for_recheck args () =
+let main base_flags option_values json pretty root strip_root wait_for_recheck lsp args () =
   let (filename, contents, cursor_opt) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
@@ -118,7 +123,15 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck a
       | ServerProt.Response.AUTOCOMPLETE response -> response
       | response -> failwith_bad_response ~request ~response
     in
-    if json || pretty then
+    if lsp then
+      Base.Result.iter
+        results
+        ~f:
+          (List.iter
+             ( Flow_lsp_conversions.flow_completion_to_lsp true
+             %> Lsp_fmt.print_completionItem
+             %> Hh_json.print_json_endline ~pretty:true ))
+    else if json || pretty then
       results
       |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
       |> Hh_json.print_json_endline ~pretty
@@ -129,7 +142,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck a
         List.iter
           (fun res ->
             let name = res.ServerProt.Response.res_name in
-            let (_ty_loc, ty) = res.ServerProt.Response.res_ty in
+            let ty = res.ServerProt.Response.res_ty in
             print_endline (Printf.sprintf "%s %s" name ty))
           completions
     )

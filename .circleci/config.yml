@@ -5,10 +5,12 @@ aliases:
     TERM: dumb
     OPAMYES: true
 
-  - &run_on_tags
+  - &run_on_release_tags
     filters:
       tags:
-        only: /.*/
+        only: /^v.*/
+      branches:
+        ignore: /.*/
 
 orbs:
   win: circleci/windows@2.2.0
@@ -53,7 +55,7 @@ orbs:
               environment:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
-                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes
+                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes -vvv
 
 executors:
   linux-opam:
@@ -71,6 +73,7 @@ executors:
       xcode: "9.0"
     environment:
       <<: *opam_env
+      OPAM_VERSION: 2.0.5
     working_directory: ~/flow
   curl:
     docker:
@@ -93,14 +96,15 @@ commands:
           command: opam --version > .circleci/opamversion
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          - v1-opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
 
   save-opam-cache:
     steps:
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          key: v1-opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
           paths:
             - ~/.opam
+            - _opam
 
   create-opam-switch:
     steps:
@@ -108,7 +112,9 @@ commands:
           name: Install deps from opam
           command: |
             eval $(opam env)
-            opam switch create . 4.07.1 --deps-only | cat
+            if [ ! -d _opam ]; then
+              opam switch create . 4.07.1 --deps-only | cat
+            fi
 
 jobs:
   checkout:
@@ -202,28 +208,20 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      # https://github.com/Homebrew/brew/issues/5513
-      - run:
-          name: Fix homebrew python
-          command: brew update
-      # https://github.com/Homebrew/homebrew-core/issues/26358
-      - run:
-          name: Fix homebrew python
-          command: brew upgrade python
       - run:
           name: Install opam
-          command: command -v opam || brew install opam aspcud
+          command: |
+            if ! [ -x "$(command -v opam)" ]; then
+              TMP=${TMPDIR:-/tmp}
+              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
+              install -m 755 "$TMP/opam" "/usr/local/bin/opam"
+              rm -f "$TMP/opam"
+            fi
       - restore-opam-cache
       - run:
-          name: Install ocaml
-          command: opam init --comp 4.07.1 -yn | cat
-      - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1
-          paths:
-            - ~/.opam
-      - run:
-          name: Update opam repo
-          command: opam update | cat
+          name: Init opam
+          command: |
+            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
       - create-opam-switch
       - save-opam-cache
       - run:
@@ -256,6 +254,7 @@ jobs:
     executor: win/default
     environment:
       - FLOW_TMP_DIR: 'C:\tmp\flow'
+      - OPAMDOWNLOADJOBS: 1
     steps:
       - run:
           name: Set up workspace
@@ -266,14 +265,15 @@ jobs:
           name: Calculate opam version
           shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
           command: /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamversion
-      - checkout
+      - attach_workspace:
+          at: .
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}-circle_{{ checksum ".circleci/config.yml" }}
       - opam_windows/init
       - opam_windows/create_switch
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}-circle_{{ checksum ".circleci/config.yml" }}
           paths:
             - C:/tools/cygwin/home/circleci/.opam
             - _opam
@@ -287,11 +287,21 @@ jobs:
              make bin/flow.exe dist/flow.zip
              mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
              cp dist/flow.zip dist/flow-win64.zip
+      - run:
+          name: Build parser test runner
+          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          environment:
+            PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+          command: |
+            eval $(opam env)
+            make -C src/parser/ ../../_build/src/parser/test/run_tests.native
+            cp _build/src/parser/test/run_tests.native bin/win64/run_parser_tests.exe
       - persist_to_workspace:
           root: .
           paths:
             - bin/win64/flow.exe
             - dist/flow-win64.zip
+            - bin/win64/run_parser_tests.exe
       - store_artifacts:
           path: .\dist\flow-win64.zip
           destination: flow-win64.zip
@@ -343,9 +353,8 @@ jobs:
   tool_test_win:
     executor: win/default
     steps:
-      - checkout
       - attach_workspace:
-          at: ./artifacts
+          at: .
       - run:
           name: Install Yarn
           command: choco install yarn
@@ -353,11 +362,24 @@ jobs:
           name: Install tool deps from yarn
           command: |
             cd packages/flow-dev-tools
-            yarn install
+            yarn install --ignore-scripts --pure-lockfile
       - run:
           name: Run tool tests
           shell: bash
-          command: ./tool test --bin artifacts/bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+          command: ./tool test --bin bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+
+  parser_test_win:
+    executor: win/default
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Test parser
+          command: |
+            .\bin\win64\run_parser_tests.exe .\src\parser\test\flow\
+            if ($LASTEXITCODE -gt 0) {
+              Throw "flow parser hardcoded ocaml tests exited with error code: $LASTEXITCODE"
+            }
 
   npm_pack:
     executor: linux-node
@@ -438,6 +460,15 @@ jobs:
         name: Upload Mac libflowparser
         command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
 
+  github_win:
+    executor: curl
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Windows binary
+        command: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-$CIRCLE_TAG.zip"
+
   website_deploy:
     executor: flow-website
     steps:
@@ -475,6 +506,7 @@ jobs:
         name: Publish website
         command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
 
+  # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
     executor: awscli
     steps:
@@ -494,69 +526,38 @@ jobs:
 workflows:
   build_and_test:
     jobs:
-      - checkout:
-          <<: *run_on_tags
+      - checkout
       - build_linux:
-          <<: *run_on_tags
           requires:
             - checkout
       - build_macos:
-          <<: *run_on_tags
           requires:
             - checkout
       - build_win:
-          <<: *run_on_tags
+          requires:
+            - checkout
       - runtests_linux:
-          <<: *run_on_tags
           requires:
             - build_linux
       - runtests_macos:
-          <<: *run_on_tags
           requires:
             - build_macos
       - tool_test_linux:
-          <<: *run_on_tags
           requires:
             - build_linux
       - tool_test_macos:
-          <<: *run_on_tags
           requires:
             - build_macos
       - tool_test_win:
-          <<: *run_on_tags
+          requires:
+            - build_win
+      - parser_test_win:
           requires:
             - build_win
       - npm_pack:
-          <<: *run_on_tags
           requires:
             - build_linux
             - build_macos
-      - npm_deploy:
-          requires:
-            - npm_pack
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - github_linux:
-          requires:
-            - runtests_linux
-            - tool_test_linux
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - github_macos:
-          requires:
-            - runtests_macos
-            - tool_test_macos
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
 
       # only deploy the website from master, so that it can include docs/blog
       # posts about an upcoming release, and so the release branch doesn't
@@ -568,12 +569,44 @@ workflows:
             branches:
               only: master
 
-      # deploys flow.js and the libdefs to Try Flow on release branches
-      - try_flow_deploy:
+  build_and_deploy:
+    jobs:
+      - checkout:
+          <<: *run_on_release_tags
+      - build_linux:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - build_macos:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - build_win:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - npm_pack:
+          <<: *run_on_release_tags
           requires:
             - build_linux
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+            - build_macos
+      - npm_deploy:
+          <<: *run_on_release_tags
+          requires:
+            - npm_pack
+      - github_linux:
+          <<: *run_on_release_tags
+          requires:
+            - build_linux
+      - github_macos:
+          <<: *run_on_release_tags
+          requires:
+            - build_macos
+      - github_win:
+          <<: *run_on_release_tags
+          requires:
+            - build_win
+      - try_flow_deploy:
+          <<: *run_on_release_tags
+          requires:
+            - build_linux

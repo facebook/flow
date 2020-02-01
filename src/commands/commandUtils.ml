@@ -243,28 +243,17 @@ let input_file_flag verb prev =
            ^ "read from the standard input." ))
 
 type shared_mem_params = {
-  shm_dirs: string option;
-  shm_min_avail: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
 }
 
-let collect_shm_flags main shm_dirs shm_min_avail shm_hash_table_pow shm_log_level =
-  main { shm_dirs; shm_min_avail; shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_hash_table_pow shm_log_level =
+  main { shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_shm_flags
-    |> flag
-         "--sharedmemory-dirs"
-         string
-         ~doc:"Directory in which to store shared memory heap (default: /dev/shm/)"
-    |> flag
-         "--sharedmemory-minimum-available"
-         int
-         ~doc:
-           "Flow will only use a filesystem for shared memory if it has at least these many bytes available (default: 536870912 - which is 512MB)"
     |> flag
          "--sharedmemory-hash-table-pow"
          int
@@ -279,26 +268,10 @@ let shm_config shm_flags flowconfig =
   let hash_table_pow =
     Option.value shm_flags.shm_hash_table_pow ~default:(FlowConfig.shm_hash_table_pow flowconfig)
   in
-  let shm_dirs =
-    Option.value_map
-      shm_flags.shm_dirs
-      ~default:(FlowConfig.shm_dirs flowconfig)
-      ~f:(Str.split (Str.regexp ","))
-    |> Base.List.map ~f:Path.(make %> to_string)
-  in
-  let shm_min_avail =
-    Option.value shm_flags.shm_min_avail ~default:(FlowConfig.shm_min_avail flowconfig)
-  in
   let log_level =
     Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  {
-    SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig;
-    hash_table_pow;
-    shm_dirs;
-    shm_min_avail;
-    log_level;
-  }
+  { SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =
@@ -1024,24 +997,31 @@ let base_flags =
   let collect_base_flags main flowconfig_name = main { Base_flags.flowconfig_name } in
   (fun prev -> CommandSpec.ArgSpec.(prev |> collect collect_base_flags |> flowconfig_name_flag))
 
+let default_file_watcher_timeout = 120
+
 let file_watcher_flag prev =
-  CommandSpec.ArgSpec.(
-    prev
-    |> flag
-         "--file-watcher"
-         (enum
-            [
-              ("none", Options.NoFileWatcher);
-              ("dfind", Options.DFind);
-              ("watchman", Options.Watchman);
-            ])
-         ~doc:
-           ( "Which file watcher Flow should use (none, dfind, watchman). "
-           ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )
-    |> flag
-         "--file-watcher-debug"
-         no_arg
-         ~doc:"Enable debug logging for the file watcher. This is very noisy")
+  let open CommandSpec.ArgSpec in
+  prev
+  |> flag
+       "--file-watcher"
+       (enum
+          [
+            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
+          ])
+       ~doc:
+         ( "Which file watcher Flow should use (none, dfind, watchman). "
+         ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )
+  |> flag
+       "--file-watcher-debug"
+       no_arg
+       ~doc:"Enable debug logging for the file watcher. This is very noisy"
+  |> flag
+       "--file-watcher-timeout"
+       uint
+       ~doc:
+         (Printf.sprintf
+            "Maximum time to wait for the file watcher to initialize, in seconds. 0 means no timeout (default: %d)"
+            default_file_watcher_timeout)
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let options_and_json_flags =
@@ -1132,7 +1112,13 @@ let no_cgroup_flag =
            no_arg
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
 
-let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : Options_flags.t) =
+let make_options
+    ~flowconfig_name
+    ~flowconfig
+    ~lazy_mode
+    ~root
+    ~file_watcher_timeout
+    (options_flags : Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -1177,6 +1163,12 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
     let opt_lazy_mode =
       let default = Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE in
       Option.value lazy_mode ~default
+    in
+    let opt_file_watcher_timeout =
+      match Option.first_some file_watcher_timeout (FlowConfig.file_watcher_timeout flowconfig) with
+      | Some 0 -> None
+      | Some x -> Some (float x)
+      | None -> Some (float default_file_watcher_timeout)
     in
     let opt_arch =
       if options_flags.types_first || FlowConfig.types_first flowconfig then
@@ -1271,6 +1263,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
         FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
       opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
+      opt_file_watcher_timeout;
     })
 
 let make_env flowconfig_name connect_flags root =
@@ -1279,11 +1272,6 @@ let make_env flowconfig_name connect_flags root =
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir =
     Option.value_map ~f:normalize ~default:(FlowConfig.temp_dir flowconfig) connect_flags.temp_dir
-  in
-  let shm_dirs =
-    Option.map
-      ~f:(Str.split (Str.regexp ",") %> Base.List.map ~f:normalize)
-      connect_flags.shm_flags.shm_dirs
   in
   let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
   let retries = connect_flags.retries in
@@ -1309,8 +1297,6 @@ let make_env flowconfig_name connect_flags root =
     expiry;
     autostop = connect_flags.autostop;
     tmp_dir;
-    shm_dirs;
-    shm_min_avail = connect_flags.shm_flags.shm_min_avail;
     shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
     shm_log_level = connect_flags.shm_flags.shm_log_level;
     log_file;

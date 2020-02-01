@@ -24,23 +24,7 @@ let try_finalize f x finally y =
 let make_workers n =
   let default_sharedmem_config =
     let gig = 1024 * 1024 * 1024 in
-    (* Where to write temp files *)
-    let tmp_dir =
-      try Sys.getenv "HH_TMPDIR"
-      with _ -> Path.to_string @@ Path.concat (Path.make Sys_utils.temp_dir_name) "hh_server"
-    in
-
-    let shm_dir = (try Sys.getenv "HH_SHMDIR" with _ -> "/dev/shm") in
-    {
-      SharedMem.heap_size = 20 * gig;
-      (* 1 << 17 *)
-      hash_table_pow = 18;
-      (* 1 << 18 *)
-      shm_dirs = [shm_dir; tmp_dir];
-      shm_min_avail = gig / 2;
-      (* Half a gig by default *)
-      log_level = 0;
-    }
+    { SharedMem.heap_size = 20 * gig; hash_table_pow = 18; log_level = 0 }
   in
   let handle = SharedMem.init ~num_workers:n default_sharedmem_config in
   let workers = MultiWorkerLwt.make handle entry n (Gc.get ()) handle in

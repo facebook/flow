@@ -52,24 +52,13 @@ let autocomplete_result_to_json ~strip_root result =
     | None -> Hh_json.JSON_Null
   in
   let name = result.res_name in
-  let (ty_loc, ty) = result.res_ty in
-  (* This is deprecated for two reasons:
-   *   1) The props are still our legacy, flat format rather than grouped into
-   *      "loc" and "range" properties.
-   *   2) It's the location of the definition of the type (the "type loc"),
-   *      which may be interesting but should be its own field. The loc should
-   *      instead be the range to replace (usually but not always the token
-   *      being completed; perhaps we also want to replace the whole member
-   *      expression, for example). That's `result.res_loc`, but we're not
-   *      exposing it in the legacy `flow autocomplete` API; use
-   *      LSP instead.
-   *)
-  let deprecated_loc = Errors.deprecated_json_props_of_loc ~strip_root ty_loc in
+  Pervasives.ignore strip_root;
   Hh_json.JSON_Object
-    ( ("name", Hh_json.JSON_String name)
-    :: ("type", Hh_json.JSON_String ty)
-    :: ("func_details", func_details_to_json result.func_details)
-    :: deprecated_loc )
+    [
+      ("name", Hh_json.JSON_String name);
+      ("type", Hh_json.JSON_String result.res_ty);
+      ("func_details", func_details_to_json result.func_details);
+    ]
 
 let autocomplete_response_to_json ~strip_root response =
   Hh_json.(
@@ -123,8 +112,8 @@ let lsp_completion_of_type =
     | Mu _ ->
       Some Lsp.Completion.Variable)
 
-let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, loc) (ty, ty_loc) =
-  let res_ty = (ty_loc, Ty_printer.string_of_t ~with_comments:false ty) in
+let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
+  let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   let func_details =
     match ty with
@@ -132,16 +121,15 @@ let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, l
       Some (Signature_help.func_details fun_params fun_rest_param fun_return)
     | _ -> None
   in
-  { res_loc = loc; res_kind; res_name = name; res_insert_text = insert_text; res_ty; func_details }
-
-let autocomplete_is_valid_member key =
-  (* This is really for being better safe than sorry. It shouldn't happen. *)
-  (not (is_autocomplete key))
-  (* filter out constructor, it shouldn't be called manually *)
-  && (not (key = "constructor"))
-  && (* strip out members from prototypes which are implicitly created for
-     internal reasons *)
-  not (Reason.is_internal_name key)
+  {
+    res_loc = loc;
+    res_kind;
+    res_name = name;
+    res_insert_text = insert_text;
+    res_ty;
+    func_details;
+    rank;
+  }
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -156,6 +144,7 @@ let ty_normalizer_options =
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
+      expand_toplevel_members = None;
     }
 
 type autocomplete_service_result =
@@ -166,54 +155,283 @@ type autocomplete_service_result =
   | AcEmpty of string
   | AcFatalError of string
 
-let autocomplete_member
-    ~reader
+(* helper types for autocomplete_member *)
+module MemberInfo = struct
+  type 'a t = {
+    ty: 'a;
+    (* Autocomplete ranks members from primitive prototypes below user-defined members.
+     * `from_proto` indicates that the member is from a primitive prototype. *)
+    from_proto: bool;
+    (* If a member came from a possibly-null/undefined object, autocomplete may suggest
+     * that the user use optional chaining to access it.
+     * `from_nullable` indicates that the member is from a possibly-null/undefined object. *)
+    from_nullable: bool;
+  }
+
+  let map f info = { info with ty = f info.ty }
+
+  (*  There are two special cases we'll consider when recursively getting the members of
+   *  a constituent type in a union/intersection:
+   *  - `EmptyOrAny`:
+   *    the given type's member set is the universal set,
+   *    where each member's type is the given type.
+   *  - `Nullish`:
+   *    the given type is Void or Null.
+   *  `Normal` indicates a type which falls into neither of these special cases. *)
+  type membership_behavior =
+    | EmptyOrAny
+    | Nullish
+    | Normal
+
+  let membership_behavior =
+    let open Ty in
+    function
+    | Bot _
+    | Any _ ->
+      EmptyOrAny
+    | Void
+    | Null ->
+      Nullish
+    | _ -> Normal
+end
+
+(* returns (members, errors to log) *)
+let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
+  let open Ty in
+  let ty_of_named_prop = function
+    | Field (t, { fld_optional = false; _ })
+    | Get t
+    | Set t ->
+      t
+    | Field (t, { fld_optional = true; _ }) -> Union (t, Void, [])
+    | Method ft -> Fun ft
+  in
+  let members_of_obj obj_props =
+    obj_props
+    |> Base.List.fold_left ~init:(SMap.empty, []) ~f:(fun (mems1, errs1) prop ->
+           let (mems2, errs2) =
+             match prop with
+             | NamedProp { name; prop; from_proto } ->
+               ( SMap.singleton
+                   name
+                   MemberInfo.{ ty = ty_of_named_prop prop; from_proto; from_nullable = false },
+                 [] )
+             | SpreadProp ty -> members_of_ty ty
+             | IndexProp _
+             | CallProp _ ->
+               (SMap.empty, [])
+           in
+           (SMap.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
+  in
+  let members_of_union (t1, t2, ts) =
+    let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
+      (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
+    in
+    let errs = List.concat (errs1 :: errs2 :: errss) in
+    let universe =
+      (* set union of all child members *)
+      List.fold_right
+        (SMap.merge (fun _ _ _ -> Some ()))
+        (t1_members :: t2_members :: ts_members)
+        SMap.empty
+    in
+    (* empty and any have all possible members *)
+    let (t1_members, t2_members, ts_members) =
+      let f ty ty_members =
+        let open MemberInfo in
+        match membership_behavior ty with
+        | EmptyOrAny ->
+          SMap.map (Fn.const { ty; from_proto = true; from_nullable = false }) universe
+        | Nullish ->
+          SMap.map
+            (* Bot is the identity of type union *)
+            (Fn.const { ty = Bot EmptyType; from_proto = true; from_nullable = true })
+            universe
+        | Normal -> ty_members
+      in
+      (f t1 t1_members, f t2 t2_members, List.map2 f ts ts_members)
+    in
+    let mems =
+      (* set intersection of members; type union upon overlaps *)
+      SMap.map (MemberInfo.map Nel.one) t1_members
+      |> List.fold_right
+           (SMap.merge (fun _ ty_opt tys_opt ->
+                let open MemberInfo in
+                match (ty_opt, tys_opt) with
+                | ( Some { ty; from_proto = fp; from_nullable = fn },
+                    Some { ty = tys; from_proto = fps; from_nullable = fns } ) ->
+                  (* We say that a member formed by unioning other members should be treated:
+                    * - as from a prototype only if all its constituent members are.
+                    * - as from a nullable object if any of its constituent members are. *)
+                  Some { ty = Nel.cons ty tys; from_proto = fp && fps; from_nullable = fn || fns }
+                | (None, _)
+                | (_, None) ->
+                  None))
+           (t2_members :: ts_members)
+      |> SMap.map
+           (MemberInfo.map (function
+               | (t, []) -> t
+               | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))))
+    in
+    (mems, errs)
+  in
+  let members_of_intersection (t1, t2, ts) =
+    let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
+      (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
+    in
+    let errs = List.concat (errs1 :: errs2 :: errss) in
+    let special_cases =
+      Base.List.filter_map
+        ~f:(fun ty ->
+          let open MemberInfo in
+          match membership_behavior ty with
+          | EmptyOrAny -> Some ty
+          | Nullish
+          | Normal ->
+            None)
+        (t1 :: t2 :: ts)
+    in
+    let mems =
+      (* set union of members; type intersection upon overlaps *)
+      SMap.map (MemberInfo.map Nel.one) t1_members
+      |> List.fold_right
+           (SMap.merge (fun _ ty_opt tys_opt ->
+                let open MemberInfo in
+                match (ty_opt, tys_opt) with
+                | ( Some { ty; from_proto = fp; from_nullable = fn },
+                    Some { ty = tys; from_proto = fps; from_nullable = fns } ) ->
+                  (* We say that a member formed by intersecting other members should be treated:
+                    * - as from a prototype only if all its constituent members are.
+                    * - as from a nullable object only if all its constituent members are. *)
+                  Some { ty = Nel.cons ty tys; from_proto = fp && fps; from_nullable = fn && fns }
+                | (Some info, None) -> Some (MemberInfo.map Nel.one info)
+                | (None, Some info) -> Some info
+                | (None, None) -> None))
+           (t2_members :: ts_members)
+      |> SMap.map (MemberInfo.map (List.fold_right Nel.cons special_cases))
+      |> SMap.map
+           (MemberInfo.map (function
+               | (t, []) -> t
+               | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))))
+    in
+    (mems, errs)
+  in
+  function
+  | Obj { obj_props; _ } -> members_of_obj obj_props
+  | Fun { fun_static; _ } -> members_of_ty fun_static
+  | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
+  | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
+  | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
+    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ ) as t ->
+    (SMap.empty, [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)])
+  | Any _
+  | Top
+  | Bot _
+  | Void
+  | Null
+  | InlineInterface _
+  | TypeOf _
+  | ClassDecl _
+  | InterfaceDecl _
+  | EnumDecl _
+  | Utility _
+  | Module _
+  | Mu _ ->
+    (SMap.empty, [])
+
+let members_of_type
     ~exclude_proto_members
     ?(exclude_keys = SSet.empty)
-    ?compute_insert_text
+    ?(idx_hook = Pervasives.ignore)
     cx
     file_sig
     typed_ast
     this
+    ~tparams =
+  let this_ty_res =
+    Ty_normalizer.from_scheme
+      ~options:
+        {
+          ty_normalizer_options with
+          Ty_normalizer_env.expand_toplevel_members =
+            Some Ty_normalizer_env.{ include_proto_members = not exclude_proto_members; idx_hook };
+        }
+      ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+      Type.TypeScheme.{ tparams; type_ = this }
+  in
+  let is_valid_member (s, _) =
+    (* filter out constructor, it shouldn't be called manually *)
+    s <> "constructor"
+    (* filter out indexer/call properties *)
+    && (not (String.length s >= 1 && s.[0] = '$'))
+    (* strip out members from prototypes which are implicitly created for internal reasons *)
+    && (not (Reason.is_internal_name s))
+    && (* exclude members the caller told us to exclude *)
+    not (SSet.mem s exclude_keys)
+  in
+  match this_ty_res with
+  | Error error -> return ([], [Ty_normalizer.error_to_string error])
+  | Ok (Ty.Any _) -> fail "not enough type information to autocomplete"
+  | Ok this_ty ->
+    let (mems, errs) = members_of_ty this_ty in
+    return
+      ( mems |> SMap.bindings |> List.filter is_valid_member,
+        match errs with
+        | [] -> []
+        | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx this) :: errs )
+
+let autocomplete_member
+    ~reader
+    ~exclude_proto_members
+    ?exclude_keys
+    cx
+    file_sig
+    typed_ast
+    this
+    in_optional_chain
     ac_loc
     ~tparams =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let result = Members.extract ~exclude_proto_members cx this in
-  match Members.to_command_result result with
-  | Error error -> AcFatalError error
-  | Ok result_map ->
-    let file = Context.file cx in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-    let rev_result =
-      SMap.fold
-        (fun name (_id_loc, type_) acc ->
-          if (not (autocomplete_is_valid_member name)) || SSet.mem name exclude_keys then
-            acc
-          else
-            let loc = Type.loc_of_t type_ |> loc_of_aloc ~reader in
-            let scheme = Type.TypeScheme.{ tparams; type_ } in
-            ((name, loc), scheme) :: acc)
-        result_map
-        []
-    in
-    let (results, errors_to_log) =
-      rev_result
-      |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
-      |> Base.List.fold_left
-           ~init:([], [])
-           ~f:(fun (results, errors_to_log) ((name, ty_loc), ty_res) ->
-             match ty_res with
-             | Ok ty ->
-               let result =
-                 autocomplete_create_result
-                   ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
-                   (name, ac_loc)
-                   (ty, ty_loc)
-               in
-               (result :: results, errors_to_log)
-             | Error err ->
-               let error_to_log = Ty_normalizer.error_to_string err in
-               (results, error_to_log :: errors_to_log))
+  let in_idx = ref false in
+  let idx_hook () = in_idx := true in
+  match
+    members_of_type
+      ~exclude_proto_members
+      ?exclude_keys
+      ~idx_hook
+      cx
+      file_sig
+      typed_ast
+      this
+      ~tparams
+  with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log) ->
+    let results =
+      mems
+      |> List.map (fun (name, MemberInfo.{ ty; from_proto; from_nullable }) ->
+             let rank =
+               if from_proto then
+                 1
+               else
+                 0
+             in
+             let opt_chain_ty =
+               Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
+             in
+             match (from_nullable, in_optional_chain, !in_idx) with
+             | (false, _, _)
+             | (_, _, true) ->
+               autocomplete_create_result ~rank (name, ac_loc) ty
+             | (true, false, false) ->
+               let opt_chain_name = "?." ^ name in
+               let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
+               autocomplete_create_result
+                 ~insert_text:opt_chain_name
+                 ~rank
+                 (opt_chain_name, opt_chain_ac_loc)
+                 opt_chain_ty
+             | (true, true, false) -> autocomplete_create_result ~rank (name, ac_loc) opt_chain_ty)
     in
     AcResult { results; errors_to_log }
 
@@ -305,7 +523,7 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
   |> Base.List.filter_map ~f:(fun (name, loc) ->
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
-             ((name, loc), Type.TypeScheme.{ tparams; type_ })))
+             (name, Type.TypeScheme.{ tparams; type_ })))
   |> Ty_normalizer.from_schemes
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -317,14 +535,11 @@ let autocomplete_id
   let (results, errors_to_log) =
     local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, loc), normalization_result) ->
-           match normalization_result with
+         (fun (results, errors_to_log) (name, ty_result) ->
+           match ty_result with
            | Ok ty ->
              let result =
-               autocomplete_create_result
-                 ~show_func_details:(id_type <> JSXIdent)
-                 (name, ac_loc)
-                 (ty, loc)
+               autocomplete_create_result ~show_func_details:(id_type <> JSXIdent) (name, ac_loc) ty
              in
              (result :: results, errors_to_log)
            | Error err ->
@@ -339,9 +554,10 @@ let autocomplete_id
         res_loc = ac_loc;
         res_kind = Some Lsp.Completion.Variable;
         res_name = "this";
-        res_ty = (Loc.none, "this");
+        res_ty = "this";
         func_details = None;
         res_insert_text = None;
+        rank = 0;
       }
       :: results
     else
@@ -354,9 +570,10 @@ let autocomplete_id
         res_loc = ac_loc;
         res_kind = Some Lsp.Completion.Variable;
         res_name = "super";
-        res_ty = (Loc.none, "super");
+        res_ty = "super";
         func_details = None;
         res_insert_text = None;
+        rank = 0;
       }
       :: results
     else
@@ -381,17 +598,26 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
    * it from the autocomplete results, along with already used attribute names. *)
   let exclude_keys = SSet.add "children" used_attr_names in
   (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
-  autocomplete_member
-    ~reader
-    ~exclude_proto_members:true
-    ~exclude_keys
-    ~compute_insert_text:(fun name -> name ^ "=")
-    cx
-    file_sig
-    typed_ast
-    props_object
-    ac_loc
-    ~tparams
+  let mems_result =
+    members_of_type
+      ~exclude_proto_members:true
+      ~exclude_keys
+      cx
+      file_sig
+      typed_ast
+      props_object
+      ~tparams
+  in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  match mems_result with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log) ->
+    let results =
+      mems
+      |> List.map (fun (name, MemberInfo.{ ty; _ }) ->
+             autocomplete_create_result ~insert_text:(name ^ "=") (name, ac_loc) ty)
+    in
+    AcResult { results; errors_to_log }
 
 (* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
 (* NOTE: excludes classes, because we'll get those from local_value_identifiers *)
@@ -451,7 +677,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
   Pervasives.ignore (search#program typed_ast);
   search#ids
-  |> List.map (fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
+  |> List.map (fun ((_, t), Flow_ast.Identifier.{ name; _ }) -> (name, t))
   |> Ty_normalizer.from_types
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -472,14 +698,14 @@ let type_exports_of_module_ty ~ac_loc =
   | Module (_, { exports; _ }) ->
     Base.List.filter_map exports ~f:(fun (name, ty) ->
         if is_type_export ty then
-          Some (autocomplete_create_result (name, ac_loc) (ty, Loc.none))
+          Some (autocomplete_create_result (name, ac_loc) ty)
         else
           None)
   (* workaround while the ty normalizer sometimes renders modules as objects *)
   | Obj { obj_props; _ } ->
     Base.List.filter_map obj_props ~f:(function
-        | NamedProp (name, Field (ty, _)) when is_type_export ty ->
-          Some (autocomplete_create_result (name, ac_loc) (ty, Loc.none))
+        | NamedProp { name; prop = Field (ty, _); _ } when is_type_export ty ->
+          Some (autocomplete_create_result (name, ac_loc) ty)
         | _ -> None)
   | _ -> []
 
@@ -492,19 +718,20 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
           res_loc = ac_loc;
           res_kind = Some Lsp.Completion.TypeParameter;
           res_name = name;
-          res_ty = (Loc.none, name);
+          res_ty = name;
           func_details = None;
           res_insert_text = None;
+          rank = 0;
         })
       tparams
   in
   let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
     local_type_identifiers ~typed_ast ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, loc), ty_result) ->
+         (fun (results, errors_to_log) (name, ty_result) ->
            match ty_result with
            | Ok ty ->
-             let result = autocomplete_create_result (name, ac_loc) (ty, loc_of_aloc ~reader loc) in
+             let result = autocomplete_create_result (name, ac_loc) ty in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -517,18 +744,16 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
   let (results, errors_to_log) =
     local_value_identifiers ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, loc), ty_res) ->
+         (fun (results, errors_to_log) (name, ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (results, error_to_log :: errors_to_log)
            | Ok (Ty.ClassDecl _ as ty) ->
-             let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
+             let result = autocomplete_create_result (name, ac_loc) ty in
              (result :: results, errors_to_log)
            | Ok ty when type_exports_of_module_ty ~ac_loc ty <> [] ->
-             let result =
-               autocomplete_create_result (name, ac_loc) (ty, loc) ~insert_text:(name ^ ".")
-             in
+             let result = autocomplete_create_result (name, ac_loc) ty ~insert_text:(name ^ ".") in
              (result :: results, errors_to_log)
            | Ok _ -> (results, errors_to_log))
          (tparam_and_tident_results, tparam_and_tident_errors_to_log)
@@ -575,7 +800,7 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cur
         ~include_super
         ~include_this
         ~tparams )
-  | Some (tparams, ac_loc, Acmem this) ->
+  | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
     ( "Acmem",
       autocomplete_member
         ~reader
@@ -583,7 +808,8 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cur
         cx
         file_sig
         typed_ast
-        this
+        obj_type
+        in_optional_chain
         ac_loc
         ~tparams )
   | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->

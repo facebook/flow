@@ -7,6 +7,14 @@
 
 module File_sig = File_sig.With_ALoc
 
+type member_expansion_options = {
+  (* Whether to include prototypes' members *)
+  include_proto_members: bool;
+  (* A function which the implementation will call if the given type is in an IdxWrapper.
+   * Feels hacky, but idx isn't super important now that we have optional chaining. *)
+  idx_hook: unit -> unit;
+}
+
 type options = {
   (* If this flag is set to `true` then the normalizer will attempt to reuse the
    * cached results of evaluated type-destructors. If this is set to `false`, then
@@ -78,6 +86,12 @@ type options = {
   preserve_inferred_literal_types: bool;
   (* Debug *)
   verbose_normalizer: bool;
+  (* If set to `Some _` then render top-level InstanceTs, primitive types,
+   * class types, type variables/aliases as object types instead of nominally.
+   *
+   * Used for member autocompletion.
+   *)
+  expand_toplevel_members: member_expansion_options option;
 }
 
 let default_options =
@@ -92,6 +106,7 @@ let default_options =
     optimize_types = true;
     preserve_inferred_literal_types = false;
     verbose_normalizer = false;
+    expand_toplevel_members = None;
   }
 
 (* This is a global environment that should not change during normalization *)
@@ -107,6 +122,31 @@ type genv = {
 }
 
 let mk_genv ~full_cx ~file ~typed_ast ~file_sig = { file; cx = full_cx; typed_ast; file_sig }
+
+type instance_member_expansion_mode =
+  | IMUnset
+  | IMStatic
+  | IMInstance
+
+(* Info used for implementation of `expand_toplevel_members` *)
+type member_expansion_info = {
+  (* Information that was passed in via options *)
+  member_expansion_options: member_expansion_options;
+  (* Sets how to expand members upon encountering an InstanceT:
+   * - if set to IMStatic then expand the static members
+   * - if set to IMUnset or IMInstance then expand the instance members.
+   *
+   * We distinguish between this being not yet set (IMUnset) and this being explicitly
+   * set to instance (IMInstance) for the sake of determining how to update this flag
+   * upon a ThisClassT:
+   * - if the flag was IMUnset, then we know we want to proceed by setting it to IMStatic
+   *   so that the InstanceT within is looked at as a static class.
+   * - if the flag was IMInstance then we could be looking at the superclass of another
+   *   InstanceT, in which case we want to look at the superclass as an instance. *)
+  instance_member_expansion_mode: instance_member_expansion_mode;
+  (* Keep track of whether we're currently expanding the members of a primitive *)
+  within_primitive: bool;
+}
 
 type t = {
   (* Does not change. Set once in the beginning. *)
@@ -162,10 +202,31 @@ type t = {
      or a unique ID of the type alias to make this distinction, but at the moment
      keeping this information around introduces a small space regression. *)
   under_type_alias: string option;
+  (* Info used in the implementation of `expand_toplevel_members`.
+   * This is stored separately from the `expand_toplevel_members` option so that
+   * we can keep track of more information than what we ask the caller to specify.
+   * The bool tracks whether we should expand members. It's set to true initially,
+   * and then gets flipped to false once we descend below the top level of the type. *)
+  member_expansion_info: (bool * member_expansion_info) option;
 }
 
 let init ~options ~genv ~tparams ~imported_names =
-  { options; genv; depth = 0; tparams; imported_names; under_type_alias = None }
+  {
+    options;
+    genv;
+    depth = 0;
+    tparams;
+    imported_names;
+    under_type_alias = None;
+    member_expansion_info =
+      Option.map options.expand_toplevel_members ~f:(fun member_expansion_options ->
+          ( true,
+            {
+              member_expansion_options;
+              instance_member_expansion_mode = IMUnset;
+              within_primitive = false;
+            } ));
+  }
 
 let descend e = { e with depth = e.depth + 1 }
 
@@ -190,3 +251,47 @@ let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 let current_file e = e.genv.file
 
 let add_typeparam env typeparam = { env with tparams = typeparam :: env.tparams }
+
+let get_member_expansion_info e =
+  match e.member_expansion_info with
+  | Some (true, info) -> Some (info, { e with member_expansion_info = Some (false, info) })
+  | Some (false, _)
+  | None ->
+    None
+
+let continue_expanding_members e =
+  {
+    e with
+    member_expansion_info = Option.map e.member_expansion_info ~f:(fun (_, info) -> (true, info));
+  }
+
+let expand_instance_members e =
+  {
+    e with
+    member_expansion_info =
+      Option.map e.member_expansion_info ~f:(fun (_, info) ->
+          (true, { info with instance_member_expansion_mode = IMInstance }));
+  }
+
+let expand_static_members e =
+  {
+    e with
+    member_expansion_info =
+      Option.map e.member_expansion_info ~f:(fun (_, info) ->
+          (true, { info with instance_member_expansion_mode = IMStatic }));
+  }
+
+let expand_primitive_members e =
+  {
+    e with
+    member_expansion_info =
+      Option.map e.member_expansion_info ~f:(fun (_, info) ->
+          (true, { info with within_primitive = true; instance_member_expansion_mode = IMUnset }));
+  }
+
+(* We let ty_normalizer access this separately from get_member_expansion_info
+ * because this is relevant after we've descended below the top level of the type *)
+let within_primitive e =
+  match e.member_expansion_info with
+  | None -> false
+  | Some (_, { within_primitive; _ }) -> within_primitive

@@ -267,22 +267,22 @@ module Expression
 
   and assignment_op env =
     let op =
-      Expression.Assignment.(
-        match Peek.token env with
-        | T_RSHIFT3_ASSIGN -> Some (Some RShift3Assign)
-        | T_RSHIFT_ASSIGN -> Some (Some RShiftAssign)
-        | T_LSHIFT_ASSIGN -> Some (Some LShiftAssign)
-        | T_BIT_XOR_ASSIGN -> Some (Some BitXorAssign)
-        | T_BIT_OR_ASSIGN -> Some (Some BitOrAssign)
-        | T_BIT_AND_ASSIGN -> Some (Some BitAndAssign)
-        | T_MOD_ASSIGN -> Some (Some ModAssign)
-        | T_DIV_ASSIGN -> Some (Some DivAssign)
-        | T_MULT_ASSIGN -> Some (Some MultAssign)
-        | T_EXP_ASSIGN -> Some (Some ExpAssign)
-        | T_MINUS_ASSIGN -> Some (Some MinusAssign)
-        | T_PLUS_ASSIGN -> Some (Some PlusAssign)
-        | T_ASSIGN -> Some None
-        | _ -> None)
+      let open Expression.Assignment in
+      match Peek.token env with
+      | T_RSHIFT3_ASSIGN -> Some (Some RShift3Assign)
+      | T_RSHIFT_ASSIGN -> Some (Some RShiftAssign)
+      | T_LSHIFT_ASSIGN -> Some (Some LShiftAssign)
+      | T_BIT_XOR_ASSIGN -> Some (Some BitXorAssign)
+      | T_BIT_OR_ASSIGN -> Some (Some BitOrAssign)
+      | T_BIT_AND_ASSIGN -> Some (Some BitAndAssign)
+      | T_MOD_ASSIGN -> Some (Some ModAssign)
+      | T_DIV_ASSIGN -> Some (Some DivAssign)
+      | T_MULT_ASSIGN -> Some (Some MultAssign)
+      | T_EXP_ASSIGN -> Some (Some ExpAssign)
+      | T_MINUS_ASSIGN -> Some (Some MinusAssign)
+      | T_PLUS_ASSIGN -> Some (Some PlusAssign)
+      | T_ASSIGN -> Some None
+      | _ -> None
     in
     if op <> None then Eat.token env;
     op
@@ -393,38 +393,38 @@ module Expression
   and binary_cover =
     let binary_op env =
       let ret =
-        Expression.Binary.(
-          match Peek.token env with
-          (* Most BinaryExpression operators are left associative *)
-          (* Lowest pri *)
-          | T_BIT_OR -> Some (BitOr, Left_assoc 2)
-          | T_BIT_XOR -> Some (Xor, Left_assoc 3)
-          | T_BIT_AND -> Some (BitAnd, Left_assoc 4)
-          | T_EQUAL -> Some (Equal, Left_assoc 5)
-          | T_STRICT_EQUAL -> Some (StrictEqual, Left_assoc 5)
-          | T_NOT_EQUAL -> Some (NotEqual, Left_assoc 5)
-          | T_STRICT_NOT_EQUAL -> Some (StrictNotEqual, Left_assoc 5)
-          | T_LESS_THAN -> Some (LessThan, Left_assoc 6)
-          | T_LESS_THAN_EQUAL -> Some (LessThanEqual, Left_assoc 6)
-          | T_GREATER_THAN -> Some (GreaterThan, Left_assoc 6)
-          | T_GREATER_THAN_EQUAL -> Some (GreaterThanEqual, Left_assoc 6)
-          | T_IN ->
-            if no_in env then
-              None
-            else
-              Some (In, Left_assoc 6)
-          | T_INSTANCEOF -> Some (Instanceof, Left_assoc 6)
-          | T_LSHIFT -> Some (LShift, Left_assoc 7)
-          | T_RSHIFT -> Some (RShift, Left_assoc 7)
-          | T_RSHIFT3 -> Some (RShift3, Left_assoc 7)
-          | T_PLUS -> Some (Plus, Left_assoc 8)
-          | T_MINUS -> Some (Minus, Left_assoc 8)
-          | T_MULT -> Some (Mult, Left_assoc 9)
-          | T_DIV -> Some (Div, Left_assoc 9)
-          | T_MOD -> Some (Mod, Left_assoc 9)
-          | T_EXP -> Some (Exp, Right_assoc 10)
-          (* Highest priority *)
-          | _ -> None)
+        let open Expression.Binary in
+        match Peek.token env with
+        (* Most BinaryExpression operators are left associative *)
+        (* Lowest pri *)
+        | T_BIT_OR -> Some (BitOr, Left_assoc 2)
+        | T_BIT_XOR -> Some (Xor, Left_assoc 3)
+        | T_BIT_AND -> Some (BitAnd, Left_assoc 4)
+        | T_EQUAL -> Some (Equal, Left_assoc 5)
+        | T_STRICT_EQUAL -> Some (StrictEqual, Left_assoc 5)
+        | T_NOT_EQUAL -> Some (NotEqual, Left_assoc 5)
+        | T_STRICT_NOT_EQUAL -> Some (StrictNotEqual, Left_assoc 5)
+        | T_LESS_THAN -> Some (LessThan, Left_assoc 6)
+        | T_LESS_THAN_EQUAL -> Some (LessThanEqual, Left_assoc 6)
+        | T_GREATER_THAN -> Some (GreaterThan, Left_assoc 6)
+        | T_GREATER_THAN_EQUAL -> Some (GreaterThanEqual, Left_assoc 6)
+        | T_IN ->
+          if no_in env then
+            None
+          else
+            Some (In, Left_assoc 6)
+        | T_INSTANCEOF -> Some (Instanceof, Left_assoc 6)
+        | T_LSHIFT -> Some (LShift, Left_assoc 7)
+        | T_RSHIFT -> Some (RShift, Left_assoc 7)
+        | T_RSHIFT3 -> Some (RShift3, Left_assoc 7)
+        | T_PLUS -> Some (Plus, Left_assoc 8)
+        | T_MINUS -> Some (Minus, Left_assoc 8)
+        | T_MULT -> Some (Mult, Left_assoc 9)
+        | T_DIV -> Some (Div, Left_assoc 9)
+        | T_MOD -> Some (Mod, Left_assoc 9)
+        | T_EXP -> Some (Exp, Right_assoc 10)
+        (* Highest priority *)
+        | _ -> None
       in
       if ret <> None then Eat.token env;
       ret
@@ -472,22 +472,22 @@ module Expression
     (fun env -> helper env [])
 
   and peek_unary_op env =
-    Expression.Unary.(
-      match Peek.token env with
-      | T_NOT -> Some Not
-      | T_BIT_NOT -> Some BitNot
-      | T_PLUS -> Some Plus
-      | T_MINUS -> Some Minus
-      | T_TYPEOF -> Some Typeof
-      | T_VOID -> Some Void
-      | T_DELETE -> Some Delete
-      (* If we are in a unary expression context, and within an async function,
-       * assume that a use of "await" is intended as a keyword, not an ordinary
-       * identifier. This is a little bit inconsistent, since it can be used as
-       * an identifier in other contexts (such as a variable name), but it's how
-       * Babel does it. *)
-      | T_AWAIT when allow_await env -> Some Await
-      | _ -> None)
+    let open Expression.Unary in
+    match Peek.token env with
+    | T_NOT -> Some Not
+    | T_BIT_NOT -> Some BitNot
+    | T_PLUS -> Some Plus
+    | T_MINUS -> Some Minus
+    | T_TYPEOF -> Some Typeof
+    | T_VOID -> Some Void
+    | T_DELETE -> Some Delete
+    (* If we are in a unary expression context, and within an async function,
+     * assume that a use of "await" is intended as a keyword, not an ordinary
+     * identifier. This is a little bit inconsistent, since it can be used as
+     * an identifier in other contexts (such as a variable name), but it's how
+     * Babel does it. *)
+    | T_AWAIT when allow_await env -> Some Await
+    | _ -> None
 
   and unary_cover env =
     let begin_loc = Peek.loc env in
@@ -496,11 +496,11 @@ module Expression
     match op with
     | None ->
       let op =
-        Expression.Update.(
-          match Peek.token env with
-          | T_INCR -> Some Increment
-          | T_DECR -> Some Decrement
-          | _ -> None)
+        let open Expression.Update in
+        match Peek.token env with
+        | T_INCR -> Some Increment
+        | T_DECR -> Some Decrement
+        | _ -> None
       in
       (match op with
       | None -> postfix_cover env
@@ -545,11 +545,11 @@ module Expression
       argument
     else
       let op =
-        Expression.Update.(
-          match Peek.token env with
-          | T_INCR -> Some Increment
-          | T_DECR -> Some Decrement
-          | _ -> None)
+        let open Expression.Update in
+        match Peek.token env with
+        | T_INCR -> Some Increment
+        | T_DECR -> Some Decrement
+        | _ -> None
       in
       match op with
       | None -> argument
@@ -826,29 +826,29 @@ module Expression
       let (id_loc, id, is_private) = property_name_include_private env in
       if is_private then add_used_private env (Flow_ast_utils.name_of_ident id) id_loc;
       let loc = Loc.btwn start_loc id_loc in
-      Expression.Member.(
-        let property =
-          if is_private then
-            PropertyPrivateName (id_loc, id)
-          else
-            PropertyIdentifier id
-        in
-        (* super.PrivateName is a syntax error *)
-        begin
-          match left with
-          | Cover_expr (_, Ast.Expression.Super) when is_private ->
-            error_at env (loc, Parse_error.SuperPrivate)
-          | _ -> ()
-        end;
-        let member = Expression.Member.{ _object = as_expression env left; property } in
-        let member =
-          if in_optional_chain then
-            let open Expression in
-            OptionalMember { OptionalMember.member; optional }
-          else
-            Expression.Member member
-        in
-        call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, member)))
+      let open Expression.Member in
+      let property =
+        if is_private then
+          PropertyPrivateName (id_loc, id)
+        else
+          PropertyIdentifier id
+      in
+      (* super.PrivateName is a syntax error *)
+      begin
+        match left with
+        | Cover_expr (_, Ast.Expression.Super) when is_private ->
+          error_at env (loc, Parse_error.SuperPrivate)
+        | _ -> ()
+      end;
+      let member = Expression.Member.{ _object = as_expression env left; property } in
+      let member =
+        if in_optional_chain then
+          let open Expression in
+          OptionalMember { OptionalMember.member; optional }
+        else
+          Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, member))
     in
     fun ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left ->
       let options = parse_options env in

@@ -1,0 +1,7 @@
+(library
+  (name flow_common_utils_filename_cache)
+  (wrapped false)
+  (libraries
+    collections ; hack
+    flow_common_utils
+    flow_parser))

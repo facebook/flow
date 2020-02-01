@@ -74,6 +74,7 @@ let type_at_pos_type
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer;
+      expand_toplevel_members = None;
     }
   in
   match find_type_at_pos_annotation typed_ast loc with
@@ -139,6 +140,7 @@ let insert_type_normalize
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
+      expand_toplevel_members = None;
     }
   in
   type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme

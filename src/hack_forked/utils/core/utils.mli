@@ -47,7 +47,7 @@ val unsafe_opt : 'a option -> 'a
 
 val inter_list : SSet.t list -> SSet.t
 
-val list_last : ('a -> 'b) -> ('a -> unit) -> 'a list -> unit
+val list_last : ('a -> unit) -> ('a -> unit) -> 'a list -> unit
 
 val is_prefix_dir : string -> string -> bool
 
@@ -85,7 +85,7 @@ val expand_namespace : (string * string) list -> string -> string
 
 val split_class_from_method : string -> (string * string) option
 
-val iter2_shortest : ('a -> 'b -> 'c) -> 'a list -> 'b list -> unit
+val iter2_shortest : ('a -> 'b -> unit) -> 'a list -> 'b list -> unit
 
 val fold_fun_list : 'a -> ('a -> 'a) list -> 'a
 
@@ -100,7 +100,7 @@ end
 
 val try_finally : f:(unit -> 'a) -> finally:(unit -> unit) -> 'a
 
-val with_context : enter:(unit -> 'a) -> exit:(unit -> 'b) -> do_:(unit -> 'c) -> 'c
+val with_context : enter:(unit -> unit) -> exit:(unit -> unit) -> do_:(unit -> 'c) -> 'c
 
 val assert_false_log_backtrace : string option -> 'a
 

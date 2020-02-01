@@ -12,8 +12,6 @@ open Hh_core
 type config = {
   heap_size: int;
   hash_table_pow: int;
-  shm_dirs: string list;
-  shm_min_avail: int;
   log_level: int;
 }
 
@@ -29,15 +27,7 @@ exception Hash_table_full
 
 exception Heap_full
 
-exception Revision_length_is_zero
-
-exception Sql_assertion_failure of int
-
-exception Failed_anonymous_memfd_init
-
-exception Less_than_minimum_available of int
-
-exception Failed_to_use_shm_dir of string
+exception Failed_memfd_init of Unix.error
 
 exception C_assertion_failure of string
 
@@ -45,68 +35,24 @@ let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "heap_full" Heap_full;
-  Callback.register_exception "revision_length_is_zero" Revision_length_is_zero;
-  Callback.register_exception "sql_assertion_failure" (Sql_assertion_failure 0);
-  Callback.register_exception "failed_anonymous_memfd_init" Failed_anonymous_memfd_init;
-  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0);
-  Callback.register_exception "c_assertion_failure" (C_assertion_failure "dummy string")
+  Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL);
+  Callback.register_exception "c_assertion_failure" (C_assertion_failure "")
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
-external hh_shared_init : config:config -> shm_dir:string option -> num_workers:int -> handle
-  = "hh_shared_init"
-
-let anonymous_init config ~num_workers = hh_shared_init ~config ~shm_dir:None ~num_workers
-
-let rec shm_dir_init config ~num_workers = function
-  | [] ->
-    Hh_logger.log "We've run out of filesystems to use for shared memory";
-    raise Out_of_shared_memory
-  | shm_dir :: shm_dirs ->
-    let shm_min_avail = config.shm_min_avail in
-    begin
-      (* For some reason statvfs is segfaulting when the directory doesn't
-       * exist, instead of returning -1 and an errno *)
-      try
-        if not (Sys.file_exists shm_dir) then raise (Failed_to_use_shm_dir "shm_dir does not exist");
-        hh_shared_init ~config ~shm_dir:(Some shm_dir) ~num_workers
-      with
-      | Less_than_minimum_available avail ->
-        EventLogger.(
-          log_if_initialized (fun () ->
-              sharedmem_less_than_minimum_available ~shm_dir ~shm_min_avail ~avail));
-        Hh_logger.log
-          "Filesystem %s only has %d bytes available, which is less than the minimum %d bytes"
-          shm_dir
-          avail
-          config.shm_min_avail;
-        shm_dir_init config ~num_workers shm_dirs
-      | Unix.Unix_error (e, fn, arg) ->
-        let fn_string =
-          if fn = "" then
-            ""
-          else
-            Utils.spf " thrown by %s(%s)" fn arg
-        in
-        let reason = Utils.spf "Unix error%s: %s" fn_string (Unix.error_message e) in
-        EventLogger.(
-          log_if_initialized (fun () -> sharedmem_failed_to_use_shm_dir ~shm_dir ~reason));
-        Hh_logger.log "Failed to use shm dir `%s`: %s" shm_dir reason;
-        shm_dir_init config ~num_workers shm_dirs
-      | Failed_to_use_shm_dir reason ->
-        EventLogger.(
-          log_if_initialized (fun () -> sharedmem_failed_to_use_shm_dir ~shm_dir ~reason));
-        Hh_logger.log "Failed to use shm dir `%s`: %s" shm_dir reason;
-        shm_dir_init config ~num_workers shm_dirs
-    end
+external hh_shared_init : config -> num_workers:int -> handle = "hh_shared_init"
 
 let init config ~num_workers =
-  try anonymous_init config ~num_workers
-  with Failed_anonymous_memfd_init ->
-    EventLogger.(log_if_initialized (fun () -> sharedmem_failed_anonymous_memfd_init ()));
+  try hh_shared_init config ~num_workers
+  with Failed_memfd_init _ ->
+    EventLogger.(log_if_initialized (fun () -> sharedmem_failed_memfd_init ()));
     Hh_logger.log "Failed to use anonymous memfd init";
-    shm_dir_init config ~num_workers config.shm_dirs
+    (* TODO: The server should exit, but we should exit with a different
+     * message, since Out_of_shared_memory is also raised when memfd_reserve
+     * fails. This error condition is specifically when the memfd could not be
+     * initialized. *)
+    raise Out_of_shared_memory
 
 external connect : handle -> worker_id:int -> unit = "hh_connect"
 
@@ -1004,7 +950,7 @@ end)
         end
         cache;
       Hashtbl.clear cache;
-      l := List.sort (fun (_, x, _) (_, y, _) -> y - x) !l;
+      l := List.sort ~compare:(fun (_, x, _) (_, y, _) -> y - x) !l;
       let i = ref 0 in
       while !i < Config.capacity do
         match !l with

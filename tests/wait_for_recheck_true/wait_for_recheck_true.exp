@@ -6,26 +6,8 @@ Trigger a 1000s recheck
 autocomplete with --wait-for-recheck false runs immediately:
 {
   "result":[
-    {
-      "name":"x",
-      "type":"string",
-      "func_details":null,
-      "path":"focused.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":5
-    },
-    {
-      "name":"val",
-      "type":"number",
-      "func_details":null,
-      "path":"focused.js",
-      "line":3,
-      "endline":3,
-      "start":8,
-      "end":10
-    }
+    {"name":"x","type":"string","func_details":null},
+    {"name":"val","type":"number","func_details":null}
   ]
 }
 

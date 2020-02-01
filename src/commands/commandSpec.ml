@@ -88,6 +88,25 @@ module ArgSpec = struct
       arg = Arg;
     }
 
+  let uint =
+    {
+      parse =
+        (fun ~name -> function
+          | Some [x] ->
+            let i =
+              try int_of_string x
+              with Failure _ ->
+                raise
+                  (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
+            in
+            if i < 0 then
+              raise (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
+            else
+              Some i
+          | _ -> None);
+      arg = Arg;
+    }
+
   let enum values =
     {
       parse =

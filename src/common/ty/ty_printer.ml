@@ -175,7 +175,8 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     in
     let body = type_object ~depth body in
     fuse_with_space [Atom "interface"; extends; body]
-  and type_function ~depth ~sep { fun_params; fun_rest_param; fun_return; fun_type_params } =
+  and type_function
+      ~depth ~sep { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _ } =
     let params = counted_map (type_function_param ~depth) fun_params in
     let params =
       match fun_rest_param with
@@ -222,7 +223,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     Ty.(
       fun ~depth prop ->
         match prop with
-        | NamedProp (key, named_prop) ->
+        | NamedProp { name = key; prop = named_prop; _ } ->
           begin
             match named_prop with
             | Field (t, { fld_polarity; fld_optional }) ->

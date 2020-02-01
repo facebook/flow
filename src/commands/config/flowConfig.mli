@@ -90,6 +90,8 @@ val facebook_fbt : config -> string option
 
 val file_watcher : config -> Options.file_watcher option
 
+val file_watcher_timeout : config -> int option
+
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
@@ -156,15 +158,11 @@ val root_name : config -> string option
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
-val shm_dirs : config -> string list
-
 val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int
 
 val shm_log_level : config -> int
-
-val shm_min_avail : config -> int
 
 val suppress_comments : config -> Str.regexp list
 

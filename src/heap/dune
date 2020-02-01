@@ -5,10 +5,7 @@
   (c_names
     hh_assert
     hh_shared)
-  (c_flags (:standard
-    (:include config/c_flags.sexp)))
-  (c_library_flags (:standard
-    (:include config/c_library_flags.sexp)))
+  (c_flags (:standard -I../../src/third-party/lz4))
   (preprocess (pps ppx_deriving.std visitors.ppx))
   (libraries
     utils_core))
@@ -47,11 +44,3 @@
     heap_libc
     utils_core))
 
-(library
-  (name heap_global_storage)
-  (wrapped false)
-  (modules
-    globalStorage)
-  (preprocess (pps ppx_deriving.std visitors.ppx))
-  (libraries
-    heap_libc))

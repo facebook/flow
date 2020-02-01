@@ -5,7 +5,7 @@
     flow_commands_utils
     flow_common_lsp_conversions
     flow_exit_status
-    flow_logging_lwt
+    logging_common_lwt
   )
   (preprocess (pps lwt_ppx))
 )

@@ -3,6 +3,7 @@
   (wrapped false)
   (libraries
     flow_common
+    flow_common_utils_filename_cache
     flow_exit_status
     flow_monitor_rpc
     flow_parser

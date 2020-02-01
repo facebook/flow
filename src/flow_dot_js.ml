@@ -151,7 +151,7 @@ let stub_docblock =
   {
     Docblock.flow = None;
     typeAssert = false;
-    preventMunge = None;
+    preventMunge = false;
     providesModule = None;
     isDeclarationFile = false;
     jsx = None;

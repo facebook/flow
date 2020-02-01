@@ -3,7 +3,7 @@
   (wrapped false)
   (libraries
     flow_exit_status
-    flow_logging_lwt
+    logging_common_lwt
     flow_logging_utils
     flow_monitor_rpc
     flow_procs

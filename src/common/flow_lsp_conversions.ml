@@ -50,7 +50,7 @@ let flow_completion_to_lsp
         else
           String.sub s 0 n ^ "..."
       in
-      let trunc80 s = trunc 80 s in
+      let column_width = 80 in
       let flow_params_to_string params =
         let params = Base.List.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
         "(" ^ String.concat ", " params ^ ")"
@@ -72,7 +72,7 @@ let flow_completion_to_lsp
       in
       let plaintext_text_edits =
         lazy
-          ( if item.res_name <> insert_text then
+          ( if Option.is_some item.res_insert_text then
             [text_edit item.res_loc insert_text]
           else
             [] )
@@ -82,8 +82,7 @@ let flow_completion_to_lsp
         | Some func_details ->
           let itemType = Some (trunc 30 func_details.return_ty) in
           let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
-          let (_ty_loc, ty) = item.res_ty in
-          let detail = Some (trunc80 ty) in
+          let detail = Some (trunc column_width item.res_ty) in
           let (insertTextFormat, textEdits) =
             match is_snippet_supported with
             | true -> (Some SnippetFormat, [func_snippet func_details])
@@ -92,11 +91,11 @@ let flow_completion_to_lsp
           (itemType, inlineDetail, detail, insertTextFormat, textEdits)
         | None ->
           let itemType = None in
-          let (_ty_loc, ty) = item.res_ty in
-          let inlineDetail = Some (trunc80 ty) in
+          let inlineDetail = Some (trunc column_width item.res_ty) in
           let detail = inlineDetail in
           (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
       in
+      let sortText = Some (Printf.sprintf "%020u" item.rank) in
       {
         label = item.res_name;
         kind = item.res_kind;
@@ -105,7 +104,7 @@ let flow_completion_to_lsp
         itemType;
         documentation = None;
         (* This will be filled in by completionItem/resolve. *)
-        sortText = None;
+        sortText;
         filterText = None;
         (* deprecated and should not be used *)
         insertText = None;

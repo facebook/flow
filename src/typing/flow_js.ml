@@ -2165,6 +2165,8 @@ struct
            * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
           rec_flow cx trace (t, u)
         | (MaybeT (_, t), UseT (_, MaybeT _)) -> rec_flow cx trace (t, u)
+        | (MaybeT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
+          resolve_union cx trace reason id resolved unresolved l upper
         | (MaybeT (reason, t), _) ->
           let reason = replace_desc_reason RNullOrVoid reason in
           rec_flow cx trace (NullT.make reason |> with_trust Trust.bogus_trust, u);
@@ -2207,6 +2209,8 @@ struct
         | (OptionalT { reason = _; type_ = t; use_desc = _ }, UseT (_, OptionalT _))
         | (OptionalT { reason = _; type_ = t; use_desc = _ }, UseT (_, MaybeT _)) ->
           rec_flow cx trace (t, u)
+        | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
+          resolve_union cx trace reason id resolved unresolved l upper
         | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
           rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
@@ -2744,25 +2748,7 @@ struct
            if our union contains any of these problematic types, we force it to resolve its elements before
            considering its upper bound *)
         | (_, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
-          let continue resolved =
-            match unresolved with
-            | [] -> rec_flow cx trace (union_of_ts reason resolved, upper)
-            | next :: rest ->
-              rec_flow
-                cx
-                trace
-                (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
-          in
-          let reason_elemt = reason_of_t l in
-          let pos = Base.List.length resolved in
-          (* Union resolution can fall prey to the same sort of infinite recursion that array spreads can, so
-          we can use the same constant folding guard logic that arrays do. To more fully understand how that works,
-          see the comment there *)
-          ConstFoldExpansion.guard id (reason_elemt, pos) (function
-              | 0 -> continue (l :: resolved)
-              (* Unions are idempotent, so we can just skip any duplicated elements *)
-              | 1 -> continue resolved
-              | _ -> ())
+          resolve_union cx trace reason id resolved unresolved l upper
         | (UnionT (reason, rep), FilterMaybeT (use_op, tout)) ->
           let checked_trust = Context.trust_errors cx in
           let void = VoidT.why reason |> with_trust bogus_trust in
@@ -7074,8 +7060,7 @@ struct
       | (DefT (_, _, EmptyT Zeroed), t)
       | (t, DefT (_, _, EmptyT Zeroed)) ->
         rec_flow_t cx trace ~use_op:unknown_use (t, u)
-      | ( DefT (_, _, (NumT _ | BoolT _ | NullT | VoidT)),
-          DefT (_, _, (NumT _ | BoolT _ | NullT | VoidT)) ) ->
+      | (DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (DefT (_, _, StrT _), _) ->
         rec_flow cx trace (r, UseT (use_op, l));
@@ -7083,6 +7068,10 @@ struct
       | (_, DefT (_, _, StrT _)) ->
         rec_flow cx trace (l, UseT (use_op, r));
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
+      | (DefT (reason, _, (VoidT | NullT)), _)
+      | (_, DefT (reason, _, (VoidT | NullT))) ->
+        add_output cx ~trace (Error_message.ENullVoidAddition reason);
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (AnyT (_, src), _)
       | (_, AnyT (_, src)) ->
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)
@@ -8205,11 +8194,21 @@ struct
    branches of the unions. *)
     | UnionT (r, rep) ->
       let destructor = TypeDestructorT (use_op, reason, d) in
-      rec_flow_t
-        ~use_op:unknown_use
-        cx
-        trace
-        (UnionT (r, rep |> UnionRep.ident_map (fun t -> Cache.Eval.id t destructor)), tout)
+      let unresolved =
+        UnionRep.members rep |> Base.List.map ~f:(fun t -> Cache.Eval.id t destructor)
+      in
+      let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
+      let u =
+        ResolveUnionT
+          {
+            reason = r;
+            unresolved;
+            resolved = [];
+            upper = UseT (unknown_use, tout);
+            id = Reason.mk_id ();
+          }
+      in
+      rec_flow cx trace (first, u)
     | MaybeT (r, t) ->
       let destructor = TypeDestructorT (use_op, reason, d) in
       let reason = replace_desc_new_reason RNullOrVoid r in
@@ -9258,6 +9257,27 @@ struct
     | KeysT _ ->
       true
     | _ -> false
+
+  and resolve_union cx trace reason id resolved unresolved l upper =
+    let continue resolved =
+      match unresolved with
+      | [] -> rec_flow cx trace (union_of_ts reason resolved, upper)
+      | next :: rest ->
+        rec_flow cx trace (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
+    in
+    match l with
+    | DefT (_, _, EmptyT _) -> continue resolved
+    | _ ->
+      let reason_elemt = reason_of_t l in
+      let pos = Base.List.length resolved in
+      (* Union resolution can fall prey to the same sort of infinite recursion that array spreads can, so
+      we can use the same constant folding guard logic that arrays do. To more fully understand how that works,
+      see the comment there. *)
+      ConstFoldExpansion.guard id (reason_elemt, pos) (function
+          | 0 -> continue (l :: resolved)
+          (* Unions are idempotent, so we can just skip any duplicated elements *)
+          | 1 -> continue resolved
+          | _ -> ())
 
   and quick_mem_result cx trace reason_op use_op l rep = function
     | UnionRep.Yes ->
@@ -11877,7 +11897,11 @@ struct
     get_builtin_type cx ?trace reason x
 
   and flow_all_in_union cx trace rep u =
-    UnionRep.members rep |> Base.List.iter ~f:(mk_tuple_swapped u %> rec_flow cx trace)
+    (* This is required so that our caches don't treat different branches of unions as the same type *)
+    let union_reason i r = replace_desc_reason (RUnionBranching (desc_of_reason r, i)) r in
+    UnionRep.members rep
+    |> Base.List.iteri ~f:(fun i ->
+           mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> rec_flow cx trace)
 
   and call_args_iter f =
     List.iter (function

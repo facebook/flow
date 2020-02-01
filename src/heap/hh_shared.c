@@ -355,6 +355,12 @@ CAMLprim value hh_hash_slots(void) {
   CAMLreturn(Val_long(hashtbl_size));
 }
 
+static void raise_failed_memfd_init(int errcode) {
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("failed_memfd_init");
+  caml_raise_with_arg(*exn, unix_error_of_code(errcode));
+}
+
 #ifdef _WIN32
 
 static HANDLE memfd;
@@ -375,7 +381,7 @@ static HANDLE memfd;
  * Committing the whole shared heap at once would require the same
  * amount of free space in memory (or in swap file).
  **************************************************************************/
-void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
+void memfd_init(size_t shared_mem_size) {
   memfd = CreateFileMapping(
     INVALID_HANDLE_VALUE,
     NULL,
@@ -384,11 +390,11 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
     NULL);
   if (memfd == NULL) {
     win32_maperr(GetLastError());
-    uerror("CreateFileMapping", Nothing);
+    raise_failed_memfd_init(errno);
   }
   if (!SetHandleInformation(memfd, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
     win32_maperr(GetLastError());
-    uerror("SetHandleInformation", Nothing);
+    raise_failed_memfd_init(errno);
   }
 }
 
@@ -396,102 +402,50 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
 
 static int memfd = -1;
 
-static void raise_failed_anonymous_memfd_init(void) {
-  static value *exn = NULL;
-  if (!exn) exn = caml_named_value("failed_anonymous_memfd_init");
-  caml_raise_constant(*exn);
-}
-
-static void raise_less_than_minimum_available(uint64_t avail) {
-  value arg;
-  static value *exn = NULL;
-  if (!exn) exn = caml_named_value("less_than_minimum_available");
-  arg = Val_long(avail);
-  caml_raise_with_arg(*exn, arg);
-}
-
-#include <sys/statvfs.h>
-void assert_avail_exceeds_minimum(char *shm_dir, uint64_t minimum_avail) {
-  struct statvfs stats;
-  uint64_t avail;
-  if (statvfs(shm_dir, &stats)) {
-    uerror("statvfs", caml_copy_string(shm_dir));
-  }
-  avail = stats.f_bsize * stats.f_bavail;
-  if (avail < minimum_avail) {
-    raise_less_than_minimum_available(avail);
-  }
-}
-
 /**************************************************************************
  * The memdfd_init function creates a anonymous memory file that might
  * be inherited by `Daemon.spawned` processus (contrary to a simple
  * anonymous mmap).
  *
  * The preferred mechanism is memfd_create(2) (see the upper
- * description).  Then we try shm_open(2) (on Apple OS X). As a safe fallback,
- * we use `mkstemp/unlink`.
- *
- * mkstemp is preferred over shm_open on Linux as it allows to
- * choose another directory that `/dev/shm` on system where this
- * partition is too small (e.g. the Travis containers).
+ * description). Then we try shm_open(3).
  *
  * The resulting file descriptor should be mmaped with the memfd_map
  * function (see below).
  ****************************************************************************/
-void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
-  if (shm_dir == NULL) {
-    // This means that we should try to use the anonymous-y system calls
+void memfd_init(size_t shared_mem_size) {
 #if defined(MEMFD_CREATE)
-    memfd = memfd_create("fb_heap", 0);
+  memfd = memfd_create("fb_heap", 0);
 #endif
-#if defined(__APPLE__)
+  if (memfd < 0) {
+    char memname[255];
+    snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
+    // the ftruncate below will fail with errno EINVAL if you try to
+    // ftruncate the same sharedmem fd more than once. We're seeing this in
+    // some tests, which might imply that two flow processes with the same
+    // pid are starting up. This shm_unlink should prevent that from
+    // happening. Here's a stackoverflow about it
+    // http://stackoverflow.com/questions/25502229/ftruncate-not-working-on-posix-shared-memory-in-mac-os-x
+    shm_unlink(memname);
+    memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
     if (memfd < 0) {
-      char memname[255];
-      snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
-      // the ftruncate below will fail with errno EINVAL if you try to
-      // ftruncate the same sharedmem fd more than once. We're seeing this in
-      // some tests, which might imply that two flow processes with the same
-      // pid are starting up. This shm_unlink should prevent that from
-      // happening. Here's a stackoverflow about it
-      // http://stackoverflow.com/questions/25502229/ftruncate-not-working-on-posix-shared-memory-in-mac-os-x
-      shm_unlink(memname);
-      memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
-      if (memfd < 0) {
-          uerror("shm_open", Nothing);
-      }
+      raise_failed_memfd_init(errno);
+    }
 
-      // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
-      // we want this fd to be open for other processes, so that they can
-      // reconnect to the shared memory.
-      int fcntl_flags = fcntl(memfd, F_GETFD);
-      if (fcntl_flags == -1) {
-        printf("Error with fcntl(memfd): %s\n", strerror(errno));
-        uerror("fcntl", Nothing);
-      }
-      // Unset close-on-exec
-      fcntl(memfd, F_SETFD, fcntl_flags & ~FD_CLOEXEC);
+    // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
+    // we want this fd to be open for other processes, so that they can
+    // reconnect to the shared memory.
+    int flags = fcntl(memfd, F_GETFD);
+    if (flags == -1) {
+      raise_failed_memfd_init(errno);
     }
-#endif
-    if (memfd < 0) {
-      raise_failed_anonymous_memfd_init();
-    }
-  } else {
-    assert_avail_exceeds_minimum(shm_dir, minimum_avail);
-    if (memfd < 0) {
-      char template[1024];
-      if (!snprintf(template, 1024, "%s/fb_heap-XXXXXX", shm_dir)) {
-        uerror("snprintf", Nothing);
-      };
-      memfd = mkstemp(template);
-      if (memfd < 0) {
-        uerror("mkstemp", caml_copy_string(template));
-      }
-      unlink(template);
-    }
+    // Unset close-on-exec
+    if (fcntl(memfd, F_SETFD, flags & ~FD_CLOEXEC) == -1) {
+      raise_failed_memfd_init(errno);
+    };
   }
-  if(ftruncate(memfd, shared_mem_size) == -1) {
-    uerror("ftruncate", Nothing);
+  if (ftruncate(memfd, shared_mem_size) == -1) {
+    raise_failed_memfd_init(errno);
   }
 }
 
@@ -697,10 +651,9 @@ static void set_sizes(
 
 CAMLprim value hh_shared_init(
   value config_val,
-  value shm_dir_val,
   value num_workers_val
 ) {
-  CAMLparam3(config_val, shm_dir_val, num_workers_val);
+  CAMLparam2(config_val, num_workers_val);
   CAMLlocal3(
     connector,
     config_heap_size_val,
@@ -716,18 +669,7 @@ CAMLprim value hh_shared_init(
     Long_val(num_workers_val)
   );
 
-  // None -> NULL
-  // Some str -> String_val(str)
-  char *shm_dir = NULL;
-  if (shm_dir_val != Val_int(0)) {
-    shm_dir = String_val(Field(shm_dir_val, 0));
-  }
-
-  memfd_init(
-    shm_dir,
-    shared_mem_size,
-    Long_val(Field(config_val, 3))
-  );
+  memfd_init(shared_mem_size);
   char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
 
@@ -741,7 +683,7 @@ CAMLprim value hh_shared_init(
 #endif
 
   init_shared_globals(
-    Long_val(Field(config_val, 4)));
+    Long_val(Field(config_val, 2)));
   // Checking that we did the maths correctly.
   assert(Ptr_of_offset(info->heap) + heap_size_b == shared_mem + shared_mem_size);
 

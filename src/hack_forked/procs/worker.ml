@@ -137,15 +137,6 @@ let slave_main ic oc =
   | SharedMem.Out_of_shared_memory -> Exit_status.(exit Out_of_shared_memory)
   | SharedMem.Hash_table_full -> Exit_status.(exit Hash_table_full)
   | SharedMem.Heap_full -> Exit_status.(exit Heap_full)
-  | SharedMem.Sql_assertion_failure err_num ->
-    let exit_code =
-      match err_num with
-      | 11 -> Exit_status.Sql_corrupt
-      | 14 -> Exit_status.Sql_cantopen
-      | 21 -> Exit_status.Sql_misuse
-      | _ -> Exit_status.Sql_assertion_failure
-    in
-    Exit_status.exit exit_code
   | e ->
     let e_backtrace = Printexc.get_backtrace () in
     let e_str = Printexc.to_string e in

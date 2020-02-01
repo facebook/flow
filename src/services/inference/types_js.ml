@@ -370,17 +370,15 @@ module DirectDependentFilesCache : sig
 end = struct
   let max_size = 100
 
-  (* I've written out the type here so that it's clear that we are caching the `Lwt.t`s, and not
-   * the results that they resolve to. *)
-  let cache : FilenameSet.t Lwt.t FilenameCache.t = FilenameCache.make ~max_size
+  let cache : FilenameSet.t FilenameCache.t = FilenameCache.make ~max_size
 
   let clear () = FilenameCache.clear cache
 
   let with_cache ~root_files ~on_miss =
     match FilenameSet.elements root_files with
     | [root_file] ->
-      let (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
-      result
+      let%lwt (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
+      Lwt.return result
     | _ ->
       (* Cache is only for when there is a single root file *)
       Lazy.force on_miss
@@ -2863,10 +2861,6 @@ let query_watchman_for_changed_files ~options =
       {
         (* We're not setting up a subscription, we're just sending a single query *)
         Watchman_lwt.subscribe_mode = None;
-        (* Hack makes this configurable in their local config. Apparently buck & hgwatchman
-         * use 10 seconds. But I've seen 10s timeout, so let's not set a timeout. Instead we'll
-         * manually timeout later *)
-        init_timeout = Watchman_lwt.No_timeout;
         expression_terms = Watchman_expression_terms.make ~options;
         subscription_prefix = "flow_server_watcher";
         roots = Files.watched_paths (Options.file_options options);
@@ -2880,7 +2874,7 @@ let query_watchman_for_changed_files ~options =
       | Some watchman_env ->
         (* No timeout. We'll time this out ourselves after init if we need *)
         let%lwt changed_files =
-          Watchman_lwt.(get_changes_since_mergebase ~timeout:No_timeout watchman_env)
+          Watchman_lwt.(get_changes_since_mergebase ~timeout:None watchman_env)
         in
         let%lwt () = Watchman_lwt.close watchman_env in
         Lwt.return (SSet.of_list changed_files)
@@ -2951,15 +2945,18 @@ let init ~profiling ~workers options =
   in
   let%lwt (updates, files_to_focus) =
     let now = Unix.gettimeofday () in
-    (* Let's give Watchman another 15 seconds to finish. *)
-    let timeout = 15.0 in
-    let deadline = now +. timeout in
+    let timeout = Options.file_watcher_timeout options in
+    let deadline = Option.map ~f:(fun timeout -> now +. timeout) timeout in
     MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
     let%lwt (watchman_updates, files_to_focus) =
       try%lwt
-        Lwt_unix.with_timeout timeout @@ fun () ->
-        let%lwt get_watchman_updates = get_watchman_updates_thread in
-        get_watchman_updates ~libs:env.ServerEnv.libs
+        let go () =
+          let%lwt get_watchman_updates = get_watchman_updates_thread in
+          get_watchman_updates ~libs:env.ServerEnv.libs
+        in
+        match timeout with
+        | Some timeout -> Lwt_unix.with_timeout timeout go
+        | None -> go ()
       with
       | Lwt_unix.Timeout ->
         let msg =

@@ -137,7 +137,8 @@ and obj_ o =
   (Loc.none, T.Object { T.Object.exact = o.obj_exact; inexact = false; properties })
 
 and obj_prop = function
-  | NamedProp (x, p) -> obj_named_prop x p >>| fun p -> T.Object.Property (Loc.none, p)
+  | NamedProp { name; prop; _ } ->
+    obj_named_prop name prop >>| fun p -> T.Object.Property (Loc.none, p)
   | IndexProp d -> obj_index_prop d >>| fun p -> T.Object.Indexer (Loc.none, p)
   | CallProp f -> obj_call_prop f >>| fun p -> T.Object.CallProperty (Loc.none, p)
   | SpreadProp t -> obj_spread_prop t >>| fun p -> T.Object.SpreadProperty p
@@ -248,7 +249,14 @@ and num_lit lit =
   }
 
 and getter t =
-  function_ { fun_params = []; fun_rest_param = None; fun_return = t; fun_type_params = None }
+  function_
+    {
+      fun_params = [];
+      fun_rest_param = None;
+      fun_return = t;
+      fun_type_params = None;
+      fun_static = Ty.Top;
+    }
 
 and setter t =
   function_
@@ -257,6 +265,7 @@ and setter t =
       fun_rest_param = None;
       fun_return = Void;
       fun_type_params = None;
+      fun_static = Ty.Top;
     }
 
 and class_decl name = generic_type name None >>| fun name -> (Loc.none, T.Typeof name)

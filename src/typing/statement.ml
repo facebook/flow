@@ -666,27 +666,27 @@ and toplevels =
         let rest =
           Base.List.map
             ~f:
-              Ast.Statement.(
-                fun stmt ->
-                  match stmt with
-                  | (_, Empty) as stmt -> stmt
-                  (* function declarations are hoisted, so not unreachable *)
-                  | (_, FunctionDeclaration _) -> statement cx stmt
-                  (* variable declarations are hoisted, but associated assignments are
+              (let open Ast.Statement in
+              fun stmt ->
+                match stmt with
+                | (_, Empty) as stmt -> stmt
+                (* function declarations are hoisted, so not unreachable *)
+                | (_, FunctionDeclaration _) -> statement cx stmt
+                (* variable declarations are hoisted, but associated assignments are
            not, so skip variable declarations with no assignments.
            Note: this does not seem like a practice anyone would use *)
-                  | (_, VariableDeclaration d) as stmt ->
-                    VariableDeclaration.(
-                      d.declarations
-                      |> List.iter
-                           Declarator.(
-                             function
-                             | (_, { init = Some (loc, _); _ }) -> warn_unreachable loc
-                             | _ -> ()));
-                    Tast_utils.unreachable_mapper#statement stmt
-                  | (loc, _) as stmt ->
-                    warn_unreachable loc;
-                    Tast_utils.unreachable_mapper#statement stmt)
+                | (_, VariableDeclaration d) as stmt ->
+                  VariableDeclaration.(
+                    d.declarations
+                    |> List.iter
+                         Declarator.(
+                           function
+                           | (_, { init = Some (loc, _); _ }) -> warn_unreachable loc
+                           | _ -> ()));
+                  Tast_utils.unreachable_mapper#statement stmt
+                | (loc, _) as stmt ->
+                  warn_unreachable loc;
+                  Tast_utils.unreachable_mapper#statement stmt)
             stmts
         in
         Abnormal.throw_stmts_control_flow_exception (List.rev_append acc (stmt :: rest)) abnormal
@@ -7332,160 +7332,152 @@ and mk_class_sig =
   *)
       let (class_sig, rev_elements) =
         List.fold_left
-          Ast.Class.(
-            fun (c, rev_elements) -> function
-              (* instance and static methods *)
-              | Body.Property (_, { Property.key = Ast.Expression.Object.Property.PrivateName _; _ })
-                ->
-                failwith "Internal Error: Found non-private field with private name"
-              | Body.Method (_, { Method.key = Ast.Expression.Object.Property.PrivateName _; _ }) ->
-                failwith "Internal Error: Found method with private name"
-              | Body.Method
-                  ( loc,
-                    {
-                      Method.key =
-                        Ast.Expression.Object.Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                      value = (func_loc, func);
-                      kind;
-                      static;
-                      decorators;
-                    } ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-                let decorators = warn_or_ignore_decorators cx decorators in
-                (match kind with
-                | Method.Get
-                | Method.Set ->
-                  Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc)
-                | _ -> ());
+          (let open Ast.Class in
+          fun (c, rev_elements) -> function
+            (* instance and static methods *)
+            | Body.Property (_, { Property.key = Ast.Expression.Object.Property.PrivateName _; _ })
+              ->
+              failwith "Internal Error: Found non-private field with private name"
+            | Body.Method (_, { Method.key = Ast.Expression.Object.Property.PrivateName _; _ }) ->
+              failwith "Internal Error: Found method with private name"
+            | Body.Method
+                ( loc,
+                  {
+                    Method.key =
+                      Ast.Expression.Object.Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                    value = (func_loc, func);
+                    kind;
+                    static;
+                    decorators;
+                  } ) ->
+              Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
+              let decorators = warn_or_ignore_decorators cx decorators in
+              (match kind with
+              | Method.Get
+              | Method.Set ->
+                Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc)
+              | _ -> ());
 
-                let (method_sig, reconstruct_func) = mk_method cx tparams_map loc func in
-                (*  The body of a class method doesn't get checked until Class_sig.toplevels
+              let (method_sig, reconstruct_func) = mk_method cx tparams_map loc func in
+              (*  The body of a class method doesn't get checked until Class_sig.toplevels
           is called on the class sig (in this case c). The order of how the methods
           were arranged in the class is lost by the time this happens, so rather
           than attempting to return a list of method bodies from the Class_sig.toplevels
           function, we have it place the function bodies into a list via side effects.
           We use a similar approach for method types *)
-                let params_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t option ref =
-                  ref None
+              let params_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t option ref =
+                ref None
+              in
+              let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
+              let set_asts (params_opt, body_opt, _) =
+                params_ref := Some (Option.value_exn params_opt);
+                body_ref := Some (Option.value_exn body_opt)
+              in
+              let func_t_ref : Type.t option ref = ref None in
+              let set_type t = func_t_ref := Some t in
+              let get_element () =
+                let params =
+                  Option.value
+                    !params_ref
+                    ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params)
                 in
-                let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
-                let set_asts (params_opt, body_opt, _) =
-                  params_ref := Some (Option.value_exn params_opt);
-                  body_ref := Some (Option.value_exn body_opt)
+                let body =
+                  Option.value
+                    !body_ref
+                    ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body)
                 in
-                let func_t_ref : Type.t option ref = ref None in
-                let set_type t = func_t_ref := Some t in
-                let get_element () =
-                  let params =
-                    Option.value
-                      !params_ref
-                      ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params)
-                  in
-                  let body =
-                    Option.value
-                      !body_ref
-                      ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body)
-                  in
-                  let func_t =
-                    Option.value !func_t_ref ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
-                  in
-                  let func = reconstruct_func params body func_t in
-                  Body.Method
-                    ( (loc, func_t),
-                      {
-                        Method.key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
-                        value = (func_loc, func);
-                        kind;
-                        static;
-                        decorators;
-                      } )
+                let func_t =
+                  Option.value !func_t_ref ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
                 in
-                let add =
-                  match kind with
-                  | Method.Constructor -> add_constructor (Some id_loc)
-                  | Method.Method -> add_method ~static name id_loc
-                  | Method.Get -> add_getter ~static name id_loc
-                  | Method.Set -> add_setter ~static name id_loc
-                in
-                (add method_sig ~set_asts ~set_type c, get_element :: rev_elements)
-              (* fields *)
-              | Body.PrivateField
-                  ( loc,
+                let func = reconstruct_func params body func_t in
+                Body.Method
+                  ( (loc, func_t),
                     {
-                      PrivateField.key = (_, (id_loc, { Ast.Identifier.name; comments = _ })) as key;
-                      annot;
-                      value;
+                      Method.key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
+                      value = (func_loc, func);
+                      kind;
                       static;
-                      variance;
-                    } ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
+                      decorators;
+                    } )
+              in
+              let add =
+                match kind with
+                | Method.Constructor -> add_constructor (Some id_loc)
+                | Method.Method -> add_method ~static name id_loc
+                | Method.Get -> add_getter ~static name id_loc
+                | Method.Set -> add_setter ~static name id_loc
+              in
+              (add method_sig ~set_asts ~set_type c, get_element :: rev_elements)
+            (* fields *)
+            | Body.PrivateField
+                ( loc,
+                  {
+                    PrivateField.key = (_, (id_loc, { Ast.Identifier.name; comments = _ })) as key;
+                    annot;
+                    value;
+                    static;
+                    variance;
+                  } ) ->
+              Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
-                if value <> None then warn_or_ignore_class_properties cx ~static loc;
+              if value <> None then warn_or_ignore_class_properties cx ~static loc;
 
-                let reason = mk_reason (RProperty (Some name)) loc in
-                let polarity = Anno.polarity variance in
-                let (field, annot_t, annot_ast, get_value) =
-                  mk_field cx tparams_map reason annot value
-                in
-                let get_element () =
-                  Body.PrivateField
-                    ( (loc, annot_t),
-                      {
-                        PrivateField.key;
-                        annot = annot_ast;
-                        value = get_value ();
-                        static;
-                        variance;
-                      } )
-                in
-                (add_private_field ~static name id_loc polarity field c, get_element :: rev_elements)
-              | Body.Property
-                  ( loc,
+              let reason = mk_reason (RProperty (Some name)) loc in
+              let polarity = Anno.polarity variance in
+              let (field, annot_t, annot_ast, get_value) =
+                mk_field cx tparams_map reason annot value
+              in
+              let get_element () =
+                Body.PrivateField
+                  ( (loc, annot_t),
+                    { PrivateField.key; annot = annot_ast; value = get_value (); static; variance }
+                  )
+              in
+              (add_private_field ~static name id_loc polarity field c, get_element :: rev_elements)
+            | Body.Property
+                ( loc,
+                  {
+                    Property.key =
+                      Ast.Expression.Object.Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                    annot;
+                    value;
+                    static;
+                    variance;
+                  } ) ->
+              Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
+
+              if value <> None then warn_or_ignore_class_properties cx ~static loc;
+
+              let reason = mk_reason (RProperty (Some name)) loc in
+              let polarity = Anno.polarity variance in
+              let (field, annot_t, annot, get_value) = mk_field cx tparams_map reason annot value in
+              let get_element () =
+                Body.Property
+                  ( (loc, annot_t),
                     {
                       Property.key =
-                        Ast.Expression.Object.Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                        Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
                       annot;
-                      value;
+                      value = get_value ();
                       static;
                       variance;
-                    } ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-
-                if value <> None then warn_or_ignore_class_properties cx ~static loc;
-
-                let reason = mk_reason (RProperty (Some name)) loc in
-                let polarity = Anno.polarity variance in
-                let (field, annot_t, annot, get_value) =
-                  mk_field cx tparams_map reason annot value
-                in
-                let get_element () =
-                  Body.Property
-                    ( (loc, annot_t),
-                      {
-                        Property.key =
-                          Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
-                        annot;
-                        value = get_value ();
-                        static;
-                        variance;
-                      } )
-                in
-                (add_field ~static name id_loc polarity field c, get_element :: rev_elements)
-              (* literal LHS *)
-              | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Literal _; _ })
-                | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Literal _; _ })
-                  ) as elem ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
-                (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements)
-              (* computed LHS *)
-              | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
-                | Body.Property
-                    (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ }) ) as elem
-                ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
-                (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements))
+                    } )
+              in
+              (add_field ~static name id_loc polarity field c, get_element :: rev_elements)
+            (* literal LHS *)
+            | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Literal _; _ })
+              | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Literal _; _ })
+                ) as elem ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
+              (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements)
+            (* computed LHS *)
+            | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
+              | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ })
+                ) as elem ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
+              (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements))
           (class_sig, [])
           elements
       in

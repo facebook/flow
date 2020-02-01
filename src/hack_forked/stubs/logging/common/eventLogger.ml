@@ -39,7 +39,7 @@ let sharedmem_gc_ran _ _ _ _ = ()
 
 let sharedmem_init_done _ = ()
 
-let sharedmem_failed_anonymous_memfd_init _ = ()
+let sharedmem_failed_memfd_init _ = ()
 
 let sharedmem_failed_to_use_shm_dir ~shm_dir:_ ~reason:_ = ()
 

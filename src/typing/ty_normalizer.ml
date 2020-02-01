@@ -111,11 +111,6 @@ end = struct
       match i with
       | TVarKey i -> { c with open_ts = IMap.add i t c.open_ts }
       | EvalKey i -> { c with eval_ts = Type.Eval.Map.add i t c.eval_ts }
-
-    let remove i c =
-      match i with
-      | TVarKey i -> { c with open_ts = IMap.remove i c.open_ts }
-      | EvalKey i -> { c with eval_ts = Type.Eval.Map.remove i c.eval_ts }
   end
 
   module State = struct
@@ -190,24 +185,6 @@ end = struct
     let open State in
     let%bind state = get in
     put { state with cache = Cache.update i t state.cache }
-
-  (* It is safe to cache results, if there are no other OpenTs currently under
-   * normalization or the type we reconstructed does contain free recursive variable
-   * occurences. This is to avoid caching types like 'T<V$1>' since when this type
-   * will be recovered, we might no longer be in a context where 'V$1' is in scope,
-   * which could lead to an ill-formed type.
-   *)
-  let is_safe_to_cache free_tvars t_result =
-    VSet.is_empty free_tvars
-    ||
-    match t_result with
-    | Ok t -> ISet.is_empty (Ty_utils.free_vars_of_type t)
-    | Error _ -> true
-
-  let remove_from_cache i =
-    let open State in
-    let%bind state = get in
-    put { state with cache = Cache.remove i state.cache }
 
   let add_to_free_tvars v =
     let open State in
@@ -469,12 +446,7 @@ end = struct
         let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
         let%bind () = put out_st in
         (* Update cache with final result *)
-        let%bind () =
-          if is_safe_to_cache out_st.free_tvars result then
-            update_cache id result
-          else
-            remove_from_cache id
-        in
+        let%bind () = update_cache id result in
         (* Throw the error if one was encountered *)
         (match result with
         | Ok ty -> return ty
@@ -544,10 +516,16 @@ end = struct
 
   let non_opt_param = Ty.{ prm_optional = false }
 
-  let mk_fun ?(params = []) ?rest ?tparams ret =
+  let mk_fun ?(params = []) ?rest ?tparams ?(static = Ty.(TypeOf FunProto)) ret =
     Ty.(
       Fun
-        { fun_params = params; fun_rest_param = rest; fun_return = ret; fun_type_params = tparams })
+        {
+          fun_params = params;
+          fun_rest_param = rest;
+          fun_return = ret;
+          fun_type_params = tparams;
+          fun_static = static;
+        })
 
   let mk_tparam ?bound ?(pol = Ty.Neutral) ?default name =
     Ty.{ tp_name = name; tp_bound = bound; tp_polarity = pol; tp_default = default }
@@ -616,7 +594,7 @@ end = struct
       let indent = String.make (2 * depth) ' ' in
       let prefix = spf "%s[Norm|run_id:%d|depth:%d]" indent (get_run_id ()) depth in
       prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
-      let result = type_poly ~env t state in
+      let result = type_with_expand_members ~env t state in
       let result_str =
         match result with
         | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
@@ -631,7 +609,14 @@ end = struct
       if options.Env.verbose_normalizer then
         type_debug ~env t
       else
-        type_poly ~env t
+        type_with_expand_members ~env t
+
+  (* If we're interested in seeing the type's members, then we should skip
+   * recovering type parameters/aliases. *)
+  and type_with_expand_members ~env t =
+    match Env.get_member_expansion_info env with
+    | Some (_, env) -> type_after_reason ~env:(Env.continue_expanding_members env) t
+    | None -> type_poly ~env t
 
   (* Before we start pattern-matching on the structure of the input type, we can
      reconstruct some types based on attached reasons. Two cases are of interest here:
@@ -711,29 +696,29 @@ end = struct
     | DefT (_, _, MixedT _) -> return Ty.Top
     | AnyT (_, kind) -> return (Ty.Any (any_t kind))
     | DefT (_, _, VoidT) -> return Ty.Void
-    | DefT (_, _, NumT (Literal (_, (_, x)))) when Env.preserve_inferred_literal_types env ->
-      return (Ty.Num (Some x))
-    | DefT (_, _, NumT (Truthy | AnyLiteral | Literal _)) -> return (Ty.Num None)
-    | DefT (_, _, StrT (Literal (_, x))) when Env.preserve_inferred_literal_types env ->
-      return (Ty.Str (Some x))
-    | DefT (_, _, StrT (Truthy | AnyLiteral | Literal _)) -> return (Ty.Str None)
-    | DefT (_, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
-      return (Ty.Bool (Some x))
-    | DefT (_, _, BoolT _) -> return (Ty.Bool None)
+    | DefT (r, _, NumT (Literal (_, (_, x)))) when Env.preserve_inferred_literal_types env ->
+      primitive ~env (Ty.Num (Some x)) r "Number"
+    | DefT (r, _, NumT (Truthy | AnyLiteral | Literal _)) -> primitive ~env (Ty.Num None) r "Number"
+    | DefT (r, _, StrT (Literal (_, x))) when Env.preserve_inferred_literal_types env ->
+      primitive ~env (Ty.Str (Some x)) r "String"
+    | DefT (r, _, StrT (Truthy | AnyLiteral | Literal _)) -> primitive ~env (Ty.Str None) r "String"
+    | DefT (r, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
+      primitive ~env (Ty.Bool (Some x)) r "Boolean"
+    | DefT (r, _, BoolT _) -> primitive ~env (Ty.Bool None) r "Boolean"
     | DefT (_, _, EmptyT _) -> return (mk_empty Ty.EmptyType)
     | DefT (_, _, NullT) -> return Ty.Null
-    | DefT (_, _, SymbolT) -> return Ty.Symbol
-    | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
-    | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
-    | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
+    | DefT (r, _, SymbolT) -> primitive ~env Ty.Symbol r "Symbol"
+    | DefT (r, _, SingletonNumT (_, lit)) -> primitive ~env (Ty.NumLit lit) r "Number"
+    | DefT (r, _, SingletonStrT lit) -> primitive ~env (Ty.StrLit lit) r "String"
+    | DefT (r, _, SingletonBoolT lit) -> primitive ~env (Ty.BoolLit lit) r "Boolean"
     | MaybeT (_, t) ->
       let%map t = type__ ~env t in
       Ty.mk_union (Ty.Void, [Ty.Null; t])
     | OptionalT { reason = _; type_ = t; use_desc = _ } ->
       let%map t = type__ ~env t in
       Ty.mk_union (Ty.Void, [t])
-    | DefT (_, _, FunT (_, _, f)) ->
-      let%map t = fun_ty ~env f None in
+    | DefT (_, _, FunT (static, _, f)) ->
+      let%map t = fun_ty ~env static f None in
       Ty.Fun t
     | DefT (r, _, ObjT o) -> obj_ty ~env r o
     | DefT (r, _, ArrT a) -> arr_ty ~env r a
@@ -752,9 +737,13 @@ end = struct
     | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
     | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
     | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
-    | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
+    | DefT (r, _, InstanceT (static, super, _, t)) -> instance_t ~env r static super t
     | DefT (_, _, ClassT t) -> class_t ~env t None
-    | DefT (_, _, IdxWrapper t) -> type__ ~env t
+    | DefT (_, _, IdxWrapper t) ->
+      Option.iter
+        (Env.get_member_expansion_info env)
+        ~f:(fun (Env.{ member_expansion_options = { idx_hook; _ }; _ }, _) -> idx_hook ());
+      type__ ~env t
     | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
       let%bind config = type__ ~env config in
       let%bind instance = type__ ~env instance in
@@ -763,7 +752,12 @@ end = struct
            (Ty_symbol.builtin_symbol "React$AbstractComponent")
            (Some [config; instance]))
     | ThisClassT (_, t) -> this_class_t ~env t None
-    | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
+    | ThisTypeAppT (_, c, _, ts) ->
+      begin
+        match Env.get_member_expansion_info env with
+        | None -> type_app ~env c ts
+        | Some (_, env) -> type__ ~env:(Env.continue_expanding_members env) c
+      end
     | KeysT (_, t) ->
       let%map ty = type__ ~env t in
       Ty.Utility (Ty.Keys ty)
@@ -777,8 +771,8 @@ end = struct
       return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return Ty.(Utility Exists)
-    | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
-    | FunProtoT _ -> return Ty.(TypeOf FunProto)
+    | ObjProtoT r -> primitive ~env Ty.(TypeOf ObjProto) r "Object"
+    | FunProtoT r -> primitive ~env Ty.(TypeOf FunProto) r "Function"
     | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ } -> type__ ~env t
     | FunProtoApplyT _ ->
       if Env.expand_internal_types env then
@@ -829,6 +823,13 @@ end = struct
       let symbol = symbol_from_reason env reason enum_name in
       return (Ty.Generic (symbol, Ty.EnumKind, None))
     | DefT (_, _, CharSetT _) -> terr ~kind:UnsupportedTypeCtor (Some t)
+
+  and primitive ~env ty reason builtin =
+    match Env.get_member_expansion_info env with
+    | None -> return ty
+    | Some (_, env) ->
+      let t = Flow_js.get_builtin_type Env.(env.genv.cx) reason builtin in
+      type__ ~env:(Env.expand_primitive_members env) t
 
   and type_variable ~env id =
     let (root_id, constraints) =
@@ -889,21 +890,22 @@ end = struct
     let { Ty.def_loc; name; _ } = symbol_from_reason env reason name in
     return (Ty.Bound (def_loc, name))
 
-  and fun_ty ~env f fun_type_params =
+  and fun_ty ~env static f fun_type_params =
+    let%bind fun_static = type__ ~env static in
     let { T.params; rest_param; return_t; _ } = f in
     let%bind fun_params = mapM (fun_param ~env) params in
     let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
     let%bind fun_return = type__ ~env return_t in
-    return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params }
+    return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static }
 
   and method_ty ~env t =
-    Type.(
-      match t with
-      | DefT (_, _, FunT (_, _, f)) -> fun_ty ~env f None
-      | DefT (_, _, PolyT { tparams = ps; t_out = DefT (_, _, FunT (_, _, f)); _ }) ->
-        let%bind ps = mapM (type_param ~env) (Nel.to_list ps) in
-        fun_ty ~env f (Some ps)
-      | _ -> terr ~kind:BadMethodType (Some t))
+    let rec go = function
+      | Ty.Fun ft -> return [ft]
+      | Ty.Inter (t1, t2, ts) -> concat_fold_m go (t1 :: t2 :: ts)
+      | _ -> terr ~kind:BadMethodType (Some t)
+    in
+    let%bind ty = type__ ~env t in
+    go ty
 
   and fun_param ~env (x, t) =
     let%bind (t, prm_optional) = opt_t ~env t in
@@ -916,31 +918,41 @@ end = struct
     | _ -> return None
 
   and obj_ty ~env reason o =
-    let { T.flags; props_tmap; call_t; dict_t; _ } = o in
+    let { T.flags; props_tmap; call_t; dict_t; proto_t } = o in
     let { T.exact = obj_exact; T.frozen = obj_frozen; _ } = flags in
     let obj_literal =
       match Reason.desc_of_reason reason with
       | Reason.RObjectLit -> true
       | _ -> false
     in
-    let%map obj_props = obj_props ~env props_tmap call_t dict_t in
+    let%map obj_props =
+      match Env.get_member_expansion_info env with
+      | None -> obj_props ~env props_tmap call_t dict_t
+      | Some (Env.{ member_expansion_options = { include_proto_members = false; _ }; _ }, env) ->
+        obj_props ~env props_tmap call_t dict_t
+      | Some (Env.{ member_expansion_options = { include_proto_members = true; _ }; _ }, env) ->
+        let%bind proto = type__ ~env:(Env.continue_expanding_members env) proto_t in
+        let%map obj_props = obj_props ~env props_tmap call_t dict_t in
+        Ty.SpreadProp proto :: obj_props
+    in
     Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
   and obj_prop ~env (x, p) =
+    let from_proto = Env.within_primitive env in
     match p with
     | T.Field (_, t, polarity) ->
       let fld_polarity = type_polarity polarity in
       let%map (t, fld_optional) = opt_t ~env t in
-      [Ty.(NamedProp (x, Field (t, { fld_polarity; fld_optional })))]
+      [Ty.(NamedProp { name = x; prop = Field (t, { fld_polarity; fld_optional }); from_proto })]
     | T.Method (_, t) ->
-      let%map t = method_ty ~env t in
-      [Ty.NamedProp (x, Ty.Method t)]
+      let%map tys = method_ty ~env t in
+      List.map (fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto }) tys
     | T.Get (_, t) ->
       let%map t = type__ ~env t in
-      [Ty.NamedProp (x, Ty.Get t)]
+      [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto }]
     | T.Set (_, t) ->
       let%map t = type__ ~env t in
-      [Ty.NamedProp (x, Ty.Set t)]
+      [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto }]
     | T.GetSet (loc1, t1, loc2, t2) ->
       let%bind p1 = obj_prop ~env (x, T.Get (loc1, t1)) in
       let%map p2 = obj_prop ~env (x, T.Set (loc2, t2)) in
@@ -952,7 +964,7 @@ end = struct
       | T.IntersectionT (_, rep) -> T.InterRep.members rep
       | t -> [t]
     in
-    let%map ts = mapM (method_ty ~env) ts in
+    let%map ts = concat_fold_m (method_ty ~env) ts in
     Base.List.map ~f:(fun t -> Ty.CallProp t) ts
 
   and obj_props =
@@ -988,16 +1000,25 @@ end = struct
       | Reason.RArrayLit -> true
       | _ -> false
     in
-    match elt_t with
-    | T.ArrayAT (t, _) ->
+    match (elt_t, Env.get_member_expansion_info env) with
+    | (T.ArrayAT (t, _), None) ->
       let%map t = type__ ~env t in
       Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t = t }
-    | T.ROArrayAT t ->
+    | (T.ROArrayAT t, None) ->
       let%map t = type__ ~env t in
       Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
-    | T.TupleAT (_, ts) ->
+    | (T.TupleAT (_, ts), None) ->
       let%map ts = mapM (type__ ~env) ts in
       Ty.Tup ts
+    | (T.ArrayAT _, Some (_, env)) ->
+      type__
+        ~env:(Env.expand_instance_members env)
+        (Flow_js.get_builtin (Env.get_cx env) "Array" reason)
+    | (T.ROArrayAT _, Some (_, env))
+    | (T.TupleAT _, Some (_, env)) ->
+      type__
+        ~env:(Env.expand_instance_members env)
+        (Flow_js.get_builtin (Env.get_cx env) "$ReadOnlyArray" reason)
 
   (* Used for instances of React.createClass(..) *)
   and react_component =
@@ -1067,12 +1088,33 @@ end = struct
         let msg = "could not extract name from reason: " ^ desc in
         terr ~kind:BadInstanceT ~msg None
     in
-    fun ~env r super inst ->
-      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+    let to_object ~env member_expansion_info super own_props proto_props =
+      let%bind own_ty_props = obj_props ~env own_props None None in
+      let%bind proto_ty_props = obj_props ~env proto_props None None in
+      let%map obj_props =
+        if Env.(member_expansion_info.member_expansion_options.include_proto_members) then
+          let%map super_ty = type__ ~env:(Env.expand_instance_members env) super in
+          (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
+        else
+          return (own_ty_props @ proto_ty_props)
+      in
+      Ty.(Obj { obj_exact = true; obj_frozen = false; obj_literal = false; obj_props })
+    in
+    fun ~env r static super inst ->
+      let { T.inst_kind; own_props; inst_call_t; proto_props; _ } = inst in
       match inst_kind with
       | T.InterfaceKind { inline = true } -> inline_interface ~env super own_props inst_call_t
       | T.InterfaceKind { inline = false } -> to_generic ~env Ty.InterfaceKind r inst
-      | T.ClassKind -> to_generic ~env Ty.ClassKind r inst
+      | T.ClassKind ->
+        begin
+          match Env.get_member_expansion_info env with
+          | None -> to_generic ~env Ty.ClassKind r inst
+          | Some (Env.{ instance_member_expansion_mode = IMStatic; _ }, env) ->
+            type__ ~env:(Env.continue_expanding_members env) static
+          | Some ((Env.{ instance_member_expansion_mode = IMUnset | IMInstance; _ } as info), env)
+            ->
+            to_object ~env info super own_props proto_props
+        end
 
   and inline_interface =
     let rec extends = function
@@ -1091,10 +1133,10 @@ end = struct
         List.fold_left
           (fun (key, value, pole, ps) p ->
             match p with
-            | Ty.NamedProp ("$key", Ty.Field (t, _)) ->
+            | Ty.NamedProp { name = "$key"; prop = Ty.Field (t, _); _ } ->
               (* The $key's polarity is fixed to neutral so we ignore it *)
               (Some t, value, pole, ps)
-            | Ty.NamedProp ("$value", Ty.Field (t, { Ty.fld_polarity; _ })) ->
+            | Ty.NamedProp { name = "$value"; prop = Ty.Field (t, { Ty.fld_polarity; _ }); _ } ->
               (* The dictionary's polarity is determined by that of $value *)
               (key, Some t, Some fld_polarity, ps)
             | _ -> (key, value, pole, p :: ps))
@@ -1157,20 +1199,26 @@ end = struct
       | ty -> terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
     in
     fun ~env t ps ->
-      match t with
-      | T.DefT (r, _, T.InstanceT (static, _, _, inst))
+      match (t, Env.get_member_expansion_info env) with
+      | (T.DefT (r, _, T.InstanceT (static, _, _, inst)), _)
         when desc_of_reason ~unwrap:false r = RReactComponent ->
         let { Type.own_props; _ } = inst in
         react_component ~env static own_props
-      | _ ->
+      | (_, Some (_, env)) -> type__ ~env:(Env.continue_expanding_members env) t
+      | (_, None) ->
         let%bind t = type__ ~env t in
         go ~env ps t
 
   and this_class_t ~env t ps =
-    let%bind ty = type__ ~env t in
-    match ty with
-    | Ty.Generic (name, Ty.ClassKind, _) -> return (Ty.ClassDecl (name, ps))
-    | _ -> terr ~kind:BadThisClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t)
+    match Env.get_member_expansion_info env with
+    | Some (Env.{ instance_member_expansion_mode = IMUnset; _ }, env) ->
+      type__ ~env:(Env.expand_static_members env) t
+    | Some (Env.{ instance_member_expansion_mode = IMInstance | IMStatic; _ }, env) ->
+      type__ ~env:(Env.continue_expanding_members env) t
+    | None ->
+      (match%bind type__ ~env t with
+      | Ty.Generic (name, Ty.ClassKind, _) -> return (Ty.ClassDecl (name, ps))
+      | ty -> terr ~kind:BadThisClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t))
 
   and poly_ty ~env t typeparams =
     let (env, results) =
@@ -1193,8 +1241,8 @@ end = struct
     | T.DefT (_, _, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
     | T.DefT (r, _, T.TypeT (kind, t)) -> type_t ~env r kind t ps
-    | T.DefT (_, _, T.FunT (_, _, f)) ->
-      let%map fun_t = fun_ty ~env f ps in
+    | T.DefT (_, _, T.FunT (static, _, f)) ->
+      let%map fun_t = fun_ty ~env static f ps in
       Ty.Fun fun_t
     | _ -> terr ~kind:BadPoly (Some t)
 
@@ -1269,13 +1317,13 @@ end = struct
   and exact_t ~env t = type__ ~env t >>| Ty.mk_exact
 
   and type_app =
-    let go ~env targs = function
+    let go ~env ~expand_type_aliases targs = function
       | Ty.ClassDecl (name, _) -> return (generic_class name targs)
       | Ty.InterfaceDecl (name, _) -> return (generic_interface name targs)
       | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
         begin
           match ta_type with
-          | Some ta_type when Env.expand_type_aliases env ->
+          | Some ta_type when expand_type_aliases ->
             begin
               match Option.both ta_tparams targs with
               | Some (ps, ts) -> Substitution.run ps ts ta_type
@@ -1298,8 +1346,14 @@ end = struct
     in
     fun ~env t targs ->
       let%bind ty = type__ ~env t in
+      let (env, expand_type_aliases) =
+        match (Env.expand_type_aliases env, Env.get_member_expansion_info env) with
+        | (true, _) -> (env, true)
+        | (_, Some (_, env)) -> (env, true)
+        | _ -> (env, false)
+      in
       let%bind targs = optMapM (type__ ~env) targs in
-      go ~env targs ty
+      go ~env ~expand_type_aliases targs ty
 
   and opaque_t ~env reason opaque_type =
     let name = opaque_type.Type.opaque_name in

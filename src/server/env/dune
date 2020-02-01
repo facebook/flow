@@ -3,6 +3,7 @@
   (wrapped false)
   (libraries
     flow_common
+    flow_common_utils_checked_set
     flow_parser
     flow_procs
     flow_server_persistent_connection

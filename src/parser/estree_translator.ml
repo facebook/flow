@@ -724,16 +724,16 @@ with type t = Impl.t = struct
       | Statement.ExportType -> "type"
       | Statement.ExportValue -> "value"
     and export_specifiers =
-      Statement.ExportNamedDeclaration.(
-        function
-        | Some (ExportSpecifiers specifiers) -> array_of_list export_specifier specifiers
-        | Some (ExportBatchSpecifier (loc, Some name)) ->
-          array [node "ExportNamespaceSpecifier" loc [("exported", identifier name)]]
-        | Some (ExportBatchSpecifier (_, None)) ->
-          (* this should've been handled by callers, since this represents an
+      let open Statement.ExportNamedDeclaration in
+      function
+      | Some (ExportSpecifiers specifiers) -> array_of_list export_specifier specifiers
+      | Some (ExportBatchSpecifier (loc, Some name)) ->
+        array [node "ExportNamespaceSpecifier" loc [("exported", identifier name)]]
+      | Some (ExportBatchSpecifier (_, None)) ->
+        (* this should've been handled by callers, since this represents an
              ExportAllDeclaration, not a specifier. *)
-          array []
-        | None -> array [])
+        array []
+      | None -> array []
     and declare_type_alias (loc, { Statement.TypeAlias.id; tparams; right }) =
       node
         "DeclareTypeAlias"
@@ -808,12 +808,12 @@ with type t = Impl.t = struct
         | Property p -> class_property p)
     and class_method (loc, { Class.Method.key; value; kind; static; decorators }) =
       let (key, computed) =
-        Expression.Object.Property.(
-          match key with
-          | Literal lit -> (literal lit, false)
-          | Identifier id -> (identifier id, false)
-          | PrivateName name -> (private_name name, false)
-          | Computed expr -> (expression expr, true))
+        let open Expression.Object.Property in
+        match key with
+        | Literal lit -> (literal lit, false)
+        | Identifier id -> (identifier id, false)
+        | PrivateName name -> (private_name name, false)
+        | Computed expr -> (expression expr, true)
       in
       let kind =
         Class.Method.(
@@ -867,70 +867,67 @@ with type t = Impl.t = struct
           ("variance", option variance variance_);
         ]
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body }) =
-      Statement.EnumDeclaration.(
-        let enum_body =
-          match body with
-          | (loc, BooleanBody { BooleanBody.members; explicitType }) ->
-            node
-              "EnumBooleanBody"
-              loc
-              [
-                ( "members",
-                  array_of_list
-                    (fun (loc, { InitializedMember.id; init = (_, bool_val) }) ->
-                      node "EnumBooleanMember" loc [("id", identifier id); ("init", bool bool_val)])
-                    members );
-                ("explicitType", bool explicitType);
-              ]
-          | (loc, NumberBody { NumberBody.members; explicitType }) ->
-            node
-              "EnumNumberBody"
-              loc
-              [
-                ( "members",
-                  array_of_list
-                    (fun (loc, { InitializedMember.id; init }) ->
-                      node
-                        "EnumNumberMember"
-                        loc
-                        [("id", identifier id); ("init", number_literal init)])
-                    members );
-                ("explicitType", bool explicitType);
-              ]
-          | (loc, StringBody { StringBody.members; explicitType }) ->
-            let members =
-              match members with
-              | StringBody.Defaulted defaulted_members ->
-                List.map
-                  (fun (loc, { DefaultedMember.id }) ->
-                    node "EnumDefaultedMember" loc [("id", identifier id)])
-                  defaulted_members
-              | StringBody.Initialized initialized_members ->
-                List.map
+      let open Statement.EnumDeclaration in
+      let enum_body =
+        match body with
+        | (loc, BooleanBody { BooleanBody.members; explicitType }) ->
+          node
+            "EnumBooleanBody"
+            loc
+            [
+              ( "members",
+                array_of_list
+                  (fun (loc, { InitializedMember.id; init = (_, bool_val) }) ->
+                    node "EnumBooleanMember" loc [("id", identifier id); ("init", bool bool_val)])
+                  members );
+              ("explicitType", bool explicitType);
+            ]
+        | (loc, NumberBody { NumberBody.members; explicitType }) ->
+          node
+            "EnumNumberBody"
+            loc
+            [
+              ( "members",
+                array_of_list
                   (fun (loc, { InitializedMember.id; init }) ->
                     node
-                      "EnumStringMember"
+                      "EnumNumberMember"
                       loc
-                      [("id", identifier id); ("init", string_literal init)])
-                  initialized_members
-            in
-            node
-              "EnumStringBody"
-              loc
-              [("members", array members); ("explicitType", bool explicitType)]
-          | (loc, SymbolBody { SymbolBody.members }) ->
-            node
-              "EnumSymbolBody"
-              loc
-              [
-                ( "members",
-                  array_of_list
-                    (fun (loc, { DefaultedMember.id }) ->
-                      node "EnumDefaultedMember" loc [("id", identifier id)])
-                    members );
-              ]
-        in
-        node "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)])
+                      [("id", identifier id); ("init", number_literal init)])
+                  members );
+              ("explicitType", bool explicitType);
+            ]
+        | (loc, StringBody { StringBody.members; explicitType }) ->
+          let members =
+            match members with
+            | StringBody.Defaulted defaulted_members ->
+              List.map
+                (fun (loc, { DefaultedMember.id }) ->
+                  node "EnumDefaultedMember" loc [("id", identifier id)])
+                defaulted_members
+            | StringBody.Initialized initialized_members ->
+              List.map
+                (fun (loc, { InitializedMember.id; init }) ->
+                  node "EnumStringMember" loc [("id", identifier id); ("init", string_literal init)])
+                initialized_members
+          in
+          node
+            "EnumStringBody"
+            loc
+            [("members", array members); ("explicitType", bool explicitType)]
+        | (loc, SymbolBody { SymbolBody.members }) ->
+          node
+            "EnumSymbolBody"
+            loc
+            [
+              ( "members",
+                array_of_list
+                  (fun (loc, { DefaultedMember.id }) ->
+                    node "EnumDefaultedMember" loc [("id", identifier id)])
+                  members );
+            ]
+      in
+      node "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)]
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends }) =
       node
         "InterfaceDeclaration"
@@ -993,40 +990,40 @@ with type t = Impl.t = struct
         | RestElement (loc, { RestElement.argument }) ->
           node "RestElement" loc [("argument", pattern argument)])
     and object_property =
-      Expression.Object.(
-        function
-        | Property (loc, prop) ->
-          Property.(
-            let (key, value, kind, method_, shorthand) =
-              match prop with
-              | Init { key; value; shorthand } -> (key, expression value, "init", false, shorthand)
-              | Method { key; value = (loc, func) } ->
-                (key, function_expression (loc, func), "init", true, false)
-              | Get { key; value = (loc, func) } ->
-                (key, function_expression (loc, func), "get", false, false)
-              | Set { key; value = (loc, func) } ->
-                (key, function_expression (loc, func), "set", false, false)
-            in
-            let (key, computed) =
-              match key with
-              | Literal lit -> (literal lit, false)
-              | Identifier id -> (identifier id, false)
-              | PrivateName _ -> failwith "Internal Error: Found private field in object props"
-              | Computed expr -> (expression expr, true)
-            in
-            node
-              "Property"
-              loc
-              [
-                ("key", key);
-                ("value", value);
-                ("kind", string kind);
-                ("method", bool method_);
-                ("shorthand", bool shorthand);
-                ("computed", bool computed);
-              ])
-        | SpreadProperty (loc, prop) ->
-          SpreadProperty.(node "SpreadProperty" loc [("argument", expression prop.argument)]))
+      let open Expression.Object in
+      function
+      | Property (loc, prop) ->
+        Property.(
+          let (key, value, kind, method_, shorthand) =
+            match prop with
+            | Init { key; value; shorthand } -> (key, expression value, "init", false, shorthand)
+            | Method { key; value = (loc, func) } ->
+              (key, function_expression (loc, func), "init", true, false)
+            | Get { key; value = (loc, func) } ->
+              (key, function_expression (loc, func), "get", false, false)
+            | Set { key; value = (loc, func) } ->
+              (key, function_expression (loc, func), "set", false, false)
+          in
+          let (key, computed) =
+            match key with
+            | Literal lit -> (literal lit, false)
+            | Identifier id -> (identifier id, false)
+            | PrivateName _ -> failwith "Internal Error: Found private field in object props"
+            | Computed expr -> (expression expr, true)
+          in
+          node
+            "Property"
+            loc
+            [
+              ("key", key);
+              ("value", value);
+              ("kind", string kind);
+              ("method", bool method_);
+              ("shorthand", bool shorthand);
+              ("computed", bool computed);
+            ])
+      | SpreadProperty (loc, prop) ->
+        SpreadProperty.(node "SpreadProperty" loc [("argument", expression prop.argument)])
     and object_pattern_property =
       Pattern.Object.(
         function

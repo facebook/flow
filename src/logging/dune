@@ -3,10 +3,10 @@
 let library_entry name suffix =
   Printf.sprintf
 "(library
-  (name flow_%s)
+  (name %s)
   (wrapped false)
   (modules)
-  (libraries flow_%s_%s))" name name suffix
+  (libraries %s_%s))" name name suffix
 
 let fb_entry name =
   library_entry name "fb"
@@ -29,6 +29,6 @@ let () =
   (* locate src/facebook/dune *)
   let fb_dune = Filename.concat fb_dir "dune" in
   let is_fb = Sys.file_exists fb_dune in
-  let logging = entry is_fb "logging" in
-  let logging_lwt = entry is_fb "logging_lwt" in
+  let logging = entry is_fb "flow_logging" in
+  let logging_lwt = entry is_fb "logging_common_lwt" in
   Jbuild_plugin.V1.send (String.concat "\n\n" [logging; logging_lwt])

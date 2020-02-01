@@ -618,8 +618,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:70:2
 
 Cannot cast object literal to `$ObjMap` because:
- - Either boolean [1] is incompatible with number [2] in property `foo`.
- - Or boolean [1] is incompatible with string [3] in property `foo`.
+ - Either boolean [1] is incompatible with string [2] in property `foo`.
+ - Or boolean [1] is incompatible with number [3] in property `foo`.
 
    identity.js:70:2
         v
@@ -632,12 +632,12 @@ References:
    identity.js:71:8
    71|   foo: true, // Error: boolean ~> number | string
               ^^^^ [1]
-   identity.js:73:11
-   73|   ({ foo: number } | { foo: string }),
-                 ^^^^^^ [2]
    identity.js:73:29
    73|   ({ foo: number } | { foo: string }),
-                                   ^^^^^^ [3]
+                                   ^^^^^^ [2]
+   identity.js:73:11
+   73|   ({ foo: number } | { foo: string }),
+                 ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:7:2

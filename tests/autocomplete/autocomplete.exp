@@ -11,82 +11,34 @@ foo.js = {
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
-    {
-      "name":"num",
-      "type":"number",
-      "func_details":null,
-      "path":"foo.js",
-      "line":6,
-      "endline":6,
-      "start":8,
-      "end":10
-    },
+    {"name":"num","type":"number","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
-    {
-      "name":"str",
-      "type":"string",
-      "func_details":null,
-      "path":"foo.js",
-      "line":7,
-      "endline":7,
-      "start":8,
-      "end":14
-    },
+    {"name":"str","type":"string","func_details":null},
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -96,52 +48,27 @@ str.js = {
     {
       "name":"@@iterator",
       "type":"() => Iterator<string>",
-      "func_details":{"return_type":"Iterator<string>","params":[]},
-      "path":"[LIB] core.js",
-      "line":323,
-      "endline":323,
-      "start":5,
-      "end":34
+      "func_details":{"return_type":"Iterator<string>","params":[]}
     },
     {
       "name":"anchor",
       "type":"(name: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":324,
-      "endline":324,
-      "start":5,
-      "end":32
+      "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]}
     },
     {
       "name":"charAt",
       "type":"(pos: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":325,
-      "endline":325,
-      "start":5,
-      "end":31
+      "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]}
     },
     {
       "name":"charCodeAt",
       "type":"(index: number) => number",
-      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":326,
-      "endline":326,
-      "start":5,
-      "end":37
+      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]}
     },
     {
       "name":"codePointAt",
       "type":"(index: number) => number",
-      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":327,
-      "endline":327,
-      "start":5,
-      "end":38
+      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]}
     },
     {
       "name":"concat",
@@ -149,12 +76,7 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"...strings","type":"Array<string>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":328,
-      "endline":328,
-      "start":5,
-      "end":45
+      }
     },
     {
       "name":"endsWith",
@@ -162,12 +84,12 @@ str.js = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":330,
-      "endline":330,
-      "start":5,
-      "end":62
+      }
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"includes",
@@ -175,12 +97,7 @@ str.js = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":331,
-      "endline":331,
-      "start":5,
-      "end":62
+      }
     },
     {
       "name":"indexOf",
@@ -188,12 +105,12 @@ str.js = {
       "func_details":{
         "return_type":"number",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":332,
-      "endline":332,
-      "start":5,
-      "end":60
+      }
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"lastIndexOf",
@@ -201,32 +118,13 @@ str.js = {
       "func_details":{
         "return_type":"number",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":333,
-      "endline":333,
-      "start":5,
-      "end":64
+      }
     },
-    {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":360,
-      "endline":360,
-      "start":13,
-      "end":18
-    },
+    {"name":"length","type":"number","func_details":null},
     {
       "name":"link",
       "type":"(href: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":334,
-      "endline":334,
-      "start":5,
-      "end":30
+      "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]}
     },
     {
       "name":"localeCompare",
@@ -238,12 +136,7 @@ str.js = {
           {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Intl$CollatorOptions"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":335,
-      "endline":335,
-      "start":5,
-      "end":105
+      }
     },
     {
       "name":"match",
@@ -251,12 +144,7 @@ str.js = {
       "func_details":{
         "return_type":"RegExp$matchResult | null",
         "params":[{"name":"regexp","type":"string | RegExp"}]
-      },
-      "path":"[LIB] core.js",
-      "line":336,
-      "endline":336,
-      "start":5,
-      "end":61
+      }
     },
     {
       "name":"matchAll",
@@ -264,22 +152,12 @@ str.js = {
       "func_details":{
         "return_type":"Iterator<RegExp$matchResult>",
         "params":[{"name":"regexp","type":"string | RegExp"}]
-      },
-      "path":"[LIB] core.js",
-      "line":337,
-      "endline":337,
-      "start":5,
-      "end":67
+      }
     },
     {
       "name":"normalize",
       "type":"(format?: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":338,
-      "endline":338,
-      "start":5,
-      "end":38
+      "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]}
     },
     {
       "name":"padEnd",
@@ -287,12 +165,7 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
-      },
-      "path":"[LIB] core.js",
-      "line":339,
-      "endline":339,
-      "start":5,
-      "end":60
+      }
     },
     {
       "name":"padStart",
@@ -300,22 +173,17 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
-      },
-      "path":"[LIB] core.js",
-      "line":340,
-      "endline":340,
-      "start":5,
-      "end":62
+      }
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"repeat",
       "type":"(count: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":341,
-      "endline":341,
-      "start":5,
-      "end":33
+      "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]}
     },
     {
       "name":"replace",
@@ -329,22 +197,12 @@ str.js = {
             "type":"string | ((substring: string, ...args: Array<any>) => string)"
           }
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":342,
-      "endline":342,
-      "start":5,
-      "end":124
+      }
     },
     {
       "name":"search",
       "type":"(regexp: (string | RegExp)) => number",
-      "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
-      "path":"[LIB] core.js",
-      "line":343,
-      "endline":343,
-      "start":5,
-      "end":43
+      "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]}
     },
     {
       "name":"slice",
@@ -352,12 +210,7 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":344,
-      "endline":344,
-      "start":5,
-      "end":47
+      }
     },
     {
       "name":"split",
@@ -368,12 +221,7 @@ str.js = {
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":345,
-      "endline":345,
-      "start":5,
-      "end":69
+      }
     },
     {
       "name":"startsWith",
@@ -381,12 +229,7 @@ str.js = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":346,
-      "endline":346,
-      "start":5,
-      "end":64
+      }
     },
     {
       "name":"substr",
@@ -394,12 +237,7 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"from","type":"number"},{"name":"length?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":347,
-      "endline":347,
-      "start":5,
-      "end":49
+      }
     },
     {
       "name":"substring",
@@ -407,12 +245,7 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"start","type":"number"},{"name":"end?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":348,
-      "endline":348,
-      "start":5,
-      "end":50
+      }
     },
     {
       "name":"toLocaleLowerCase",
@@ -420,12 +253,12 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"locale?","type":"string | Array<string>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":349,
-      "endline":349,
-      "start":5,
-      "end":62
+      }
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toLocaleUpperCase",
@@ -433,126 +266,81 @@ str.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"locale?","type":"string | Array<string>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":350,
-      "endline":350,
-      "start":5,
-      "end":62
+      }
     },
     {
       "name":"toLowerCase",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":351,
-      "endline":351,
-      "start":5,
-      "end":25
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":359,
-      "endline":359,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toUpperCase",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":352,
-      "endline":352,
-      "start":5,
-      "end":25
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trim",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":353,
-      "endline":353,
-      "start":5,
-      "end":18
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimEnd",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":354,
-      "endline":354,
-      "start":5,
-      "end":21
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimLeft",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":355,
-      "endline":355,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimRight",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":356,
-      "endline":356,
-      "start":5,
-      "end":23
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimStart",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":357,
-      "endline":357,
-      "start":5,
-      "end":23
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":358,
-      "endline":358,
-      "start":5,
-      "end":21
+      "func_details":{"return_type":"string","params":[]}
     }
   ]
 }
 num.js = {
   "result":[
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
       "name":"toExponential",
       "type":"(fractionDigits?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":161,
-      "endline":161,
-      "start":5,
-      "end":50
+      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]}
     },
     {
       "name":"toFixed",
       "type":"(fractionDigits?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":162,
-      "endline":162,
-      "start":5,
-      "end":44
+      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]}
     },
     {
       "name":"toLocaleString",
@@ -563,141 +351,80 @@ num.js = {
           {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Intl$NumberFormatOptions"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":163,
-      "endline":163,
-      "start":5,
-      "end":96
+      }
     },
     {
       "name":"toPrecision",
       "type":"(precision?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":164,
-      "endline":164,
-      "start":5,
-      "end":43
+      "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]}
     },
     {
       "name":"toString",
       "type":"(radix?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":165,
-      "endline":165,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]}
     },
     {
       "name":"valueOf",
       "type":"() => number",
-      "func_details":{"return_type":"number","params":[]},
-      "path":"[LIB] core.js",
-      "line":166,
-      "endline":166,
-      "start":5,
-      "end":21
+      "func_details":{"return_type":"number","params":[]}
     }
   ]
 }
 bool.js = {
   "result":[
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":141,
-      "endline":141,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => boolean",
-      "func_details":{"return_type":"boolean","params":[]},
-      "path":"[LIB] core.js",
-      "line":140,
-      "endline":140,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"boolean","params":[]}
     }
   ]
 }
 union.js = {
   "result":[
-    {
-      "name":"bar",
-      "type":"string",
-      "func_details":null,
-      "path":"union.js",
-      "line":3,
-      "endline":3,
-      "start":36,
-      "end":41
-    },
+    {"name":"bar","type":"string | any","func_details":null},
     {
       "name":"hasOwnProperty",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "type":"((prop: mixed) => boolean) | any",
+      "func_details":null
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "type":"((o: mixed) => boolean) | any",
+      "func_details":null
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "type":"((prop: mixed) => boolean) | any",
+      "func_details":null
     },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
-    }
+    {"name":"toLocaleString","type":"(() => string) | any","func_details":null},
+    {"name":"toString","type":"(() => string) | any","func_details":null},
+    {"name":"valueOf","type":"(() => mixed) | any","func_details":null}
   ]
 }
 object_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
@@ -705,64 +432,62 @@ function_builtins.js = {"error":"not enough type information to autocomplete","r
 fun.js = {
   "result":[
     {
+      "name":"apply",
+      "type":"(thisArg: any, argArray?: any) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
+      }
+    },
+    {"name":"arguments","type":"any","func_details":null},
+    {
+      "name":"bind",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {
+      "name":"call",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {"name":"caller","type":"any | null","func_details":null},
+    {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
+    {"name":"length","type":"number","func_details":null},
+    {"name":"name","type":"string","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -771,90 +496,79 @@ this.js = {
     {
       "name":"bar",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"this.js",
-      "line":6,
-      "endline":6,
-      "start":3,
-      "end":10
+      "func_details":{"return_type":"void","params":[]}
     },
+    {"name":"baz","type":"string","func_details":null},
     {
-      "name":"baz",
-      "type":"string",
-      "func_details":null,
-      "path":"this.js",
-      "line":5,
-      "endline":5,
-      "start":8,
-      "end":13
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"hello",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"this.js",
-      "line":7,
-      "endline":9,
-      "start":3,
-      "end":3
+      "func_details":{"return_type":"void","params":[]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
 this2.js = {
   "result":[
-    {
-      "name":"super",
-      "type":"super",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"A",
-      "type":"class A",
-      "func_details":null,
-      "path":"this2.js",
-      "line":3,
-      "endline":3,
-      "start":7,
-      "end":7
-    }
+    {"name":"super","type":"super","func_details":null},
+    {"name":"this","type":"this","func_details":null},
+    {"name":"A","type":"class A","func_details":null}
   ]
 }
 typeparams.js = {
   "result":[
     {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
       "name":"toExponential",
       "type":"(fractionDigits?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":161,
-      "endline":161,
-      "start":5,
-      "end":50
+      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]}
     },
     {
       "name":"toFixed",
       "type":"(fractionDigits?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":162,
-      "endline":162,
-      "start":5,
-      "end":44
+      "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]}
     },
     {
       "name":"toLocaleString",
@@ -865,140 +579,67 @@ typeparams.js = {
           {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Intl$NumberFormatOptions"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":163,
-      "endline":163,
-      "start":5,
-      "end":96
+      }
     },
     {
       "name":"toPrecision",
       "type":"(precision?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":164,
-      "endline":164,
-      "start":5,
-      "end":43
+      "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]}
     },
     {
       "name":"toString",
       "type":"(radix?: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":165,
-      "endline":165,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]}
     },
     {
       "name":"valueOf",
       "type":"() => number",
-      "func_details":{"return_type":"number","params":[]},
-      "path":"[LIB] core.js",
-      "line":166,
-      "endline":166,
-      "start":5,
-      "end":21
+      "func_details":{"return_type":"number","params":[]}
     }
   ]
 }
 typeparams_function.js = {
   "result":[
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
+    {"name":"this","type":"this","func_details":null},
     {
       "name":"test",
       "type":"<T>() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"typeparams_function.js",
-      "line":2,
-      "endline":2,
-      "start":10,
-      "end":13
+      "func_details":{"return_type":"void","params":[]}
     }
   ]
 }
 generics.js = {
   "result":[
-    {
-      "name":"cn",
-      "type":"C<number>",
-      "func_details":null,
-      "path":"generics.js",
-      "line":5,
-      "endline":5,
-      "start":23,
-      "end":31
-    },
+    {"name":"cn","type":"C<number>","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -1007,283 +648,79 @@ optional.js = {
     {
       "name":"f",
       "type":"(x?: string) => void",
-      "func_details":{"return_type":"void","params":[{"name":"x?","type":"string"}]},
-      "path":"optional.js",
-      "line":3,
-      "endline":3,
-      "start":36,
-      "end":55
+      "func_details":{"return_type":"void","params":[{"name":"x?","type":"string"}]}
     },
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
-    {
-      "name":"o",
-      "type":"{x?: string}",
-      "func_details":null,
-      "path":"optional.js",
-      "line":3,
-      "endline":3,
-      "start":61,
-      "end":74
-    },
+    {"name":"o","type":"{x?: string}","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     },
-    {
-      "name":"x",
-      "type":"void | string",
-      "func_details":null,
-      "path":"optional.js",
-      "line":3,
-      "endline":3,
-      "start":25,
-      "end":30
-    }
+    {"name":"x","type":"string | void","func_details":null}
   ]
 }
-jsx1.js = {
-  "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx1.js",
-      "line":5,
-      "endline":5,
-      "start":37,
-      "end":42
-    }
-  ]
-}
-jsx2.js = {
-  "result":[
-    {
-      "name":"y",
-      "type":"string",
-      "func_details":null,
-      "path":"jsx2.js",
-      "line":5,
-      "endline":5,
-      "start":48,
-      "end":53
-    }
-  ]
-}
+jsx1.js = {"result":[{"name":"x","type":"number","func_details":null}]}
+jsx2.js = {"result":[{"name":"y","type":"string","func_details":null}]}
 jsx3.js = {
   "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx3.js",
-      "line":5,
-      "endline":5,
-      "start":28,
-      "end":33
-    },
-    {
-      "name":"y",
-      "type":"string",
-      "func_details":null,
-      "path":"jsx3.js",
-      "line":5,
-      "endline":5,
-      "start":39,
-      "end":44
-    }
+    {"name":"x","type":"number","func_details":null},
+    {"name":"y","type":"string","func_details":null}
   ]
 }
 jsx4.js = {
   "result":[
-    {
-      "name":"Computerization",
-      "type":"(props: empty) => void",
-      "func_details":null,
-      "path":"jsx4.js",
-      "line":4,
-      "endline":4,
-      "start":7,
-      "end":21
-    },
-    {
-      "name":"Compressibility",
-      "type":"(props: empty) => void",
-      "func_details":null,
-      "path":"jsx4.js",
-      "line":5,
-      "endline":5,
-      "start":10,
-      "end":24
-    },
-    {
-      "name":"Complementarity",
-      "type":"class Complementarity",
-      "func_details":null,
-      "path":"jsx4.js",
-      "line":3,
-      "endline":3,
-      "start":7,
-      "end":21
-    }
+    {"name":"Computerization","type":"(props: empty) => void","func_details":null},
+    {"name":"Compressibility","type":"(props: empty) => void","func_details":null},
+    {"name":"Complementarity","type":"class Complementarity","func_details":null}
   ]
 }
 jsx-function-component.js = {
   "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx-function-component.js",
-      "line":5,
-      "endline":5,
-      "start":28,
-      "end":33
-    },
-    {
-      "name":"y",
-      "type":"string",
-      "func_details":null,
-      "path":"jsx-function-component.js",
-      "line":5,
-      "endline":5,
-      "start":39,
-      "end":44
-    }
+    {"name":"x","type":"number","func_details":null},
+    {"name":"y","type":"string","func_details":null}
   ]
 }
-jsx-function-component-2.js = {
-  "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx-function-component-2.js",
-      "line":5,
-      "endline":5,
-      "start":28,
-      "end":33
-    }
-  ]
-}
-jsx-function-component-3.js = {
-  "result":[
-    {
-      "name":"y",
-      "type":"string",
-      "func_details":null,
-      "path":"jsx-function-component-3.js",
-      "line":5,
-      "endline":5,
-      "start":39,
-      "end":44
-    }
-  ]
-}
+jsx-function-component-2.js = {"result":[{"name":"x","type":"number","func_details":null}]}
+jsx-function-component-3.js = {"result":[{"name":"y","type":"string","func_details":null}]}
 jsx-abstract-component.js = {
   "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx-abstract-component.js",
-      "line":5,
-      "endline":5,
-      "start":28,
-      "end":33
-    },
-    {
-      "name":"y",
-      "type":"string",
-      "func_details":null,
-      "path":"jsx-abstract-component.js",
-      "line":5,
-      "endline":5,
-      "start":39,
-      "end":44
-    }
+    {"name":"x","type":"number","func_details":null},
+    {"name":"y","type":"string","func_details":null}
   ]
 }
-jsx-with-children.js = {
-  "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx-with-children.js",
-      "line":5,
-      "endline":5,
-      "start":28,
-      "end":33
-    }
-  ]
-}
+jsx-with-children.js = {"result":[{"name":"x","type":"number","func_details":null}]}
 jsx-text.js = {"result":[]}
 customfun.js = {
   "result":[
     {
       "name":"objectGetPrototypeOf",
       "type":"(o: any) => any",
-      "func_details":{"return_type":"any","params":[{"name":"o","type":"any"}]},
-      "path":"customfun.js",
-      "line":4,
-      "endline":4,
-      "start":13,
-      "end":32
+      "func_details":{"return_type":"any","params":[{"name":"o","type":"any"}]}
     },
     {
       "name":"objectAssign",
@@ -1291,12 +728,7 @@ customfun.js = {
       "func_details":{
         "return_type":"any",
         "params":[{"name":"target","type":"any"},{"name":"...sources","type":"Array<any>"}]
-      },
-      "path":"customfun.js",
-      "line":5,
-      "endline":5,
-      "start":13,
-      "end":24
+      }
     },
     {
       "name":"idx",
@@ -1307,46 +739,48 @@ customfun.js = {
           {"name":"obj","type":"IdxObject"},
           {"name":"pathCallback","type":"(demaybefiedObj: IdxObject) => IdxResult"}
         ]
-      },
-      "path":"customfun.js",
-      "line":3,
-      "endline":3,
-      "start":13,
-      "end":15
+      }
     }
   ]
 }
 issue-1368.js = {
   "result":[
+    {"name":"extended","type":"string","func_details":null},
     {
-      "name":"extended",
-      "type":"string",
-      "func_details":null,
-      "path":"issue-1368.js",
-      "line":11,
-      "endline":11,
-      "start":13,
-      "end":18
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"method",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"issue-1368.js",
-      "line":18,
-      "endline":21,
-      "start":3,
-      "end":3
+      "func_details":{"return_type":"void","params":[]}
+    },
+    {"name":"prop","type":"number","func_details":null},
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
-      "name":"prop",
-      "type":"number",
-      "func_details":null,
-      "path":"issue-1368.js",
-      "line":3,
-      "endline":3,
-      "start":9,
-      "end":14
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -1355,52 +789,27 @@ if.js = {
     {
       "name":"@@iterator",
       "type":"() => Iterator<string>",
-      "func_details":{"return_type":"Iterator<string>","params":[]},
-      "path":"[LIB] core.js",
-      "line":323,
-      "endline":323,
-      "start":5,
-      "end":34
+      "func_details":{"return_type":"Iterator<string>","params":[]}
     },
     {
       "name":"anchor",
       "type":"(name: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":324,
-      "endline":324,
-      "start":5,
-      "end":32
+      "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]}
     },
     {
       "name":"charAt",
       "type":"(pos: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":325,
-      "endline":325,
-      "start":5,
-      "end":31
+      "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]}
     },
     {
       "name":"charCodeAt",
       "type":"(index: number) => number",
-      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":326,
-      "endline":326,
-      "start":5,
-      "end":37
+      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]}
     },
     {
       "name":"codePointAt",
       "type":"(index: number) => number",
-      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":327,
-      "endline":327,
-      "start":5,
-      "end":38
+      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]}
     },
     {
       "name":"concat",
@@ -1408,12 +817,7 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"...strings","type":"Array<string>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":328,
-      "endline":328,
-      "start":5,
-      "end":45
+      }
     },
     {
       "name":"endsWith",
@@ -1421,12 +825,12 @@ if.js = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":330,
-      "endline":330,
-      "start":5,
-      "end":62
+      }
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"includes",
@@ -1434,12 +838,7 @@ if.js = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":331,
-      "endline":331,
-      "start":5,
-      "end":62
+      }
     },
     {
       "name":"indexOf",
@@ -1447,12 +846,12 @@ if.js = {
       "func_details":{
         "return_type":"number",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":332,
-      "endline":332,
-      "start":5,
-      "end":60
+      }
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"lastIndexOf",
@@ -1460,32 +859,13 @@ if.js = {
       "func_details":{
         "return_type":"number",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":333,
-      "endline":333,
-      "start":5,
-      "end":64
+      }
     },
-    {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":360,
-      "endline":360,
-      "start":13,
-      "end":18
-    },
+    {"name":"length","type":"number","func_details":null},
     {
       "name":"link",
       "type":"(href: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":334,
-      "endline":334,
-      "start":5,
-      "end":30
+      "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]}
     },
     {
       "name":"localeCompare",
@@ -1497,12 +877,7 @@ if.js = {
           {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Intl$CollatorOptions"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":335,
-      "endline":335,
-      "start":5,
-      "end":105
+      }
     },
     {
       "name":"match",
@@ -1510,12 +885,7 @@ if.js = {
       "func_details":{
         "return_type":"RegExp$matchResult | null",
         "params":[{"name":"regexp","type":"string | RegExp"}]
-      },
-      "path":"[LIB] core.js",
-      "line":336,
-      "endline":336,
-      "start":5,
-      "end":61
+      }
     },
     {
       "name":"matchAll",
@@ -1523,22 +893,12 @@ if.js = {
       "func_details":{
         "return_type":"Iterator<RegExp$matchResult>",
         "params":[{"name":"regexp","type":"string | RegExp"}]
-      },
-      "path":"[LIB] core.js",
-      "line":337,
-      "endline":337,
-      "start":5,
-      "end":67
+      }
     },
     {
       "name":"normalize",
       "type":"(format?: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":338,
-      "endline":338,
-      "start":5,
-      "end":38
+      "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]}
     },
     {
       "name":"padEnd",
@@ -1546,12 +906,7 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
-      },
-      "path":"[LIB] core.js",
-      "line":339,
-      "endline":339,
-      "start":5,
-      "end":60
+      }
     },
     {
       "name":"padStart",
@@ -1559,22 +914,17 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
-      },
-      "path":"[LIB] core.js",
-      "line":340,
-      "endline":340,
-      "start":5,
-      "end":62
+      }
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"repeat",
       "type":"(count: number) => string",
-      "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":341,
-      "endline":341,
-      "start":5,
-      "end":33
+      "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]}
     },
     {
       "name":"replace",
@@ -1588,22 +938,12 @@ if.js = {
             "type":"string | ((substring: string, ...args: Array<any>) => string)"
           }
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":342,
-      "endline":342,
-      "start":5,
-      "end":124
+      }
     },
     {
       "name":"search",
       "type":"(regexp: (string | RegExp)) => number",
-      "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
-      "path":"[LIB] core.js",
-      "line":343,
-      "endline":343,
-      "start":5,
-      "end":43
+      "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]}
     },
     {
       "name":"slice",
@@ -1611,12 +951,7 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":344,
-      "endline":344,
-      "start":5,
-      "end":47
+      }
     },
     {
       "name":"split",
@@ -1627,12 +962,7 @@ if.js = {
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":345,
-      "endline":345,
-      "start":5,
-      "end":69
+      }
     },
     {
       "name":"startsWith",
@@ -1640,12 +970,7 @@ if.js = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":346,
-      "endline":346,
-      "start":5,
-      "end":64
+      }
     },
     {
       "name":"substr",
@@ -1653,12 +978,7 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"from","type":"number"},{"name":"length?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":347,
-      "endline":347,
-      "start":5,
-      "end":49
+      }
     },
     {
       "name":"substring",
@@ -1666,12 +986,7 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"start","type":"number"},{"name":"end?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":348,
-      "endline":348,
-      "start":5,
-      "end":50
+      }
     },
     {
       "name":"toLocaleLowerCase",
@@ -1679,12 +994,12 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"locale?","type":"string | Array<string>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":349,
-      "endline":349,
-      "start":5,
-      "end":62
+      }
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toLocaleUpperCase",
@@ -1692,102 +1007,52 @@ if.js = {
       "func_details":{
         "return_type":"string",
         "params":[{"name":"locale?","type":"string | Array<string>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":350,
-      "endline":350,
-      "start":5,
-      "end":62
+      }
     },
     {
       "name":"toLowerCase",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":351,
-      "endline":351,
-      "start":5,
-      "end":25
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":359,
-      "endline":359,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toUpperCase",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":352,
-      "endline":352,
-      "start":5,
-      "end":25
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trim",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":353,
-      "endline":353,
-      "start":5,
-      "end":18
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimEnd",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":354,
-      "endline":354,
-      "start":5,
-      "end":21
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimLeft",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":355,
-      "endline":355,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimRight",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":356,
-      "endline":356,
-      "start":5,
-      "end":23
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"trimStart",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":357,
-      "endline":357,
-      "start":5,
-      "end":23
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":358,
-      "endline":358,
-      "start":5,
-      "end":21
+      "func_details":{"return_type":"string","params":[]}
     }
   ]
 }
@@ -1796,232 +1061,277 @@ override.js = {
     {
       "name":"bar",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"override.js",
-      "line":10,
-      "endline":11,
-      "start":3,
-      "end":0
+      "func_details":{"return_type":"void","params":[]}
     },
     {
       "name":"foo",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"override.js",
-      "line":8,
-      "endline":8,
-      "start":3,
-      "end":34
-    },
-    {
-      "name":"override",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"override.js",
-      "line":9,
-      "endline":9,
-      "start":3,
-      "end":35
-    }
-  ]
-}
-member_class_property.js = {
-  "result":[
-    {
-      "name":"baz",
-      "type":"string",
-      "func_details":null,
-      "path":"member_class_property.js",
-      "line":4,
-      "endline":4,
-      "start":8,
-      "end":13
-    }
-  ]
-}
-member_class_static.js = {
-  "result":[
-    {
-      "name":"bar",
-      "type":"string",
-      "func_details":null,
-      "path":"member_class_static.js",
-      "line":3,
-      "endline":3,
-      "start":15,
-      "end":20
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
-      "name":"name",
-      "type":"string",
-      "func_details":null,
-      "path":"member_class_static.js",
-      "line":2,
-      "endline":2,
-      "start":7,
-      "end":9
+      "name":"override",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+member_class_property.js = {
+  "label":"baz",
+  "kind":6,
+  "detail":"string",
+  "inlineDetail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toString()"
+  }
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"valueOf()"
+  }
+}
+member_class_static.js = {
+  "result":[
+    {
+      "name":"apply",
+      "type":"(thisArg: any, argArray?: any) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
+      }
+    },
+    {"name":"arguments","type":"any","func_details":null},
+    {"name":"bar","type":"string","func_details":null},
+    {
+      "name":"bind",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {
+      "name":"call",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
+    },
+    {"name":"caller","type":"any | null","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {"name":"length","type":"number","func_details":null},
+    {"name":"name","type":"string","func_details":null},
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
 optional_chaining_new.js = {
   "result":[
+    {"name":"bar","type":"void | number","func_details":null},
     {
-      "name":"bar",
-      "type":"number",
-      "func_details":null,
-      "path":"optional_chaining_new.js",
-      "line":4,
-      "endline":4,
-      "start":8,
-      "end":13
-    }
+      "name":"hasOwnProperty",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"void | ((o: mixed) => boolean)",
+      "func_details":null
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
+    },
+    {"name":"toLocaleString","type":"void | (() => string)","func_details":null},
+    {"name":"toString","type":"void | (() => string)","func_details":null},
+    {"name":"valueOf","type":"void | (() => mixed)","func_details":null}
   ]
 }
 optional_chaining_continue.js = {
   "result":[
+    {"name":"baz","type":"void | number","func_details":null},
     {
-      "name":"baz",
-      "type":"number",
-      "func_details":null,
-      "path":"optional_chaining_continue.js",
-      "line":8,
-      "endline":8,
-      "start":8,
-      "end":13
-    }
+      "name":"hasOwnProperty",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"void | ((o: mixed) => boolean)",
+      "func_details":null
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
+    },
+    {"name":"toLocaleString","type":"void | (() => string)","func_details":null},
+    {"name":"toString","type":"void | (() => string)","func_details":null},
+    {"name":"valueOf","type":"void | (() => mixed)","func_details":null}
   ]
 }
 idx.js = {
   "result":[
-    {
-      "name":"bar",
-      "type":"string",
-      "func_details":null,
-      "path":"idx.js",
-      "line":7,
-      "endline":7,
-      "start":10,
-      "end":15
-    },
+    {"name":"bar","type":"string","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -2030,72 +1340,33 @@ generic_alias.js = {
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
-    {
-      "name":"name",
-      "type":"string",
-      "func_details":null,
-      "path":"generic_alias.js",
-      "line":5,
-      "endline":5,
-      "start":25,
-      "end":30
-    },
+    {"name":"name","type":"string","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -2104,686 +1375,312 @@ object_literal.js:7:17 = {"result":[]}
 optional_object.js = {
   "result":[
     {
-      "name":"hasOwnProperty",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "name":"?.hasOwnProperty",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"isPrototypeOf",
-      "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "name":"?.isPrototypeOf",
+      "type":"void | ((o: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "name":"?.propertyIsEnumerable",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
     },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
-    },
-    {
-      "name":"z",
-      "type":"number",
-      "func_details":null,
-      "path":"optional_object.js",
-      "line":2,
-      "endline":2,
-      "start":25,
-      "end":30
-    }
+    {"name":"?.toLocaleString","type":"void | (() => string)","func_details":null},
+    {"name":"?.toString","type":"void | (() => string)","func_details":null},
+    {"name":"?.valueOf","type":"void | (() => mixed)","func_details":null},
+    {"name":"?.z","type":"void | number","func_details":null}
   ]
 }
 indirect_array.js:5:3 = {
   "result":[
+    {"name":"?.@@iterator","type":"void | (() => Iterator<T>)","func_details":null},
     {
-      "name":"@@iterator",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":219,
-      "endline":219,
-      "start":5,
-      "end":29
+      "name":"?.concat",
+      "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>)",
+      "func_details":null
     },
     {
-      "name":"concat",
-      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(number | S)>",
-      "func_details":{
-        "return_type":"Array<(number | S)>",
-        "params":[{"name":"...items","type":"Array<Item>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":222,
-      "endline":222,
-      "start":5,
-      "end":79
+      "name":"?.copyWithin",
+      "type":"void | ((target: number, start: number, end?: number) => Array<T>)",
+      "func_details":null
     },
     {
-      "name":"copyWithin",
-      "type":"(target: number, start: number, end?: number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[
-          {"name":"target","type":"number"},
-          {"name":"start","type":"number"},
-          {"name":"end?","type":"number"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":260,
-      "endline":260,
-      "start":5,
-      "end":64
+      "name":"?.entries",
+      "type":"void | (() => Iterator<[number, T]>)",
+      "func_details":null
     },
     {
-      "name":"entries",
-      "type":"() => Iterator<[number, number]>",
-      "func_details":{"return_type":"Iterator<[number, number]>","params":[]},
-      "path":"[LIB] core.js",
-      "line":223,
-      "endline":223,
-      "start":5,
-      "end":36
+      "name":"?.every",
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean)",
+      "func_details":null
     },
     {
-      "name":"every",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
-      "func_details":{
-        "return_type":"boolean",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":261,
-      "endline":261,
-      "start":5,
-      "end":98
+      "name":"?.fill",
+      "type":"void | ((value: T, begin?: number, end?: number) => Array<T>)",
+      "func_details":null
     },
     {
-      "name":"fill",
-      "type":"(value: number, begin?: number, end?: number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[
-          {"name":"value","type":"number"},
-          {"name":"begin?","type":"number"},
-          {"name":"end?","type":"number"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":262,
-      "endline":262,
-      "start":5,
-      "end":58
+      "name":"?.filter",
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => Array<T>)",
+      "func_details":null
     },
     {
-      "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":263,
-      "endline":263,
-      "start":5,
-      "end":63
+      "name":"?.find",
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => (T | void))",
+      "func_details":null
     },
     {
-      "name":"find",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => (number | void)",
-      "func_details":{
-        "return_type":"number | void",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":265,
-      "endline":265,
-      "start":5,
-      "end":98
+      "name":"?.findIndex",
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number)",
+      "func_details":null
     },
     {
-      "name":"findIndex",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => number",
-      "func_details":{
-        "return_type":"number",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":266,
-      "endline":266,
-      "start":5,
-      "end":101
+      "name":"?.flat",
+      "type":"void | ((depth?: number) => Array<mixed>)",
+      "func_details":null
     },
     {
-      "name":"flat",
-      "type":"(depth?: number) => Array<mixed>",
-      "func_details":{"return_type":"Array<mixed>","params":[{"name":"depth?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":270,
-      "endline":270,
-      "start":5,
-      "end":38
+      "name":"?.flatMap",
+      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>)",
+      "func_details":null
     },
     {
-      "name":"flatMap",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
-      "func_details":{
-        "return_type":"Array<U>",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U)"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":269,
-      "endline":269,
-      "start":5,
-      "end":120
+      "name":"?.forEach",
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => void)",
+      "func_details":null
     },
     {
-      "name":"forEach",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => void",
-      "func_details":{
-        "return_type":"void",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":267,
-      "endline":267,
-      "start":5,
-      "end":97
+      "name":"?.hasOwnProperty",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"includes",
-      "type":"(searchElement: mixed, fromIndex?: number) => boolean",
-      "func_details":{
-        "return_type":"boolean",
-        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":230,
-      "endline":230,
-      "start":5,
-      "end":63
+      "name":"?.includes",
+      "type":"void | ((searchElement: mixed, fromIndex?: number) => boolean)",
+      "func_details":null
     },
     {
-      "name":"indexOf",
-      "type":"(searchElement: mixed, fromIndex?: number) => number",
-      "func_details":{
-        "return_type":"number",
-        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":231,
-      "endline":231,
-      "start":5,
-      "end":61
+      "name":"?.indexOf",
+      "type":"void | ((searchElement: mixed, fromIndex?: number) => number)",
+      "func_details":null
     },
     {
-      "name":"join",
-      "type":"(separator?: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"separator?","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":232,
-      "endline":232,
-      "start":5,
-      "end":36
+      "name":"?.isPrototypeOf",
+      "type":"void | ((o: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"keys",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":233,
-      "endline":233,
-      "start":5,
-      "end":28
+      "name":"?.join",
+      "type":"void | ((separator?: string) => string)",
+      "func_details":null
+    },
+    {"name":"?.keys","type":"void | (() => Iterator<number>)","func_details":null},
+    {
+      "name":"?.lastIndexOf",
+      "type":"void | ((searchElement: mixed, fromIndex?: number) => number)",
+      "func_details":null
+    },
+    {"name":"?.length","type":"void | number","func_details":null},
+    {
+      "name":"?.map",
+      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any) => Array<U>)",
+      "func_details":null
+    },
+    {"name":"?.pop","type":"void | (() => T)","func_details":null},
+    {
+      "name":"?.propertyIsEnumerable",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"lastIndexOf",
-      "type":"(searchElement: mixed, fromIndex?: number) => number",
-      "func_details":{
-        "return_type":"number",
-        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":234,
-      "endline":234,
-      "start":5,
-      "end":65
+      "name":"?.push",
+      "type":"void | ((...items: Array<T>) => number)",
+      "func_details":null
     },
     {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":296,
-      "endline":296,
-      "start":13,
-      "end":18
+      "name":"?.reduce",
+      "type":"void | (<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)",
+      "func_details":null
     },
     {
-      "name":"map",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => U, thisArg?: any) => Array<U>",
-      "func_details":{
-        "return_type":"Array<U>",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => U"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":268,
-      "endline":268,
-      "start":5,
-      "end":96
+      "name":"?.reduceRight",
+      "type":"void | (<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)",
+      "func_details":null
+    },
+    {"name":"?.reverse","type":"void | (() => Array<T>)","func_details":null},
+    {"name":"?.shift","type":"void | (() => T)","func_details":null},
+    {
+      "name":"?.slice",
+      "type":"void | ((start?: number, end?: number) => Array<T>)",
+      "func_details":null
     },
     {
-      "name":"pop",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]},
-      "path":"[LIB] core.js",
-      "line":271,
-      "endline":271,
-      "start":5,
-      "end":12
+      "name":"?.some",
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean)",
+      "func_details":null
     },
     {
-      "name":"push",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
-      "path":"[LIB] core.js",
-      "line":272,
-      "endline":272,
-      "start":5,
-      "end":36
+      "name":"?.sort",
+      "type":"void | ((compareFn?: (a: T, b: T) => number) => Array<T>)",
+      "func_details":null
     },
     {
-      "name":"reduce",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":273,
-      "endline":275,
-      "start":5,
-      "end":8
+      "name":"?.splice",
+      "type":"void | ((start: number, deleteCount?: number, ...items: Array<T>) => Array<T>)",
+      "func_details":null
     },
+    {"name":"?.toLocaleString","type":"void | (() => string)","func_details":null},
+    {"name":"?.toString","type":"void | (() => string)","func_details":null},
     {
-      "name":"reduceRight",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":280,
-      "endline":282,
-      "start":5,
-      "end":8
+      "name":"?.unshift",
+      "type":"void | ((...items: Array<T>) => number)",
+      "func_details":null
     },
-    {
-      "name":"reverse",
-      "type":"() => Array<number>",
-      "func_details":{"return_type":"Array<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":287,
-      "endline":287,
-      "start":5,
-      "end":23
-    },
-    {
-      "name":"shift",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]},
-      "path":"[LIB] core.js",
-      "line":288,
-      "endline":288,
-      "start":5,
-      "end":14
-    },
-    {
-      "name":"slice",
-      "type":"(start?: number, end?: number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":252,
-      "endline":252,
-      "start":5,
-      "end":49
-    },
-    {
-      "name":"some",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
-      "func_details":{
-        "return_type":"boolean",
-        "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
-          },
-          {"name":"thisArg?","type":"any"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":289,
-      "endline":289,
-      "start":5,
-      "end":97
-    },
-    {
-      "name":"sort",
-      "type":"(compareFn?: (a: number, b: number) => number) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[{"name":"compareFn?","type":"(a: number, b: number) => number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":290,
-      "endline":290,
-      "start":5,
-      "end":54
-    },
-    {
-      "name":"splice",
-      "type":"(start: number, deleteCount?: number, ...items: Array<number>) => Array<number>",
-      "func_details":{
-        "return_type":"Array<number>",
-        "params":[
-          {"name":"start","type":"number"},
-          {"name":"deleteCount?","type":"number"},
-          {"name":"...items","type":"Array<number>"}
-        ]
-      },
-      "path":"[LIB] core.js",
-      "line":291,
-      "endline":291,
-      "start":5,
-      "end":77
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":220,
-      "endline":220,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"unshift",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
-      "path":"[LIB] core.js",
-      "line":292,
-      "endline":292,
-      "start":5,
-      "end":39
-    },
-    {
-      "name":"values",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":254,
-      "endline":254,
-      "start":5,
-      "end":25
-    }
+    {"name":"?.valueOf","type":"void | (() => mixed)","func_details":null},
+    {"name":"?.values","type":"void | (() => Iterator<T>)","func_details":null}
   ]
 }
 indirect_array.js:10:3 = {
   "result":[
     {
       "name":"@@iterator",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":219,
-      "endline":219,
-      "start":5,
-      "end":29
+      "type":"() => Iterator<T>",
+      "func_details":{"return_type":"Iterator<T>","params":[]}
     },
     {
       "name":"concat",
-      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(number | S)>",
+      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>",
       "func_details":{
-        "return_type":"Array<(number | S)>",
+        "return_type":"Array<(T | S)>",
         "params":[{"name":"...items","type":"Array<Item>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":222,
-      "endline":222,
-      "start":5,
-      "end":79
+      }
     },
     {
       "name":"copyWithin",
-      "type":"(target: number, start: number, end?: number) => Array<number>",
+      "type":"(target: number, start: number, end?: number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[
           {"name":"target","type":"number"},
           {"name":"start","type":"number"},
           {"name":"end?","type":"number"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":260,
-      "endline":260,
-      "start":5,
-      "end":64
+      }
     },
     {
       "name":"entries",
-      "type":"() => Iterator<[number, number]>",
-      "func_details":{"return_type":"Iterator<[number, number]>","params":[]},
-      "path":"[LIB] core.js",
-      "line":223,
-      "endline":223,
-      "start":5,
-      "end":36
+      "type":"() => Iterator<[number, T]>",
+      "func_details":{"return_type":"Iterator<[number, T]>","params":[]}
     },
     {
       "name":"every",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean",
       "func_details":{
         "return_type":"boolean",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":261,
-      "endline":261,
-      "start":5,
-      "end":98
+      }
     },
     {
       "name":"fill",
-      "type":"(value: number, begin?: number, end?: number) => Array<number>",
+      "type":"(value: T, begin?: number, end?: number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[
-          {"name":"value","type":"number"},
+          {"name":"value","type":"T"},
           {"name":"begin?","type":"number"},
           {"name":"end?","type":"number"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":262,
-      "endline":262,
-      "start":5,
-      "end":58
+      }
     },
     {
       "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":263,
-      "endline":263,
-      "start":5,
-      "end":63
-    },
-    {
-      "name":"find",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => (number | void)",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => Array<T>",
       "func_details":{
-        "return_type":"number | void",
+        "return_type":"Array<T>",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":265,
-      "endline":265,
-      "start":5,
-      "end":98
+      }
+    },
+    {
+      "name":"find",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => (T | void)",
+      "func_details":{
+        "return_type":"T | void",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      }
     },
     {
       "name":"findIndex",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => number",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number",
       "func_details":{
         "return_type":"number",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":266,
-      "endline":266,
-      "start":5,
-      "end":101
+      }
     },
     {
       "name":"flat",
       "type":"(depth?: number) => Array<mixed>",
-      "func_details":{"return_type":"Array<mixed>","params":[{"name":"depth?","type":"number"}]},
-      "path":"[LIB] core.js",
-      "line":270,
-      "endline":270,
-      "start":5,
-      "end":38
+      "func_details":{"return_type":"Array<mixed>","params":[{"name":"depth?","type":"number"}]}
     },
     {
       "name":"flatMap",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
+      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
       "func_details":{
         "return_type":"Array<U>",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U)"
+            "type":"(value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U)"
           },
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":269,
-      "endline":269,
-      "start":5,
-      "end":120
+      }
     },
     {
       "name":"forEach",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => void",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => void",
       "func_details":{
         "return_type":"void",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":267,
-      "endline":267,
-      "start":5,
-      "end":97
+      }
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"includes",
@@ -2791,12 +1688,7 @@ indirect_array.js:10:3 = {
       "func_details":{
         "return_type":"boolean",
         "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":230,
-      "endline":230,
-      "start":5,
-      "end":63
+      }
     },
     {
       "name":"indexOf",
@@ -2804,32 +1696,22 @@ indirect_array.js:10:3 = {
       "func_details":{
         "return_type":"number",
         "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":231,
-      "endline":231,
-      "start":5,
-      "end":61
+      }
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"join",
       "type":"(separator?: string) => string",
-      "func_details":{"return_type":"string","params":[{"name":"separator?","type":"string"}]},
-      "path":"[LIB] core.js",
-      "line":232,
-      "endline":232,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"string","params":[{"name":"separator?","type":"string"}]}
     },
     {
       "name":"keys",
       "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":233,
-      "endline":233,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"Iterator<number>","params":[]}
     },
     {
       "name":"lastIndexOf",
@@ -2837,415 +1719,228 @@ indirect_array.js:10:3 = {
       "func_details":{
         "return_type":"number",
         "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":234,
-      "endline":234,
-      "start":5,
-      "end":65
+      }
     },
-    {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":296,
-      "endline":296,
-      "start":13,
-      "end":18
-    },
+    {"name":"length","type":"number","func_details":null},
     {
       "name":"map",
-      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => U, thisArg?: any) => Array<U>",
+      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any) => Array<U>",
       "func_details":{
         "return_type":"Array<U>",
         "params":[
-          {
-            "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => U"
-          },
+          {"name":"callbackfn","type":"(value: T, index: number, array: Array<T>) => U"},
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":268,
-      "endline":268,
-      "start":5,
-      "end":96
+      }
     },
+    {"name":"pop","type":"() => T","func_details":{"return_type":"T","params":[]}},
     {
-      "name":"pop",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]},
-      "path":"[LIB] core.js",
-      "line":271,
-      "endline":271,
-      "start":5,
-      "end":12
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"push",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
-      "path":"[LIB] core.js",
-      "line":272,
-      "endline":272,
-      "start":5,
-      "end":36
+      "type":"(...items: Array<T>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<T>"}]}
     },
     {
       "name":"reduce",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":273,
-      "endline":275,
-      "start":5,
-      "end":8
+      "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U",
+      "func_details":{
+        "return_type":"U",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U"
+          },
+          {"name":"initialValue","type":"U"}
+        ]
+      }
     },
     {
       "name":"reduceRight",
-      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":280,
-      "endline":282,
-      "start":5,
-      "end":8
+      "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U",
+      "func_details":{
+        "return_type":"U",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U"
+          },
+          {"name":"initialValue","type":"U"}
+        ]
+      }
     },
     {
       "name":"reverse",
-      "type":"() => Array<number>",
-      "func_details":{"return_type":"Array<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":287,
-      "endline":287,
-      "start":5,
-      "end":23
+      "type":"() => Array<T>",
+      "func_details":{"return_type":"Array<T>","params":[]}
     },
     {
       "name":"shift",
-      "type":"() => number",
-      "func_details":{"return_type":"number","params":[]},
-      "path":"[LIB] core.js",
-      "line":288,
-      "endline":288,
-      "start":5,
-      "end":14
+      "type":"() => T",
+      "func_details":{"return_type":"T","params":[]}
     },
     {
       "name":"slice",
-      "type":"(start?: number, end?: number) => Array<number>",
+      "type":"(start?: number, end?: number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":252,
-      "endline":252,
-      "start":5,
-      "end":49
+      }
     },
     {
       "name":"some",
-      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean",
       "func_details":{
         "return_type":"boolean",
         "params":[
           {
             "name":"callbackfn",
-            "type":"(value: number, index: number, array: Array<number>) => mixed"
+            "type":"(value: T, index: number, array: Array<T>) => mixed"
           },
           {"name":"thisArg?","type":"any"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":289,
-      "endline":289,
-      "start":5,
-      "end":97
+      }
     },
     {
       "name":"sort",
-      "type":"(compareFn?: (a: number, b: number) => number) => Array<number>",
+      "type":"(compareFn?: (a: T, b: T) => number) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
-        "params":[{"name":"compareFn?","type":"(a: number, b: number) => number"}]
-      },
-      "path":"[LIB] core.js",
-      "line":290,
-      "endline":290,
-      "start":5,
-      "end":54
+        "return_type":"Array<T>",
+        "params":[{"name":"compareFn?","type":"(a: T, b: T) => number"}]
+      }
     },
     {
       "name":"splice",
-      "type":"(start: number, deleteCount?: number, ...items: Array<number>) => Array<number>",
+      "type":"(start: number, deleteCount?: number, ...items: Array<T>) => Array<T>",
       "func_details":{
-        "return_type":"Array<number>",
+        "return_type":"Array<T>",
         "params":[
           {"name":"start","type":"number"},
           {"name":"deleteCount?","type":"number"},
-          {"name":"...items","type":"Array<number>"}
+          {"name":"...items","type":"Array<T>"}
         ]
-      },
-      "path":"[LIB] core.js",
-      "line":291,
-      "endline":291,
-      "start":5,
-      "end":77
+      }
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":220,
-      "endline":220,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"unshift",
-      "type":"(...items: Array<number>) => number",
-      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
-      "path":"[LIB] core.js",
-      "line":292,
-      "endline":292,
-      "start":5,
-      "end":39
+      "type":"(...items: Array<T>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<T>"}]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     },
     {
       "name":"values",
-      "type":"() => Iterator<number>",
-      "func_details":{"return_type":"Iterator<number>","params":[]},
-      "path":"[LIB] core.js",
-      "line":254,
-      "endline":254,
-      "start":5,
-      "end":25
+      "type":"() => Iterator<T>",
+      "func_details":{"return_type":"Iterator<T>","params":[]}
     }
   ]
 }
 infer.js = {
   "result":[
+    {"name":"?.b","type":"void | number","func_details":null},
     {
-      "name":"b",
-      "type":"number",
-      "func_details":null,
-      "path":"infer.js",
-      "line":3,
-      "endline":3,
-      "start":26,
-      "end":27
+      "name":"?.hasOwnProperty",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"hasOwnProperty",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "name":"?.isPrototypeOf",
+      "type":"void | ((o: mixed) => boolean)",
+      "func_details":null
     },
     {
-      "name":"isPrototypeOf",
-      "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "name":"?.propertyIsEnumerable",
+      "type":"void | ((prop: mixed) => boolean)",
+      "func_details":null
     },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
-    }
+    {"name":"?.toLocaleString","type":"void | (() => string)","func_details":null},
+    {"name":"?.toString","type":"void | (() => string)","func_details":null},
+    {"name":"?.valueOf","type":"void | (() => mixed)","func_details":null}
   ]
 }
 eval_predicate.js = {
   "result":[
-    {
-      "name":"a",
-      "type":"number",
-      "func_details":null,
-      "path":"eval_predicate.js",
-      "line":3,
-      "endline":3,
-      "start":23,
-      "end":28
-    },
+    {"name":"a","type":"number","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
 eval_destructor.js = {
   "result":[
-    {
-      "name":"a",
-      "type":"number",
-      "func_details":null,
-      "path":"eval_destructor.js",
-      "line":3,
-      "endline":3,
-      "start":24,
-      "end":29
-    },
+    {"name":"a","type":"number","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -3254,83 +1949,35 @@ poly.js = {
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     },
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"poly.js",
-      "line":4,
-      "endline":4,
-      "start":18,
-      "end":23
-    },
-    {
-      "name":"y",
-      "type":"number",
-      "func_details":null,
-      "path":"poly.js",
-      "line":4,
-      "endline":4,
-      "start":18,
-      "end":23
-    }
+    {"name":"x","type":"number","func_details":null},
+    {"name":"y","type":"T","func_details":null}
   ]
 }
 poly_no_args.js = {
@@ -3338,191 +1985,57 @@ poly_no_args.js = {
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     },
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"poly_no_args.js",
-      "line":3,
-      "endline":3,
-      "start":10,
-      "end":15
-    }
+    {"name":"x","type":"S","func_details":null}
   ]
 }
 identifier.js = {
   "result":[
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"flowery",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":8,
-      "endline":8,
-      "start":7,
-      "end":13
-    },
-    {
-      "name":"flounder",
-      "type":"any",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":10,
-      "endline":10,
-      "start":7,
-      "end":14
-    },
-    {
-      "name":"flotsam",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":12,
-      "endline":12,
-      "start":7,
-      "end":13
-    },
-    {
-      "name":"florist",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":3,
-      "endline":3,
-      "start":5,
-      "end":11
-    },
+    {"name":"this","type":"this","func_details":null},
+    {"name":"flowery","type":"number","func_details":null},
+    {"name":"flounder","type":"any","func_details":null},
+    {"name":"flotsam","type":"number","func_details":null},
+    {"name":"florist","type":"number","func_details":null},
     {
       "name":"florescent",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"identifier.js",
-      "line":7,
-      "endline":7,
-      "start":10,
-      "end":19
+      "func_details":{"return_type":"void","params":[]}
     },
-    {
-      "name":"floater",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":17,
-      "endline":17,
-      "start":5,
-      "end":11
-    },
-    {
-      "name":"bartender",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":13
-    }
+    {"name":"floater","type":"number","func_details":null},
+    {"name":"bartender","type":"number","func_details":null}
   ]
 }
 super.js = {
   "result":[
-    {
-      "name":"super",
-      "type":"super",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"Foo",
-      "type":"class Foo",
-      "func_details":null,
-      "path":"super.js",
-      "line":3,
-      "endline":3,
-      "start":7,
-      "end":9
-    }
+    {"name":"super","type":"super","func_details":null},
+    {"name":"this","type":"this","func_details":null},
+    {"name":"Foo","type":"class Foo","func_details":null}
   ]
 }
 this-2.js = {
@@ -3530,329 +2043,123 @@ this-2.js = {
     {
       "name":"y",
       "type":"(z: empty) => empty",
-      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
-      "path":"this-2.js",
-      "line":11,
-      "endline":11,
-      "start":5,
-      "end":5
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]}
     },
-    {
-      "name":"x",
-      "type":"any",
-      "func_details":null,
-      "path":"this-2.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":5
-    },
+    {"name":"x","type":"any","func_details":null},
     {
       "name":"foo",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"this-2.js",
-      "line":7,
-      "endline":7,
-      "start":10,
-      "end":12
+      "func_details":{"return_type":"void","params":[]}
     }
   ]
 }
 {
   "result":[
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
+    {"name":"this","type":"this","func_details":null},
     {
       "name":"y",
       "type":"(z: empty) => empty",
-      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
-      "path":"this-2.js",
-      "line":11,
-      "endline":11,
-      "start":5,
-      "end":5
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]}
     },
-    {
-      "name":"x",
-      "type":"void",
-      "func_details":null,
-      "path":"this-2.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":5
-    },
+    {"name":"x","type":"void","func_details":null},
     {
       "name":"foo",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"this-2.js",
-      "line":7,
-      "endline":7,
-      "start":10,
-      "end":12
+      "func_details":{"return_type":"void","params":[]}
     }
   ]
 }
 {
   "result":[
-    {
-      "name":"z",
-      "type":"empty",
-      "func_details":null,
-      "path":"this-2.js",
-      "line":11,
-      "endline":11,
-      "start":9,
-      "end":9
-    },
+    {"name":"z","type":"empty","func_details":null},
     {
       "name":"y",
       "type":"(z: empty) => any",
-      "func_details":{"return_type":"any","params":[{"name":"z","type":"empty"}]},
-      "path":"this-2.js",
-      "line":11,
-      "endline":11,
-      "start":5,
-      "end":5
+      "func_details":{"return_type":"any","params":[{"name":"z","type":"empty"}]}
     },
-    {
-      "name":"x",
-      "type":"void",
-      "func_details":null,
-      "path":"this-2.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":5
-    },
+    {"name":"x","type":"void","func_details":null},
     {
       "name":"foo",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"this-2.js",
-      "line":7,
-      "endline":7,
-      "start":10,
-      "end":12
+      "func_details":{"return_type":"void","params":[]}
     }
   ]
 }
 {
   "result":[
-    {
-      "name":"super",
-      "type":"super",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
+    {"name":"super","type":"super","func_details":null},
+    {"name":"this","type":"this","func_details":null},
     {
       "name":"y",
       "type":"(z: empty) => empty",
-      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
-      "path":"this-2.js",
-      "line":11,
-      "endline":11,
-      "start":5,
-      "end":5
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]}
     },
-    {
-      "name":"x",
-      "type":"void",
-      "func_details":null,
-      "path":"this-2.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":5
-    },
+    {"name":"x","type":"void","func_details":null},
     {
       "name":"foo",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"this-2.js",
-      "line":7,
-      "endline":7,
-      "start":10,
-      "end":12
+      "func_details":{"return_type":"void","params":[]}
     },
-    {
-      "name":"Bar",
-      "type":"class Bar",
-      "func_details":null,
-      "path":"this-2.js",
-      "line":13,
-      "endline":13,
-      "start":7,
-      "end":9
-    }
+    {"name":"Bar","type":"class Bar","func_details":null}
   ]
 }
 pattern.js = {"result":[]}
 {
   "result":[
-    {
-      "name":"foo",
-      "type":"number",
-      "func_details":null,
-      "path":"pattern.js",
-      "line":3,
-      "endline":3,
-      "start":5,
-      "end":7
-    },
+    {"name":"foo","type":"number","func_details":null},
     {
       "name":"bar",
       "type":"() => void",
-      "func_details":{"return_type":"void","params":[]},
-      "path":"pattern.js",
-      "line":9,
-      "endline":9,
-      "start":10,
-      "end":12
+      "func_details":{"return_type":"void","params":[]}
     }
   ]
 }
 {"result":[]}
 normalize-1.js = {
   "result":[
-    {
-      "name":"b",
-      "type":"T",
-      "func_details":null,
-      "path":"normalize-1.js",
-      "line":3,
-      "endline":3,
-      "start":27,
-      "end":27
-    },
+    {"name":"b","type":"T","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
 normalize-2.js = {
   "result":[
-    {
-      "name":"this",
-      "type":"this",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
+    {"name":"this","type":"this","func_details":null},
     {
       "name":"foo",
       "type":"<T>(a: {b: T}) => any",
-      "func_details":{"return_type":"any","params":[{"name":"a","type":"{b: T}"}]},
-      "path":"normalize-2.js",
-      "line":3,
-      "endline":3,
-      "start":10,
-      "end":12
+      "func_details":{"return_type":"any","params":[{"name":"a","type":"{b: T}"}]}
     },
-    {
-      "name":"c",
-      "type":"T",
-      "func_details":null,
-      "path":"normalize-2.js",
-      "line":4,
-      "endline":4,
-      "start":7,
-      "end":7
-    },
-    {
-      "name":"a",
-      "type":"{b: T}",
-      "func_details":null,
-      "path":"normalize-2.js",
-      "line":3,
-      "endline":3,
-      "start":17,
-      "end":17
-    }
+    {"name":"c","type":"T","func_details":null},
+    {"name":"a","type":"{b: T}","func_details":null}
   ]
 }
 unqualified-type-annotation.js = {
@@ -3860,298 +2167,143 @@ unqualified-type-annotation.js = {
     {
       "name":"Typologies",
       "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":4,
-      "endline":4,
-      "start":5,
-      "end":14
+      "func_details":null
     },
-    {
-      "name":"Typography",
-      "type":"class Typewriter",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":25,
-      "endline":25,
-      "start":5,
-      "end":14
-    },
-    {
-      "name":"Typewriter",
-      "type":"class Typewriter",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":24,
-      "endline":24,
-      "start":7,
-      "end":16
-    },
+    {"name":"Typography","type":"class Typewriter","func_details":null},
+    {"name":"Typewriter","type":"class Typewriter","func_details":null},
     {
       "name":"Types",
       "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":3,
-      "endline":3,
-      "start":13,
-      "end":17
+      "func_details":null
     },
-    {
-      "name":"Typesafe",
-      "type":"interface Typesafety",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":7,
-      "endline":7,
-      "start":39,
-      "end":46
-    },
-    {
-      "name":"Typhoon",
-      "type":"type ./type-exports.js = string",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":10,
-      "endline":10,
-      "start":17,
-      "end":23
-    },
-    {
-      "name":"Typnotism",
-      "type":"type Typnotism = number",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":13,
-      "endline":13,
-      "start":15,
-      "end":23
-    },
-    {
-      "name":"Tyrant",
-      "type":"type Tyrant = string",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":15,
-      "endline":15,
-      "start":6,
-      "end":11
-    },
-    {
-      "name":"Tympanic",
-      "type":"type Tympanic = number",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":16,
-      "endline":16,
-      "start":13,
-      "end":20
-    },
-    {
-      "name":"Typeset",
-      "type":"interface Typeset",
-      "func_details":null,
-      "path":"unqualified-type-annotation.js",
-      "line":18,
-      "endline":18,
-      "start":11,
-      "end":17
-    },
-    {
-      "name":"Typaram",
-      "type":"Typaram",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    }
+    {"name":"Typesafe","type":"interface Typesafety","func_details":null},
+    {"name":"Typhoon","type":"type ./type-exports.js = string","func_details":null},
+    {"name":"Typnotism","type":"type Typnotism = number","func_details":null},
+    {"name":"Tyrant","type":"type Tyrant = string","func_details":null},
+    {"name":"Tympanic","type":"type Tympanic = number","func_details":null},
+    {"name":"Typeset","type":"interface Typeset","func_details":null},
+    {"name":"Typaram","type":"Typaram","func_details":null}
   ]
 }
 qualified-type-annotation.js = {
   "result":[
-    {
-      "name":"Typesafety",
-      "type":"interface Typesafety",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
+    {"name":"Typesafety","type":"interface Typesafety","func_details":null},
     {
       "name":"Typical",
       "type":"type Typical = {|x: number, y: number|}",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
+      "func_details":null
     },
-    {
-      "name":"Tyrannosaurus",
-      "type":"class Tyrannosaurus",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    }
+    {"name":"Tyrannosaurus","type":"class Tyrannosaurus","func_details":null}
   ]
 }
 qualified-type-annotation-require.js = {
   "result":[
-    {
-      "name":"Typesafety",
-      "type":"interface Typesafety",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
+    {"name":"Typesafety","type":"interface Typesafety","func_details":null},
     {
       "name":"Typical",
       "type":"type Typical = {|x: number, y: number|}",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
+      "func_details":null
     },
-    {
-      "name":"Tyrannosaurus",
-      "type":"class Tyrannosaurus",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    }
+    {"name":"Tyrannosaurus","type":"class Tyrannosaurus","func_details":null}
   ]
 }
 inherited-class-properties.js = {
   "result":[
+    {"name":"bar","type":"\"bar\"","func_details":null},
+    {"name":"baz","type":"\"baz\"","func_details":null},
+    {"name":"foo","type":"\"oof\"","func_details":null},
     {
-      "name":"bar",
-      "type":"\"bar\"",
-      "func_details":null,
-      "path":"inherited-class-properties.js",
-      "line":8,
-      "endline":8,
-      "start":9,
-      "end":13
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
-      "name":"baz",
-      "type":"\"baz\"",
-      "func_details":null,
-      "path":"inherited-class-properties.js",
-      "line":12,
-      "endline":12,
-      "start":9,
-      "end":13
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
     {
-      "name":"foo",
-      "type":"\"oof\"",
-      "func_details":null,
-      "path":"inherited-class-properties.js",
-      "line":13,
-      "endline":13,
-      "start":9,
-      "end":13
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
 function-added-properties.js = {
   "result":[
     {
-      "name":"bar",
-      "type":"string",
-      "func_details":null,
-      "path":"function-added-properties.js",
-      "line":4,
-      "endline":4,
-      "start":1,
-      "end":7
+      "name":"apply",
+      "type":"(thisArg: any, argArray?: any) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
+      }
+    },
+    {"name":"arguments","type":"any","func_details":null},
+    {"name":"bar","type":"string","func_details":null},
+    {
+      "name":"bind",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
     },
     {
-      "name":"baz",
-      "type":"string",
-      "func_details":null,
-      "path":"function-added-properties.js",
-      "line":5,
-      "endline":5,
-      "start":1,
-      "end":17
+      "name":"call",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "func_details":{
+        "return_type":"any",
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+      }
     },
+    {"name":"caller","type":"any | null","func_details":null},
     {
       "name":"hasOwnProperty",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":81,
-      "endline":81,
-      "start":5,
-      "end":40
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"isPrototypeOf",
       "type":"(o: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":82,
-      "endline":82,
-      "start":5,
-      "end":36
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
     },
+    {"name":"length","type":"number","func_details":null},
+    {"name":"name","type":"string","func_details":null},
     {
       "name":"propertyIsEnumerable",
       "type":"(prop: mixed) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
-      "path":"[LIB] core.js",
-      "line":83,
-      "endline":83,
-      "start":5,
-      "end":46
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":84,
-      "endline":84,
-      "start":5,
-      "end":28
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"toString",
       "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":85,
-      "endline":85,
-      "start":5,
-      "end":22
+      "func_details":{"return_type":"string","params":[]}
     },
     {
       "name":"valueOf",
       "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":86,
-      "endline":86,
-      "start":5,
-      "end":20
+      "func_details":{"return_type":"mixed","params":[]}
     }
   ]
 }
@@ -4161,3 +2313,711 @@ literal.js (inside string) = {"result":[]}
 literal.js (inside regex) = {"result":[]}
 literal.js (inside template literal) = {"result":[]}
 import_source.js = {"result":[]}
+object-with-prototype.js = {
+  "result":[
+    {"name":"bar","type":"string","func_details":null},
+    {"name":"baz","type":"string","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+object-spread-1.js = {
+  "result":[
+    {"name":"bar","type":"B","func_details":null},
+    {"name":"foo","type":"A","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+object-spread-2.js = {
+  "result":[
+    {"name":"bar","type":"C","func_details":null},
+    {"name":"foo","type":"A","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+union-2.js = {
+  "result":[
+    {"name":"bar","type":"\"D\" | \"B\"","func_details":null},
+    {"name":"foo","type":"\"A\"","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+type-alias.js = {
+  "result":[
+    {"name":"a","type":"number","func_details":null},
+    {"name":"b","type":"string","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+intersection.js = {
+  "result":[
+    {"name":"bar","type":"B","func_details":null},
+    {"name":"baz","type":"D","func_details":null},
+    {"name":"foo","type":"C & A","func_details":null},
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]}
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]}
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]}
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]}
+    }
+  ]
+}
+rank.js = {
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"valueOf()"
+  }
+}
+rank_union.js = {
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":13,
+  "detail":"(() => string) | number",
+  "inlineDetail":"(() => string) | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"valueOf()"
+  }
+}
+rank_intersection.js = {
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":6,
+  "detail":"(() => string) & number",
+  "inlineDetail":"(() => string) & number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"valueOf()"
+  }
+}
+suggest_optional_chaining_1.js = {
+  "label":"?.foo",
+  "kind":13,
+  "detail":"void | string",
+  "inlineDetail":"void | string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.foo"
+  }
+}
+{
+  "label":"?.hasOwnProperty",
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "inlineDetail":"void | ((prop: mixed) => boolean)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.hasOwnProperty"
+  }
+}
+{
+  "label":"?.isPrototypeOf",
+  "kind":13,
+  "detail":"void | ((o: mixed) => boolean)",
+  "inlineDetail":"void | ((o: mixed) => boolean)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.isPrototypeOf"
+  }
+}
+{
+  "label":"?.propertyIsEnumerable",
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "inlineDetail":"void | ((prop: mixed) => boolean)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.propertyIsEnumerable"
+  }
+}
+{
+  "label":"?.toLocaleString",
+  "kind":13,
+  "detail":"void | (() => string)",
+  "inlineDetail":"void | (() => string)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.toLocaleString"
+  }
+}
+{
+  "label":"?.toString",
+  "kind":13,
+  "detail":"void | (() => string)",
+  "inlineDetail":"void | (() => string)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.toString"
+  }
+}
+{
+  "label":"?.valueOf",
+  "kind":13,
+  "detail":"void | (() => mixed)",
+  "inlineDetail":"void | (() => mixed)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.valueOf"
+  }
+}
+suggest_optional_chaining_2.js = {
+  "label":"?.bar",
+  "kind":13,
+  "detail":"void | number",
+  "inlineDetail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.bar"
+  }
+}
+{
+  "label":"foo",
+  "kind":6,
+  "detail":"string",
+  "inlineDetail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toString()"
+  }
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"valueOf()"
+  }
+}
+suggest_optional_chaining_3.js = {
+  "label":"?.foo",
+  "kind":13,
+  "detail":"void | number | string",
+  "inlineDetail":"void | number | string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.foo"
+  }
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"hasOwnProperty(${1:prop})"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"isPrototypeOf(${1:o})"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"propertyIsEnumerable(${1:prop})"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toLocaleString()"
+  }
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"()",
+  "itemType":"string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toString()"
+  }
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"()",
+  "itemType":"mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"valueOf()"
+  }
+}

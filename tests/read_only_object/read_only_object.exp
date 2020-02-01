@@ -78,7 +78,7 @@ Cannot assign `42` to `spreadUnionObj.z` because property `z` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:4
 
-Cannot get `spreadUnionObj.q` because property `q` is missing in `SpreadUnionObj` [1].
+Cannot get `spreadUnionObj.q` because property `q` is missing in object type [1].
 
    test.js:40:4
    40|   (spreadUnionObj.q: number); // Should error!

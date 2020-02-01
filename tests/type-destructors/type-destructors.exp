@@ -343,6 +343,28 @@ References:
                                  ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ non_maybe_type.js:52:21
+
+Cannot assign `y.filter(...)` to `z` because:
+ - number [1] is incompatible with string [2] in type argument `T` [3].
+ - string [1] is incompatible with number [2] in type argument `T` [3].
+
+   non_maybe_type.js:52:21
+   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
+                           ^^^^^^^^^^^^^^^^^
+
+References:
+   non_maybe_type.js:42:27
+   42| declare function bar () : Node
+                                 ^^^^ [1]
+   non_maybe_type.js:52:13
+   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
+                   ^^^^ [2]
+   non_maybe_type.js:35:17
+   35| declare class A<T> {
+                       ^ [3]
+
+
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
 
 Cannot use `$PropertyType` because the second type argument must be a string literal.
@@ -726,62 +748,62 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:2:40
 
 Cannot assign `true` to `x1` because:
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
 
    union.js:2:40
    2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                              ^^^^ [1]
 
 References:
-   union.js:2:23
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                            ^^^^^^ [2]
    union.js:2:30
    2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                                   ^^^^^^ [3]
+                                   ^^^^^^ [2]
+   union.js:2:23
+   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                            ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:4:52
 
 Cannot assign `true` to `x3` because:
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
 
    union.js:4:52
    4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                                          ^^^^ [1]
 
 References:
-   union.js:4:26
-   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-                               ^^^^^^ [2]
    union.js:4:37
    4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-                                          ^^^^^^ [3]
+                                          ^^^^^^ [2]
+   union.js:4:26
+   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                               ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:10:2
 
 Cannot cast `null` to `P2` because:
- - Either null [1] is incompatible with string [2].
- - Or null [1] is incompatible with number [3].
+ - Either null [1] is incompatible with number [2].
+ - Or null [1] is incompatible with string [3].
 
    union.js:10:2
    10| (null: P2); // err, null ~> string|number
         ^^^^ [1]
 
 References:
-   union.js:11:14
-   11| type T = {p: string} | {p: number}; // NB: T resolved here
-                    ^^^^^^ [2]
    union.js:11:28
    11| type T = {p: string} | {p: number}; // NB: T resolved here
-                                  ^^^^^^ [3]
+                                  ^^^^^^ [2]
+   union.js:11:14
+   11| type T = {p: string} | {p: number}; // NB: T resolved here
+                    ^^^^^^ [3]
 
 
 
-Found 52 errors
+Found 54 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

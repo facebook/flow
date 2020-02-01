@@ -44,17 +44,17 @@ Cannot cast `hmac.read()` to number because:
                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1837:24
-   1837|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1841:24
+   1841|   read(size?: number): ?(string | Buffer);
                                 ^^^^^^^^^^^^^^^^^^ [1]
    crypto/crypto.js:12:21
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1837:26
-   1837|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1841:26
+   1841|   read(size?: number): ?(string | Buffer);
                                   ^^^^^^ [3]
-   <BUILTINS>/node.js:1837:35
-   1837|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1841:35
+   1841|   read(size?: number): ?(string | Buffer);
                                            ^^^^^^ [4]
 
 
@@ -72,11 +72,11 @@ References:
    crypto/crypto.js:16:16
      16|     hmac.write(123); // 2 errors: not a string or a Buffer
                         ^^^ [1]
-   <BUILTINS>/node.js:1881:16
-   1881|   write(chunk: string | Buffer | Uint8Array, callback?: (error?: Error) => void): boolean;
+   <BUILTINS>/node.js:1885:16
+   1885|   write(chunk: string | Buffer | Uint8Array, callback?: (error?: Error) => void): boolean;
                         ^^^^^^ [2]
-   <BUILTINS>/node.js:1882:16
-   1882|   write(chunk: string | Buffer | Uint8Array, encoding?: string,  callback?: (error?: Error) => void): boolean;
+   <BUILTINS>/node.js:1886:16
+   1886|   write(chunk: string | Buffer | Uint8Array, encoding?: string,  callback?: (error?: Error) => void): boolean;
                         ^^^^^^ [3]
 
 
@@ -679,8 +679,8 @@ References:
    http/get.js:13:10
      13| http.get(-1); // error
                   ^^ [1]
-   <BUILTINS>/node.js:1497:10
-   1497|     url: string,
+   <BUILTINS>/node.js:1501:10
+   1501|     url: string,
                   ^^^^^^ [2]
 
 
@@ -696,8 +696,8 @@ References:
    http/get.js:14:17
      14| http.get({port: 'expects number'}); // error
                          ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -713,8 +713,8 @@ References:
    http/get.js:15:19
      15| http.get(url, {}, -1); // error
                            ^^ [1]
-   <BUILTINS>/node.js:1499:16
-   1499|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1503:16
+   1503|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -730,8 +730,8 @@ References:
    http/get.js:16:22
      16| http.get(url, {port: 'expects number'}, () => {}); // error
                               ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -747,8 +747,8 @@ References:
    http/request.js:13:14
      13| http.request(-1); // error
                       ^^ [1]
-   <BUILTINS>/node.js:1488:10
-   1488|     url: string,
+   <BUILTINS>/node.js:1492:10
+   1492|     url: string,
                   ^^^^^^ [2]
 
 
@@ -764,8 +764,8 @@ References:
    http/request.js:14:21
      14| http.request({port: 'expects number'}); // error
                              ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -781,8 +781,8 @@ References:
    http/request.js:15:23
      15| http.request(url, {}, -1); // error
                                ^^ [1]
-   <BUILTINS>/node.js:1490:16
-   1490|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1494:16
+   1494|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -798,8 +798,8 @@ References:
    http/request.js:16:26
      16| http.request(url, {port: 'expects number'}, () => {}); // error
                                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -815,8 +815,8 @@ References:
    http/server.js:69:15
      69| server.listen({}, () => {}, 'localhost', 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1398:17
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:17
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
 
 
@@ -832,8 +832,8 @@ References:
    http/server.js:70:15
      70| server.listen({}, function() {}, 'localhost', 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1398:17
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:17
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
 
 
@@ -852,14 +852,14 @@ References:
    http/server.js:71:15
      71| server.listen({}, () => {}, 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1398:17
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:17
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:17
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:17
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:17
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:17
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -878,14 +878,14 @@ References:
    http/server.js:72:15
      72| server.listen({}, function() {}, 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1398:17
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:17
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:17
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:17
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:17
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:17
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -904,14 +904,14 @@ References:
    http/server.js:75:15
      75| server.listen(() => {}, 'localhost', 123);
                        ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:17
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:17
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:17
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:17
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:17
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:17
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -930,14 +930,14 @@ References:
    http/server.js:76:15
      76| server.listen(function() {}, 'localhost', 123);
                        ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:17
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:17
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:17
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:17
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:17
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:17
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -953,8 +953,8 @@ References:
    http/server.js:79:21
      79| server.listen(8080, () => {}, 'localhost', 123);
                              ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:36
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:36
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
 
 
@@ -970,8 +970,8 @@ References:
    http/server.js:80:21
      80| server.listen(8080, function() {}, 'localhost', 123);
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:36
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:36
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
 
 
@@ -990,14 +990,14 @@ References:
    http/server.js:81:21
      81| server.listen(8080, () => {}, 123);
                              ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:36
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:36
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:35
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:35
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:36
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:36
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1016,14 +1016,14 @@ References:
    http/server.js:82:21
      82| server.listen(8080, function() {}, 123);
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:36
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:36
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:35
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:35
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:36
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:36
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1042,14 +1042,14 @@ References:
    http/server.js:83:21
      83| server.listen(8080, () => {}, 'localhost');
                              ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:36
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:36
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:35
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:35
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:36
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:36
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1068,14 +1068,14 @@ References:
    http/server.js:84:21
      84| server.listen(8080, function() {}, 'localhost');
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1398:36
-   1398|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1402:36
+   1402|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1400:35
-   1400|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1404:35
+   1404|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1401:36
-   1401|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1405:36
+   1405|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1091,8 +1091,8 @@ References:
    https/get.js:13:11
      13| https.get(-1); // error
                    ^^ [1]
-   <BUILTINS>/node.js:1544:10
-   1544|     url: string,
+   <BUILTINS>/node.js:1548:10
+   1548|     url: string,
                   ^^^^^^ [2]
 
 
@@ -1108,8 +1108,8 @@ References:
    https/get.js:14:18
      14| https.get({port: 'expects number'}); // error
                           ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -1125,8 +1125,8 @@ References:
    https/get.js:15:20
      15| https.get(url, {}, -1); // error
                             ^^ [1]
-   <BUILTINS>/node.js:1546:16
-   1546|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1550:16
+   1550|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1142,8 +1142,8 @@ References:
    https/get.js:16:23
      16| https.get(url, {port: 'expects number'}, () => {}); // error
                                ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -1159,8 +1159,8 @@ References:
    https/request.js:13:15
      13| https.request(-1); // error
                        ^^ [1]
-   <BUILTINS>/node.js:1535:10
-   1535|     url: string,
+   <BUILTINS>/node.js:1539:10
+   1539|     url: string,
                   ^^^^^^ [2]
 
 
@@ -1176,8 +1176,8 @@ References:
    https/request.js:14:22
      14| https.request({port: 'expects number'}); // error
                               ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -1193,8 +1193,8 @@ References:
    https/request.js:15:24
      15| https.request(url, {}, -1); // error
                                 ^^ [1]
-   <BUILTINS>/node.js:1537:16
-   1537|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1541:16
+   1541|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1210,8 +1210,8 @@ References:
    https/request.js:16:27
      16| https.request(url, {port: 'expects number'}, () => {}); // error
                                    ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1457:10
-   1457|   port?: number,
+   <BUILTINS>/node.js:1461:10
+   1461|   port?: number,
                   ^^^^^^ [2]
 
 
@@ -1227,8 +1227,8 @@ References:
    https/server.js:69:15
      69| server.listen({}, () => {}, 'localhost', 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1424:17
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:17
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
 
 
@@ -1244,8 +1244,8 @@ References:
    https/server.js:70:15
      70| server.listen({}, function() {}, 'localhost', 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1424:17
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:17
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
 
 
@@ -1264,14 +1264,14 @@ References:
    https/server.js:71:15
      71| server.listen({}, () => {}, 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1424:17
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:17
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:17
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:17
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:17
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:17
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -1290,14 +1290,14 @@ References:
    https/server.js:72:15
      72| server.listen({}, function() {}, 123);
                        ^^ [1]
-   <BUILTINS>/node.js:1424:17
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:17
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:17
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:17
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:17
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:17
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -1316,14 +1316,14 @@ References:
    https/server.js:75:15
      75| server.listen(() => {}, 'localhost', 123);
                        ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:17
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:17
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:17
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:17
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:17
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:17
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -1342,14 +1342,14 @@ References:
    https/server.js:76:15
      76| server.listen(function() {}, 'localhost', 123);
                        ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:17
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:17
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:17
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:17
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                          ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:17
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:17
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                          ^^^^^^ [4]
 
 
@@ -1365,8 +1365,8 @@ References:
    https/server.js:79:21
      79| server.listen(8443, () => {}, 'localhost', 123);
                              ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:36
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:36
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
 
 
@@ -1382,8 +1382,8 @@ References:
    https/server.js:80:21
      80| server.listen(8443, function() {}, 'localhost', 123);
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:36
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:36
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
 
 
@@ -1402,14 +1402,14 @@ References:
    https/server.js:81:21
      81| server.listen(8443, () => {}, 123);
                              ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:36
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:36
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:35
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:35
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:36
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:36
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1428,14 +1428,14 @@ References:
    https/server.js:82:21
      82| server.listen(8443, function() {}, 123);
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:36
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:36
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:35
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:35
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:36
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:36
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1454,14 +1454,14 @@ References:
    https/server.js:83:21
      83| server.listen(8443, () => {}, 'localhost');
                              ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:36
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:36
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:35
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:35
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:36
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:36
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1480,14 +1480,14 @@ References:
    https/server.js:84:21
      84| server.listen(8443, function() {}, 'localhost');
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1424:36
-   1424|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1428:36
+   1428|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
-   <BUILTINS>/node.js:1426:35
-   1426|   listen(port?: number, backlog?: number, callback?: Function): this;
+   <BUILTINS>/node.js:1430:35
+   1430|   listen(port?: number, backlog?: number, callback?: Function): this;
                                            ^^^^^^ [3]
-   <BUILTINS>/node.js:1427:36
-   1427|   listen(port?: number, hostname?: string, callback?: Function): this;
+   <BUILTINS>/node.js:1431:36
+   1431|   listen(port?: number, hostname?: string, callback?: Function): this;
                                             ^^^^^^ [4]
 
 
@@ -1711,8 +1711,8 @@ Cannot cast `u1.username` to `Buffer` because string [1] is incompatible with `B
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1687:13
-   1687|   username: string,
+   <BUILTINS>/node.js:1691:13
+   1691|   username: string,
                      ^^^^^^ [1]
    os/userInfo.js:7:15
       7| (u1.username: Buffer); // error
@@ -1728,8 +1728,8 @@ Cannot cast `u2.username` to `Buffer` because string [1] is incompatible with `B
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1687:13
-   1687|   username: string,
+   <BUILTINS>/node.js:1691:13
+   1691|   username: string,
                      ^^^^^^ [1]
    os/userInfo.js:11:15
      11| (u2.username: Buffer); // error
@@ -1745,8 +1745,8 @@ Cannot cast `u3.username` to string because `Buffer` [1] is incompatible with st
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1678:13
-   1678|   username: Buffer,
+   <BUILTINS>/node.js:1682:13
+   1682|   username: Buffer,
                      ^^^^^^ [1]
    os/userInfo.js:14:15
      14| (u3.username: string); // error
@@ -1767,26 +1767,26 @@ Cannot call `process.emitWarning` because:
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2585:24
-   2585|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2589:24
+   2589|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2585:33
-   2585|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2589:33
+   2589|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2586:3
-   2586|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2590:3
+   2590|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2587:3
-   2587|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2591:3
+   2591|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2588:3
+   <BUILTINS>/node.js:2592:3
            v-----------
-   2588|   emitWarning(
-   2589|     warning: string,
-   2590|     type: string,
-   2591|     code: string,
-   2592|     ctor?: (...empty) => mixed
-   2593|   ): void;
+   2592|   emitWarning(
+   2593|     warning: string,
+   2594|     type: string,
+   2595|     code: string,
+   2596|     ctor?: (...empty) => mixed
+   2597|   ): void;
            ------^ [6]
 
 
@@ -1805,14 +1805,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2586:24
-   2586|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2590:24
+   2590|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2587:24
-   2587|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2591:24
+   2591|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2589:14
-   2589|     warning: string,
+   <BUILTINS>/node.js:2593:14
+   2593|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1830,11 +1830,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2587:38
-   2587|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2591:38
+   2591|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2590:11
-   2590|     type: string,
+   <BUILTINS>/node.js:2594:11
+   2594|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1850,8 +1850,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2591:11
-   2591|     code: string,
+   <BUILTINS>/node.js:2595:11
+   2595|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1864,8 +1864,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2585:41
-   2585|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2589:41
+   2589|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -1941,8 +1941,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2614:21
-   2614|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2618:21
+   2618|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1955,8 +1955,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2574:32
-   2574|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:2578:32
+   2578|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
@@ -1991,8 +1991,8 @@ Cannot cast `error` to null because:
               ^^^^^
 
 References:
-   <BUILTINS>/node.js:1965:18
-   1965|     cb: (error?: Error) => void,
+   <BUILTINS>/node.js:1969:18
+   1969|     cb: (error?: Error) => void,
                           ^^^^^ [1]
    stream/stream.js:45:13
      45|     (error: null); // error
@@ -2039,23 +2039,23 @@ References:
    stream/stream.js:53:3
      53|   new MyWriteStream(), // error - first stream must be Readable
            ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1950:9
-   1950|     s1: stream$Readable,
+   <BUILTINS>/node.js:1954:9
+   1954|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:1955:9
-   1955|     s1: stream$Readable,
+   <BUILTINS>/node.js:1959:9
+   1959|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/node.js:1961:9
-   1961|     s1: stream$Readable,
+   <BUILTINS>/node.js:1965:9
+   1965|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1968:9
-   1968|     s1: stream$Readable,
+   <BUILTINS>/node.js:1972:9
+   1972|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:1976:9
-   1976|     s1: stream$Readable,
+   <BUILTINS>/node.js:1980:9
+   1980|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [6]
-   <BUILTINS>/node.js:1985:9
-   1985|     s1: stream$Readable,
+   <BUILTINS>/node.js:1989:9
+   1989|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [7]
 
 
@@ -2082,20 +2082,20 @@ References:
    stream/stream.js:60:3
      60|   new MyWriteStream(), // error - middle stream must be Duplex
            ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1956:9
-   1956|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1960:9
+   1960|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:1962:9
-   1962|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1966:9
+   1966|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [3]
-   <BUILTINS>/node.js:1969:9
-   1969|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1973:9
+   1973|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1977:9
-   1977|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1981:9
+   1981|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:1986:9
-   1986|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1990:9
+   1990|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [6]
 
 
@@ -2122,20 +2122,20 @@ References:
    stream/stream.js:68:3
      68|   new MyReadStream(), // error - last stream must be Writable
            ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1954:32
-   1954|   declare function pipeline<T: stream$Writable>(
+   <BUILTINS>/node.js:1958:32
+   1958|   declare function pipeline<T: stream$Writable>(
                                         ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:1963:9
-   1963|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1967:9
+   1967|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [3]
-   <BUILTINS>/node.js:1970:9
-   1970|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1974:9
+   1974|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1978:9
-   1978|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1982:9
+   1982|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:1987:9
-   1987|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1991:9
+   1991|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [6]
 
 

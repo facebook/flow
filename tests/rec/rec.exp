@@ -1,25 +1,3 @@
-Error ----------------------------------------------------------------------------------------------- eval_union.js:9:18
-
-Cannot instantiate array type because:
- - Either null or undefined [1] is incompatible with empty [2].
- - Or null or undefined [1] is incompatible with number [3].
-
-   eval_union.js:9:18
-   9| arr.forEach(x => acc.push(x.f));
-                       ^^^
-
-References:
-   eval_union.js:7:30
-   7| declare var arr: Array<{ +f: ?number }>;
-                                   ^^^^^^^ [1]
-   eval_union.js:9:27
-   9| arr.forEach(x => acc.push(x.f));
-                                ^^^ [2]
-   eval_union.js:7:31
-   7| declare var arr: Array<{ +f: ?number }>;
-                                    ^^^^^^ [3]
-
-
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:6:17
 
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
@@ -295,4 +273,4 @@ References:
 
 
 
-Found 24 errors
+Found 23 errors

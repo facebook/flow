@@ -115,7 +115,8 @@ react_component.js:31:7 = {
                 },
                 "polarity":"Neutral",
                 "optional":true
-              }
+              },
+              "from_proto":false
             }
           }
         ]
@@ -130,7 +131,8 @@ react_component.js:31:7 = {
         "name":"React$Node"
       },
       "kind":"type alias"
-    }
+    },
+    "staticType":{"kind":"Obj","exact":false,"frozen":false,"literal":false,"props":[]}
   },
   "type":"({children?: React$Node}) => React$Node",
   "reasons":[],

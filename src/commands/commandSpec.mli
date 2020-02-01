@@ -43,6 +43,8 @@ module ArgSpec : sig
 
   val int : int option flag_t
 
+  val uint : int option flag_t
+
   val enum : (string * 't) list -> 't option flag_t
 
   val command : (string * 'cmd) list -> ('cmd * string list) option flag_t

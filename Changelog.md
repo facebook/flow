@@ -1,3 +1,23 @@
+### 0.117.1
+
+* Improved timeouts related to Watchman that could cause the server to fail to start if Watchman is slow to respond. Added a `file_watcher_timeout` .flowconfig option and `--file-watcher-timeout` argument to `flow start` and `flow server`, which defaults to 120 seconds.
+
+### 0.117.0
+
+Notable bug fixes:
+* Improved the behavior of `$Diff` and other type destructors when applied to unions.
+
+Misc:
+* Improved error messages when attempting to use watchman without watchman installed.
+* Removed uses of `Symbol` from libdefs in favor of `symbol`.
+* Fixed definition of `fs.promises.mkdir` (thanks @gabrielrumiranda!)
+
+### 0.116.1
+
+Notable bug fixes:
+
+* Fix #8259.
+
 ### 0.116.0
 
 New Features:

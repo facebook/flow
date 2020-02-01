@@ -41,6 +41,7 @@ type lint_kind =
   | UninitializedInstanceProperty
   | NoFloatingPromises
   | AmbiguousObjectType
+  | NullVoidAddition
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -75,6 +76,7 @@ let string_of_kind = function
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | NoFloatingPromises -> "no-floating-promises"
   | AmbiguousObjectType -> "ambiguous-object-type"
+  | NullVoidAddition -> "unsafe-addition"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -109,6 +111,7 @@ let kinds_of_string = function
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "no-floating-promises" -> Some [NoFloatingPromises]
+  | "unsafe-addition" -> Some [NullVoidAddition]
   | _ -> None
 
 module LintKind = struct

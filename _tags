@@ -12,3 +12,4 @@ not <src/parser/**>: package(base), package(core_kernel), package(ppx_deriving),
 <**/node_modules/**>: -traverse
 <_obuild>: -traverse
 <packages>: -traverse
+true: strict-sequence

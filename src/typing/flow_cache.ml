@@ -88,18 +88,17 @@ end
    those representing the result): the cache would be useless if we considered
    those type variables as part of the identity of the operation. *)
 module PolyInstantiation = struct
-  type cache_key = ALoc.t * reason * op_reason
+  type cache_key = reason * reason * op_reason
 
   and op_reason = reason Nel.t
 
   let cache : (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
 
   let find cx reason_tapp typeparam op_reason =
-    let loc = def_aloc_of_reason reason_tapp in
-    try Hashtbl.find cache (loc, typeparam.reason, op_reason)
+    try Hashtbl.find cache (reason_tapp, typeparam.reason, op_reason)
     with _ ->
       let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
-      Hashtbl.add cache (loc, typeparam.reason, op_reason) t;
+      Hashtbl.add cache (reason_tapp, typeparam.reason, op_reason) t;
       t
 end
 

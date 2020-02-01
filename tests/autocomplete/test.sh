@@ -128,7 +128,7 @@ assert_ok \
 
 printf "member_class_property.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty member_class_property.js 8 5 < member_class_property.js
+  "$FLOW" autocomplete --lsp member_class_property.js 8 5 < member_class_property.js
 
 printf "member_class_static.js = "
 assert_ok \
@@ -267,3 +267,51 @@ assert_ok \
 printf "import_source.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty import_source.js 3 17 < import_source.js
+
+printf "object-with-prototype.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object-with-prototype.js 9 11 < object-with-prototype.js
+
+printf "object-spread-1.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object-spread-1.js 9 3 < object-spread-1.js
+
+printf "object-spread-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object-spread-2.js 9 3 < object-spread-2.js
+
+printf "union-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty union-2.js 4 3 < union-2.js
+
+printf "type-alias.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty type-alias.js 7 3 < type-alias.js
+
+printf "intersection.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty intersection.js 4 5 < intersection.js
+
+printf "rank.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp rank.js 7 11 < rank.js
+
+printf "rank_union.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp rank_union.js 8 3 < rank_union.js
+
+printf "rank_intersection.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp rank_intersection.js 8 3 < rank_intersection.js
+
+printf "suggest_optional_chaining_1.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp suggest_optional_chaining_1.js 4 3 < suggest_optional_chaining_1.js
+
+printf "suggest_optional_chaining_2.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp suggest_optional_chaining_2.js 4 3 < suggest_optional_chaining_2.js
+
+printf "suggest_optional_chaining_3.js = "
+assert_ok \
+  "$FLOW" autocomplete --lsp suggest_optional_chaining_3.js 4 3 < suggest_optional_chaining_3.js

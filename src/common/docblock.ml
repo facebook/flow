@@ -29,7 +29,7 @@ type jsx_pragma =
 type t = {
   flow: flow_mode option;
   typeAssert: bool;
-  preventMunge: bool option;
+  preventMunge: bool;
   providesModule: string option;
   isDeclarationFile: bool;
   jsx: jsx_pragma option;
@@ -39,7 +39,7 @@ let default_info =
   {
     flow = None;
     typeAssert = false;
-    preventMunge = None;
+    preventMunge = false;
     providesModule = None;
     isDeclarationFile = false;
     jsx = None;
@@ -106,9 +106,10 @@ let json_of_docblock info =
       | None -> JSON_Null
     in
     let preventsMunge =
-      match preventMunge info with
-      | Some b -> JSON_Bool b
-      | None -> JSON_Null
+      if preventMunge info then
+        JSON_Bool true
+      else
+        JSON_Null
     in
     let providesModule =
       match providesModule info with
