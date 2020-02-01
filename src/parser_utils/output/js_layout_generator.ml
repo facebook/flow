@@ -2164,13 +2164,13 @@ and import_namespace_specifier (loc, id) =
 and import_named_specifier { Ast.Statement.ImportDeclaration.kind; local; remote } =
   fuse
     [
-      Ast.Statement.ImportDeclaration.(
-        match kind with
-        | Some ImportType -> fuse [Atom "type"; space]
-        | Some ImportTypeof -> fuse [Atom "typeof"; space]
-        | Some ImportValue
-        | None ->
-          Empty);
+      (let open Ast.Statement.ImportDeclaration in
+      match kind with
+      | Some ImportType -> fuse [Atom "type"; space]
+      | Some ImportTypeof -> fuse [Atom "typeof"; space]
+      | Some ImportValue
+      | None ->
+        Empty);
       identifier remote;
       (match local with
       | Some id -> fuse [space; Atom "as"; space; identifier id]
