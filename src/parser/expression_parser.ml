@@ -667,64 +667,67 @@ module Expression
     as_expression env (call_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and new_expression env =
-    let start_loc = Peek.loc env in
-    let leading = Peek.comments env in
-    Expect.token env T_NEW;
+    with_loc
+      (fun env ->
+        let start_loc = Peek.loc env in
+        let leading = Peek.comments env in
+        Expect.token env T_NEW;
 
-    if in_function env && Peek.token env = T_PERIOD then (
-      Expect.token env T_PERIOD;
-      let meta = Flow_ast_utils.ident_of_source (start_loc, "new") in
-      match Peek.token env with
-      | T_IDENTIFIER { raw = "target"; _ } ->
-        let property = Parse.identifier env in
-        let end_loc = fst property in
-        (Loc.btwn start_loc end_loc, Expression.(MetaProperty MetaProperty.{ meta; property }))
-      | _ ->
-        error_unexpected ~expected:"the identifier `target`" env;
-        Eat.token env;
+        if in_function env && Peek.token env = T_PERIOD then (
+          Expect.token env T_PERIOD;
+          let meta = Flow_ast_utils.ident_of_source (start_loc, "new") in
+          match Peek.token env with
+          | T_IDENTIFIER { raw = "target"; _ } ->
+            let property = Parse.identifier env in
+            Expression.(MetaProperty MetaProperty.{ meta; property })
+          | _ ->
+            error_unexpected ~expected:"the identifier `target`" env;
+            Eat.token env;
 
-        (* skip unknown identifier *)
-        (start_loc, Expression.Identifier meta)
-      (* return `new` identifier *)
-    ) else
-      let callee_loc = Peek.loc env in
-      let expr =
-        match Peek.token env with
-        | T_NEW -> new_expression env
-        | T_SUPER -> super (env |> with_no_call true)
-        | _ when Peek.is_function env -> _function env
-        | _ -> primary env
-      in
-      let callee = member ~allow_optional_chain:false (env |> with_no_call true) callee_loc expr in
-      (* You can do something like
-       *   new raw`42`
-       *)
-      let callee =
-        match Peek.token env with
-        | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
-        | _ -> callee
-      in
-      let targs =
-        (* If we are parsing types, then new C<T>(e) is a constructor with a
+            (* skip unknown identifier *)
+            Expression.Identifier meta
+          (* return `new` identifier *)
+        ) else
+          let callee_loc = Peek.loc env in
+          let expr =
+            match Peek.token env with
+            | T_NEW -> new_expression env
+            | T_SUPER -> super (env |> with_no_call true)
+            | _ when Peek.is_function env -> _function env
+            | _ -> primary env
+          in
+          let callee =
+            member ~allow_optional_chain:false (env |> with_no_call true) callee_loc expr
+          in
+          (* You can do something like
+           *   new raw`42`
+           *)
+          let callee =
+            match Peek.token env with
+            | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
+            | _ -> callee
+          in
+          let targs =
+            (* If we are parsing types, then new C<T>(e) is a constructor with a
            type application. If we aren't, it's a nested binary expression. *)
-        if should_parse_types env then
-          (* Parameterized call syntax is ambiguous, so we fall back to
+            if should_parse_types env then
+              (* Parameterized call syntax is ambiguous, so we fall back to
              standard parsing if it fails. *)
-          let error_callback _ _ = raise Try.Rollback in
-          let env = env |> with_error_callback error_callback in
-          Try.or_else env ~fallback:None call_type_args
-        else
-          None
-      in
-      let (end_loc, arguments) =
-        match (Peek.token env, targs) with
-        | (T_LPAREN, _) -> arguments env
-        | (_, Some (targs_loc, _)) -> (targs_loc, [])
-        | _ -> (fst callee, [])
-      in
-      let trailing = Peek.comments env in
-      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      (Loc.btwn start_loc end_loc, Expression.(New New.{ callee; targs; arguments; comments }))
+              let error_callback _ _ = raise Try.Rollback in
+              let env = env |> with_error_callback error_callback in
+              Try.or_else env ~fallback:None call_type_args
+            else
+              None
+          in
+          let arguments =
+            match Peek.token env with
+            | T_LPAREN -> snd (arguments env)
+            | _ -> []
+          in
+          let trailing = Peek.comments env in
+          let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+          Expression.(New New.{ callee; targs; arguments; comments }))
+      env
 
   and call_type_args =
     let args env acc =
