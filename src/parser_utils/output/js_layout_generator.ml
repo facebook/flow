@@ -922,10 +922,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
              [
                fuse_with_space [Atom "new"; callee_layout];
                option call_type_args targs;
-               new_list
-                 ~wrap:(Atom "(", Atom ")")
-                 ~sep:(Atom ",")
-                 (Base.List.map ~f:expression_or_spread arguments);
+               call_args arguments;
              ]
       | E.Unary { E.Unary.operator; argument; comments } ->
         let (s_operator, needs_space) =
@@ -1068,18 +1065,7 @@ and call ?(optional = false) ~precedence ~ctxt call_node =
                 ] ),
           "(" )
     in
-    fuse
-      [
-        expression_with_parens ~precedence ~ctxt callee;
-        targs;
-        group
-          [
-            new_list
-              ~wrap:(Atom lparen, Atom ")")
-              ~sep:(Atom ",")
-              (Base.List.map ~f:expression_or_spread arguments);
-          ];
-      ]
+    fuse [expression_with_parens ~precedence ~ctxt callee; targs; call_args ~lparen arguments]
 
 and expression_with_parens ~precedence ~(ctxt : expression_context) expr =
   if definitely_needs_parens ~precedence ctxt expr then
@@ -2344,6 +2330,15 @@ and type_parameter (loc, params) =
       group
         [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_param params)]
     )
+
+and call_args ?(lparen = "(") arguments =
+  group
+    [
+      new_list
+        ~wrap:(Atom lparen, Atom ")")
+        ~sep:(Atom ",")
+        (Base.List.map ~f:expression_or_spread arguments);
+    ]
 
 and call_type_args (loc, args) =
   source_location_with_comments

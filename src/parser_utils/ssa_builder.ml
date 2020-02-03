@@ -455,28 +455,32 @@ struct
           match operator with
           | None ->
             let open Ast.Pattern in
-            (match left with
-            | (_, (Identifier _ | Object _ | Array _)) ->
-              (* given `x = e`, read e then write x *)
-              ignore @@ this#expression right;
-              ignore @@ this#assignment_pattern left
-            | (_, Expression _) ->
-              (* given `o.x = e`, read o then read e *)
-              ignore @@ this#assignment_pattern left;
-              ignore @@ this#expression right)
+            begin
+              match left with
+              | (_, (Identifier _ | Object _ | Array _)) ->
+                (* given `x = e`, read e then write x *)
+                ignore @@ this#expression right;
+                ignore @@ this#assignment_pattern left
+              | (_, Expression _) ->
+                (* given `o.x = e`, read o then read e *)
+                ignore @@ this#assignment_pattern left;
+                ignore @@ this#expression right
+            end
           | Some _ ->
             let open Ast.Pattern in
-            (match left with
-            | (_, Identifier { Identifier.name; _ }) ->
-              (* given `x += e`, read x then read e then write x *)
-              ignore @@ this#identifier name;
-              ignore @@ this#expression right;
-              ignore @@ this#assignment_pattern left
-            | (_, Expression _) ->
-              (* given `o.x += e`, read o then read e *)
-              ignore @@ this#assignment_pattern left;
-              ignore @@ this#expression right
-            | (_, (Object _ | Array _)) -> failwith "unexpected AST node")
+            begin
+              match left with
+              | (_, Identifier { Identifier.name; _ }) ->
+                (* given `x += e`, read x then read e then write x *)
+                ignore @@ this#identifier name;
+                ignore @@ this#expression right;
+                ignore @@ this#assignment_pattern left
+              | (_, Expression _) ->
+                (* given `o.x += e`, read o then read e *)
+                ignore @@ this#assignment_pattern left;
+                ignore @@ this#expression right
+              | (_, (Object _ | Array _)) -> failwith "unexpected AST node"
+            end
         end;
         expr
 
@@ -1033,7 +1037,7 @@ struct
         let open Ast.Expression.Call in
         let { callee; targs = _; arguments } = expr in
         ignore @@ this#expression callee;
-        ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
+        ignore @@ this#call_arguments arguments;
         this#havoc_current_ssa_env;
         expr
 
@@ -1041,7 +1045,7 @@ struct
         let open Ast.Expression.New in
         let { callee; targs = _; arguments; comments = _ } = expr in
         ignore @@ this#expression callee;
-        ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
+        ignore @@ this#call_arguments arguments;
         this#havoc_current_ssa_env;
         expr
 

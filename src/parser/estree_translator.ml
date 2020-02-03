@@ -509,7 +509,7 @@ with type t = Impl.t = struct
           [
             ("callee", expression callee);
             ("typeArguments", option call_type_args targs);
-            ("arguments", array_of_list expression_or_spread arguments);
+            ("arguments", arg_list arguments);
           ]
       | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
       | (loc, OptionalCall { OptionalCall.call; optional }) ->
@@ -655,6 +655,7 @@ with type t = Impl.t = struct
           ("typeAnnotation", hint type_annotation annot);
           ("optional", bool optional);
         ]
+    and arg_list arguments = array_of_list expression_or_spread arguments
     and case (loc, { Statement.Switch.Case.test; consequent }) =
       node
         "SwitchCase"
@@ -1550,7 +1551,7 @@ with type t = Impl.t = struct
       [
         ("callee", expression callee);
         ("typeArguments", option call_type_args targs);
-        ("arguments", array_of_list expression_or_spread arguments);
+        ("arguments", arg_list arguments);
       ]
     and member_node_properties { Expression.Member._object; property } =
       let (property, computed) =

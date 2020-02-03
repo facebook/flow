@@ -1292,7 +1292,7 @@ let program
     let { callee = callee2; targs = targs2; arguments = arguments2; comments = comments2 } = new2 in
     let comments = syntax_opt loc comments1 comments2 in
     let targs = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
-    let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+    let args = diff_if_changed_ret_opt call_args arguments1 arguments2 in
     let callee = Some (diff_if_changed expression callee1 callee2) in
     join_diff_list [comments; targs; args; callee]
   and member
@@ -1322,7 +1322,7 @@ let program
     let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
     let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
     let targs = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
-    let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+    let args = diff_if_changed_ret_opt call_args arguments1 arguments2 in
     let callee = Some (diff_if_changed expression callee1 callee2) in
     join_diff_list [targs; args; callee]
   and call_type_arg
@@ -1339,6 +1339,10 @@ let program
     let (_, t_args1) = pi1 in
     let (_, t_args2) = pi2 in
     diff_and_recurse_no_trivial call_type_arg t_args1 t_args2
+  and call_args
+      (args1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread list)
+      (args2 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread list) : node change list option =
+    diff_and_recurse_no_trivial expression_or_spread args1 args2
   and expression_or_spread
       (expr1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
       (expr2 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread) : node change list option =

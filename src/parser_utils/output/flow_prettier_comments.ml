@@ -217,11 +217,7 @@ and get_children_nodes_expr expression =
     get_children_nodes_pattern left @ get_children_nodes_expr right
   | Binary { Binary.left; right; _ } -> get_children_nodes_expr left @ get_children_nodes_expr right
   | Call { Call.callee; arguments; _ } ->
-    get_children_nodes_expr callee
-    @ List.fold_left
-        (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
-        []
-        arguments
+    get_children_nodes_expr callee @ get_children_nodes_arg_list arguments
   | Class clazz -> get_children_nodes_class clazz
   | Comprehension { Comprehension.blocks; filter } ->
     let block_nodes = get_children_nodes_comprehension_block_list blocks in
@@ -243,11 +239,7 @@ and get_children_nodes_expr expression =
   | Member member -> get_children_nodes_member member
   | MetaProperty _ -> []
   | New { New.callee; arguments; _ } ->
-    get_children_nodes_expr callee
-    @ List.fold_left
-        (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
-        []
-        arguments
+    get_children_nodes_expr callee @ get_children_nodes_arg_list arguments
   | Object { Object.properties; comments = _ } ->
     List.fold_left
       (fun nodes property ->
@@ -265,11 +257,7 @@ and get_children_nodes_expr expression =
       []
       properties
   | OptionalCall { OptionalCall.call = { Call.callee; arguments; _ }; _ } ->
-    get_children_nodes_expr callee
-    @ List.fold_left
-        (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
-        []
-        arguments
+    get_children_nodes_expr callee @ get_children_nodes_arg_list arguments
   | OptionalMember { OptionalMember.member; _ } -> get_children_nodes_member member
   | Sequence { Sequence.expressions } ->
     List.fold_left (fun nodes eos -> nodes @ get_children_nodes_expr eos) [] expressions
@@ -288,6 +276,9 @@ and get_children_nodes_function { Ast.Function.body; _ } =
   match body with
   | Ast.Function.BodyBlock (_, { Ast.Statement.Block.body }) -> body
   | Ast.Function.BodyExpression expr -> get_children_nodes_expr expr
+
+and get_children_nodes_arg_list arguments =
+  List.fold_left (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos) [] arguments
 
 and get_children_nodes_expression_or_spread eos =
   match eos with
@@ -346,8 +337,8 @@ and get_children_nodes_class { Ast.Class.body = (_, { Ast.Class.Body.body }); _ 
     body
 
 and get_children_nodes_member { Ast.Expression.Member._object; property; _ } =
-  let open Ast.Expression.Member in
-  (match property with
+  (let open Ast.Expression.Member in
+  match property with
   | PropertyIdentifier _ -> []
   | PropertyPrivateName _ -> []
   | PropertyExpression e -> get_children_nodes_expr e)

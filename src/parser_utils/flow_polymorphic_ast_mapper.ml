@@ -122,6 +122,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Update x -> Update (this#update_expression x)
           | Yield x -> Yield (this#yield x) )
 
+    method arg_list (args : ('M, 'T) Ast.Expression.expression_or_spread list)
+        : ('N, 'U) Ast.Expression.expression_or_spread list =
+      Base.List.map ~f:this#expression_or_spread args
+
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
       let open Ast.Expression in
       let { Array.elements; Array.comments } = expr in
@@ -165,7 +169,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { callee; targs; arguments } = expr in
       let callee' = this#expression callee in
       let targs' = Option.map ~f:this#call_type_args targs in
-      let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
+      let arguments' = this#arg_list arguments in
       { callee = callee'; targs = targs'; arguments = arguments' }
 
     method optional_call annot (expr : ('M, 'T) Ast.Expression.OptionalCall.t)
@@ -1138,7 +1142,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = Option.map ~f:this#call_type_args targs in
-      let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
+      let arguments' = this#arg_list arguments in
       let comments' = Option.map ~f:this#syntax comments in
       { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 

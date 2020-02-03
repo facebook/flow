@@ -3061,7 +3061,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       Option.map targs (fun (targts_loc, args) ->
           (targts_loc, convert_call_targs cx SMap.empty args))
     in
-    let (argts, arges) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
+    let (argts, arges) = arg_list cx arguments in
     let id_t = identifier cx name callee_loc in
     let callee_annot = (callee_loc, id_t) in
     (match targts_opt with
@@ -3126,11 +3126,11 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let targts =
       Option.map targs (fun (loc, args) -> (loc, convert_call_targs cx SMap.empty args))
     in
-    let args = Base.List.map ~f:(expression_or_spread cx) arguments in
+    let (argts, args) = arg_list cx arguments in
     let result =
-      match (targts, args) with
-      | (Some (loc, ([t], [elem_t])), [(Arg argt, arg)]) -> Ok (Some (loc, elem_t, t), argt, arg)
-      | (None, [(Arg argt, arg)]) -> Ok (None, argt, arg)
+      match (targts, argts) with
+      | (Some (loc, ([t], [elem_t])), [Arg argt]) -> Ok (Some (loc, elem_t, t), argt)
+      | (None, [Arg argt]) -> Ok (None, argt)
       | (None, _) -> Error (Error_message.EUseArrayLiteral loc)
       | (Some _, _) ->
         Error
@@ -3144,7 +3144,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               })
     in
     (match result with
-    | Ok (targ_t, arg_t, arg) ->
+    | Ok (targ_t, arg_t) ->
       let reason = mk_reason (RCustom "new Array(..)") loc in
       let length_reason = replace_desc_reason (RCustom "array length") reason in
       Flow.flow_t cx (arg_t, DefT (length_reason, bogus_trust (), NumT AnyLiteral));
@@ -3163,7 +3163,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           {
             New.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
             targs;
-            arguments = [arg];
+            arguments = args;
             comments;
           } )
     | Error err ->
@@ -3172,9 +3172,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | New { New.callee; targs; arguments; comments } ->
     let (((_, class_), _) as callee_ast) = expression cx callee in
     let (targts, targs_ast) = convert_call_targs_opt cx targs in
-    let (argts, arguments_ast) =
-      arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-    in
+    let (argts, arguments_ast) = arg_list cx arguments in
     let reason = mk_reason (RConstructorCall (desc_of_t class_)) loc in
     let use_op =
       Op
@@ -3692,7 +3690,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           ( Import_export.require cx (source_loc, module_name) loc,
             [Expression (expression cx lit_exp)] )
         | (Some _, _) ->
-          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          ignore (arg_list cx arguments);
           Flow.add_output
             cx
             Error_message.(
@@ -3703,13 +3701,13 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
-        | _ ->
-          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+        | (None, _) ->
+          ignore (arg_list cx arguments);
           let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
           if not ignore_non_literals then
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
+          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
@@ -3784,7 +3782,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           ( NullT.at loc |> with_trust bogus_trust,
             [Expression (expression cx elems_exp); Expression callback_ast] )
         | (Some _, _) ->
-          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          ignore (arg_list cx arguments);
           Flow.add_output
             cx
             Error_message.(
@@ -3795,11 +3793,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
+          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
         | _ ->
-          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          ignore (arg_list cx arguments);
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
+          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
@@ -3866,9 +3864,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx super_loc in
       let (targts, targs) = convert_call_targs_opt cx targs in
-      let (argts, argument_asts) =
-        arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-      in
+      let (argts, argument_asts) = arg_list cx arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
@@ -3914,9 +3910,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           None )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
-      let (argts, argument_asts) =
-        arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-      in
+      let (argts, argument_asts) = arg_list cx arguments in
       let reason = mk_reason (RFunctionCall RSuper) loc in
       (* switch back env entries for this and super from undefined *)
       define_internal cx reason "this";
@@ -4000,11 +3994,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           Flow.flow cx (cond_t, InvariantT reason);
           Expression cond :: arguments
         | (_, Spread _ :: _) ->
-          ignore (Base.List.map ~f:(expression_or_spread cx) arguments);
+          ignore (arg_list cx arguments);
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
-          List.map Tast_utils.error_mapper#expression_or_spread arguments
+          Tast_utils.error_mapper#arg_list arguments
         | (Some _, _) ->
-          ignore (Base.List.map ~f:(expression_or_spread cx) arguments);
+          ignore (arg_list cx arguments);
           Flow.add_output
             cx
             Error_message.(
@@ -4015,7 +4009,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          List.map Tast_utils.error_mapper#expression_or_spread arguments
+          Tast_utils.error_mapper#arg_list arguments
       in
       let lhs_t = VoidT.at loc |> with_trust bogus_trust in
       Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments }), None, None)
@@ -4599,10 +4593,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 let use = apply_opt_use (get_opt_use argts reason obj_t) t in
                 Flow.flow cx (obj_t, use))
           in
-          let eval_args preds =
-            in_env preds (fun () ->
-                arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split)
-          in
+          let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
           let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
             handle_chaining
               member_opt
@@ -4660,9 +4651,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let eval_args_and_expr preds =
             in_env preds (fun () ->
                 let (((_, elem_t), _) as expr) = expression cx expr in
-                let (argts, argument_asts) =
-                  arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-                in
+                let (argts, argument_asts) = arg_list cx arguments in
                 ((argts, elem_t), (argument_asts, expr)))
           in
           let this_reason = mk_expression_reason callee in
@@ -4732,10 +4721,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             let use = apply_opt_use (get_opt_use argts reason f) t in
             Flow.flow cx (f, use))
       in
-      let eval_args preds =
-        in_env preds (fun () ->
-            arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split)
-      in
+      let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
       let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
         handle_chaining
           opt_state
@@ -4765,6 +4751,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     | _ ->
       let (((_, t), _) as res) = expression ?cond cx ex in
       (t, None, res, None, None))
+
+and arg_list cx arguments = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
 
 and subscript ~cond cx ex =
   let (_, _, ast, _, _) = optional_chain ~cond ~is_existence_check:false cx ex in
@@ -7099,7 +7087,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       Some (targs_loc, targs),
       _ ) ->
     let targs = snd (convert_call_targs cx SMap.empty targs) in
-    let args = Base.List.map ~f:(fun arg -> snd (expression_or_spread cx arg)) args in
+    let (_argts, args) = arg_list cx args in
     let arity =
       if m = "freeze" || m = "defineProperty" then
         1
@@ -7120,7 +7108,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
   (* TODO *)
   | _ ->
     let (targts, targ_asts) = convert_call_targs_opt cx targs in
-    let (argts, arg_asts) = args |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
+    let (argts, arg_asts) = arg_list cx args in
     let reason = mk_reason (RMethodCall (Some m)) loc in
     let use_op =
       Op

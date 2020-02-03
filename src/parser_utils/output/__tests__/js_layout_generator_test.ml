@@ -374,7 +374,7 @@ let tests =
            let layout = Js_layout_generator.expression (E.new_ (E.identifier x80)) in
            assert_layout
              ~ctxt
-             L.(loc (group [atom "new"; space; loc (id x80); atom "("; atom ")"]))
+             L.(loc (group [atom "new"; space; loc (id x80); group [atom "("; atom ")"]]))
              layout;
            assert_output ~ctxt ("new " ^ x80 ^ "()") layout;
            assert_output ~ctxt ~pretty:true ("new " ^ x80 ^ "()") layout );
@@ -395,19 +395,22 @@ let tests =
                       atom "new";
                       space;
                       loc (id "Foo");
-                      atom "(";
-                      indent
-                        (fused
-                           [
-                             softline;
-                             loc (id "x");
-                             atom ",";
-                             pretty_line;
-                             loc (id "y");
-                             Layout.IfBreak (atom ",", empty);
-                           ]);
-                      softline;
-                      atom ")";
+                      group
+                        [
+                          atom "(";
+                          indent
+                            (fused
+                               [
+                                 softline;
+                                 loc (id "x");
+                                 atom ",";
+                                 pretty_line;
+                                 loc (id "y");
+                                 Layout.IfBreak (atom ",", empty);
+                               ]);
+                          softline;
+                          atom ")";
+                        ];
                     ]))
              layout;
            assert_output ~ctxt "new Foo(x,y)" layout;
@@ -428,10 +431,13 @@ let tests =
                       atom "new";
                       space;
                       loc (id "Foo");
-                      atom "(";
-                      indent (fused [softline; loc (id x80); Layout.IfBreak (atom ",", empty)]);
-                      softline;
-                      atom ")";
+                      group
+                        [
+                          atom "(";
+                          indent (fused [softline; loc (id x80); Layout.IfBreak (atom ",", empty)]);
+                          softline;
+                          atom ")";
+                        ];
                     ]))
              layout;
            assert_output ~ctxt ("new Foo(" ^ x80 ^ ")") layout;
@@ -453,8 +459,7 @@ let tests =
                         atom "new";
                         pretty_space;
                         wrap_in_parens (loc (fused [loc (id "x"); atom "++"]));
-                        atom "(";
-                        atom ")";
+                        group [atom "("; atom ")"];
                       ]))
                layout;
              assert_output ~ctxt "new(x++)()" layout;

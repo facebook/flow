@@ -9,6 +9,10 @@ module Ast = Flow_ast
 
 class virtual ['M, 'T, 'N, 'U] mapper :
   object
+    method arg_list :
+      ('M, 'T) Ast.Expression.expression_or_spread list ->
+      ('N, 'U) Ast.Expression.expression_or_spread list
+
     method array : ('M, 'T) Ast.Expression.Array.t -> ('N, 'U) Ast.Expression.Array.t
 
     method arrow_function : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
