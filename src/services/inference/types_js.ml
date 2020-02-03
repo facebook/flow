@@ -2074,18 +2074,11 @@ end = struct
       ~direct_dependent_files =
     let%lwt (sig_dependent_files, all_dependent_files) =
       with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
-          if
-            FilenameSet.is_empty direct_dependent_files
-            (* as is the case for anything doing `check_contents` *)
-          then
-            Lwt.return (FilenameSet.empty, FilenameSet.empty)
-          (* avoid O(dependency graph) calculations *)
-          else
-            Lwt.return
-              (Pure_dep_graph_operations.calc_all_dependents
-                 ~sig_dependency_graph
-                 ~implementation_dependency_graph
-                 direct_dependent_files))
+          Lwt.return
+            (Pure_dep_graph_operations.calc_all_dependents
+               ~sig_dependency_graph
+               ~implementation_dependency_graph
+               direct_dependent_files))
     in
     let acceptable_files_to_focus =
       FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
