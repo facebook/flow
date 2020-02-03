@@ -34,6 +34,7 @@ flow.parse('1+1', {});
 
 The second argument to `flow.parse` is the options object. Currently supported options:
 
+* `enums` (boolean, default `false`) - enable parsing of Flow enums
 * `esproposal_decorators` (boolean, default `false`) - enable parsing of decorators
 * `esproposal_class_instance_fields` (boolean, default `false`) - enable parsing of class instance fields
 * `esproposal_class_static_fields` (boolean, default `false`) - enable parsing of class static fields
