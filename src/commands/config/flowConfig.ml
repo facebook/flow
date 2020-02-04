@@ -78,7 +78,6 @@ module Opts = struct
     max_seconds_for_check_per_worker: float;
     max_workers: int;
     merge_timeout: int option;
-    minimal_merge: bool;
     module_file_exts: SSet.t;
     module_name_mappers: (Str.regexp * string) list;
     module_resource_exts: SSet.t;
@@ -178,7 +177,6 @@ module Opts = struct
       max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
-      minimal_merge = true;
       module_file_exts;
       module_name_mappers = [];
       module_resource_exts;
@@ -550,7 +548,6 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
         boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v }) );
-      ("experimental.minimal_merge", boolean (fun opts v -> Ok { opts with minimal_merge = v }));
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "trust_mode",
         enum
@@ -1162,8 +1159,6 @@ let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_pe
 let max_workers c = c.options.Opts.max_workers
 
 let merge_timeout c = c.options.Opts.merge_timeout
-
-let minimal_merge c = c.options.Opts.minimal_merge
 
 let module_file_exts c = c.options.Opts.module_file_exts
 

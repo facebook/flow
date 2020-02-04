@@ -544,13 +544,7 @@ let include_dependencies_and_dependents
             in
             let dependencies =
               let (dependents, non_dependents) =
-                List.partition
-                  ( if Options.minimal_merge options then
-                    fun fn ->
-                  FilenameSet.mem fn sig_dependent_files
-                  else
-                    fun fn ->
-                  FilenameSet.mem fn all_dependent_files )
+                List.partition (fun fn -> FilenameSet.mem fn sig_dependent_files)
                 @@ Nel.to_list component
               in
               if
@@ -570,27 +564,20 @@ let include_dependencies_and_dependents
       (* Definitely recheck input and dependencies. As merging proceeds, dependents may or may not be
        rechecked. *)
       let definitely_to_merge = CheckedSet.add ~dependencies input in
-      let (to_merge, to_check, to_merge_or_check) =
-        if Options.minimal_merge options then
-          let to_merge = CheckedSet.add ~dependents:sig_dependent_files definitely_to_merge in
-          (* We don't need to include definitely_to_merge here, since we only need to merge the
-           * dependencies, not check them. *)
-          let to_check = CheckedSet.add ~dependents:all_dependent_files input in
-          (* This contains all of the files which may be merged or checked. Conveniently, this is
-           * currently the same as to_check except for the addition of dependencies, so we can avoid
-           * doing a costly union, but if we change how to_check or to_merge is computed we should be
-           * sure to change this as well. *)
-          let to_merge_or_check = CheckedSet.add ~dependencies to_check in
-          (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with
-           * to_merge on sig_dependency_graph, we would get exactly the same components. Later, we
-           * will filter sig_dependency_graph to just to_merge, and correspondingly filter
-           * components as well. This will work out because every component is either entirely
-           * inside to_merge or entirely outside. *)
-          (to_merge, to_check, to_merge_or_check)
-        else
-          let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
-          (to_merge, to_merge, to_merge)
-      in
+      let to_merge = CheckedSet.add ~dependents:sig_dependent_files definitely_to_merge in
+      (* We don't need to include definitely_to_merge here, since we only need to merge the
+       * dependencies, not check them. *)
+      let to_check = CheckedSet.add ~dependents:all_dependent_files input in
+      (* This contains all of the files which may be merged or checked. Conveniently, this is
+       * currently the same as to_check except for the addition of dependencies, so we can avoid
+       * doing a costly union, but if we change how to_check or to_merge is computed we should be
+       * sure to change this as well. *)
+      let to_merge_or_check = CheckedSet.add ~dependencies to_check in
+      (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with
+       * to_merge on sig_dependency_graph, we would get exactly the same components. Later, we
+       * will filter sig_dependency_graph to just to_merge, and correspondingly filter
+       * components as well. This will work out because every component is either entirely
+       * inside to_merge or entirely outside. *)
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 

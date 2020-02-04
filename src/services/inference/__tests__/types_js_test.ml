@@ -98,17 +98,13 @@ let make_unchanged_checked checked_files freshparsed =
 let make_options () =
   let flowconfig = FlowConfig.empty_config in
   let root = Path.dummy_path in
-  {
-    (CommandUtils.make_options
-       ~flowconfig_name:".flowconfig"
-       ~flowconfig
-       ~lazy_mode:None
-       ~file_watcher_timeout:None
-       ~root
-       dummy_options_flags)
-    with
-    Options.opt_minimal_merge = true;
-  }
+  CommandUtils.make_options
+    ~flowconfig_name:".flowconfig"
+    ~flowconfig
+    ~lazy_mode:None
+    ~file_watcher_timeout:None
+    ~root
+    dummy_options_flags
 
 let prepare_freshparsed freshparsed =
   freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list

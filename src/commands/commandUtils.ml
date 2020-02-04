@@ -1253,7 +1253,6 @@ let make_options
         FlowConfig.node_resolver_root_relative_dirnames flowconfig;
       opt_arch;
       opt_abstract_locations;
-      opt_minimal_merge = FlowConfig.minimal_merge flowconfig;
       opt_include_suppressions = options_flags.include_suppressions;
       opt_trust_mode =
         Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
