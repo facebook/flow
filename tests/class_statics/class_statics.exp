@@ -206,7 +206,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:2
 
-Cannot cast `new A()` to `typeof A` because `A` [1] is incompatible with class `A` [2].
+Cannot cast `new A` to `typeof A` because `A` [1] is incompatible with class `A` [2].
 
    test.js:47:2
    47| (new A: typeof A);

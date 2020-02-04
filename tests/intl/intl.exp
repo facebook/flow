@@ -595,7 +595,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:30:3
 
-Cannot call `new PluralRules().format` because property `format` is missing in `Intl$PluralRules` [1].
+Cannot call `(new PluralRules()).format` because property `format` is missing in `Intl$PluralRules` [1].
 
    plural_rules.js:30:3
    30|   new PluralRules().format() // incorrect
@@ -609,7 +609,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:31:3
 
-Cannot call `new PluralRules().select` because function [1] requires another argument.
+Cannot call `(new PluralRules()).select` because function [1] requires another argument.
 
    plural_rules.js:31:3
     31|   new PluralRules().select() // incorrect

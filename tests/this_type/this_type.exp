@@ -359,7 +359,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:2
 
-Cannot cast `new B3().qux(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2].
 
    import.js:18:2
    18| (new B3().qux(0): string); // error
@@ -376,7 +376,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:3
 
-Cannot cast `new B3().bar()` to `A2` because string [1] is incompatible with number [2] in type argument `X` [3].
+Cannot cast `(new B3()).bar()` to `A2` because string [1] is incompatible with number [2] in type argument `X` [3].
 
    import.js:21:3
    21| ((new B3().bar(): B3<string>): A2<number>); // error
@@ -396,7 +396,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:2
 
-Cannot cast `new B3().qux(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2].
 
    import.js:22:2
    22| ((new B3(): A2<number>).qux(0): string); // error
@@ -421,7 +421,7 @@ Unexpected use of `this` type.
 
 Error ----------------------------------------------------------------------------------------------------- self.js:4:24
 
-Cannot return `new A().foo()` because `A` [1] is incompatible with `this` [2].
+Cannot return `(new A()).foo()` because `A` [1] is incompatible with `this` [2].
 
    self.js:4:24
    4|   bar(): this { return new A().foo(); } // same as returning : A, so error
@@ -455,7 +455,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
-Cannot cast `new Inherit().foo()` to `Inherit` because:
+Cannot cast `(new Inherit()).foo()` to `Inherit` because:
  - `Base` [1] is incompatible with `Inherit` [2].
  - `Override` [3] is incompatible with `Inherit` [2].
 
@@ -477,7 +477,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
-Cannot cast `new InheritOverride().bar_caller()` to `InheritOverride` because:
+Cannot cast `(new InheritOverride()).bar_caller()` to `InheritOverride` because:
  - `Base` [1] is incompatible with `InheritOverride` [2].
  - `Override` [3] is incompatible with `InheritOverride` [2].
 

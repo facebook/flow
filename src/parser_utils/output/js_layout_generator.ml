@@ -80,7 +80,7 @@ let deoptionalize l =
        l)
 
 (* See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence *)
-let max_precedence = 20
+let max_precedence = 21
 
 let min_precedence = 1
 
@@ -108,16 +108,18 @@ let precedence_of_expression expr =
   | (_, E.Member _)
   | (_, E.OptionalMember _)
   | (_, E.MetaProperty _)
-  | (_, E.New _) ->
-    19
   | (_, E.Call _)
   | (_, E.OptionalCall _)
+  | (_, E.New { E.New.arguments = Some _; _ }) ->
+    20
+  | (_, E.New { E.New.arguments = None; _ }) -> 19
   | (_, E.TaggedTemplate _)
   | (_, E.Import _) ->
     18
   | (_, E.Update { E.Update.prefix = false; _ }) -> 17
-  | (_, E.Update { E.Update.prefix = true; _ }) -> 16
-  | (_, E.Unary _) -> 16
+  | (_, E.Update { E.Update.prefix = true; _ })
+  | (_, E.Unary _) ->
+    16
   | (_, E.Binary { E.Binary.operator; _ }) ->
     begin
       match operator with
@@ -922,7 +924,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
              [
                fuse_with_space [Atom "new"; callee_layout];
                option call_type_args targs;
-               call_args arguments;
+               option call_args arguments;
              ]
       | E.Unary { E.Unary.operator; argument; comments } ->
         let (s_operator, needs_space) =

@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:47:9
 
-Cannot assign `new A()` to `o.p` because `A` [1] is incompatible with `B` [2].
+Cannot assign `new A` to `o.p` because `A` [1] is incompatible with `B` [2].
 
    dictionary.js:47:9
    47|   o.p = new A; // error, A ~> B

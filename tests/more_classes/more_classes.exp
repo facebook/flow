@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- Bar.js:15:19
 
-Cannot assign `"?"` to `new Qux().w` because string [1] is incompatible with number [2].
+Cannot assign `"?"` to `(new Qux()).w` because string [1] is incompatible with number [2].
 
    Bar.js:15:19
    15|     new Qux().w = "?";

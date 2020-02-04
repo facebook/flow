@@ -741,7 +741,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- scoping.js:24:2
 
-Cannot cast `new Foo().outer` to string because number [1] is incompatible with string [2].
+Cannot cast `(new Foo()).outer` to string because number [1] is incompatible with string [2].
 
    scoping.js:24:2
    24| (new Foo().outer: string); // Error: number ~> string
@@ -775,7 +775,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- scoping.js:33:2
 
-Cannot cast `new Foo().selfTyped` to number because `Foo` [1] is incompatible with number [2].
+Cannot cast `(new Foo()).selfTyped` to number because `Foo` [1] is incompatible with number [2].
 
    scoping.js:33:2
    33| (new Foo().selfTyped: number); // Error: Foo ~> number
@@ -809,7 +809,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- scoping.js:38:2
 
-Cannot cast `new Foo().selfTypedInit` to number because `Foo` [1] is incompatible with number [2].
+Cannot cast `(new Foo()).selfTypedInit` to number because `Foo` [1] is incompatible with number [2].
 
    scoping.js:38:2
    38| (new Foo().selfTypedInit: number); // Error: Foo ~> number

@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- libtest.js:3:16
 
-Cannot assign `new TypeError().name` to `z` because string [1] is incompatible with number [2].
+Cannot assign `(new TypeError()).name` to `z` because string [1] is incompatible with number [2].
 
    libtest.js:3:16
      3| var z:number = new TypeError().name;

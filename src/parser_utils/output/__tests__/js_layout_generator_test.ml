@@ -287,6 +287,10 @@ let tests =
            let new_ = E.call (E.new_ x) in
            assert_expression ~ctxt "new x()()" new_;
 
+           (* `(new x)()` *)
+           let new_ = E.call (E.new_ x ~args:None) in
+           assert_expression ~ctxt "(new x)()" new_;
+
            (* `function() {}()` *)
            let func = E.call (E.function_ ()) in
            assert_expression ~ctxt "function(){}()" func;
@@ -384,7 +388,7 @@ let tests =
              Js_layout_generator.expression
                (E.new_
                   (E.identifier "Foo")
-                  ~args:[E.expression (E.identifier "x"); E.expression (E.identifier "y")])
+                  ~args:(Some [E.expression (E.identifier "x"); E.expression (E.identifier "y")]))
            in
            assert_layout
              ~ctxt
@@ -420,7 +424,7 @@ let tests =
            let x80 = String.make 80 'x' in
            let layout =
              Js_layout_generator.expression
-               (E.new_ (E.identifier "Foo") ~args:[E.expression (E.identifier x80)])
+               (E.new_ (E.identifier "Foo") ~args:(Some [E.expression (E.identifier x80)]))
            in
            assert_layout
              ~ctxt

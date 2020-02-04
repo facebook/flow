@@ -239,7 +239,7 @@ and get_children_nodes_expr expression =
   | Member member -> get_children_nodes_member member
   | MetaProperty _ -> []
   | New { New.callee; arguments; _ } ->
-    get_children_nodes_expr callee @ get_children_nodes_arg_list arguments
+    get_children_nodes_expr callee @ node_list_of_option ~f:get_children_nodes_arg_list arguments
   | Object { Object.properties; comments = _ } ->
     List.fold_left
       (fun nodes property ->

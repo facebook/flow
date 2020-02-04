@@ -1365,7 +1365,7 @@ class ['loc] mapper =
       let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = map_opt this#call_type_args targs in
-      let arguments' = this#call_arguments arguments in
+      let arguments' = map_opt this#call_arguments arguments in
       let comments' = this#syntax_opt comments in
       if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
       then

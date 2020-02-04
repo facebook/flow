@@ -1025,7 +1025,7 @@ and Expression : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
       targs: ('M, 'T) Expression.CallTypeArgs.t option;
-      arguments: ('M, 'T) expression_or_spread list;
+      arguments: ('M, 'T) expression_or_spread list option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

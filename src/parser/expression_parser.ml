@@ -721,8 +721,8 @@ module Expression
           in
           let arguments =
             match Peek.token env with
-            | T_LPAREN -> snd (arguments env)
-            | _ -> []
+            | T_LPAREN -> Some (snd (arguments env))
+            | _ -> None
           in
           let trailing = Peek.comments env in
           let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in

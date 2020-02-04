@@ -502,6 +502,11 @@ with type t = Impl.t = struct
             ("alternate", expression alternate);
           ]
       | (loc, New { New.callee; targs; arguments; comments }) ->
+        let arguments =
+          match arguments with
+          | Some arguments -> arg_list arguments
+          | None -> array []
+        in
         node
           ?comments
           "NewExpression"
@@ -509,7 +514,7 @@ with type t = Impl.t = struct
           [
             ("callee", expression callee);
             ("typeArguments", option call_type_args targs);
-            ("arguments", arg_list arguments);
+            ("arguments", arguments);
           ]
       | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
       | (loc, OptionalCall { OptionalCall.call; optional }) ->

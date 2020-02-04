@@ -3061,7 +3061,13 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       Option.map targs (fun (targts_loc, args) ->
           (targts_loc, convert_call_targs cx SMap.empty args))
     in
-    let (argts, arges) = arg_list cx arguments in
+    let (argts, arges) =
+      match arguments with
+      | Some arguments ->
+        let (argts, arges) = arg_list cx arguments in
+        (argts, Some arges)
+      | None -> ([], None)
+    in
     let id_t = identifier cx name callee_loc in
     let callee_annot = (callee_loc, id_t) in
     (match targts_opt with
@@ -3126,7 +3132,13 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let targts =
       Option.map targs (fun (loc, args) -> (loc, convert_call_targs cx SMap.empty args))
     in
-    let (argts, args) = arg_list cx arguments in
+    let (argts, args) =
+      match arguments with
+      | Some arguments ->
+        let (argts, args) = arg_list cx arguments in
+        (argts, Some args)
+      | None -> ([], None)
+    in
     let result =
       match (targts, argts) with
       | (Some (loc, ([t], [elem_t])), [Arg argt]) -> Ok (Some (loc, elem_t, t), argt)
@@ -3172,7 +3184,14 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | New { New.callee; targs; arguments; comments } ->
     let (((_, class_), _) as callee_ast) = expression cx callee in
     let (targts, targs_ast) = convert_call_targs_opt cx targs in
-    let (argts, arguments_ast) = arg_list cx arguments in
+    let (argts, args_reasons, arguments_ast) =
+      match arguments with
+      | Some arguments ->
+        let (argst, arguments_ast) = arg_list cx arguments in
+        let args_reasons = mk_initial_arguments_reason arguments in
+        (argst, args_reasons, Some arguments_ast)
+      | None -> ([], [], None)
+    in
     let reason = mk_reason (RConstructorCall (desc_of_t class_)) loc in
     let use_op =
       Op
@@ -3180,7 +3199,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
            {
              op = mk_expression_reason ex;
              fn = mk_expression_reason callee;
-             args = mk_initial_arguments_reason arguments;
+             args = args_reasons;
              local = true;
            })
     in

@@ -40,7 +40,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:2
 
-Cannot cast `new C().foo()` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `(new C).foo()` to boolean because string [1] is incompatible with boolean [2].
 
    test.js:18:2
    18| ((new C).foo(): boolean); // last wins
@@ -57,7 +57,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
-Cannot cast `new C().x` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `(new C).x` to boolean because string [1] is incompatible with boolean [2].
 
    test.js:19:2
    19| ((new C).x: boolean); // last wins
@@ -74,7 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:2
 
-Cannot cast `new C().bar` to empty because string [1] is incompatible with empty [2].
+Cannot cast `(new C).bar` to empty because string [1] is incompatible with empty [2].
 
    test.js:20:2
    20| ((new C).bar: empty); // error: string ~> empty (own prop wins)
@@ -91,7 +91,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:2
 
-Cannot cast `new C().qux` to empty because number [1] is incompatible with empty [2].
+Cannot cast `(new C).qux` to empty because number [1] is incompatible with empty [2].
 
    test.js:21:2
    21| ((new C).qux: empty); // error: number ~> empty (own prop wins)

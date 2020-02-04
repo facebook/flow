@@ -68,7 +68,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:20
 
-Cannot assign `new C()` to `c` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot assign `new C` to `c` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    test.js:22:20
    22| var c: C<string> = new C; // error, since T = string is incompatible with number

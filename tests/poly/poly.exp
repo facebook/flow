@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:10
 
-Cannot return `new A() || new A()` because property `x` is missing in object type [1] but exists in object type [2] in
+Cannot return `(new A) || (new A)` because property `x` is missing in object type [1] but exists in object type [2] in
 type argument `X` [3].
 
    annot.js:10:10

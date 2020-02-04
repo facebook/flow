@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:3:17
 
-Cannot assign `new C().x` to `x` because number [1] is incompatible with string [2].
+Cannot assign `(new C()).x` to `x` because number [1] is incompatible with string [2].
 
    interface.js:3:17
    3| var x: string = new C().x;
@@ -423,7 +423,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:9:1
 
-Cannot call `new C().bar` because string [1] is incompatible with number [2] in the first argument.
+Cannot call `(new C()).bar` because string [1] is incompatible with number [2] in the first argument.
 
    test4.js:9:1
    9| new C().bar((x: string) => { }); // error, number ~/~> string

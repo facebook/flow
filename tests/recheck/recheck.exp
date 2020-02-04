@@ -108,7 +108,7 @@ Found 3 errors
 Test b:
 Error -------------------------------------------------------------------------------------------------------- b3.js:5:2
 
-Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
+Cannot cast `new D` to `C` because `D` [1] is incompatible with `C` [2].
 
    b3.js:5:2
    5| (new D: C);

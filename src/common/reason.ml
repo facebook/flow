@@ -1014,10 +1014,11 @@ let rec code_desc_of_expression ~wrap (_, x) =
     in
     let args =
       match arguments with
-      | [] -> "()"
-      | _ :: _ -> "(...)"
+      | None -> ""
+      | Some [] -> "()"
+      | Some (_ :: _) -> "(...)"
     in
-    "new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args
+    do_wrap ("new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args)
   | Object _ -> "{...}"
   | OptionalCall { OptionalCall.call = { Call.callee; targs; arguments }; optional } ->
     let targ_string =

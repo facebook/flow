@@ -1292,7 +1292,7 @@ let program
     let { callee = callee2; targs = targs2; arguments = arguments2; comments = comments2 } = new2 in
     let comments = syntax_opt loc comments1 comments2 in
     let targs = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
-    let args = diff_if_changed_ret_opt call_args arguments1 arguments2 in
+    let args = diff_if_changed_ret_opt (diff_if_changed_opt call_args) arguments1 arguments2 in
     let callee = Some (diff_if_changed expression callee1 callee2) in
     join_diff_list [comments; targs; args; callee]
   and member

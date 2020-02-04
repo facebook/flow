@@ -90,7 +90,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:2
 
-Cannot cast `new C5()` to `IBar` because property `bar` is missing in `C5` [1] but exists in `IBar` [2].
+Cannot cast `new C5` to `IBar` because property `bar` is missing in `C5` [1] but exists in `IBar` [2].
 
    test.js:21:2
    21| (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)

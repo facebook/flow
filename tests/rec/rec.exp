@@ -202,7 +202,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:30:3
 
-Cannot cast `new C()` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
+Cannot cast `new C` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
 
    test2.js:30:3
    30| ((new C: C<number>): D<string>) // error: number ~/~ string

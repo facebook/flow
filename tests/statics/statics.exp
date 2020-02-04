@@ -76,7 +76,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- funstatics.js:5:16
 
-Cannot assign `new C().f()` to `x` because number [1] is incompatible with string [2].
+Cannot assign `(new C()).f()` to `x` because number [1] is incompatible with string [2].
 
    funstatics.js:5:16
    5| var x:string = new C().f();

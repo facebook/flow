@@ -221,7 +221,7 @@ Cannot import `childProp` because there is no `childProp` export in `CommonJS_Cl
 
 Error ----------------------------------------------------------------------------------------------- es6modules.js:63:1
 
-Cannot get `new CJS_Clobb_Class().doesntExist` because property `doesntExist` is missing in `Test` [1].
+Cannot get `(new CJS_Clobb_Class()).doesntExist` because property `doesntExist` is missing in `Test` [1].
 
    es6modules.js:63:1
    63| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
@@ -252,7 +252,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:67:18
 
-Cannot assign `new CJS_Clobb_Class().instNumber1()` to `h4` because number [1] is incompatible with string [2].
+Cannot assign `(new CJS_Clobb_Class()).instNumber1()` to `h4` because number [1] is incompatible with string [2].
 
    es6modules.js:67:18
    67| var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
@@ -298,7 +298,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:73:18
 
-Cannot assign `new CJS_Clobb_Class_NS.default().instNumber2()` to `i3` because number [1] is incompatible with
+Cannot assign `(new CJS_Clobb_Class_NS.default()).instNumber2()` to `i3` because number [1] is incompatible with
 string [2].
 
    es6modules.js:73:18
@@ -466,7 +466,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:115:18
 
-Cannot assign `new ES6_Def_AnonClass1().givesANum()` to `p2` because number [1] is incompatible with string [2].
+Cannot assign `(new ES6_Def_AnonClass1()).givesANum()` to `p2` because number [1] is incompatible with string [2].
 
    es6modules.js:115:18
    115| var p2: string = new ES6_Def_AnonClass1().givesANum(); // Error: number ~> string
@@ -483,7 +483,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:119:18
 
-Cannot assign `new ES6_Def_NamedClass1().givesANum()` to `q2` because number [1] is incompatible with string [2].
+Cannot assign `(new ES6_Def_NamedClass1()).givesANum()` to `q2` because number [1] is incompatible with string [2].
 
    es6modules.js:119:18
    119| var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
@@ -610,7 +610,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:151:18
 
-Cannot assign `new NumberGenerator().givesANumber()` to `w2` because number [1] is incompatible with string [2].
+Cannot assign `(new NumberGenerator()).givesANumber()` to `w2` because number [1] is incompatible with string [2].
 
    es6modules.js:151:18
    151| var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
@@ -795,7 +795,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:195:19
 
-Cannot assign `new ES6_Def_AnonClass2().givesANum()` to `af2` because number [1] is incompatible with string [2].
+Cannot assign `(new ES6_Def_AnonClass2()).givesANum()` to `af2` because number [1] is incompatible with string [2].
 
    es6modules.js:195:19
    195| var af2: string = new ES6_Def_AnonClass2().givesANum(); // Error: number ~> string
@@ -812,7 +812,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:199:19
 
-Cannot assign `new ES6_Def_NamedClass2().givesANum()` to `ag2` because number [1] is incompatible with string [2].
+Cannot assign `(new ES6_Def_NamedClass2()).givesANum()` to `ag2` because number [1] is incompatible with string [2].
 
    es6modules.js:199:19
    199| var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
@@ -914,7 +914,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:226:19
 
-Cannot assign `new NumberGenerator2().givesANumber()` to `al2` because number [1] is incompatible with string [2].
+Cannot assign `(new NumberGenerator2()).givesANumber()` to `al2` because number [1] is incompatible with string [2].
 
    es6modules.js:226:19
    226| var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string

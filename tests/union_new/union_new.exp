@@ -355,7 +355,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test26.js:20:1
 
-Cannot call `new Record().set` because string [1] is incompatible with number [2].
+Cannot call `(new Record()).set` because string [1] is incompatible with number [2].
 
    test26.js:20:1
    20| new Record().set('foo', "42");

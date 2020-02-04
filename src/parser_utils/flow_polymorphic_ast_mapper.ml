@@ -1142,7 +1142,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = Option.map ~f:this#call_type_args targs in
-      let arguments' = this#arg_list arguments in
+      let arguments' = Option.map ~f:this#arg_list arguments in
       let comments' = Option.map ~f:this#syntax comments in
       { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 

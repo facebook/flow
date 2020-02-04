@@ -1119,7 +1119,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:48:2
 
-Cannot cast `new f().p` to empty because mixed [1] is incompatible with empty [2].
+Cannot cast `(new f()).p` to empty because mixed [1] is incompatible with empty [2].
 
    expression.js:48:2
    48| (((new f(): empty): T).p: empty);
@@ -1150,7 +1150,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:49:2
 
-Cannot cast `new f(...).p` to empty because mixed [1] is incompatible with empty [2].
+Cannot cast `(new f(...)).p` to empty because mixed [1] is incompatible with empty [2].
 
    expression.js:49:2
    49| (((new f(42): empty): T).p: empty);
