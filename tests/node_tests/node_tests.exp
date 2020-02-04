@@ -1,18 +1,24 @@
 Error ------------------------------------------------------------------------------------------- buffer/buffer.js:57:10
 
-Cannot call `Buffer.from` because array literal [1] is incompatible with `ArrayBuffer` [2].
+Cannot call `Buffer.from` because:
+ - Either no more than 1 argument is expected by function type [1].
+ - Or no more than 2 arguments are expected by function type [2].
+ - Or no more than 1 argument is expected by function type [3].
 
    buffer/buffer.js:57:10
     57| buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   buffer/buffer.js:57:22
-    57| buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:119:22
-   119|   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
-                             ^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:117:3
+   117|   static from(value: Buffer): Buffer;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:118:3
+   118|   static from(value: string, encoding?: buffer$Encoding): Buffer;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:120:3
+   120|   static from(value: Iterable<number>): this;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------ child_process/execSync.js:8:2
