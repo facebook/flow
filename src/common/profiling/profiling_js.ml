@@ -274,27 +274,33 @@ end = struct
     let finished_timer = stop_timer total_timer in
     Lwt.return (finished_timer, ret)
 
-  let with_timer_lwt ?(should_print = false) ~timer ~f running =
+  let prepare_timer ~timer ~running =
     let parent_timer = !running in
     let running_timer = start_timer ~timer in
     running := running_timer;
+    (parent_timer, running_timer)
+
+  let finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running =
+    let finished_timer = stop_timer running_timer in
+    parent_timer.sub_results_rev <- finished_timer :: parent_timer.sub_results_rev;
+
+    running := parent_timer;
+
+    if should_print then
+      let stats =
+        Printf.sprintf
+          "start_wall_age: %f; wall_duration: %f; cpu_usage: %f; flow_cpu_usage: %f"
+          finished_timer.wall.start_age
+          finished_timer.wall.duration
+          finished_timer.processor_totals.cpu_usage
+          finished_timer.flow_cpu_usage
+      in
+      Hh_logger.info "TimingEvent `%s`: %s" timer stats
+
+  let with_timer_lwt ?(should_print = false) ~timer ~f running =
+    let (parent_timer, running_timer) = prepare_timer ~timer ~running in
     Lwt.finalize f (fun () ->
-        let finished_timer = stop_timer running_timer in
-        parent_timer.sub_results_rev <- finished_timer :: parent_timer.sub_results_rev;
-
-        running := parent_timer;
-
-        ( if should_print then
-          let stats =
-            Printf.sprintf
-              "start_wall_age: %f; wall_duration: %f; cpu_usage: %f; flow_cpu_usage: %f"
-              finished_timer.wall.start_age
-              finished_timer.wall.duration
-              finished_timer.processor_totals.cpu_usage
-              finished_timer.flow_cpu_usage
-          in
-          Hh_logger.info "TimingEvent `%s`: %s" timer stats );
-
+        finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
         Lwt.return_unit)
 
   let get_total_wall_duration finished_timer = finished_timer.wall.duration
