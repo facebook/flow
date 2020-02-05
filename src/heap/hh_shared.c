@@ -168,6 +168,21 @@ static int win32_getpagesize(void) {
 /* Convention: .*_b = Size in bytes. */
 
 typedef struct {
+  /* Layout information, used by workers to create memory mappings. */
+  size_t locals_size_b;
+  size_t hashtbl_size;
+  size_t hashtbl_size_b;
+  size_t heap_size_b;
+
+  /* Offset of hashtbl in shared file. */
+  off_t hashtbl_offset;
+
+  /* Where the heap started (bottom), offset from hashtbl pointer */
+  size_t heap_init;
+
+  /* Where the heap will end (top), offset from hashtbl pointer */
+  size_t heap_max;
+
   /* Logging level for shared memory statistics
    * 0 = nothing
    * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
@@ -273,23 +288,6 @@ typedef struct {
 /* Globals */
 /*****************************************************************************/
 
-/* Total size of allocated shared memory */
-static size_t shared_mem_size = 0;
-
-/* Size of local storage */
-static size_t num_workers = 0;
-static size_t locals_size_b = 0;
-
-/* Size of shared hash table */
-static size_t hashtbl_size = 0;
-static size_t hashtbl_size_b = 0;
-
-/* Size of shared heap */
-static size_t heap_size_b = 0;
-
-/* Beginning of shared memory */
-static char* shared_mem = NULL;
-
 /* Shared memory metadata */
 static shmem_info_t* info = NULL;
 
@@ -311,14 +309,8 @@ static size_t worker_id;
 
 static size_t worker_can_exit = 1;
 
-/* Where the heap started (bottom), offset from hashtbl pointer */
-static size_t heap_init = 0;
-
-/* Where the heap will end (top), offset from hashtbl pointer */
-static size_t heap_max = 0;
-
 static size_t used_heap_size(void) {
-  return info->heap - heap_init;
+  return info->heap - info->heap_init;
 }
 
 static long removed_count = 0;
@@ -352,7 +344,7 @@ CAMLprim value hh_hash_used_slots(void) {
 
 CAMLprim value hh_hash_slots(void) {
   CAMLparam0();
-  CAMLreturn(Val_long(hashtbl_size));
+  CAMLreturn(Val_long(info->hashtbl_size));
 }
 
 static void raise_failed_memfd_init(int errcode) {
@@ -451,18 +443,15 @@ void memfd_init(size_t shared_mem_size) {
 
 #endif
 
-
-/*****************************************************************************/
-/* Given a pointer to the shared memory address space, initializes all
- * the globals that live in shared memory.
- */
-/*****************************************************************************/
-
 #ifdef _WIN32
 
-static char *memfd_map(size_t shared_mem_size) {
+static char *memfd_map(size_t size, off_t offset) {
   char *mem = NULL;
-  mem = MapViewOfFile(memfd, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+  /* MapViewOfFile separates a QWORD offset into two DWORD arguments, one for
+   * the high bits and one for the low bits. In practice, our offsets will not
+   * exceed a single DWORD. */
+  assert(offset <= 0xFFFFFFFF);
+  mem = MapViewOfFile(memfd, FILE_MAP_ALL_ACCESS, 0, offset, size);
   if (mem == NULL) {
     win32_maperr(GetLastError());
     uerror("MapViewOfFile", Nothing);
@@ -472,14 +461,14 @@ static char *memfd_map(size_t shared_mem_size) {
 
 #else
 
-static char *memfd_map(size_t shared_mem_size) {
+static char *memfd_map(size_t size, off_t offset) {
   char *mem = NULL;
   /* MAP_NORESERVE is because we want a lot more virtual memory than what
    * we are actually going to use.
    */
   int flags = MAP_SHARED | MAP_NORESERVE;
   int prot  = PROT_READ  | PROT_WRITE;
-  mem = (char*)mmap(NULL, shared_mem_size, prot, flags, memfd, 0);
+  mem = (char*)mmap(NULL, size, prot, flags, memfd, offset);
   if(mem == MAP_FAILED) {
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
@@ -496,7 +485,6 @@ static char *memfd_map(size_t shared_mem_size) {
  * messages. Otherwise, the kernel might terminate the process with
  * `SIGBUS`.
  ****************************************************************************/
-
 
 static void raise_out_of_shared_memory(void)
 {
@@ -538,7 +526,9 @@ static void memfd_reserve(char * mem, size_t sz) {
 #else
 
 static void memfd_reserve(char *mem, size_t sz) {
-  off_t offset = (off_t)(mem - shared_mem);
+  // Translate hashtbl-relative pointer to offset in memfd
+  assert(mem >= (char*)hashtbl);
+  off_t offset = info->hashtbl_offset + (mem - (char*)hashtbl);
   int err;
   do {
     err = posix_fallocate(memfd, offset, sz);
@@ -550,99 +540,46 @@ static void memfd_reserve(char *mem, size_t sz) {
 
 #endif
 
-// DON'T WRITE TO THE SHARED MEMORY IN THIS FUNCTION!!!  This function just
-// calculates where the memory is and sets local globals. The shared memory
-// might not be ready for writing yet! If you want to initialize a bit of
-// shared memory, check out init_shared_globals
-static void define_globals(char * shared_mem_init) {
-  size_t page_size = getpagesize();
-  char *mem = shared_mem_init;
-
-  // Beginning of the shared memory
-  shared_mem = mem;
-
-  #ifdef MADV_DONTDUMP
-    // We are unlikely to get much useful information out of the shared heap in
-    // a core file. Moreover, it can be HUGE, and the extensive work done dumping
-    // it once for each CPU can mean that the user will reboot their machine
-    // before the much more useful stack gets dumped!
-    madvise(shared_mem, shared_mem_size, MADV_DONTDUMP);
-  #endif
-
+static void map_info_page(int page_size) {
   // The first page of shared memory contains (1) size information describing
   // the layout of the rest of the shared file; (2) values which are atomically
   // updated by workers, like the heap pointer; and (3) various configuration
   // which is convenient to stick here, like the master process pid.
   assert(page_size >= sizeof(shmem_info_t));
-  info = (shmem_info_t*)mem;
-  mem += page_size;
-
-  /* Process-local storage */
-  locals = (local_t *)mem;
-  mem += locals_size_b;
-
-  /* Hashtable */
-  hashtbl = (helt_t*)mem;
-  mem += hashtbl_size_b;
-
-  /* Heap */
-  heap_init = hashtbl_size_b;
-  heap_max = heap_init + heap_size_b;
+  info = (shmem_info_t*)memfd_map(page_size, 0);
 
 #ifdef _WIN32
-  /* Reserve all memory space. This is required for Windows but we don't do this
-   * for Linux since it lets us run more processes in parallel without running
-   * out of memory immediately (though we do risk it later on) */
-  memfd_reserve(shared_mem, page_size + locals_size_b + hashtbl_size_b);
+  // Memory must be reserved on Windows
+  win_reserve((char *)info, page_size);
+#endif
+}
+
+static void define_mappings(int page_size) {
+  assert(info != NULL);
+  size_t locals_size = info->locals_size_b;
+  size_t hashtbl_size = info->hashtbl_size_b;
+  size_t heap_size = info->heap_size_b;
+
+  /* Process-local storage */
+  locals = (local_t*)memfd_map(locals_size, page_size);
+
+  /* Hashtable */
+  hashtbl = (helt_t*)memfd_map(hashtbl_size + heap_size, page_size + locals_size);
+
+#ifdef _WIN32
+  // Memory must be reserved on Windows. Heap allocations will be reserved
+  // in hh_alloc, so we just reserve the locals and hashtbl memory here.
+  win_reserve((char *)locals, locals_size);
+  win_reserve((char *)hashtbl, hashtbl_size);
 #endif
 
-}
-
-/* The total size of the shared memory.  Most of it is going to remain
- * virtual. */
-static size_t get_shared_mem_size(void) {
-  size_t page_size = getpagesize();
-  return (page_size + locals_size_b + hashtbl_size_b + heap_size_b);
-}
-
-static void init_shared_globals(
-  size_t config_log_level
-) {
-  // Initialize the number of element in the table
-  info->hcounter = 0;
-  info->hcounter_filled = 0;
-  // Ensure the global counter starts on a COUNTER_RANGE boundary
-  info->counter = ALIGN(early_counter + 1, COUNTER_RANGE);
-  info->log_level = config_log_level;
-  info->workers_should_exit = 0;
-  info->wasted_heap_size = 0;
-
-  for (uint64_t i = 0; i <= num_workers; i++) {
-    locals[i].counter = 0;
-  }
-
-  // Initialize top heap pointers
-  info->heap = heap_init;
-}
-
-static void set_sizes(
-  uint64_t config_heap_size,
-  uint64_t config_hash_table_pow,
-  uint64_t config_num_workers) {
-
-  size_t page_size = getpagesize();
-
-  heap_size_b = config_heap_size;
-
-  hashtbl_size    = 1ul << config_hash_table_pow;
-  hashtbl_size_b  = hashtbl_size * sizeof(hashtbl[0]);
-
-  // We will allocate a cache line for the master process and each worker
-  // process, then pad that out to the nearest page.
-  num_workers = config_num_workers;
-  locals_size_b = ALIGN((1 + num_workers) * sizeof(local_t), page_size);
-
-  shared_mem_size = get_shared_mem_size();
+#ifdef MADV_DONTDUMP
+  // We are unlikely to get much useful information out of the shared heap in
+  // a core file. Moreover, it can be HUGE, and the extensive work done dumping
+  // it once for each CPU can mean that the user will reboot their machine
+  // before the much more useful stack gets dumped!
+  madvise(hashtbl, hashtbl_size + heap_size, MADV_DONTDUMP);
+#endif
 }
 
 /*****************************************************************************/
@@ -654,38 +591,57 @@ CAMLprim value hh_shared_init(
   value num_workers_val
 ) {
   CAMLparam2(config_val, num_workers_val);
-  CAMLlocal3(
-    connector,
-    config_heap_size_val,
-    config_hash_table_pow_val
-  );
 
-  config_heap_size_val = Field(config_val, 0);
-  config_hash_table_pow_val = Field(config_val, 1);
+  size_t page_size = getpagesize();
 
-  set_sizes(
-    Long_val(config_heap_size_val),
-    Long_val(config_hash_table_pow_val),
-    Long_val(num_workers_val)
-  );
+  /* Calculate layout information. We need to figure out how big the shared file
+   * needs to be in order to create the file. We will also store enough of the
+   * layout information in the first page of the shared file so that workers can
+   * create mappings for the rest of the shared data. */
+  size_t num_workers = Long_val(num_workers_val);
+  size_t locals_size_b =
+    ALIGN((1 + num_workers) * sizeof(local_t), page_size);
+  size_t hashtbl_size = 1ul << Long_val(Field(config_val, 1));
+  size_t hashtbl_size_b = hashtbl_size * sizeof(helt_t);
+  size_t heap_size_b = Long_val(Field(config_val, 0));
 
-  memfd_init(shared_mem_size);
-  char *shared_mem_init = memfd_map(shared_mem_size);
-  define_globals(shared_mem_init);
+  /* The total size of the shared file must have space for the info page, local
+   * data, the hash table, and the heap. */
+  size_t shared_mem_size_b =
+    page_size + locals_size_b + hashtbl_size_b + heap_size_b;
+
+  memfd_init(shared_mem_size_b);
+
+  /* The info page contains (1) size information describing the layout of the
+   * rest of the shared file; (2) values which are atomically updated by
+   * workers, like the heap pointer; and (3) various configuration which is
+   * conventient to stick here, like the master process pid. */
+  map_info_page(page_size);
+  info->locals_size_b = locals_size_b;
+  info->hashtbl_size = hashtbl_size;
+  info->hashtbl_size_b = hashtbl_size_b;
+  info->heap_size_b = heap_size_b;
+  info->hashtbl_offset = page_size + locals_size_b;
+  info->heap_init = hashtbl_size_b;
+  info->heap_max = info->heap_init + heap_size_b;
+  info->log_level = Long_val(Field(config_val, 2));
 
   // Keeping the pids around to make asserts.
 #ifdef _WIN32
   info->master_pid = 0;
-  my_pid = info->master_pid;
 #else
   info->master_pid = getpid();
-  my_pid = info->master_pid;
 #endif
 
-  init_shared_globals(
-    Long_val(Field(config_val, 2)));
-  // Checking that we did the maths correctly.
-  assert(Ptr_of_offset(info->heap) + heap_size_b == shared_mem + shared_mem_size);
+  // Ensure the global counter starts on a COUNTER_RANGE boundary
+  info->counter = ALIGN(early_counter + 1, COUNTER_RANGE);
+
+  // Initialize top heap pointers
+  info->heap = info->heap_init;
+
+  my_pid = info->master_pid;
+
+  define_mappings(page_size);
 
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
@@ -699,32 +655,24 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  connector = caml_alloc_tuple(5);
-  Store_field(connector, 0, Val_handle(memfd));
-  Store_field(connector, 1, config_heap_size_val);
-  Store_field(connector, 2, config_hash_table_pow_val);
-  Store_field(connector, 3, num_workers_val);
-
-  CAMLreturn(connector);
+  CAMLreturn(Val_handle(memfd));
 }
 
 /* Must be called by every worker before any operation is performed */
-value hh_connect(value connector, value worker_id_val) {
-  CAMLparam2(connector, worker_id_val);
-  memfd = Handle_val(Field(connector, 0));
-  set_sizes(
-    Long_val(Field(connector, 1)),
-    Long_val(Field(connector, 2)),
-    Long_val(Field(connector, 3))
-  );
+value hh_connect(value handle_val, value worker_id_val) {
+  CAMLparam2(handle_val, worker_id_val);
+  memfd = Handle_val(handle_val);
   worker_id = Long_val(worker_id_val);
+
 #ifdef _WIN32
   my_pid = 1; // Trick
 #else
   my_pid = getpid();
 #endif
-  char *shared_mem_init = memfd_map(shared_mem_size);
-  define_globals(shared_mem_init);
+
+  int page_size = getpagesize();
+  map_info_page(page_size);
+  define_mappings(page_size);
 
   CAMLreturn(Val_unit);
 }
@@ -830,7 +778,7 @@ CAMLprim value hh_collect(void) {
   assert_master();
 
   // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
-
+  size_t hashtbl_size = info->hashtbl_size;
   for (size_t i = 0; i < hashtbl_size; i++) {
     // Skip empty slots
     if (hashtbl[i].addr == NULL_ADDR) { continue; }
@@ -858,10 +806,10 @@ CAMLprim value hh_collect(void) {
   // to relocated addresses.
 
   // Offset of free space in the heap where moved values will move to.
-  size_t dest = heap_init;
+  size_t dest = info->heap_init;
 
   // Pointer that walks the heap from bottom to top.
-  char *src = Ptr_of_offset(heap_init);
+  char *src = Ptr_of_offset(info->heap_init);
   char *heap_ptr = Ptr_of_offset(info->heap);
 
   size_t aligned_size;
@@ -924,7 +872,7 @@ static addr_t hh_alloc(hh_header_t header, char *data) {
   // modification in hh_remove
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(header));
   size_t offset = __sync_fetch_and_add(&info->heap, slot_size);
-  if (offset + slot_size > heap_max) {
+  if (offset + slot_size > info->heap_max) {
     raise_heap_full();
   }
   heap_entry_t *chunk = Entry_of_offset(offset);
@@ -1057,6 +1005,7 @@ static void raise_hash_table_full(void) {
 value hh_add(value key, value data) {
   CAMLparam2(key, data);
   check_should_exit();
+  size_t hashtbl_size = info->hashtbl_size;
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
   unsigned int init_slot = slot;
@@ -1113,6 +1062,7 @@ value hh_add(value key, value data) {
  */
 /*****************************************************************************/
 static unsigned int find_slot(value key) {
+  size_t hashtbl_size = info->hashtbl_size;
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
   unsigned int init_slot = slot;
