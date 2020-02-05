@@ -15,11 +15,7 @@ type config = {
   log_level: int;
 }
 
-(* Allocated in C only. *)
-type handle = private {
-  h_fd: Unix.file_descr;
-  h_heap_size: int;
-}
+type handle = Unix.file_descr
 
 exception Out_of_shared_memory
 
