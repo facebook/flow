@@ -71,7 +71,7 @@
     # - path: "/docs/cli/autocomplete/"
     # - path: "/docs/cli/check-contents/"
     # - path: "/docs/cli/check/"
-    # - path: "/docs/cli/coverage/"
+    - path: "/docs/cli/coverage/"
     # - path: "/docs/cli/find-module/"
     # - path: "/docs/cli/get-def/"
     # - path: "/docs/cli/get-importers/"

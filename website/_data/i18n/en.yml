@@ -108,8 +108,8 @@ docs_additional_reading: "Additional Reading"
   title: "flow check"
   description: ""
 "/docs/cli/coverage/":
-  title: "flow coverage"
-  description: ""
+  title: "Flow Coverage"
+  description: "Increase your confidence in Flow checking"
 "/docs/cli/find-module/":
   title: "flow find-module"
   description: ""
