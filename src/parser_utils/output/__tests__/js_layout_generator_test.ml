@@ -284,11 +284,11 @@ let tests =
            assert_expression ~ctxt "x()()" call;
 
            (* `new x()()` *)
-           let new_ = E.call (E.new_ x) in
+           let new_ = E.call (E.new_ x ~args:(E.arg_list [])) in
            assert_expression ~ctxt "new x()()" new_;
 
            (* `(new x)()` *)
-           let new_ = E.call (E.new_ x ~args:None) in
+           let new_ = E.call (E.new_ x) in
            assert_expression ~ctxt "(new x)()" new_;
 
            (* `function() {}()` *)
@@ -311,12 +311,13 @@ let tests =
            let underscore_d =
              E.call
                ~args:
-                 [
-                   E.expression (E.literal (Literals.string "a"));
-                   E.expression (E.literal (Literals.string "b"));
-                   E.expression (E.function_ ());
-                   E.expression (E.literal (Literals.number 1. "1"));
-                 ]
+                 (E.arg_list
+                    [
+                      E.expression (E.literal (Literals.string "a"));
+                      E.expression (E.literal (Literals.string "b"));
+                      E.expression (E.function_ ());
+                      E.expression (E.literal (Literals.number 1. "1"));
+                    ])
                (E.identifier "__d")
            in
            assert_expression ~ctxt "__d(\"a\",\"b\",(function(){}),1)" underscore_d );
@@ -375,10 +376,12 @@ let tests =
          ( "new_expression_empty_params" >:: fun ctxt ->
            (* `new xxxxxxx....()` *)
            let x80 = String.make 80 'x' in
-           let layout = Js_layout_generator.expression (E.new_ (E.identifier x80)) in
+           let layout =
+             Js_layout_generator.expression (E.new_ ~args:(E.arg_list []) (E.identifier x80))
+           in
            assert_layout
              ~ctxt
-             L.(loc (group [atom "new"; space; loc (id x80); group [atom "("; atom ")"]]))
+             L.(loc (group [atom "new"; space; loc (id x80); loc (group [atom "("; atom ")"])]))
              layout;
            assert_output ~ctxt ("new " ^ x80 ^ "()") layout;
            assert_output ~ctxt ~pretty:true ("new " ^ x80 ^ "()") layout );
@@ -388,7 +391,8 @@ let tests =
              Js_layout_generator.expression
                (E.new_
                   (E.identifier "Foo")
-                  ~args:(Some [E.expression (E.identifier "x"); E.expression (E.identifier "y")]))
+                  ~args:
+                    (E.arg_list [E.expression (E.identifier "x"); E.expression (E.identifier "y")]))
            in
            assert_layout
              ~ctxt
@@ -399,22 +403,23 @@ let tests =
                       atom "new";
                       space;
                       loc (id "Foo");
-                      group
-                        [
-                          atom "(";
-                          indent
-                            (fused
-                               [
-                                 softline;
-                                 loc (id "x");
-                                 atom ",";
-                                 pretty_line;
-                                 loc (id "y");
-                                 Layout.IfBreak (atom ",", empty);
-                               ]);
-                          softline;
-                          atom ")";
-                        ];
+                      loc
+                        (group
+                           [
+                             atom "(";
+                             indent
+                               (fused
+                                  [
+                                    softline;
+                                    loc (id "x");
+                                    atom ",";
+                                    pretty_line;
+                                    loc (id "y");
+                                    Layout.IfBreak (atom ",", empty);
+                                  ]);
+                             softline;
+                             atom ")";
+                           ]);
                     ]))
              layout;
            assert_output ~ctxt "new Foo(x,y)" layout;
@@ -424,7 +429,7 @@ let tests =
            let x80 = String.make 80 'x' in
            let layout =
              Js_layout_generator.expression
-               (E.new_ (E.identifier "Foo") ~args:(Some [E.expression (E.identifier x80)]))
+               (E.new_ (E.identifier "Foo") ~args:(E.arg_list [E.expression (E.identifier x80)]))
            in
            assert_layout
              ~ctxt
@@ -435,13 +440,15 @@ let tests =
                       atom "new";
                       space;
                       loc (id "Foo");
-                      group
-                        [
-                          atom "(";
-                          indent (fused [softline; loc (id x80); Layout.IfBreak (atom ",", empty)]);
-                          softline;
-                          atom ")";
-                        ];
+                      loc
+                        (group
+                           [
+                             atom "(";
+                             indent
+                               (fused [softline; loc (id x80); Layout.IfBreak (atom ",", empty)]);
+                             softline;
+                             atom ")";
+                           ]);
                     ]))
              layout;
            assert_output ~ctxt ("new Foo(" ^ x80 ^ ")") layout;
@@ -453,7 +460,10 @@ let tests =
            in
            (* `new (x++)()` *)
            begin
-             let layout = Js_layout_generator.expression (E.new_ (E.increment ~prefix:false x)) in
+             let layout =
+               Js_layout_generator.expression
+                 (E.new_ (E.increment ~prefix:false x) ~args:(E.arg_list []))
+             in
              assert_layout
                ~ctxt
                L.(
@@ -463,35 +473,41 @@ let tests =
                         atom "new";
                         pretty_space;
                         wrap_in_parens (loc (fused [loc (id "x"); atom "++"]));
-                        group [atom "("; atom ")"];
+                        loc (group [atom "("; atom ")"]);
                       ]))
                layout;
              assert_output ~ctxt "new(x++)()" layout;
              assert_output ~ctxt ~pretty:true "new (x++)()" layout;
 
-             let update = E.new_ (E.increment ~prefix:false id80) in
+             let update = E.new_ (E.increment ~prefix:false id80) ~args:(E.arg_list []) in
              assert_expression ~ctxt ("new(" ^ x80 ^ "++)()") update;
              assert_expression ~ctxt ~pretty:true ("new (" ^ x80 ^ "++)()") update
            end;
 
            (* `new (x())()` *)
-           let call = E.new_ (E.call x) in
+           let call = E.new_ (E.call x) ~args:(E.arg_list []) in
            assert_expression ~ctxt "new(x())()" call;
 
            (* `new x.y()` *)
-           let member = E.new_ (E.member_expression (E.member x ~property:"y")) in
+           let member =
+             E.new_ (E.member_expression (E.member x ~property:"y")) ~args:(E.arg_list [])
+           in
            assert_expression ~ctxt "new x.y()" member;
 
            (* `new (x.y())()` *)
-           let member_call = E.new_ (E.call (E.member_expression (E.member x ~property:"y"))) in
+           let member_call =
+             E.new_ (E.call (E.member_expression (E.member x ~property:"y"))) ~args:(E.arg_list [])
+           in
            assert_expression ~ctxt "new(x.y())()" member_call;
 
            (* `new (x().y)()` *)
-           let call_member = E.new_ (E.member_expression (E.member (E.call x) ~property:"y")) in
+           let call_member =
+             E.new_ (E.member_expression (E.member (E.call x) ~property:"y")) ~args:(E.arg_list [])
+           in
            assert_expression ~ctxt "new(x().y)()" call_member;
 
            (* `new (x ? y : z)()` *)
-           let cond = E.new_ (E.conditional x y z) in
+           let cond = E.new_ (E.conditional x y z) ~args:(E.arg_list []) in
            assert_expression ~ctxt "new(x?y:z)()" cond );
          ( "unary_expression_parens" >:: fun ctxt ->
            (* `+(+x)` *)
@@ -523,7 +539,7 @@ let tests =
            assert_expression ~ctxt "+x()" call;
 
            (* `+new x()` *)
-           let new_ = E.unary_plus (E.new_ (E.identifier "x")) in
+           let new_ = E.unary_plus (E.new_ ~args:(E.arg_list []) (E.identifier "x")) in
            assert_expression ~ctxt "+new x()" new_ );
          ( "expression_statement_parens" >:: fun ctxt ->
            let obj = S.expression (E.object_ []) in
@@ -586,28 +602,28 @@ let tests =
          ( "argument_parens" >:: fun ctxt ->
            let f = E.identifier "f" in
            let (x, y, z) = (E.identifier "x", E.identifier "y", E.identifier "z") in
-           let args = [] in
+           let args = E.arg_list [] in
            let call = E.call ~args f in
            assert_expression ~ctxt "f()" call;
 
            let args =
              let seq = E.sequence [x; y] in
-             [E.expression seq]
+             E.arg_list [E.expression seq]
            in
            let call = E.call ~args f in
            assert_expression ~ctxt ~msg:"sequence should be parenthesized" "f((x,y))" call;
 
-           let args = [E.spread (E.sequence [x; y])] in
+           let args = E.arg_list [E.spread (E.sequence [x; y])] in
            let call = E.call ~args f in
            assert_expression ~ctxt ~msg:"sequence should be parenthesized" "f(...(x,y))" call;
 
-           let args = [E.expression (E.conditional x y z)] in
+           let args = E.arg_list [E.expression (E.conditional x y z)] in
            let call = E.call ~args f in
            assert_expression ~ctxt ~msg:"higher-precedence ops don't need parens" "f(x?y:z)" call;
 
            let call =
              let arrow = E.arrow_function () in
-             let args = [E.expression arrow] in
+             let args = E.arg_list [E.expression arrow] in
              E.call ~args f
            in
            assert_expression ~ctxt ~msg:"higher-precedence ops don't need parens" "f(()=>{})" call;
@@ -615,7 +631,7 @@ let tests =
            let args =
              let seq = E.sequence [x; y] in
              let logical = E.logical_or seq z in
-             [E.expression logical]
+             E.arg_list [E.expression logical]
            in
            let call = E.call ~args f in
            assert_expression ~ctxt ~msg:"nested sequence has parens" "f((x,y)||z)" call );

@@ -1021,11 +1021,15 @@ and Expression : sig
     [@@deriving show]
   end
 
+  module ArgList : sig
+    type ('M, 'T) t = 'M * ('M, 'T) expression_or_spread list [@@deriving show]
+  end
+
   module New : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
       targs: ('M, 'T) Expression.CallTypeArgs.t option;
-      arguments: ('M, 'T) expression_or_spread list option;
+      arguments: ('M, 'T) ArgList.t option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
@@ -1035,7 +1039,7 @@ and Expression : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
       targs: ('M, 'T) Expression.CallTypeArgs.t option;
-      arguments: ('M, 'T) expression_or_spread list;
+      arguments: ('M, 'T) ArgList.t;
     }
     [@@deriving show]
   end

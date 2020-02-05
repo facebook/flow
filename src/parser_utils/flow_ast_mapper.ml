@@ -250,8 +250,13 @@ class ['loc] mapper =
       else
         { callee = callee'; targs = targs'; arguments = arguments' }
 
-    method call_arguments (arguments : ('loc, 'loc) Ast.Expression.expression_or_spread list) =
-      ListUtils.ident_map this#expression_or_spread arguments
+    method call_arguments (arg_list : ('loc, 'loc) Ast.Expression.ArgList.t) =
+      let (loc, arguments) = arg_list in
+      let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
+      if arguments == arguments' then
+        arg_list
+      else
+        (loc, arguments')
 
     method optional_call loc (expr : ('loc, 'loc) Ast.Expression.OptionalCall.t) =
       let open Ast.Expression.OptionalCall in

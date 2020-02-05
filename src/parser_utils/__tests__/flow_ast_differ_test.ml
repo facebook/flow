@@ -414,16 +414,17 @@ class insert_second_cjsimport_mapper =
                               (Flow_ast_utils.ident_of_source (loc, "require")) );
                         targs = None;
                         arguments =
-                          [
-                            Ast.Expression.Expression
-                              ( loc,
-                                Ast.Expression.Literal
-                                  {
-                                    value = Ast.Literal.String "baz";
-                                    raw = "\"baz\"";
-                                    comments = Flow_ast_utils.mk_comments_opt ();
-                                  } );
-                          ];
+                          ( loc,
+                            [
+                              Ast.Expression.Expression
+                                ( loc,
+                                  Ast.Expression.Literal
+                                    {
+                                      value = Ast.Literal.String "baz";
+                                      raw = "\"baz\"";
+                                      comments = Flow_ast_utils.mk_comments_opt ();
+                                    } );
+                            ] );
                       } );
                 directive = None;
               } )
@@ -458,16 +459,17 @@ class add_body_mapper =
                           );
                         targs = None;
                         arguments =
-                          [
-                            Ast.Expression.Expression
-                              ( loc,
-                                Ast.Expression.Literal
-                                  {
-                                    value = Ast.Literal.String "baz";
-                                    raw = "\"baz\"";
-                                    comments = Flow_ast_utils.mk_comments_opt ();
-                                  } );
-                          ];
+                          ( loc,
+                            [
+                              Ast.Expression.Expression
+                                ( loc,
+                                  Ast.Expression.Literal
+                                    {
+                                      value = Ast.Literal.String "baz";
+                                      raw = "\"baz\"";
+                                      comments = Flow_ast_utils.mk_comments_opt ();
+                                    } );
+                            ] );
                       } );
                 directive = None;
               } )

@@ -24,7 +24,7 @@ let rec is_require ~is_legit_require expr =
       Call
         {
           Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
-          arguments = Expression ((source_loc, _), _) :: _;
+          arguments = (_, Expression ((source_loc, _), _) :: _);
           _;
         } )
     when is_legit_require source_loc ->
@@ -189,10 +189,11 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
             {
               Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
               arguments =
-                [
-                  Expression
-                    ((source_loc, _), Literal Flow_ast.Literal.{ value = String module_name; _ });
-                ];
+                ( _,
+                  [
+                    Expression
+                      ((source_loc, _), Literal Flow_ast.Literal.{ value = String module_name; _ });
+                  ] );
               _;
             })
         when this#covers_target loc && is_legit_require source_loc ->

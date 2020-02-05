@@ -633,7 +633,7 @@ module Expression
     let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
     let optional = last_token env = Some T_PLING_PERIOD in
     let arguments ?targs env =
-      let (args_loc, arguments) = arguments env in
+      let (args_loc, arguments) = with_loc arguments env in
       let loc = Loc.btwn start_loc args_loc in
       let call = { Expression.Call.callee = as_expression env left; targs; arguments } in
       let call =
@@ -721,7 +721,7 @@ module Expression
           in
           let arguments =
             match Peek.token env with
-            | T_LPAREN -> Some (snd (arguments env))
+            | T_LPAREN -> Some (arguments env)
             | _ -> None
           in
           let trailing = Peek.comments env in

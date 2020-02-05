@@ -3680,35 +3680,37 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let (lhs_t, arguments) =
         match (targs, arguments) with
         | ( None,
-            [
-              Expression
-                ( ( source_loc,
-                    Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String module_name; _ }
-                  ) as lit_exp );
-            ] ) ->
+            ( args_loc,
+              [
+                Expression
+                  ( ( source_loc,
+                      Ast.Expression.Literal
+                        { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp );
+              ] ) ) ->
           ( Import_export.require cx (source_loc, module_name) loc,
-            [Expression (expression cx lit_exp)] )
+            (args_loc, [Expression (expression cx lit_exp)]) )
         | ( None,
-            [
-              Expression
-                ( ( source_loc,
-                    TemplateLiteral
-                      {
-                        TemplateLiteral.quasis =
-                          [
-                            ( _,
-                              {
-                                TemplateLiteral.Element.value =
-                                  { TemplateLiteral.Element.cooked = module_name; _ };
-                                _;
-                              } );
-                          ];
-                        expressions = [];
-                      } ) as lit_exp );
-            ] ) ->
+            ( args_loc,
+              [
+                Expression
+                  ( ( source_loc,
+                      TemplateLiteral
+                        {
+                          TemplateLiteral.quasis =
+                            [
+                              ( _,
+                                {
+                                  TemplateLiteral.Element.value =
+                                    { TemplateLiteral.Element.cooked = module_name; _ };
+                                  _;
+                                } );
+                            ];
+                          expressions = [];
+                        } ) as lit_exp );
+              ] ) ) ->
           ( Import_export.require cx (source_loc, module_name) loc,
-            [Expression (expression cx lit_exp)] )
-        | (Some _, _) ->
+            (args_loc, [Expression (expression cx lit_exp)]) )
+        | (Some _, arguments) ->
           ignore (arg_list cx arguments);
           Flow.add_output
             cx
@@ -3721,7 +3723,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   expected_arity = 0;
                 });
           (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
-        | (None, _) ->
+        | (None, arguments) ->
           ignore (arg_list cx arguments);
           let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
           if not ignore_non_literals then
@@ -3755,10 +3757,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let (lhs_t, arguments) =
         match (targs, arguments) with
         | ( None,
-            [
-              Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
-              Expression callback_expr;
-            ] ) ->
+            ( args_loc,
+              [
+                Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
+                Expression callback_expr;
+              ] ) ) ->
           (*
            * From a static perspective (and as long as side-effects aren't
            * considered in Flow), a requireLazy call can be viewed as an immediate
@@ -3799,8 +3802,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
           ( NullT.at loc |> with_trust bogus_trust,
-            [Expression (expression cx elems_exp); Expression callback_ast] )
-        | (Some _, _) ->
+            (args_loc, [Expression (expression cx elems_exp); Expression callback_ast]) )
+        | (Some _, arguments) ->
           ignore (arg_list cx arguments);
           Flow.add_output
             cx
@@ -3813,7 +3816,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   expected_arity = 0;
                 });
           (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
-        | _ ->
+        | (None, arguments) ->
           ignore (arg_list cx arguments);
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
           (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
@@ -3883,7 +3886,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx super_loc in
       let (targts, targs) = convert_call_targs_opt cx targs in
-      let (argts, argument_asts) = arg_list cx arguments in
+      let (argts, arguments_ast) = arg_list cx arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
@@ -3923,13 +3926,13 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                         property = Member.PropertyIdentifier ((ploc, prop_t), id);
                       } );
                 targs;
-                arguments = argument_asts;
+                arguments = arguments_ast;
               } ),
           None,
           None )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
-      let (argts, argument_asts) = arg_list cx arguments in
+      let (argts, arguments_ast) = arg_list cx arguments in
       let reason = mk_reason (RFunctionCall RSuper) loc in
       (* switch back env entries for this and super from undefined *)
       define_internal cx reason "this";
@@ -3958,7 +3961,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       in
       Some
         ( ( (loc, lhs_t),
-            call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
+            call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = arguments_ast }
           ),
           None,
           None )
@@ -3978,20 +3981,21 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             in other ways, and if not, restricting it to this pattern. *)
       let arguments =
         match (targs, arguments) with
-        | (None, []) ->
+        | (None, (args_loc, [])) ->
           (* invariant() is treated like a throw *)
           Env.reset_current_activation loc;
           Abnormal.save Abnormal.Throw;
           Abnormal.throw_expr_control_flow_exception
             loc
             ( (loc, VoidT.at loc |> with_trust bogus_trust),
-              Ast.Expression.Call { Call.callee; targs; arguments = [] } )
+              Ast.Expression.Call { Call.callee; targs; arguments = (args_loc, []) } )
             Abnormal.Throw
         | ( None,
-            Expression
-              ( (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }) as
-              lit_exp )
-            :: arguments ) ->
+            ( args_loc,
+              Expression
+                ( (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ })
+                as lit_exp )
+              :: arguments ) ) ->
           (* invariant(false, ...) is treated like a throw *)
           let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
           Env.reset_current_activation loc;
@@ -4001,9 +4005,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             loc
             ( (loc, VoidT.at loc |> with_trust bogus_trust),
               Ast.Expression.Call
-                { Call.callee; targs; arguments = Expression lit_exp :: arguments } )
+                { Call.callee; targs; arguments = (args_loc, Expression lit_exp :: arguments) } )
             Abnormal.Throw
-        | (None, Expression cond :: arguments) ->
+        | (None, (args_loc, Expression cond :: arguments)) ->
           let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
           let ((((_, cond_t), _) as cond), preds, _, xtypes) =
             predicates_of_condition ~cond:OtherTest cx cond
@@ -4011,12 +4015,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let _ = Env.refine_with_preds cx loc preds xtypes in
           let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
           Flow.flow cx (cond_t, InvariantT reason);
-          Expression cond :: arguments
-        | (_, Spread _ :: _) ->
+          (args_loc, Expression cond :: arguments)
+        | (_, ((_, Spread _ :: _) as arguments)) ->
           ignore (arg_list cx arguments);
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
           Tast_utils.error_mapper#arg_list arguments
-        | (Some _, _) ->
+        | (Some _, arguments) ->
           ignore (arg_list cx arguments);
           Flow.add_output
             cx
@@ -4670,8 +4674,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let eval_args_and_expr preds =
             in_env preds (fun () ->
                 let (((_, elem_t), _) as expr) = expression cx expr in
-                let (argts, argument_asts) = arg_list cx arguments in
-                ((argts, elem_t), (argument_asts, expr)))
+                let (argts, arguments_ast) = arg_list cx arguments in
+                ((argts, elem_t), (arguments_ast, expr)))
           in
           let this_reason = mk_expression_reason callee in
           let ( filtered_out,
@@ -4771,7 +4775,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let (((_, t), _) as res) = expression ?cond cx ex in
       (t, None, res, None, None))
 
-and arg_list cx arguments = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+and arg_list cx (args_loc, arguments) =
+  let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
+  (argts, (args_loc, arg_asts))
 
 and subscript ~cond cx ex =
   let (_, _, ast, _, _) = optional_chain ~cond ~is_existence_check:false cx ex in
@@ -4795,7 +4801,7 @@ and predicated_call_expression cx loc call =
 and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; arguments } =
   let (targts, targ_asts) = convert_call_targs_opt cx targs in
   let args =
-    arguments
+    snd arguments
     |> Base.List.map ~f:(function
            | Ast.Expression.Expression e -> e
            | _ -> Utils_js.assert_false "No spreads should reach here")
@@ -4816,15 +4822,14 @@ and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; argu
          })
   in
   let t = func_call cx reason ~use_op f targts (Base.List.map ~f:(fun e -> Arg e) argts) in
+  let arguments_ast =
+    (fst arguments, Base.List.map ~f:(fun e -> Ast.Expression.Expression e) arg_asts)
+  in
   ( f,
     argks,
     argts,
     t,
-    {
-      Ast.Expression.Call.callee = callee_ast;
-      targs = targ_asts;
-      arguments = Base.List.map ~f:(fun e -> Ast.Expression.Expression e) arg_asts;
-    } )
+    { Ast.Expression.Call.callee = callee_ast; targs = targ_asts; arguments = arguments_ast } )
 
 (* We assume that constructor functions return void
    and constructions return objects.
@@ -6785,7 +6790,7 @@ and predicates_of_condition cx ~cond e =
                       (prop_loc, ({ Ast.Identifier.name = "isArray"; comments = _ } as id));
                 } );
           targs;
-          arguments = [Expression arg];
+          arguments = (args_loc, [Expression arg]);
         } ) ->
     Option.iter targs ~f:(fun _ ->
         Flow.add_output
@@ -6819,7 +6824,7 @@ and predicates_of_condition cx ~cond e =
             {
               Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
               targs = None;
-              arguments = [Expression arg];
+              arguments = (args_loc, [Expression arg]);
             } ),
         ArrP )
     in
@@ -6879,7 +6884,7 @@ and predicates_of_condition cx ~cond e =
       | Spread _ -> true
       | _ -> false
     in
-    if List.exists is_spread arguments then
+    if List.exists is_spread (snd arguments) then
       empty_result (expression cx e)
     else
       let (fun_t, keys, arg_ts, ret_t, call_ast) = predicated_call_expression cx loc call in
@@ -6948,15 +6953,16 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
          })
   in
   match (m, targs, args) with
-  | ("create", None, [Expression e]) ->
+  | ("create", None, (args_loc, [Expression e])) ->
     let (((_, e_t), _) as e_ast) = expression cx e in
     let proto =
       let reason = mk_reason RPrototype (fst e) in
       Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
     in
-    (Obj_type.mk_with_proto cx reason proto, None, [Expression e_ast])
-  | ("create", None, [Expression e; Expression (obj_loc, Object { Object.properties; comments })])
-    ->
+    (Obj_type.mk_with_proto cx reason proto, None, (args_loc, [Expression e_ast]))
+  | ( "create",
+      None,
+      (args_loc, [Expression e; Expression (obj_loc, Object { Object.properties; comments })]) ) ->
     let (((_, e_t), _) as e_ast) = expression cx e in
     let proto =
       let reason = mk_reason RPrototype (fst e) in
@@ -6995,12 +7001,13 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     in
     ( Obj_type.mk_with_proto cx reason ~props proto,
       None,
-      [
-        Expression e_ast;
-        (* TODO(vijayramamurthy) construct object type *)
-        Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments });
-      ] )
-  | (("getOwnPropertyNames" | "keys"), None, [Expression e]) ->
+      ( args_loc,
+        [
+          Expression e_ast;
+          (* TODO(vijayramamurthy) construct object type *)
+          Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments });
+        ] ) )
+  | (("getOwnPropertyNames" | "keys"), None, (args_loc, [Expression e])) ->
     let arr_reason = mk_reason RArrayType loc in
     let (((_, o), _) as e_ast) = expression cx e in
     ( DefT
@@ -7017,15 +7024,16 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
                      Flow.flow cx (o, GetKeysT (keys_reason, UseT (use_op, tvar)))),
                  None )) ),
       None,
-      [Expression e_ast] )
+      (args_loc, [Expression e_ast]) )
   | ( "defineProperty",
       (None | Some (_, [Ast.Expression.CallTypeArg.Explicit _])),
-      [
-        Expression e;
-        Expression
-          ((ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as key);
-        Expression config;
-      ] ) ->
+      ( args_loc,
+        [
+          Expression e;
+          Expression
+            ((ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as key);
+          Expression config;
+        ] ) ) ->
     let (ty, targs) =
       match targs with
       | None -> (Tvar.mk cx reason, None)
@@ -7046,10 +7054,10 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     Flow.flow
       cx
       (o, SetPropT (use_op, reason, Named (prop_reason, x), Assign, Normal, ty, Some prop_t));
-    (o, targs, [Expression e_ast; Expression key_ast; Expression config_ast])
+    (o, targs, (args_loc, [Expression e_ast; Expression key_ast; Expression config_ast]))
   | ( "defineProperties",
       None,
-      [Expression e; Expression (obj_loc, Object { Object.properties; comments })] ) ->
+      (args_loc, [Expression e; Expression (obj_loc, Object { Object.properties; comments })]) ) ->
     let (((_, o), _) as e_ast) = expression cx e in
     let (pmap, properties) = prop_map_of_object cx properties in
     let propdesc_type = Flow.get_builtin cx "PropertyDescriptor" reason in
@@ -7077,14 +7085,17 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
                (o, SetPropT (use_op, reason, Named (reason, x), Assign, Normal, tvar, None)));
     ( o,
       None,
-      [
-        Expression e_ast;
-        (* TODO(vijayramamurthy) construct object type *)
-        Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments });
-      ] )
+      ( args_loc,
+        [
+          Expression e_ast;
+          (* TODO(vijayramamurthy) construct object type *)
+          Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments });
+        ] ) )
   (* Freezing an object literal is supported since there's no way it could
      have been mutated elsewhere *)
-  | ("freeze", ((None | Some (_, [_])) as targs), [Expression ((arg_loc, Object _) as e)]) ->
+  | ( "freeze",
+      ((None | Some (_, [_])) as targs),
+      (args_loc, [Expression ((arg_loc, Object _) as e)]) ) ->
     let targs =
       Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
     in
@@ -7101,7 +7112,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
            (Option.map ~f:(snd %> fst) targs)
            [Arg arg_t]),
       Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
-      [Expression e_ast] )
+      (args_loc, [Expression e_ast]) )
   | ( ("create" | "getOwnPropertyNames" | "keys" | "defineProperty" | "defineProperties" | "freeze"),
       Some (targs_loc, targs),
       _ ) ->
@@ -7954,10 +7965,12 @@ and post_assignment_havoc ~private_ name exp orig_t t =
 
 and mk_initial_arguments_reason =
   let open Ast.Expression in
-  function
-  | [] -> []
-  | Expression x :: args -> mk_expression_reason x :: mk_initial_arguments_reason args
-  | Spread _ :: _ -> []
+  let rec helper = function
+    | [] -> []
+    | Expression x :: args -> mk_expression_reason x :: helper args
+    | Spread _ :: _ -> []
+  in
+  (fun (_args_loc, args) -> helper args)
 
 and warn_or_ignore_optional_chaining optional cx loc =
   if optional then

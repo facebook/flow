@@ -88,7 +88,7 @@ class special_caser
               Call
                 {
                   Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
-                  arguments = Expression ((source_loc, _), _) :: _;
+                  arguments = (_, Expression ((source_loc, _), _) :: _);
                   _;
                 } )
         when is_legit_require source_loc && this#covers_target id_loc ->

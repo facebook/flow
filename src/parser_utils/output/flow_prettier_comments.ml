@@ -277,7 +277,7 @@ and get_children_nodes_function { Ast.Function.body; _ } =
   | Ast.Function.BodyBlock (_, { Ast.Statement.Block.body }) -> body
   | Ast.Function.BodyExpression expr -> get_children_nodes_expr expr
 
-and get_children_nodes_arg_list arguments =
+and get_children_nodes_arg_list (_loc, arguments) =
   List.fold_left (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos) [] arguments
 
 and get_children_nodes_expression_or_spread eos =

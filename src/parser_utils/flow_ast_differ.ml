@@ -1340,8 +1340,10 @@ let program
     let (_, t_args2) = pi2 in
     diff_and_recurse_no_trivial call_type_arg t_args1 t_args2
   and call_args
-      (args1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread list)
-      (args2 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread list) : node change list option =
+      (list1 : (Loc.t, Loc.t) Ast.Expression.ArgList.t)
+      (list2 : (Loc.t, Loc.t) Ast.Expression.ArgList.t) : node change list option =
+    let (_, args1) = list1 in
+    let (_, args2) = list2 in
     diff_and_recurse_no_trivial expression_or_spread args1 args2
   and expression_or_spread
       (expr1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread)

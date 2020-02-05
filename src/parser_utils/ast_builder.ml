@@ -322,12 +322,20 @@ module Expressions = struct
 
   let array ?comments elements = (Loc.none, Array { Array.elements; comments })
 
-  let call_node ?targs ?(args = []) callee = { Call.callee; targs; arguments = args }
+  let arg_list ?(loc = Loc.none) args : (Loc.t, 'a) ArgList.t = (loc, args)
 
-  let call ?(args = []) callee = (Loc.none, Call (call_node ~args callee))
+  let call_node ?targs ?args callee =
+    let arguments =
+      match args with
+      | Some args -> args
+      | None -> arg_list []
+    in
+    { Call.callee; targs; arguments }
 
-  let optional_call ~optional ?(args = []) callee =
-    (Loc.none, OptionalCall { OptionalCall.call = call_node ~args callee; optional })
+  let call ?args callee = (Loc.none, Call (call_node ?args callee))
+
+  let optional_call ~optional ?args callee =
+    (Loc.none, OptionalCall { OptionalCall.call = call_node ?args callee; optional })
 
   let function_ ?(loc = Loc.none) ?(async = false) ?(generator = false) ?params ?id ?body () =
     let fn = Functions.make ~async ~generator ?params ~id ?body () in
@@ -424,7 +432,7 @@ module Expressions = struct
   let optional_member_expression ~optional expr =
     (Loc.none, OptionalMember { OptionalMember.member = expr; optional })
 
-  let new_ ?comments ?targs ?(args = Some []) callee =
+  let new_ ?comments ?targs ?args callee =
     (Loc.none, New { New.callee; targs; arguments = args; comments })
 
   let sequence exprs = (Loc.none, Sequence { Sequence.expressions = exprs })

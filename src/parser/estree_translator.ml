@@ -660,7 +660,10 @@ with type t = Impl.t = struct
           ("typeAnnotation", hint type_annotation annot);
           ("optional", bool optional);
         ]
-    and arg_list arguments = array_of_list expression_or_spread arguments
+    and arg_list (_loc, arguments) =
+      (* ESTree does not have a unique node for argument lists, so there's nowhere to
+         include the loc. *)
+      array_of_list expression_or_spread arguments
     and case (loc, { Statement.Switch.Case.test; consequent }) =
       node
         "SwitchCase"

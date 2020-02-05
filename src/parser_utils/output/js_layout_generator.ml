@@ -1017,7 +1017,7 @@ and call ?(optional = false) ~precedence ~ctxt call_node =
     TODO: This is FB only, find generic way to add logic *)
   | ( (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "__d"; comments = _ })),
       None,
-      [a; b; c; d] ) ->
+      (_, [a; b; c; d]) ) ->
     let lparen =
       if optional then
         ".?("
@@ -2333,14 +2333,16 @@ and type_parameter (loc, params) =
         [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_param params)]
     )
 
-and call_args ?(lparen = "(") arguments =
-  group
-    [
-      new_list
-        ~wrap:(Atom lparen, Atom ")")
-        ~sep:(Atom ",")
-        (Base.List.map ~f:expression_or_spread arguments);
-    ]
+and call_args ?(lparen = "(") (loc, arguments) =
+  source_location_with_comments
+    ( loc,
+      group
+        [
+          new_list
+            ~wrap:(Atom lparen, Atom ")")
+            ~sep:(Atom ",")
+            (Base.List.map ~f:expression_or_spread arguments);
+        ] )
 
 and call_type_args (loc, args) =
   source_location_with_comments

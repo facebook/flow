@@ -803,16 +803,17 @@ module T = struct
                     (Flow_ast_utils.ident_of_source (approx_loc decl_loc, "require")) );
               targs = None;
               arguments =
-                [
-                  Ast.Expression.Expression
-                    ( loc,
-                      Ast.Expression.Literal
-                        {
-                          Ast.Literal.value = Ast.Literal.String x;
-                          raw = x;
-                          comments = Flow_ast_utils.mk_comments_opt ();
-                        } );
-                ];
+                ( approx_loc decl_loc,
+                  [
+                    Ast.Expression.Expression
+                      ( loc,
+                        Ast.Expression.Literal
+                          {
+                            Ast.Literal.value = Ast.Literal.String x;
+                            raw = x;
+                            comments = Flow_ast_utils.mk_comments_opt ();
+                          } );
+                  ] );
             } )
       in
       let declaration =
@@ -1111,7 +1112,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                         (_, { Ast.Identifier.name = "freeze"; comments = _ });
                   } );
             targs = None;
-            arguments = [Expression (loc, Object stuff)];
+            arguments = (_, [Expression (loc, Object stuff)]);
           } ) ->
       let open Ast.Expression.Object in
       let { properties; comments = _ } = stuff in
@@ -1126,7 +1127,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             Ast.Expression.Call.callee =
               (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
             targs = None;
-            arguments = [Expression (loc, Object stuff)];
+            arguments = (_, [Expression (loc, Object stuff)]);
           } ) ->
       let open Ast.Expression.Object in
       let { properties; comments = _ } = stuff in

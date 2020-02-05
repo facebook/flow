@@ -122,9 +122,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Update x -> Update (this#update_expression x)
           | Yield x -> Yield (this#yield x) )
 
-    method arg_list (args : ('M, 'T) Ast.Expression.expression_or_spread list)
-        : ('N, 'U) Ast.Expression.expression_or_spread list =
-      Base.List.map ~f:this#expression_or_spread args
+    method arg_list ((annot, args) : ('M, 'T) Ast.Expression.ArgList.t)
+        : ('N, 'U) Ast.Expression.ArgList.t =
+      (this#on_loc_annot annot, Base.List.map ~f:this#expression_or_spread args)
 
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
       let open Ast.Expression in

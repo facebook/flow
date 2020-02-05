@@ -417,7 +417,7 @@ module Eval (Env : EvalEnv) = struct
                         (_, { Ast.Identifier.name = "freeze"; comments = _ });
                   } );
             targs = None;
-            arguments = [Expression ((_, Object _) as expr)];
+            arguments = (_, [Expression ((_, Object _) as expr)]);
           } ) ->
       literal_expr tps expr
     | ( _,
@@ -426,7 +426,7 @@ module Eval (Env : EvalEnv) = struct
             Ast.Expression.Call.callee =
               (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
             targs = None;
-            arguments = [Expression ((_, Object _) as expr)];
+            arguments = (_, [Expression ((_, Object _) as expr)]);
           } )
       when Env.facebook_keyMirror ->
       literal_expr tps expr

@@ -965,29 +965,30 @@ struct
           this#visit_requires_with_bindings call_loc bindings;
           match (callee, arguments) with
           | ( (_, Identifier (loc, { Ast.Identifier.name = "require"; comments = _ })),
-              [
-                Expression
-                  ( source_loc,
-                    ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
-                    | TemplateLiteral
-                        {
-                          TemplateLiteral.quasis =
-                            [
-                              ( _,
-                                {
-                                  TemplateLiteral.Element.value =
-                                    { TemplateLiteral.Element.cooked = name; _ };
-                                  _;
-                                } );
-                            ];
-                          _;
-                        } ) );
-              ] ) ->
+              ( _,
+                [
+                  Expression
+                    ( source_loc,
+                      ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
+                      | TemplateLiteral
+                          {
+                            TemplateLiteral.quasis =
+                              [
+                                ( _,
+                                  {
+                                    TemplateLiteral.Element.value =
+                                      { TemplateLiteral.Element.cooked = name; _ };
+                                    _;
+                                  } );
+                              ];
+                            _;
+                          } ) );
+                ] ) ) ->
             if not (Scope_api.is_local_use scope_info loc) then
               this#add_require
                 (Require { source = (source_loc, name); require_loc = call_loc; bindings })
           | ( (_, Identifier (loc, { Ast.Identifier.name = "requireLazy"; comments = _ })),
-              [Expression (_, Array { Array.elements; comments = _ }); Expression _] ) ->
+              (_, [Expression (_, Array { Array.elements; comments = _ }); Expression _]) ) ->
             let element = function
               | Some
                   (Expression

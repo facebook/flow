@@ -970,8 +970,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
     in
     let args =
       match arguments with
-      | [] -> "()"
-      | _ :: _ -> "(...)"
+      | (_loc, []) -> "()"
+      | (_loc, _ :: _) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee ^ targs ^ args
   | Class _ -> "class { ... }"
@@ -1015,8 +1015,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
     let args =
       match arguments with
       | None -> ""
-      | Some [] -> "()"
-      | Some (_ :: _) -> "(...)"
+      | Some (_loc, []) -> "()"
+      | Some (_loc, _ :: _) -> "(...)"
     in
     do_wrap ("new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args)
   | Object _ -> "{...}"
@@ -1029,8 +1029,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
     in
     let arg_string =
       match arguments with
-      | [] -> "()"
-      | _ -> "(...)"
+      | (_loc, []) -> "()"
+      | (_loc, _) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee
     ^ ( if optional then
