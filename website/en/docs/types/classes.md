@@ -124,3 +124,17 @@ class MyClass<A, B, C> {
 
 var val: MyClass<number, boolean, string> = new MyClass(1, true, 'three');
 ```
+
+## Classes in annotations<a class="toc" id="toc-classes-in-annotations" href="#toc-classes-in-annotations"></a>
+
+When you use the name of your class in an annotation, it means an _instance_ of your class:
+
+```js
+//@flow
+class MyClass {}
+(MyClass: MyClass); // Error
+(new MyClass(): MyClass); // Ok
+```
+
+See [here](../utilities/#toc-class) for details on `Class<T>`, which allows you
+to refer to the type of the class in an annotation.
