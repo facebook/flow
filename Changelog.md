@@ -1,3 +1,15 @@
+### 0.118.0
+
+New Features:
+* Autocomplete for nullable objects will now suggest completions with optional chaining syntax
+* Added a new lint, `unsafe-addition`, which warns if either operand of an addition is `null` or `void`
+
+Breaking change:
+* The output of `flow autocomplete --json` no longer includes location information. This might affect some IDE integrations which have not yet updated to Flow's LSP server. The LSP integration is unaffected.
+
+Misc:
+* Added the `dir` field to the `Document` libdef (Thanks, @lukeapage!)
+
 ### 0.117.1
 
 * Improved timeouts related to Watchman that could cause the server to fail to start if Watchman is slow to respond. Added a `file_watcher_timeout` .flowconfig option and `--file-watcher-timeout` argument to `flow start` and `flow server`, which defaults to 120 seconds.
