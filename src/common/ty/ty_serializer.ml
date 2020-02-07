@@ -20,11 +20,11 @@ let opt f t =
 let id_from_string x = Flow_ast_utils.ident_of_source (Loc.none, x)
 
 let id_from_symbol x =
-  let { name; anonymous; _ } = x in
-  if anonymous then
+  let { sym_name; sym_anonymous; _ } = x in
+  if sym_anonymous then
     Error (Utils_js.spf "Cannot output anonymous elements.")
   else
-    Ok (id_from_string name)
+    Ok (id_from_string sym_name)
 
 let mk_generic x targs = { T.Generic.id = T.Generic.Identifier.Unqualified x; targs }
 

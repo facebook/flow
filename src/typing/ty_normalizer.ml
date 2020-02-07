@@ -530,31 +530,31 @@ end = struct
   let mk_tparam ?bound ?(pol = Ty.Neutral) ?default name =
     Ty.{ tp_name = name; tp_bound = bound; tp_polarity = pol; tp_default = default }
 
-  let symbol_from_loc env def_loc name =
-    File_key.(
-      let symbol_source = ALoc.source def_loc in
-      let provenance =
-        match symbol_source with
-        | Some (LibFile def_source) ->
-          let current_source = Env.(env.genv.file) in
-          if File_key.to_string current_source = def_source then
-            Ty.Local
-          else
-            Ty.Library { Ty.imported_as = ALocMap.find_opt def_loc env.Env.imported_names }
-        | Some (SourceFile def_source) ->
-          let current_source = Env.(env.genv.file) in
-          if File_key.to_string current_source = def_source then
-            Ty.Local
-          else
-            Ty.Remote { Ty.imported_as = ALocMap.find_opt def_loc env.Env.imported_names }
-        | Some (JsonFile _)
-        | Some (ResourceFile _) ->
+  let symbol_from_loc env sym_def_loc sym_name =
+    let open File_key in
+    let symbol_source = ALoc.source sym_def_loc in
+    let sym_provenance =
+      match symbol_source with
+      | Some (LibFile def_source) ->
+        let current_source = Env.(env.genv.file) in
+        if File_key.to_string current_source = def_source then
           Ty.Local
-        | Some Builtins -> Ty.Builtin
-        | None -> Ty.Local
-      in
-      let anonymous = name = "<<anonymous class>>" in
-      { Ty.provenance; name; anonymous; def_loc })
+        else
+          Ty.Library { Ty.imported_as = ALocMap.find_opt sym_def_loc env.Env.imported_names }
+      | Some (SourceFile def_source) ->
+        let current_source = Env.(env.genv.file) in
+        if File_key.to_string current_source = def_source then
+          Ty.Local
+        else
+          Ty.Remote { Ty.imported_as = ALocMap.find_opt sym_def_loc env.Env.imported_names }
+      | Some (JsonFile _)
+      | Some (ResourceFile _) ->
+        Ty.Local
+      | Some Builtins -> Ty.Builtin
+      | None -> Ty.Local
+    in
+    let sym_anonymous = sym_name = "<<anonymous class>>" in
+    { Ty.sym_provenance; sym_name; sym_anonymous; sym_def_loc }
 
   (* TODO due to repositioninig `reason_loc` may not point to the actual
      location where `name` was defined. *)
@@ -887,8 +887,8 @@ end = struct
     | T.WeakContext -> Ty.WeakContext
 
   and bound_t ~env reason name =
-    let { Ty.def_loc; name; _ } = symbol_from_reason env reason name in
-    return (Ty.Bound (def_loc, name))
+    let { Ty.sym_def_loc; sym_name; _ } = symbol_from_reason env reason name in
+    return (Ty.Bound (sym_def_loc, sym_name))
 
   and fun_ty ~env static f fun_type_params =
     let%bind fun_static = type__ ~env static in
@@ -1274,8 +1274,8 @@ end = struct
       in
       let import env r t ps =
         let%bind symbol = import_symbol env r t in
-        let { Ty.name; _ } = symbol in
-        let env = Env.{ env with under_type_alias = Some name } in
+        let { Ty.sym_name; _ } = symbol in
+        let env = Env.{ env with under_type_alias = Some sym_name } in
         let%bind ty = type__ ~env t in
         match ty with
         | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
@@ -1908,13 +1908,13 @@ end = struct
       let imported_names = ALocMap.empty in
       let env = Env.init ~options ~genv ~tparams ~imported_names in
       match%map type__ ~env t with
-      | Ty.TypeAlias { Ty.ta_name = { Ty.def_loc; _ }; _ }
-      | Ty.ClassDecl ({ Ty.def_loc; _ }, _)
-      | Ty.InterfaceDecl ({ Ty.def_loc; _ }, _) ->
-        Some def_loc
-      | Ty.Utility (Ty.Class (Ty.Generic ({ Ty.def_loc; _ }, _, None))) ->
+      | Ty.TypeAlias { Ty.ta_name = { Ty.sym_def_loc; _ }; _ }
+      | Ty.ClassDecl ({ Ty.sym_def_loc; _ }, _)
+      | Ty.InterfaceDecl ({ Ty.sym_def_loc; _ }, _) ->
+        Some sym_def_loc
+      | Ty.Utility (Ty.Class (Ty.Generic ({ Ty.sym_def_loc; _ }, _, None))) ->
         (* This is an acceptable proxy only if the class is not polymorphic *)
-        Some def_loc
+        Some sym_def_loc
       | _ -> None
 
     let normalize_imports ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t =

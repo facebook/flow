@@ -33,6 +33,21 @@ let builtin_value = function
   | FunProtoBind -> "Function.prototype.bind"
   | FunProtoCall -> "Function.prototype.call"
 
+let ctor_of_provenance = function
+  | Local -> "Local"
+  | Remote { imported_as = Some _ } -> "Imported"
+  | Remote { imported_as = None } -> "Remote"
+  | Library { imported_as = Some _ } -> "Library (Imported)"
+  | Library { imported_as = None } -> "Library (Remote)"
+  | Builtin -> "Builtin"
+
+let dump_symbol { sym_provenance; sym_def_loc; sym_name; _ } =
+  Utils_js.spf
+    "%s (%s:%s)"
+    sym_name
+    (ctor_of_provenance sym_provenance)
+    (Reason.string_of_aloc sym_def_loc)
+
 let rec dump_opt (f : 'a -> string) (o : 'a option) =
   match o with
   | Some t -> f t
@@ -166,13 +181,6 @@ and dump_generics ~depth = function
 
 and dump_tvar (RVar i) = spf "T_%d" i
 
-and dump_symbol { provenance; def_loc; name; _ } =
-  spf
-    "(%s, %s) %s"
-    (Ty.debug_string_of_provenance_ctor provenance)
-    (Reason.string_of_aloc def_loc)
-    name
-
 and dump_utility ~depth u =
   let ctor = Ty.string_of_utility_ctor u in
   match Ty.types_of_utility u with
@@ -287,14 +295,17 @@ let json_of_t ~strip_root =
     Hh_json.(
       JSON_Object
         [
-          ("kind", JSON_String (Ty.debug_string_of_provenance_ctor p));
+          ("kind", JSON_String (ctor_of_provenance p));
           ("loc", JSON_String (Reason.string_of_aloc ~strip_root loc));
         ])
   in
-  let json_of_symbol { provenance; def_loc; name; _ } =
+  let json_of_symbol { sym_provenance; sym_def_loc; sym_name; _ } =
     Hh_json.(
       JSON_Object
-        [("provenance", json_of_provenance def_loc provenance); ("name", JSON_String name)])
+        [
+          ("provenance", json_of_provenance sym_def_loc sym_provenance);
+          ("name", JSON_String sym_name);
+        ])
   in
   let rec json_of_t t =
     Hh_json.(

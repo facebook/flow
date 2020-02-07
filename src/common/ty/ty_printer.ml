@@ -120,7 +120,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
   and module_t ~depth sym exports cjs_export =
     let name =
       match sym with
-      | Some { name; _ } -> fuse [space; identifier name]
+      | Some { sym_name = name; _ } -> fuse [space; identifier name]
       | None -> Empty
     in
     let cjs_name = "exports" in
@@ -137,7 +137,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       ]
   and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
-    let ({ name; _ }, _, targs) = g in
+    let ({ sym_name = name; _ }, _, targs) = g in
     let name = identifier name in
     type_reference ~depth name targs
   and type_reference ~depth name targs =
@@ -160,7 +160,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
         else
           Empty );
       ]
-  and type_alias { ta_name = { name; _ }; ta_tparams; ta_type } =
+  and type_alias { ta_name = { sym_name = name; _ }; ta_tparams; ta_type } =
     fuse
       ( [Atom "type"; space; identifier name; option (type_parameter ~depth:0) ta_tparams]
       @ Option.value_map ta_type ~default:[] ~f:(fun t ->
@@ -344,11 +344,11 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Inter _ ->
       wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
-  and class_decl ~depth { name; _ } typeParameters =
+  and class_decl ~depth { sym_name = name; _ } typeParameters =
     fuse [Atom "class"; space; identifier name; option (type_parameter ~depth) typeParameters]
-  and interface_decl ~depth { name; _ } typeParameters =
+  and interface_decl ~depth { sym_name = name; _ } typeParameters =
     fuse [Atom "interface"; space; identifier name; option (type_parameter ~depth) typeParameters]
-  and enum_decl { name; _ } = fuse [Atom "enum"; space; identifier name]
+  and enum_decl { sym_name = name; _ } = fuse [Atom "enum"; space; identifier name]
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in

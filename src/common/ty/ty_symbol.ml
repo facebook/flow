@@ -23,11 +23,12 @@ and provenance =
   | Builtin
 
 and symbol = {
-  provenance: provenance;
-  def_loc: ALoc.t; [@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))]
-  name: string;
-  anonymous: bool;
+  sym_provenance: provenance;
+  sym_def_loc: ALoc.t; [@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))]
+  sym_name: string;
+  sym_anonymous: bool;
 }
 [@@deriving show]
 
-let builtin_symbol name = { provenance = Builtin; def_loc = ALoc.none; name; anonymous = false }
+let builtin_symbol name =
+  { sym_provenance = Builtin; sym_def_loc = ALoc.none; sym_name = name; sym_anonymous = false }

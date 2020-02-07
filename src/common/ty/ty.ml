@@ -583,21 +583,6 @@ let mk_array ~readonly ~literal t =
 
 let named_alias ?ta_tparams ?ta_type name = TypeAlias { ta_name = name; ta_tparams; ta_type }
 
-let debug_string_of_provenance_ctor = function
-  | Local -> "Local"
-  | Remote { imported_as = Some _ } -> "Imported"
-  | Remote { imported_as = None } -> "Remote"
-  | Library { imported_as = Some _ } -> "Library (Imported)"
-  | Library { imported_as = None } -> "Library (Remote)"
-  | Builtin -> "Builtin"
-
-let debug_string_of_symbol { provenance; def_loc; name; _ } =
-  Utils_js.spf
-    "%s (%s:%s)"
-    name
-    (debug_string_of_provenance_ctor provenance)
-    (Reason.string_of_aloc def_loc)
-
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"
   | InterfaceKind -> "interface"

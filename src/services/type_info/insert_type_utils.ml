@@ -69,9 +69,9 @@ class type_validator_visitor =
       | Ty.ClassDecl (symbol, _)
       | Ty.InterfaceDecl (symbol, _)
       | Ty.Module (Some symbol, _) ->
-        let { Ty.anonymous; def_loc; _ } = symbol in
-        if anonymous then (
-          env := Anonymous (ALoc.to_loc_exn def_loc) :: !env;
+        let { Ty.sym_anonymous; sym_def_loc; _ } = symbol in
+        if sym_anonymous then (
+          env := Anonymous (ALoc.to_loc_exn sym_def_loc) :: !env;
           Ty.explicit_any
         ) else
           super#on_t env t
@@ -180,23 +180,23 @@ class patch_up_react_mapper ?(imports_react = false) () =
        * Otherwise, we refer to these names as 'React.NAME'. *)
       | Ty.Generic
           ( ( {
-                Ty.name =
+                Ty.sym_name =
                   ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
                   | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
                   | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name;
-                provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
-                def_loc;
+                sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
+                sym_def_loc;
                 _;
               } as symbol ),
             kind,
             args_opt )
-        when is_react_loc def_loc ->
+        when is_react_loc sym_def_loc ->
         let args_opt = Flow_ast_mapper.map_opt (ListUtils.ident_map (this#on_t loc)) args_opt in
         let symbol =
           if imports_react then
-            { symbol with Ty.name = "React." ^ name }
+            { symbol with Ty.sym_name = "React." ^ name }
           else
-            { symbol with Ty.provenance = Ty.Remote { Ty.imported_as = None } }
+            { symbol with Ty.sym_provenance = Ty.Remote { Ty.imported_as = None } }
         in
         Ty.Generic (symbol, kind, args_opt)
       | _ -> super#on_t loc t
@@ -267,10 +267,20 @@ class stylize_ty_mapper ?(imports_react = false) () =
 let is_point loc = Loc.(loc.start = loc._end)
 
 let temporary_objectlit_symbol =
-  { Ty.provenance = Ty.Builtin; def_loc = ALoc.none; name = "$TEMPORARY$object"; anonymous = false }
+  {
+    Ty.sym_provenance = Ty.Builtin;
+    sym_def_loc = ALoc.none;
+    sym_name = "$TEMPORARY$object";
+    sym_anonymous = false;
+  }
 
 let temporary_arraylit_symbol =
-  { Ty.provenance = Ty.Builtin; def_loc = ALoc.none; name = "$TEMPORARY$array"; anonymous = false }
+  {
+    Ty.sym_provenance = Ty.Builtin;
+    sym_def_loc = ALoc.none;
+    sym_name = "$TEMPORARY$array";
+    sym_anonymous = false;
+  }
 
 module Builtins = struct
   let flowfixme = Ty.Generic (Ty_symbol.builtin_symbol "$FlowFixMe", Ty.TypeAliasKind, None)
