@@ -556,8 +556,8 @@ end = struct
     let sym_anonymous = sym_name = "<<anonymous class>>" in
     { Ty.sym_provenance; sym_name; sym_anonymous; sym_def_loc }
 
-  (* TODO due to repositioninig `reason_loc` may not point to the actual
-     location where `name` was defined. *)
+  (* NOTE Due to repositioning, `reason_loc` may not point to the actual location
+     where `name` was defined. *)
   let symbol_from_reason env reason name =
     let def_loc = Reason.def_aloc_of_reason reason in
     symbol_from_loc env def_loc name
@@ -582,6 +582,43 @@ end = struct
     match (targs, tparams) with
     | (Some targ_lst, Some tparam_lst) -> Some (remove_if_able targ_lst tparam_lst)
     | _ -> targs
+
+  module Reason_utils = struct
+    let local_type_alias_symbol env reason =
+      match desc_of_reason ~unwrap:false reason with
+      | RTypeAlias (name, true, _)
+      | RType name ->
+        return (symbol_from_reason env reason name)
+      | desc ->
+        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+        let msg = "could not extract local type alias name from reason: " ^ desc in
+        terr ~kind:BadTypeAlias ~msg None
+
+    let imported_type_alias_symbol env reason =
+      match desc_of_reason ~unwrap:false reason with
+      | RNamedImportedType (name, _)
+      | RDefaultImportedType (name, _)
+      | RImportStarType name
+      | RImportStarTypeOf name
+      | RImportStar name ->
+        return (symbol_from_reason env reason name)
+      | desc ->
+        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+        let msg = "could not extract imported type alias name from reason: " ^ desc in
+        terr ~kind:BadTypeAlias ~msg None
+
+    let instance_symbol env reason =
+      match desc_of_reason reason with
+      | RType name
+      | RIdentifier name ->
+        (* class or interface declaration *)
+        let symbol = symbol_from_reason env reason name in
+        return symbol
+      | desc ->
+        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+        let msg = "could not extract instance name from reason: " ^ desc in
+        terr ~kind:BadInstanceT ~msg None
+  end
 
   (*************************)
   (* Main transformation   *)
@@ -1071,22 +1108,14 @@ end = struct
 
   and instance_t =
     let to_generic ~env kind r inst =
-      match desc_of_reason ~unwrap:false r with
-      | RType name
-      | RIdentifier name ->
-        (* class or interface declaration *)
-        let symbol = symbol_from_reason env r name in
-        let%map tys = mapM (fun (_, _, t, _) -> type__ ~env t) inst.T.type_args in
-        let targs =
-          match tys with
-          | [] -> None
-          | _ -> Some tys
-        in
-        Ty.Generic (symbol, kind, targs)
-      | r ->
-        let desc = Reason.string_of_desc r in
-        let msg = "could not extract name from reason: " ^ desc in
-        terr ~kind:BadInstanceT ~msg None
+      let%bind symbol = Reason_utils.instance_symbol env r in
+      let%map tys = mapM (fun (_, _, t, _) -> type__ ~env t) inst.T.type_args in
+      let targs =
+        match tys with
+        | [] -> None
+        | _ -> Some tys
+      in
+      Ty.Generic (symbol, kind, targs)
     in
     let to_object ~env member_expansion_info super own_props proto_props =
       let%bind own_ty_props = obj_props ~env own_props None None in
@@ -1254,28 +1283,14 @@ end = struct
        unwieldy as it is used more pervasively. *)
       let local env t ta_tparams =
         let reason = TypeUtil.reason_of_t t in
-        match desc_of_reason ~unwrap:false reason with
-        | RTypeAlias (name, true, _) ->
-          let env = Env.{ env with under_type_alias = Some name } in
-          let%bind ta_type = type__ ~env t in
-          let symbol = symbol_from_reason env reason name in
-          return (Ty.named_alias symbol ?ta_tparams ~ta_type)
-        | _ -> terr ~kind:BadTypeAlias ~msg:"local" (Some t)
-      in
-      let import_symbol env r t =
-        match desc_of_reason ~unwrap:false r with
-        | RNamedImportedType (name, _)
-        | RDefaultImportedType (name, _)
-        | RImportStarType name
-        | RImportStarTypeOf name
-        | RImportStar name ->
-          return (symbol_from_reason env r name)
-        | _ -> terr ~kind:BadTypeAlias ~msg:"import" (Some t)
+        let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
+        let env = Env.{ env with under_type_alias = Some symbol.Ty.sym_name } in
+        let%bind ta_type = type__ ~env t in
+        return (Ty.named_alias symbol ?ta_tparams ~ta_type)
       in
       let import env r t ps =
-        let%bind symbol = import_symbol env r t in
-        let { Ty.sym_name; _ } = symbol in
-        let env = Env.{ env with under_type_alias = Some sym_name } in
+        let%bind symbol = Reason_utils.imported_type_alias_symbol env r in
+        let env = Env.{ env with under_type_alias = Some symbol.Ty.sym_name } in
         let%bind ty = type__ ~env t in
         match ty with
         | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
@@ -1290,7 +1305,6 @@ end = struct
           return ty
         | _ -> return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
       in
-      let import_typeof env r t ps = import env r t ps in
       let opaque env t ps =
         match t with
         | OpaqueT (r, o) -> opaque_type_t ~env r o ps
@@ -1308,7 +1322,7 @@ end = struct
         match kind with
         | TypeAliasKind -> local env t ps
         | ImportClassKind -> class_t ~env t ps
-        | ImportTypeofKind -> import_typeof env r t ps
+        | ImportTypeofKind -> import env r t ps
         | OpaqueKind -> opaque env t ps
         | TypeParamKind -> type_param env r t
         (* The following cases are not common *)
