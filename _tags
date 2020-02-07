@@ -6,6 +6,7 @@ not <src/parser/**>: package(base), package(core_kernel), package(ppx_deriving),
 <hack/third-party/core/result.ml>: warn(-41)
 <hack/utils/*.ml*>: warn(-3-27)
 <src/flowlib/flowlib.ml>: ppx(scripts/ppx_gen_flowlibs.exe --as-ppx -flowlib lib/ -prelude prelude/)
+<src/common/*.ml*>: package(ppx_deriving.show)
 <src/common/ty/*.ml*>: package(visitors.ppx), package(ppx_deriving.show)
 <src/common/utils/*.ml*>: package(ppx_deriving.show)
 <src/typing/polarity/*.ml*>: package(ppx_deriving.show)

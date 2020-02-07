@@ -353,3 +353,14 @@ val code_desc_of_expression : wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> str
  * the same file. Usually `Context.aloc_tables` is a good choice, but if the context is not
  * available, the empty map may be appropriate. *)
 val concretize_equal : ALoc.table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
+
+val pp_virtual_reason_desc :
+  (Format.formatter -> 'loc -> Ppx_deriving_runtime.unit) ->
+  Format.formatter ->
+  'loc virtual_reason_desc ->
+  Ppx_deriving_runtime.unit
+
+val show_virtual_reason_desc :
+  (Format.formatter -> 'loc -> Ppx_deriving_runtime.unit) -> 'loc virtual_reason_desc -> string
+
+val show_reason_desc_function : reason_desc_function -> string

@@ -229,7 +229,7 @@ type 'loc virtual_reason_desc =
   | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
   | RWidenedObjProp of 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
-[@@deriving eq]
+[@@deriving eq, show]
 
 and reason_desc_function =
   | RAsync
@@ -715,7 +715,7 @@ let string_of_reason ?(strip_root = None) r =
   else if desc = "" then
     spos
   else
-    spf "%s:\n%s" spos desc
+    spf "%s: %s" spos desc
 
 let dump_reason ?(strip_root = None) r =
   spf
