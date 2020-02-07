@@ -40,6 +40,10 @@ assert_ok "$FLOW" type-at-pos array.js 19 4 --strip-root --pretty
 printf "array.js:23:4 = "
 assert_ok "$FLOW" type-at-pos array.js 23 4 --strip-root --pretty
 
+# charset.js
+printf "charset.js:3:13 = "
+assert_ok "$FLOW" type-at-pos charset.js 3 13 --strip-root --pretty
+
 # destructuring.js
 printf "destructuring.js:3:6 = "
 assert_ok "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --pretty

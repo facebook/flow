@@ -822,7 +822,7 @@ end = struct
     | DefT (reason, _, EnumT { enum_name; _ }) ->
       let symbol = symbol_from_reason env reason enum_name in
       return (Ty.Generic (symbol, Ty.EnumKind, None))
-    | DefT (_, _, CharSetT _) -> terr ~kind:UnsupportedTypeCtor (Some t)
+    | DefT (_, _, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
 
   and primitive ~env ty reason builtin =
     match Env.get_member_expansion_info env with

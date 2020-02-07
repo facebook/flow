@@ -247,6 +247,7 @@ and dump_t ?(depth = 10) t =
     | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
     | Utility u -> dump_utility ~depth u
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
+    | CharSet s -> spf "CharSet (%s)" s
 
 let dump_binding (v, ty) = Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
 
@@ -289,6 +290,7 @@ let string_of_ctor = function
   | Utility _ -> "Utility"
   | Module _ -> "Module"
   | Mu _ -> "Mu"
+  | CharSet _ -> "CharSet"
 
 let json_of_t ~strip_root =
   let json_of_provenance loc p =
@@ -362,7 +364,8 @@ let json_of_t ~strip_root =
           [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
         | EnumDecl name -> [("name", json_of_symbol name)]
         | Utility u -> json_of_utility u
-        | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)] ))
+        | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
+        | CharSet s -> [("literal", JSON_String s)] ))
   and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt

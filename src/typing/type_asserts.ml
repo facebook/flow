@@ -59,6 +59,7 @@ let check_type_visitor wrap =
         | EnumDecl _
         | Utility _
         | Module _
+        | CharSet _
         | InlineInterface _ ->
           ()
     end)

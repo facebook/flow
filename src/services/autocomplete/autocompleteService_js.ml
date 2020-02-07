@@ -109,7 +109,8 @@ let lsp_completion_of_type =
     | Arr _
     | TypeOf _
     | Utility _
-    | Mu _ ->
+    | Mu _
+    | CharSet _ ->
       Some Lsp.Completion.Variable)
 
 let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
@@ -336,7 +337,8 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | EnumDecl _
   | Utility _
   | Module _
-  | Mu _ ->
+  | Mu _
+  | CharSet _ ->
     (SMap.empty, [])
 
 let members_of_type

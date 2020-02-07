@@ -116,6 +116,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
       Atom (varname i)
+    | CharSet s -> fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes s); Atom ">"]
   and export ~depth (name, t) = fuse [identifier name; Atom ":"; space; type_ ~depth t]
   and module_t ~depth sym exports cjs_export =
     let name =

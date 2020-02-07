@@ -84,6 +84,9 @@ let rec type_ t =
   | EnumDecl s -> enum_decl s
   | Utility s -> utility s
   | InlineInterface i -> inline_interface i
+  | CharSet s ->
+    let id = id_from_string "CharSet" in
+    return (mk_generic_type id (Some (Loc.none, [(Loc.none, T.StringLiteral (str_lit s))])))
   | InterfaceDecl _
   | TypeOf _
   | TypeAlias _

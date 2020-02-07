@@ -42,6 +42,7 @@ type t =
   | Utility of utility
   | Module of symbol option * export_t
   | Mu of int * t
+  | CharSet of string
 
 and tvar = RVar of int [@@unboxed]
 
@@ -393,6 +394,7 @@ class ['A] comparator_ty =
       | Module _ -> 27
       | Mu _ -> 28
       | InlineInterface _ -> 29
+      | CharSet _ -> 30
 
     method tag_of_gen_kind _ =
       function
@@ -561,7 +563,8 @@ let rec mk_exact ty =
   | Arr _
   | Tup _
   | InlineInterface _
-  | EnumDecl _ ->
+  | EnumDecl _
+  | CharSet _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
