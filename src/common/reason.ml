@@ -184,6 +184,7 @@ type 'loc virtual_reason_desc =
   | RImportStarTypeOf of string
   | RImportStar of string
   | RDefaultImportedType of string * string
+  | RAsyncImport
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
@@ -265,8 +266,8 @@ let rec map_desc_locs f = function
     | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
     | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _ | RUntypedModule _
     | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
-    | RDefaultImportedType _ | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
-    | RObjectMapi ) as r ->
+    | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _
+    | ROpaqueType _ | RObjectMapi ) as r ->
     r
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
@@ -652,6 +653,7 @@ let rec string_of_desc = function
   | RImportStar n -> spf "import * as %s" n
   | RCode x -> "`" ^ x ^ "`"
   | RDefaultImportedType (_, m) -> spf "Default import from `%s`" m
+  | RAsyncImport -> "async import"
   | RCustom x -> x
   | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
@@ -1386,6 +1388,7 @@ let classification_of_reason r =
   | RImportStarTypeOf _
   | RImportStar _
   | RDefaultImportedType _
+  | RAsyncImport
   | RCode _
   | RCustom _
   | RExports

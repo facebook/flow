@@ -132,6 +132,7 @@ type 'loc virtual_reason_desc =
   | RImportStarTypeOf of string
   | RImportStar of string
   | RDefaultImportedType of string * string
+  | RAsyncImport
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc

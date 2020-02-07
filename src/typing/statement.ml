@@ -3507,7 +3507,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         let import_reason = mk_reason (RModule module_name) loc in
         Import_export.import_ns cx import_reason (source_loc, module_name)
       in
-      let reason = mk_annot_reason (RCustom "async import") loc in
+      let reason = mk_annot_reason RAsyncImport loc in
       let t = Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t] in
       ( (loc, t),
         Import
