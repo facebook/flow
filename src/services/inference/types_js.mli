@@ -128,3 +128,15 @@ val debug_include_dependencies_and_dependents :
   sig_dependent_files:FilenameSet.t ->
   all_dependent_files:FilenameSet.t ->
   (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t
+
+val include_dependencies_and_dependents :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  unchanged_checked:CheckedSet.t ->
+  input:CheckedSet.t ->
+  implementation_dependency_graph:Utils_js.FilenameGraph.t ->
+  sig_dependency_graph:Utils_js.FilenameGraph.t ->
+  sig_dependent_files:Utils_js.FilenameSet.t ->
+  all_dependent_files:Utils_js.FilenameSet.t ->
+  (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * Utils_js.FilenameSet.t)
+  Lwt.t

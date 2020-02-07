@@ -969,7 +969,11 @@ end = struct
         (List.length unfinished_files);
       (acc, unfinished_files)
     | file :: rest ->
-      let result = Merge_service.check options ~reader file in
+      let result =
+        match Merge_service.check options ~reader file with
+        | (f, Ok (_, acc)) -> (f, Ok acc)
+        | (f, Error e) -> (f, Error e)
+      in
       job_helper ~reader ~options ~start_time ~start_rss (result :: acc) rest
 
   let job ~reader ~options acc files =

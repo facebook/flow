@@ -13,12 +13,20 @@ type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
 type 'a file_keyed_result = File_key.t * 'a unit_result
 
-type acc =
+type error_acc =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
   * Coverage_response.file_coverage FilenameMap.t option
   * float
+
+type type_acc =
+  ( Context.t
+  * File_sig.With_ALoc.t FilenameMap.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.program Utils_js.FilenameMap.t )
+  option
+
+type acc = type_acc * error_acc
 
 type 'a merge_job_results = 'a file_keyed_result list
 
@@ -323,7 +331,7 @@ let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; coverage_map; _ } =
+    let { cx; coverage_map; typed_asts; file_sigs; _ } =
       merge_context_generic
         ~options
         ~reader
@@ -353,13 +361,13 @@ let check_file options ~reader file =
         severity_cover
     in
     let check_time = Unix.gettimeofday () -. start_check_time in
-    (errors, warnings, suppressions, coverage_map, check_time)
+    (Some (cx, file_sigs, typed_asts), (errors, warnings, suppressions, coverage_map, check_time))
   else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
     let coverage = None in
-    (errors, warnings, suppressions, coverage, 0.0)
+    (None, (errors, warnings, suppressions, coverage, 0.0))
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
