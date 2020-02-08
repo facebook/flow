@@ -22,7 +22,7 @@ module.exports = (transformPaths: Array<string>) => {
         // Require the transform path.
         const transform = (require: any)(transformPath);
         // Use the transform to codemod the file.
-        const notSkipped = transform(j, root);
+        const notSkipped = transform(j, root, file);
         // If all of the transforms return true then skipped will be true.
         return skipped && !notSkipped;
       },
