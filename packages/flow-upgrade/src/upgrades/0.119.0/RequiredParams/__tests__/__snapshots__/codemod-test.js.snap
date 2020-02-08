@@ -1,0 +1,270 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`basic-class.js 1`] = `
+"//@flow
+
+class A {
+  fn1(x?: ?string) {}
+
+  fn2 = (x?: ?number) => {};
+
+  constructor(x?: ?number) {
+    this.fn3 = (y: number) => {};
+  }
+
+  static fn4(x?: ?number) {}
+}
+
+function f(x: A) {}
+"
+`;
+
+exports[`basic-functions.js 1`] = `
+"//@flow
+
+function fn1(x?: ?number) { }
+
+function fn2(x: number, y: number) { }
+
+function fn3(x) {}
+
+function fn4(x: number, y) {}
+
+function fn5(x?: ?number, y: string) {}
+
+function fn6(x?: ?number, y?: ?string) {}
+
+function fn7(x?: ?number | ?string) {}
+
+function fn8(x: null | number | string) {}
+
+function fn9(x?: void | number | string) {}
+
+function fn10(x?: void | number | string | (() => void)) {}
+
+function fn11(x: ((x?: ?string) => void)) {}
+
+function fn12(x: (: (_?: ?string) => void)) {}
+
+const fn13 = (x?: ?string) => {}
+
+function fn14(x?: mixed) {}
+
+function fn15(x?: void) {}
+
+function fn16(x?: any) {}
+
+function fn17(x?: ?(() => null)) {}
+
+var fn18: { (): string } = (x) => \\"hi\\"
+
+function fn19(x: { x: number } & { y: string }) {}
+
+function fn20(x: (: (_?: ?string) => void)) {}
+
+function fn21(x?: any) {}
+
+function fn22(x: number, ...rest: string[]) {}
+
+function fn23(x?: ?number, ...rest: string[]) {}
+
+function fn24(f: (x: number, ...rest: string[]) => null) {}
+
+function fn25(f: (x?: ?number, ...rest: string[]) => null) {}
+"
+`;
+
+exports[`function-types.js 1`] = `
+"// @flow
+
+type Fn = (_?: ?number) => string;
+
+declare function fn2(x?: ?number): null;
+
+type T1 = ?number;
+type T2 = number;
+
+declare function fn3(x?: T1): null;
+
+declare function fn4(x: T2): null;
+
+declare function fn5<T>(x?: T): null;
+
+declare function fn6<T: number>(x: T): null;
+
+declare function fn7<T: T1>(x?: T): null;
+
+declare function fn8<T: T2>(x: T): null;
+
+declare var fn9: (x: number) => void;
+
+declare var fn10: (x?: ?number) => void;
+
+declare var fn11: <T>(x?: T) => void;
+
+declare var fn12: <T: T1>(x?: T) => void;
+
+declare var fn13: <T: T2>(x: T) => void;
+
+declare function fn14(x: number, ...rest: string[]): void;
+
+declare function fn15(x?: ?number, ...rest: string[]): void;
+
+type O1 = {
+  (number): number,
+};
+
+type O2 = {
+  (_?: ?number): number,
+};
+
+type O3<T: number> = {
+  <T1: T>(T1): number,
+};
+
+type O4<T: ?number> = {
+  <T1: T>(_?: T1): number,
+};
+
+type O5<T> = {
+  <T1: number>(T1): number,
+};
+
+type O6<T> = {
+  <T1: number>(_?: T): number,
+};
+"
+`;
+
+exports[`generic-class.js 1`] = `
+"class A1<T> {
+  fn1<T>(a?: T) {};
+  static fn2<T>(a?: T) {};
+  fn3<T: number>(a: T) {};
+  fn4<T: number | void>(a?: T) {};
+  fn5<T: number>(a?: ?T) {};
+  fn6<T: ?number>(a?: T) {};
+  static fn7<T>(a: T, number) {};
+  constructor(x?: T) {}
+}
+
+class A2<T: string | number> {
+  fn1(a: T) {}
+  static fn2(a: T) {}
+  fn3(a: T) {}
+  fn4(a: T) {}
+  fn5(a?: ?T) {}
+  fn6(a: T) {}
+  static fn7(a: T, number) {}
+  constructor(x: T) {}
+}
+
+class A3<T: ?number> {
+  fn1(a?: T) {}
+  static fn2(a?: T) {}
+  fn3(a?: T) {}
+  fn4(a?: T) {}
+  fn5(a?: ?T) {}
+  fn6(a?: T) {}
+  static fn7(a: T, number) {}
+  constructor(x?: T) {}
+}
+
+type T1 = ?number;
+class A4<T: T1> {
+  fn1 = (a?: T) => {};
+  static fn2 = (a?: T) => {};
+  static fn3<T2>(a?: T2) {}
+  static fn4<T3: number>(a: T3) {}
+  static fn5<T: number>(a: T) {}
+  constructor(x?: T) {}
+}"
+`;
+
+exports[`generic-functions.js 1`] = `
+"// @flow
+
+function fn1<T>(x?: T) { }
+
+function fn2<T: number>(x: T) { }
+
+function fn3<T: ?number>(x?: T) { }
+
+function fn4<T: number>(x?: ?T) { }
+
+type T1 = number | ?string;
+type T2 = number | string;
+type T3 = T1 | string;
+
+function fn5(x?: T1) {}
+
+function fn6(x: T2) {}
+
+function fn7(x?: T3) {}
+
+function fn8<T: T1>(x?: T) {}
+
+function fn() {
+  // Local overwrite
+  type T1 = number;
+  function fn9<T: T1>(x: T) {}
+  function fn10<T: T3>(x?: T) {}
+}
+
+function fn11(x: $ReadOnlyArray<?string>) {}
+
+function fn12(x: $NonMaybeType<?string>) {}"
+`;
+
+exports[`interfaces-types.js 1`] = `
+"//@flow
+
+interface A {
+  (_?: ?string): void;
+
+  fn1(x?: ?string): void;
+
+  fn2: (y?: ?number) => void;
+}
+
+interface B {
+  (string): void;
+
+  fn1(x: string): void;
+
+  fn2: (y: number) => void;
+}
+
+interface C<T> {
+  (_?: T): void;
+
+  fn1(x?: T): void;
+
+  fn2: (y?: T) => void;
+}
+
+interface D<T: number> {
+  (T): void;
+
+  fn1(x: T): void;
+
+  fn2: (y: T) => void;
+}
+
+interface E<T: ?number> {
+  <T1: T>(_?: T1): void;
+
+  fn1<T1: T>(x?: T1): void;
+
+  fn2: <T2: T>(y?: T2) => void;
+}
+
+interface F<T: number> {
+  <T1: T>(T1): void;
+
+  fn1<T1: T>(x: T1): void;
+
+  fn2: <T2: T>(y: T2) => void;
+}
+"
+`;
