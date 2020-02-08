@@ -1,3 +1,4 @@
 {
-  "presets": ["flow", ["env", { "targets": { "node": 6 } }]]
+  "presets": ["@babel/preset-flow", ["@babel/preset-env", { "targets": { "node": 6 } }]],
+  "plugins": ["@babel/plugin-proposal-class-properties"]
 }
