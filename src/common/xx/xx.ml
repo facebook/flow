@@ -9,7 +9,7 @@ type state
 
 type hash = int64
 
-external init : unit -> state = "caml_xx_init"
+external init : (int64[@unboxed]) -> state = "caml_xx_init" "caml_xx_init_unboxed"
 
 external update : state -> string -> unit = "caml_xx_update" [@@noalloc]
 
@@ -21,7 +21,9 @@ external update_int64 : state -> (int64[@unboxed]) -> unit
 
 external digest : state -> (hash[@unboxed]) = "caml_xx_digest" "caml_xx_digest_unboxed" [@@noalloc]
 
-external hash : string -> (hash[@unboxed]) = "caml_xx_hash" "caml_xx_hash_unboxed" [@@noalloc]
+external hash : string -> (int64[@unboxed]) -> (hash[@unboxed])
+  = "caml_xx_hash" "caml_xx_hash_unboxed"
+  [@@noalloc]
 
 (* Unlike Int64.to_string, which returns a decimal string, this returns a hex
  * string which is padded out to the full 16 bytes. *)

@@ -582,7 +582,7 @@ module ContextOptimizer = struct
     object (self)
       inherit [Polarity.t] Type_mapper.t_with_uses as super
 
-      val sig_hash = Xx.init ()
+      val sig_hash = Xx.init 0L
 
       method sig_hash () = Xx.digest sig_hash
 

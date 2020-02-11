@@ -10,7 +10,7 @@ let build_id = ref None
 let get_build_id () =
   match !build_id with
   | None ->
-    let state = Xx.init () in
+    let state = Xx.init 0L in
     Xx.update state (Sys_utils.cat Sys.executable_name);
     let hash = Xx.digest state |> Xx.to_string in
     build_id := Some hash;

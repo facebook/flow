@@ -44,7 +44,7 @@ type resolved_requires = {
 **)
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependents =
-  let state = Xx.init () in
+  let state = Xx.init 0L in
   SMap.iter
     (fun reference modulename ->
       Xx.update state reference;

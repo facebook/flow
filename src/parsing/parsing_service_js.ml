@@ -497,7 +497,7 @@ let do_parse ~parse_options ~info content file =
     Parse_fail (Parse_error err)
 
 let hash_content content =
-  let state = Xx.init () in
+  let state = Xx.init 0L in
   Xx.update state content;
   Xx.digest state
 

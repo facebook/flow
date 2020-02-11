@@ -822,7 +822,7 @@ let rec fold_left_stop_on_error
  * 3. The name of the rollout
  *)
 let calculate_pct rollout_name =
-  let state = Xx.init () in
+  let state = Xx.init 0L in
   Xx.update state (Unix.gethostname ());
   Xx.update_int state (Unix.getuid ());
   Xx.update state rollout_name;
@@ -994,7 +994,7 @@ let is_not_comment =
 let read filename =
   let contents = Sys_utils.cat_no_fail filename in
   let hash =
-    let xx_state = Xx.init () in
+    let xx_state = Xx.init 0L in
     Xx.update xx_state contents;
     Xx.digest xx_state
   in

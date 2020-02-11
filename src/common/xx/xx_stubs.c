@@ -34,11 +34,16 @@ static value alloc_xx_state(XXH64_state_t state) {
   return v;
 }
 
-CAMLexport value caml_xx_init(value unit) {
-  CAMLparam1(unit);
+CAMLexport value caml_xx_init_unboxed(unsigned long long seed) {
+  CAMLparam0();
   XXH64_state_t state;
-  XXH64_reset(&state, 0);
+  XXH64_reset(&state, seed);
   CAMLreturn(alloc_xx_state(state));
+}
+
+CAMLexport value caml_xx_init(value seed) {
+  CAMLparam1(seed);
+  CAMLreturn(caml_xx_init_unboxed(Int64_val(seed)));
 }
 
 CAMLexport value caml_xx_update(value state, value v) {
@@ -70,12 +75,12 @@ CAMLexport value caml_xx_digest(value state) {
   return caml_copy_int64(caml_xx_digest_unboxed(state));
 }
 
-CAMLexport XXH64_hash_t caml_xx_hash_unboxed(value v) {
-  return XXH64(String_val(v), caml_string_length(v), 0);
+CAMLexport XXH64_hash_t caml_xx_hash_unboxed(value v, unsigned long long seed) {
+  return XXH64(String_val(v), caml_string_length(v), seed);
 }
 
-CAMLexport value caml_xx_hash(value v) {
-  return caml_copy_int64(caml_xx_hash_unboxed(v));
+CAMLexport value caml_xx_hash(value v, value seed) {
+  return caml_copy_int64(caml_xx_hash_unboxed(v, Int64_val(seed)));
 }
 
 CAMLexport value caml_xx_to_string_unboxed(XXH64_hash_t hash) {
