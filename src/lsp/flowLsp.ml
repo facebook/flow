@@ -270,6 +270,7 @@ let selectively_omit_errors (request_name : string) (response : lsp_message) =
        *)
       | "textDocument/completion" ->
         Some Completion.(CompletionResult { isIncomplete = false; items = [] })
+      | "textDocument/signatureHelp" -> Some (SignatureHelpResult None)
       (* Like autocomplete requests, users rarely request these explicitly. The IDE sends them when
        * people are simply moving the cursor around. For the same reasons, let's suppress errors here
        * for now. *)
@@ -487,7 +488,7 @@ let do_initialize flowconfig : Initialize.result =
           hoverProvider = true;
           completionProvider =
             Some { resolveProvider = false; completion_triggerCharacters = ["."; " "] };
-          signatureHelpProvider = None;
+          signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
           definitionProvider = true;
           typeDefinitionProvider = false;
           referencesProvider = true;

@@ -1317,6 +1317,7 @@ let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
   let message =
     match id with
     | Some id ->
+      Hh_logger.error "Error: %s\n%s" reason stack;
       let friendly_message =
         "Flow encountered an unexpected error while handling this request. "
         ^ "See the Flow logs for more details."
@@ -1540,6 +1541,51 @@ let handle_persistent_autocomplete_lsp
           Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
         | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
       end)
+
+let handle_persistent_signaturehelp_lsp
+    ~reader:_ ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+  let (file, line, col) =
+    match loc with
+    | Some loc -> loc
+    | None ->
+      (* We must have failed to get the client when we first tried. We could throw here, but this is
+        * a little more defensive. The only danger here is that the file contents may have changed *)
+      Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+  in
+  let fn_content =
+    match file with
+    | File_input.FileContent (fn, content) -> Ok (fn, content)
+    | File_input.FileName fn ->
+      (try Ok (Some fn, Sys_utils.cat fn)
+       with e ->
+         let e = Exception.wrap e in
+         Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
+  in
+  match fn_content with
+  | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
+  | Ok (filename, contents) ->
+    let path =
+      match filename with
+      | Some filename -> filename
+      | None -> "-"
+    in
+    let path = File_key.SourceFile path in
+    let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
+    (match check_contents_result with
+    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+    | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
+      let func_details =
+        let file_sig = File_sig.abstractify_locs file_sig in
+        let cursor_loc = Loc.make path line col in
+        Signature_help.find_signatures ~cx ~file_sig ~typed_ast cursor_loc
+      in
+      (match func_details with
+      | Ok details ->
+        let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
+        let response = ResponseMessage (id, r) in
+        Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+      | Error _ ->
+        mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Failed to normalize type" metadata))
 
 let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
@@ -2095,6 +2141,15 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       mk_parallelizable_persistent
         ~options
         (handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata)
+    | (LspToServer (RequestMessage (id, SignatureHelpRequest params)), metadata) ->
+      (* Grab the file contents immediately in case of any future didChanges *)
+      let loc =
+        Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+            Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
+      in
+      mk_parallelizable_persistent
+        ~options
+        (handle_persistent_signaturehelp_lsp ~reader ~options ~id ~params ~loc ~metadata)
     | (LspToServer (RequestMessage (id, DocumentHighlightRequest params)), metadata) ->
       mk_parallelizable_persistent
         ~options

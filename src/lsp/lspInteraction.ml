@@ -31,6 +31,7 @@ type trigger =
   | Rage
   | Rename
   | ServerConnected
+  | SignatureHelp
   | TypeCoverage
   | UnknownTrigger
 
@@ -95,6 +96,7 @@ let string_of_trigger = function
   | Rage -> "Rage"
   | Rename -> "Rename"
   | ServerConnected -> "ServerConnected"
+  | SignatureHelp -> "SignatureHelp"
   | TypeCoverage -> "TypeCoverage"
   | UnknownTrigger -> "UnknownTrigger"
 
@@ -135,6 +137,7 @@ let source_of_trigger = function
   | Hover
   | Rage
   | Rename
+  | SignatureHelp
   | TypeCoverage ->
     Client
   | PushedErrorsEndOfRecheck _
@@ -273,6 +276,7 @@ let trigger_of_lsp_msg =
     | RequestMessage (_, RageRequest) -> Some Rage
     | RequestMessage (_, RenameRequest _) -> Some Rename
     | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
+    | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
     (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
      * the client *)
     | RequestMessage (_, CompletionItemResolveRequest _)
@@ -299,6 +303,7 @@ let trigger_of_lsp_msg =
     | ResponseMessage (_, DefinitionResult _)
     | ResponseMessage (_, CompletionResult _)
     | ResponseMessage (_, CompletionItemResolveResult _)
+    | ResponseMessage (_, SignatureHelpResult _)
     | ResponseMessage (_, WorkspaceSymbolResult _)
     | ResponseMessage (_, DocumentSymbolResult _)
     | ResponseMessage (_, FindReferencesResult _)

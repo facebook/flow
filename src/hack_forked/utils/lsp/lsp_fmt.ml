@@ -1113,6 +1113,7 @@ let request_name_to_string (request : lsp_request) : string =
   | CodeActionRequest _ -> "textDocument/codeAction"
   | CompletionRequest _ -> "textDocument/completion"
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
+  | SignatureHelpRequest _ -> "textDocument/signatureHelp"
   | DefinitionRequest _ -> "textDocument/definition"
   | TypeDefinitionRequest _ -> "textDocument/typeDefinition"
   | WorkspaceSymbolRequest _ -> "workspace/symbol"
@@ -1139,6 +1140,7 @@ let result_name_to_string (result : lsp_result) : string =
   | CodeActionResult _ -> "textDocument/codeAction"
   | CompletionResult _ -> "textDocument/completion"
   | CompletionItemResolveResult _ -> "completionItem/resolve"
+  | SignatureHelpResult _ -> "textDocument/signatureHelp"
   | DefinitionResult _ -> "textDocument/definition"
   | TypeDefinitionResult _ -> "textDocument/typeDefinition"
   | WorkspaceSymbolResult _ -> "workspace/symbol"
@@ -1213,6 +1215,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/onTypeFormatting" ->
     DocumentOnTypeFormattingRequest (parse_documentOnTypeFormatting params)
   | "textDocument/codeLens" -> DocumentCodeLensRequest (parse_documentCodeLens params)
+  | "textDocument/signatureHelp" -> SignatureHelpRequest (parse_signatureHelp params)
   | "telemetry/rage" -> RageRequest
   | "completionItem/resolve"
   | "window/showMessageRequest"
@@ -1257,6 +1260,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | CodeActionRequest _
   | CompletionRequest _
   | CompletionItemResolveRequest _
+  | SignatureHelpRequest _
   | DefinitionRequest _
   | TypeDefinitionRequest _
   | WorkspaceSymbolRequest _
@@ -1308,6 +1312,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | CodeLensResolveRequest _
     | CompletionRequest _
     | CompletionItemResolveRequest _
+    | SignatureHelpRequest _
     | DefinitionRequest _
     | TypeDefinitionRequest _
     | WorkspaceSymbolRequest _
@@ -1356,6 +1361,7 @@ let print_lsp_response ?include_error_stack_trace (id : lsp_id) (result : lsp_re
     | RageResult r -> print_rage r
     | RenameResult r -> print_documentRename r
     | DocumentCodeLensResult r -> print_documentCodeLens r
+    | SignatureHelpResult r -> print_signatureHelp r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->

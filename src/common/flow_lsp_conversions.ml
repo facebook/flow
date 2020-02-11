@@ -38,6 +38,34 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
     { Lsp.start; end_ })
 
+let flow_signature_help_to_lsp
+    (details : (ServerProt.Response.func_details_result list * int) option) :
+    Lsp.SignatureHelp.result =
+  match details with
+  | None -> None
+  | Some (signatures, active_parameter) ->
+    let open Lsp.SignatureHelp in
+    let signatures =
+      Base.List.fold_left
+        signatures
+        ~f:(fun acc { ServerProt.Response.param_tys; return_ty } ->
+          let params =
+            param_tys
+            |> Base.List.map ~f:(fun { ServerProt.Response.param_name; param_ty } ->
+                   Printf.sprintf "%s: %s" param_name param_ty)
+          in
+          let siginfo_label = Printf.sprintf "(%s): %s" (String.concat ", " params) return_ty in
+          let parameters =
+            Base.List.map
+              ~f:(fun parinfo_label -> { parinfo_label; parinfo_documentation = None })
+              params
+          in
+          let signature = { siginfo_label; siginfo_documentation = None; parameters } in
+          signature :: acc)
+        ~init:[]
+    in
+    Some { signatures; activeSignature = 0; activeParameter = active_parameter }
+
 let flow_completion_to_lsp
     (is_snippet_supported : bool) (item : ServerProt.Response.complete_autocomplete_result) :
     Lsp.Completion.completionItem =

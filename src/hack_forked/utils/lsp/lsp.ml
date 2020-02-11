@@ -1200,6 +1200,7 @@ type lsp_request =
   | CodeActionRequest of CodeActionRequest.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
+  | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
   | FindReferencesRequest of FindReferences.params
@@ -1225,6 +1226,7 @@ type lsp_result =
   | CodeActionResult of CodeAction.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
+  | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
   | FindReferencesResult of FindReferences.result
