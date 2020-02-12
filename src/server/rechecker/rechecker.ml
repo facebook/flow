@@ -97,16 +97,19 @@ let recheck
   Persistent_connection.send_start_recheck env.connections;
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
-  let%lwt (profiling, log_recheck_event, summary_info, env) =
-    Types_js.recheck
-      ~options
-      ~workers
-      ~updates
-      env
-      ~files_to_force
-      ~file_watcher_metadata
-      ~recheck_reasons
-      ~will_be_checked_files
+  let%lwt (profiling, (log_recheck_event, summary_info, env)) =
+    let should_print_summary = Options.should_profile options in
+    Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
+        Types_js.recheck
+          ~profiling
+          ~options
+          ~workers
+          ~updates
+          env
+          ~files_to_force
+          ~file_watcher_metadata
+          ~recheck_reasons
+          ~will_be_checked_files)
   in
   log_recheck_event ~profiling;
   let lazy_stats = get_lazy_stats ~options env in

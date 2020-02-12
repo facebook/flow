@@ -2405,6 +2405,7 @@ let with_transaction f =
   f transaction reader
 
 let recheck
+    ~profiling
     ~options
     ~workers
     ~updates
@@ -2413,23 +2414,21 @@ let recheck
     ~file_watcher_metadata
     ~recheck_reasons
     ~will_be_checked_files =
-  let should_print_summary = Options.should_profile options in
-  let%lwt (profiling, (env, stats, first_internal_error)) =
-    Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
-        SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
-            with_transaction (fun transaction reader ->
-                Recheck.full
-                  ~profiling
-                  ~transaction
-                  ~reader
-                  ~options
-                  ~workers
-                  ~updates
-                  ~env
-                  ~files_to_force
-                  ~file_watcher_metadata
-                  ~recheck_reasons
-                  ~will_be_checked_files)))
+  let%lwt (env, stats, first_internal_error) =
+    SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
+        with_transaction (fun transaction reader ->
+            Recheck.full
+              ~profiling
+              ~transaction
+              ~reader
+              ~options
+              ~workers
+              ~updates
+              ~env
+              ~files_to_force
+              ~file_watcher_metadata
+              ~recheck_reasons
+              ~will_be_checked_files))
   in
   let {
     Recheck.new_or_changed = modified;
@@ -2505,7 +2504,7 @@ let recheck
     ServerStatus.RecheckSummary
       { dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
   in
-  Lwt.return (profiling, log_recheck_event, summary_info, env)
+  Lwt.return (log_recheck_event, summary_info, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -2961,16 +2960,19 @@ let init ~profiling ~workers options =
   else
     let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
     let recheck_reasons = [LspProt.Lazy_init_typecheck] in
-    let%lwt (recheck_profiling, log_recheck_event, _summary_info, env) =
-      recheck
-        ~options
-        ~workers
-        ~updates
-        env
-        ~files_to_force
-        ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
-        ~recheck_reasons
-        ~will_be_checked_files:(ref files_to_force)
+    let%lwt (recheck_profiling, (log_recheck_event, _summary_info, env)) =
+      let should_print_summary = Options.should_profile options in
+      Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
+          recheck
+            ~profiling
+            ~options
+            ~workers
+            ~updates
+            env
+            ~files_to_force
+            ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+            ~recheck_reasons
+            ~will_be_checked_files:(ref files_to_force))
     in
     log_recheck_event ~profiling:recheck_profiling;
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;

@@ -23,6 +23,7 @@ val calc_deps :
 
 (* incremental typecheck entry point *)
 val recheck :
+  profiling:Profiling_js.running ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
@@ -31,11 +32,7 @@ val recheck :
   file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   recheck_reasons:LspProt.recheck_reason list ->
   will_be_checked_files:CheckedSet.t ref ->
-  ( Profiling_js.finished
-  * (profiling:Profiling_js.finished -> unit)
-  * ServerStatus.summary_info
-  * ServerEnv.env )
-  Lwt.t
+  ((profiling:Profiling_js.finished -> unit) * ServerStatus.summary_info * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
 val full_check :
