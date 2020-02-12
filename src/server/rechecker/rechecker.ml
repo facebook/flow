@@ -97,7 +97,7 @@ let recheck
   Persistent_connection.send_start_recheck env.connections;
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
-  let%lwt (profiling, summary, env) =
+  let%lwt (profiling, summary_info, env) =
     Types_js.recheck
       ~options
       ~workers
@@ -123,6 +123,9 @@ let recheck
     ~clients:env.connections
     ~errors_reason
     ~calc_errors_and_warnings;
+
+  let duration = Profiling_js.get_profiling_duration profiling in
+  let summary = ServerStatus.{ duration; info = summary_info } in
 
   MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
   Lwt.return (profiling, env)

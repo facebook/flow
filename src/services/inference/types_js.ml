@@ -2496,21 +2496,15 @@ let recheck
     ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
     ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
 
-  let duration = Profiling_js.get_profiling_duration profiling in
   let all_dependent_file_count = Utils_js.FilenameSet.cardinal all_dependent_files in
   let changed_file_count =
     Utils_js.FilenameSet.cardinal modified + Utils_js.FilenameSet.cardinal deleted
   in
-  let summary =
-    ServerStatus.
-      {
-        duration;
-        info =
-          RecheckSummary
-            { dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle };
-      }
+  let summary_info =
+    ServerStatus.RecheckSummary
+      { dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
   in
-  Lwt.return (profiling, summary, env)
+  Lwt.return (profiling, summary_info, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -2966,7 +2960,7 @@ let init ~profiling ~workers options =
   else
     let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
     let recheck_reasons = [LspProt.Lazy_init_typecheck] in
-    let%lwt (recheck_profiling, _summary, env) =
+    let%lwt (recheck_profiling, _summary_info, env) =
       recheck
         ~options
         ~workers
