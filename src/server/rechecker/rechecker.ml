@@ -100,33 +100,38 @@ let recheck
   let%lwt (profiling, (log_recheck_event, summary_info, env)) =
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
-        Types_js.recheck
-          ~profiling
-          ~options
-          ~workers
-          ~updates
-          env
-          ~files_to_force
-          ~file_watcher_metadata
-          ~recheck_reasons
-          ~will_be_checked_files)
+        let%lwt (log_recheck_event, summary_info, env) =
+          Types_js.recheck
+            ~profiling
+            ~options
+            ~workers
+            ~updates
+            env
+            ~files_to_force
+            ~file_watcher_metadata
+            ~recheck_reasons
+            ~will_be_checked_files
+        in
+        let lazy_stats = get_lazy_stats ~options env in
+        Persistent_connection.send_end_recheck ~lazy_stats env.connections;
+
+        (* We must send "end_recheck" prior to sending errors+warnings so the client *)
+        (* knows that this set of errors+warnings are final ones, not incremental.   *)
+        let calc_errors_and_warnings () =
+          let reader = State_reader.create () in
+          let (errors, warnings, _) =
+            ErrorCollator.get_with_separate_warnings ~reader ~options env
+          in
+          (errors, warnings)
+        in
+        let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
+        Persistent_connection.update_clients
+          ~clients:env.connections
+          ~errors_reason
+          ~calc_errors_and_warnings;
+        Lwt.return (log_recheck_event, summary_info, env))
   in
   log_recheck_event ~profiling;
-  let lazy_stats = get_lazy_stats ~options env in
-  Persistent_connection.send_end_recheck ~lazy_stats env.connections;
-
-  (* We must send "end_recheck" prior to sending errors+warnings so the client *)
-  (* knows that this set of errors+warnings are final ones, not incremental.   *)
-  let calc_errors_and_warnings () =
-    let reader = State_reader.create () in
-    let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
-    (errors, warnings)
-  in
-  let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
-  Persistent_connection.update_clients
-    ~clients:env.connections
-    ~errors_reason
-    ~calc_errors_and_warnings;
 
   let duration = Profiling_js.get_profiling_duration profiling in
   let summary = ServerStatus.{ duration; info = summary_info } in
