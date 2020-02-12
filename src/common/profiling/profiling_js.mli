@@ -19,6 +19,8 @@ val merge : from:finished -> into:running -> unit
 val with_timer_lwt :
   ?should_print:bool -> timer:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 
+val with_timer : ?should_print:bool -> timer:string -> f:(unit -> 'a) -> running -> 'a
+
 val legacy_sample_memory : metric:string -> value:float -> running -> unit
 
 val sample_memory : ?group:string -> metric:string -> value:float -> running -> unit

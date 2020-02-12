@@ -31,6 +31,8 @@ module Timing : sig
   val with_timer_lwt :
     ?should_print:bool -> timer:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 
+  val with_timer : ?should_print:bool -> timer:string -> f:(unit -> 'a) -> running -> 'a
+
   val get_total_wall_duration : finished -> float
 
   val to_json : abridged:bool -> finished -> Hh_json.json
@@ -302,6 +304,17 @@ end = struct
     Lwt.finalize f (fun () ->
         finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
         Lwt.return_unit)
+
+  let with_timer ?(should_print = false) ~timer ~f running =
+    let (parent_timer, running_timer) = prepare_timer ~timer ~running in
+    try
+      let result = f () in
+      finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
+      result
+    with exn ->
+      let exn = Exception.wrap exn in
+      finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
+      Exception.reraise exn
 
   let get_total_wall_duration finished_timer = finished_timer.wall.duration
 
@@ -1095,6 +1108,9 @@ let get_profiling_duration profile = Timing.get_total_wall_duration profile.fini
 
 let with_timer_lwt ?should_print ~timer ~f profile =
   Timing.with_timer_lwt ?should_print ~timer ~f profile.running_timing
+
+let with_timer ?should_print ~timer ~f profile =
+  Timing.with_timer ?should_print ~timer ~f profile.running_timing
 
 let legacy_sample_memory ~metric ~value profile =
   Memory.legacy_sample_memory ~metric ~value profile.running_memory
