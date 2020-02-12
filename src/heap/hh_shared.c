@@ -170,12 +170,12 @@ static int win32_getpagesize(void) {
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
   size_t locals_size_b;
-  size_t hashtbl_size;
   size_t hashtbl_size_b;
   size_t heap_size_b;
+  size_t shared_mem_size_b;
 
-  /* Offset of hashtbl in shared file. */
-  off_t hashtbl_offset;
+  /* Maximum number of hashtable elements */
+  size_t hashtbl_slots;
 
   /* Where the heap started (bottom), offset from hashtbl pointer */
   size_t heap_init;
@@ -291,6 +291,9 @@ typedef struct {
 /* Shared memory metadata */
 static shmem_info_t* info = NULL;
 
+/* Beginning of shared memory */
+static char* shared_mem = NULL;
+
 /* Worker-local storage is cache line aligned. */
 static local_t* locals = NULL;
 
@@ -344,7 +347,7 @@ CAMLprim value hh_hash_used_slots(void) {
 
 CAMLprim value hh_hash_slots(void) {
   CAMLparam0();
-  CAMLreturn(Val_long(info->hashtbl_size));
+  CAMLreturn(Val_long(info->hashtbl_slots));
 }
 
 static void raise_failed_memfd_init(int errcode) {
@@ -445,13 +448,9 @@ void memfd_init(size_t shared_mem_size) {
 
 #ifdef _WIN32
 
-static char *memfd_map(size_t size, off_t offset) {
+static char *memfd_map(size_t size) {
   char *mem = NULL;
-  /* MapViewOfFile separates a QWORD offset into two DWORD arguments, one for
-   * the high bits and one for the low bits. In practice, our offsets will not
-   * exceed a single DWORD. */
-  assert(offset <= 0xFFFFFFFF);
-  mem = MapViewOfFile(memfd, FILE_MAP_ALL_ACCESS, 0, offset, size);
+  mem = MapViewOfFile(memfd, FILE_MAP_ALL_ACCESS, 0, 0, size);
   if (mem == NULL) {
     win32_maperr(GetLastError());
     uerror("MapViewOfFile", Nothing);
@@ -461,14 +460,14 @@ static char *memfd_map(size_t size, off_t offset) {
 
 #else
 
-static char *memfd_map(size_t size, off_t offset) {
+static char *memfd_map(size_t size) {
   char *mem = NULL;
   /* MAP_NORESERVE is because we want a lot more virtual memory than what
    * we are actually going to use.
    */
   int flags = MAP_SHARED | MAP_NORESERVE;
   int prot  = PROT_READ  | PROT_WRITE;
-  mem = (char*)mmap(NULL, size, prot, flags, memfd, offset);
+  mem = (char*)mmap(NULL, size, prot, flags, memfd, 0);
   if(mem == MAP_FAILED) {
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
@@ -526,9 +525,7 @@ static void memfd_reserve(char * mem, size_t sz) {
 #else
 
 static void memfd_reserve(char *mem, size_t sz) {
-  // Translate hashtbl-relative pointer to offset in memfd
-  assert(mem >= (char*)hashtbl);
-  off_t offset = info->hashtbl_offset + (mem - (char*)hashtbl);
+  off_t offset = (off_t)(mem - shared_mem);
   int err;
   do {
     err = posix_fallocate(memfd, offset, sz);
@@ -546,7 +543,7 @@ static void map_info_page(int page_size) {
   // updated by workers, like the heap pointer; and (3) various configuration
   // which is convenient to stick here, like the master process pid.
   assert(page_size >= sizeof(shmem_info_t));
-  info = (shmem_info_t*)memfd_map(page_size, 0);
+  info = (shmem_info_t*)memfd_map(page_size);
 
 #ifdef _WIN32
   // Memory must be reserved on Windows
@@ -560,11 +557,13 @@ static void define_mappings(int page_size) {
   size_t hashtbl_size = info->hashtbl_size_b;
   size_t heap_size = info->heap_size_b;
 
+  shared_mem = memfd_map(info->shared_mem_size_b);
+
   /* Process-local storage */
-  locals = (local_t*)memfd_map(locals_size, page_size);
+  locals = (local_t*)(shared_mem + page_size);
 
   /* Hashtable */
-  hashtbl = (helt_t*)memfd_map(hashtbl_size + heap_size, page_size + locals_size);
+  hashtbl = (helt_t*)(shared_mem + page_size + locals_size);
 
 #ifdef _WIN32
   // Memory must be reserved on Windows. Heap allocations will be reserved
@@ -599,10 +598,9 @@ CAMLprim value hh_shared_init(
    * layout information in the first page of the shared file so that workers can
    * create mappings for the rest of the shared data. */
   size_t num_workers = Long_val(num_workers_val);
-  size_t locals_size_b =
-    ALIGN((1 + num_workers) * sizeof(local_t), page_size);
-  size_t hashtbl_size = 1ul << Long_val(Field(config_val, 1));
-  size_t hashtbl_size_b = hashtbl_size * sizeof(helt_t);
+  size_t locals_size_b = CACHE_ALIGN((1 + num_workers) * sizeof(local_t));
+  size_t hashtbl_slots = 1ul << Long_val(Field(config_val, 1));
+  size_t hashtbl_size_b = CACHE_ALIGN(hashtbl_slots * sizeof(helt_t));
   size_t heap_size_b = Long_val(Field(config_val, 0));
 
   /* The total size of the shared file must have space for the info page, local
@@ -618,10 +616,10 @@ CAMLprim value hh_shared_init(
    * conventient to stick here, like the master process pid. */
   map_info_page(page_size);
   info->locals_size_b = locals_size_b;
-  info->hashtbl_size = hashtbl_size;
   info->hashtbl_size_b = hashtbl_size_b;
   info->heap_size_b = heap_size_b;
-  info->hashtbl_offset = page_size + locals_size_b;
+  info->shared_mem_size_b = shared_mem_size_b;
+  info->hashtbl_slots = hashtbl_slots;
   info->heap_init = hashtbl_size_b;
   info->heap_max = info->heap_init + heap_size_b;
   info->log_level = Long_val(Field(config_val, 2));
@@ -778,8 +776,8 @@ CAMLprim value hh_collect(void) {
   assert_master();
 
   // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
-  size_t hashtbl_size = info->hashtbl_size;
-  for (size_t i = 0; i < hashtbl_size; i++) {
+  size_t hashtbl_slots = info->hashtbl_slots;
+  for (size_t i = 0; i < hashtbl_slots; i++) {
     // Skip empty slots
     if (hashtbl[i].addr == NULL_ADDR) { continue; }
 
@@ -1005,9 +1003,9 @@ static void raise_hash_table_full(void) {
 value hh_add(value key, value data) {
   CAMLparam2(key, data);
   check_should_exit();
-  size_t hashtbl_size = info->hashtbl_size;
+  size_t hashtbl_slots = info->hashtbl_slots;
   uint64_t hash = get_hash(key);
-  unsigned int slot = hash & (hashtbl_size - 1);
+  unsigned int slot = hash & (hashtbl_slots - 1);
   unsigned int init_slot = slot;
   while(1) {
     uint64_t slot_hash = hashtbl[slot].hash;
@@ -1016,7 +1014,7 @@ value hh_add(value key, value data) {
       CAMLreturn(write_at(slot, data));
     }
 
-    if (info->hcounter >= hashtbl_size) {
+    if (info->hcounter >= hashtbl_slots) {
       // We're never going to find a spot
       raise_hash_table_full();
     }
@@ -1026,7 +1024,7 @@ value hh_add(value key, value data) {
       if(__sync_bool_compare_and_swap(&(hashtbl[slot].hash), 0, hash)) {
         uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
         // Sanity check
-        assert(size < hashtbl_size);
+        assert(size < hashtbl_slots);
         CAMLreturn(write_at(slot, data));
       }
 
@@ -1048,7 +1046,7 @@ value hh_add(value key, value data) {
       }
     }
 
-    slot = (slot + 1) & (hashtbl_size - 1);
+    slot = (slot + 1) & (hashtbl_slots - 1);
     if (slot == init_slot) {
       // We're never going to find a spot
       raise_hash_table_full();
@@ -1062,9 +1060,9 @@ value hh_add(value key, value data) {
  */
 /*****************************************************************************/
 static unsigned int find_slot(value key) {
-  size_t hashtbl_size = info->hashtbl_size;
+  size_t hashtbl_slots = info->hashtbl_slots;
   uint64_t hash = get_hash(key);
-  unsigned int slot = hash & (hashtbl_size - 1);
+  unsigned int slot = hash & (hashtbl_slots - 1);
   unsigned int init_slot = slot;
   while(1) {
     if(hashtbl[slot].hash == hash) {
@@ -1073,7 +1071,7 @@ static unsigned int find_slot(value key) {
     if(hashtbl[slot].hash == 0) {
       return slot;
     }
-    slot = (slot + 1) & (hashtbl_size - 1);
+    slot = (slot + 1) & (hashtbl_slots - 1);
 
     if (slot == init_slot) {
       raise_hash_table_full();
