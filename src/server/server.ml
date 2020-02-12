@@ -257,7 +257,7 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
           let reader = State_reader.create () in
           let%lwt (errors, warnings, suppressed_errors) =
             Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling ~f:(fun () ->
-                Lwt.return (ErrorCollator.get ~reader ~options env))
+                Lwt.return (ErrorCollator.get ~profiling ~reader ~options env))
           in
           let collated_errors = (errors, warnings, suppressed_errors) in
           let%lwt print_errors =

@@ -125,7 +125,7 @@ let regenerate ~reader =
         in
         { collated_errorset; collated_warning_map; collated_suppressed_errors }))
 
-let get_with_separate_warnings ~reader ~options env =
+let get_with_separate_warnings_no_profiling ~reader ~options env =
   ServerEnv.(
     let collated_errors =
       match !(env.collated_errors) with
@@ -138,11 +138,14 @@ let get_with_separate_warnings ~reader ~options env =
     let { collated_errorset; collated_warning_map; collated_suppressed_errors } = collated_errors in
     (collated_errorset, collated_warning_map, collated_suppressed_errors))
 
+let get_with_separate_warnings ~profiling:_ ~reader ~options env =
+  get_with_separate_warnings_no_profiling ~reader ~options env
+
 (* combine error maps into a single error set and a single warning set *)
-let get ~reader ~options env =
+let get ~profiling:_ ~reader ~options env =
   Errors.(
     let (errors, warning_map, suppressed_errors) =
-      get_with_separate_warnings ~reader ~options env
+      get_with_separate_warnings_no_profiling ~reader ~options env
     in
     let warnings =
       FilenameMap.fold

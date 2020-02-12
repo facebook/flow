@@ -120,7 +120,7 @@ let recheck
         let calc_errors_and_warnings () =
           let reader = State_reader.create () in
           let (errors, warnings, _) =
-            ErrorCollator.get_with_separate_warnings ~reader ~options env
+            ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
           in
           (errors, warnings)
         in

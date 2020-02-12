@@ -65,7 +65,7 @@ let fold_json_of_parse_errors parse_errors acc =
     :: acc
   | [] -> acc
 
-let get_status ~reader genv env client_root =
+let get_status ~profiling ~reader genv env client_root =
   let options = genv.ServerEnv.options in
   let server_root = Options.root options in
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
@@ -75,7 +75,9 @@ let get_status ~reader genv env client_root =
         { ServerProt.Response.server = server_root; ServerProt.Response.client = client_root }
     else
       (* collate errors by origin *)
-      let (errors, warnings, suppressed_errors) = ErrorCollator.get ~reader ~options env in
+      let (errors, warnings, suppressed_errors) =
+        ErrorCollator.get ~profiling ~reader ~options env
+      in
       let warnings =
         if Options.should_include_warnings options then
           warnings
@@ -302,7 +304,7 @@ let autofix_exports ~options ~env ~profiling ~input =
       in
       Lwt.return result)
 
-let collect_rage ~options ~reader ~env ~files =
+let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = [] in
   (* options *)
   let data = Printf.sprintf "lazy_mode=%s\n" Options.(lazy_mode options |> lazy_mode_to_string) in
@@ -337,7 +339,7 @@ let collect_rage ~options ~reader ~env ~files =
   let data = "DEPENDENCIES:\n" ^ dependencies in
   let items = ("env.dependencies", data) :: items in
   (* env: errors *)
-  let (errors, warnings, _) = ErrorCollator.get ~reader ~options env in
+  let (errors, warnings, _) = ErrorCollator.get ~profiling ~reader ~options env in
   let json =
     Errors.Json_output.json_of_errors_with_context
       ~strip_root:None
@@ -830,8 +832,8 @@ let handle_insert_type
   in
   Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
 
-let handle_rage ~reader ~options ~files ~profiling:_ ~env =
-  let items = collect_rage ~options ~reader ~env ~files:(Some files) in
+let handle_rage ~reader ~options ~files ~profiling ~env =
+  let items = collect_rage ~profiling ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
 
 let handle_refactor
@@ -851,8 +853,8 @@ let handle_refactor
     in
     Lwt.return (env, REFACTOR result, None))
 
-let handle_status ~reader ~genv ~client_root ~profiling:_ ~env =
-  let (status_response, lazy_stats) = get_status ~reader genv env client_root in
+let handle_status ~reader ~genv ~client_root ~profiling ~env =
+  let (status_response, lazy_stats) = get_status ~profiling ~reader genv env client_root in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
 let handle_suggest ~options ~input ~profiling ~env =
@@ -1238,7 +1240,8 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
     ServerMonitorListenerState.push_new_workload workload;
     Lwt.return_unit
 
-let did_open ~reader genv env client (files : (string * string) Nel.t) : ServerEnv.env Lwt.t =
+let did_open ~profiling ~reader genv env client (files : (string * string) Nel.t) :
+    ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   match Options.lazy_mode options with
   | Options.LAZY_MODE_IDE ->
@@ -1255,7 +1258,9 @@ let did_open ~reader genv env client (files : (string * string) Nel.t) : ServerE
     let%lwt (env, triggered_recheck) = Lazy_mode_utils.focus_and_check genv env filenames in
     ( if not triggered_recheck then
       (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-      let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
+      let (errors, warnings, _) =
+        ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
+      in
       Persistent_connection.send_errors_if_subscribed
         ~client
         ~errors_reason:LspProt.Env_change
@@ -1267,7 +1272,9 @@ let did_open ~reader genv env client (files : (string * string) Nel.t) : ServerE
   | Options.NON_LAZY_MODE ->
     (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
      * a new file is opened is to send the errors to the client *)
-    let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
+    let (errors, warnings, _) =
+      ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
+    in
     Persistent_connection.send_errors_if_subscribed
       ~client
       ~errors_reason:LspProt.Env_change
@@ -1275,9 +1282,11 @@ let did_open ~reader genv env client (files : (string * string) Nel.t) : ServerE
       ~warnings;
     Lwt.return env
 
-let did_close ~reader genv env client : ServerEnv.env Lwt.t =
+let did_close ~profiling ~reader genv env client : ServerEnv.env Lwt.t =
   let options = genv.options in
-  let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
+  let (errors, warnings, _) =
+    ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
+  in
   Persistent_connection.send_errors_if_subscribed
     ~client
     ~errors_reason:LspProt.Env_change
@@ -1337,9 +1346,9 @@ let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let metadata = with_error metadata ~reason:"cancelled" in
   Lwt.return (ret, LspProt.LspFromServer (Some response), metadata)
 
-let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling:_ ~env =
+let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling ~env =
   let (current_errors, current_warnings, _) =
-    ErrorCollator.get_with_separate_warnings ~reader ~options env
+    ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
   in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (env, LspProt.LspFromServer None, metadata)
@@ -1358,11 +1367,11 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
     pending := SMap.empty;
     ret
   in
-  let handle_persistent_did_open_notification ~reader ~genv ~metadata ~client ~profiling:_ ~env =
+  let handle_persistent_did_open_notification ~reader ~genv ~metadata ~client ~profiling ~env =
     let%lwt env =
       match get_and_clear_did_open_files () with
       | [] -> Lwt.return env
-      | first :: rest -> did_open ~reader genv env client (first, rest)
+      | first :: rest -> did_open ~profiling ~reader genv env client (first, rest)
     in
     Lwt.return (env, LspProt.LspFromServer None, metadata)
   in
@@ -1383,8 +1392,8 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   Lwt.return ((), LspProt.LspFromServer None, metadata)
 
-let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling:_ ~env =
-  let%lwt env = did_close ~reader genv env client in
+let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling ~env =
+  let%lwt env = did_close ~profiling ~reader genv env client in
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
@@ -1825,10 +1834,10 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   | Ok None -> edits_to_response []
   | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
 
-let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
+let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env =
   let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
   let items =
-    collect_rage ~options:genv.ServerEnv.options ~reader ~env ~files:None
+    collect_rage ~profiling ~options:genv.ServerEnv.options ~reader ~env ~files:None
     |> List.map (fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
   in
   let response = ResponseMessage (id, RageResult items) in

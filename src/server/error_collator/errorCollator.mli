@@ -6,6 +6,7 @@
  *)
 
 val get_with_separate_warnings :
+  profiling:Profiling_js.running ->
   reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
@@ -14,6 +15,7 @@ val get_with_separate_warnings :
   * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
 
 val get :
+  profiling:Profiling_js.running ->
   reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
