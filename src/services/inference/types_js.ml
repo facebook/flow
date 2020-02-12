@@ -2473,28 +2473,29 @@ let recheck
           Some estimated_files_to_init ))
   in
   (* TODO: update log to reflect current terminology **)
-  FlowEventLogger.recheck
-    ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
-    ~modified
-    ~deleted
-    ~to_merge
-    ~to_check
-    ~sig_dependent_files
-    ~all_dependent_files
-    ~profiling
-    ~merge_skip_count
-    ~check_skip_count
-    ~estimated_time_to_recheck
-    ~estimated_time_to_restart
-    ~estimated_time_to_init
-    ~estimated_time_per_file
-    ~estimated_files_to_recheck
-    ~estimated_files_to_init
-    ~slowest_file
-    ~num_slow_files
-    ~first_internal_error
-    ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
-    ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
+  let log_recheck_event : profiling:Profiling_js.finished -> unit =
+    FlowEventLogger.recheck
+      ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
+      ~modified
+      ~deleted
+      ~to_merge
+      ~to_check
+      ~sig_dependent_files
+      ~all_dependent_files
+      ~merge_skip_count
+      ~check_skip_count
+      ~estimated_time_to_recheck
+      ~estimated_time_to_restart
+      ~estimated_time_to_init
+      ~estimated_time_per_file
+      ~estimated_files_to_recheck
+      ~estimated_files_to_init
+      ~slowest_file
+      ~num_slow_files
+      ~first_internal_error
+      ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
+      ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase
+  in
 
   let all_dependent_file_count = Utils_js.FilenameSet.cardinal all_dependent_files in
   let changed_file_count =
@@ -2504,7 +2505,7 @@ let recheck
     ServerStatus.RecheckSummary
       { dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
   in
-  Lwt.return (profiling, summary_info, env)
+  Lwt.return (profiling, log_recheck_event, summary_info, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -2960,7 +2961,7 @@ let init ~profiling ~workers options =
   else
     let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
     let recheck_reasons = [LspProt.Lazy_init_typecheck] in
-    let%lwt (recheck_profiling, _summary_info, env) =
+    let%lwt (recheck_profiling, log_recheck_event, _summary_info, env) =
       recheck
         ~options
         ~workers
@@ -2971,6 +2972,7 @@ let init ~profiling ~workers options =
         ~recheck_reasons
         ~will_be_checked_files:(ref files_to_force)
     in
+    log_recheck_event ~profiling:recheck_profiling;
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
     Lwt.return (true, env, last_estimates)
 
