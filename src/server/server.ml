@@ -255,9 +255,8 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
             Lwt.async sample_processor_info );
           let%lwt (env, _, first_internal_error) = program_init profiling in
           let reader = State_reader.create () in
-          let%lwt (errors, warnings, suppressed_errors) =
-            Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling ~f:(fun () ->
-                Lwt.return (ErrorCollator.get ~profiling ~reader ~options env))
+          let (errors, warnings, suppressed_errors) =
+            ErrorCollator.get ~profiling ~reader ~options env
           in
           let collated_errors = (errors, warnings, suppressed_errors) in
           let%lwt print_errors =

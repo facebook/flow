@@ -138,19 +138,21 @@ let get_with_separate_warnings_no_profiling ~reader ~options env =
     let { collated_errorset; collated_warning_map; collated_suppressed_errors } = collated_errors in
     (collated_errorset, collated_warning_map, collated_suppressed_errors))
 
-let get_with_separate_warnings ~profiling:_ ~reader ~options env =
-  get_with_separate_warnings_no_profiling ~reader ~options env
+let get_with_separate_warnings ~profiling ~reader ~options env =
+  Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
+      get_with_separate_warnings_no_profiling ~reader ~options env)
 
 (* combine error maps into a single error set and a single warning set *)
-let get ~profiling:_ ~reader ~options env =
-  Errors.(
-    let (errors, warning_map, suppressed_errors) =
-      get_with_separate_warnings_no_profiling ~reader ~options env
-    in
-    let warnings =
-      FilenameMap.fold
-        (fun _key -> ConcreteLocPrintableErrorSet.union)
-        warning_map
-        ConcreteLocPrintableErrorSet.empty
-    in
-    (errors, warnings, suppressed_errors))
+let get ~profiling ~reader ~options env =
+  Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
+      Errors.(
+        let (errors, warning_map, suppressed_errors) =
+          get_with_separate_warnings_no_profiling ~reader ~options env
+        in
+        let warnings =
+          FilenameMap.fold
+            (fun _key -> ConcreteLocPrintableErrorSet.union)
+            warning_map
+            ConcreteLocPrintableErrorSet.empty
+        in
+        (errors, warnings, suppressed_errors)))
