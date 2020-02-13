@@ -530,31 +530,32 @@ let include_dependencies_and_dependents
         Sort_js.topsort ~roots:preliminary_to_merge (FilenameGraph.to_map sig_dependency_graph)
       in
       let dependencies =
+        let add_filename_to_set set filename = FilenameSet.add filename set in
+        let add_nel_to_filenameset set nel = Nel.fold_left add_filename_to_set set nel in
+        let add_list_to_filenameset set nel = List.fold_left add_filename_to_set set nel in
+        let is_in_unchanged_checked filename = CheckedSet.mem filename unchanged_checked in
+        let all_in_unchanged_checked filenames = Nel.for_all is_in_unchanged_checked filenames in
         List.fold_left
           (fun dependencies component ->
             let dependencies =
-              if
-                Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
-                (* If some member of the component is not unchanged, then keep the component *)
-              then
-                Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
-              (* If every element is unchanged, drop the component *)
-              else
+              if all_in_unchanged_checked component then
+                (* If every element is unchanged, drop the component *)
                 dependencies
+              else
+                (* If some member of the component is not unchanged, then keep the component *)
+                add_nel_to_filenameset dependencies component
             in
             let dependencies =
               let (dependents, non_dependents) =
                 List.partition (fun fn -> FilenameSet.mem fn sig_dependent_files)
                 @@ Nel.to_list component
               in
-              if
-                dependents <> [] && non_dependents <> []
+              if dependents <> [] && non_dependents <> [] then
                 (* If some member of the component is a dependent and others are not, then keep the
-           others *)
-              then
-                List.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies non_dependents
-              (* If every element is a dependent or if every element is not, drop the component *)
+                 * others *)
+                add_list_to_filenameset dependencies non_dependents
               else
+                (* If every element is a dependent or if every element is not, drop the component *)
                 dependencies
             in
             dependencies)
