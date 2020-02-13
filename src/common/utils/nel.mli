@@ -19,6 +19,8 @@ val cons : 'a -> 'a t -> 'a t
 
 val mem : equal:('a -> 'a -> bool) -> 'a -> 'a t -> bool
 
+val for_all : ('a -> bool) -> 'a t -> bool
+
 val exists : ('a -> bool) -> 'a t -> bool
 
 val iter : ('a -> unit) -> 'a t -> unit

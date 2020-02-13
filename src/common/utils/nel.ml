@@ -25,6 +25,8 @@ let cons x0 (x1, xs) = (x0, x1 :: xs)
 
 let mem ~equal y (x1, xs) = equal x1 y || Base.List.mem ~equal xs y
 
+let for_all f (x1, xs) = f x1 && Base.List.for_all ~f xs
+
 let exists f (x1, xs) = f x1 || Base.List.exists ~f xs
 
 let iter f (x, xs) =

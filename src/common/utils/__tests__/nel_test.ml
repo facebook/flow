@@ -30,6 +30,17 @@ let tests =
          ( "mem" >:: fun ctxt ->
            assert_equal ~ctxt (Nel.mem ~equal:( = ) 4 lst) true;
            assert_equal ~ctxt (Nel.mem ~equal:( = ) 5 lst) false );
+         ( "for_all" >:: fun ctxt ->
+           (* matches one element *)
+           assert_equal ~ctxt (Nel.for_all (( = ) 4) lst) false;
+           (* matches no elements *)
+           assert_equal ~ctxt (Nel.for_all (( = ) 10) lst) false;
+           (* matches all elements *)
+           assert_equal ~ctxt (Nel.for_all (fun _ -> true) lst) true;
+           (* matches the singleton element *)
+           assert_equal ~ctxt (Nel.for_all (( = ) 4) (Nel.one 4)) true;
+           (* does not match the singleton element *)
+           assert_equal ~ctxt (Nel.for_all (( = ) 4) (Nel.one 3)) false );
          ( "exists" >:: fun ctxt ->
            assert_equal ~ctxt (Nel.exists (( = ) 4) lst) true;
            assert_equal ~ctxt (Nel.exists (( = ) 5) lst) false );
