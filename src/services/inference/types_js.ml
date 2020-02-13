@@ -2535,164 +2535,199 @@ let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~c
     connections = Persistent_connection.empty;
   }
 
-let init_from_saved_state ~profiling ~workers ~saved_state options =
-  with_transaction @@ fun transaction reader ->
-  let file_options = Options.file_options options in
-  (* We don't want to walk the file system for the checked in files. But we still need to find the
-   * flowlibs *)
-  let (ordered_flowlib_libs, _) = Files.init ~flowlibs_only:true file_options in
-  let {
-    Saved_state.flowconfig_hash = _;
-    parsed_heaps;
-    unparsed_heaps;
-    ordered_non_flowlib_libs;
-    local_errors;
-    warnings;
-    coverage;
-    node_modules_containers;
-  } =
-    saved_state
-  in
-  Files.node_modules_containers := node_modules_containers;
+let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
+  let%lwt (env, libs_ok) =
+    with_transaction @@ fun transaction reader ->
+    let file_options = Options.file_options options in
+    (* We don't want to walk the file system for the checked in files. But we still need to find the
+     * flowlibs *)
+    let (ordered_flowlib_libs, _) = Files.init ~flowlibs_only:true file_options in
+    let {
+      Saved_state.flowconfig_hash = _;
+      parsed_heaps;
+      unparsed_heaps;
+      ordered_non_flowlib_libs;
+      local_errors;
+      warnings;
+      coverage;
+      node_modules_containers;
+    } =
+      saved_state
+    in
+    Files.node_modules_containers := node_modules_containers;
 
-  Hh_logger.info "Restoring heaps";
-  let%lwt () =
-    with_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
-        let root = Options.root options |> Path.to_string in
-        let%lwt () =
+    Hh_logger.info "Restoring heaps";
+    let%lwt () =
+      with_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+          let root = Options.root options |> Path.to_string in
+          let%lwt () =
+            MultiWorkerLwt.call
+              workers
+              ~job:
+                (List.fold_left (fun () (fn, parsed_file_data) ->
+                     let { Saved_state.package; file_sig; hash; resolved_requires } =
+                       Saved_state.denormalize_parsed_data
+                         ~root
+                         parsed_file_data.Saved_state.normalized_file_data
+                     in
+                     (* Every package.json file should have a Package_json.t. Use those to restore the
+                      * PackageHeap and the ReversePackageHeap *)
+                     begin
+                       match fn with
+                       | File_key.JsonFile str when Filename.basename str = "package.json" ->
+                         begin
+                           match package with
+                           | None ->
+                             failwith
+                               (Printf.sprintf
+                                  "Saved state for `%s` missing Package_json.t data"
+                                  str)
+                           | Some package ->
+                             Module_heaps.Package_heap_mutator.add_package_json str package
+                         end
+                       | _ -> ()
+                     end;
+
+                     (* Restore the FileSigHeap *)
+                     Parsing_heaps.From_saved_state.add_file_sig fn file_sig;
+
+                     (* Restore the FileHashHeap *)
+                     Parsing_heaps.From_saved_state.add_file_hash fn hash;
+
+                     (* Restore the ResolvedRequiresHeap *)
+                     Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
+              ~merge:(fun () () -> ())
+              ~neutral:()
+              ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings parsed_heaps))
+          in
           MultiWorkerLwt.call
             workers
             ~job:
-              (List.fold_left (fun () (fn, parsed_file_data) ->
-                   let { Saved_state.package; file_sig; hash; resolved_requires } =
-                     Saved_state.denormalize_parsed_data
-                       ~root
-                       parsed_file_data.Saved_state.normalized_file_data
-                   in
-                   (* Every package.json file should have a Package_json.t. Use those to restore the
-                    * PackageHeap and the ReversePackageHeap *)
-                   begin
-                     match fn with
-                     | File_key.JsonFile str when Filename.basename str = "package.json" ->
-                       begin
-                         match package with
-                         | None ->
-                           failwith
-                             (Printf.sprintf "Saved state for `%s` missing Package_json.t data" str)
-                         | Some package ->
-                           Module_heaps.Package_heap_mutator.add_package_json str package
-                       end
-                     | _ -> ()
-                   end;
-
-                   (* Restore the FileSigHeap *)
-                   Parsing_heaps.From_saved_state.add_file_sig fn file_sig;
-
+              (List.fold_left (fun () (fn, unparsed_file_data) ->
                    (* Restore the FileHashHeap *)
-                   Parsing_heaps.From_saved_state.add_file_hash fn hash;
-
-                   (* Restore the ResolvedRequiresHeap *)
-                   Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
+                   let hash = unparsed_file_data.Saved_state.unparsed_hash in
+                   Parsing_heaps.From_saved_state.add_file_hash fn hash))
             ~merge:(fun () () -> ())
             ~neutral:()
-            ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings parsed_heaps))
-        in
-        MultiWorkerLwt.call
-          workers
-          ~job:
-            (List.fold_left (fun () (fn, unparsed_file_data) ->
-                 (* Restore the FileHashHeap *)
-                 let hash = unparsed_file_data.Saved_state.unparsed_hash in
-                 Parsing_heaps.From_saved_state.add_file_hash fn hash))
-          ~merge:(fun () () -> ())
-          ~neutral:()
-          ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings unparsed_heaps)))
-  in
-  Hh_logger.info "Loading libraries";
+            ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings unparsed_heaps)))
+    in
+    Hh_logger.info "Loading libraries";
 
-  (* We actually parse and typecheck the libraries, even though we're loading from saved state.
-   * We'd need to check them anyway, as soon as any file is checked, since we don't track
-   * dependents for libraries. And we don't really support incrementally checking libraries
-   *
-   * The order of libraries is significant. If two libraries define the same thing, the one
-   * merged later wins. For this reason, the saved state stores the order in which the non-flowlib
-   * libraries were merged. So all we need to guarantee here is:
-   *
-   * 1. The builtin libraries are merged first
-   * 2. The non-builtin libraries are merged in the same order as before
-   *)
-  let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
-  let libs = SSet.of_list ordered_libs in
-  let%lwt (libs_ok, local_errors, warnings, suppressions) =
-    let suppressions = Error_suppressions.empty in
-    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
-  in
-  Hh_logger.info "Resolving dependencies";
-  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+    (* We actually parse and typecheck the libraries, even though we're loading from saved state.
+     * We'd need to check them anyway, as soon as any file is checked, since we don't track
+     * dependents for libraries. And we don't really support incrementally checking libraries
+     *
+     * The order of libraries is significant. If two libraries define the same thing, the one
+     * merged later wins. For this reason, the saved state stores the order in which the non-flowlib
+     * libraries were merged. So all we need to guarantee here is:
+     *
+     * 1. The builtin libraries are merged first
+     * 2. The non-builtin libraries are merged in the same order as before
+     *)
+    let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
+    let libs = SSet.of_list ordered_libs in
+    let%lwt (libs_ok, local_errors, warnings, suppressions) =
+      let suppressions = Error_suppressions.empty in
+      init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
+    in
+    Hh_logger.info "Resolving dependencies";
+    MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
 
-  let%lwt (parsed_set, unparsed_set, all_files, parsed, unparsed) =
-    with_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
-        let (parsed, parsed_set) =
-          FilenameMap.fold
-            (fun fn data (parsed, parsed_set) ->
-              let parsed = (fn, data.Saved_state.info) :: parsed in
-              let parsed_set = FilenameSet.add fn parsed_set in
-              (parsed, parsed_set))
-            parsed_heaps
-            ([], FilenameSet.empty)
-        in
-        let (unparsed, unparsed_set) =
-          FilenameMap.fold
-            (fun fn data (unparsed, unparsed_set) ->
-              let unparsed = (fn, data.Saved_state.unparsed_info) :: unparsed in
-              let unparsed_set = FilenameSet.add fn unparsed_set in
-              (unparsed, unparsed_set))
-            unparsed_heaps
-            ([], FilenameSet.empty)
-        in
-        let all_files = FilenameSet.union parsed_set unparsed_set in
-        Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed))
+    let%lwt (parsed_set, unparsed_set, all_files, parsed, unparsed) =
+      with_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
+          let (parsed, parsed_set) =
+            FilenameMap.fold
+              (fun fn data (parsed, parsed_set) ->
+                let parsed = (fn, data.Saved_state.info) :: parsed in
+                let parsed_set = FilenameSet.add fn parsed_set in
+                (parsed, parsed_set))
+              parsed_heaps
+              ([], FilenameSet.empty)
+          in
+          let (unparsed, unparsed_set) =
+            FilenameMap.fold
+              (fun fn data (unparsed, unparsed_set) ->
+                let unparsed = (fn, data.Saved_state.unparsed_info) :: unparsed in
+                let unparsed_set = FilenameSet.add fn unparsed_set in
+                (unparsed, unparsed_set))
+              unparsed_heaps
+              ([], FilenameSet.empty)
+          in
+          let all_files = FilenameSet.union parsed_set unparsed_set in
+          Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed))
+    in
+    let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
+    (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
+    let%lwt _ =
+      commit_modules_from_saved_state
+        ~transaction
+        ~reader
+        ~all_providers_mutator
+        ~options
+        ~is_init:true
+        ~profiling
+        ~workers
+        ~parsed
+        ~parsed_set
+        ~unparsed
+        ~unparsed_set
+        ~old_modules:[]
+        ~deleted:FilenameSet.empty
+        ~local_errors
+        ~new_or_changed:all_files
+    in
+    let errors =
+      { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
+    in
+    let%lwt dependency_info =
+      with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+          Dep_service.calc_dependency_info ~options ~reader workers ~parsed:parsed_set)
+    in
+    let env =
+      mk_init_env
+        ~files:parsed_set
+        ~unparsed:unparsed_set
+        ~dependency_info
+        ~ordered_libs
+        ~libs
+        ~errors
+        ~coverage
+    in
+    Lwt.return (env, libs_ok)
   in
-  let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
-  (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
-  let%lwt _ =
-    commit_modules_from_saved_state
-      ~transaction
-      ~reader
-      ~all_providers_mutator
-      ~options
-      ~is_init:true
-      ~profiling
-      ~workers
-      ~parsed
-      ~parsed_set
-      ~unparsed
-      ~unparsed_set
-      ~old_modules:[]
-      ~deleted:FilenameSet.empty
-      ~local_errors
-      ~new_or_changed:all_files
-  in
-  let errors =
-    { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
-  in
-  let%lwt dependency_info =
-    with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-        Dep_service.calc_dependency_info ~options ~reader workers ~parsed:parsed_set)
-  in
-  let env =
-    mk_init_env
-      ~files:parsed_set
-      ~unparsed:unparsed_set
-      ~dependency_info
-      ~ordered_libs
-      ~libs
-      ~errors
-      ~coverage
-  in
-  Lwt.return (env, libs_ok)
 
-let init ~profiling ~workers options =
+  let should_force_recheck = Options.saved_state_force_recheck options in
+  (* We know that all the files in updates have changed since the saved state was generated. We
+    * have two ways to deal with them: *)
+  if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck then
+    (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
+      * fanout, this can be a huge recheck, but it's sound.
+      *
+      * We'll also hit this code path in lazy modes if the user has passed
+      * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
+      * have changed since the saved state was generated*)
+    Lwt.return (updates, env, libs_ok)
+  else
+    (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
+      * is to update the dependency graph and stuff like that. We don't actually want to merge
+      * anything yet. *)
+    with_transaction @@ fun transaction reader ->
+    let recheck_reasons = [LspProt.Lazy_init_update_deps] in
+    let%lwt env =
+      Recheck.parse_and_update_dependency_info
+        ~profiling
+        ~transaction
+        ~reader
+        ~options
+        ~workers
+        ~updates
+        ~files_to_force:CheckedSet.empty
+        ~recheck_reasons
+        ~env
+    in
+    Lwt.return (FilenameSet.empty, env, libs_ok)
+
+let init_from_scratch ~profiling ~workers options =
   let file_options = Options.file_options options in
   with_transaction @@ fun transaction reader ->
   (* TODO - explicitly order the libs.
@@ -2887,40 +2922,10 @@ let init ~profiling ~workers options =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
-      init ~profiling ~workers options
+      init_from_scratch ~profiling ~workers options
     | Some (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
-      let%lwt (env, libs_ok) = init_from_saved_state ~profiling ~workers ~saved_state options in
-      let should_force_recheck = Options.saved_state_force_recheck options in
-      (* We know that all the files in updates have changed since the saved state was generated. We
-       * have two ways to deal with them: *)
-      if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck then
-        (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
-         * fanout, this can be a huge recheck, but it's sound.
-         *
-         * We'll also hit this code path in lazy modes if the user has passed
-         * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
-         * have changed since the saved state was generated*)
-        Lwt.return (updates, env, libs_ok)
-      else
-        (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
-         * is to update the dependency graph and stuff like that. We don't actually want to merge
-         * anything yet. *)
-        with_transaction @@ fun transaction reader ->
-        let recheck_reasons = [LspProt.Lazy_init_update_deps] in
-        let%lwt env =
-          Recheck.parse_and_update_dependency_info
-            ~profiling
-            ~transaction
-            ~reader
-            ~options
-            ~workers
-            ~updates
-            ~files_to_force:CheckedSet.empty
-            ~recheck_reasons
-            ~env
-        in
-        Lwt.return (FilenameSet.empty, env, libs_ok)
+      init_from_saved_state ~profiling ~workers ~saved_state ~updates options
   in
   let%lwt (updates, files_to_focus) =
     let now = Unix.gettimeofday () in
