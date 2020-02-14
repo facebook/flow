@@ -5,6 +5,11 @@ layout: guide
 Objects can be used in many different ways in JavaScript. There are a number of
 different ways to type them in order to support all the different use cases.
 
+In Flow, there are two different kinds of object types: exact object types and inexact object types.
+
+In general, we recommend using [exact object types](#toc-exact-object-types) whenever possible. Exact object types are more
+precise and interact better with other type system features, like spreads.
+
 ## Object type syntax <a class="toc" id="toc-object-type-syntax" href="#toc-object-type-syntax"></a>
 
 Object types try to match the syntax for objects in JavaScript as much as
@@ -243,6 +248,24 @@ type FooBarT = {| ...FooT, ...BarT |};
 const fooBarFail: FooBarFailT = { foo: '123', bar: 12 }; // Error!
 const fooBar: FooBarT = { foo: '123', bar: 12 }; // Works!
 ```
+
+## Explicit inexact object types <a class="toc" id="toc-explicit-inexact-object-types" href="#toc-explicit-inexact-object-types"></a>
+
+In addition to the default `{}` syntax, you can explicitly indicate an inexact
+object by using an ellipsis at the end of your property list:
+
+```js
+// @flow
+
+type Inexact = {foo: number, ...};
+```
+
+[Flow is planning to make object types exact by default](https://medium.com/flow-type/on-the-roadmap-exact-objects-by-default-16b72933c5cf).
+This is available via an [option in your flowconfig](../../config/options/#toc-exact-by-default-boolean).
+You can also read our [upgrade guide](https://medium.com/flow-type/how-to-upgrade-to-exact-by-default-object-type-syntax-7aa44b4d08ab)
+for steps to enable this option in your own project.
+
+In a project using exact-by-default syntax, the explicit inexact object type syntax is the only way to express an inexact object type.
 
 ## Objects as maps <a class="toc" id="toc-objects-as-maps" href="#toc-objects-as-maps"></a>
 
