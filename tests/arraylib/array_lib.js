@@ -20,6 +20,11 @@ var l: Array<number> = h.concat(1,2,3);
 var m: Array<number | string> = h.concat('a', 'b', 'c');
 var n: Array<number> = h.concat('a', 'b', 'c'); // Error
 
+var o: Array<string> = Array('a', 'b')
+var p: Array<number> = Array('a', 'b') // error, string ~> number
+var q: Array<string> = Array(0) // ok
+var r: Array<number> = Array(20) // ok
+
 function reduce_test() {
   /* Adapted from the following source:
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
