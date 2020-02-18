@@ -126,8 +126,7 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
   in
   Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast
 
-let suggest ~options ~env ~profiling file_name file_content =
-  let file_key = File_key.SourceFile file_name in
+let suggest ~options ~env ~profiling file_key file_content =
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
     let file_sig = File_sig.abstractify_locs file_sig in

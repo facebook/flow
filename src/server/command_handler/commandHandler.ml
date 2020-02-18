@@ -508,9 +508,10 @@ let get_cycle ~env fn types_only =
 
 let suggest ~options ~env ~profiling file =
   let file_name = File_input.filename_of_file_input file in
+  let file_key = File_key.SourceFile file_name in
   File_input.content_of_file_input file %>>= fun file_content ->
   try_with (fun _ ->
-      let%lwt result = Type_info_service.suggest ~options ~env ~profiling file_name file_content in
+      let%lwt result = Type_info_service.suggest ~options ~env ~profiling file_key file_content in
       match result with
       | Ok (tc_errors, tc_warnings, suggest_warnings, file_patch) ->
         Lwt.return

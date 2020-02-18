@@ -41,7 +41,7 @@ val suggest :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  string ->
+  File_key.t ->
   string ->
   ( Errors.ConcreteLocPrintableErrorSet.t
     * (* Typechecking errors *)
