@@ -391,18 +391,21 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   items
 
 let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file_input =
-  let file = File_input.filename_of_file_input file_input in
-  let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input %>>= fun content ->
+  let open Lwt_result.Infix in
   try_with (fun () ->
-      Type_info_service.dump_types
-        ~options
-        ~env
-        ~profiling
-        ~expand_aliases
-        ~evaluate_type_destructors
-        file
-        content)
+      let file = File_input.filename_of_file_input file_input in
+      let file = File_key.SourceFile file in
+      Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
+      Types_js.type_contents ~options ~env ~profiling content file
+      >>= fun (cx, _info, file_sig, typed_ast, _parse_errors) ->
+      Lwt.return
+        (Ok
+           (Type_info_service.dump_types
+              ~expand_aliases
+              ~evaluate_type_destructors
+              cx
+              file_sig
+              typed_ast)))
 
 let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then

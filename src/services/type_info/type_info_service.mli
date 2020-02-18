@@ -19,14 +19,12 @@ val type_at_pos :
   (Loc.t * Ty.t option) * (string * Hh_json.json) list
 
 val dump_types :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
   expand_aliases:bool ->
   evaluate_type_destructors:bool ->
-  File_key.t ->
-  string ->
-  ((Loc.t * string) list, string) result Lwt.t
+  Context.t ->
+  File_sig.With_Loc.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  (Loc.t * string) list
 
 val coverage :
   cx:Context.t ->
