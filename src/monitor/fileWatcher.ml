@@ -132,7 +132,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None)
           in
           let exit_status_string =
-            Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+            Base.Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
           in
           Logger.error
             "File watcher (%s) exited with code %s (%d)"
@@ -351,7 +351,7 @@ end = struct
 
       method wait_for_init ~timeout =
         let go () =
-          let%lwt watchman = Option.value_exn init_thread in
+          let%lwt watchman = Base.Option.value_exn init_thread in
           init_thread <- None;
 
           let should_track_mergebase =
@@ -372,13 +372,15 @@ end = struct
                 finished_an_hg_update = false;
                 changes_condition = Lwt_condition.create ();
                 metadata = MonitorProt.empty_file_watcher_metadata;
-                init_settings = Option.value_exn init_settings;
+                init_settings = Base.Option.value_exn init_settings;
                 should_track_mergebase;
               }
             in
             (match%lwt get_mergebase new_env with
             | Ok mergebase ->
-              Option.iter mergebase ~f:(Logger.info "Watchman reports the initial mergebase as %S");
+              Base.Option.iter
+                mergebase
+                ~f:(Logger.info "Watchman reports the initial mergebase as %S");
               let new_env = { new_env with mergebase } in
               env <- Some new_env;
               Lwt.wakeup wakener new_env;

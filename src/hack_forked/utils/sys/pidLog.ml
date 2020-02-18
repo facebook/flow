@@ -56,5 +56,5 @@ let get_pids pids_file =
   with Sys_error _ -> raise FailedToGetPids
 
 let close () =
-  Option.iter !log_oc ~f:close_out;
+  Base.Option.iter !log_oc ~f:close_out;
   log_oc := None

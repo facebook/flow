@@ -358,7 +358,7 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
       | FoundClass locs -> Some (def_info_of_class_member_locs locs)
       | FoundObject loc -> Some (Nel.one (Object loc))
       | FoundUnion def_locs ->
-        def_locs |> Nel.map def_info_of_def_loc |> Nel.cat_maybes |> Option.map ~f:Nel.concat
+        def_locs |> Nel.map def_info_of_def_loc |> Nel.cat_maybes |> Base.Option.map ~f:Nel.concat
       | NoDefFound
       | UnsupportedType
       | AnyType ->
@@ -374,7 +374,7 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
       (* Here, `ty` ends up resolving to `ObjT` so we lose the knowledge that this is a static
        * property. This means that we don't get the fancy look-up-the-inheritance-chain behavior
        * that we get with class instances. That would be nice to add at some point. *)
-      def_info_of_type name ty >>| Option.map ~f:(fun def_info -> (def_info, name))
+      def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
     else
       (* We get the type of the class back here, so we need to extract the type of an instance *)
       extract_instancet cx ty >>= fun ty ->
@@ -385,13 +385,13 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
         Error "Expected to extract class def info from a class"
       | _ -> Error "Unexpectedly failed to extract definition from known type" )
   | Some (Use (ty, name)) ->
-    def_info_of_type name ty >>| Option.map ~f:(fun def_info -> (def_info, name))
+    def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
   | Some (Use_in_literal (types, name)) ->
     let def_infos_result = Nel.map (def_info_of_type name) types |> Nel.result_all in
     def_infos_result >>| fun def_infos ->
     Nel.cat_maybes def_infos
-    |> Option.map ~f:Nel.concat
-    |> Option.map ~f:(fun def_info -> (def_info, name))
+    |> Base.Option.map ~f:Nel.concat
+    |> Base.Option.map ~f:(fun def_info -> (def_info, name))
 
 let add_literal_properties literal_key_info def_info =
   (* If we happen to be on an object property, include the location of that
@@ -414,14 +414,14 @@ let add_literal_properties literal_key_info def_info =
   in
   Result.map
     def_info
-    ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
+    ~f:(Base.Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
 let get_def_info ~reader ~options env profiling file_key ast_info loc :
     (def_info option, string) result Lwt.t =
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
   (* Check if it's an exported symbol *)
-  let loc = Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
+  let loc = Base.Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let%lwt cx =
@@ -459,10 +459,10 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
                   | Ok None ->
                     let external_file_sig =
                       let filename = file_key_of_module_ref ~reader file_key module_ref in
-                      Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
+                      Base.Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
                     in
                     Result.return
-                    @@ Option.bind external_file_sig (fun external_file_sig ->
+                    @@ Base.Option.bind external_file_sig (fun external_file_sig ->
                            match external_file_sig.module_sig.module_kind with
                            | CommonJS { mod_exp_loc = Some loc; _ } -> Some loc
                            | _ -> None)
@@ -486,6 +486,6 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
                 None
             | _ -> None))
       in
-      Result.map export_loc ~f:(Option.map ~f:(fun x -> CJSExport x))
+      Result.map export_loc ~f:(Base.Option.map ~f:(fun x -> CJSExport x))
   in
   Lwt.return @@ def_info

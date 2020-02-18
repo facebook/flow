@@ -117,7 +117,7 @@ let main
     get_file_from_filename_or_stdin
       ~cmd:CommandSpec.(spec.name)
       path
-      (Option.map ~f:expand_path filename)
+      (Base.Option.map ~f:expand_path filename)
   in
   File_input.(
     let content =

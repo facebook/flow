@@ -252,7 +252,7 @@ let rec merge_type cx =
 let instantiate_poly_t cx t args =
   match t with
   | DefT (_, _, PolyT { tparams = type_params; t_out = t_; _ }) ->
-    let args = Option.value ~default:[] args in
+    let args = Base.Option.value ~default:[] args in
     let maximum_arity = Nel.length type_params in
     if List.length args > maximum_arity then (
       Hh_logger.error "Instantiating poly type failed";

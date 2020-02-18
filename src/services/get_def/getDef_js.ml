@@ -73,7 +73,7 @@ class special_caser
 
     method! import_named_specifier
         ({ Flow_ast.Statement.ImportDeclaration.local; remote; kind = _ } as x) =
-      let ((aloc, v), _) = Option.value ~default:remote local in
+      let ((aloc, v), _) = Base.Option.value ~default:remote local in
       if this#covers_target aloc then raise (SpecialCase (Chain (Get_def_request.Type v)));
       super#import_named_specifier x
 

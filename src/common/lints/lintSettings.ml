@@ -33,7 +33,7 @@ let ignored_by_all =
 
 let config_default =
   Base.List.Assoc.find default_lint_severities ~equal:( = )
-  %> Option.value ~default:(Severity.Off, None)
+  %> Base.Option.value ~default:(Severity.Off, None)
 
 let of_default default_value =
   let explicit_values = LintMap.of_function ignored_by_all config_default in
@@ -50,10 +50,10 @@ let get_default settings = settings.default_value
 
 let get_value lint_kind settings =
   LintMap.find_opt lint_kind settings.explicit_values
-  |> Option.value_map ~f:fst ~default:settings.default_value
+  |> Base.Option.value_map ~f:fst ~default:settings.default_value
 
 let get_loc lint_kind settings =
-  LintMap.find_opt lint_kind settings.explicit_values |> Option.value_map ~f:snd ~default:None
+  LintMap.find_opt lint_kind settings.explicit_values |> Base.Option.value_map ~f:snd ~default:None
 
 let is_explicit lint_kind settings = LintMap.mem lint_kind settings.explicit_values
 
@@ -174,7 +174,7 @@ let of_lines base_settings =
     let used_locs =
       fold
         (fun _kind (_enabled, loc) acc ->
-          Option.value_map loc ~f:(fun loc -> Loc_collections.LocSet.add loc acc) ~default:acc)
+          Base.Option.value_map loc ~f:(fun loc -> Loc_collections.LocSet.add loc acc) ~default:acc)
         settings
         Loc_collections.LocSet.empty
     in

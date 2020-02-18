@@ -65,7 +65,7 @@ let main
       | None -> File_input.path_of_file_input file)
   in
   (* pretty implies json *)
-  let json = json || Option.is_some json_version || pretty in
+  let json = json || Base.Option.is_some json_version || pretty in
   let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
   if (not option_values.quiet) && verbose <> None then
     prerr_endline "NOTE: --verbose writes to the server log file";

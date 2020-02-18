@@ -48,7 +48,7 @@ let tests =
            assert_ssets_equal ~ctxt expected result );
          ( "find_opt" >:: fun ctxt ->
            let result = StringGraph.find_opt "foo" graph in
-           let result = Option.value_exn result in
+           let result = Base.Option.value_exn result in
            let expected = SMap.find "foo" map in
            assert_ssets_equal ~ctxt expected result );
          ( "find_opt_none" >:: fun ctxt ->
@@ -61,7 +61,7 @@ let tests =
            assert_ssets_equal ~ctxt expected result );
          ( "find_backward_opt" >:: fun ctxt ->
            let result = StringGraph.find_backward_opt "baz" graph in
-           let result = Option.value_exn result in
+           let result = Base.Option.value_exn result in
            let expected = SMap.find "baz" reverse_map in
            assert_ssets_equal ~ctxt expected result );
          ( "find_backward_opt_none" >:: fun ctxt ->

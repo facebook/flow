@@ -67,8 +67,8 @@ let message_to_short_string (c : message) : string =
 
 let parse_message ~(json : Hh_json.json) ~(timestamp : float) : message =
   let id = J.try_get_val "id" json in
-  let method_opt = J.try_get_val "method" json |> Option.map ~f:Hh_json.get_string_exn in
-  let method_ = Option.value method_opt ~default:"" in
+  let method_opt = J.try_get_val "method" json |> Base.Option.map ~f:Hh_json.get_string_exn in
+  let method_ = Base.Option.value method_opt ~default:"" in
   (* is easier to consume *)
   let params = J.try_get_val "params" json in
   let result = J.try_get_val "result" json in
@@ -307,13 +307,13 @@ let respond
   Hh_json.(
     let is_error =
       match result_or_error with
-      | JSON_Object _ -> J.try_get_val "code" result_or_error |> Option.is_some
+      | JSON_Object _ -> J.try_get_val "code" result_or_error |> Base.Option.is_some
       | _ -> false
     in
     let response =
       JSON_Object
         ( [("jsonrpc", JSON_String "2.0")]
-        @ [("id", Option.value in_response_to.id ~default:JSON_Null)]
+        @ [("id", Base.Option.value in_response_to.id ~default:JSON_Null)]
         @ ( if is_error then
             [("error", result_or_error)]
           else

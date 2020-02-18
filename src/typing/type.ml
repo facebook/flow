@@ -1841,7 +1841,7 @@ end = struct
     in
     fun t0 t1 ts ->
       let enum =
-        Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> UnionEnum tset)
+        Base.Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> UnionEnum tset)
       in
       (t0, t1, ts, ref enum)
 
@@ -1919,10 +1919,10 @@ end = struct
       else
         UnionEnum tset
 
-  let canon_prop find_resolved p = Option.(Property.read_t p >>= find_resolved >>= canon)
+  let canon_prop find_resolved p = Base.Option.(Property.read_t p >>= find_resolved >>= canon)
 
   let base_prop find_resolved p =
-    match Option.(Property.read_t p >>= find_resolved) with
+    match Base.Option.(Property.read_t p >>= find_resolved) with
     | Some t when is_base t -> canon t
     | _ -> None
 
@@ -1936,7 +1936,7 @@ end = struct
 
   let disjoint_union_optimize =
     let base_props_of find_resolved find_props t =
-      Option.(
+      Base.Option.(
         props_of find_props t >>| fun prop_map ->
         SMap.fold
           (fun key p acc ->
@@ -1991,7 +1991,7 @@ end = struct
             (fun acc base_props ->
               SMap.merge
                 (fun _key enum_t_opt values_opt ->
-                  Option.(
+                  Base.Option.(
                     both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values))
                 base_props
                 acc)
@@ -3003,7 +3003,7 @@ end = struct
       | Addition { op; left; right } ->
         Addition { op = mod_reason op; left = mod_reason left; right = mod_reason right }
       | AssignVar { var; init } ->
-        AssignVar { var = Option.map ~f:mod_reason var; init = mod_reason init }
+        AssignVar { var = Base.Option.map ~f:mod_reason var; init = mod_reason init }
       | Cast { lower; upper } -> Cast { lower = mod_reason lower; upper = mod_reason upper }
       | ClassExtendsCheck { def; name; extends } ->
         ClassExtendsCheck
@@ -3013,7 +3013,7 @@ end = struct
           { def = mod_reason def; name = mod_reason name; implements = mod_reason implements }
       | ClassOwnProtoCheck { own_loc; proto_loc; prop } ->
         ClassOwnProtoCheck
-          { prop; own_loc = Option.map ~f own_loc; proto_loc = Option.map ~f proto_loc }
+          { prop; own_loc = Base.Option.map ~f own_loc; proto_loc = Base.Option.map ~f proto_loc }
       | Coercion { from; target } -> Coercion { from = mod_reason from; target = mod_reason target }
       | DeleteProperty { lhs; prop } ->
         DeleteProperty { lhs = mod_reason lhs; prop = mod_reason prop }
@@ -4109,12 +4109,12 @@ module TypeParams : sig
   val map : (typeparam -> typeparam) -> typeparams -> typeparams
 end = struct
   let to_list tparams =
-    Option.value_map tparams ~default:[] ~f:(fun (_loc, tparam_nel) -> Nel.to_list tparam_nel)
+    Base.Option.value_map tparams ~default:[] ~f:(fun (_loc, tparam_nel) -> Nel.to_list tparam_nel)
 
   let of_list tparams_loc tparams =
     match tparams with
     | [] -> None
     | hd :: tl -> Some (tparams_loc, (hd, tl))
 
-  let map f tparams = Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
+  let map f tparams = Base.Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
 end

@@ -69,7 +69,7 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
   let check_valid_call ~genv (call_loc : ALoc.t) (_, targ_loc) =
     let typed_ast = genv.Ty_normalizer_env.typed_ast in
     let ty_opt = Typed_ast_utils.find_exact_match_annotation typed_ast targ_loc in
-    Option.iter ty_opt ~f:(fun scheme ->
+    Base.Option.iter ty_opt ~f:(fun scheme ->
         let desc = Reason.RCustom "TypeAssert library function" in
         let reason_main = Reason.mk_reason desc call_loc in
         let wrap reason =

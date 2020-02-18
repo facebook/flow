@@ -121,7 +121,7 @@ module InsertType = struct
       args
       () =
     let (Loc.{ source; _ } as target) = parse_args args in
-    let source_path = Option.map ~f:File_key.to_string source in
+    let source_path = Base.Option.map ~f:File_key.to_string source in
     let input = get_file_from_filename_or_stdin ~cmd:spec.name path source_path in
     let root = get_the_root ~base_flags ~input root_arg in
     (* TODO Figure out how to implement root striping *)

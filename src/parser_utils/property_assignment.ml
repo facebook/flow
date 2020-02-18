@@ -250,7 +250,7 @@ let eval_property_assignment class_body =
           Some block
         | _ -> None)
       class_body
-    |> Option.value ~default:{ Ast.Statement.Block.body = [] }
+    |> Base.Option.value ~default:{ Ast.Statement.Block.body = [] }
   in
   let properties = Base.List.map ~f:fst property_declarations in
   let bindings : ALoc.t Hoister.Bindings.t =
@@ -300,7 +300,7 @@ let eval_property_assignment class_body =
     |> Base.List.rev_filter_map ~f:(fun (read_loc, write_locs) ->
            if not_definitively_initialized write_locs then
              ssa_walk#metadata_of_read_loc read_loc
-             |> Option.map ~f:(fun name ->
+             |> Base.Option.map ~f:(fun name ->
                     ({ loc = read_loc; desc = Lints.ReadFromUninitializedProperty }, name))
            else
              None)
@@ -311,7 +311,8 @@ let eval_property_assignment class_body =
         filter_uninitialized ssa_env properties
         |> Base.List.map ~f:Flow_ast_utils.name_of_ident
         |> Nel.of_list
-        |> Option.map ~f:(fun uninitialized_properties -> ({ loc; desc }, uninitialized_properties)))
+        |> Base.Option.map ~f:(fun uninitialized_properties ->
+               ({ loc; desc }, uninitialized_properties)))
       ssa_walk#this_escape_errors
   in
   (* It's better to append new to old b/c new is always a singleton *)

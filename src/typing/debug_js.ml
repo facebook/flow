@@ -533,7 +533,7 @@ and _json_of_use_t_impl json_cx t =
               ]
             | None -> []
           in
-          Option.value_map test_opt ~default:ret ~f:(fun (id, _) -> ("testID", int_ id) :: ret)
+          Base.Option.value_map test_opt ~default:ret ~f:(fun (id, _) -> ("testID", int_ id) :: ret)
         | Strict r ->
           [("strictReason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r)]
         | ShadowRead (_, ids) ->
@@ -1542,7 +1542,7 @@ let rec dump_t_ (depth, tvars) cx t =
       ( if not (Context.trust_tracking cx) then
         ""
       else
-        Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust )
+        Base.Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust )
       ( if reason then
         spf "%S" (dump_reason cx (reason_of_t t))
       else
@@ -1833,8 +1833,9 @@ and dump_use_t_ (depth, tvars) cx t =
     | NonstrictReturning (default_opt, testid_opt) ->
       spf
         "Nonstrict%s%s"
-        (Option.value_map default_opt ~default:"" ~f:(fun (t, _) -> spf " returning %s" (kid t)))
-        (Option.value_map testid_opt ~default:"" ~f:(fun (id, _) -> spf " for test id %d" id))
+        (Base.Option.value_map default_opt ~default:"" ~f:(fun (t, _) ->
+             spf " returning %s" (kid t)))
+        (Base.Option.value_map testid_opt ~default:"" ~f:(fun (id, _) -> spf " for test id %d" id))
     | Strict r -> spf "Strict %S" (dump_reason cx r)
     | ShadowRead (_, ids) ->
       spf
@@ -2023,7 +2024,7 @@ and dump_use_t_ (depth, tvars) cx t =
               (String.concat "; " (Base.List.map ~f:acc_element acc))
               (string_of_int spread_id)
               (string_of_int curr_resolve_idx)
-              (Option.value_map union_reason ~default:"None" ~f:(dump_reason cx))
+              (Base.Option.value_map union_reason ~default:"None" ~f:(dump_reason cx))
           in
           spf "Spread (%s, %s)" target state)
       in
@@ -2972,7 +2973,7 @@ let dump_error_message =
         spf
           "[%s; %s]"
           (dump_reason cx first_reason)
-          (Option.value_map ~default:"None" ~f:(dump_reason cx) second_reason)
+          (Base.Option.value_map ~default:"None" ~f:(dump_reason cx) second_reason)
       in
       spf
         "EExponentialSpread %s ([%s]) ([%s])"
@@ -2994,7 +2995,7 @@ let dump_error_message =
     | EEnumInvalidMemberAccess { member_name; members; access_reason; enum_reason } ->
       spf
         "EEnumInvalidMemberAccess (%s) (%s) (%s) (%s)"
-        (Option.value ~default:"<None>" member_name)
+        (Base.Option.value ~default:"<None>" member_name)
         (SSet.elements members |> String.concat ", ")
         (dump_reason cx access_reason)
         (dump_reason cx enum_reason)

@@ -410,14 +410,14 @@ module Select_timeout = struct
   let read_process ~timeout ~on_timeout ~reader cmd args =
     let (tic, oc) = open_process cmd args in
     let on_timeout () =
-      Option.iter ~f:Sys_utils.terminate_process tic.pid;
+      Base.Option.iter ~f:Sys_utils.terminate_process tic.pid;
       tic.pid <- None;
       on_timeout ()
     in
     with_timeout ~timeout ~on_timeout ~do_:(fun timeout ->
         try reader timeout tic oc
         with exn ->
-          Option.iter ~f:Sys_utils.terminate_process tic.pid;
+          Base.Option.iter ~f:Sys_utils.terminate_process tic.pid;
           tic.pid <- None;
           close_in tic;
           close_out oc;

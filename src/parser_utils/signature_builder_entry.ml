@@ -70,12 +70,12 @@ let variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclar
 
 let function_declaration
     loc { Ast.Function.id; generator; async; tparams; params; return; body; predicate; _ } =
-  ( Option.value_exn id,
+  ( Base.Option.value_exn id,
     (loc, Kind.FunctionDef { generator; async; tparams; params; return; body; predicate }) )
 
 let function_expression
     loc { Ast.Function.id; generator; async; tparams; params; return; body; predicate; _ } =
-  ( Option.value_exn id,
+  ( Base.Option.value_exn id,
     (loc, Kind.FunctionDef { generator; async; tparams; params; return; body; predicate }) )
 
 let class_ loc class_ =
@@ -86,7 +86,7 @@ let class_ loc class_ =
     | None -> (None, None)
     | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
   in
-  (Option.value_exn id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements }))
+  (Base.Option.value_exn id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements }))
 
 let enum loc enum =
   let open Ast.Statement.EnumDeclaration in

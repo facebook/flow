@@ -323,7 +323,7 @@ module Make (F : Func_sig.S) = struct
 
   let subst_typeapp cx map (loc, c, targs) =
     let c = Flow.subst cx map c in
-    let targs = Option.map ~f:(Base.List.map ~f:(Flow.subst cx map)) targs in
+    let targs = Base.Option.map ~f:(Base.List.map ~f:(Flow.subst cx map)) targs in
     (loc, c, targs)
 
   let subst_extends cx map = function
@@ -378,7 +378,8 @@ module Make (F : Func_sig.S) = struct
             in
             (* Keep track of these before intersections are merged, to enable
              * type information on every member of the intersection. *)
-            ms |> Nel.iter (fun (loc, t, set_type) -> Option.iter loc ~f:(fun _loc -> set_type t));
+            ms
+            |> Nel.iter (fun (loc, t, set_type) -> Base.Option.iter loc ~f:(fun _loc -> set_type t));
             match ms with
             | ((loc, t, _), []) -> (loc, t)
             | ((loc0, t0, _), (_, t1, _) :: ts) ->
@@ -402,7 +403,7 @@ module Make (F : Func_sig.S) = struct
     in
     (* Register getters and setters with the typed AST *)
     let register_accessors =
-      SMap.iter (fun _ (loc, t, set_type) -> Option.iter ~f:(fun _ -> set_type t) loc)
+      SMap.iter (fun _ (loc, t, set_type) -> Base.Option.iter ~f:(fun _ -> set_type t) loc)
     in
     register_accessors getters;
     register_accessors setters;
@@ -499,7 +500,7 @@ module Make (F : Func_sig.S) = struct
       type_args;
       own_props = Context.generate_property_map cx fields;
       proto_props = Context.generate_property_map cx methods;
-      inst_call_t = Option.map call ~f:(Context.make_call_prop cx);
+      inst_call_t = Base.Option.map call ~f:(Context.make_call_prop cx);
       initialized_fields;
       initialized_static_fields;
       has_unknown_react_mixins = false;
@@ -533,14 +534,14 @@ module Make (F : Func_sig.S) = struct
     let tparams =
       (* Use the loc for the original tparams, or just the loc for the this type if there are no
        * tparams *)
-      let loc = Option.value_map ~default:(aloc_of_reason this_reason) ~f:fst tparams in
+      let loc = Base.Option.value_map ~default:(aloc_of_reason this_reason) ~f:fst tparams in
       (* Add the type of `this` to the end of the list of type
        parameters. Remember, order is important, since we don't have recursive
        bounds (aka F-bounds): the bound of This refers to all the other type
        parameters! *)
       let tparams_lst = Type.TypeParams.to_list tparams @ [this_tp] in
       (* Obviously there is at least one element since we just added `this_tp` *)
-      let tparams_nel = Option.value_exn (Nel.of_list tparams_lst) in
+      let tparams_nel = Base.Option.value_exn (Nel.of_list tparams_lst) in
       Some (loc, tparams_nel)
     in
     (tparams, SMap.add "this" (Type.BoundT (this_reason, "this")) tparams_map)
@@ -551,14 +552,14 @@ module Make (F : Func_sig.S) = struct
     else
       let tparams =
         (* Remove the last type param. Assert that we have at least one type param. *)
-        let (loc, tparams_nel) = Option.value_exn x.tparams in
+        let (loc, tparams_nel) = Base.Option.value_exn x.tparams in
         tparams_nel
         |> Nel.to_list
         |> List.rev
         |> List.tl
         |> List.rev
         |> Nel.of_list
-        |> Option.map ~f:(fun nel -> (loc, nel))
+        |> Base.Option.map ~f:(fun nel -> (loc, nel))
       in
       { x with tparams; tparams_map = SMap.remove "this" x.tparams_map }
 

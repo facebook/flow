@@ -174,7 +174,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           ()
       else (
         Printf.printf "No errors!\n%!";
-        Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
+        Base.Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
       );
       FlowExitStatus.(exit No_error)
     | ServerProt.Response.NOT_COVERED ->
@@ -200,7 +200,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     let root = guess_root flowconfig_name root in
-    let json = json || Option.is_some json_version || pretty in
+    let json = json || Base.Option.is_some json_version || pretty in
     let args =
       {
         root;

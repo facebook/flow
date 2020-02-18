@@ -198,7 +198,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           (SSet.empty, None)
           attributes
       in
-      Option.iter
+      Base.Option.iter
         ~f:(fun (attribute_name, loc, component_t) ->
           this#find loc (Acjsx (attribute_name, used_attr_names, component_t)))
         found;

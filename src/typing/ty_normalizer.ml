@@ -149,11 +149,11 @@ end = struct
   let get_run_id () = !run_id
 
   let optMapM f = function
-    | Some xs -> mapM f xs >>| Option.return
+    | Some xs -> mapM f xs >>| Base.Option.return
     | None as y -> return y
 
   let optM f = function
-    | Some x -> f x >>| Option.return
+    | Some x -> f x >>| Base.Option.return
     | None as y -> return y
 
   let _fstMapM f (x, y) = f x >>| mk_tuple_swapped y
@@ -170,7 +170,7 @@ end = struct
       n)
 
   let terr ~kind ?msg t =
-    let t_str = Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
+    let t_str = Base.Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
     let msg = ListUtils.cat_maybes [msg; t_str] |> String.concat ", " in
     error (kind, msg)
 
@@ -777,7 +777,7 @@ end = struct
     | DefT (r, _, InstanceT (static, super, _, t)) -> instance_t ~env r static super t
     | DefT (_, _, ClassT t) -> class_t ~env t None
     | DefT (_, _, IdxWrapper t) ->
-      Option.iter
+      Base.Option.iter
         (Env.get_member_expansion_info env)
         ~f:(fun (Env.{ member_expansion_options = { idx_hook; _ }; _ }, _) -> idx_hook ());
       type__ ~env t
@@ -1339,7 +1339,7 @@ end = struct
           match ta_type with
           | Some ta_type when expand_type_aliases ->
             begin
-              match Option.both ta_tparams targs with
+              match Base.Option.both ta_tparams targs with
               | Some (ps, ts) -> Substitution.run ps ts ta_type
               | None -> return ta_type
             end
@@ -1355,7 +1355,7 @@ end = struct
       | Ty.(Any _ | Bot _ | Top) as ty -> return ty
       (* "Fix" type application on recursive types *)
       | Ty.TVar (Ty.RVar v, None) -> return (Ty.TVar (Ty.RVar v, targs))
-      | Ty.Utility (Ty.Class _) as ty when Option.is_none targs -> return ty
+      | Ty.Utility (Ty.Class _) as ty when Base.Option.is_none targs -> return ty
       | ty -> terr ~kind:BadTypeApp ~msg:(Ty_debug.string_of_ctor ty) None
     in
     fun ~env t targs ->

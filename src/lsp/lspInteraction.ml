@@ -206,17 +206,17 @@ let log_pushed_errors ~end_state ~errors_reason =
     match errors_reason with
     | End_of_recheck { recheck_reasons } ->
       ( List.map recheck_reasons ~f:(fun reason -> PushedErrorsEndOfRecheck reason),
-        Option.value ~default:end_state internal_state.last_recheck_start_state )
+        Base.Option.value ~default:end_state internal_state.last_recheck_start_state )
     | Recheck_streaming { recheck_reasons } ->
       ( List.map recheck_reasons ~f:(fun reason -> PushedErrorsRecheckStreaming reason),
-        Option.value ~default:end_state internal_state.last_recheck_start_state )
+        Base.Option.value ~default:end_state internal_state.last_recheck_start_state )
     | Env_change -> ([PushedErrorsEnvChange], end_state)
     | New_subscription -> ([PushedErrorsNewSubscription], end_state)
   in
   List.iter triggers ~f:(fun trigger -> log ~ux:PushedErrors ~trigger ~start_state ~end_state)
 
 let log ~end_state ~ux ~id =
-  Option.iter (IMap.find_opt id internal_state.pending_interactions) ~f:(fun interaction ->
+  Base.Option.iter (IMap.find_opt id internal_state.pending_interactions) ~f:(fun interaction ->
       internal_state.pending_interactions <- IMap.remove id internal_state.pending_interactions;
       let { start_state; trigger } = interaction in
       log ~ux ~trigger ~start_state ~end_state)

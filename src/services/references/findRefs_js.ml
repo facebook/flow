@@ -40,14 +40,14 @@ let global_property_refs ~reader ~genv ~env ~def_info ~multi_hop =
   | None -> Lwt.return (Ok None)
   | Some def_info ->
     let%lwt refs = PropertyFindRefs.find_global_refs ~reader genv env ~multi_hop def_info in
-    Lwt.return (refs >>| Option.some)
+    Lwt.return (refs >>| Base.Option.some)
 
 let local_property_refs ~reader ~options ~file_key ~ast_info ~def_info =
   match def_info with
   | None -> Lwt.return (Ok None)
   | Some def_info ->
     let refs = PropertyFindRefs.find_local_refs ~reader ~options file_key ast_info def_info in
-    Lwt.return (refs >>| Option.some)
+    Lwt.return (refs >>| Base.Option.some)
 
 let find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi_hop =
   let options = genv.ServerEnv.options in
@@ -99,7 +99,7 @@ let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
   local_property_refs ~reader ~options ~file_key ~ast_info ~def_info >>= fun prop_refs ->
   (* If property find-refs returned nothing (for example if we are importing from an untyped
     * module), then fall back on the local refs we computed earlier. *)
-  let refs = Option.first_some prop_refs var_refs in
+  let refs = Base.Option.first_some prop_refs var_refs in
   let refs =
     match refs with
     | Some (name, refs) -> Some (name, sort_and_dedup refs)

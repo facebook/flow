@@ -150,26 +150,26 @@ let detect_sketchy_null_checks cx =
   let detect_function exists_excuses loc exists_check =
     ExistsCheck.(
       let exists_excuse =
-        Loc_collections.ALocMap.find_opt loc exists_excuses |> Option.value ~default:empty
+        Loc_collections.ALocMap.find_opt loc exists_excuses |> Base.Option.value ~default:empty
       in
       match exists_check.null_loc with
       | None -> ()
       | Some null_loc ->
         let add_error = add_error ~loc ~null_loc in
-        if Option.is_none exists_excuse.bool_loc then
-          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyNullBool);
-        if Option.is_none exists_excuse.number_loc then
-          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNullNumber);
-        if Option.is_none exists_excuse.string_loc then
-          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
-        if Option.is_none exists_excuse.mixed_loc then
-          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
-        if Option.is_none exists_excuse.enum_bool_loc then
-          Option.iter exists_check.enum_bool_loc ~f:(add_error Lints.SketchyNullEnumBool);
-        if Option.is_none exists_excuse.enum_number_loc then
-          Option.iter exists_check.enum_number_loc ~f:(add_error Lints.SketchyNullEnumNumber);
-        if Option.is_none exists_excuse.enum_string_loc then
-          Option.iter exists_check.enum_string_loc ~f:(add_error Lints.SketchyNullEnumString);
+        if Base.Option.is_none exists_excuse.bool_loc then
+          Base.Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyNullBool);
+        if Base.Option.is_none exists_excuse.number_loc then
+          Base.Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNullNumber);
+        if Base.Option.is_none exists_excuse.string_loc then
+          Base.Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
+        if Base.Option.is_none exists_excuse.mixed_loc then
+          Base.Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
+        if Base.Option.is_none exists_excuse.enum_bool_loc then
+          Base.Option.iter exists_check.enum_bool_loc ~f:(add_error Lints.SketchyNullEnumBool);
+        if Base.Option.is_none exists_excuse.enum_number_loc then
+          Base.Option.iter exists_check.enum_number_loc ~f:(add_error Lints.SketchyNullEnumNumber);
+        if Base.Option.is_none exists_excuse.enum_string_loc then
+          Base.Option.iter exists_check.enum_string_loc ~f:(add_error Lints.SketchyNullEnumString);
         ())
   in
   Loc_collections.ALocMap.iter
@@ -708,7 +708,7 @@ module ContextOptimizer = struct
       method props cx pole id =
         if Properties.Map.mem id reduced_property_maps then
           let () =
-            Option.iter
+            Base.Option.iter
               ~f:(fun id_int ->
                 let stable_id =
                   if Context.mem_nominal_prop_id cx id_int then
@@ -722,7 +722,7 @@ module ContextOptimizer = struct
           id
         else
           let () =
-            Option.iter
+            Base.Option.iter
               ~f:(fun id_int ->
                 let stable_id =
                   if Context.mem_nominal_prop_id cx id_int then (
@@ -843,8 +843,9 @@ module ContextOptimizer = struct
         | OpaqueT (_, { opaque_id; _ }) ->
           SigHash.add_aloc sig_hash (opaque_id :> ALoc.t);
           super#type_ cx pole t
-        | AnyT (r, src) when Unsoundness.banned_in_exports src && Option.is_some export_reason ->
-          self#warn_dynamic_exports cx r (Option.value_exn export_reason);
+        | AnyT (r, src) when Unsoundness.banned_in_exports src && Base.Option.is_some export_reason
+          ->
+          self#warn_dynamic_exports cx r (Base.Option.value_exn export_reason);
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';
           t'

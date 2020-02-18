@@ -439,7 +439,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       >|= J.get_string_val "clock")
     >>= fun clockspec ->
     let watched_path_expression_terms =
-      Option.map watched_path_expression_terms ~f:(J.pred "anyof")
+      Base.Option.map watched_path_expression_terms ~f:(J.pred "anyof")
     in
     let env =
       {
@@ -648,7 +648,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       ~on_dead:(fun _ -> Watchman_unavailable)
       ~on_alive:(fun env ->
         let timeout =
-          Option.map deadline (fun deadline ->
+          Base.Option.map deadline (fun deadline ->
               let timeout = deadline -. Unix.time () in
               max timeout 0.0)
         in

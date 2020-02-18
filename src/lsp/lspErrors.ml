@@ -158,7 +158,7 @@ let have_errors_changed before after =
 let send_errors_for_file state (send_json : Hh_json.json -> unit) uri =
   let (parse_errors, non_parse_errors) =
     SMap.find_opt uri state.file_to_errors_map
-    |> Option.value ~default:empty_per_file_errors
+    |> Base.Option.value ~default:empty_per_file_errors
     |> choose_errors
   in
   let errors = parse_errors @ non_parse_errors in
@@ -179,7 +179,7 @@ let send_all_errors send_json state =
 (* Helper function to modify the data for a specific file *)
 let modify_per_file_errors uri state f =
   let old_per_file_errors =
-    SMap.find_opt uri state.file_to_errors_map |> Option.value ~default:empty_per_file_errors
+    SMap.find_opt uri state.file_to_errors_map |> Base.Option.value ~default:empty_per_file_errors
   in
   let new_per_file_errors = f old_per_file_errors in
   let dirty = have_errors_changed old_per_file_errors new_per_file_errors in

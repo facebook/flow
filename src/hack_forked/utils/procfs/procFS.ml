@@ -47,12 +47,16 @@ let parse_status raw_status_contents =
            | _ -> stats)
   in
   {
-    rss_anon = SMap.find_opt "RssAnon" stats |> Option.value_map ~default:0 ~f:humanReadableToBytes;
-    rss_file = SMap.find_opt "RssFile" stats |> Option.value_map ~default:0 ~f:humanReadableToBytes;
+    rss_anon =
+      SMap.find_opt "RssAnon" stats |> Base.Option.value_map ~default:0 ~f:humanReadableToBytes;
+    rss_file =
+      SMap.find_opt "RssFile" stats |> Base.Option.value_map ~default:0 ~f:humanReadableToBytes;
     rss_shmem =
-      SMap.find_opt "RssShmem" stats |> Option.value_map ~default:0 ~f:humanReadableToBytes;
-    rss_total = SMap.find_opt "VmRSS" stats |> Option.value_map ~default:0 ~f:humanReadableToBytes;
-    rss_hwm = SMap.find_opt "VmHWM" stats |> Option.value_map ~default:0 ~f:humanReadableToBytes;
+      SMap.find_opt "RssShmem" stats |> Base.Option.value_map ~default:0 ~f:humanReadableToBytes;
+    rss_total =
+      SMap.find_opt "VmRSS" stats |> Base.Option.value_map ~default:0 ~f:humanReadableToBytes;
+    rss_hwm =
+      SMap.find_opt "VmHWM" stats |> Base.Option.value_map ~default:0 ~f:humanReadableToBytes;
   }
 
 let parse_cgroup raw_cgroup_contents =

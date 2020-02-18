@@ -2832,7 +2832,7 @@ and declare_export_declaration
       [
         Atom "export";
         space;
-        ( if Option.is_some default then
+        ( if Base.Option.is_some default then
           fuse [Atom "default"; space]
         else
           Empty );

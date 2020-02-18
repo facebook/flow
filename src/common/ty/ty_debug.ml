@@ -223,7 +223,7 @@ and dump_t ?(depth = 10) t =
         "TypeAlias (%s, %s, %s)"
         (dump_symbol ta_name)
         (dump_type_params ~depth ta_tparams)
-        (Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
+        (Base.Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
     | InlineInterface { if_extends; if_body } ->
       spf
         "InlineInterface (%s, %s)"
@@ -350,14 +350,15 @@ let json_of_t ~strip_root =
           [
             ("name", json_of_symbol ta_name);
             ("typeParams", json_of_type_params ta_tparams);
-            ("body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type);
+            ("body", Base.Option.value_map ~f:json_of_t ~default:JSON_Null ta_type);
           ]
         | InlineInterface { if_extends; if_body } ->
           Hh_json.(
             let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
             [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
         | TypeOf b -> [("name", JSON_String (builtin_value b))]
-        | Module (name, _) -> [("name", Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
+        | Module (name, _) ->
+          [("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
         | ClassDecl (name, tparams) ->
           [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
         | InterfaceDecl (name, tparams) ->
@@ -424,10 +425,10 @@ let json_of_t ~strip_root =
       JSON_Object
         ( [
             ("name", JSON_String tp_name);
-            ("bound", Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null);
+            ("bound", Base.Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null);
             ("polarity", json_of_polarity tp_polarity);
           ]
-        @ Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)]) ))
+        @ Base.Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)]) ))
   and json_of_polarity polarity = Hh_json.JSON_String (string_of_polarity polarity)
   and json_of_prop prop =
     Hh_json.(
@@ -453,7 +454,7 @@ let json_of_t ~strip_root =
       JSON_Object
         [
           ("polarity", json_of_polarity dict_polarity);
-          ("name", JSON_String (Option.value dict_name ~default:"_"));
+          ("name", JSON_String (Base.Option.value dict_name ~default:"_"));
           ("key", json_of_t dict_key);
           ("value", json_of_t dict_value);
         ])

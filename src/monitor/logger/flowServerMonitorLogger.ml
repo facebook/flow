@@ -69,8 +69,10 @@ let init_logger log_fd =
 
   let min_level = Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level in
   let template = "$(date).$(milliseconds) [$(level)] $(message)" in
-  let log_fd = Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true) in
-  let fds = Lwt_unix.stderr :: Option.value_map log_fd ~default:[] ~f:(fun fd -> [fd]) in
+  let log_fd =
+    Base.Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true)
+  in
+  let fds = Lwt_unix.stderr :: Base.Option.value_map log_fd ~default:[] ~f:(fun fd -> [fd]) in
   Lwt.async (fun () -> WriteLoop.run fds);
 
   (* Format the messages and write the to the log and stderr *)
@@ -89,7 +91,7 @@ let init_logger log_fd =
     Lwt.return_unit
   in
   (* Just close the log *)
-  let close () = Option.value_map ~default:Lwt.return_unit ~f:Lwt_unix.close log_fd in
+  let close () = Base.Option.value_map ~default:Lwt.return_unit ~f:Lwt_unix.close log_fd in
   (* Set the default logger *)
   Lwt_log.default := Lwt_log_core.make ~output ~close;
 

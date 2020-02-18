@@ -842,7 +842,7 @@ let calculate_pct rollout_name =
  * Each rollout's groups must sum to 100.
  *)
 let parse_rollouts config lines =
-  Option.value_map lines ~default:(Ok config) ~f:(fun lines ->
+  Base.Option.value_map lines ~default:(Ok config) ~f:(fun lines ->
       let lines = trim_labeled_lines lines in
       fold_left_stop_on_error lines ~acc:SMap.empty ~f:(fun rollouts (line_num, line) ->
           (* A rollout's name is can only contain [a-zA-Z0-9._] *)

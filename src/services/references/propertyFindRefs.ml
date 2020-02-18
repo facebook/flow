@@ -184,7 +184,7 @@ let add_related_bindings ast_info refs =
       fun acc loc ->
       let new_refs =
         VariableFindRefs.local_find_refs ast loc
-        |> Option.value_map ~default:[] ~f:(fun ((_, refs), _) -> refs)
+        |> Base.Option.value_map ~default:[] ~f:(fun ((_, refs), _) -> refs)
       in
       List.rev_append new_refs acc
     end
@@ -276,7 +276,7 @@ let focus_and_check genv env paths =
 let focus_and_check_filename_set genv env files =
   let paths = files |> FilenameSet.elements |> Base.List.map ~f:File_key.to_path |> Result.all in
   paths %>>| fun paths ->
-  Nel.of_list paths |> Option.value_map ~default:Lwt.return_unit ~f:(focus_and_check genv env)
+  Nel.of_list paths |> Base.Option.value_map ~default:Lwt.return_unit ~f:(focus_and_check genv env)
 
 (* Returns location pairs such that:
  * - Each location is the definition location for a property with the given

@@ -61,7 +61,7 @@ let format_errors
       in
       fun profiling ->
         let profiling_props =
-          Option.value_map profiling ~default:[] ~f:Profiling_js.to_legacy_json_properties
+          Base.Option.value_map profiling ~default:[] ~f:Profiling_js.to_legacy_json_properties
         in
         finish_formatting ~profiling_props
     | Cli flags ->
@@ -146,7 +146,7 @@ module CheckCommand = struct
     let format_errors =
       let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
       let printer =
-        if json || Option.is_some json_version || pretty then
+        if json || Base.Option.is_some json_version || pretty then
           Json { pretty; version = json_version }
         else
           Cli error_flags
@@ -244,7 +244,7 @@ module FocusCheckCommand = struct
     let format_errors =
       let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
       let printer =
-        if json || Option.is_some json_version || pretty then
+        if json || Base.Option.is_some json_version || pretty then
           Json { pretty; version = json_version }
         else
           Cli error_flags

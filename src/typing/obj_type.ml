@@ -24,7 +24,7 @@ let mk_with_proto
     proto =
   let sealed = mk_seal reason sealed in
   let flags = { sealed; exact; frozen } in
-  let call = Option.map call ~f:(Context.make_call_prop cx) in
+  let call = Base.Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =
     match loc with
     | None -> Context.generate_property_map cx props

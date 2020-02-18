@@ -24,7 +24,7 @@ module CommentAttachCandidate = struct
   }
 end
 
-let node_list_of_option ~f = Option.value_map ~default:[] ~f
+let node_list_of_option ~f = Base.Option.value_map ~default:[] ~f
 
 (* comments.js#findExpressionIndexForComment *)
 let find_expression_index_for_node quasis ({ Loc.start = orig_start; _ }, _) =
@@ -124,14 +124,14 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
   | Throw { Throw.argument } -> statement_list_of_expression argument
   | Try { Try.block = (_, { Block.body }); handler; finalizer; _ } ->
     let handler_nodes =
-      Option.value_map
+      Base.Option.value_map
         ~default:[]
         ~f:(fun (_, { Try.CatchClause.param; body = (_, { Block.body }); _ }) ->
           node_list_of_option ~f:get_children_nodes_pattern param @ body)
         handler
     in
     let finalizer_nodes =
-      Option.value_map ~default:[] ~f:(fun (_, { Block.body }) -> body) finalizer
+      Base.Option.value_map ~default:[] ~f:(fun (_, { Block.body }) -> body) finalizer
     in
     body @ handler_nodes @ finalizer_nodes
   | VariableDeclaration { VariableDeclaration.declarations; _ } ->
@@ -209,7 +209,7 @@ and get_children_nodes_expr expression =
   | Array { Array.elements; comments = _ } ->
     List.fold_left
       (fun nodes element ->
-        nodes @ Option.value_map ~default:[] ~f:get_children_nodes_expression_or_spread element)
+        nodes @ Base.Option.value_map ~default:[] ~f:get_children_nodes_expression_or_spread element)
       []
       elements
   | ArrowFunction func -> get_children_nodes_function func

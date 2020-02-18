@@ -115,7 +115,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
   let initial_json_props =
     let open Hh_json in
     [
-      ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
+      ("ac_trigger", JSON_String (Base.Option.value trigger_character ~default:"None"));
       ("broader_context", JSON_String broader_context);
     ]
   in
@@ -354,7 +354,7 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = ("env.errors", data) :: items in
   (* Checking if file hashes are up to date *)
   let items =
-    Option.value_map files ~default:items ~f:(fun files ->
+    Base.Option.value_map files ~default:items ~f:(fun files ->
         let buf = Buffer.create 1024 in
         Printf.bprintf
           buf
@@ -497,7 +497,10 @@ let get_cycle ~env fn types_only =
         (* Restrict dep graph to only in-cycle files *)
         Nel.fold_left
           (fun acc f ->
-            Option.fold (FilenameGraph.find_opt f dependency_graph) ~init:acc ~f:(fun acc deps ->
+            Base.Option.fold
+              (FilenameGraph.find_opt f dependency_graph)
+              ~init:acc
+              ~f:(fun acc deps ->
                 let subdeps =
                   FilenameSet.filter (fun f -> Nel.mem ~equal:File_key.equal f component) deps
                 in
@@ -539,7 +542,7 @@ let find_module ~options ~reader (moduleref, filename) =
 
 let convert_find_refs_result (result : FindRefsTypes.find_refs_ok) :
     ServerProt.Response.find_refs_success =
-  Option.map result ~f:(fun (name, refs) -> (name, Base.List.map ~f:snd refs))
+  Base.Option.map result ~f:(fun (name, refs) -> (name, Base.List.map ~f:snd refs))
 
 (* Find refs is a really weird command. Whereas other commands will cancel themselves if they find
  * unchecked code, find refs will focus that code and keep chugging along. It may therefore change
@@ -614,7 +617,7 @@ let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, l
       get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
     in
     let json =
-      let json_props = Option.value ~default:[] json_props in
+      let json_props = Base.Option.value ~default:[] json_props in
       let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
       Hh_json.JSON_Object json_props
     in
@@ -759,7 +762,7 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
     let (wait_for_recheck_thread, wakener) = Lwt.task () in
     push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
     let%lwt recheck_profiling = wait_for_recheck_thread in
-    Option.iter recheck_profiling ~f:(fun recheck_profiling ->
+    Base.Option.iter recheck_profiling ~f:(fun recheck_profiling ->
         Profiling_js.merge ~from:recheck_profiling ~into:profiling);
     Lwt.return (ServerProt.Response.FORCE_RECHECK recheck_profiling, None)
   ) else (
@@ -853,7 +856,7 @@ let handle_refactor
     in
     let env = !env in
     let result =
-      result |> Base.Result.map ~f:(Option.map ~f:(fun refactor_edits -> { refactor_edits }))
+      result |> Base.Result.map ~f:(Base.Option.map ~f:(fun refactor_edits -> { refactor_edits }))
     in
     Lwt.return (env, REFACTOR result, None))
 
@@ -923,7 +926,7 @@ type command_handler =
  * to wait_for_recheck by the .flowconfig or CLI *)
 let mk_parallelizable ~wait_for_recheck ~options f =
   let wait_for_recheck =
-    Option.value wait_for_recheck ~default:(Options.wait_for_recheck options)
+    Base.Option.value wait_for_recheck ~default:(Options.wait_for_recheck options)
   in
   if wait_for_recheck then
     Handle_nonparallelizable
@@ -1326,7 +1329,7 @@ type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
   * an error response *)
 let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
   let metadata = with_error ?stack ~reason metadata in
-  let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.LspProt.error_info in
+  let (_, reason, Utils.Callstack stack) = Base.Option.value_exn metadata.LspProt.error_info in
   let message =
     match id with
     | Some id ->
@@ -1512,7 +1515,7 @@ let handle_persistent_autocomplete_lsp
         Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc client
     in
     let trigger_character =
-      Option.value_map
+      Base.Option.value_map
         ~f:(fun completionContext -> completionContext.triggerCharacter)
         ~default:None
         params.context
@@ -1811,7 +1814,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
           let (loc, _) = edit in
           let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
           uri >>| fun uri ->
-          let lst = Option.value ~default:[] (SMap.find_opt uri map) in
+          let lst = Base.Option.value ~default:[] (SMap.find_opt uri map) in
           (* This reverses the list *)
           SMap.add uri (edit :: lst) map
         end
@@ -2125,7 +2128,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     | (LspToServer (RequestMessage (id, DefinitionRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc =
-        Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+        Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
             Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
       in
       mk_parallelizable_persistent
@@ -2134,7 +2137,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     | (LspToServer (RequestMessage (id, HoverRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc =
-        Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+        Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
             Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
       in
       mk_parallelizable_persistent
@@ -2148,7 +2151,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc = params.Completion.loc in
       let loc =
-        Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+        Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
             Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client)
       in
       mk_parallelizable_persistent
@@ -2157,7 +2160,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     | (LspToServer (RequestMessage (id, SignatureHelpRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc =
-        Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+        Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
             Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
       in
       mk_parallelizable_persistent
@@ -2171,7 +2174,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       (* Grab the file contents immediately in case of any future didChanges *)
       let textDocument = params.TypeCoverage.textDocument in
       let file =
-        Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+        Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
             Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client)
       in
       mk_parallelizable_persistent

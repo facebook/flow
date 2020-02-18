@@ -52,7 +52,7 @@ let regenerate ~reader =
               in
               let file_warnings =
                 FilenameMap.find_opt source_file warnings
-                |> Option.value ~default:ConcreteLocPrintableErrorSet.empty
+                |> Base.Option.value ~default:ConcreteLocPrintableErrorSet.empty
                 |> ConcreteLocPrintableErrorSet.add err
               in
               FilenameMap.add source_file file_warnings warnings

@@ -64,7 +64,7 @@ module Make (F : Func_params.S) = struct
       tparams
       |> TypeParams.map (fun tp ->
              let bound = Flow.subst cx map tp.bound in
-             let default = Option.map ~f:(Flow.subst cx map) tp.default in
+             let default = Base.Option.map ~f:(Flow.subst cx map) tp.default in
              { tp with bound; default })
     in
     let map =
@@ -199,7 +199,7 @@ module Make (F : Func_params.S) = struct
     (* add param bindings *)
     let params_ast = F.eval cx fparams in
     (* early-add our own name binding for recursive calls. *)
-    Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
+    Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
         let entry = knot |> Scope.Entry.new_var ~loc in
         Scope.add_entry name entry function_scope);
 

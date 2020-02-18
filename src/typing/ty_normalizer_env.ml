@@ -219,7 +219,7 @@ let init ~options ~genv ~tparams ~imported_names =
     imported_names;
     under_type_alias = None;
     member_expansion_info =
-      Option.map options.expand_toplevel_members ~f:(fun member_expansion_options ->
+      Base.Option.map options.expand_toplevel_members ~f:(fun member_expansion_options ->
           ( true,
             {
               member_expansion_options;
@@ -262,14 +262,15 @@ let get_member_expansion_info e =
 let continue_expanding_members e =
   {
     e with
-    member_expansion_info = Option.map e.member_expansion_info ~f:(fun (_, info) -> (true, info));
+    member_expansion_info =
+      Base.Option.map e.member_expansion_info ~f:(fun (_, info) -> (true, info));
   }
 
 let expand_instance_members e =
   {
     e with
     member_expansion_info =
-      Option.map e.member_expansion_info ~f:(fun (_, info) ->
+      Base.Option.map e.member_expansion_info ~f:(fun (_, info) ->
           (true, { info with instance_member_expansion_mode = IMInstance }));
   }
 
@@ -277,7 +278,7 @@ let expand_static_members e =
   {
     e with
     member_expansion_info =
-      Option.map e.member_expansion_info ~f:(fun (_, info) ->
+      Base.Option.map e.member_expansion_info ~f:(fun (_, info) ->
           (true, { info with instance_member_expansion_mode = IMStatic }));
   }
 
@@ -285,7 +286,7 @@ let expand_primitive_members e =
   {
     e with
     member_expansion_info =
-      Option.map e.member_expansion_info ~f:(fun (_, info) ->
+      Base.Option.map e.member_expansion_info ~f:(fun (_, info) ->
           (true, { info with within_primitive = true; instance_member_expansion_mode = IMUnset }));
   }
 

@@ -138,7 +138,7 @@ let havoc_call_env =
       else
         let func_env = IMap.find_opt func_frame (Context.envs cx) in
         let call_env = IMap.find_opt call_frame (Context.envs cx) in
-        Option.iter (Option.both func_env call_env) ~f:(fun (func_env, call_env) ->
+        Base.Option.iter (Base.Option.both func_env call_env) ~f:(fun (func_env, call_env) ->
             overlapped_call_scopes func_env call_env
             |> List.iter (fun ({ id; _ } as scope) ->
                    Changeset.include_scopes [id] changeset
@@ -227,7 +227,7 @@ let add_output cx ?trace msg =
         | Some loc ->
           ALoc.to_loc_with_tables (Context.aloc_tables cx) loc
           |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
-          |> Option.value_map ~default:true ~f:(fun lint_settings ->
+          |> Base.Option.value_map ~default:true ~f:(fun lint_settings ->
                  LintSettings.is_explicit lint_kind lint_settings
                  || LintSettings.get_value lint_kind lint_settings <> Severity.Off)
         | _ -> true
@@ -254,7 +254,7 @@ let add_output cx ?trace msg =
     (* catch no-loc errors early, before they get into error map *)
     if
       Flow_error.loc_of_error error
-      |> Option.value_map ~default:false ~f:(fun loc -> ALoc.source loc = None)
+      |> Base.Option.value_map ~default:false ~f:(fun loc -> ALoc.source loc = None)
     then
       assert_false (spf "add_output: no source for error: %s" (Debug_js.dump_error_message cx msg));
 
@@ -312,7 +312,7 @@ module ConstFoldExpansion : sig
 end = struct
   let rmaps : int ConstFoldMap.t IMap.t ref = ref IMap.empty
 
-  let get_rmap id = IMap.find_opt id !rmaps |> Option.value ~default:ConstFoldMap.empty
+  let get_rmap id = IMap.find_opt id !rmaps |> Base.Option.value ~default:ConstFoldMap.empty
 
   let increment reason_with_pos rmap =
     match ConstFoldMap.find_opt reason_with_pos rmap with
@@ -696,7 +696,8 @@ let strict_equatable_error cond_context (l, r) =
   (* We don't check other strict equality comparisons. *)
   | _ -> None
 
-let strict_equatable cond_context args = strict_equatable_error cond_context args |> Option.is_none
+let strict_equatable cond_context args =
+  strict_equatable_error cond_context args |> Base.Option.is_none
 
 (* Creates a union from a list of types. Since unions require a minimum of two
    types this function will return an empty type when there are no types in the
@@ -1392,7 +1393,7 @@ struct
               | ReExport ->
                 (* Re-exports do not overwrite named exports from the local module. Further, they do
                  * not need to be checked, as the original module has already performed the check. *)
-                SMap.find_opt name acc |> Option.value ~default:export
+                SMap.find_opt name acc |> Base.Option.value ~default:export
               | ExportType ->
                 (* If it's of the form `export type` then check to make sure it's actually a type. *)
                 let (loc, t) = export in
@@ -2628,7 +2629,7 @@ struct
                   []
               in
               rec_flow cx trace (union_of_ts reason_op keylist, keys);
-              Option.iter dict_t (fun { key; _ } ->
+              Base.Option.iter dict_t (fun { key; _ } ->
                   rec_flow cx trace (key, ToStringT (reason_op, keys)))
             | _ -> rec_flow cx trace (StrT.why reason_op |> with_trust bogus_trust, keys)
           end
@@ -3616,7 +3617,7 @@ struct
        types, so the decision to cache or not originates there.) *)
         | ( DefT (_, _, PolyT { tparams_loc; tparams = xs; t_out = t; id }),
             SpecializeT (use_op, reason_op, reason_tapp, cache, ts, tvar) ) ->
-          let ts = Option.value ts ~default:[] in
+          let ts = Base.Option.value ts ~default:[] in
           let t_ =
             mk_typeapp_of_poly
               cx
@@ -4091,7 +4092,7 @@ struct
             ReactPropsToOut (_, props) ) ->
           (* Contravariance *)
           Base.List.hd params
-          |> Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
+          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
         | ( DefT
               ( reason,
@@ -4100,7 +4101,7 @@ struct
             ReactInToProps (reason_op, props) ) ->
           (* Contravariance *)
           Base.List.hd params
-          |> Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
+          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
           |> fun t ->
           rec_flow_t ~use_op:unknown_use cx trace (props, t);
           rec_flow_t
@@ -4226,7 +4227,7 @@ struct
           in
           rec_flow cx trace (o2, UseT (use_op, o1));
 
-          Option.iter call_targs ~f:(fun _ ->
+          Base.Option.iter call_targs ~f:(fun _ ->
               add_output
                 cx
                 ~trace
@@ -4445,7 +4446,7 @@ struct
           in
           (* None of the supported custom funs are polymorphic, so error here
          instead of threading targs into spread resolution. *)
-          Option.iter call_targs ~f:(fun _ ->
+          Base.Option.iter call_targs ~f:(fun _ ->
               add_output
                 cx
                 ~trace
@@ -4514,7 +4515,7 @@ struct
             let proto_props = Context.find_props cx lproto in
             SMap.union own_props proto_props
           in
-          Option.iter ucall ~f:(fun ucall ->
+          Base.Option.iter ucall ~f:(fun ucall ->
               let prop_name = Some "$call" in
               let use_op =
                 Frame
@@ -4706,8 +4707,8 @@ struct
             UseT (use_op, DefT (r2, _, ArrT (ArrayAT (t2, ts2)))) ) ->
           let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
           let lit1 = desc_of_reason r1 = RArrayLit in
-          let ts1 = Option.value ~default:[] ts1 in
-          let ts2 = Option.value ~default:[] ts2 in
+          let ts1 = Base.Option.value ~default:[] ts1 in
+          let ts2 = Base.Option.value ~default:[] ts2 in
           array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
         (* Tuples can flow to tuples with the same arity *)
         | ( DefT (r1, _, ArrT (TupleAT (_, ts1))),
@@ -4810,7 +4811,7 @@ struct
           let reason_o = replace_desc_reason RConstructorReturn reason in
           let annot_loc = aloc_of_reason reason_op in
           (* early error if type args passed to non-polymorphic class *)
-          Option.iter targs ~f:(fun _ ->
+          Base.Option.iter targs ~f:(fun _ ->
               add_output
                 cx
                 ~trace
@@ -4853,7 +4854,7 @@ struct
           in
           let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
           (* error if type arguments are provided to non-polymorphic constructor **)
-          Option.iter targs ~f:(fun _ ->
+          Base.Option.iter targs ~f:(fun _ ->
               add_output
                 cx
                 ~trace
@@ -4887,13 +4888,13 @@ struct
             MethodT (use_op, reason_op, _, _, CallM { call_args_tlist; call_tout; _ }, prop_t) ) ->
           let any = AnyT.untyped reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
-          Option.iter
+          Base.Option.iter
             ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (any, prop_t))
             prop_t;
           rec_flow_t cx trace ~use_op:unknown_use (any, call_tout)
         | (AnyT _, MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
           let any = AnyT.untyped reason_op in
-          Option.iter
+          Base.Option.iter
             ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (any, prop_t))
             prop_t;
           rec_flow cx trace (any, apply_method_action use_op reason_op chain)
@@ -5164,7 +5165,7 @@ struct
             x
             props
             funt;
-          Option.iter
+          Base.Option.iter
             ~f:(fun prop_t -> rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t))
             prop_t;
 
@@ -5509,7 +5510,7 @@ struct
           write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_t
         (* Since we don't know the type of the prop, use AnyT. *)
         | (AnyT _, SetPropT (use_op, reason_op, _, _, _, t, prop_t)) ->
-          Option.iter
+          Base.Option.iter
             ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t))
             prop_t;
           rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op))
@@ -5536,7 +5537,9 @@ struct
             Tvar.mk_where cx reason_lookup (fun tout ->
                 read_obj_prop cx trace ~use_op o propref reason_obj reason_lookup tout)
           in
-          Option.iter ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t)) prop_t;
+          Base.Option.iter
+            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t))
+            prop_t;
           rec_flow cx trace (t, apply_method_action use_op reason_call action)
         (******************************************)
         (* strings may have their characters read *)
@@ -5739,7 +5742,7 @@ struct
           in
           let arrtype =
             match arrtype with
-            | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Base.List.map ~f) ts)
+            | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Base.Option.map ~f:(Base.List.map ~f) ts)
             | TupleAT (elemt, ts) -> TupleAT (f elemt, Base.List.map ~f ts)
             | ROArrayAT elemt -> ROArrayAT (f elemt)
           in
@@ -5777,7 +5780,7 @@ struct
             |> Context.generate_property_map cx
           in
           let dict_t =
-            Option.map
+            Base.Option.map
               ~f:(fun dict ->
                 let value = map_t dict.value in
                 { dict with value })
@@ -5822,7 +5825,7 @@ struct
             |> Context.generate_property_map cx
           in
           let dict_t =
-            Option.map
+            Base.Option.map
               ~f:(fun dict ->
                 let value = mapi_t dict.key dict.value in
                 { dict with value })
@@ -5983,7 +5986,7 @@ struct
                     call_args_tlist = first_arg :: call_args_tlist;
                     _;
                   } as funtype ) ) ) ->
-          Option.iter call_targs ~f:(fun _ ->
+          Base.Option.iter call_targs ~f:(fun _ ->
               add_output
                 cx
                 ~trace
@@ -6539,7 +6542,7 @@ struct
             cx
             trace
             (l, SetPropT (use_op, reason, Named (reason, "$value"), mode, Normal, tin, None));
-          Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
+          Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
         (***************************)
         (* conditional type switch *)
         (***************************)
@@ -6806,8 +6809,8 @@ struct
          a condition, in which case we consider the object's property to be
          `mixed`.
       *)
-          let use_op = Option.value ~default:unknown_use (use_op_of_lookup_action action) in
-          Option.iter test_opt ~f:(fun (id, reasons) ->
+          let use_op = Base.Option.value ~default:unknown_use (use_op_of_lookup_action action) in
+          Base.Option.iter test_opt ~f:(fun (id, reasons) ->
               Context.test_prop_miss cx id (name_of_propref propref) reasons use_op);
 
           begin
@@ -7192,8 +7195,8 @@ struct
                 }
             in
             add_output cx ~trace err);
-      Option.iter lcall ~f:(fun _ ->
-          if Option.is_none ucall then
+      Base.Option.iter lcall ~f:(fun _ ->
+          if Base.Option.is_none ucall then
             let prop = Some "$call" in
             let use_op =
               Frame
@@ -7574,8 +7577,8 @@ struct
       let opaquetype =
         {
           opaquetype with
-          underlying_t = Option.(underlying_t >>| only_any);
-          super_t = Option.(super_t >>| only_any);
+          underlying_t = Base.Option.(underlying_t >>| only_any);
+          super_t = Base.Option.(super_t >>| only_any);
           opaque_type_args =
             Base.List.(opaque_type_args >>| fun (str, r', _, polarity) -> (str, r', any, polarity));
         }
@@ -7600,7 +7603,7 @@ struct
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
-    Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
+    Base.Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
     contravariant ~use_op this_t;
     covariant ~use_op return_t
 
@@ -7909,7 +7912,7 @@ struct
     let lreason = reason_of_t lower in
     let own_props = Context.find_props cx own_props_id in
     let proto_props = Context.find_props cx proto_props_id in
-    let call_t = Option.map call_id ~f:(Context.find_call cx) in
+    let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
     own_props
     |> SMap.iter (fun s p ->
            let use_op =
@@ -7985,7 +7988,7 @@ struct
                    ids = Properties.Set.empty;
                  } ));
     call_t
-    |> Option.iter ~f:(fun ut ->
+    |> Base.Option.iter ~f:(fun ut ->
            let prop_name = Some "$call" in
            let use_op =
              Frame
@@ -8042,7 +8045,7 @@ struct
       let (_, result) =
         mk_type_destructor
           cx
-          ~trace:(Option.value ~default:Trace.dummy_trace trace)
+          ~trace:(Base.Option.value ~default:Trace.dummy_trace trace)
           use_op
           reason
           t
@@ -8223,7 +8226,7 @@ struct
                 let state =
                   {
                     todo_rev;
-                    acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
+                    acc = Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
                     spread_id = Reason.mk_id ();
                     union_reason = None;
                     curr_resolve_idx = 0;
@@ -8313,7 +8316,7 @@ struct
         cx
         ~trace
         (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
-      Option.iter errs_ref ~f:(fun errs_ref ->
+      Base.Option.iter errs_ref ~f:(fun errs_ref ->
           errs_ref := Cache.Subst.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
     );
     let (map, _) =
@@ -8330,7 +8333,7 @@ struct
                 cx
                 ~trace
                 (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
-              Option.iter errs_ref ~f:(fun errs_ref ->
+              Base.Option.iter errs_ref ~f:(fun errs_ref ->
                   errs_ref := Cache.Subst.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
               (AnyT (reason_op, AnyError), [])
             | (_, t :: ts) -> (t, ts)
@@ -9494,7 +9497,7 @@ struct
       match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
         let reason_named = replace_desc_reason (RStringLit x) reason_x in
-        Option.iter ~f:(fun f -> f reason_named) on_named_prop;
+        Base.Option.iter ~f:(fun f -> f reason_named) on_named_prop;
         let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
         Named (reason_prop, x)
       | _ -> Computed l
@@ -9503,7 +9506,7 @@ struct
     | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
     | WriteElem (tin, tout, mode) ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
-      Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout
+      Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout
     | CallElem (reason_call, ft) ->
       rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None))
 
@@ -9664,7 +9667,7 @@ struct
           in
           let exists_checks = Context.exists_checks cx in
           let exists_check =
-            ALocMap.find_opt loc exists_checks |> Option.value ~default:ExistsCheck.empty
+            ALocMap.find_opt loc exists_checks |> Base.Option.value ~default:ExistsCheck.empty
           in
           let exists_check =
             match Type_filter.maybe t with
@@ -10676,8 +10679,8 @@ struct
             in
             rec_unify cx trace ~use_op inst1 inst2
         | (DefT (_, _, ArrT (ArrayAT (t1, ts1))), DefT (_, _, ArrT (ArrayAT (t2, ts2)))) ->
-          let ts1 = Option.value ~default:[] ts1 in
-          let ts2 = Option.value ~default:[] ts2 in
+          let ts1 = Base.Option.value ~default:[] ts1 in
+          let ts2 = Base.Option.value ~default:[] ts2 in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
         | (DefT (r1, _, ArrT (TupleAT (_, ts1))), DefT (r2, _, ArrT (TupleAT (_, ts2)))) ->
           let l1 = List.length ts1 in
@@ -11254,7 +11257,7 @@ struct
                      | (Some tuple_types, ResolvedArg t) -> Some (t :: tuple_types)
                      | (_, ResolvedAnySpreadArg _) -> failwith "Should not be hit")
                    (Some [])
-              |> Option.map ~f:List.rev
+              |> Base.Option.map ~f:List.rev
             | `Array -> None
           in
           (* We infer the array's general element type by looking at the type of
@@ -11350,7 +11353,7 @@ struct
       fun cx ~use_op r resolved ->
         let (args, spread) = flatten r [] None resolved in
         let spread =
-          Option.map
+          Base.Option.map
             ~f:(fun tset ->
               let r = mk_reason RArray (aloc_of_reason r) in
               Tvar.mk_where cx r (fun tvar ->
@@ -11490,12 +11493,12 @@ struct
         | (Some t, IndexerProperty, Delete) ->
           (* Always OK to delete a property we found via an indexer *)
           let void = VoidT.why (reason_of_t t) |> with_trust literal_trust in
-          Option.iter
+          Base.Option.iter
             ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (void, prop_tout))
             prop_tout
         | (Some t, _, _) ->
           rec_flow cx trace (tin, UseT (use_op, t));
-          Option.iter
+          Base.Option.iter
             ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_tout))
             prop_tout
         | (None, _, _) ->
@@ -11528,14 +11531,14 @@ struct
     | (WriteElem (tin, tout, Assign), _)
     | (WriteElem (tin, tout, Delete), true) ->
       rec_flow cx trace (tin, UseT (use_op, value));
-      Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
+      Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
     | (WriteElem (tin, tout, Delete), false) ->
       (* Ok to delete arbitrary elements on arrays, not OK for tuples *)
       rec_flow
         cx
         trace
         (tin, UseT (use_op, VoidT.why (reason_of_t value) |> with_trust literal_trust));
-      Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
+      Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
     | (CallElem (reason_call, action), _) ->
       rec_flow cx trace (value, apply_method_action use_op reason_call action)
 
@@ -11720,7 +11723,7 @@ struct
     let rec recurse seen = function
       | OpenT (r, id) as t ->
         let reason = mod_reason r in
-        let use_desc = Option.is_some desc in
+        let use_desc = Base.Option.is_some desc in
         let constraints = Context.find_graph cx id in
         begin
           match constraints with
@@ -11791,7 +11794,7 @@ struct
          is just as transparent as its resulting tvar.) *)
         let defer_use_t = mod_reason_of_defer_use_t mod_reason defer_use_t in
         let reason = reason_of_defer_use_t defer_use_t in
-        let use_desc = Option.is_some desc in
+        let use_desc = Base.Option.is_some desc in
         begin
           match Cache.Eval.find_repos root defer_use_t id with
           | Some tvar -> tvar

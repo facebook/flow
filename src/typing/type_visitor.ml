@@ -286,7 +286,7 @@ class ['a] t =
       | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
       | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
       | ConstructorT (_, _, targs, args, t) ->
-        let acc = Option.fold ~init:acc ~f:(List.fold_left (self#targ cx pole_TODO)) targs in
+        let acc = Base.Option.fold ~init:acc ~f:(List.fold_left (self#targ cx pole_TODO)) targs in
         let acc = List.fold_left (self#call_arg cx) acc args in
         let acc = self#type_ cx pole_TODO acc t in
         acc
@@ -1016,7 +1016,7 @@ class ['a] t =
     method private nel : 't. ('a -> 't -> 'a) -> 'a -> 't Nel.t -> 'a = Nel.fold_left
 
     method private opt : 't. ('a -> 't -> 'a) -> 'a -> 't option -> 'a =
-      (fun f acc opt -> Option.fold opt ~init:acc ~f)
+      (fun f acc opt -> Base.Option.fold opt ~init:acc ~f)
 
     method private smap : 't. ('a -> 't -> 'a) -> 'a -> 't SMap.t -> 'a =
       (fun f acc smap -> SMap.fold (fun _ t acc -> f acc t) smap acc)

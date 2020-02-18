@@ -269,7 +269,10 @@ end = struct
               Logger.info "Successfully killed the server process"
             else
               let exit_status_string =
-                Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+                Base.Option.value_map
+                  ~default:"Invalid_exit_code"
+                  ~f:FlowExitStatus.to_string
+                  exit_type
               in
               Logger.error
                 "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
@@ -534,7 +537,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
     | Unix.WEXITED exit_status ->
       let exit_type = (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None) in
       let exit_status_string =
-        Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+        Base.Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
       in
       Logger.error
         "Flow server (pid %d) exited with code %s (%d)"

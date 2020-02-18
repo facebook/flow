@@ -84,15 +84,15 @@ module Jget = struct
   (* array_opt lifts all the array's members into the "json option" monad *)
 
   (* Accessors which return a supplied default on absence *)
-  let string_d json key ~default = Option.value (string_opt json key) ~default
+  let string_d json key ~default = Base.Option.value (string_opt json key) ~default
 
-  let bool_d json key ~default = Option.value (bool_opt json key) ~default
+  let bool_d json key ~default = Base.Option.value (bool_opt json key) ~default
 
-  let int_d json key ~default = Option.value (int_opt json key) ~default
+  let int_d json key ~default = Base.Option.value (int_opt json key) ~default
 
-  let float_d json key ~default = Option.value (float_opt json key) ~default
+  let float_d json key ~default = Base.Option.value (float_opt json key) ~default
 
-  let array_d json key ~default = Option.value (array_opt json key) ~default
+  let array_d json key ~default = Base.Option.value (array_opt json key) ~default
 
   (* Accessors which throw "Error.Parse key" on absence *)
   let bool_exn = get_exn bool_opt

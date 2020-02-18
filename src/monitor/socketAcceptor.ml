@@ -185,7 +185,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       let server1 = { server_build_id; server_bin; server_intent; server_version } in
       let wire : server_handshake_wire =
         ( server1 |> monitor_to_client_1__to_json |> Hh_json.json_to_string,
-          Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 []) )
+          Base.Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 []) )
       in
       let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble client_fd wire in
       Lwt.return_unit
@@ -228,7 +228,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
         failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
       (* Server still initializing *)
     else if not (StatusStream.ever_been_free ()) then
-      let client = Option.value_exn client in
+      let client = Base.Option.value_exn client in
       let status = StatusStream.get_status () in
       if client_handshake.server_should_hangup_if_still_initializing then (
         let%lwt () = respond Server_will_hangup (Some (Server_still_initializing status)) in
@@ -247,7 +247,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
         Lwt.return (Some client)
     (* Success *)
     else
-      let client = Option.value_exn client in
+      let client = Base.Option.value_exn client in
       let%lwt () = respond Server_will_continue (Some Server_ready) in
       Lwt.return (Some client))
 

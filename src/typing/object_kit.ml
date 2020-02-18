@@ -728,7 +728,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let mk_read_only_object cx reason slice =
           let { Object.reason = r; props; dict; flags } = slice in
           let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-          let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let dict = Base.Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
           let call = None in
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
@@ -755,7 +755,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           (* TODO(jmbrown): Add polarity information to props *)
           let polarity = Polarity.Neutral in
           let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-          let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let dict = Base.Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
           let call = None in
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
@@ -780,7 +780,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let mk_object cx reason { Object.reason = r; props; dict; flags } =
           let polarity = Polarity.Neutral in
           let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-          let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let dict = Base.Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
           let call = None in
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
@@ -936,7 +936,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             (* If we have some type for children then we want to add a children prop
              * to our config props. *)
             let config_props =
-              Option.value_map children ~default:config_props ~f:(fun children ->
+              Base.Option.value_map children ~default:config_props ~f:(fun children ->
                   SMap.add "children" (children, true) config_props)
             in
             (* Remove the key and ref props from our config. We check key and ref
@@ -991,7 +991,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 in
                 (* Merge the dictionary from our config with the defaults dictionary. *)
                 let dict =
-                  Option.merge config_dict defaults_dict (fun d1 d2 ->
+                  Base.Option.merge config_dict defaults_dict (fun d1 d2 ->
                       {
                         dict_name = None;
                         key = UnionT (reason, UnionRep.make d1.key d2.key []);
@@ -1027,7 +1027,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (* Create a new dictionary from our config's dictionary with a
                  * positive polarity. *)
                 let dict =
-                  Option.map config_dict (fun d ->
+                  Base.Option.map config_dict (fun d ->
                       {
                         dict_name = None;
                         key = d.key;
@@ -1162,7 +1162,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             props2
         in
         let dict =
-          Option.merge dict1 dict2 (fun d1 d2 ->
+          Base.Option.merge dict1 dict2 (fun d1 d2 ->
               {
                 dict_name = None;
                 key = intersection d1.key d2.key;
@@ -1208,7 +1208,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let props = Context.find_props cx id in
         let props = SMap.mapi (read_prop r flags) props in
         let dict =
-          Option.map dict (fun d ->
+          Base.Option.map dict (fun d ->
               {
                 dict_name = None;
                 key = d.key;

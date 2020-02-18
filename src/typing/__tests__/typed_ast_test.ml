@@ -267,7 +267,7 @@ let blacklist = SSet.of_list ["invariant_reachability/index.js"]
 
 let tests =
   let relative_test_dir = "flow/tests" in
-  let root = Option.value_exn (Sys_utils.realpath relative_test_dir) in
+  let root = Base.Option.value_exn (Sys_utils.realpath relative_test_dir) in
   let files = CommandUtils.expand_file_list [relative_test_dir] in
   let tests =
     let slash_regex = Str.regexp_string "/" in

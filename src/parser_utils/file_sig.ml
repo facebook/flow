@@ -367,7 +367,10 @@ struct
     let info = msig.info in
     let type_exports_named_info = List.rev_append named_info info.type_exports_named_info in
     let type_exports_star =
-      Option.fold ~f:(fun acc export_star -> export_star :: acc) ~init:msig.type_exports_star star
+      Base.Option.fold
+        ~f:(fun acc export_star -> export_star :: acc)
+        ~init:msig.type_exports_star
+        star
     in
     Ok
       {
@@ -391,7 +394,7 @@ struct
     | Ok (named0, named_info0, star0) ->
       let named = List.rev_append named named0 in
       let named_info = List.rev_append named_info named_info0 in
-      let star = Option.fold ~f:(fun acc export_star -> export_star :: acc) ~init:star0 star in
+      let star = Base.Option.fold ~f:(fun acc export_star -> export_star :: acc) ~init:star0 star in
       let module_kind = ES { named; star } in
       let module_kind_info = ESInfo named_info in
       Ok { msig with module_kind; info = { info with module_kind_info } }
@@ -400,7 +403,7 @@ struct
     let info = msig.info in
     match (msig.module_kind, info.module_kind_info) with
     | (CommonJS { mod_exp_loc = original_mod_exp_loc }, CommonJSInfo def) ->
-      let mod_exp_loc = Option.first_some original_mod_exp_loc (Some mod_exp_loc) in
+      let mod_exp_loc = Base.Option.first_some original_mod_exp_loc (Some mod_exp_loc) in
       let module_kind = CommonJS { mod_exp_loc } in
       let module_kind_info = CommonJSInfo (cjs_exports_def :: def) in
       Ok { msig with module_kind; info = { info with module_kind_info } }
@@ -615,7 +618,7 @@ struct
               else
                 failwith "unreachable"
             in
-            Option.iter
+            Base.Option.iter
               ~f:(fun (loc, { Ast.Identifier.name = local; comments = _ }) ->
                 add_named
                   "default"
@@ -623,7 +626,7 @@ struct
                   { remote_loc = loc; local_loc = loc }
                   (ref_of_kind importKind))
               default;
-            Option.iter
+            Base.Option.iter
               ~f:(function
                 | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
                   ->
@@ -683,7 +686,7 @@ struct
           | Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
           | _ -> None
         in
-        let local = Option.map ~f:Flow_ast_utils.source_of_ident local in
+        let local = Base.Option.map ~f:Flow_ast_utils.source_of_ident local in
         let export = (stmt_loc, ExportDefault { default_loc; local }) in
         let export_info = ExportDefaultDef declaration in
         this#add_exports stmt_loc Ast.Statement.ExportValue [("default", export)] [export_info] None;
@@ -755,7 +758,7 @@ struct
         let source =
           match source with
           | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
-            assert (Option.is_none default);
+            assert (Base.Option.is_none default);
 
             (* declare export default from not supported *)
             Some (loc, mref)
@@ -795,7 +798,7 @@ struct
             | NamedType (_, { TypeAlias.id; _ })
             | NamedOpaqueType (_, { OpaqueType.id; _ })
             | Interface (_, { Interface.id; _ }) ->
-              assert (Option.is_none default);
+              assert (Base.Option.is_none default);
               let export = (stmt_loc, ExportNamed { loc = fst id; kind }) in
               this#add_exports
                 stmt_loc
@@ -808,7 +811,7 @@ struct
           match specifiers with
           | None -> () (* assert declaration <> None *)
           | Some specifiers ->
-            assert (Option.is_none default);
+            assert (Base.Option.is_none default);
 
             (* declare export type unsupported *)
             let exportKind = Ast.Statement.ExportValue in
@@ -938,12 +941,12 @@ struct
                         _;
                       } ) ->
                   let bindings = this#require_pattern pattern in
-                  Option.map bindings (fun bindings -> (remote, bindings) :: named)
+                  Base.Option.map bindings (fun bindings -> (remote, bindings) :: named)
                 | _ -> None)
               []
               properties
           in
-          Option.map named_opt (fun named ->
+          Base.Option.map named_opt (fun named ->
               let named_bind =
                 List.map (fun (id, bind) -> (Flow_ast_utils.source_of_ident id, bind)) named
               in
@@ -1552,7 +1555,7 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
         {
           source = abstractify_fst source;
           require_loc = ALoc.of_loc require_loc;
-          bindings = Option.map ~f:abstractify_require_bindings bindings;
+          bindings = Base.Option.map ~f:abstractify_require_bindings bindings;
         }
     | WL.ImportDynamic { source; import_loc } ->
       WA.ImportDynamic { source = abstractify_fst source; import_loc = ALoc.of_loc import_loc }
@@ -1563,10 +1566,10 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
           import_loc = ALoc.of_loc import_loc;
           source = abstractify_fst source;
           named = abstractify_imported_locs_map named;
-          ns = Option.map ~f:abstractify_fst ns;
+          ns = Base.Option.map ~f:abstractify_fst ns;
           types = abstractify_imported_locs_map types;
           typesof = abstractify_imported_locs_map typesof;
-          typesof_ns = Option.map ~f:abstractify_fst typesof_ns;
+          typesof_ns = Base.Option.map ~f:abstractify_fst typesof_ns;
         }
   in
   let abstractify_requires = Base.List.map ~f:abstractify_require in
@@ -1574,12 +1577,12 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
     | WL.NamedDeclaration -> WA.NamedDeclaration
     | WL.NamedSpecifier { local; source } ->
       WA.NamedSpecifier
-        { local = abstractify_fst local; source = Option.map ~f:abstractify_fst source }
+        { local = abstractify_fst local; source = Base.Option.map ~f:abstractify_fst source }
   in
   let abstractify_export = function
     | WL.ExportDefault { default_loc; local } ->
       WA.ExportDefault
-        { default_loc = ALoc.of_loc default_loc; local = Option.map ~f:abstractify_fst local }
+        { default_loc = ALoc.of_loc default_loc; local = Base.Option.map ~f:abstractify_fst local }
     | WL.ExportNamed { loc; kind } ->
       WA.ExportNamed { loc = ALoc.of_loc loc; kind = abstractify_named_export_kind kind }
     | WL.ExportNs { loc; star_loc; source } ->
@@ -1600,7 +1603,7 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   in
   let abstractify_module_kind = function
     | WL.CommonJS { mod_exp_loc } ->
-      WA.CommonJS { mod_exp_loc = Option.map ~f:ALoc.of_loc mod_exp_loc }
+      WA.CommonJS { mod_exp_loc = Base.Option.map ~f:ALoc.of_loc mod_exp_loc }
     | WL.ES { named; star } ->
       WA.ES { named = abstractify_named_exports named; star = abstractify_es_star star }
   in

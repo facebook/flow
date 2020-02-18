@@ -41,7 +41,8 @@ let merge_error_maps =
 (* We just want to replace the old coverage with the new one *)
 let update_coverage coverage = function
   | None -> coverage
-  | Some new_coverage -> FilenameMap.union ~combine:(fun _ _ -> Option.return) coverage new_coverage
+  | Some new_coverage ->
+    FilenameMap.union ~combine:(fun _ _ -> Base.Option.return) coverage new_coverage
 
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
@@ -86,17 +87,17 @@ let with_timer_lwt =
   in
   let profile_add_memory profiling getter group metric =
     getter "worker_rss_start"
-    |> Option.iter ~f:(fun start ->
+    |> Base.Option.iter ~f:(fun start ->
            getter "worker_rss_delta"
-           |> Option.iter ~f:(fun delta ->
+           |> Base.Option.iter ~f:(fun delta ->
                   getter "worker_rss_hwm_delta"
-                  |> Option.iter ~f:(fun hwm_delta ->
+                  |> Base.Option.iter ~f:(fun hwm_delta ->
                          Profiling_js.add_memory ~group ~metric ~start ~delta ~hwm_delta profiling)))
   in
   let sample_memory timer profiling ~cgroup_stats ~hash_stats ~heap_size =
     Profiling_js.sample_memory profiling ~group:timer ~metric:"heap" ~value:(float heap_size);
 
-    Option.iter hash_stats ~f:(fun { SharedMem_js.nonempty_slots; used_slots; slots } ->
+    Base.Option.iter hash_stats ~f:(fun { SharedMem_js.nonempty_slots; used_slots; slots } ->
         Profiling_js.sample_memory
           profiling
           ~group:timer
@@ -129,7 +130,7 @@ let with_timer_lwt =
       Profiling_js.sample_memory profiling ~group:timer ~metric:"cgroup_file" ~value:(float file)
   in
   fun ?options timer profiling f ->
-    let should_print = Option.value_map options ~default:false ~f:Options.should_profile in
+    let should_print = Base.Option.value_map options ~default:false ~f:Options.should_profile in
     let sample_memory = sample_memory timer profiling in
     clear_worker_memory ();
 
@@ -664,7 +665,7 @@ let run_merge_service
           coverage,
           skipped_count,
           sig_new_or_changed,
-          Option.map first_internal_error ~f:(spf "First merge internal error:\n%s") ))
+          Base.Option.map first_internal_error ~f:(spf "First merge internal error:\n%s") ))
 
 let mk_intermediate_result_callback
     ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
@@ -723,7 +724,7 @@ let mk_intermediate_result_callback
                filename, because the clients only receive warnings for files they have open. *)
                       let warns_acc =
                         let acc =
-                          Option.value
+                          Base.Option.value
                             (FilenameMap.find_opt file warns_acc)
                             ~default:ConcreteLocPrintableErrorSet.empty
                         in
@@ -992,7 +993,7 @@ end = struct
     let total_count = List.length files in
     let todo = ref (files, total_count) in
     let finished_count = ref 0 in
-    let num_workers = max 1 (Option.value_map workers ~default:1 ~f:List.length) in
+    let num_workers = max 1 (Base.Option.value_map workers ~default:1 ~f:List.length) in
     let status_update () =
       MonitorRPC.status_update
         ServerStatus.(Checking_progress { total = Some total_count; finished = !finished_count })
@@ -1126,9 +1127,9 @@ end = struct
               coverage,
               time_to_check_merged,
               !skipped_count,
-              Option.map ~f:File_key.to_string !slowest_file,
+              Base.Option.map ~f:File_key.to_string !slowest_file,
               !num_slow_files,
-              Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
+              Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
 end
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
@@ -1427,7 +1428,7 @@ let focused_files_and_dependents_to_infer
   let input =
     CheckedSet.add
       ~focused:input_focused
-      ~dependencies:(Option.value ~default:FilenameSet.empty input_dependencies)
+      ~dependencies:(Base.Option.value ~default:FilenameSet.empty input_dependencies)
       CheckedSet.empty
   in
   (* Filter unchecked files out of the input *)
@@ -1468,7 +1469,7 @@ let filter_out_node_modules ~options =
 let unfocused_files_and_dependents_to_infer
     ~options ~input_focused ~input_dependencies ~sig_dependent_files ~all_dependent_files =
   let focused = filter_out_node_modules ~options input_focused in
-  let dependencies = Option.value ~default:FilenameSet.empty input_dependencies in
+  let dependencies = Base.Option.value ~default:FilenameSet.empty input_dependencies in
   Lwt.return
     ( CheckedSet.add ~focused ~dependencies CheckedSet.empty,
       sig_dependent_files,
@@ -2271,7 +2272,7 @@ end = struct
         ~persistent_connections:(Some env.ServerEnv.connections)
         ~recheck_reasons
     in
-    Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
+    Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
     let%lwt ( errors,
               coverage,
@@ -2296,7 +2297,7 @@ end = struct
         ~recheck_reasons
         ~cannot_skip_direct_dependents
     in
-    Option.iter check_internal_error ~f:(Hh_logger.error "%s");
+    Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
     let%lwt () =
       Recheck_stats.record_recheck_time
@@ -2325,7 +2326,7 @@ end = struct
           num_slow_files;
           estimates;
         },
-        Option.first_some merge_internal_error check_internal_error )
+        Base.Option.first_some merge_internal_error check_internal_error )
 
   (* We maintain the following invariant across rechecks: The set of `files` contains files that
    * parsed successfully in the previous phase (which could be the init phase or a previous recheck
@@ -2457,7 +2458,7 @@ let recheck
         estimated_time_per_file,
         estimated_files_to_recheck,
         estimated_files_to_init ) =
-    Option.value_map
+    Base.Option.value_map
       estimates
       ~default:(None, None, None, None, None, None)
       ~f:(fun {
@@ -2935,7 +2936,7 @@ let init ~profiling ~workers options =
   let%lwt (updates, files_to_focus) =
     let now = Unix.gettimeofday () in
     let timeout = Options.file_watcher_timeout options in
-    let deadline = Option.map ~f:(fun timeout -> now +. timeout) timeout in
+    let deadline = Base.Option.map ~f:(fun timeout -> now +. timeout) timeout in
     MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
     let%lwt (watchman_updates, files_to_focus) =
       try%lwt
@@ -3032,7 +3033,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~persistent_connections:None
           ~recheck_reasons
       in
-      Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
+      Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
       let%lwt (errors, coverage, _, _, _, _, check_internal_error) =
         Check_files.check_files
@@ -3051,9 +3052,9 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~recheck_reasons
           ~cannot_skip_direct_dependents:true
       in
-      Option.iter check_internal_error ~f:(Hh_logger.error "%s");
+      Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
-      let first_internal_error = Option.first_some merge_internal_error check_internal_error in
+      let first_internal_error = Base.Option.first_some merge_internal_error check_internal_error in
       let checked_files = to_merge_or_check in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
       Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error))

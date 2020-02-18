@@ -265,7 +265,7 @@ module Signature = struct
                   import_loc
                   source
                   ImportValue
-                  (Option.map ~f:Flow_ast_utils.ident_of_source ns)
+                  (Base.Option.map ~f:Flow_ast_utils.ident_of_source ns)
                   env
               in
               let env = add_named_imports import_loc source ImportType types env in
@@ -274,7 +274,7 @@ module Signature = struct
                 import_loc
                 source
                 ImportTypeof
-                (Option.map ~f:Flow_ast_utils.ident_of_source typesof_ns)
+                (Base.Option.map ~f:Flow_ast_utils.ident_of_source typesof_ns)
                 env
             | _ -> env)
           env

@@ -12,7 +12,7 @@ let parameter_name is_opt name =
     else
       ""
   in
-  Option.value name ~default:"_" ^ opt
+  Base.Option.value name ~default:"_" ^ opt
 
 let func_details params rest_param return =
   let param_tys =

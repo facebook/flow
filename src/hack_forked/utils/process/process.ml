@@ -66,7 +66,7 @@ let rec maybe_consume
     ()
   else
     let start_t = Unix.time () in
-    Option.iter !fd_ref ~f:(fun fd ->
+    Base.Option.iter !fd_ref ~f:(fun fd ->
         match Unix.select [fd] [] [] max_time with
         | ([], _, _) -> ()
         | _ ->
@@ -124,7 +124,7 @@ let is_ready (process : Process_types.t) : bool =
 let kill_and_cleanup_fds (pid : int) (fds : Unix.file_descr option ref list) : unit =
   Unix.kill pid Sys.sigkill;
   let maybe_close fd_ref =
-    Option.iter !fd_ref ~f:(fun fd ->
+    Base.Option.iter !fd_ref ~f:(fun fd ->
         Unix.close fd;
         fd_ref := None)
   in
@@ -260,7 +260,7 @@ let exec_no_chdir
   Unix.set_close_on_exec stdout_parent;
   Unix.set_close_on_exec stderr_parent;
 
-  let env = Option.value env ~default:Process_types.Default in
+  let env = Base.Option.value env ~default:Process_types.Default in
   let pid =
     match env_to_array env with
     | None -> Unix.create_process prog args stdin_child stdout_child stderr_child
@@ -307,7 +307,7 @@ let chdir_main (p : chdir_params) : 'a =
   let args = Array.of_list (p.prog :: p.args) in
   (* NOTE: to preserve original behavior of this code, empty environment is the default here.
     This is different from exec_no_chdir where the default is Default (current environment). *)
-  let env = Option.value p.env ~default:Process_types.Empty in
+  let env = Base.Option.value p.env ~default:Process_types.Empty in
   let env = env_to_array env in
   match env with
   | None -> Unix.execvp p.prog args

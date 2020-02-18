@@ -73,7 +73,7 @@ module Make (S : State) : S with type s = S.t = struct
   let modify f = get >>= fun st -> put (f st)
 
   let option f = function
-    | Some x -> f x >>| Option.some
+    | Some x -> f x >>| Base.Option.some
     | None -> return None
 
   let error x s = (Error x, s)

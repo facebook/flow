@@ -51,7 +51,7 @@ class type_parameter_mapper =
       let this_tparam =
         let open Ast.Class in
         let { body = (body_loc, _); id; _ } = cls in
-        let id_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
+        let id_loc = Base.Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
         (id_loc, "this")
       in
       let originally_bound_tparams = bound_tparams in

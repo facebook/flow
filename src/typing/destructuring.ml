@@ -64,7 +64,7 @@ let array_element cx acc i loc =
   in
   let reason = mk_reason (RCustom (Utils_js.spf "element %d" i)) loc in
   let init =
-    Option.map init (fun init ->
+    Base.Option.map init (fun init ->
         ( loc,
           let open Ast.Expression in
           Member
@@ -82,27 +82,29 @@ let array_element cx acc i loc =
                         } );
               } ))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
+  let refinement =
+    Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
+  in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
     | None -> (Some current, destruct cx reason ~annot (Elem key) current)
   in
-  let default = Option.map default (Default.elem key reason) in
+  let default = Base.Option.map default (Default.elem key reason) in
   { acc with parent; current; init; default }
 
 let array_rest_element cx acc i loc =
   let { current; default; annot; _ } = acc in
   let reason = mk_reason RArrayPatternRestProp loc in
   let (parent, current) = (Some current, destruct cx reason ~annot (ArrRest i) current) in
-  let default = Option.map default (Default.arr_rest i reason) in
+  let default = Base.Option.map default (Default.arr_rest i reason) in
   { acc with parent; current; default }
 
 let object_named_property ~has_default cx acc loc x comments =
   let { current; init; default; annot; _ } = acc in
   let reason = mk_reason (RProperty (Some x)) loc in
   let init =
-    Option.map init (fun init ->
+    Base.Option.map init (fun init ->
         ( loc,
           let open Ast.Expression in
           Member
@@ -112,9 +114,11 @@ let object_named_property ~has_default cx acc loc x comments =
                 property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
               } ))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
+  let refinement =
+    Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
+  in
   let default =
-    Option.map default (fun default ->
+    Base.Option.map default (fun default ->
         let d = Default.prop x reason has_default default in
         if has_default then
           Default.default reason d
@@ -149,23 +153,25 @@ let object_computed_property cx ~expr acc e =
   let (((loc, t), _) as e') = expr cx e in
   let reason = mk_reason (RProperty None) loc in
   let init =
-    Option.map init (fun init ->
+    Base.Option.map init (fun init ->
         (loc, Ast.Expression.(Member Member.{ _object = init; property = PropertyExpression e })))
   in
-  let refinement = Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc) in
+  let refinement =
+    Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
+  in
   let (parent, current) =
     match refinement with
     | Some t -> (None, t)
     | None -> (Some current, destruct cx reason ~annot (Elem t) current)
   in
-  let default = Option.map default (Default.elem t reason) in
+  let default = Base.Option.map default (Default.elem t reason) in
   ({ acc with parent; current; init; default }, e')
 
 let object_rest_property cx acc xs loc =
   let { current; default; annot; _ } = acc in
   let reason = mk_reason RObjectPatternRestProp loc in
   let (parent, current) = (Some current, destruct cx reason ~annot (ObjRest xs) current) in
-  let default = Option.map default (Default.obj_rest xs reason) in
+  let default = Base.Option.map default (Default.obj_rest xs reason) in
   { acc with parent; current; default }
 
 let object_property
@@ -268,7 +274,7 @@ let rec pattern cx ~expr ~f acc (loc, p) =
 and array_elements cx ~expr ~f acc =
   let open Ast.Pattern.Array in
   List.mapi (fun i ->
-      Option.map ~f:(function
+      Base.Option.map ~f:(function
           | Element (loc, { Element.argument = p; default = d }) ->
             let acc = array_element cx acc i loc in
             let (acc, d) = pattern_default cx ~expr acc d in

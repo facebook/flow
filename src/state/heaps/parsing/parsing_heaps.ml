@@ -157,9 +157,9 @@ module ParsingHeaps = struct
     ASTHeap.add file (compactify_loc ast);
     DocblockHeap.add file info;
     FileSigHeap.add file file_sig;
-    Option.iter sig_opt ~f:(fun (sig_ast, sig_file_sig, aloc_table) ->
+    Base.Option.iter sig_opt ~f:(fun (sig_ast, sig_file_sig, aloc_table) ->
         SigASTHeap.add file (remove_source_aloc sig_ast);
-        Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
+        Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
         SigFileSigHeap.add file sig_file_sig)
 
   let oldify_batch files =
@@ -246,7 +246,7 @@ end = struct
 
   let get_ast ~reader:_ key =
     let ast = ASTHeap.get key in
-    Option.map ~f:(decompactify_loc key) ast
+    Base.Option.map ~f:(decompactify_loc key) ast
 
   let get_docblock ~reader:_ = DocblockHeap.get
 
@@ -391,7 +391,7 @@ module Reader : READER with type reader = State_reader.t = struct
       else
         ASTHeap.get key
     in
-    Option.map ~f:(decompactify_loc key) ast
+    Base.Option.map ~f:(decompactify_loc key) ast
 
   let get_sig_ast ~reader:_ key =
     let ast =
@@ -400,7 +400,7 @@ module Reader : READER with type reader = State_reader.t = struct
       else
         SigASTHeap.get key
     in
-    Option.map ~f:(add_source_aloc key) ast
+    Base.Option.map ~f:(add_source_aloc key) ast
 
   let get_sig_ast_aloc_table ~reader:_ key =
     if should_use_oldified key then

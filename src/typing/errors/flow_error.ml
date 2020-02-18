@@ -29,7 +29,7 @@ let trace_reasons { trace_reasons; _ } = trace_reasons
 
 let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
   {
-    loc = Option.map ~f loc;
+    loc = Base.Option.map ~f loc;
     msg = map_loc_of_error_message f msg;
     source_file;
     trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
@@ -619,12 +619,12 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
             (* If our current loc is inside our root_loc then use our current loc
              * since it is the smallest possible loc in our root_loc. *)
             let root_loc = loc_of_reason root_reason in
-            let root_specific_loc = Option.map root_specific_reason loc_of_reason in
+            let root_specific_loc = Base.Option.map root_specific_reason loc_of_reason in
             let loc =
               if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0 then
                 loc
               else
-                Option.value root_specific_loc ~default:root_loc
+                Base.Option.value root_specific_loc ~default:root_loc
             in
             (* Return our root loc and message in addition to the true primary loc
              * and frames. *)
@@ -634,7 +634,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
         fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
           let (root, loc, frames) = loop loc ([], []) use_op in
           let root =
-            Option.map root (fun (root_loc, root_message) ->
+            Base.Option.map root (fun (root_loc, root_message) ->
                 (root_loc, root_message @ [text " because"]))
           in
           (root, loc, frames))

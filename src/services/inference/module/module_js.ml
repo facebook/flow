@@ -538,7 +538,7 @@ module Haste : MODULE_SYSTEM = struct
     | [] -> None
     | package_name :: rest ->
       Module_heaps.Reader_dispatcher.get_package_directory ~reader package_name
-      |> Option.map ~f:(fun package -> Files.construct_path package rest)
+      |> Base.Option.map ~f:(fun package -> Files.construct_path package rest)
 
   (* similar to Node resolution, with possible special cases *)
   let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r =

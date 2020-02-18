@@ -489,7 +489,7 @@ and 'loc upper_kind =
   | IncompatibleUnclassified of string
 
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
-  { first_reason = f first_reason; second_reason = Option.map ~f second_reason }
+  { first_reason = f first_reason; second_reason = Base.Option.map ~f second_reason }
 
 let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
@@ -518,7 +518,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIncompatible { use_op; lower = (lreason, lkind); upper = (ureason, ukind); branches } ->
     EIncompatible
       {
-        use_op = Option.map ~f:map_use_op use_op;
+        use_op = Base.Option.map ~f:map_use_op use_op;
         lower = (map_reason lreason, lkind);
         upper = (map_reason ureason, map_upper_kind ukind);
         branches = Base.List.map ~f:map_branch branches;
@@ -534,7 +534,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIncompatibleProp { use_op; prop; reason_prop; reason_obj; special } ->
     EIncompatibleProp
       {
-        use_op = Option.map ~f:map_use_op use_op;
+        use_op = Base.Option.map ~f:map_use_op use_op;
         prop;
         reason_prop = map_reason reason_prop;
         reason_obj = map_reason reason_obj;
@@ -585,7 +585,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_obj = map_reason reason_obj;
         name;
         suggestion;
-        use_op = Option.map ~f:map_use_op use_op;
+        use_op = Base.Option.map ~f:map_use_op use_op;
       }
   | EPrivateLookupFailed ((r1, r2), x, op) ->
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
@@ -850,12 +850,12 @@ let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 (* A utility function for getting and updating the use_op in error messages. *)
 let util_use_op_of_msg nope util = function
   | EIncompatible { use_op; lower; upper; branches } ->
-    Option.value_map use_op ~default:nope ~f:(fun use_op ->
+    Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
         util use_op (fun use_op -> EIncompatible { use_op = Some use_op; lower; upper; branches }))
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     util use_op (fun use_op -> EIncompatibleDefs { use_op; reason_lower; reason_upper; branches })
   | EIncompatibleProp { use_op; prop; reason_prop; reason_obj; special } ->
-    Option.value_map use_op ~default:nope ~f:(fun use_op ->
+    Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
         util use_op (fun use_op ->
             EIncompatibleProp { use_op = Some use_op; prop; reason_prop; reason_obj; special }))
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
@@ -1377,13 +1377,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           upper_kind;
           reason_lower;
           reason_upper;
-          use_op = Option.value ~default:unknown_use use_op;
+          use_op = Base.Option.value ~default:unknown_use use_op;
         }
     else
       Speculation
         {
           loc = loc_of_reason reason_upper;
-          use_op = Option.value ~default:unknown_use use_op;
+          use_op = Base.Option.value ~default:unknown_use use_op;
           branches;
         }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
@@ -1398,7 +1398,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         prop;
         reason_obj;
         suggestion = None;
-        use_op = Option.value ~default:unknown_use use_op;
+        use_op = Base.Option.value ~default:unknown_use use_op;
       }
   | EDebugPrint (_, str) -> Normal { features = [text str] }
   | EExportValueAsType (_, export_name) ->
@@ -1713,7 +1713,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         prop = name;
         suggestion;
         reason_obj;
-        use_op = Option.value ~default:unknown_use use_op;
+        use_op = Base.Option.value ~default:unknown_use use_op;
       }
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing

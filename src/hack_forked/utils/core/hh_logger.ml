@@ -27,7 +27,7 @@ let dupe_log : (string * out_channel) option ref = ref None
 
 let set_log filename fd = dupe_log := Some (filename, fd)
 
-let get_log_name () = Option.map !dupe_log ~f:fst
+let get_log_name () = Base.Option.map !dupe_log ~f:fst
 
 let id : string option ref = ref None
 
@@ -41,7 +41,7 @@ let id_string () =
 let print_with_newline ?exn fmt =
   let print_raw ?exn s =
     let exn_str =
-      Option.value_map exn ~default:"" ~f:(fun exn ->
+      Base.Option.value_map exn ~default:"" ~f:(fun exn ->
           let bt = String_utils.indent 8 @@ String.trim @@ Exception.get_backtrace_string exn in
           let bt =
             if bt = "" then

@@ -26,9 +26,9 @@ let add_autocomplete_token contents line column =
   let f (_, x, _) = x in
   let default = "" in
   ( contents_with_token,
-    Option.value_map ~f ~default (Line.split_nth contents_with_token (line - 1))
-    ^ Option.value_map ~f ~default (Line.split_nth contents_with_token line)
-    ^ Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1)) )
+    Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line - 1))
+    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token line)
+    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1)) )
 
 (* the autocomplete token inserts `suffix_len` characters, which are included
  * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before
@@ -524,7 +524,7 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
   |> SMap.bindings
   |> Base.List.filter_map ~f:(fun (name, loc) ->
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
-         Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
+         Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
              (name, Type.TypeScheme.{ tparams; type_ })))
   |> Ty_normalizer.from_schemes
        ~options:ty_normalizer_options
@@ -659,8 +659,8 @@ class local_type_identifiers_searcher =
         | ImportValue -> false
       in
       let declaration_binds_type = binds_type importKind in
-      if declaration_binds_type then Option.iter default ~f:this#add_id;
-      Option.iter specifiers ~f:(function
+      if declaration_binds_type then Base.Option.iter default ~f:this#add_id;
+      Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers specifiers ->
             List.iter
               (fun { kind; local; remote } ->
@@ -669,7 +669,7 @@ class local_type_identifiers_searcher =
                   | None -> declaration_binds_type
                   | Some k -> binds_type k
                 in
-                if specifier_binds_type then this#add_id (Option.value local ~default:remote))
+                if specifier_binds_type then this#add_id (Base.Option.value local ~default:remote))
               specifiers
           | ImportNamespaceSpecifier _ -> ( (* namespaces can't be types *) ));
       x

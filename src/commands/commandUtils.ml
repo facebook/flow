@@ -119,7 +119,7 @@ let collect_error_flags
   let message_width =
     match message_width with
     | Some message_width -> message_width
-    | None -> Option.value_map (Tty.get_term_cols ()) ~default:120 ~f:(min 120)
+    | None -> Base.Option.value_map (Tty.get_term_cols ()) ~default:120 ~f:(min 120)
   in
   main
     {
@@ -266,10 +266,12 @@ let shm_flags prev =
 
 let shm_config shm_flags flowconfig =
   let hash_table_pow =
-    Option.value shm_flags.shm_hash_table_pow ~default:(FlowConfig.shm_hash_table_pow flowconfig)
+    Base.Option.value
+      shm_flags.shm_hash_table_pow
+      ~default:(FlowConfig.shm_hash_table_pow flowconfig)
   in
   let log_level =
-    Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
+    Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
   { SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
 
@@ -404,7 +406,9 @@ let log_file_flags =
     Path.concat dirname basename |> Path.to_string
   in
   let collector main server_log_file monitor_log_file =
-    main (Option.map ~f:normalize server_log_file) (Option.map ~f:normalize monitor_log_file)
+    main
+      (Base.Option.map ~f:normalize server_log_file)
+      (Base.Option.map ~f:normalize monitor_log_file)
   in
   fun prev ->
     CommandSpec.ArgSpec.(
@@ -1121,7 +1125,7 @@ let make_options
     (options_flags : Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
-    |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
+    |> Base.Option.value ~default:(FlowConfig.temp_dir flowconfig)
     |> Path.make
     |> Path.to_string
   in
@@ -1152,20 +1156,24 @@ let make_options
       | None -> FlowConfig.merge_timeout flowconfig
       | Some 0 -> None
       | timeout -> timeout)
-      |> Option.map ~f:float_of_int
+      |> Base.Option.map ~f:float_of_int
     in
     (* The CLI flag overrides the .flowconfig *)
     let opt_saved_state_fetcher =
-      Option.value
+      Base.Option.value
         options_flags.saved_state_fetcher
         ~default:(FlowConfig.saved_state_fetcher flowconfig)
     in
     let opt_lazy_mode =
-      let default = Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE in
-      Option.value lazy_mode ~default
+      let default =
+        Base.Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE
+      in
+      Base.Option.value lazy_mode ~default
     in
     let opt_file_watcher_timeout =
-      match Option.first_some file_watcher_timeout (FlowConfig.file_watcher_timeout flowconfig) with
+      match
+        Base.Option.first_some file_watcher_timeout (FlowConfig.file_watcher_timeout flowconfig)
+      with
       | Some 0 -> None
       | Some x -> Some (float x)
       | None -> Some (float default_file_watcher_timeout)
@@ -1180,7 +1188,9 @@ let make_options
       options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig
     in
     let opt_wait_for_recheck =
-      Option.value options_flags.wait_for_recheck ~default:(FlowConfig.wait_for_recheck flowconfig)
+      Base.Option.value
+        options_flags.wait_for_recheck
+        ~default:(FlowConfig.wait_for_recheck flowconfig)
     in
     let strict_mode = FlowConfig.strict_mode flowconfig in
     {
@@ -1194,7 +1204,7 @@ let make_options
       opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
       opt_wait_for_recheck;
       opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
-      opt_traces = Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
+      opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
       opt_quiet = options_flags.Options_flags.quiet;
       opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
       opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
@@ -1206,7 +1216,7 @@ let make_options
       opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
       opt_temp_dir = temp_dir;
       opt_max_workers =
-        Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
+        Base.Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
         |> min Sys_utils.nbr_procs;
       opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
       opt_suppress_types = FlowConfig.suppress_types flowconfig;
@@ -1255,7 +1265,7 @@ let make_options
       opt_abstract_locations;
       opt_include_suppressions = options_flags.include_suppressions;
       opt_trust_mode =
-        Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
+        Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
       opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
       opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
       opt_max_rss_bytes_for_check_per_worker =
@@ -1270,7 +1280,10 @@ let make_env flowconfig_name connect_flags root =
   let flowconfig = read_config_or_exit flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir =
-    Option.value_map ~f:normalize ~default:(FlowConfig.temp_dir flowconfig) connect_flags.temp_dir
+    Base.Option.value_map
+      ~f:normalize
+      ~default:(FlowConfig.temp_dir flowconfig)
+      connect_flags.temp_dir
   in
   let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
   let retries = connect_flags.retries in
@@ -1521,7 +1534,7 @@ let rec connect_and_make_request flowconfig_name =
             Some (FileWatcherStatus.string_of_status watcher_status)
         | (server_status, _) -> Some (ServerStatus.string_of_status ~use_emoji server_status)
       in
-      Option.iter status_string (fun status_string ->
+      Base.Option.iter status_string (fun status_string ->
           if not quiet then eprintf_with_spinner "Please wait. %s" status_string);
 
       wait_for_response ?timeout ~quiet ~root ic
@@ -1625,14 +1638,14 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
     in
     raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
   | (_, Some file_watcher) -> file_watcher
-  | (_, None) -> Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+  | (_, None) -> Base.Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
 
 (* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
  * has changed since the location was constructed, the offset could be incorrect. If the file has
  * changed such that the contents no longer have text at the given line/column, the offset is not
  * included in the JSON output. *)
 let json_of_loc_with_offset ?stdin_file ~strip_root loc =
-  Option.(
+  Base.Option.(
     let file_content =
       let path = Loc.source loc >>= File_key.to_path %> Base.Result.ok in
       match stdin_file with
@@ -1640,5 +1653,7 @@ let json_of_loc_with_offset ?stdin_file ~strip_root loc =
         Some (File_input.content_of_file_input_unsafe fileinput)
       | _ -> path >>= Sys_utils.cat_or_failed
     in
-    let offset_table = Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8) in
+    let offset_table =
+      Base.Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+    in
     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)

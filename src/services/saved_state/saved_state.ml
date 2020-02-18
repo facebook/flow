@@ -86,12 +86,12 @@ end = struct
       inherit File_sig.mapper
 
       method! loc (loc : Loc.t) =
-        { loc with Loc.source = Option.map ~f:(normalize_file_key ~root) loc.Loc.source }
+        { loc with Loc.source = Base.Option.map ~f:(normalize_file_key ~root) loc.Loc.source }
     end
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error ~root =
-    Flow_error.map_loc_of_error (ALoc.update_source (Option.map ~f:(normalize_file_key ~root)))
+    Flow_error.map_loc_of_error (ALoc.update_source (Base.Option.map ~f:(normalize_file_key ~root)))
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -345,11 +345,12 @@ end = struct
       inherit File_sig.mapper
 
       method! loc (loc : Loc.t) =
-        { loc with Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source }
+        { loc with Loc.source = Base.Option.map ~f:(denormalize_file_key ~root) loc.Loc.source }
     end
 
   let denormalize_error ~root =
-    Flow_error.map_loc_of_error (ALoc.update_source (Option.map ~f:(denormalize_file_key ~root)))
+    Flow_error.map_loc_of_error
+      (ALoc.update_source (Base.Option.map ~f:(denormalize_file_key ~root)))
 
   let verify_version =
     let version_length = 16 in

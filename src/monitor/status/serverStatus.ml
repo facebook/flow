@@ -415,9 +415,9 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
               recheck_worst_duration = Some duration;
               recheck_worst_dependent_file_count = Some dependent_file_count;
               recheck_worst_changed_file_count = Some changed_file_count;
-              recheck_worst_cycle_size = Option.map top_cycle ~f:(fun (_, size) -> size);
+              recheck_worst_cycle_size = Base.Option.map top_cycle ~f:(fun (_, size) -> size);
               recheck_worst_cycle_leader =
-                Option.map top_cycle ~f:(fun (f, _) ->
+                Base.Option.map top_cycle ~f:(fun (f, _) ->
                     f |> File_key.to_string |> Files.relative_path (Path.to_string root));
             }
         in
@@ -438,7 +438,7 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
  * monitor might know that the server actually is restarting. This function turns a initializing
  * status into a restarting status *)
 let change_init_to_restart restart_reason status =
-  Option.value_map restart_reason ~default:status ~f:(fun restart_reason ->
+  Base.Option.value_map restart_reason ~default:status ~f:(fun restart_reason ->
       match status with
       | Typechecking (Initializing, tcs) -> Typechecking (Restarting restart_reason, tcs)
       | _ -> status)

@@ -26,7 +26,7 @@ let getenv_user () =
   let logname_var = "LOGNAME" in
   let user = get_env user_var in
   let logname = get_env logname_var in
-  Option.first_some user logname
+  Base.Option.first_some user logname
 
 let getenv_home () =
   let home_var =

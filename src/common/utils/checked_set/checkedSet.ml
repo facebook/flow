@@ -55,7 +55,7 @@ let mem = FilenameMap.mem
 
 let add =
   let add_all files kind checked =
-    Option.value_map
+    Base.Option.value_map
       files
       ~f:(fun files ->
         FilenameSet.fold (fun f checked -> FilenameMap.add ~combine f kind checked) files checked)

@@ -24,7 +24,7 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
      it in the trust graph. *)
   let mk_trust_var cx ?initial () =
     let tvar = Reason.mk_id () in
-    let initial = Option.value initial ~default:(dynamic_qualifier ()) in
+    let initial = Base.Option.value initial ~default:(dynamic_qualifier ()) in
     Context.add_trust_var cx tvar (new_unresolved_root initial);
     tvar
 

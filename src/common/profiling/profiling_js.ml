@@ -129,13 +129,17 @@ end = struct
   let time_measurement start end_ = { start_age = start; duration = end_ -. start }
 
   let (worker_wall_start_times, worker_wall_times) =
-    let get_run () = Option.value ~default:0.0 (Measure.get_sum "worker_wall_time") in
-    let get_read () = Option.value ~default:0.0 (Measure.get_sum "worker_read_request") in
-    let get_send () = Option.value ~default:0.0 (Measure.get_sum "worker_send_response") in
-    let get_idle () = Option.value ~default:0.0 (Measure.get_sum "worker_idle") in
-    let get_done () = Option.value ~default:0.0 (Measure.get_sum "worker_done") in
-    let get_gc_minor () = Option.value ~default:0.0 (Measure.get_sum "worker_gc_minor_wall_time") in
-    let get_gc_major () = Option.value ~default:0.0 (Measure.get_sum "worker_gc_major_wall_time") in
+    let get_run () = Base.Option.value ~default:0.0 (Measure.get_sum "worker_wall_time") in
+    let get_read () = Base.Option.value ~default:0.0 (Measure.get_sum "worker_read_request") in
+    let get_send () = Base.Option.value ~default:0.0 (Measure.get_sum "worker_send_response") in
+    let get_idle () = Base.Option.value ~default:0.0 (Measure.get_sum "worker_idle") in
+    let get_done () = Base.Option.value ~default:0.0 (Measure.get_sum "worker_done") in
+    let get_gc_minor () =
+      Base.Option.value ~default:0.0 (Measure.get_sum "worker_gc_minor_wall_time")
+    in
+    let get_gc_major () =
+      Base.Option.value ~default:0.0 (Measure.get_sum "worker_gc_major_wall_time")
+    in
     let worker_wall_start_times () =
       {
         worker_idle_start = get_idle ();
@@ -1031,7 +1035,7 @@ end = struct
     let header_without_section = "  START                DELTA               HWM DELTA          " in
     let pre_section_whitespace = String.make (String.length header_without_section) ' ' in
     let print_group ~indent finished_results group_name =
-      Option.iter (SMap.find_opt group_name finished_results) ~f:(fun group ->
+      Base.Option.iter (SMap.find_opt group_name finished_results) ~f:(fun group ->
           let indent_str = String.make (String.length header_without_section + indent - 2) ' ' in
           Printf.eprintf "%s== %s ==\n%!" indent_str group_name;
           SMap.iter (print_summary_single ~indent:(indent + 2)) group)
@@ -1119,7 +1123,7 @@ let total_memory_group = "TOTAL"
 
 let sample_memory ?group ~metric ~value profile =
   Memory.sample_memory ~group:total_memory_group ~metric ~value profile.running_memory;
-  Option.iter group ~f:(fun group ->
+  Base.Option.iter group ~f:(fun group ->
       Memory.sample_memory ~group ~metric ~value profile.running_memory)
 
 let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
@@ -1130,7 +1134,7 @@ let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
     ~delta
     ~hwm_delta
     profile.running_memory;
-  Option.iter group ~f:(fun group ->
+  Base.Option.iter group ~f:(fun group ->
       Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory)
 
 let to_json_properties profile =

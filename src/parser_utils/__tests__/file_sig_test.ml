@@ -43,7 +43,7 @@ let assert_cjs ~source ?assert_export_loc = function
     let offset_pair_of_loc loc =
       Loc.(Offset_utils.offset table loc.start, Offset_utils.offset table loc._end)
     in
-    let offsets = Option.map mod_exp_loc ~f:offset_pair_of_loc in
+    let offsets = Base.Option.map mod_exp_loc ~f:offset_pair_of_loc in
     call_opt offsets assert_export_loc
   | ES _ -> assert_failure "Unexpected module kind"
 

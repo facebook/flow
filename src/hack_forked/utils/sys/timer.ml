@@ -89,7 +89,7 @@ external reraise : exn -> 'a = "%reraise"
 let rec ding_fries_are_done _ =
   let exns =
     try
-      Option.iter !current_timer ~f:(fun timer -> timer.callback ());
+      Base.Option.iter !current_timer ~f:(fun timer -> timer.callback ());
       []
     with exn -> [exn]
   in
@@ -101,7 +101,7 @@ and schedule ?(exns = []) () =
   schedule_non_recurring 0.0;
 
   (* If there's a current timer, requeue it *)
-  Option.iter !current_timer ~f:(TimerQueue.push queue);
+  Base.Option.iter !current_timer ~f:(TimerQueue.push queue);
 
   let (timer, exns) = get_next_timer ~exns in
   current_timer := timer;
@@ -109,7 +109,8 @@ and schedule ?(exns = []) () =
   ignore (Sys.signal Sys.sigalrm (Sys.Signal_handle ding_fries_are_done));
 
   (* Start the timer back up *)
-  Option.iter timer ~f:(fun t -> schedule_non_recurring (t.target_time -. Unix.gettimeofday ()));
+  Base.Option.iter timer ~f:(fun t ->
+      schedule_non_recurring (t.target_time -. Unix.gettimeofday ()));
 
   (* If we executed more than one callback this time and more than one callback threw an
    * exception, then we just arbitrarily choose one to throw. Oh well :/ *)

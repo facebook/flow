@@ -60,7 +60,7 @@ let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded 
     Hh_json.(
       Reason.(
         let offset_table =
-          Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+          Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
         in
         let json_assoc =
           ("type", JSON_String ty)

@@ -115,7 +115,8 @@ let get_handshake ~timeout:_ sockaddr ic oc =
       let wire = (Marshal_tools.from_fd_with_preamble fd : server_handshake_wire) in
       let server_handshake =
         ( fst wire |> Hh_json.json_of_string |> json_to__monitor_to_client_1,
-          snd wire |> Option.map ~f:(fun s -> (Marshal.from_string s 0 : monitor_to_client_2)) )
+          snd wire |> Base.Option.map ~f:(fun s -> (Marshal.from_string s 0 : monitor_to_client_2))
+        )
         (* Server invariant: it only sends us snd=Some if it knows client+server versions match *)
       in
       Ok (sockaddr, ic, oc, server_handshake)

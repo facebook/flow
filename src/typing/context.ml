@@ -392,7 +392,7 @@ let is_verbose cx = cx.metadata.verbose <> None
 
 let is_weak cx = cx.metadata.weak
 
-let is_strict cx = Option.is_some cx.declare_module_ref || cx.metadata.strict
+let is_strict cx = Base.Option.is_some cx.declare_module_ref || cx.metadata.strict
 
 let is_strict_local cx = cx.metadata.strict_local
 

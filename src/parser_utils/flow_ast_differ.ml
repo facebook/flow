@@ -51,7 +51,7 @@ let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result
     | (hd1 :: tl1, hd2 :: tl2) ->
       let rest = helper (i + 1) tl1 tl2 in
       if hd1 != hd2 then
-        Option.map rest ~f:(List.cons (i, Replace (hd1, hd2)))
+        Base.Option.map rest ~f:(List.cons (i, Replace (hd1, hd2)))
       else
         rest
     | (_, [])
@@ -183,7 +183,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
     in
     deletes |> add_inserts (-1) |> List.sort change_compare |> convert_to_replace
   in
-  Option.(
+  Base.Option.(
     longest_trace (n + m)
     >>| List.rev (* trace is built backwards for efficiency *)
     >>| build_script_from_trace)
@@ -297,7 +297,7 @@ let is_import_or_directive_stmt (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
   | (_, Ast.Statement.Expression { expression = expr; _ }) -> is_import_expr expr
   | (_, Ast.Statement.VariableDeclaration { declarations = decs; _ }) ->
     List.exists
-      (fun (_, { init; _ }) -> Option.value_map init ~default:false ~f:is_import_expr)
+      (fun (_, { init; _ }) -> Base.Option.value_map init ~default:false ~f:is_import_expr)
       decs
   | _ -> false
 
@@ -356,7 +356,7 @@ let program
       (old_list : a list)
       (index_offset : int)
       (diffs : a diff_result list) : b change list option =
-    Option.(
+    Base.Option.(
       let recurse_into_change = function
         | (_, Replace (x1, x2)) -> f x1 x2
         | (index, Insert (break, lst)) ->
@@ -394,16 +394,16 @@ let program
       (trivial : a -> (Loc.t * b) option)
       (old_list : a list)
       (new_list : a list) : b change list option =
-    Option.(list_diff algo old_list new_list >>= recurse_into_diff f trivial old_list 0)
+    Base.Option.(list_diff algo old_list new_list >>= recurse_into_diff f trivial old_list 0)
   in
   (* Same as diff_and_recurse but takes in a function `f` that doesn't return an option *)
   let diff_and_recurse_nonopt (type a b) (f : a -> a -> b change list) =
-    diff_and_recurse (fun x y -> f x y |> Option.return)
+    diff_and_recurse (fun x y -> f x y |> Base.Option.return)
   in
   (* diff_and_recurse for when there is no way to get a trivial transformation from a to b*)
   let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
   let diff_and_recurse_nonopt_no_trivial f = diff_and_recurse_nonopt f (fun _ -> None) in
-  let join_diff_list = Some [] |> List.fold_left (Option.map2 ~f:List.append) in
+  let join_diff_list = Some [] |> List.fold_left (Base.Option.map2 ~f:List.append) in
   let rec syntax_opt
       (loc : Loc.t)
       (s1 : (Loc.t, unit) Ast.Syntax.t option)
@@ -454,11 +454,11 @@ let program
     let (program_loc, statements1, _) = program1 in
     let (_, statements2, _) = program2 in
     toplevel_statement_list statements1 statements2
-    |> Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
+    |> Base.Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
   and toplevel_statement_list
       (stmts1 : (Loc.t, Loc.t) Ast.Statement.t list) (stmts2 : (Loc.t, Loc.t) Ast.Statement.t list)
       =
-    Option.(
+    Base.Option.(
       let (imports1, body1) = partition_imports stmts1 in
       let (imports2, body2) = partition_imports stmts2 in
       let imports_diff = list_diff algo imports1 imports2 in
@@ -545,7 +545,7 @@ let program
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
-    Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
+    Base.Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
   and export_named_declaration export1 export2 =
     let open Ast.Statement.ExportNamedDeclaration in
     let { declaration = decl1; specifiers = specs1; source = src1; exportKind = kind1 } = export1 in
@@ -567,10 +567,10 @@ let program
       None
     else
       match (declaration1, declaration2) with
-      | (Declaration s1, Declaration s2) -> statement s1 s2 |> Option.return
+      | (Declaration s1, Declaration s2) -> statement s1 s2 |> Base.Option.return
       | ( Ast.Statement.ExportDefaultDeclaration.Expression e1,
           Ast.Statement.ExportDefaultDeclaration.Expression e2 ) ->
-        expression e1 e2 |> Option.return
+        expression e1 e2 |> Base.Option.return
       | _ -> None
   and export_specifier
       (spec1 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
@@ -579,7 +579,7 @@ let program
     let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
     let (_, { local = local1; exported = exported1 }) = spec1 in
     let (_, { local = local2; exported = exported2 }) = spec2 in
-    let locals = diff_if_changed identifier local1 local2 |> Option.return in
+    let locals = diff_if_changed identifier local1 local2 |> Base.Option.return in
     let exporteds = diff_if_changed_nonopt_fn identifier exported1 exported2 in
     join_diff_list [locals; exporteds]
   and export_named_declaration_specifier
@@ -610,7 +610,7 @@ let program
   and import_namespace_specifier
       (ident1 : (Loc.t, Loc.t) Ast.Identifier.t) (ident2 : (Loc.t, Loc.t) Ast.Identifier.t) :
       node change list option =
-    diff_if_changed identifier ident1 ident2 |> Option.return
+    diff_if_changed identifier ident1 ident2 |> Base.Option.return
   and import_named_specifier
       (nm_spec1 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier)
       (nm_spec2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier) :
@@ -622,7 +622,7 @@ let program
       None
     else
       let locals = diff_if_changed_nonopt_fn identifier local1 local2 in
-      let remotes = diff_if_changed identifier remote1 remote2 |> Option.return in
+      let remotes = diff_if_changed identifier remote1 remote2 |> Base.Option.return in
       join_diff_list [locals; remotes]
   and import_specifier
       (spec1 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.specifier)
@@ -694,7 +694,7 @@ let program
           Some [(l, Replace (Params params1, Params params2))]
         | _ -> params
       in
-      let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
+      let returns = diff_if_changed type_annotation_hint return1 return2 |> Base.Option.return in
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       join_diff_list [id; tparams; params; returns; fnbody]
   and function_params
@@ -711,7 +711,7 @@ let program
       : node change list option =
     let (_, { Ast.Function.Param.argument = arg1; default = def1 }) = param1 in
     let (_, { Ast.Function.Param.argument = arg2; default = def2 }) = param2 in
-    let param_diff = diff_if_changed function_param_pattern arg1 arg2 |> Option.return in
+    let param_diff = diff_if_changed function_param_pattern arg1 arg2 |> Base.Option.return in
     let default_diff = diff_if_changed_nonopt_fn expression def1 def2 in
     join_diff_list [param_diff; default_diff]
   and function_body_any
@@ -719,7 +719,7 @@ let program
       node change list option =
     let open Ast.Function in
     match (body1, body2) with
-    | (BodyExpression e1, BodyExpression e2) -> expression e1 e2 |> Option.return
+    | (BodyExpression e1, BodyExpression e2) -> expression e1 e2 |> Base.Option.return
     | (BodyBlock (_, block1), BodyBlock (_, block2)) -> block block1 block2
     | _ -> None
   and variable_declarator
@@ -729,7 +729,7 @@ let program
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (_, { id = id1; init = init1 }) = decl1 in
     let (_, { id = id2; init = init2 }) = decl2 in
-    let id_diff = diff_if_changed pattern id1 id2 |> Option.return in
+    let id_diff = diff_if_changed pattern id1 id2 |> Base.Option.return in
     let expr_diff = diff_if_changed_nonopt_fn expression init1 init2 in
     join_diff_list [id_diff; expr_diff]
   and variable_declaration
@@ -787,7 +787,10 @@ let program
     let comments = syntax_opt loc comments1 comments2 in
     let block_diff = diff_if_changed_ret_opt block block1 block2 in
     let finalizer_diff =
-      diff_if_changed_opt block (Option.map ~f:snd finalizer1) (Option.map ~f:snd finalizer2)
+      diff_if_changed_opt
+        block
+        (Base.Option.map ~f:snd finalizer1)
+        (Base.Option.map ~f:snd finalizer2)
     in
     let handler_diff = diff_if_changed_opt handler handler1 handler2 in
     join_diff_list [comments; block_diff; finalizer_diff; handler_diff]
@@ -845,7 +848,7 @@ let program
     let open Ast.Class.Extends in
     let { expr = expr1; targs = targs1 } = extends1 in
     let { expr = expr2; targs = targs2 } = extends2 in
-    let expr_diff = diff_if_changed expression expr1 expr2 |> Option.return in
+    let expr_diff = diff_if_changed expression expr1 expr2 |> Base.Option.return in
     let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
     join_diff_list [expr_diff; targs_diff]
   and interface
@@ -854,7 +857,7 @@ let program
     let open Ast.Statement.Interface in
     let { id = id1; tparams = tparams1; extends = extends1; body = (_loc1, body1) } = intf1 in
     let { id = id2; tparams = tparams2; extends = extends2; body = (_loc2, body2) } = intf2 in
-    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
     let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
     let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
@@ -872,7 +875,7 @@ let program
     let open Ast.Class.Body in
     match (elem1, elem2) with
     | (Method (_, m1), Method (_, m2)) -> class_method m1 m2
-    | (Property p1, Property p2) -> class_property p1 p2 |> Option.return
+    | (Property p1, Property p2) -> class_property p1 p2 |> Base.Option.return
     | _ -> None
   (* TODO *)
   and class_property prop1 prop2 : node change list =
@@ -887,7 +890,7 @@ let program
       let vals = diff_if_changed_nonopt_fn expression val1 val2 in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [vals; annots] )
-    |> Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
+    |> Base.Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
   and class_method
       (m1 : (Loc.t, Loc.t) Ast.Class.Method.t') (m2 : (Loc.t, Loc.t) Ast.Class.Method.t') :
       node change list option =
@@ -949,8 +952,8 @@ let program
       | ((_, Binary b1), (_, Binary b2)) -> binary b1 b2
       | ((loc, Unary u1), (_, Unary u2)) -> unary loc u1 u2
       | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
-        identifier id1 id2 |> Option.return
-      | ((_, Conditional c1), (_, Conditional c2)) -> conditional c1 c2 |> Option.return
+        identifier id1 id2 |> Base.Option.return
+      | ((_, Conditional c1), (_, Conditional c2)) -> conditional c1 c2 |> Base.Option.return
       | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
       | ((_, Member member1), (_, Member member2)) -> member member1 member2
       | ((_, Call call1), (_, Call call2)) -> call call1 call2
@@ -975,7 +978,7 @@ let program
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
-    Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+    Base.Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
   and literal (loc : Loc.t) (lit1 : Loc.t Ast.Literal.t) (lit2 : Loc.t Ast.Literal.t) :
       node change list =
     [(loc, Replace (Literal lit1, Literal lit2))]
@@ -1010,7 +1013,9 @@ let program
     let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
     let exprs_diff = diff_and_recurse_nonopt_no_trivial expression exprs1 exprs2 in
     let result = join_diff_list [quasis_diff; exprs_diff] in
-    Option.value result ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))]
+    Base.Option.value
+      result
+      ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))]
   and template_literal_element
       (tl_elem1 : Loc.t Ast.Expression.TemplateLiteral.Element.t)
       (tl_elem2 : Loc.t Ast.Expression.TemplateLiteral.Element.t) : node change list option =
@@ -1104,7 +1109,7 @@ let program
         diff_if_changed_ret_opt jsx_member_expression member_expr1' member_expr2'
       | _ -> None
     in
-    let prop_diff = diff_if_changed jsx_identifier prop1 prop2 |> Option.return in
+    let prop_diff = diff_if_changed jsx_identifier prop1 prop2 |> Base.Option.return in
     join_diff_list [obj_diff; prop_diff]
   and jsx_closing_element
       (elem1 : (Loc.t, Loc.t) Ast.JSX.Closing.t) (elem2 : (Loc.t, Loc.t) Ast.JSX.Closing.t) :
@@ -1120,7 +1125,7 @@ let program
     match (jsx_attr1, jsx_attr2) with
     | (Attribute attr1, Attribute attr2) -> diff_if_changed_ret_opt jsx_attribute attr1 attr2
     | (SpreadAttribute attr1, SpreadAttribute attr2) ->
-      diff_if_changed jsx_spread_attribute attr1 attr2 |> Option.return
+      diff_if_changed jsx_spread_attribute attr1 attr2 |> Base.Option.return
     | _ -> None
   and jsx_spread_attribute
       (attr1 : (Loc.t, Loc.t) Ast.JSX.SpreadAttribute.t)
@@ -1147,7 +1152,7 @@ let program
       match (value1, value2) with
       | (Some (Ast.JSX.Attribute.Literal (loc, lit1)), Some (Ast.JSX.Attribute.Literal (_, lit2)))
         ->
-        diff_if_changed (literal loc) lit1 lit2 |> Option.return
+        diff_if_changed (literal loc) lit1 lit2 |> Base.Option.return
       | (Some (ExpressionContainer (_, expr1)), Some (ExpressionContainer (_, expr2))) ->
         diff_if_changed_ret_opt jsx_expression expr1 expr2
       | _ -> None
@@ -1168,11 +1173,11 @@ let program
         | (ExpressionContainer expr1, ExpressionContainer expr2) ->
           diff_if_changed_ret_opt jsx_expression expr1 expr2
         | (SpreadChild expr1, SpreadChild expr2) ->
-          diff_if_changed expression expr1 expr2 |> Option.return
+          diff_if_changed expression expr1 expr2 |> Base.Option.return
         | (Text _, Text _) -> None
         | _ -> None
       in
-      Option.value changes ~default:[(old_loc, Replace (JSXChild child1, JSXChild child2))]
+      Base.Option.value changes ~default:[(old_loc, Replace (JSXChild child1, JSXChild child2))]
   and jsx_expression
       (jsx_expr1 : (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t)
       (jsx_expr2 : (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t) : node change list option =
@@ -1193,7 +1198,7 @@ let program
     if op1 != op2 then
       None
     else
-      diff_if_changed pattern pat1 pat2 @ diff_if_changed expression exp1 exp2 |> Option.return
+      diff_if_changed pattern pat1 pat2 @ diff_if_changed expression exp1 exp2 |> Base.Option.return
   and object_spread_property prop1 prop2 =
     let open Ast.Expression.Object.SpreadProperty in
     let { argument = arg1 } = prop1 in
@@ -1203,9 +1208,10 @@ let program
     let module EOP = Ast.Expression.Object.Property in
     match (key1, key2) with
     | (EOP.Literal (loc, l1), EOP.Literal (_, l2)) ->
-      diff_if_changed (literal loc) l1 l2 |> Option.return
-    | (EOP.Identifier i1, EOP.Identifier i2) -> diff_if_changed identifier i1 i2 |> Option.return
-    | (EOP.Computed e1, EOP.Computed e2) -> diff_if_changed expression e1 e2 |> Option.return
+      diff_if_changed (literal loc) l1 l2 |> Base.Option.return
+    | (EOP.Identifier i1, EOP.Identifier i2) ->
+      diff_if_changed identifier i1 i2 |> Base.Option.return
+    | (EOP.Computed e1, EOP.Computed e2) -> diff_if_changed expression e1 e2 |> Base.Option.return
     | (_, _) -> None
   and object_regular_property (_, prop1) (_, prop2) =
     let open Ast.Expression.Object.Property in
@@ -1215,7 +1221,7 @@ let program
       if sh1 != sh2 then
         None
       else
-        let values = diff_if_changed expression val1 val2 |> Option.return in
+        let values = diff_if_changed expression val1 val2 |> Base.Option.return in
         let keys = diff_if_changed_ret_opt object_key key1 key2 in
         join_diff_list [keys; values]
     | (Set { value = val1; key = key1 }, Set { value = val2; key = key2 })
@@ -1230,10 +1236,10 @@ let program
     match (prop1, prop2) with
     | (Property (loc, p1), Property p2) ->
       object_regular_property (loc, p1) p2
-      |> Option.value ~default:[(loc, Replace (ObjectProperty prop1, ObjectProperty prop2))]
-      |> Option.return
+      |> Base.Option.value ~default:[(loc, Replace (ObjectProperty prop1, ObjectProperty prop2))]
+      |> Base.Option.return
     | (SpreadProperty (_, p1), SpreadProperty (_, p2)) ->
-      object_spread_property p1 p2 |> Option.return
+      object_spread_property p1 p2 |> Base.Option.return
     | _ -> None
   and object_ loc obj1 obj2 =
     let open Ast.Expression.Object in
@@ -1257,7 +1263,7 @@ let program
     let open Ast.Expression.Unary in
     let { operator = op1; argument = arg1; comments = comments1 } = u1 in
     let { operator = op2; argument = arg2; comments = comments2 } = u2 in
-    let comments = syntax_opt loc comments1 comments2 |> Option.value ~default:[] in
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     if op1 != op2 then
       None
     else
@@ -1272,7 +1278,7 @@ let program
       else
         [(old_loc, Replace (Raw name1, Raw name2))]
     in
-    let comments = syntax_opt old_loc comments1 comments2 |> Option.value ~default:[] in
+    let comments = syntax_opt old_loc comments1 comments2 |> Base.Option.value ~default:[] in
     comments @ name
   and conditional
       (c1 : (Loc.t, Loc.t) Ast.Expression.Conditional.t)
@@ -1486,7 +1492,7 @@ let program
     let { body = body2; test = test2; comments = comments2 } = stmt2 in
     let body = diff_if_changed statement body1 body2 in
     let test = diff_if_changed expression test1 test2 in
-    let comments = syntax_opt loc comments1 comments2 |> Option.value ~default:[] in
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     List.concat [body; test; comments]
   and return_statement
       loc
@@ -1549,7 +1555,7 @@ let program
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_pattern p1 in
-    Option.value changes ~default:[(old_loc, Replace (Pattern p1, Pattern p2))]
+    Base.Option.value changes ~default:[(old_loc, Replace (Pattern p1, Pattern p2))]
   and pattern_object
       (o1 : (Loc.t, Loc.t) Ast.Pattern.Object.t) (o2 : (Loc.t, Loc.t) Ast.Pattern.Object.t) :
       node change list option =
@@ -1559,7 +1565,7 @@ let program
     let properties_diff =
       diff_and_recurse_no_trivial pattern_object_property properties1 properties2
     in
-    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Option.return in
+    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
     join_diff_list [properties_diff; annot_diff]
   and pattern_object_property
       (p1 : (Loc.t, Loc.t) Ast.Pattern.Object.property)
@@ -1588,9 +1594,10 @@ let program
     let module POP = Ast.Pattern.Object.Property in
     match (k1, k2) with
     | (POP.Literal (loc, l1), POP.Literal (_, l2)) ->
-      diff_if_changed (literal loc) l1 l2 |> Option.return
-    | (POP.Identifier i1, POP.Identifier i2) -> diff_if_changed identifier i1 i2 |> Option.return
-    | (POP.Computed e1, POP.Computed e2) -> diff_if_changed expression e1 e2 |> Option.return
+      diff_if_changed (literal loc) l1 l2 |> Base.Option.return
+    | (POP.Identifier i1, POP.Identifier i2) ->
+      diff_if_changed identifier i1 i2 |> Base.Option.return
+    | (POP.Computed e1, POP.Computed e2) -> diff_if_changed expression e1 e2 |> Base.Option.return
     | (_, _) -> None
   and pattern_array
       loc (a1 : (Loc.t, Loc.t) Ast.Pattern.Array.t) (a2 : (Loc.t, Loc.t) Ast.Pattern.Array.t) :
@@ -1599,7 +1606,7 @@ let program
     let { elements = elements1; annot = annot1; comments = comments1 } = a1 in
     let { elements = elements2; annot = annot2; comments = comments2 } = a2 in
     let elements_diff = diff_and_recurse_no_trivial pattern_array_e elements1 elements2 in
-    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Option.return in
+    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [comments_diff; elements_diff; annot_diff]
   and pattern_array_e
@@ -1637,7 +1644,7 @@ let program
     if optional1 != optional2 then
       None
     else
-      let ids = diff_if_changed identifier name1 name2 |> Option.return in
+      let ids = diff_if_changed identifier name1 name2 |> Base.Option.return in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [ids; annots]
   and function_rest_param
@@ -1668,7 +1675,7 @@ let program
       | (Array t1, Array t2) -> Some (type_ t1 t2)
       | _ -> None
     in
-    Option.value type_diff ~default:[(loc1, Replace (Type (loc1, type1), Type (loc1, type2)))]
+    Base.Option.value type_diff ~default:[(loc1, Replace (Type (loc1, type1), Type (loc1, type2)))]
   and interface_type
       (it1 : (Loc.t, Loc.t) Ast.Type.Interface.t) (it2 : (Loc.t, Loc.t) Ast.Type.Interface.t) :
       node change list option =
@@ -1696,11 +1703,11 @@ let program
       (git2 : (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t) : node change list option =
     let open Ast.Type.Generic.Identifier in
     match (git1, git2) with
-    | (Unqualified id1, Unqualified id2) -> diff_if_changed identifier id1 id2 |> Option.return
+    | (Unqualified id1, Unqualified id2) -> diff_if_changed identifier id1 id2 |> Base.Option.return
     | ( Qualified (_loc1, { qualification = q1; id = id1 }),
         Qualified (_loc2, { qualification = q2; id = id2 }) ) ->
       let qualification_diff = diff_if_changed_ret_opt generic_identifier_type q1 q2 in
-      let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+      let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
       join_diff_list [qualification_diff; id_diff]
     | _ -> None
   and object_type (ot1 : (Loc.t, Loc.t) Ast.Type.Object.t) (ot2 : (Loc.t, Loc.t) Ast.Type.Object.t)
@@ -1774,7 +1781,7 @@ let program
       (opvt2 : (Loc.t, Loc.t) Ast.Type.Object.Property.value) : node change list option =
     let open Ast.Type.Object.Property in
     match (opvt1, opvt2) with
-    | (Init t1, Init t2) -> diff_if_changed type_ t1 t2 |> Option.return
+    | (Init t1, Init t2) -> diff_if_changed type_ t1 t2 |> Base.Option.return
     | (Get (_loc1, ft1), Get (_loc2, ft2))
     | (Set (_loc1, ft1), Set (_loc2, ft2)) ->
       diff_if_changed_ret_opt function_type ft1 ft2
@@ -1802,7 +1809,7 @@ let program
         None
     in
     let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
-    let annot_diff = diff_if_changed type_ annot1 annot2 |> Option.return in
+    let annot_diff = diff_if_changed type_ annot1 annot2 |> Base.Option.return in
     join_diff_list [optional_diff; name_diff; annot_diff]
   and function_rest_param_type
       (frpt1 : (Loc.t, Loc.t) Ast.Type.Function.RestParam.t)
@@ -1832,7 +1839,7 @@ let program
     let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
     let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
     let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
-    let return_diff = diff_if_changed type_ return1 return2 |> Option.return in
+    let return_diff = diff_if_changed type_ return1 return2 |> Base.Option.return in
     join_diff_list [tparams_diff; params_diff; rest_diff; return_diff]
   and type_alias
       (t_alias1 : (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
@@ -1840,9 +1847,9 @@ let program
     let open Ast.Statement.TypeAlias in
     let { id = id1; tparams = t_params1; right = right1 } = t_alias1 in
     let { id = id2; tparams = t_params2; right = right2 } = t_alias2 in
-    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
-    let right_diff = diff_if_changed type_ right1 right2 |> Option.return in
+    let right_diff = diff_if_changed type_ right1 right2 |> Base.Option.return in
     join_diff_list [id_diff; t_params_diff; right_diff]
   and opaque_type
       (o_type1 : (Loc.t, Loc.t) Ast.Statement.OpaqueType.t)
@@ -1850,7 +1857,7 @@ let program
     let open Ast.Statement.OpaqueType in
     let { id = id1; tparams = t_params1; impltype = impltype1; supertype = supertype1 } = o_type1 in
     let { id = id2; tparams = t_params2; impltype = impltype2; supertype = supertype2 } = o_type2 in
-    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
     let supertype_diff = diff_if_changed_nonopt_fn type_ supertype1 supertype2 in
     let impltype_diff = diff_if_changed_nonopt_fn type_ impltype1 impltype2 in
@@ -1877,7 +1884,7 @@ let program
     } =
       dclass2
     in
-    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params tparams1 tparams2 in
     let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
     let extends_diff = diff_if_changed_opt generic_type_with_loc extends1 extends2 in
@@ -1898,11 +1905,11 @@ let program
     let { name = name1; bound = bound1; variance = variance1; default = default1 } = t_param1 in
     let { name = name2; bound = bound2; variance = variance2; default = default2 } = t_param2 in
     let variance_diff = diff_if_changed_ret_opt variance variance1 variance2 in
-    let name_diff = diff_if_changed identifier name1 name2 |> Option.return in
-    let bound_diff = diff_if_changed type_annotation_hint bound1 bound2 |> Option.return in
+    let name_diff = diff_if_changed identifier name1 name2 |> Base.Option.return in
+    let bound_diff = diff_if_changed type_annotation_hint bound1 bound2 |> Base.Option.return in
     let default_diff = diff_if_changed_nonopt_fn type_ default1 default2 in
     let result = join_diff_list [variance_diff; name_diff; bound_diff; default_diff] in
-    Option.value
+    Base.Option.value
       result
       ~default:[(loc1, Replace (TypeParam (loc1, t_param1), TypeParam (loc1, t_param2)))]
   and variance (var1 : Loc.t Ast.Variance.t option) (var2 : Loc.t Ast.Variance.t option) :

@@ -132,7 +132,7 @@ and collect_of_type ?log_unresolved cx acc = function
     let ts = List.fold_left (fun acc (_, t) -> t :: acc) [return_t] params in
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
-    let ts = Option.value ~default:[] tuple_types in
+    let ts = Base.Option.value ~default:[] tuple_types in
     let ts = elemt :: ts in
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
@@ -187,8 +187,8 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
     collect_of_types ?log_unresolved cx acc [config; instance]
   | OpaqueT (_, { underlying_t; super_t; _ }) ->
-    let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
-    let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
+    let acc = Base.Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
+    let acc = Base.Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     acc
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))

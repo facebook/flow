@@ -205,7 +205,7 @@ let scan_for_lint_suppressions =
   (* parse arguments of the form lint1:setting1,lint2:setting2... *)
   let get_settings_list cx args =
     split_delim_locational ',' args
-    |> Base.List.map ~f:(fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
+    |> Base.List.map ~f:(fun rule -> get_kind_setting cx rule |> Base.Option.value ~default:[])
   in
   (* Doesn't preserve offset, but is only used in locations where offset isn't used,
    * so that's fine. *)

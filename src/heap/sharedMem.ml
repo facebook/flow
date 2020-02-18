@@ -380,7 +380,7 @@ functor
 
       let stack : t option ref = ref None
 
-      let has_local_changes () = Option.is_some !stack
+      let has_local_changes () = Base.Option.is_some !stack
 
       let rec mem stack_opt key =
         match stack_opt with

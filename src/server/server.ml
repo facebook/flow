@@ -124,7 +124,7 @@ let rec serve ~genv ~env =
   let%lwt (_profiling, env) = Rechecker.recheck_loop genv env in
   (* Run a workload (if there is one) *)
   let%lwt env =
-    Option.value_map
+    Base.Option.value_map
       (ServerMonitorListenerState.pop_next_workload ())
       ~default:(Lwt.return env)
       ~f:(fun workload ->

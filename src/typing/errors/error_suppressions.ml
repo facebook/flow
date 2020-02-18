@@ -105,7 +105,7 @@ let add_lint_suppressions lint_suppressions map =
       fun loc acc ->
       let file = file_of_loc_unsafe loc in
       let file_suppressions =
-        FilenameMap.find_opt file acc |> Option.value ~default:FileSuppressions.empty
+        FilenameMap.find_opt file acc |> Base.Option.value ~default:FileSuppressions.empty
       in
       let file_suppressions = FileSuppressions.add_lint_suppression loc file_suppressions in
       FilenameMap.add file file_suppressions acc
@@ -163,12 +163,12 @@ let check_locs locs (suppressions : t) (unused : t) =
   List.fold_left (check_loc suppressions) (Err, LocSet.empty, unused) locs
 
 let in_node_modules ~root ~file_options loc =
-  match Option.both (Loc.source loc) file_options with
+  match Base.Option.both (Loc.source loc) file_options with
   | None -> false
   | Some (file, options) -> Files.is_within_node_modules ~root ~options (File_key.to_string file)
 
 let in_declarations ~file_options loc =
-  match Option.both (Loc.source loc) file_options with
+  match Base.Option.both (Loc.source loc) file_options with
   | None -> false
   | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
 
@@ -178,7 +178,7 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
     (* It is possible for errors to contain locations without a source, but suppressions always
      * exist in an actual file so there is no point checking if suppressions exist at locations
      * without a source. *)
-    |> List.filter (fun loc -> Option.is_some (Loc.source loc))
+    |> List.filter (fun loc -> Base.Option.is_some (Loc.source loc))
   in
   (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
@@ -230,7 +230,7 @@ let update_suppressions current_suppressions new_suppressions =
     current_suppressions
 
 let get_lint_settings severity_cover loc =
-  Option.Monad_infix.(
+  Base.Option.Monad_infix.(
     Loc.source loc >>= fun source ->
     Utils_js.FilenameMap.find_opt source severity_cover >>= ExactCover.find_opt loc)
 

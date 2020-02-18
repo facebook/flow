@@ -52,7 +52,7 @@ let lsp_range_to_fc (range : Lsp.range) : File_content.range =
 
 let lsp_edit_to_fc (edit : Lsp.DidChange.textDocumentContentChangeEvent) : File_content.text_edit =
   {
-    File_content.range = Option.map edit.DidChange.range ~f:lsp_range_to_fc;
+    File_content.range = Base.Option.map edit.DidChange.range ~f:lsp_range_to_fc;
     text = edit.DidChange.text;
   }
 
@@ -233,7 +233,7 @@ let update_diagnostics_due_to_change
       match (diagnostic_opt, replace_opt) with
       | (Some diagnostic, Some replace) ->
         let range = update_range_due_to_replace diagnostic.range replace in
-        Option.map range ~f:(fun range -> { diagnostic with range })
+        Base.Option.map range ~f:(fun range -> { diagnostic with range })
       | _ -> None
     in
     let replaces = Base.List.map change.DidChange.contentChanges ~f:replace_of_change in

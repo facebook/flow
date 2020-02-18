@@ -128,7 +128,7 @@ and fun_params params rest_param =
   opt fun_rest_param rest_param >>| fun rest -> (Loc.none, { T.Function.Params.params; rest })
 
 and fun_param (name, t, { prm_optional }) =
-  let name = Option.map ~f:id_from_string name in
+  let name = Base.Option.map ~f:id_from_string name in
   type_ t >>| fun annot -> (Loc.none, { T.Function.Param.name; annot; optional = prm_optional })
 
 and fun_rest_param (name, t) =
@@ -204,7 +204,7 @@ and obj_named_prop =
       }
 
 and obj_index_prop d =
-  let id = Option.map ~f:id_from_string d.dict_name in
+  let id = Base.Option.map ~f:id_from_string d.dict_name in
   type_ d.dict_key >>= fun key ->
   type_ d.dict_value >>| fun value ->
   { T.Object.Indexer.id; key; value; static = false; variance = variance_ d.dict_polarity }

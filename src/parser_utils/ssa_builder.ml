@@ -173,7 +173,7 @@ struct
       | Return
       | Throw
 
-    let label_opt = Option.map ~f:Flow_ast_utils.name_of_ident
+    let label_opt = Base.Option.map ~f:Flow_ast_utils.name_of_ident
 
     let break x = Break (label_opt x)
 

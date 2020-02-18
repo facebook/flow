@@ -71,7 +71,7 @@ let flow_completion_to_lsp
     Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
-      let insert_text = Option.value item.res_insert_text ~default:item.res_name in
+      let insert_text = Base.Option.value item.res_insert_text ~default:item.res_name in
       let trunc n s =
         if String.length s < n then
           s
@@ -100,7 +100,7 @@ let flow_completion_to_lsp
       in
       let plaintext_text_edits =
         lazy
-          ( if Option.is_some item.res_insert_text then
+          ( if Base.Option.is_some item.res_insert_text then
             [text_edit item.res_loc insert_text]
           else
             [] )
@@ -174,7 +174,7 @@ let flow_loc_patch_to_lsp_edits (p : (Loc.t * string) list) : Lsp.TextEdit.t lis
 (* but symlinks must be canonicalized before being used in flow: *)
 let lsp_DocumentIdentifier_to_flow_path textDocument =
   let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
-  Sys_utils.realpath fn |> Option.value ~default:fn
+  Sys_utils.realpath fn |> Base.Option.value ~default:fn
 
 let lsp_DocumentIdentifier_to_flow
     (textDocument : Lsp.TextDocumentIdentifier.t) ~(client : Persistent_connection.single_client) :
@@ -211,7 +211,7 @@ module DocumentSymbols = struct
     name
 
   let name_of_id_opt (id_opt : (Loc.t, Loc.t) Ast.Identifier.t option) : string option =
-    Option.map id_opt ~f:name_of_id
+    Base.Option.map id_opt ~f:name_of_id
 
   let ast_name
       ~(uri : Lsp.documentUri)
@@ -229,7 +229,7 @@ module DocumentSymbols = struct
     :: acc
 
   let ast_name_opt ~uri ~containerName ~acc ~loc ~(name_opt : string option) ~kind =
-    Option.value_map name_opt ~default:acc ~f:(fun name ->
+    Base.Option.value_map name_opt ~default:acc ~f:(fun name ->
         ast_name ~uri ~containerName ~acc ~loc ~name ~kind)
 
   let ast_key

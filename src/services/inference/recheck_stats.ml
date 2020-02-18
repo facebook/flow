@@ -111,7 +111,7 @@ let save_averages ~options ?estimates new_averages =
   averages := Some new_averages;
 
   let estimates =
-    Option.value_map
+    Base.Option.value_map
       estimates
       ~default:[]
       ~f:(fun {

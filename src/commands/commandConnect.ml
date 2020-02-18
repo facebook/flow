@@ -31,7 +31,7 @@ let arg name value arr =
   | Some value -> name :: value :: arr
 
 let arg_map name ~f value arr =
-  let value = Option.map ~f value in
+  let value = Base.Option.map ~f value in
   arg name value arr
 
 let flag name value arr =

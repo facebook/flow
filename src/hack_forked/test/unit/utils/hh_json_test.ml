@@ -80,10 +80,10 @@ let test_jget_string () =
   Hh_json_helpers.(
     let results = "" in
     let str = Jget.string_opt json_string "foo" = Some "hello" in
-    let num = Jget.string_opt json_number "foo" |> Option.is_none in
-    let nul = Jget.string_opt json_number "foo" |> Option.is_none in
-    let abs = Jget.string_opt json_absent "foo" |> Option.is_none in
-    let non = Jget.string_opt json_none "foo" |> Option.is_none in
+    let num = Jget.string_opt json_number "foo" |> Base.Option.is_none in
+    let nul = Jget.string_opt json_number "foo" |> Base.Option.is_none in
+    let abs = Jget.string_opt json_absent "foo" |> Base.Option.is_none in
+    let non = Jget.string_opt json_none "foo" |> Base.Option.is_none in
     let results =
       results
       ^ Printf.sprintf "string_opt: str=%B num=%B nul=%B abs=%B non=%B\n" str num nul abs non
@@ -117,13 +117,13 @@ let test_jget_number () =
     let results = "" in
     let iint = Jget.int_opt json_int "foo" = Some 1 in
     let ifloat = throws (fun () -> Jget.int_opt json_float "foo") in
-    let istring = Jget.int_opt json_string "foo" |> Option.is_none in
+    let istring = Jget.int_opt json_string "foo" |> Base.Option.is_none in
     let results =
       results ^ Printf.sprintf "int_opt: int=%B float=%B string=%B\n" iint ifloat istring
     in
     let fint = Jget.float_opt json_int "foo" = Some 1.0 in
     let ffloat = Jget.float_opt json_float "foo" = Some 1.0 in
-    let fstring = Jget.float_opt json_string "foo" |> Option.is_none in
+    let fstring = Jget.float_opt json_string "foo" |> Base.Option.is_none in
     let results =
       results ^ Printf.sprintf "float_opt: int=%B float=%B string=%B\n" fint ffloat fstring
     in

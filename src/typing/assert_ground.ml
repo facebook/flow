@@ -152,7 +152,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                 TypeMap.fold (fun t _ seen -> self#type_ cx Polarity.Positive seen t) lower seen))
 
       method! type_ cx pole seen t =
-        Option.iter
+        Base.Option.iter
           ~f:(fun { Verbose.depth = verbose_depth; indent; enabled_during_flowlib = _ } ->
             let pid = Context.pid_prefix cx in
             let indent = String.make (!depth * indent) ' ' in
@@ -216,12 +216,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                   (try fst (Properties.Map.find i.proto_props insts) with Not_found -> 0)
                 in
                 let static_refcnt =
-                  Option.value_map static_props_id ~default:0 ~f:(fun id ->
+                  Base.Option.value_map static_props_id ~default:0 ~f:(fun id ->
                       (try fst (Properties.Map.find id insts) with Not_found -> 0))
                 in
                 insts <- Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
                 insts <- Properties.Map.add i.proto_props (proto_refcnt + 1, SSet.empty) insts;
-                Option.iter static_props_id (fun id ->
+                Base.Option.iter static_props_id (fun id ->
                     insts <-
                       Properties.Map.add id (static_refcnt + 1, i.initialized_static_fields) insts);
                 let seen = super#type_ cx pole seen t in
@@ -235,7 +235,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                     Properties.Map.remove i.proto_props insts
                   else
                     Properties.Map.add i.proto_props (own_refcnt, SSet.empty) insts );
-                Option.iter static_props_id (fun id ->
+                Base.Option.iter static_props_id (fun id ->
                     insts <-
                       ( if static_refcnt = 0 then
                         Properties.Map.remove id insts
@@ -273,13 +273,13 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
 
       method private arrlit cx pole seen t ts =
         let seen = self#type_ cx pole seen t in
-        let seen = Option.fold ts ~init:seen ~f:(List.fold_left (self#type_ cx pole)) in
+        let seen = Base.Option.fold ts ~init:seen ~f:(List.fold_left (self#type_ cx pole)) in
         seen
 
       method private objlit_props cx pole seen id =
         let props = Context.find_props cx id in
         SMap.fold
-          (fun _ p acc -> Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc)
+          (fun _ p acc -> Property.read_t p |> Base.Option.fold ~f:(self#type_ cx pole) ~init:acc)
           props
           seen
 
@@ -290,7 +290,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             if is_munged_prop_name_with_munge x ~should_munge_underscores then
               acc
             else if SSet.mem x init then
-              Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc
+              Property.read_t p |> Base.Option.fold ~f:(self#type_ cx pole) ~init:acc
             else
               self#prop cx pole acc p)
           props

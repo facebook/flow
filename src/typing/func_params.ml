@@ -52,18 +52,18 @@ module Make (C : Config) = struct
       []
       params_rev
 
-  let rest { rest; _ } = Option.map ~f:C.rest_type rest
+  let rest { rest; _ } = Base.Option.map ~f:C.rest_type rest
 
   let subst cx map { params_rev; rest; reconstruct } =
     {
       params_rev = Base.List.map ~f:(C.subst_param cx map) params_rev;
-      rest = Option.map ~f:(C.subst_rest cx map) rest;
+      rest = Base.Option.map ~f:(C.subst_rest cx map) rest;
       reconstruct;
     }
 
   let eval cx { params_rev; rest; reconstruct } =
     let params = List.rev params_rev in
     let param_tasts_rev = List.rev_map (C.eval_param cx) params in
-    let rest_tast = Option.map ~f:(C.eval_rest cx) rest in
+    let rest_tast = Base.Option.map ~f:(C.eval_rest cx) rest in
     reconstruct (List.rev param_tasts_rev) rest_tast
 end

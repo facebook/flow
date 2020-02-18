@@ -111,7 +111,7 @@ let parse_stat stat_contents =
            match String.split line ~on:' ' with
            | [key; raw_stat] ->
              int_of_string_opt raw_stat
-             |> Option.value_map ~default:stats ~f:(fun stat -> SMap.add key stat stats)
+             |> Base.Option.value_map ~default:stats ~f:(fun stat -> SMap.add key stat stats)
            | _ -> stats)
   in
   let get key =

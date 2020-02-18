@@ -262,7 +262,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
      * child_fd to this one spawned process because it will be using that FD to
      * send messages back up to us. Close_on_exec is probably already false, but
      * we force it again to be false here just in case. *)
-    Option.iter child_fd ~f:Unix.clear_close_on_exec;
+    Base.Option.iter child_fd ~f:Unix.clear_close_on_exec;
     let state = (saved_state, gc_control, heap_handle, worker_id) in
     let handle =
       Daemon.spawn ~name (Daemon.null_fd (), Unix.stdout, Unix.stderr) entry (state, child_fd)
@@ -271,7 +271,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
 
     (* This process no longer needs child_fd after its spawned the child.
      * Messages are read using controller_fd. *)
-    Option.iter child_fd ~f:Unix.close;
+    Base.Option.iter child_fd ~f:Unix.close;
     handle
   in
   let made_workers = ref [] in
@@ -494,7 +494,7 @@ let get_call_id h = snd (fst !h)
 let kill w =
   if not (is_killed w) then (
     w.killed <- true;
-    Option.iter ~f:Daemon.kill w.prespawned
+    Base.Option.iter ~f:Daemon.kill w.prespawned
   )
 
 let killall () = List.iter ~f:kill !workers

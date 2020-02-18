@@ -1014,7 +1014,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       ( loc,
         T.Outline
           (T.Class
-             ( Option.map ~f:Flow_ast_utils.source_of_ident id,
+             ( Base.Option.map ~f:Flow_ast_utils.source_of_ident id,
                class_ tparams body super super_targs implements )) )
     | ( loc,
         Function
@@ -1791,7 +1791,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                      {
                        Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local =
                          Flow_ast_utils.ident_of_source local;
-                       exported = Option.map ~f:Flow_ast_utils.ident_of_source exported;
+                       exported = Base.Option.map ~f:Flow_ast_utils.ident_of_source exported;
                      } );
                  ]);
           source;
@@ -1820,7 +1820,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           specifiers =
             Some
               (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier
-                 (star_loc, Option.map ~f:Flow_ast_utils.ident_of_source remote));
+                 (star_loc, Base.Option.map ~f:Flow_ast_utils.ident_of_source remote));
           source = Some (T.source_of_source source);
           exportKind;
         } )

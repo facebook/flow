@@ -123,7 +123,8 @@ module ObjectExpressionAcc = struct
       let state =
         {
           Object.Spread.todo_rev = ts;
-          acc = Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice;
+          acc =
+            Base.Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice;
           spread_id = Reason.mk_id ();
           union_reason = None;
           curr_resolve_idx = 0;
@@ -323,7 +324,7 @@ module Func_stmt_config = struct
         Env.bind_implicit_let ~state:State.Initialized kind cx name t loc)
 
   let destruct cx ~use_op:_ loc name default t =
-    Option.iter
+    Base.Option.iter
       ~f:(fun d ->
         let reason = mk_reason (RIdentifier name) loc in
         let default_t = Flow.mk_default cx reason d in
@@ -360,7 +361,7 @@ module Func_stmt_config = struct
     | Object { annot; properties } ->
       let default = eval_default cx ~expr default in
       let properties =
-        let default = Option.map default (fun ((_, t), _) -> Default.expr t) in
+        let default = Base.Option.map default (fun ((_, t), _) -> Default.expr t) in
         let init =
           Destructuring.empty
             ?default
@@ -382,7 +383,7 @@ module Func_stmt_config = struct
     | Array { annot; elements; comments } ->
       let default = eval_default cx ~expr default in
       let elements =
-        let default = Option.map default (fun ((_, t), _) -> Default.expr t) in
+        let default = Base.Option.map default (fun ((_, t), _) -> Default.expr t) in
         let init =
           Destructuring.empty
             ?default
@@ -585,7 +586,7 @@ and statement_decl cx =
       | Some (NamedOpaqueType (loc, t)) -> statement_decl cx (loc, OpaqueType t)
       | Some (Interface (loc, i)) -> statement_decl cx (loc, InterfaceDeclaration i)
       | None ->
-        if Option.is_none default then
+        if Base.Option.is_none default then
           ()
         else
           failwith
@@ -622,9 +623,9 @@ and statement_decl cx =
       else
         Env.bind_import cx local_name tvar loc
     in
-    Option.iter ~f:(fun local -> bind_import (ident_name local) (fst local) isType) default;
+    Base.Option.iter ~f:(fun local -> bind_import (ident_name local) (fst local) isType) default;
 
-    Option.iter
+    Base.Option.iter
       ~f:(function
         | ImportDeclaration.ImportNamespaceSpecifier (_, local) ->
           bind_import (ident_name local) (fst local) isType
@@ -632,7 +633,7 @@ and statement_decl cx =
           List.iter
             (fun { ImportDeclaration.local; remote; kind } ->
               let (loc, { Ast.Identifier.name = local_name; comments = _ }) =
-                Option.value ~default:remote local
+                Base.Option.value ~default:remote local
               in
               let isType =
                 isType
@@ -1037,8 +1038,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | Some (_, tps) ->
         (* TODO: use tparams_map *)
         let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.name tp acc) SMap.empty tps in
-        Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
-        Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
+        Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
+        Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
     end;
     let opaque_type_args =
       Base.List.map
@@ -1164,7 +1165,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                  (* add test refinements - save changelist for later *)
                  let test_refis = Env.refine_with_preds cx loc preds xtypes in
                  (* merge env changes from fallthrough case, if present *)
-                 Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
+                 Base.Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
                      let changes = Changeset.union writes refis in
                      Env.merge_env cx loc (case_env, case_env, env) changes);
 
@@ -1188,7 +1189,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                    | Some (Abnormal.Continue _) ->
                      (false, false)
                    | Some (Abnormal.Break None) -> (false, true)
-                   | None -> (true, Option.is_some break_opt)
+                   | None -> (true, Base.Option.is_some break_opt)
                  in
                  (* save state for fallthrough *)
                  fallthrough_case :=
@@ -1220,11 +1221,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               cases_ast)
         in
         (* if last case fell out, update terminal switch state with it *)
-        Option.iter !fallthrough_case ~f:update_switch_state;
+        Base.Option.iter !fallthrough_case ~f:update_switch_state;
 
         (* env in switch_state has accumulated switch effects. now merge in
         original types for partially written values, and swap env in *)
-        Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
+        Base.Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
             Env.merge_env cx switch_loc (env, env, incoming_env) partial_writes;
             Env.update_env cx switch_loc env);
 
@@ -1381,7 +1382,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let use_op =
       Op
         (FunReturnStatement
-           { value = Option.value_map argument ~default:(reason_of_t t) ~f:mk_expression_reason })
+           {
+             value = Base.Option.value_map argument ~default:(reason_of_t t) ~f:mk_expression_reason;
+           })
     in
     Flow.flow cx (t, UseT (use_op, ret));
     Env.reset_current_activation loc;
@@ -1720,7 +1723,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None then
           Env.havoc_vars (Changeset.Global.peek ());
 
-        let update_ast = Option.map ~f:(expression cx) update in
+        let update_ast = Base.Option.map ~f:(expression cx) update in
         let newset = Changeset.Global.merge oldset in
         Env.copy_env cx loc (env, body_env) newset;
 
@@ -2029,7 +2032,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let { Ast.Identifier.name; comments = _ } = id_name in
       let (t, annot_ast) = Anno.mk_type_available_annotation cx SMap.empty annot in
       Env.unify_declared_fun_type cx name loc t;
-      let predicate = Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
+      let predicate = Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
       ( loc,
         DeclareFunction
           { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate } ))
@@ -2366,7 +2369,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                    remote
                  in
                  let (loc, { Ast.Identifier.name = local_name; comments = _ }) =
-                   Option.value ~default:remote local
+                   Base.Option.value ~default:remote local
                  in
                  let imported_t =
                    let import_reason =
@@ -2381,12 +2384,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                    then
                      Unsoundness.why InferenceHooks import_reason
                    else
-                     let import_kind = type_kind_of_kind (Option.value ~default:importKind kind) in
+                     let import_kind =
+                       type_kind_of_kind (Base.Option.value ~default:importKind kind)
+                     in
                      get_imported_t import_reason import_kind remote_name local_name
                  in
                  let remote_ast = ((remote_name_loc, imported_t), rmt) in
                  let local_ast =
-                   Option.map local ~f:(fun (local_loc, local_id) ->
+                   Base.Option.map local ~f:(fun (local_loc, local_id) ->
                        let { Ast.Identifier.name = local_name; comments } = local_id in
                        ((local_loc, imported_t), mk_ident ~comments local_name))
                  in
@@ -2451,7 +2456,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       (fun (loc, local_name, t, specifier_kind) ->
         let t_generic =
           let lookup_mode =
-            match Option.value ~default:importKind specifier_kind with
+            match Base.Option.value ~default:importKind specifier_kind with
             | ImportDeclaration.ImportType -> ForType
             | ImportDeclaration.ImportTypeof -> ForType
             | ImportDeclaration.ImportValue -> ForValue
@@ -2480,14 +2485,14 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
       | Some t -> t
     in
     let local_name =
-      if Option.is_some default then
+      if Base.Option.is_some default then
         "default"
       else
         local_name
     in
     (* Use the location of the "default" keyword if this is a default export. For named exports,
      * use the location of the identifier. *)
-    let loc = Option.value ~default:loc default in
+    let loc = Base.Option.value ~default:loc default in
     match exportKind with
     | Ast.Statement.ExportType -> Import_export.export_type cx local_name (Some loc) local_tvar
     | Ast.Statement.ExportValue -> Import_export.export cx local_name loc local_tvar
@@ -2893,7 +2898,7 @@ and variable cx kind ?if_uninitialized id init =
       (* move const/let bindings from undeclared to declared *)
       declare_var cx name id_loc;
       Env.unify_declared_type cx name annot_t;
-      Option.iter init_opt ~f:(fun (init_t, init_reason) ->
+      Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
           let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
           init_var cx ~use_op name ~has_anno init_t id_loc);
       Type_inference_hooks_js.(dispatch_lval_hook cx name id_loc (Val annot_t));
@@ -2905,7 +2910,7 @@ and variable cx kind ?if_uninitialized id init =
             optional;
           } )
     | _ ->
-      Option.iter init_opt ~f:(fun (init_t, init_reason) ->
+      Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
           let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
           Flow.flow cx (init_t, UseT (use_op, annot_t)));
       let init =
@@ -2941,7 +2946,7 @@ and variable cx kind ?if_uninitialized id init =
               init_var cx ~use_op name ~has_anno t loc
           in
           Flow.flow cx (t, AssertImportIsValueT (reason, name));
-          Option.iter default ~f:(fun d ->
+          Base.Option.iter default ~f:(fun d ->
               let default_t = Flow.mk_default cx reason d in
               Flow.flow cx (default_t, UseT (use_op, t))))
   in
@@ -3058,7 +3063,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         comments;
       } ->
     let targts_opt =
-      Option.map targs (fun (targts_loc, args) ->
+      Base.Option.map targs (fun (targts_loc, args) ->
           (targts_loc, convert_call_targs cx SMap.empty args))
     in
     let (argts, arges) =
@@ -3130,7 +3135,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         comments;
       } ->
     let targts =
-      Option.map targs (fun (loc, args) -> (loc, convert_call_targs cx SMap.empty args))
+      Base.Option.map targs (fun (loc, args) -> (loc, convert_call_targs cx SMap.empty args))
     in
     let (argts, args) =
       match arguments with
@@ -3634,7 +3639,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
            that it has a truthy type (that's what the "ExistsP" predicate does). If we're
            deeper in the chain, then cond will be None, and we only care if the expression
            is null or undefined, not if it's false/0/"". *)
-        if Option.is_some cond then
+        if Base.Option.is_some cond then
           ExistsP (Some loc)
         else
           NotP MaybeP
@@ -3649,7 +3654,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     if is_existence_check then
       let prop_pred =
         (* see comment on exists_pred *)
-        if Option.is_some cond then
+        if Base.Option.is_some cond then
           PropExistsP (name, prop_reason)
         else
           PropNonMaybeP (name, prop_reason)
@@ -3674,7 +3679,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         }
       when not (Env.local_scope_entry_exists n) ->
       let targs =
-        Option.map targs (fun (args_loc, args) ->
+        Base.Option.map targs (fun (args_loc, args) ->
             (args_loc, snd (convert_call_targs cx SMap.empty args)))
       in
       let (lhs_t, arguments) =
@@ -3752,7 +3757,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         }
       when not (Env.local_scope_entry_exists n) ->
       let targs =
-        Option.map targs (fun (loc, args) -> (loc, snd (convert_call_targs cx SMap.empty args)))
+        Base.Option.map targs (fun (loc, args) ->
+            (loc, snd (convert_call_targs cx SMap.empty args)))
       in
       let (lhs_t, arguments) =
         match (targs, arguments) with
@@ -3971,7 +3977,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       (* TODO: require *)
       let (((_, callee_t), _) as callee) = expression cx callee in
       let targs =
-        Option.map targs (fun (loc, args) -> (loc, snd (convert_call_targs cx SMap.empty args)))
+        Base.Option.map targs (fun (loc, args) ->
+            (loc, snd (convert_call_targs cx SMap.empty args)))
       in
       (* NOTE: if an invariant expression throws abnormal control flow, the
             entire statement it was in is reconstructed in the typed AST as an
@@ -4106,7 +4113,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       (* Even though there's no optional chaining for Super member accesses, we
          can still get predicates *)
       let sentinel_refinement =
-        Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
+        Base.Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
       in
       let preds =
         exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super prop_reason
@@ -4221,7 +4228,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     in
     let voided_out =
       Tvar.mk_where cx reason (fun t ->
-          Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t)
+          Base.Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t)
     in
     let this_t = Tvar.mk cx this_reason in
     let opt_use = get_opt_use subexpression_types reason this_t in
@@ -4258,7 +4265,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       match (test_hooks chain_t, refine ()) with
       | (Some hit, _) -> hit
       | (None, Some refi) ->
-        Option.value_map
+        Base.Option.value_map
           ~f:(fun refinement_action -> refinement_action subexpression_types chain_t refi)
           ~default:refi
           refinement_action
@@ -4291,7 +4298,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         match (test_hooks obj_t, refine ()) with
         | (Some hit, _) -> hit
         | (None, Some refi) ->
-          Option.value_map
+          Base.Option.value_map
             ~f:(fun refinement_action -> refinement_action subexpression_types obj_t refi)
             ~default:refi
             refinement_action
@@ -4309,7 +4316,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           Context.mark_optional_chain cx loc lhs_reason ~useful:false;
           let (subexpression_types, subexpression_asts) = subexpressions preds in
           let tout =
-            Option.value_map
+            Base.Option.value_map
               ~f:(fun refinement_action -> refinement_action subexpression_types filtered_t t)
               ~default:t
               refinement_action
@@ -4438,7 +4445,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           ~get_reason:(Fn.const reason)
       in
       let sentinel_refinement =
-        Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+        Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
       in
       let new_pred_list = exists_pred (loc, e') lhs_t in
       let preds = combine_preds preds new_pred_list in
@@ -4485,7 +4492,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           ~get_reason:(Fn.const expr_reason)
       in
       let sentinel_refinement =
-        Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+        Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
       in
       let new_pred_list =
         exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t prop_reason
@@ -5640,7 +5647,8 @@ and collapse_children cx (children_loc, children) :
     |> List.fold_left
          (fun (unres_params, children) child ->
            let (unres_param_opt, child) = jsx_body cx child in
-           ( Option.value_map unres_param_opt ~default:unres_params ~f:(fun x -> x :: unres_params),
+           ( Base.Option.value_map unres_param_opt ~default:unres_params ~f:(fun x ->
+                 x :: unres_params),
              child :: children ))
          ([], [])
     |> map_pair List.rev List.rev
@@ -6166,10 +6174,11 @@ and expression_to_jsx_title_member loc member =
         Some (Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name }))
       | _ ->
         expression_to_jsx_title_member mloc obj_expr
-        |> Option.map ~f:(fun e -> Ast.JSX.MemberExpression.MemberExpression e)
+        |> Base.Option.map ~f:(fun e -> Ast.JSX.MemberExpression.MemberExpression e)
     in
     let property = (pannot, { Ast.JSX.Identifier.name }) in
-    Option.map _object ~f:(fun _object -> (loc, Ast.JSX.MemberExpression.{ _object; property }))
+    Base.Option.map _object ~f:(fun _object ->
+        (loc, Ast.JSX.MemberExpression.{ _object; property }))
   | _ -> None
 
 and mk_and map1 map2 =
@@ -6792,7 +6801,7 @@ and predicates_of_condition cx ~cond e =
           targs;
           arguments = (args_loc, [Expression arg]);
         } ) ->
-    Option.iter targs ~f:(fun _ ->
+    Base.Option.iter targs ~f:(fun _ ->
         Flow.add_output
           cx
           Error_message.(
@@ -6927,7 +6936,7 @@ and get_private_field cx reason ~use_op tobj name =
    would make everything involving Refinement be in the same place.
 *)
 and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
-  if Option.is_some cond then
+  if Base.Option.is_some cond then
     OptTestPropT (reason, mk_id (), Named (prop_reason, name))
   else
     OptGetPropT (use_op, reason, Named (prop_reason, name))
@@ -7097,7 +7106,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       ((None | Some (_, [_])) as targs),
       (args_loc, [Expression ((arg_loc, Object _) as e)]) ) ->
     let targs =
-      Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
+      Base.Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
     in
     let (((_, arg_t), _) as e_ast) = expression cx e in
     let arg_t = Object_freeze.freeze_object cx arg_loc arg_t in
@@ -7109,9 +7118,9 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
            prop_loc
            ~use_op
            (expr, obj_t, m)
-           (Option.map ~f:(snd %> fst) targs)
+           (Base.Option.map ~f:(snd %> fst) targs)
            [Arg arg_t]),
-      Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
+      Base.Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
       (args_loc, [Expression e_ast]) )
   | ( ("create" | "getOwnPropertyNames" | "keys" | "defineProperty" | "defineProperties" | "freeze"),
       Some (targs_loc, targs),
@@ -7224,9 +7233,10 @@ and mk_class_sig =
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer
               ( Func_stmt_sig.field_initializer tparams_map reason expr annot_t,
-                (fun (_, _, value_opt) -> value_ref := Some (Option.value_exn value_opt)) ),
+                (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
             fun () ->
-              Some (Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr)) )
+              Some (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
+          )
       in
       (field, annot_t, annot_ast, get_init)
     in
@@ -7380,24 +7390,24 @@ and mk_class_sig =
               in
               let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
               let set_asts (params_opt, body_opt, _) =
-                params_ref := Some (Option.value_exn params_opt);
-                body_ref := Some (Option.value_exn body_opt)
+                params_ref := Some (Base.Option.value_exn params_opt);
+                body_ref := Some (Base.Option.value_exn body_opt)
               in
               let func_t_ref : Type.t option ref = ref None in
               let set_type t = func_t_ref := Some t in
               let get_element () =
                 let params =
-                  Option.value
+                  Base.Option.value
                     !params_ref
                     ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params)
                 in
                 let body =
-                  Option.value
+                  Base.Option.value
                     !body_ref
                     ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body)
                 in
                 let func_t =
-                  Option.value !func_t_ref ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
+                  Base.Option.value !func_t_ref ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
                 in
                 let func = reconstruct_func params body func_t in
                 Body.Method
@@ -7494,7 +7504,7 @@ and mk_class_sig =
       ( class_sig,
         fun class_t ->
           {
-            Ast.Class.id = Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
+            Ast.Class.id = Base.Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
             body = (body_loc, { Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements });
             tparams = tparams_ast;
             extends = extends_ast;
@@ -7571,7 +7581,7 @@ and mk_func_sig =
         params
     in
     let fparams =
-      Option.fold
+      Base.Option.fold
         ~f:(fun acc rest ->
           match mk_rest cx tparams_map rest with
           | Ok rest -> Func_stmt_params.add_rest rest acc
@@ -7680,7 +7690,7 @@ and mk_func_sig =
       fun params body fun_type ->
         {
           func with
-          Ast.Function.id = Option.map ~f:(fun (id_loc, name) -> ((id_loc, fun_type), name)) id;
+          Ast.Function.id = Base.Option.map ~f:(fun (id_loc, name) -> ((id_loc, fun_type), name)) id;
           params;
           body;
           predicate;
@@ -7711,7 +7721,7 @@ and function_decl id cx loc func this super =
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-  (func_sig, reconstruct_func (Option.value_exn params_ast) (Option.value_exn body_ast))
+  (func_sig, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
 
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
@@ -7885,7 +7895,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   params
               in
               let rest =
-                Option.map
+                Base.Option.map
                   ~f:(fun (rest_loc, { Ast.Function.RestParam.argument }) ->
                     ( rest_loc,
                       { Ast.Type.Function.RestParam.argument = param_to_param_type argument } ))
@@ -7919,7 +7929,7 @@ and check_default_pattern cx left right =
     let exists_excuses = Context.exists_excuses cx in
     let exists_excuse =
       Loc_collections.ALocMap.find_opt left_loc exists_excuses
-      |> Option.value ~default:ExistsCheck.empty
+      |> Base.Option.value ~default:ExistsCheck.empty
       |> update_fun
     in
     let exists_excuses = Loc_collections.ALocMap.add left_loc exists_excuse exists_excuses in

@@ -116,7 +116,7 @@ let substituter =
              * an element to the resulting list for every element in the original list. It's just a bit
              * tricky to show this by construction while preserving the exact semantics of the above code.
              *)
-            let xs = Option.value_exn xs in
+            let xs = Base.Option.value_exn xs in
             let inner_ = self#type_ cx (map, false, None) inner in
             let changed = changed || inner_ != inner in
             if changed then
@@ -145,7 +145,7 @@ let substituter =
                * BoundT that was substituted. In this case, also change the use_op
                * so we can point at the op which instantiated the types that
                * were substituted. *)
-              let use_op = Option.value use_op ~default:op in
+              let use_op = Base.Option.value use_op ~default:op in
               TypeAppT (r, use_op, c', ts')
           | EvalT (x, TypeDestructorT (op, r, d), _) ->
             let x' = self#type_ cx map_cx x in
@@ -157,7 +157,7 @@ let substituter =
                * BoundT that was substituted. In this case, also change the use_op
                * so we can point at the op which instantiated the types that
                * were substituted. *)
-              let use_op = Option.value use_op ~default:op in
+              let use_op = Base.Option.value use_op ~default:op in
               EvalT (x', TypeDestructorT (use_op, r, d'), Eval.generate_id ())
           (* We only want to change the EvalT id if the rest of the EvalT actually changed *)
           | EvalT (t', dt, _id) ->

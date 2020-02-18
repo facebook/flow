@@ -69,7 +69,7 @@ let rec get t id =
   | Some (v, true) -> Some v
   | (None | Some (_, false)) as result ->
     (match advance t with
-    | Complete -> Option.map result fst
+    | Complete -> Base.Option.map result fst
     | Yield (id', v) when String.equal id' id -> Some v
     | Skipped
     | Yield _ ->

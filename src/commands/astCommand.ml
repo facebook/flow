@@ -77,7 +77,7 @@ let pp_underscore_loc fmt _ = Format.pp_print_string fmt "_"
 let main
     include_tokens pretty check debug pattern file_type_opt use_strict offset_style path filename ()
     =
-  let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
+  let use_relative_path = Base.Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in
   let file_type =
@@ -133,14 +133,14 @@ let main
         let filename = File_input.path_of_file_input file in
         let filename =
           if use_relative_path then
-            Option.map filename ~f:(Files.relative_path (Sys.getcwd ()))
+            Base.Option.map filename ~f:(Files.relative_path (Sys.getcwd ()))
           else
             filename
         in
         let (ast, errors) =
           match file_type with
           | File_js ->
-            let filekey = Option.map filename ~f:(fun s -> File_key.SourceFile s) in
+            let filekey = Base.Option.map filename ~f:(fun s -> File_key.SourceFile s) in
             let (ocaml_ast, errors) =
               Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
             in
@@ -154,7 +154,7 @@ let main
             );
             (Ast_js ocaml_ast, errors)
           | File_json ->
-            let filekey = Option.map filename ~f:(fun s -> File_key.JsonFile s) in
+            let filekey = Base.Option.map filename ~f:(fun s -> File_key.JsonFile s) in
             let (ocaml_ast, errors) =
               Parser_flow.json_file ~fail:false ~parse_options ~token_sink content filekey
             in

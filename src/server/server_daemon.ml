@@ -81,10 +81,10 @@ let register_entry_point
       let flowconfig_name = Options.flowconfig_name options in
       PidLog.init (Server_files_js.pids_file ~flowconfig_name ~tmp_dir root);
       PidLog.log ~reason:"monitor" parent_pid;
-      Option.iter parent_logger_pid ~f:(PidLog.log ~reason:"monitor_logger");
-      Option.iter file_watcher_pid ~f:(PidLog.log ~reason:"file_watcher");
+      Base.Option.iter parent_logger_pid ~f:(PidLog.log ~reason:"monitor_logger");
+      Base.Option.iter file_watcher_pid ~f:(PidLog.log ~reason:"file_watcher");
       PidLog.log ~reason:"main" (Unix.getpid ());
-      Option.iter (EventLogger.logger_pid ()) ~f:(PidLog.log ~reason:"main_logger");
+      Base.Option.iter (EventLogger.logger_pid ()) ~f:(PidLog.log ~reason:"main_logger");
 
       main ~monitor_channels ~shared_mem_config options)
 

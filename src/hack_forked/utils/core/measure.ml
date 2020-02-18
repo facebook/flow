@@ -273,7 +273,7 @@ let pretty_num f =
     Printf.sprintf "%f" f
 
 let print_entry_stats ?record ?print_raw name =
-  let print_raw = Option.value print_raw ~default:prerr_endline in
+  let print_raw = Base.Option.value print_raw ~default:prerr_endline in
   let record = get_record record in
   let prefix = Printf.sprintf "%s stats --" name in
   match SMap.find_opt name !record with

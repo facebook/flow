@@ -300,7 +300,7 @@ module Friendly = struct
          *
          * We ignore the score for these errors. Instead propagating the
          * high_score we already have. *)
-        | Speculation { branches = nested_branches; frames } when Option.is_none error.root ->
+        | Speculation { branches = nested_branches; frames } when Base.Option.is_none error.root ->
           (* We don't perform tail-call recursion here, but it's unlikely that
            * speculations will be so deeply nested that we blow the stack. *)
           let (hidden_branches, high_score, acc) =
@@ -418,7 +418,7 @@ module Friendly = struct
         (* When there is only one branch in acc (we had one branch with a
          * "high score") and this error does not have a root then loop while
          * adding the frames from this speculation error message. *)
-        | [(acc_frames', speculation_error)] when Option.is_none speculation_error.root ->
+        | [(acc_frames', speculation_error)] when Base.Option.is_none speculation_error.root ->
           loop
             ~show_root
             ~show_all_branches
@@ -435,7 +435,7 @@ module Friendly = struct
              * then use a mock error message. (We should always have a root
              * for speculation errors in theory, but as long as there are
              * UnknownUses it's possible we won't get a root.) *)
-            if (Option.is_none error.root || not show_root) && frames = [] then
+            if (Base.Option.is_none error.root || not show_root) && frames = [] then
               [text "all branches are incompatible:"]
             else
               (* Otherwise create a message with our frames and optionally the
@@ -610,7 +610,7 @@ let mk_error
     (loc : 'loc)
     (message : 'loc Friendly.message) : 'loc printable_error =
   Friendly.(
-    let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+    let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let message =
       match kind with
       | LintError kind -> message @ [text " ("; code (Lints.string_of_kind kind); text ")"]
@@ -620,13 +620,13 @@ let mk_error
       trace,
       {
         loc;
-        root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
+        root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
         message = Normal { message; frames };
       } ))
 
 let mk_speculation_error ?(kind = InferError) ?trace_infos ~loc ~root ~frames ~speculation_errors =
   Friendly.(
-    let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+    let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let branches =
       Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
       |> ListUtils.dedup
@@ -635,7 +635,7 @@ let mk_speculation_error ?(kind = InferError) ?trace_infos ~loc ~root ~frames ~s
       trace,
       {
         loc;
-        root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
+        root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
         message = Speculation { frames; branches };
       } ))
 
@@ -738,7 +738,7 @@ let read_file ~stdin_file filename =
     Sys_utils.cat_or_failed filename
 
 let get_offset_table_expensive ~stdin_file ~offset_kind loc =
-  let open Option in
+  let open Base.Option in
   let open Utils_js in
   Loc.source loc
   >>= File_key.to_path %> Base.Result.ok
@@ -803,14 +803,14 @@ let locs_of_printable_error =
     Friendly.(
       let { loc; root; message } = error in
       let locs =
-        Option.value_map root ~default:locs ~f:(fun { root_message; root_loc } ->
+        Base.Option.value_map root ~default:locs ~f:(fun { root_message; root_loc } ->
             root_loc :: locs_of_message locs root_message)
       in
       let locs =
         match message with
         | Normal { frames; message } ->
           let locs =
-            Option.value_map frames ~default:locs ~f:(List.fold_left locs_of_message locs)
+            Base.Option.value_map frames ~default:locs ~f:(List.fold_left locs_of_message locs)
           in
           let locs = locs_of_message locs message in
           locs
@@ -993,7 +993,7 @@ let collect_errors_into_groups max set =
       let (_, acc) =
         ConcreteLocPrintableErrorSet.fold
           (fun (kind, trace, error) (n, acc) ->
-            let omit = Option.value_map max ~default:false ~f:(fun max -> max <= n) in
+            let omit = Base.Option.value_map max ~default:false ~f:(fun max -> max <= n) in
             let acc =
               match error with
               | error when trace <> [] ->
@@ -1390,7 +1390,7 @@ module Cli_output = struct
          * of 0 for this id. *)
         | [] ->
           let color =
-            Option.value_map
+            Base.Option.value_map
               (IMap.find_opt id custom_colors)
               ~f:(fun custom -> CustomColor custom)
               ~default:(Color 0)
@@ -1509,7 +1509,7 @@ module Cli_output = struct
       and update_colors (Opened opened) colors color =
         IMap.fold
           (fun open_id opened colors ->
-            let open_color = Option.value (IMap.find_opt open_id colors) ~default:(Color 0) in
+            let open_color = Base.Option.value (IMap.find_opt open_id colors) ~default:(Color 0) in
             match open_color with
             | CustomColor _ -> colors
             | Color open_color ->
@@ -1527,7 +1527,7 @@ module Cli_output = struct
             match loc.source with
             | None -> (colors, file_tags)
             | Some source ->
-              let tags = Option.value (FileKeyMap.find_opt source file_tags) ~default:[] in
+              let tags = Base.Option.value (FileKeyMap.find_opt source file_tags) ~default:[] in
               let (colors, tags) =
                 add_tags colors (Opened IMap.empty) id loc.start loc._end tags []
               in
@@ -1558,7 +1558,7 @@ module Cli_output = struct
       | _ -> failwith "unreachable")
 
   let get_tty_color id colors =
-    get_tty_color_internal (Option.value (IMap.find_opt id colors) ~default:(Color 0))
+    get_tty_color_internal (Base.Option.value (IMap.find_opt id colors) ~default:(Color 0))
 
   (* Gets the Tty color from a stack of ids. This function will ignore
    * CustomColor `Root if there are other colors on the stack. *)
@@ -1566,9 +1566,9 @@ module Cli_output = struct
     match ids with
     | [] -> None
     | id :: ids ->
-      (match Option.value (IMap.find_opt id colors) ~default:(Color 0) with
+      (match Base.Option.value (IMap.find_opt id colors) ~default:(Color 0) with
       | CustomColor `Root ->
-        Option.value_map
+        Base.Option.value_map
           (get_tty_color_from_stack ids colors)
           ~f:(fun x -> Some x)
           ~default:(Some Tty.Default)
@@ -1732,7 +1732,7 @@ module Cli_output = struct
         in
         match words with
         (* No words means no string. *)
-        | [] -> Option.value_map indentation_first ~default:[] ~f:snd
+        | [] -> Base.Option.value_map indentation_first ~default:[] ~f:snd
         (* If we have a single word we will use that as our initializer for
          * our fold on the rest of our words. *)
         | init :: words ->
@@ -1831,11 +1831,11 @@ module Cli_output = struct
             Some (String.make ((indentation - 1) * 3) ' ')
         in
         let indentation_first =
-          Option.map indentation_space ~f:(fun space ->
+          Base.Option.map indentation_space ~f:(fun space ->
               [default_style (space ^ " " ^ bullet_char ~flags ^ " ")])
         in
         let indentation =
-          Option.map indentation_space ~f:(fun space -> [default_style (space ^ "   ")])
+          Base.Option.map indentation_space ~f:(fun space -> [default_style (space ^ "   ")])
         in
         let message =
           concat_words_into_lines
@@ -1944,7 +1944,7 @@ module Cli_output = struct
                   [loc1; loc2]
               in
               (* Add the new locs to our FileKeyMap. *)
-              let locs = Option.value (FileKeyMap.find_opt source acc) ~default:[] in
+              let locs = Base.Option.value (FileKeyMap.find_opt source acc) ~default:[] in
               (max max_line loc._end.line, FileKeyMap.add source (new_locs @ locs) acc))
           (0, FileKeyMap.empty)
           locs
@@ -2016,10 +2016,12 @@ module Cli_output = struct
               | None -> failwith "expected loc to have a source"
               | Some source ->
                 let line_references =
-                  Option.value (FileKeyMap.find_opt source file_line_references) ~default:IMap.empty
+                  Base.Option.value
+                    (FileKeyMap.find_opt source file_line_references)
+                    ~default:IMap.empty
                 in
                 let references =
-                  Option.value (IMap.find_opt loc.start.line line_references) ~default:[]
+                  Base.Option.value (IMap.find_opt loc.start.line line_references) ~default:[]
                 in
                 let references = (id, loc.start) :: references in
                 let line_references = IMap.add loc.start.line references line_references in
@@ -2084,9 +2086,11 @@ module Cli_output = struct
             (* Used by read_lines_in_file. *)
             let filename = file_of_source (Some file_key) in
             (* Get some data structures associated with this file. *)
-            let tags = Option.value (FileKeyMap.find_opt file_key tags) ~default:[] in
+            let tags = Base.Option.value (FileKeyMap.find_opt file_key tags) ~default:[] in
             let line_references =
-              Option.value (FileKeyMap.find_opt file_key file_line_references) ~default:IMap.empty
+              Base.Option.value
+                (FileKeyMap.find_opt file_key file_line_references)
+                ~default:IMap.empty
             in
             (* Fold all the locs for this file into code frames. *)
             let (_, _, code_frames) =
@@ -2109,7 +2113,7 @@ module Cli_output = struct
                              let rec loop acc col tags opened line =
                                (* Get the current style for the line. *)
                                let style =
-                                 Option.value_map
+                                 Base.Option.value_map
                                    (get_tty_color_from_stack opened colors)
                                    ~f:(fun color -> Tty.Normal color)
                                    ~default:(Tty.Dim Tty.Default)
@@ -2225,7 +2229,7 @@ module Cli_output = struct
       let code_frames = FileKeyMap.remove root_file_key code_frames in
       (* If we only have a root code frame then only render that. *)
       if FileKeyMap.is_empty code_frames then
-        Option.value root_code_frame ~default:[]
+        Base.Option.value root_code_frame ~default:[]
       else
         let code_frames = FileKeyMap.bindings code_frames in
         let code_frames =
@@ -2279,7 +2283,7 @@ module Cli_output = struct
         let filename = file_of_source loc.source in
         let lines = read_lines_in_file loc filename stdin_file in
         let lines =
-          Option.map lines (fun line_list ->
+          Base.Option.map lines (fun line_list ->
               (* Print every line by appending the line number and appropriate
                * gutter width. *)
               let (_, lines) =
@@ -2371,7 +2375,7 @@ module Cli_output = struct
         if not with_filename then
           lines
         else
-          Option.map lines (fun lines ->
+          Base.Option.map lines (fun lines ->
               let space = String.make 3 ' ' in
               let filename = print_file_key ~strip_root loc.source in
               let filename =
@@ -2388,7 +2392,8 @@ module Cli_output = struct
         IMap.fold
           (fun id loc acc ->
             let is_root =
-              Option.value_map root_reference_id ~default:false ~f:(fun root_id -> root_id = id)
+              Base.Option.value_map root_reference_id ~default:false ~f:(fun root_id ->
+                  root_id = id)
             in
             (* Skip this reference if either it is a "shadow reference" or it is the
              * reference for the root. *)
@@ -2736,7 +2741,7 @@ module Cli_output = struct
       let errors = collect_errors_into_groups max_count errors in
       let warnings =
         collect_errors_into_groups
-          (Option.map max_count ~f:(fun max_count -> max_count - err_count))
+          (Base.Option.map max_count ~f:(fun max_count -> max_count - err_count))
           warnings
       in
       let total_count = err_count + warn_count in
@@ -2780,7 +2785,7 @@ module Cli_output = struct
         Printf.fprintf
           out_channel
           "\nOnly showing the most relevant union/intersection branches.\nTo see all branches, re-run Flow with --show-all-branches\n";
-      Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
+      Base.Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
       ()
 
   let print_errors

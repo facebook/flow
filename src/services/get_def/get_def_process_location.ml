@@ -78,8 +78,8 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
       } =
         decl
       in
-      Option.iter ~f:(this#import_specifier_with_loc ~source_loc) specifiers;
-      Option.iter ~f:(this#import_default_specifier_with_loc ~source_loc) default;
+      Base.Option.iter ~f:(this#import_specifier_with_loc ~source_loc) specifiers;
+      Base.Option.iter ~f:(this#import_default_specifier_with_loc ~source_loc) default;
       if this#covers_target import_loc then
         this#chain (Get_def_request.Require ((source_loc, module_name), import_loc));
       decl
@@ -100,7 +100,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
           Member { prop_name = remote_name; object_source = ObjectRequireLoc source_loc })
       in
       if this#covers_target remote_name_loc then this#chain result;
-      Option.iter
+      Base.Option.iter
         ~f:(fun local ->
           let ((local_name_loc, _), _) = local in
           if this#covers_target local_name_loc then

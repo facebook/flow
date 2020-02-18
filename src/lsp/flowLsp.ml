@@ -277,8 +277,8 @@ let selectively_omit_errors (request_name : string) (response : lsp_message) =
       | "textDocument/documentHighlight" -> Some (DocumentHighlightResult [])
       | _ -> None
     in
-    Option.map ~f:(fun response -> ResponseMessage (id, response)) new_response
-    |> Option.value ~default:response
+    Base.Option.map ~f:(fun response -> ResponseMessage (id, response)) new_response
+    |> Base.Option.value ~default:response
   | _ -> response
 
 let get_next_event_from_server (fd : Unix.file_descr) : event =
@@ -386,8 +386,8 @@ let show_status
               { request = { type_ = ErrorMessage; _ }; _ } ) ->
             (false, false)
           | (false, Shown (id, _), { request = { type_ = ErrorMessage; _ }; _ }) ->
-            (Option.is_some id, true)
-          | (false, Shown (id, _), _) -> (Option.is_some id, false)
+            (Base.Option.is_some id, true)
+          | (false, Shown (id, _), _) -> (Base.Option.is_some id, false)
           | (false, Never_shown, { request = { type_ = ErrorMessage; _ }; _ }) -> (false, true)
           | (false, Never_shown, _) -> (false, false)
         in
@@ -395,7 +395,7 @@ let show_status
         let ienv =
           match (will_dismiss_old, ienv.i_status) with
           | (true, Shown (id, existingParams)) ->
-            let id = Option.value_exn id in
+            let id = Base.Option.value_exn id in
             let notification = CancelRequestNotification { CancelRequest.id } in
             let json = Lsp_fmt.print_lsp (NotificationMessage notification) in
             to_stdout json;
@@ -582,7 +582,7 @@ let show_disconnected
   in
   let env = { env with d_ienv = { env.d_ienv with i_isConnected } } in
   (* show red status *)
-  let message = Option.value message ~default:"Flow: server is stopped" in
+  let message = Base.Option.value message ~default:"Flow: server is stopped" in
   let message =
     match code with
     | Some code -> Printf.sprintf "%s [%s]" message (FlowExitStatus.to_string code)
@@ -787,7 +787,7 @@ let dismiss_tracks (state : state) : state =
 let lsp_DocumentItem_to_flow (open_doc : Lsp.TextDocumentItem.t) : File_input.t =
   let uri = open_doc.TextDocumentItem.uri in
   let fn = Lsp_helpers.lsp_uri_to_path uri in
-  let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+  let fn = Base.Option.value (Sys_utils.realpath fn) ~default:fn in
   File_input.FileContent (Some fn, open_doc.TextDocumentItem.text)
 
 (******************************************************************************)
@@ -857,7 +857,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
   let get_parse_options () =
     let root = get_root state in
     let use_strict =
-      Option.value_map root ~default:false ~f:(fun root ->
+      Base.Option.value_map root ~default:false ~f:(fun root ->
           Server_files_js.config_file flowconfig_name root
           |> read_config_or_exit
           |> FlowConfig.modules_are_use_strict)
@@ -881,7 +881,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
       try
         let content = File_input.content_of_file_input_unsafe file in
         let filename_opt = File_input.path_of_file_input file in
-        let filekey = Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
+        let filekey = Base.Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
         let parse_options = get_parse_options () in
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
       with _ -> ((Loc.none, [], []), [])
@@ -893,7 +893,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         None )
   in
   let open_files = get_open_files state in
-  let existing_open_file_info = Option.bind open_files (SMap.find_opt uri) in
+  let existing_open_file_info = Base.Option.bind open_files (SMap.find_opt uri) in
   match existing_open_file_info with
   | Some { o_ast = Some o_ast; _ } ->
     (* We've already parsed this file since it last changed. No need to parse again *)
@@ -908,7 +908,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
   | None ->
     (* This is an unopened file, so we won't cache the results and won't return the errors *)
     let fn = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
-    let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+    let fn = Base.Option.value (Sys_utils.realpath fn) ~default:fn in
     let file = File_input.FileName fn in
     let (open_ast, _) = parse file in
     (state, (open_ast, None))
@@ -974,9 +974,9 @@ module RagePrint = struct
         p.autostop
         p.ignore_version
         p.quiet
-        (Option.value ~default:"None" p.temp_dir)
-        (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
-        (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string))
+        (Base.Option.value ~default:"None" p.temp_dir)
+        (Base.Option.value_map p.timeout ~default:"None" ~f:string_of_int)
+        (Base.Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string))
 
   let string_of_open_file { o_open_doc; o_ast; o_unsaved } : string =
     Printf.sprintf
@@ -984,7 +984,7 @@ module RagePrint = struct
       (Lsp.string_of_uri o_open_doc.TextDocumentItem.uri)
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
-      (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
+      (Base.Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
       o_unsaved
 
   let string_of_open_files (files : open_file_info SMap.t) : string =
@@ -998,13 +998,13 @@ module RagePrint = struct
     | Shown (id_opt, params) ->
       Printf.sprintf
         "Shown id=%s params=%s"
-        (Option.value_map id_opt ~default:"None" ~f:Lsp_fmt.id_to_string)
+        (Base.Option.value_map id_opt ~default:"None" ~f:Lsp_fmt.id_to_string)
         (print_showStatus params |> Hh_json.json_to_string)
 
   let add_ienv (b : Buffer.t) (ienv : initialized_env) : unit =
     addline b "i_connect_params=" (ienv.i_connect_params |> string_of_connect_params);
     addline b "i_root=" (ienv.i_root |> Path.to_string);
-    addline b "i_version=" (ienv.i_version |> Option.value ~default:"None");
+    addline b "i_version=" (ienv.i_version |> Base.Option.value ~default:"None");
     addline b "i_server_id=" (ienv.i_server_id |> string_of_int);
     addline
       b
@@ -1053,11 +1053,11 @@ module RagePrint = struct
     addline
       b
       "d_server_status:server="
-      (server_status |> Option.value_map ~default:"None" ~f:ServerStatus.string_of_status);
+      (server_status |> Base.Option.value_map ~default:"None" ~f:ServerStatus.string_of_status);
     addline
       b
       "d_server_status:watcher="
-      (watcher_status |> Option.value_map ~default:"None" ~f:FileWatcherStatus.string_of_status);
+      (watcher_status |> Base.Option.value_map ~default:"None" ~f:FileWatcherStatus.string_of_status);
     ()
 
   let add_cenv (b : Buffer.t) (cenv : connected_env) : unit =
@@ -1067,16 +1067,17 @@ module RagePrint = struct
     addline
       b
       "c_server_status:watcher="
-      (watcher_status |> Option.value_map ~default:"None" ~f:FileWatcherStatus.string_of_status);
+      (watcher_status |> Base.Option.value_map ~default:"None" ~f:FileWatcherStatus.string_of_status);
     addline
       b
       "c_about_to_exit_code="
-      (cenv.c_about_to_exit_code |> Option.value_map ~default:"None" ~f:FlowExitStatus.to_string);
+      ( cenv.c_about_to_exit_code
+      |> Base.Option.value_map ~default:"None" ~f:FlowExitStatus.to_string );
     addline b "c_is_rechecking=" (cenv.c_is_rechecking |> string_of_bool);
     addline
       b
       "c_lazy_stats="
-      (cenv.c_lazy_stats |> Option.value_map ~default:"None" ~f:string_of_lazy_stats);
+      (cenv.c_lazy_stats |> Base.Option.value_map ~default:"None" ~f:string_of_lazy_stats);
     addline
       b
       "c_outstanding_requests_to_server="
@@ -1310,7 +1311,7 @@ let do_live_diagnostics
     (uri : string) : state =
   (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
    * diagnostics and want to log what triggered it regardless of whether it's known or not *)
-  let trigger = Option.value trigger ~default:LspInteraction.UnknownTrigger in
+  let trigger = Base.Option.value trigger ~default:LspInteraction.UnknownTrigger in
   let () =
     (* Only ask the server for live errors if we're connected *)
     match state with
@@ -1337,7 +1338,7 @@ let do_live_diagnostics
   in
   log_interaction ~ux state interaction_id;
   let error_count =
-    Option.value_map live_parse_errors ~default:Hh_json.JSON_Null ~f:(fun errors ->
+    Base.Option.value_map live_parse_errors ~default:Hh_json.JSON_Null ~f:(fun errors ->
         Hh_json.JSON_Number (errors |> List.length |> string_of_int))
   in
   FlowEventLogger.live_parse_errors
@@ -1354,8 +1355,8 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
   (* connect. We'll terminate and trust the editor to relaunch an ok version. *)
   let current_version = get_current_version flowconfig_name env.d_ienv.i_root in
   if env.d_ienv.i_version <> current_version then (
-    let prev_version_str = Option.value env.d_ienv.i_version ~default:"[None]" in
-    let current_version_str = Option.value current_version ~default:"[None]" in
+    let prev_version_str = Base.Option.value env.d_ienv.i_version ~default:"[None]" in
+    let current_version_str = Base.Option.value current_version ~default:"[None]" in
     let message =
       "\nVersion in flowconfig that spawned the existing flow server: "
       ^ prev_version_str
@@ -1734,12 +1735,12 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (* Forward the message to the server immediately *)
     let () =
       let interaction_tracking_id =
-        Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state)
+        Base.Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state)
       in
       send_lsp_to_server cenv { metadata with LspProt.interaction_tracking_id } c
     in
     let state =
-      Option.value_map
+      Base.Option.value_map
         changed_live_uri
         ~default:state
         ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
@@ -1760,13 +1761,15 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | (_, Client_message ((NotificationMessage (DidSaveNotification _) as c), metadata))
   | (_, Client_message ((NotificationMessage (DidCloseNotification _) as c), metadata)) ->
     let trigger = LspInteraction.trigger_of_lsp_msg c in
-    let interaction_id = Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state) in
+    let interaction_id =
+      Base.Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state)
+    in
     (* these are editor events that happen while disconnected. *)
     let (client_duration, state) =
       with_timer (fun () ->
           let (state, { changed_live_uri }) = track_to_server state c in
           let state =
-            Option.value_map
+            Base.Option.value_map
               changed_live_uri
               ~default:state
               ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
@@ -1775,7 +1778,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     in
     (* TODO - In the future if we start running check-contents on DidChange, we should probably
      * log Errored instead of Responded for that one *)
-    Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Responded state);
+    Base.Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Responded state);
     let metadata = { metadata with LspProt.client_duration = Some client_duration } in
     Ok (state, LogNeeded metadata)
   | (_, Client_message (NotificationMessage (CancelRequestNotification _), _metadata)) ->
@@ -1784,14 +1787,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | (Disconnected _, Client_message (c, metadata)) ->
     let interaction_id =
       LspInteraction.trigger_of_lsp_msg c
-      |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
+      |> Base.Option.map ~f:(fun trigger -> start_interaction ~trigger state)
     in
     let (state, _) = track_to_server state c in
     let exn =
       let method_ = Lsp_fmt.denorm_message_to_string c in
       Error.RequestCancelled ("Server not connected; can't handle " ^ method_)
     in
-    Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Errored state);
+    Base.Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Errored state);
     (match c with
     | RequestMessage (id, _request) ->
       let e = Lsp_fmt.error_of_exn exn in
@@ -1841,7 +1844,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
         (state, metadata, ux)
     in
-    Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
+    Base.Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
     Ok (state, LogNeeded metadata)
   | ( Connected _,
       Server_message
@@ -1887,10 +1890,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
            * need to notify the client *)
           None)
     in
-    Option.iter outgoing ~f:(fun outgoing ->
+    Base.Option.iter outgoing ~f:(fun outgoing ->
         let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
         to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing));
-    Option.iter
+    Base.Option.iter
       metadata.LspProt.interaction_tracking_id
       ~f:(log_interaction ~ux:LspInteraction.Errored state);
     Ok (state, LogNeeded metadata)
@@ -1935,15 +1938,15 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
               metadata )) ) ->
     let uri = Lsp.string_of_uri uri in
     let file_is_still_open =
-      get_open_files state |> Option.value_map ~default:false ~f:(SMap.mem uri)
+      get_open_files state |> Base.Option.value_map ~default:false ~f:(SMap.mem uri)
     in
     let state =
       if file_is_still_open then (
         (* Only set the live non-parse errors if the file is still open. If it's been closed since
          * the request was sent, then we will just ignore the response *)
         let all = group_errors_by_uri ~default_uri:uri ~errors ~warnings in
-        let errors_for_uri = SMap.find_opt uri all |> Option.value ~default:[] in
-        Option.iter
+        let errors_for_uri = SMap.find_opt uri all |> Base.Option.value ~default:[] in
+        Base.Option.iter
           metadata.LspProt.interaction_tracking_id
           ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);
         FlowEventLogger.live_non_parse_errors
@@ -1962,7 +1965,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           (LspErrors.set_live_non_parse_errors_and_send to_stdout uri errors_for_uri)
           state
       ) else (
-        Option.iter
+        Base.Option.iter
           metadata.LspProt.interaction_tracking_id
           ~f:(log_interaction ~ux:LspInteraction.ErroredPushingLiveNonParseErrors state);
         FlowEventLogger.live_non_parse_errors_failed
@@ -1993,7 +1996,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       | LspProt.Canceled_error_response -> LspInteraction.CanceledPushingLiveNonParseErrors
       | LspProt.Errored_error_response -> LspInteraction.ErroredPushingLiveNonParseErrors
     in
-    Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
+    Base.Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
     FlowEventLogger.live_non_parse_errors_failed
       ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
       ~data:
@@ -2015,7 +2018,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let state =
       show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats }
     in
-    Option.iter (get_open_files state) ~f:(fun open_files ->
+    Base.Option.iter (get_open_files state) ~f:(fun open_files ->
         let method_name = "synthetic/endRecheck" in
         let metadata =
           {
@@ -2041,7 +2044,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let new_time = Unix.gettimeofday () in
     let summary = ServerStatus.get_summary server_status in
     let c_recent_summaries =
-      Option.value_map summary ~default:c_recent_summaries ~f:(fun summary ->
+      Base.Option.value_map summary ~default:c_recent_summaries ~f:(fun summary ->
           (new_time, summary) :: cenv.c_recent_summaries
           |> List.filter ~f:(fun (t, _) -> t >= new_time -. 120.0))
     in
@@ -2072,9 +2075,11 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
           FlowEventLogger.start_lsp_state = metadata.start_lsp_state;
           start_lsp_state_reason = metadata.start_lsp_state_reason;
           start_server_status =
-            Option.map metadata.start_server_status ~f:(ServerStatus.string_of_status ~terse:true);
+            Base.Option.map
+              metadata.start_server_status
+              ~f:(ServerStatus.string_of_status ~terse:true);
           start_watcher_status =
-            Option.map metadata.start_watcher_status ~f:FileWatcherStatus.string_of_status;
+            Base.Option.map metadata.start_watcher_status ~f:FileWatcherStatus.string_of_status;
         }
     in
     let server_logging_context = metadata.server_logging_context in
@@ -2089,7 +2094,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
               None)
       | _ -> []
     in
-    let root = Option.value ~default:Path.dummy_path (get_root state) in
+    let root = Base.Option.value ~default:Path.dummy_path (get_root state) in
     let persistent_delay =
       if delays = [] then
         None
@@ -2182,7 +2187,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
         | Connected cenv -> cenv.c_about_to_exit_code
         | _ -> None
       in
-      let code = Option.value_map code ~f:FlowExitStatus.to_string ~default:"" in
+      let code = Base.Option.value_map code ~f:FlowExitStatus.to_string ~default:"" in
       let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code edata.message stack in
       Lsp_helpers.telemetry_error to_stdout report;
       let (d_autostart, d_ienv) =

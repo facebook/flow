@@ -73,11 +73,11 @@ module Watchman_changes_asserter = Asserter.Make_asserter (Watchman_changes_comp
 let test_mock_basic () =
   Watchman_lwt.Mocking.init_returns None;
   let%lwt result = Watchman_lwt.init Watchman_lwt.Testing.test_settings () in
-  let result = Option.map result ~f:Watchman_lwt.Mocking.print_env in
+  let result = Base.Option.map result ~f:Watchman_lwt.Mocking.print_env in
   Asserter.String_asserter.assert_option_equals None result "init_returns";
   Watchman_lwt.Mocking.init_returns (Some "hello");
   let%lwt result = Watchman_lwt.init Watchman_lwt.Testing.test_settings () in
-  let result = Option.map result ~f:Watchman_lwt.Mocking.print_env in
+  let result = Base.Option.map result ~f:Watchman_lwt.Mocking.print_env in
   Asserter.String_asserter.assert_option_equals (Some "hello") result "init_returns";
   let expected_changes =
     Watchman_lwt.Watchman_synchronous [Watchman_lwt.Files_changed (SSet.singleton "some_file.php")]

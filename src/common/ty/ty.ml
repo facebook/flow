@@ -543,7 +543,7 @@ let rec mk_exact ty =
   match ty with
   | Obj o -> Obj { o with obj_exact = true }
   | TypeAlias a ->
-    let ta_type = Option.map ~f:mk_exact a.ta_type in
+    let ta_type = Base.Option.map ~f:mk_exact a.ta_type in
     TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)

@@ -19,7 +19,7 @@ module FlowSet = struct
 
   let cache (l, u) setr =
     (* update returns ref eq map if no change *)
-    let setr' = TypeMap.update l (add_not_found u %> Option.return) !setr in
+    let setr' = TypeMap.update l (add_not_found u %> Base.Option.return) !setr in
     if setr' == !setr then
       true
     else (

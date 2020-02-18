@@ -84,7 +84,7 @@ class property_access_searcher name =
     method! import_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
       let { default; specifiers; _ } = decl in
-      if Option.is_some default && name = "default" then this#set_acc true;
+      if Base.Option.is_some default && name = "default" then this#set_acc true;
       let handle_specifier = function
         (* `import * as ...`
          * No action needed since any references to actual exports will appear later as normal
@@ -96,7 +96,7 @@ class property_access_searcher name =
                (fun { remote = (_, { Ast.Identifier.name = remote_name; comments = _ }); _ } ->
                  if remote_name = name then this#set_acc true)
       in
-      Option.iter specifiers ~f:handle_specifier;
+      Base.Option.iter specifiers ~f:handle_specifier;
       super#import_declaration loc decl
   end
 

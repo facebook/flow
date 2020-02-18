@@ -446,8 +446,8 @@ let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt =
 let map_reason_locs f reason =
   let { def_loc_opt; annot_loc_opt; loc; desc; test_id; derivable } = reason in
   let loc' = f loc in
-  let def_loc_opt' = Option.map ~f def_loc_opt in
-  let annot_loc_opt' = Option.map ~f annot_loc_opt in
+  let def_loc_opt' = Base.Option.map ~f def_loc_opt in
+  let annot_loc_opt' = Base.Option.map ~f annot_loc_opt in
   let desc' = map_desc_locs f desc in
   {
     def_loc_opt = def_loc_opt';
@@ -861,7 +861,7 @@ let builtin_reason desc =
 let is_builtin_reason f r = r.loc |> f |> ( = ) (Some File_key.Builtins)
 
 let is_lib_reason r =
-  r.loc |> ALoc.source |> Option.value_map ~default:false ~f:File_key.is_lib_file
+  r.loc |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 

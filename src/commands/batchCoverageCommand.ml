@@ -201,7 +201,7 @@ let main
   let batch =
     get_filenames_from_input input files |> Base.List.map ~f:(Path.make %> Path.to_string)
   in
-  let input = Option.map (Base.List.hd batch) (fun x -> File_input.FileName x) in
+  let input = Base.Option.map (Base.List.hd batch) (fun x -> File_input.FileName x) in
   let root = get_the_root ~base_flags ?input root in
   (* pretty implies json *)
   let json = json || pretty in

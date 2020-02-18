@@ -890,11 +890,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           match SMap.find_opt x props with
           | Some _ as p -> p
           | None ->
-            Option.map dict (fun { key; value; dict_polarity; _ } ->
+            Base.Option.map dict (fun { key; value; dict_polarity; _ } ->
                 rec_flow_t ~use_op:unknown_use cx trace (string_key x reason_op, key);
                 Field (None, value, dict_polarity))
         in
-        let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
+        let read_prop x obj = Base.Option.bind (get_prop x obj) Property.read_t in
         let read_stack x ((obj, _), _) = read_prop x obj in
         let map_spec f ((obj, spec), tail) = ((obj, f spec), tail) in
         (* This tool recursively resolves types until the spec is resolved enough to
@@ -943,7 +943,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         let merge_objs (r1, ps1, dict1, flags1) (_, ps2, dict2, flags2) =
           let props = SMap.union ps1 ps2 in
-          let dict = Option.first_some dict1 dict2 in
+          let dict = Base.Option.first_some dict1 dict2 in
           let flags = merge_flags flags1 flags2 in
           (r1, props, dict, flags)
         in
@@ -1028,10 +1028,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               | Unknown reason -> { acc with unknown_mixins = reason :: acc.unknown_mixins })
             mixins_rev
             spec
-        and merge_statics = Option.merge ~f:(merge_unknown merge_objs)
-        and merge_prop_types = Option.merge ~f:(merge_unknown merge_objs)
-        and merge_default_props = Option.merge ~f:(merge_unknown merge_objs)
-        and merge_initial_state = Option.merge ~f:(merge_unknown (merge_nullable merge_objs))
+        and merge_statics = Base.Option.merge ~f:(merge_unknown merge_objs)
+        and merge_prop_types = Base.Option.merge ~f:(merge_unknown merge_objs)
+        and merge_default_props = Base.Option.merge ~f:(merge_unknown merge_objs)
+        and merge_initial_state = Base.Option.merge ~f:(merge_unknown (merge_nullable merge_objs))
         and merge_specs a b =
           {
             obj = merge_objs a.obj b.obj;
@@ -1208,8 +1208,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             obj;
             statics = None;
             prop_types = None;
-            get_default_props = Option.to_list (read_prop "getDefaultProps" obj);
-            get_initial_state = Option.to_list (read_prop "getInitialState" obj);
+            get_default_props = Base.Option.to_list (read_prop "getDefaultProps" obj);
+            get_initial_state = Base.Option.to_list (read_prop "getInitialState" obj);
             unknown_mixins = [];
           }
         in

@@ -83,7 +83,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       List.iter (check_polarity cx ?trace tparams polarity) implements;
       check_polarity_propmap cx ?trace tparams polarity own_props;
       check_polarity_propmap cx ?trace ~skip_ctor:true tparams polarity proto_props;
-      Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
+      Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
     (* We can ignore the statics and prototype of function annotations, since
      * they will always be "uninteresting," never containing a BoundT. *)
     | DefT (_, _, FunT (_static, _prototype, f)) ->
@@ -103,7 +103,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       in
       let check_inv = check_polarity cx ?trace tparams (Polarity.inv polarity) in
       List.iter (fun (_, t) -> check_inv t) params;
-      Option.iter ~f:(fun (_, _, t) -> check_inv t) rest_param;
+      Base.Option.iter ~f:(fun (_, _, t) -> check_inv t) rest_param;
       check_polarity cx ?trace tparams polarity return_t
     | DefT (_, _, ArrT (ArrayAT (_, Some _))) as t ->
       (* This representation signifies a literal, which is not a type. *)
@@ -115,9 +115,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | DefT (_, _, ObjT o) ->
       let { flags = _; dict_t; props_tmap; proto_t; call_t } = o in
       check_polarity_propmap cx ?trace tparams polarity props_tmap;
-      Option.iter dict_t ~f:(check_polarity_dict cx ?trace tparams polarity);
+      Base.Option.iter dict_t ~f:(check_polarity_dict cx ?trace tparams polarity);
       check_polarity cx ?trace tparams polarity proto_t;
-      Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
+      Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
     | UnionT (_, rep) ->
       List.iter (check_polarity cx ?trace tparams polarity) (UnionRep.members rep)
     | IntersectionT (_, rep) ->
@@ -202,5 +202,5 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity cx ?trace tparams polarity
     in
     check_mult bound;
-    Option.iter ~f:check_mult default
+    Base.Option.iter ~f:check_mult default
 end

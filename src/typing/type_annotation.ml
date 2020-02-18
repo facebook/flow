@@ -29,7 +29,7 @@ module Func_type_params = Func_params.Make (struct
   let id_name (_, { Ast.Identifier.name; _ }) = name
 
   let param_type (t, (_, { Ast.Type.Function.Param.name; optional; _ })) =
-    let name = Option.map name ~f:id_name in
+    let name = Base.Option.map name ~f:id_name in
     let t =
       if optional then
         Type.optional t
@@ -40,7 +40,7 @@ module Func_type_params = Func_params.Make (struct
 
   let rest_type (t, (loc, { Ast.Type.Function.RestParam.argument })) =
     let (_, { Ast.Type.Function.Param.name; _ }) = argument in
-    let name = Option.map name ~f:id_name in
+    let name = Base.Option.map name ~f:id_name in
     (name, loc, t)
 
   let subst_param cx map (t, tast) =
@@ -286,7 +286,7 @@ let rec convert cx tparams_map =
         Generic
           {
             Generic.id =
-              Generic.Identifier.Unqualified ((name_loc, Option.value id_t ~default:t), id_name);
+              Generic.Identifier.Unqualified ((name_loc, Base.Option.value id_t ~default:t), id_name);
             targs;
           } )
     in
@@ -897,8 +897,8 @@ let rec convert cx tparams_map =
             else
               t
           in
-          let name = Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
-          ( (Option.map ~f:ident_name name, t) :: params_acc,
+          let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
+          ( (Base.Option.map ~f:ident_name name, t) :: params_acc,
             (param_loc, { Function.Param.name; annot = annot_ast; optional }) :: asts_acc ))
         ([], [])
         params
@@ -909,7 +909,7 @@ let rec convert cx tparams_map =
       | Some (rest_loc, { Function.RestParam.argument = (param_loc, param) }) ->
         let { Function.Param.name; annot; optional } = param in
         let (((_, rest), _) as annot_ast) = convert cx tparams_map annot in
-        ( Some (Option.map ~f:ident_name name, loc_of_t rest, rest),
+        ( Some (Base.Option.map ~f:ident_name name, loc_of_t rest, rest),
           Some
             ( rest_loc,
               {
@@ -917,7 +917,7 @@ let rec convert cx tparams_map =
                   ( param_loc,
                     {
                       Function.Param.name =
-                        Option.map ~f:(fun (loc, id_name) -> ((loc, rest), id_name)) name;
+                        Base.Option.map ~f:(fun (loc, id_name) -> ((loc, rest), id_name)) name;
                       annot = annot_ast;
                       optional;
                     } );
@@ -1024,8 +1024,8 @@ and convert_list =
   (fun cx tparams_map asts -> loop ([], []) cx tparams_map asts)
 
 and convert_opt cx tparams_map ast_opt =
-  let tast_opt = Option.map ~f:(convert cx tparams_map) ast_opt in
-  let t_opt = Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
+  let tast_opt = Base.Option.map ~f:(convert cx tparams_map) ast_opt in
+  let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
   (t_opt, tast_opt)
 
 and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
@@ -1122,7 +1122,7 @@ and convert_object =
       else
         Context.generate_property_map cx pmap
     in
-    let call = Option.map ~f:(Context.make_call_prop cx) call in
+    let call = Base.Option.map ~f:(Context.make_call_prop cx) call in
     let flags = { sealed = Sealed; exact; frozen = false } in
     DefT
       ( mk_annot_reason RObjectType loc,
@@ -1262,7 +1262,12 @@ and convert_object =
     let { Object.Indexer.id; key; value; static; variance } = indexer in
     let (((_, key), _) as key_ast) = convert cx tparams_map key in
     let (((_, value), _) as value_ast) = convert cx tparams_map value in
-    ( { Type.dict_name = Option.map ~f:ident_name id; key; value; dict_polarity = polarity variance },
+    ( {
+        Type.dict_name = Base.Option.map ~f:ident_name id;
+        key;
+        value;
+        dict_polarity = polarity variance;
+      },
       { Object.Indexer.id; key = key_ast; value = value_ast; static; variance } )
   in
   let property cx tparams_map acc =
@@ -1400,23 +1405,23 @@ and mk_func_sig =
   let add_param cx tparams_map x param =
     let (loc, { Param.name; annot; optional }) = param in
     let (((_, t), _) as annot) = convert cx tparams_map annot in
-    let name = Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
+    let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
     let param = (t, (loc, { Param.name; annot; optional })) in
     Func_type_params.add_param param x
   in
   let add_rest cx tparams_map x rest_param =
     let (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) }) = rest_param in
     let (((_, t), _) as annot) = convert cx tparams_map annot in
-    let name = Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
+    let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
     let rest = (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) })) in
     Func_type_params.add_rest rest x
   in
   let convert_params cx tparams_map (loc, { Params.params; rest }) =
     let fparams = Func_type_params.empty (fun params rest -> Some (loc, { Params.params; rest })) in
     let fparams = List.fold_left (add_param cx tparams_map) fparams params in
-    let fparams = Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
+    let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
     let params_ast = Func_type_params.eval cx fparams in
-    (fparams, Option.value_exn params_ast)
+    (fparams, Base.Option.value_exn params_ast)
   in
   fun cx tparams_map loc func ->
     let (tparams, tparams_map, tparams_ast) =

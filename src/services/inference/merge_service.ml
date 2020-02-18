@@ -374,7 +374,7 @@ let check_file options ~reader file =
 let with_async_logging_timer ~interval ~on_timer ~f =
   let start_time = Unix.gettimeofday () in
   let timer = ref None in
-  let cancel_timer () = Option.iter ~f:Timer.cancel_timer !timer in
+  let cancel_timer () = Base.Option.iter ~f:Timer.cancel_timer !timer in
   let rec run_timer ?(first_run = false) () =
     ( if not first_run then
       let run_time = Unix.gettimeofday () -. start_time in
@@ -402,7 +402,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
           component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
         in
         let merge_timeout = Options.merge_timeout options in
-        let interval = Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
+        let interval = Base.Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
         (try
            with_async_logging_timer
              ~interval
@@ -412,7 +412,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                  (Unix.getpid ())
                  run_time
                  files;
-               Option.iter merge_timeout ~f:(fun merge_timeout ->
+               Base.Option.iter merge_timeout ~f:(fun merge_timeout ->
                    if run_time >= merge_timeout then
                      raise (Error_message.EMergeTimeout (run_time, files))))
              ~f:(fun () ->
@@ -542,7 +542,7 @@ let check options ~reader file =
   let result =
     let check_timeout = Options.merge_timeout options in
     (* TODO: add new option *)
-    let interval = Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
+    let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
     let file_str = File_key.to_string file in
     try
       with_async_logging_timer
@@ -553,7 +553,7 @@ let check options ~reader file =
             (Unix.getpid ())
             run_time
             file_str;
-          Option.iter check_timeout ~f:(fun check_timeout ->
+          Base.Option.iter check_timeout ~f:(fun check_timeout ->
               if run_time >= check_timeout then
                 raise (Error_message.ECheckTimeout (run_time, file_str))))
         ~f:(fun () -> Ok (check_file options ~reader file))

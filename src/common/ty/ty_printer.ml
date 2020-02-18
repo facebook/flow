@@ -33,7 +33,7 @@ let in_quotes s =
   let a = utf8_escape ~quote s in
   [Atom quote; Atom a; Atom quote]
 
-let option ~f = Option.value_map ~default:Empty ~f
+let option ~f = Base.Option.value_map ~default:Empty ~f
 
 let property_key_quotes_needed x =
   let regexp = Str.regexp "^[a-zA-Z\\$_][a-zA-Z0-9\\$_]*$" in
@@ -126,7 +126,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     in
     let cjs_name = "exports" in
     let exports =
-      Option.value_map ~f:(fun cjs -> (cjs_name, cjs) :: exports) ~default:exports cjs_export
+      Base.Option.value_map ~f:(fun cjs -> (cjs_name, cjs) :: exports) ~default:exports cjs_export
     in
     fuse
       [
@@ -164,7 +164,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
   and type_alias { ta_name = { sym_name = name; _ }; ta_tparams; ta_type } =
     fuse
       ( [Atom "type"; space; identifier name; option (type_parameter ~depth:0) ta_tparams]
-      @ Option.value_map ta_type ~default:[] ~f:(fun t ->
+      @ Base.Option.value_map ta_type ~default:[] ~f:(fun t ->
             [pretty_space; Atom "="; pretty_space; type_ ~depth:0 t]) )
   and type_interface ~depth extends body =
     let extends =
