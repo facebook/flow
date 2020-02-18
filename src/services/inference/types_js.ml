@@ -1223,6 +1223,73 @@ let merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig
       let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
       Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig))
 
+let errors_of_context ~options ~env ~lazy_table_of_aloc filename file_sig cx =
+  let errors = Context.errors cx in
+  let local_errors =
+    if Inference_utils.well_formed_exports_enabled options filename then
+      File_sig.With_Loc.(file_sig.tolerable_errors)
+      |> File_sig.abstractify_tolerable_errors
+      |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
+    else
+      Flow_error.ErrorSet.empty
+  in
+  (* Suppressions for errors in this file can come from dependencies *)
+  let suppressions =
+    ServerEnv.(
+      let new_suppressions = Context.error_suppressions cx in
+      let { suppressions; _ } = env.errors in
+      Error_suppressions.update_suppressions suppressions new_suppressions)
+  in
+  let severity_cover = Context.severity_cover cx in
+  let include_suppressions = Context.include_suppressions cx in
+  let aloc_tables = Context.aloc_tables cx in
+  let (errors, warnings, suppressions) =
+    Error_suppressions.filter_lints
+      ~include_suppressions
+      suppressions
+      errors
+      aloc_tables
+      severity_cover
+  in
+  let errors =
+    errors
+    |> Flow_error.ErrorSet.union local_errors
+    |> Flow_error.concretize_errors lazy_table_of_aloc
+    |> Flow_error.make_errors_printable
+  in
+  let warnings =
+    warnings |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+  in
+  let root = Options.root options in
+  let file_options = Some (Options.file_options options) in
+  (* Filter out suppressed errors *)
+  let (errors, _, _) =
+    Error_suppressions.filter_suppressed_errors
+      ~root
+      ~file_options
+      suppressions
+      errors
+      ~unused:Error_suppressions.empty
+    (* TODO: track unused suppressions *)
+  in
+  (* Filter out suppressed warnings *)
+  let (warnings, _, _) =
+    Error_suppressions.filter_suppressed_errors
+      ~root
+      ~file_options
+      suppressions
+      warnings
+      ~unused:Error_suppressions.empty
+    (* TODO: track unused suppressions *)
+  in
+  let warnings =
+    if Options.should_include_warnings options then
+      warnings
+    else
+      Errors.ConcreteLocPrintableErrorSet.empty
+  in
+  (errors, warnings)
+
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
@@ -1236,71 +1303,8 @@ let typecheck_contents ~options ~env ~profiling contents filename =
     let%lwt (cx, typed_ast) =
       merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
     in
-    let errors = Context.errors cx in
-    let local_errors =
-      if Inference_utils.well_formed_exports_enabled options filename then
-        File_sig.With_Loc.(file_sig.tolerable_errors)
-        |> File_sig.abstractify_tolerable_errors
-        |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
-      else
-        Flow_error.ErrorSet.empty
-    in
-    (* Suppressions for errors in this file can come from dependencies *)
-    let suppressions =
-      ServerEnv.(
-        let new_suppressions = Context.error_suppressions cx in
-        let { suppressions; _ } = env.errors in
-        Error_suppressions.update_suppressions suppressions new_suppressions)
-    in
-    let severity_cover = Context.severity_cover cx in
-    let include_suppressions = Context.include_suppressions cx in
-    let aloc_tables = Context.aloc_tables cx in
-    let (errors, warnings, suppressions) =
-      Error_suppressions.filter_lints
-        ~include_suppressions
-        suppressions
-        errors
-        aloc_tables
-        severity_cover
-    in
-    let errors =
-      errors
-      |> Flow_error.ErrorSet.union local_errors
-      |> Flow_error.concretize_errors lazy_table_of_aloc
-      |> Flow_error.make_errors_printable
-    in
-    let warnings =
-      warnings
-      |> Flow_error.concretize_errors lazy_table_of_aloc
-      |> Flow_error.make_errors_printable
-    in
-    let root = Options.root options in
-    let file_options = Some (Options.file_options options) in
-    (* Filter out suppressed errors *)
-    let (errors, _, _) =
-      Error_suppressions.filter_suppressed_errors
-        ~root
-        ~file_options
-        suppressions
-        errors
-        ~unused:Error_suppressions.empty
-      (* TODO: track unused suppressions *)
-    in
-    (* Filter out suppressed warnings *)
-    let (warnings, _, _) =
-      Error_suppressions.filter_suppressed_errors
-        ~root
-        ~file_options
-        suppressions
-        warnings
-        ~unused:Error_suppressions.empty
-      (* TODO: track unused suppressions *)
-    in
-    let warnings =
-      if Options.should_include_warnings options then
-        warnings
-      else
-        Errors.ConcreteLocPrintableErrorSet.empty
+    let (errors, warnings) =
+      errors_of_context ~options ~env ~lazy_table_of_aloc filename file_sig cx
     in
     Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings)
   | Error errors ->
