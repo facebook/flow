@@ -528,9 +528,8 @@ let include_dependencies_and_dependents
       in
       (* So we want to prune our dependencies to only the dependencies which changed. However, two
        * dependencies A and B might be in a cycle. If A changed and B did not, we still need to
-       * merge B. Likewise, a dependent A and a dependency B might be in a cycle. If B is not a
-       * dependent and A and B are unchanged, we still need to check B. So we need to calculate
-       * components before we can prune. *)
+       * merge B. Likewise, a dependent A and a dependency B might be in a cycle. So we need to
+       * calculate components before we can prune. *)
       let components =
         (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
          * cycles *)
@@ -539,7 +538,6 @@ let include_dependencies_and_dependents
       let dependencies =
         let add_filename_to_set set filename = FilenameSet.add filename set in
         let add_nel_to_filenameset set nel = Nel.fold_left add_filename_to_set set nel in
-        let add_list_to_filenameset set nel = List.fold_left add_filename_to_set set nel in
         let is_in_unchanged_checked filename = CheckedSet.mem filename unchanged_checked in
         let all_in_unchanged_checked filenames = Nel.for_all is_in_unchanged_checked filenames in
         List.fold_left
@@ -551,19 +549,6 @@ let include_dependencies_and_dependents
               else
                 (* If some member of the component is not unchanged, then keep the component *)
                 add_nel_to_filenameset dependencies component
-            in
-            let dependencies =
-              let (dependents, non_dependents) =
-                List.partition (fun fn -> FilenameSet.mem fn sig_dependent_files)
-                @@ Nel.to_list component
-              in
-              if dependents <> [] && non_dependents <> [] then
-                (* If some member of the component is a dependent and others are not, then keep the
-                 * others *)
-                add_list_to_filenameset dependencies non_dependents
-              else
-                (* If every element is a dependent or if every element is not, drop the component *)
-                dependencies
             in
             dependencies)
           FilenameSet.empty
