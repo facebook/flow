@@ -513,12 +513,15 @@ let include_dependencies_and_dependents
     ~sig_dependent_files
     ~all_dependent_files =
   with_timer_lwt ~options "PruneDeps" profiling (fun () ->
+      (* We need to run the check phase on the entire input set as well as all_dependent_files.
+       * We'll calculate the set of files we need to merge based on this. *)
+      let to_check = CheckedSet.add ~dependents:all_dependent_files input in
       (* Don't just look up the dependencies of the focused or dependent modules. Also look up
        * the dependencies of dependencies, since we need to check transitive dependencies *)
       let preliminary_to_merge =
         Pure_dep_graph_operations.calc_direct_dependencies
           implementation_dependency_graph
-          (CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files input))
+          (CheckedSet.all to_check)
       in
       (* So we want to prune our dependencies to only the dependencies which changed. However, two
        dependencies A and B might be in a cycle. If A changed and B did not, we still need to check
@@ -567,9 +570,6 @@ let include_dependencies_and_dependents
        rechecked. *)
       let definitely_to_merge = CheckedSet.add ~dependencies input in
       let to_merge = CheckedSet.add ~dependents:sig_dependent_files definitely_to_merge in
-      (* We don't need to include definitely_to_merge here, since we only need to merge the
-       * dependencies, not check them. *)
-      let to_check = CheckedSet.add ~dependents:all_dependent_files input in
       (* This contains all of the files which may be merged or checked. Conveniently, this is
        * currently the same as to_check except for the addition of dependencies, so we can avoid
        * doing a costly union, but if we change how to_check or to_merge is computed we should be
