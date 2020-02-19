@@ -516,22 +516,25 @@ let include_dependencies_and_dependents
       (* We need to run the check phase on the entire input set as well as all_dependent_files.
        * We'll calculate the set of files we need to merge based on this. *)
       let to_check = CheckedSet.add ~dependents:all_dependent_files input in
-      (* Don't just look up the dependencies of the focused or dependent modules. Also look up
-       * the dependencies of dependencies, since we need to check transitive dependencies *)
-      let preliminary_to_merge =
+      (* We need to make sure that signatures are available for the dependencies of the files we
+       * are going to check. To accomplish this, we start by finding the direct *implementation*
+       * dependencies of all the files we will check. Just the signature dependencies won't do,
+       * since we need signatures available for all the files imported by the bodies of the files
+       * we are going to check. *)
+      let preliminary_dependencies =
         Pure_dep_graph_operations.calc_direct_dependencies
           implementation_dependency_graph
           (CheckedSet.all to_check)
       in
       (* So we want to prune our dependencies to only the dependencies which changed. However, two
-       dependencies A and B might be in a cycle. If A changed and B did not, we still need to check
-       B. Likewise, a dependent A and a dependency B might be in a cycle. If B is not a dependent
-       and A and B are unchanged, we still need to check B. So we need to calculate components
-       before we can prune. *)
-      (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
-       cycles *)
+       * dependencies A and B might be in a cycle. If A changed and B did not, we still need to
+       * merge B. Likewise, a dependent A and a dependency B might be in a cycle. If B is not a
+       * dependent and A and B are unchanged, we still need to check B. So we need to calculate
+       * components before we can prune. *)
       let components =
-        Sort_js.topsort ~roots:preliminary_to_merge (FilenameGraph.to_map sig_dependency_graph)
+        (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
+         * cycles *)
+        Sort_js.topsort ~roots:preliminary_dependencies (FilenameGraph.to_map sig_dependency_graph)
       in
       let dependencies =
         let add_filename_to_set set filename = FilenameSet.add filename set in
