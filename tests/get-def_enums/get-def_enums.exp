@@ -1,0 +1,12 @@
+main.js:5:6
+Flags:
+main.js:5:1,5:13
+
+main.js:8:11
+Flags:
+main.js:5:1,5:13
+
+main.js:11:11
+Flags:
+library.js:3:1,6:1
+
