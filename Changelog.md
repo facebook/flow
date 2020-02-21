@@ -1,3 +1,15 @@
+### 0.119.0
+
+New Features:
+* Implemented LSP textDocument/signatureHelp, which shows parameter hints when you are within an argument list in a call or `new` expression.
+
+Misc:
+* Removed the `minimal_merge` flag
+* Added optional callback for node dgram socket.close function (thanks @davidnaas!)
+
+Parser:
+* Made arguments on `new` expressions optional
+
 ### 0.118.0
 
 New Features:
