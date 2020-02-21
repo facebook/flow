@@ -1011,63 +1011,35 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
 
 and call ?(optional = false) ~precedence ~ctxt call_node =
   let { Ast.Expression.Call.callee; targs; arguments } = call_node in
-  match (callee, targs, arguments) with
-  (* __d hack, force parens around factory function.
-    More details at: https://fburl.com/b1wv51vj
-    TODO: This is FB only, find generic way to add logic *)
-  | ( (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "__d"; comments = _ })),
-      None,
-      (_, [a; b; c; d]) ) ->
-    let lparen =
-      if optional then
-        ".?("
-      else
-        "("
-    in
-    group
-      [
-        Atom "__d";
-        new_list
-          ~wrap:(Atom lparen, Atom ")")
-          ~sep:(Atom ",")
-          [
-            expression_or_spread a;
-            expression_or_spread b;
-            wrap_in_parens (expression_or_spread c);
-            expression_or_spread d;
-          ];
-      ]
-  (* Standard call expression printing *)
-  | _ ->
-    let (targs, lparen) =
-      match targs with
-      | None ->
-        let lparen =
-          if optional then
-            ".?("
-          else
-            "("
-        in
-        (Empty, lparen)
-      | Some (loc, args) ->
-        let less_than =
-          if optional then
-            "?.<"
-          else
-            "<"
-        in
-        ( source_location_with_comments
-            ( loc,
-              group
-                [
-                  new_list
-                    ~wrap:(Atom less_than, Atom ">")
-                    ~sep:(Atom ",")
-                    (Base.List.map ~f:call_type_arg args);
-                ] ),
-          "(" )
-    in
-    fuse [expression_with_parens ~precedence ~ctxt callee; targs; call_args ~lparen arguments]
+  let (targs, lparen) =
+    match targs with
+    | None ->
+      let lparen =
+        if optional then
+          ".?("
+        else
+          "("
+      in
+      (Empty, lparen)
+    | Some (loc, args) ->
+      let less_than =
+        if optional then
+          "?.<"
+        else
+          "<"
+      in
+      ( source_location_with_comments
+          ( loc,
+            group
+              [
+                new_list
+                  ~wrap:(Atom less_than, Atom ">")
+                  ~sep:(Atom ",")
+                  (Base.List.map ~f:call_type_arg args);
+              ] ),
+        "(" )
+  in
+  fuse [expression_with_parens ~precedence ~ctxt callee; targs; call_args ~lparen arguments]
 
 and expression_with_parens ~precedence ~(ctxt : expression_context) expr =
   if definitely_needs_parens ~precedence ctxt expr then
