@@ -7,8 +7,8 @@ Cannot cast `B1.fun()` to string because number [1] is incompatible with string 
        ^^^^^^^^
 
 References:
-   node_modules/B.js.flow:1:32
-   1| declare export function fun(): number;
+   node_modules/B.js.flow:3:32
+   3| declare export function fun(): number;
                                      ^^^^^^ [1]
    test_absolute.js:5:12
    5| (B1.fun(): string); // Error number ~> string
@@ -24,8 +24,8 @@ Cannot cast `B2.fun()` to string because number [1] is incompatible with string 
        ^^^^^^^^
 
 References:
-   node_modules/B.js.flow:1:32
-   1| declare export function fun(): number;
+   node_modules/B.js.flow:3:32
+   3| declare export function fun(): number;
                                      ^^^^^^ [1]
    test_absolute.js:9:12
    9| (B2.fun(): string); // Error number ~> string
@@ -58,8 +58,8 @@ Cannot cast `D.fun()` to string because number [1] is incompatible with string [
         ^^^^^^^
 
 References:
-   node_modules/package_with_partial_main/code.js.flow:1:32
-    1| declare export function fun(): number;
+   node_modules/package_with_partial_main/code.js.flow:3:32
+    3| declare export function fun(): number;
                                       ^^^^^^ [1]
    test_absolute.js:15:11
    15| (D.fun(): string); // Error number ~> string
@@ -75,8 +75,8 @@ Cannot cast `E.fun()` to string because number [1] is incompatible with string [
         ^^^^^^^
 
 References:
-   node_modules/package_with_no_package_json/index.js.flow:1:32
-    1| declare export function fun(): number;
+   node_modules/package_with_no_package_json/index.js.flow:3:32
+    3| declare export function fun(): number;
                                       ^^^^^^ [1]
    test_absolute.js:18:11
    18| (E.fun(): string); // Error number ~> string
@@ -143,8 +143,8 @@ Cannot cast `CJS` to number because string [1] is incompatible with number [2].
         ^^^
 
 References:
-   CJS.js.flow:1:25
-    1| declare module.exports: string;
+   CJS.js.flow:3:25
+    3| declare module.exports: string;
                                ^^^^^^ [1]
    test_relative.js:13:7
    13| (CJS: number); // Error: string ~> number
