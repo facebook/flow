@@ -231,10 +231,9 @@ let apply_docblock_overrides (mtdt : Context.metadata) docblock_info =
     let metadata =
       let jsx =
         match Docblock.jsx docblock_info with
-        | Some (Docblock.Jsx_pragma (expr, jsx_expr)) ->
+        | Some (expr, jsx_expr) ->
           let jsx_expr = Ast_loc_utils.loc_to_aloc_mapper#expression jsx_expr in
           Options.Jsx_pragma (expr, jsx_expr)
-        | Some Docblock.Csx_pragma -> Options.Jsx_csx
         | None -> Options.Jsx_react
       in
       { mtdt with jsx }

@@ -5713,7 +5713,7 @@ and jsx_title cx openingElement children closingElement locs =
       let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
       let (_, children) = collapse_children cx children in
       (t, name, attributes, children)
-    | (Identifier (loc, { Identifier.name }), Options.Jsx_react, _) ->
+    | (Identifier (loc, { Identifier.name }), _, _) ->
       if Type_inference_hooks_js.dispatch_id_hook cx name loc then
         let t = Unsoundness.at InferenceHooks loc_element in
         let name = Identifier ((loc, t), { Identifier.name }) in
@@ -5721,54 +5721,23 @@ and jsx_title cx openingElement children closingElement locs =
         let (_, children) = collapse_children cx children in
         (t, name, attributes, children)
       else
-        let reason = mk_reason (RReactElement (Some name)) loc_element in
+        let reason =
+          match jsx_mode with
+          | Options.Jsx_react -> mk_reason (RReactElement (Some name)) loc_element
+          | Options.Jsx_pragma _ -> mk_reason (RJSXElement (Some name)) loc_element
+        in
         let c =
           if name = String.capitalize_ascii name then
             identifier cx (mk_ident ~comments:None name) loc
           else
-            DefT (mk_reason (RIdentifier name) loc, make_trust (), SingletonStrT name)
+            let strt =
+              (* TODO: why are these different? *)
+              match jsx_mode with
+              | Options.Jsx_react -> SingletonStrT name
+              | Options.Jsx_pragma _ -> StrT (Literal (None, name))
+            in
+            DefT (mk_reason (RIdentifier name) loc, make_trust (), strt)
         in
-        let (o, attributes', unresolved_params, children) =
-          jsx_mk_props cx reason c name attributes children
-        in
-        let t = jsx_desugar cx name c o attributes unresolved_params locs in
-        let name = Identifier ((loc, c), { Identifier.name }) in
-        (t, name, attributes', children)
-    | (Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _) ->
-      if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-        let t = Unsoundness.at InferenceHooks loc_element in
-        let name = Identifier ((loc, t), { Identifier.name }) in
-        let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-        let (_, children) = collapse_children cx children in
-        (t, name, attributes, children)
-      else
-        let reason = mk_reason (RJSXElement (Some name)) loc_element in
-        let c =
-          if name = String.capitalize_ascii name then
-            identifier cx (mk_ident ~comments:None name) loc
-          else
-            DefT (mk_reason (RIdentifier name) loc, make_trust (), StrT (Literal (None, name)))
-        in
-        let (o, attributes', unresolved_params, children) =
-          jsx_mk_props cx reason c name attributes children
-        in
-        let t = jsx_desugar cx name c o attributes unresolved_params locs in
-        let name = Identifier ((loc, c), { Identifier.name }) in
-        (t, name, attributes', children)
-    | (Identifier (loc, { Identifier.name }), Options.Jsx_csx, _) ->
-      (*
-       * It's a bummer to duplicate this case, but CSX does not want the
-       * "if name = String.capitalize name" restriction.
-       *)
-      if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-        let t = Unsoundness.at InferenceHooks loc_element in
-        let name = Identifier ((loc, t), { Identifier.name }) in
-        let attributes' = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-        let (_, children) = collapse_children cx children in
-        (t, name, attributes', children)
-      else
-        let reason = mk_reason (RJSXElement (Some name)) loc_element in
-        let c = identifier cx (mk_ident ~comments:None name) loc in
         let (o, attributes', unresolved_params, children) =
           jsx_mk_props cx reason c name attributes children
         in
@@ -5792,7 +5761,7 @@ and jsx_title cx openingElement children closingElement locs =
         | None -> Tast_utils.error_mapper#jsx_member_expression member
       in
       (t, MemberExpression member', attributes', children)
-    | (MemberExpression member, Options.(Jsx_csx | Jsx_pragma _), _) ->
+    | (MemberExpression member, Options.Jsx_pragma _, _) ->
       let t = Unsoundness.at InferenceHooks loc_element in
       let name' = Tast_utils.error_mapper#jsx_name name in
       let el_name = jsx_title_member_to_string member in
@@ -6056,10 +6025,6 @@ and jsx_desugar cx name component_t props attributes children locs =
     | _ ->
       let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
       func_call cx reason ~use_op ~call_strict_arity:false f None argts)
-  | Options.Jsx_csx ->
-    let reason = mk_reason (RJSXFunctionCall name) loc_element in
-    let use_op = Op (JSXCreateElement { op = reason; component = reason_of_t component_t }) in
-    func_call cx reason ~use_op ~call_strict_arity:false component_t None [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *
