@@ -50,16 +50,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `b` to array type because string [1] is incompatible with number [2] in array element.
 
    sanity-filter.js:8:2
-   8| (b: Array<number>);
-       ^
+    8| (b: Array<number>);
+        ^
 
 References:
-   sanity-filter.js:6:22
-   6| declare var a: Array<mixed>;
-                           ^^^^^ [1]
+   sanity-filter.js:17:10
+   17|   return typeof x === "string";
+                ^^^^^^^^^^^^^^^^^^^^^ [1]
    sanity-filter.js:8:11
-   8| (b: Array<number>);
-                ^^^^^^ [2]
+    8| (b: Array<number>);
+                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- sanity-filter.js:13:24

@@ -270,77 +270,74 @@ let not_false t =
   | DefT (r, trust, BoolT None) -> DefT (lit_reason r, trust, BoolT (Some true))
   | t -> t
 
-let boolean t =
+let boolean loc t =
   match t with
   | DefT (r, trust, MixedT Mixed_truthy) ->
     DefT (replace_desc_new_reason BoolT.desc r, trust, BoolT (Some true))
-  | DefT (r, trust, MixedT _) -> BoolT.why r trust
+  | AnyT _
+  | DefT (_, _, MixedT _) ->
+    DefT (mk_reason RBoolean loc, bogus_trust (), BoolT None)
   | DefT (_, _, BoolT _)
-  | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ })
-  | AnyT _ ->
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ }) ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_boolean t =
   match t with
-  (* TODO: this is wrong, AnyT can be a bool *)
-  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
   | DefT (_, trust, EnumT { representation_t = DefT (_, _, BoolT _); _ })
   | DefT (_, trust, BoolT _) ->
     DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
-let string t =
+let string loc t =
   match t with
   | DefT (r, trust, MixedT Mixed_truthy) ->
     DefT (replace_desc_new_reason StrT.desc r, trust, StrT Truthy)
-  | DefT (r, trust, MixedT _) -> StrT.why r trust
+  | AnyT _
+  | DefT (_, _, MixedT _) ->
+    DefT (mk_reason RString loc, bogus_trust (), StrT AnyLiteral)
   | DefT (_, _, StrT _)
-  | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ })
-  | AnyT _ ->
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ }) ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_string t =
   match t with
-  (* TODO: this is wrong, AnyT can be a string *)
-  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
   | DefT (_, trust, EnumT { representation_t = DefT (_, _, StrT _); _ })
   | DefT (_, trust, StrT _) ->
     DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
-let symbol t =
+let symbol loc t =
   match t with
   | DefT (_, _, SymbolT) -> t
-  | DefT (r, trust, MixedT _) -> SymbolT.why r trust
+  | DefT (_, _, MixedT _)
+  | AnyT _ ->
+    SymbolT.why (mk_reason RSymbol loc) (bogus_trust ())
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_symbol t =
   match t with
-  (* TODO: this is wrong, AnyT can be a symbol *)
-  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
   | DefT (_, _, SymbolT) -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
   | _ -> t
 
-let number t =
+let number loc t =
   match t with
   | DefT (r, trust, MixedT Mixed_truthy) ->
     DefT (replace_desc_new_reason NumT.desc r, trust, NumT Truthy)
-  | DefT (r, trust, MixedT _) -> NumT.why r trust
+  | AnyT _
+  | DefT (_, _, MixedT _) ->
+    DefT (mk_reason RNumber loc, bogus_trust (), NumT AnyLiteral)
   | DefT (_, _, NumT _)
-  | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ })
-  | AnyT _ ->
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ }) ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_number t =
   match t with
-  (* TODO: this is wrong, AnyT can be a number *)
-  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
   | DefT (_, trust, EnumT { representation_t = DefT (_, _, NumT _); _ })
   | DefT (_, trust, NumT _) ->
     DefT (reason_of_t t, trust, EmptyT Bottom)

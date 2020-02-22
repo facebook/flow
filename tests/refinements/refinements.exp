@@ -929,9 +929,9 @@ Cannot call `takesString` with `x` bound to `x` because number [1] is incompatib
                       ^
 
 References:
-   mixed.js:6:17
-   6| function num(x: mixed) {
-                      ^^^^^ [1]
+   mixed.js:7:7
+   7|   if (typeof x === "number") {
+            ^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:4:25
    4| function takesString(x: string) {}
                               ^^^^^^ [2]
@@ -960,9 +960,9 @@ Cannot call `takesNumber` with `x` bound to `x` because string [1] is incompatib
                        ^
 
 References:
-   mixed.js:19:17
-   19| function str(x: mixed) {
-                       ^^^^^ [1]
+   mixed.js:20:7
+   20|   if (typeof x === "string") {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:3:25
     3| function takesNumber(x: number) {}
                                ^^^^^^ [2]
@@ -991,9 +991,9 @@ Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompati
                        ^
 
 References:
-   mixed.js:32:18
-   32| function bool(x: mixed) {
-                        ^^^^^ [1]
+   mixed.js:33:7
+   33|   if (typeof x === "boolean") {
+             ^^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -1008,9 +1008,9 @@ Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible wi
             ^
 
 References:
-   mixed.js:32:18
-   32| function bool(x: mixed) {
-                        ^^^^^ [1]
+   mixed.js:33:7
+   33|   if (typeof x === "boolean") {
+             ^^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:35:9
    35|     (x: true); // error: we don't know the truthiness of x
                ^^^^ [2]
@@ -3290,12 +3290,131 @@ Cannot cast `x` to string because symbol [1] is incompatible with string [2].
             ^
 
 References:
-   typeof.js:81:24
-   81| function testSymbol(x: mixed) {
-                              ^^^^^ [1]
+   typeof.js:82:7
+   82|   if (typeof x === "symbol") { // ok
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
    typeof.js:83:9
    83|     (x: string); // error
                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:89:6
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2].
+
+   typeof.js:89:6
+   89|     (x: empty); // error number ~> empty
+            ^
+
+References:
+   typeof.js:88:7
+   88|   if (typeof x === "number") {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:89:9
+   89|     (x: empty); // error number ~> empty
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:96:6
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2].
+
+   typeof.js:96:6
+   96|     (x: empty); // error number ~> empty
+            ^
+
+References:
+   typeof.js:94:7
+   94|   if (typeof x === "number") {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:96:9
+   96|     (x: empty); // error number ~> empty
+               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:107:6
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2].
+
+   typeof.js:107:6
+   107|     (x: empty); // error string ~> empty
+             ^
+
+References:
+   typeof.js:106:7
+   106|   if (typeof x === "string") {
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:107:9
+   107|     (x: empty); // error string ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:113:6
+
+Cannot cast `x` to empty because boolean [1] is incompatible with empty [2].
+
+   typeof.js:113:6
+   113|     (x: empty); // error boolean ~> empty
+             ^
+
+References:
+   typeof.js:112:7
+   112|   if (typeof x === "boolean") {
+              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:113:9
+   113|     (x: empty); // error boolean ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:119:6
+
+Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+
+   typeof.js:119:6
+   119|     (x: true);
+             ^
+
+References:
+   typeof.js:118:7
+   118|   if (typeof x === "boolean") {
+              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:119:9
+   119|     (x: true);
+                ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:120:6
+
+Cannot cast `x` to empty because boolean [1] is incompatible with empty [2].
+
+   typeof.js:120:6
+   120|     (x: empty); // error boolean ~> empty
+             ^
+
+References:
+   typeof.js:118:7
+   118|   if (typeof x === "boolean") {
+              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:120:9
+   120|     (x: empty); // error boolean ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:126:6
+
+Cannot cast `x` to empty because symbol [1] is incompatible with empty [2].
+
+   typeof.js:126:6
+   126|     (x: empty); // error symbol ~> empty
+             ^
+
+References:
+   typeof.js:125:7
+   125|   if (typeof x === "symbol") {
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:126:9
+   126|     (x: empty); // error symbol ~> empty
+                ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
@@ -3555,4 +3674,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 258 errors
+Found 265 errors

@@ -835,12 +835,12 @@ module rec TypeTerm : sig
     | SingletonBoolP of ALoc.t * bool (* true or false *)
     | SingletonStrP of ALoc.t * bool * string (* string literal *)
     | SingletonNumP of ALoc.t * bool * number_literal
-    | BoolP (* boolean *)
+    | BoolP of ALoc.t (* boolean *)
     | FunP (* function *)
-    | NumP (* number *)
+    | NumP of ALoc.t (* number *)
     | ObjP (* object *)
-    | StrP (* string *)
-    | SymbolP (* symbol *)
+    | StrP of ALoc.t (* string *)
+    | SymbolP of ALoc.t (* symbol *)
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
@@ -3827,12 +3827,12 @@ let rec string_of_predicate = function
   | SingletonNumP (_, _, (_, raw)) -> spf "number `%s`" raw
   (* typeof *)
   | VoidP -> "undefined"
-  | BoolP -> "boolean"
-  | StrP -> "string"
-  | NumP -> "number"
+  | BoolP _ -> "boolean"
+  | StrP _ -> "string"
+  | NumP _ -> "number"
   | FunP -> "function"
   | ObjP -> "object"
-  | SymbolP -> "symbol"
+  | SymbolP _ -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
   | PropExistsP (key, _) -> spf "prop `%s` is truthy" key

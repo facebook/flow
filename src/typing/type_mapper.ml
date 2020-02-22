@@ -721,12 +721,12 @@ class virtual ['a] t =
       | SingletonBoolP _
       | SingletonStrP _
       | SingletonNumP _
-      | BoolP
+      | BoolP _
       | FunP
-      | NumP
+      | NumP _
       | ObjP
-      | StrP
-      | SymbolP
+      | StrP _
+      | SymbolP _
       | VoidP
       | ArrP
       | PropNonMaybeP _

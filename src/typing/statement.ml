@@ -6442,12 +6442,12 @@ and predicates_of_condition cx ~cond e =
     let bool = BoolT.at loc |> with_trust bogus_trust in
     let pred_and_not_undef =
       match typename with
-      | "boolean" -> Some (BoolP, true)
+      | "boolean" -> Some (BoolP loc, true)
       | "function" -> Some (FunP, true)
-      | "number" -> Some (NumP, true)
+      | "number" -> Some (NumP loc, true)
       | "object" -> Some (ObjP, true)
-      | "string" -> Some (StrP, true)
-      | "symbol" -> Some (SymbolP, true)
+      | "string" -> Some (StrP loc, true)
+      | "symbol" -> Some (SymbolP loc, true)
       | "undefined" -> Some (VoidP, false)
       | _ -> None
     in

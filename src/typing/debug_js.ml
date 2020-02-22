@@ -19,13 +19,13 @@ let string_of_pred_ctor = function
   | VoidP -> "VoidP"
   | NullP -> "NullP"
   | MaybeP -> "MaybeP"
-  | BoolP -> "BoolP"
-  | StrP -> "StrP"
-  | NumP -> "NumP"
+  | BoolP _ -> "BoolP"
+  | StrP _ -> "StrP"
+  | NumP _ -> "NumP"
   | FunP -> "FunP"
   | ObjP -> "ObjP"
   | ArrP -> "ArrP"
-  | SymbolP -> "SymbolP"
+  | SymbolP _ -> "SymbolP"
   | SingletonBoolP _ -> "SingletonBoolP"
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
@@ -1266,10 +1266,10 @@ and json_of_pred_impl json_cx p =
       | VoidP
       | NullP
       | MaybeP
-      | BoolP
-      | StrP
-      | SymbolP
-      | NumP
+      | BoolP _
+      | StrP _
+      | SymbolP _
+      | NumP _
       | FunP
       | ObjP
       | ArrP ->

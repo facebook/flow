@@ -181,12 +181,12 @@ class ['a] t =
       | SingletonBoolP _ -> acc
       | SingletonStrP _ -> acc
       | SingletonNumP _ -> acc
-      | BoolP -> acc
+      | BoolP _ -> acc
       | FunP -> acc
-      | NumP -> acc
+      | NumP _ -> acc
       | ObjP -> acc
-      | StrP -> acc
-      | SymbolP -> acc
+      | StrP _ -> acc
+      | SymbolP _ -> acc
       | VoidP -> acc
       | ArrP -> acc
       | PropExistsP _ -> acc
