@@ -217,6 +217,39 @@ let metadata_of_options options =
     type_asserts = Options.type_asserts options;
   }
 
+let docblock_overrides docblock_info metadata =
+  let metadata =
+    let jsx =
+      match Docblock.jsx docblock_info with
+      | Some (expr, jsx_expr) ->
+        let jsx_expr = Ast_loc_utils.loc_to_aloc_mapper#expression jsx_expr in
+        Options.Jsx_pragma (expr, jsx_expr)
+      | None -> Options.Jsx_react
+    in
+    { metadata with jsx }
+  in
+  let metadata =
+    match Docblock.flow docblock_info with
+    | None -> metadata
+    | Some Docblock.OptIn -> { metadata with checked = true }
+    | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true }
+    | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true }
+    | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
+    (* --all (which sets metadata.checked = true) overrides @noflow, so there are
+   currently no scenarios where we'd change checked = true to false. in the
+   future, there may be a case where checked defaults to true (but is not
+   forced to be true ala --all), but for now we do *not* want to force
+   checked = false here. *)
+    | Some Docblock.OptOut -> metadata
+  in
+  let metadata =
+    if Docblock.preventMunge docblock_info then
+      { metadata with munge_underscores = false }
+    else
+      metadata
+  in
+  metadata
+
 let empty_use_def = (Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty)
 
 let make_sig () =

@@ -96,6 +96,8 @@ val make :
 
 val metadata_of_options : Options.t -> metadata
 
+val docblock_overrides : Docblock.t -> metadata -> metadata
+
 val trust_constructor : t -> unit -> Trust.trust_rep
 
 val cx_with_trust : t -> (unit -> Trust.trust_rep) -> t
