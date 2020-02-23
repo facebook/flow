@@ -54,7 +54,11 @@ let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded 
   let ty =
     match t with
     | None -> "(unknown)"
-    | Some ty -> Ty_printer.string_of_t ty
+    | Some ty ->
+      if json then
+        Ty_printer.string_of_t_single_line ty
+      else
+        Ty_printer.string_of_t ty
   in
   if json then
     Hh_json.(

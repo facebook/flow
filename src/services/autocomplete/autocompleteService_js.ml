@@ -114,7 +114,7 @@ let lsp_completion_of_type =
       Some Lsp.Completion.Variable)
 
 let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
-  let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
+  let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   let func_details =
     match ty with

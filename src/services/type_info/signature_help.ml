@@ -14,12 +14,14 @@ let parameter_name is_opt name =
   in
   Base.Option.value name ~default:"_" ^ opt
 
+let string_of_ty = Ty_printer.string_of_t_single_line ~with_comments:false
+
 let func_details params rest_param return =
   let param_tys =
     Base.List.map
       ~f:(fun (n, t, fp) ->
         let param_name = parameter_name fp.Ty.prm_optional n in
-        let param_ty = Ty_printer.string_of_t ~with_comments:false t in
+        let param_ty = string_of_ty t in
         { ServerProt.Response.param_name; param_ty })
       params
   in
@@ -28,10 +30,10 @@ let func_details params rest_param return =
     | None -> param_tys
     | Some (name, t) ->
       let param_name = "..." ^ parameter_name false name in
-      let param_ty = Ty_printer.string_of_t ~with_comments:false t in
+      let param_ty = string_of_ty t in
       param_tys @ [{ ServerProt.Response.param_name; param_ty }]
   in
-  let return_ty = Ty_printer.string_of_t ~with_comments:false return in
+  let return_ty = string_of_ty return in
   { ServerProt.Response.param_tys; return_ty }
 
 (* given a Loc.t within a function call, returns the type of the function being called *)

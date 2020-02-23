@@ -380,7 +380,10 @@ type-destructor.js:129:6,129:24
 
 type-destructor.js:142:6
 Flags:
-type CallNestedObjType = $Call<<T>({+data: ?$ReadOnlyArray<{+foo: ?{+bar: ?T}}>}) => T, NestedObj>
+type CallNestedObjType = $Call<
+  <T>({+data: ?$ReadOnlyArray<{+foo: ?{+bar: ?T}}>}) => T,
+  NestedObj,
+>
 type-destructor.js:142:6,142:22
 
 type-destructor.js:157:6
@@ -410,12 +413,16 @@ type-destructor.js:175:18,175:28
 
 type-destructor.js:179:6
 Flags:
-type RecursiveTypeDestructor = {|f: {|g: $PropertyType<RecursiveTypeDestructor, "f">|}|}
+type RecursiveTypeDestructor = {|
+  f: {|g: $PropertyType<RecursiveTypeDestructor, "f">|}
+|}
 type-destructor.js:179:6,179:28
 
 type-destructor.js:186:6
 Flags:
-type RecursiveTypeDestructorPoly<X> = {|f: ({|h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f">|} | X)|}
+type RecursiveTypeDestructorPoly<X> = {|
+  f: ({|h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f">|} | X)
+|}
 type-destructor.js:186:6,186:32
 
 type-destructor.js:192:6
@@ -560,7 +567,10 @@ type-destructor.js:101:6,101:15
 
 type-destructor.js:105:6
 Flags: --evaluate-type-destructors
-type ObjMapiProps = {age: Array<("age" | number)>, name: Array<("name" | string)>}
+type ObjMapiProps = {
+  age: Array<("age" | number)>,
+  name: Array<("name" | string)>
+}
 type-destructor.js:105:6,105:17
 
 type-destructor.js:107:6
@@ -570,7 +580,10 @@ type-destructor.js:107:6,107:16
 
 type-destructor.js:112:6
 Flags: --evaluate-type-destructors
-type ObjMapFnReturnTypes = {getAge: {k: "getAge", v: number}, getName: {k: "getName", v: string}}
+type ObjMapFnReturnTypes = {
+  getAge: {k: "getAge", v: number},
+  getName: {k: "getName", v: string}
+}
 type-destructor.js:112:6,112:24
 
 type-destructor.js:116:6

@@ -388,19 +388,12 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
   let env_layout = Base.List.map ~f:env_ (IMap.bindings !env_map) in
   Layout.(join Newline (env_layout @ [type_layout]))
 
-(* Same as Compact_printer with the exception of:
-   - IfPretty to allow spaces after punctuation.
-   We still maintain a single line format.
-*)
-let print ~force_single_line ~source_maps node =
+(* Same as Compact_printer with the exception of locations *)
+let print_single_line ~source_maps node =
   let rec print_node src = function
     (* this printer does not output locations *)
     | SourceLocation _ -> src
-    | Newline ->
-      if force_single_line then
-        Source.add_space 1 src
-      else
-        Source.add_newline src
+    | Newline -> Source.add_space 1 src
     | Indent node -> print_node src node
     | IfPretty (node, _) -> print_node src node
     | Concat nodes
@@ -414,5 +407,10 @@ let print ~force_single_line ~source_maps node =
   in
   print_node (Source.create ~source_maps ()) node
 
-let string_of_t ?(force_single_line = false) ?(with_comments = true) (ty : Ty.t) : string =
-  print ~force_single_line ~source_maps:None (type_ ~with_comments ty) |> Source.contents
+let print_pretty ~source_maps node = Pretty_printer.print ~source_maps ~skip_endline:true node
+
+let string_of_t ?(with_comments = true) (ty : Ty.t) : string =
+  type_ ~with_comments ty |> print_pretty ~source_maps:None |> Source.contents
+
+let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) : string =
+  type_ ~with_comments ty |> print_single_line ~source_maps:None |> Source.contents

@@ -394,7 +394,7 @@ let infer_type filename content line col =
       (match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
       | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_t ~force_single_line:true t))))
+      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_t_single_line t))))
 
 let types_to_json types ~strip_root =
   Hh_json.(
