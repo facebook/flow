@@ -588,9 +588,8 @@ end = struct
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
-      | RTypeAlias (name, true, _)
-      | RType name ->
-        return (symbol_from_reason env reason name)
+      | RTypeAlias (name, Some loc, _) -> return (symbol_from_loc env loc name)
+      | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract local type alias name from reason: " ^ desc in
@@ -698,13 +697,13 @@ end = struct
         | _ ->
           begin
             match desc_of_reason ~unwrap:false reason with
-            | RTypeAlias (name, true, _) ->
+            | RTypeAlias (name, Some _, _) ->
               (* The default action is to avoid expansion by using the type alias name,
-           when this can be trusted. The one case where we want to skip this process
-           is when recovering the body of a type alias A. In that case the environment
-           field under_type_alias will be 'Some A'. If the type alias name in the reason
-           is also A, then we are still at the top-level of the type-alias, so we
-           proceed by expanding one level preserving the same environment. *)
+                 when this can be trusted. The one case where we want to skip this process
+                 is when recovering the body of a type alias A. In that case the environment
+                 field under_type_alias will be 'Some A'. If the type alias name in the reason
+                 is also A, then we are still at the top-level of the type-alias, so we
+                 proceed by expanding one level preserving the same environment. *)
               let continue =
                 match env.Env.under_type_alias with
                 | Some name' -> name = name'
@@ -717,8 +716,8 @@ end = struct
                 return (generic_talias symbol None)
             | _ ->
               (* We are now beyond the point of the one-off expansion. Reset the environment
-           assigning None to under_type_alias, so that aliases are used in subsequent
-           invocations. *)
+                 assigning None to under_type_alias, so that aliases are used in subsequent
+                 invocations. *)
               let env = Env.{ env with under_type_alias = None } in
               type_after_reason ~env t
           end)

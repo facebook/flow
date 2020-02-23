@@ -176,8 +176,8 @@ let substituter =
           t
         else
           match Reason.desc_of_reason ~unwrap:false (reason_of_t t_out) with
-          | Reason.RTypeAlias (name, true, d) ->
-            let desc = Reason.RTypeAlias (name, false, d) in
+          | Reason.RTypeAlias (name, Some _, d) ->
+            let desc = Reason.RTypeAlias (name, None, d) in
             mod_reason_of_t (Reason.replace_desc_reason desc) t_out
           | _ -> t_out
 

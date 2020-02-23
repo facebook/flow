@@ -979,8 +979,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           } ) ) as stmt ->
     let r = DescFormat.type_reason name name_loc in
     let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-    let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
-    let t = mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, true, desc))) t in
+    let (((t_loc, t), _) as right_ast) = Anno.convert cx tparams_map right in
+    let t =
+      mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some t_loc, desc))) t
+    in
     let type_ =
       poly_type_of_tparams
         (Context.generate_poly_id cx)
