@@ -804,7 +804,7 @@ end = struct
       Ty.Utility (Ty.Keys ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
-    | ShapeT t ->
+    | ShapeT (_, t) ->
       let%map t = type__ ~env t in
       Ty.Utility (Ty.Shape t)
     | TypeDestructorTriggerT (_, r, _, _, _) ->

@@ -196,7 +196,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | ThisClassT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
-  | ShapeT t -> collect_of_type ?log_unresolved cx acc t
+  | ShapeT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | DefT (_, _, IdxWrapper t) -> collect_of_type ?log_unresolved cx acc t
   | ReposT (_, t)

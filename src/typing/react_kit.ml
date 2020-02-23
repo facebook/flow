@@ -491,13 +491,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
            * Additionally, this hack enables us to not have to explicitly handle
            * AbstractComponent past this point. *)
           ( ( if clone then
-              ShapeT config
+              ShapeT (reason_of_t config, config)
             else
               config ),
             None )
         | _ ->
           ( ( if clone then
-              ShapeT (Tvar.mk_where cx reason_op props_to_tout)
+              ShapeT (reason_of_t config, Tvar.mk_where cx reason_op props_to_tout)
             else
               Tvar.mk_where cx reason_op tin_to_props ),
             (* For class components and function components we want to lookup the

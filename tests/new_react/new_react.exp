@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:64:11
 
-Property `y_` is missing in object type [1] but exists in object type [2] in the first argument.
+Property `y_` is missing in object type [1] but exists in object type [2].
 
    classes.js:64:11
    64|   setState(o: { y_: string }): void { },

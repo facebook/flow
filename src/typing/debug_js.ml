@@ -275,7 +275,7 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, IdxWrapper t) -> [("wrappedObj", _json_of_t json_cx t)]
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
         [("config", _json_of_t json_cx config); ("instance", _json_of_t json_cx instance)]
-      | ShapeT t -> [("type", _json_of_t json_cx t)]
+      | ShapeT (_, t) -> [("type", _json_of_t json_cx t)]
       | MatchingPropT (_, x, t) -> [("name", JSON_String x); ("type", _json_of_t json_cx t)]
       | KeysT (_, t) -> [("type", _json_of_t json_cx t)]
       | DefT (_, _, SingletonStrT s) -> [("literal", JSON_String s)]
@@ -1754,7 +1754,7 @@ let rec dump_t_ (depth, tvars) cx t =
         t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
-    | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
+    | ShapeT (_, arg) -> p ~extra:(kid arg) t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
     | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t

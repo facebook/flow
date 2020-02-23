@@ -146,12 +146,12 @@ class virtual ['a] t =
           t
         else
           MergedT (r, uses')
-      | ShapeT t' ->
+      | ShapeT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ShapeT t''
+          ShapeT (r, t'')
       | MatchingPropT (r, x, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

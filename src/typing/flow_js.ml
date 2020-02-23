@@ -3428,7 +3428,7 @@ struct
         (* Shapes need to be trapped here to avoid error-ing when used as exact types.
            Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
            to be used just as o is allowed to be used. *)
-        | (ShapeT o, (UseT (_, ExactT _) | MakeExactT _)) -> rec_flow cx trace (o, u)
+        | (ShapeT (_, o), (UseT (_, ExactT _) | MakeExactT _)) -> rec_flow cx trace (o, u)
         (* inexact LB ~> $Exact<UB>. error *)
         | (_, UseT (use_op, ExactT (ru, _))) ->
           let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
@@ -4634,24 +4634,24 @@ struct
 
         (* When something of type ShapeT(o) is used, it behaves like it had type o.
 
-        On the other hand, things that can be passed to something of type
-        ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
-        those properties should be transferable to o.
+           On the other hand, things that can be passed to something of type
+           ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
+           those properties should be transferable to o.
 
-        Because a property x with a type OptionalT(t) could be considered
-        missing or having type t, we consider such a property to be transferable
-        if t is a subtype of x's type in o. Otherwise, the property should be
-        assignable to o.
+           Because a property x with a type OptionalT(t) could be considered
+           missing or having type t, we consider such a property to be transferable
+           if t is a subtype of x's type in o. Otherwise, the property should be
+           assignable to o.
 
-        TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
-        ObjRestT express related meta-operations on objects. Consolidate these
-        meta-operations and ensure consistency of their semantics. **)
-        | (ShapeT o, _) -> rec_flow cx trace (o, u)
-        | (DefT (reason, _, ObjT ({ call_t = None; _ } as o)), UseT (use_op, ShapeT proto)) ->
+           TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
+           ObjRestT express related meta-operations on objects. Consolidate these
+           meta-operations and ensure consistency of their semantics. **)
+        | (ShapeT (r, o), _) -> rec_flow cx trace (reposition cx ~trace (aloc_of_reason r) o, u)
+        | (DefT (reason, _, ObjT ({ call_t = None; _ } as o)), UseT (use_op, ShapeT (_, proto))) ->
           let props = Context.find_real_props cx o.props_tmap in
           match_shape cx trace ~use_op proto reason props
         | ( DefT (reason, _, InstanceT (_, _, _, ({ inst_call_t = None; _ } as i))),
-            UseT (use_op, ShapeT proto) ) ->
+            UseT (use_op, ShapeT (_, proto)) ) ->
           let own_props = Context.find_props cx i.own_props in
           let proto_props = Context.find_props cx i.proto_props in
           let proto_props =
@@ -4667,7 +4667,7 @@ struct
          * this.
          *
          * This invariant is important for the React setState() type definition. *)
-        | (_, UseT (use_op, ShapeT o)) ->
+        | (_, UseT (use_op, ShapeT (_, o))) ->
           add_output
             cx
             ~trace
@@ -7624,7 +7624,7 @@ struct
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ })
-    | UseT (use_op, ShapeT t) ->
+    | UseT (use_op, ShapeT (_, t)) ->
       covariant_flow ~use_op t;
       true
     | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance })) ->
@@ -9585,7 +9585,6 @@ struct
     writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin action
 
   and match_shape cx trace ~use_op proto reason props =
-    (* TODO: ShapeT should have its own reason *)
     let reason_op = reason_of_t proto in
     SMap.iter
       (fun x p ->
