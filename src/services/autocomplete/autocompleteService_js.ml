@@ -146,6 +146,7 @@ let ty_normalizer_options =
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
       expand_toplevel_members = None;
+      max_depth = Some 50;
     }
 
 type autocomplete_service_result =

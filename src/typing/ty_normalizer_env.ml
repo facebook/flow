@@ -92,6 +92,8 @@ type options = {
    * Used for member autocompletion.
    *)
   expand_toplevel_members: member_expansion_options option;
+  (* Maximum depth of recursion *)
+  max_depth: int option;
 }
 
 let default_options =
@@ -107,6 +109,7 @@ let default_options =
     preserve_inferred_literal_types = false;
     verbose_normalizer = false;
     expand_toplevel_members = None;
+    max_depth = Some 50;
   }
 
 (* This is a global environment that should not change during normalization *)
@@ -245,6 +248,8 @@ let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
 let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
 
 let omit_targ_defaults e = e.options.omit_targ_defaults
+
+let max_depth e = e.options.max_depth
 
 let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 

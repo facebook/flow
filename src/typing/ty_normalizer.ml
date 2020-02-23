@@ -44,6 +44,7 @@ type error_kind =
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
   | TypeTooBig
+  | RecursionLimit
 
 type error = error_kind * string
 
@@ -65,6 +66,7 @@ let error_kind_to_string = function
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
   | TypeTooBig -> "Type too big"
+  | RecursionLimit -> "recursion limit"
 
 let error_to_string (kind, msg) = spf "[%s] %s" (error_kind_to_string kind) msg
 
@@ -625,11 +627,9 @@ end = struct
   (*************************)
 
   let rec type__ =
-    let type_debug ~env t state =
+    let type_debug ~env ~depth t state =
       let cx = Env.get_cx env in
-      let depth = env.Env.depth - 1 in
-      let indent = String.make (2 * depth) ' ' in
-      let prefix = spf "%s[Norm|run_id:%d|depth:%d]" indent (get_run_id ()) depth in
+      let prefix = spf "%*s[Norm|run_id:%d|depth:%d]" (2 * depth) "" (get_run_id ()) depth in
       prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
       let result = type_with_expand_members ~env t state in
       let result_str =
@@ -643,10 +643,14 @@ end = struct
     fun ~env t ->
       let env = Env.descend env in
       let options = env.Env.options in
-      if options.Env.verbose_normalizer then
-        type_debug ~env t
-      else
-        type_with_expand_members ~env t
+      let depth = env.Env.depth - 1 in
+      match Env.max_depth env with
+      | Some max_depth when depth > max_depth -> terr ~kind:RecursionLimit (Some t)
+      | _ ->
+        if options.Env.verbose_normalizer then
+          type_debug ~env ~depth t
+        else
+          type_with_expand_members ~env t
 
   (* If we're interested in seeing the type's members, then we should skip
    * recovering type parameters/aliases. *)

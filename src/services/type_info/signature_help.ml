@@ -118,6 +118,7 @@ let ty_normalizer_options =
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
+      max_depth = Some 50;
     }
 
 let rec collect_functions acc = function

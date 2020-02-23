@@ -16,6 +16,7 @@ let type_at_pos
     ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
+    ~max_depth
     ~verbose_normalizer
     file
     line
@@ -40,6 +41,7 @@ let type_at_pos
           ~omit_targ_defaults
           ~evaluate_type_destructors
           ~verbose_normalizer
+          ~max_depth
           ~typed_ast
           loc
       in

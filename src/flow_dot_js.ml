@@ -389,6 +389,7 @@ let infer_type filename content line col =
           ~typed_ast
           ~evaluate_type_destructors:false
           ~verbose_normalizer:false
+          ~max_depth:50
           loc
       in
       (match result with
