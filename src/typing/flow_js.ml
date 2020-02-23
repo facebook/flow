@@ -2145,6 +2145,7 @@ struct
           in
           let void_t = VoidT.why r |> with_trust bogus_trust in
           let null_t = NullT.why r |> with_trust bogus_trust in
+          let t = push_type_alias_reason r t in
           let rep = UnionRep.make (f void_t) (f null_t) [f t] in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
         | (MaybeT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _)) ->
@@ -2153,11 +2154,14 @@ struct
            * part is that spreads should distribute through unions, so `{...?T}`
            * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
           rec_flow cx trace (t, u)
-        | (MaybeT (_, t), UseT (_, MaybeT _)) -> rec_flow cx trace (t, u)
+        | (MaybeT (r, t), UseT (_, MaybeT _)) ->
+          let t = push_type_alias_reason r t in
+          rec_flow cx trace (t, u)
         | (MaybeT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (MaybeT (reason, t), _) ->
           let reason = replace_desc_reason RNullOrVoid reason in
+          let t = push_type_alias_reason reason t in
           rec_flow cx trace (NullT.make reason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (VoidT.make reason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
@@ -2815,6 +2819,7 @@ struct
           let filter_void t = TypeUtil.quick_subtype checked_trust t void in
           let filter_null t = TypeUtil.quick_subtype checked_trust t null in
           let filter_null_and_void t = filter_void t || filter_null t in
+          let maybe = push_type_alias_reason r maybe in
           (* if the union doesn't contain void or null,
          then everything in it must be upper-bounded by maybe *)
           begin
@@ -3007,7 +3012,9 @@ struct
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         (* maybe and optional types are just special union types *)
-        | (t1, UseT (use_op, MaybeT (_, t2))) -> rec_flow cx trace (t1, UseT (use_op, t2))
+        | (t1, UseT (use_op, MaybeT (r2, t2))) ->
+          let t2 = push_type_alias_reason r2 t2 in
+          rec_flow cx trace (t1, UseT (use_op, t2))
         | (t1, UseT (use_op, OptionalT { reason = _; type_ = t2; use_desc = _ })) ->
           rec_flow cx trace (t1, UseT (use_op, t2))
         (* special treatment for some operations on intersections: these
@@ -3408,10 +3415,13 @@ struct
         (* ExactT<X> comes from annotation, may behave as LB or UB *)
 
         (* when $Exact<LB> ~> UB, forward to MakeExactT *)
-        | (ExactT (r, t), _) -> rec_flow cx trace (t, MakeExactT (r, Upper u))
+        | (ExactT (r, t), _) ->
+          let t = push_type_alias_reason r t in
+          rec_flow cx trace (t, MakeExactT (r, Upper u))
         (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
         | (DefT (_, _, ObjT { flags; _ }), UseT (use_op, ExactT (r, t))) ->
           if flags.exact && Obj_type.sealed_in_op r flags.sealed then
+            let t = push_type_alias_reason r t in
             rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
           else
             let reasons = FlowError.ordered_reasons (reason_of_t l, r) in

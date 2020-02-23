@@ -4118,3 +4118,9 @@ end = struct
 
   let map f tparams = Base.Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
 end
+
+let push_type_alias_reason r t =
+  match desc_of_reason ~unwrap:false r with
+  | RTypeAlias (n, _, _) ->
+    mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (n, false, desc))) t
+  | _ -> t
