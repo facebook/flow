@@ -349,7 +349,7 @@ and 'loc t' =
   | EEnumInvalidCheck of {
       reason: 'loc virtual_reason;
       enum_name: string;
-      members: SSet.t;
+      example_member: string option;
     }
   | EEnumMemberUsedAsType of {
       reason: 'loc virtual_reason;
@@ -836,8 +836,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         remaining_member_to_check;
         number_remaining_members_to_check;
       }
-  | EEnumInvalidCheck { reason; enum_name; members } ->
-    EEnumInvalidCheck { reason = map_reason reason; enum_name; members }
+  | EEnumInvalidCheck { reason; enum_name; example_member } ->
+    EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
   | EEnumCheckedInIf reason -> EEnumCheckedInIf (map_reason reason)
@@ -2972,12 +2972,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
     in
     Normal { features }
-  | EEnumInvalidCheck { reason; enum_name; members } ->
-    let example_member =
-      match SSet.choose_opt members with
-      | Some name -> name
-      | None -> "A"
-    in
+  | EEnumInvalidCheck { reason; enum_name; example_member } ->
+    let example_member = Base.Option.value ~default:"A" example_member in
     let features =
       [
         text "Invalid enum member check at ";

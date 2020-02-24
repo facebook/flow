@@ -3027,12 +3027,12 @@ let dump_error_message =
         (dump_reason cx enum_reason)
         remaining_member_to_check
         (string_of_int number_remaining_members_to_check)
-    | EEnumInvalidCheck { reason; enum_name; members } ->
+    | EEnumInvalidCheck { reason; enum_name; example_member } ->
       spf
         "EEnumInvalidCheck (%s) (%s) (%s)"
         (dump_reason cx reason)
         enum_name
-        (SSet.elements members |> String.concat ", ")
+        (Base.Option.value ~default:"<None>" example_member)
     | EEnumMemberUsedAsType { reason; enum_name } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
     | EEnumCheckedInIf reason -> spf "EEnumCheckedInIf (%s)" (dump_reason cx reason)

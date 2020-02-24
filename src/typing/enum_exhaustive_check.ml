@@ -83,8 +83,11 @@ let detect_invalid_check cx (t, (check_reason, check)) =
           | _ -> ()
         end
       | ExhaustiveCheckInvalid reasons ->
+        let example_member = SSet.choose_opt members in
         List.iter
           (fun reason ->
-            Flow_js.add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; members }))
+            Flow_js.add_output
+              cx
+              (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
           reasons
     end
