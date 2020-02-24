@@ -109,7 +109,7 @@ let make_options () =
 let prepare_freshparsed freshparsed =
   freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list
 
-let make_checked_files ~implementation_dependency_graph =
+let checked_files_of_graph ~implementation_dependency_graph =
   (* Get all the files from the implementation_dependency_graph and consider them focused *)
   (* All files must be present as keys, even if they have no values. *)
   let focused_set =
@@ -124,7 +124,7 @@ let determine_what_to_recheck
     ~profiling ~sig_dependency_graph ~implementation_dependency_graph ~freshparsed =
   let sig_dependency_graph = make_dependency_graph sig_dependency_graph in
   let implementation_dependency_graph = make_dependency_graph implementation_dependency_graph in
-  let checked_files = make_checked_files ~implementation_dependency_graph in
+  let checked_files = checked_files_of_graph ~implementation_dependency_graph in
   let freshparsed = prepare_freshparsed freshparsed in
   let options = make_options () in
   let is_file_checked _ = true in
@@ -161,6 +161,7 @@ let determine_what_to_recheck
 
 let include_dependencies_and_dependents
     ~profiling
+    ~checked_files
     ~sig_dependency_graph
     ~implementation_dependency_graph
     ~input_focused
@@ -176,7 +177,11 @@ let include_dependencies_and_dependents
   let changed_files = CheckedSet.focused input in
   let sig_dependency_graph = make_dependency_graph sig_dependency_graph in
   let implementation_dependency_graph = make_dependency_graph implementation_dependency_graph in
-  let checked_files = make_checked_files ~implementation_dependency_graph in
+  let checked_files =
+    match checked_files with
+    | `All -> checked_files_of_graph ~implementation_dependency_graph
+    | `Lazy lst -> make_checked_set ~focused:lst ~dependents:[] ~dependencies:[]
+  in
   let unchanged_checked = make_unchanged_checked checked_files changed_files in
   let options = make_options () in
   let (sig_dependent_files, all_dependent_files) =
@@ -428,6 +433,7 @@ let tests =
                              =
                            include_dependencies_and_dependents
                              ~profiling
+                             ~checked_files:`All
                              ~sig_dependency_graph
                              ~implementation_dependency_graph
                              ~input_focused:["b"]
@@ -459,6 +465,7 @@ let tests =
                              =
                            include_dependencies_and_dependents
                              ~profiling
+                             ~checked_files:`All
                              ~sig_dependency_graph
                              ~implementation_dependency_graph
                              ~input_focused:["a"]
@@ -495,6 +502,7 @@ let tests =
                          let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set) =
                            include_dependencies_and_dependents
                              ~profiling
+                             ~checked_files:`All
                              ~sig_dependency_graph
                              ~implementation_dependency_graph
                              ~input_focused:["a"]
@@ -514,6 +522,38 @@ let tests =
                              ~dependencies:[]
                          in
                          let expected_components = [["a"; "b"; "c"]; ["d"]; ["e"]] in
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
+                         assert_components_equal ~ctxt expected_components components;
+                         Lwt.return_unit);
+                "lazy"
+                %>:: test_with_profiling (fun ctxt profiling ->
+                         let sig_dependency_graph = [("a", []); ("b", []); ("c", []); ("d", [])] in
+                         let implementation_dependency_graph =
+                           [("a", ["b"]); ("b", ["c"]); ("c", ["d"]); ("d", [])]
+                         in
+                         let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set) =
+                           include_dependencies_and_dependents
+                             ~profiling
+                             ~checked_files:(`Lazy [])
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
+                             ~input_focused:["d"]
+                             ~input_dependents:[]
+                             ~input_dependencies:[]
+                         in
+                         let expected_to_merge =
+                           (* TODO "c" should not be listed as a dependency *)
+                           make_checked_set ~focused:["d"] ~dependents:[] ~dependencies:["c"]
+                         in
+                         let expected_to_check =
+                           make_checked_set ~focused:["d"] ~dependents:["c"] ~dependencies:[]
+                         in
+                         let expected_components = [["c"]; ["d"]] in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
                          assert_checked_sets_equal
