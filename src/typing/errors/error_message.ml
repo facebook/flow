@@ -317,7 +317,7 @@ and 'loc t' =
   (* enums *)
   | EEnumInvalidMemberAccess of {
       member_name: string option;
-      members: SSet.t;
+      suggestion: string option;
       access_reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
@@ -803,11 +803,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         computed_property_reason = map_reason computed_property_reason;
         union_reason = map_reason union_reason;
       }
-  | EEnumInvalidMemberAccess { member_name; members; access_reason; enum_reason } ->
+  | EEnumInvalidMemberAccess { member_name; suggestion; access_reason; enum_reason } ->
     EEnumInvalidMemberAccess
       {
         member_name;
-        members;
+        suggestion;
         access_reason = map_reason access_reason;
         enum_reason = map_reason enum_reason;
       }
@@ -2886,19 +2886,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumInvalidMemberAccess { member_name; members; access_reason; enum_reason } ->
+  | EEnumInvalidMemberAccess { member_name; suggestion; access_reason; enum_reason } ->
     let features =
       [text "Cannot access "; desc access_reason]
       @
       match member_name with
       | Some name ->
-        let suggestion =
-          match typo_suggestion (SSet.elements members) name with
-          | Some suggestion -> [text " Did you mean the member "; code suggestion; text "?"]
-          | None -> []
-        in
         [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
-        @ suggestion
+        @ Base.Option.value_map suggestion ~default:[] ~f:(fun suggestion ->
+              [text " Did you mean the member "; code suggestion; text "?"])
       | None ->
         [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
     in
