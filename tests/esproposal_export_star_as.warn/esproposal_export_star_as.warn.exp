@@ -1,7 +1,8 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:3:13
 
-Experimental `export * as` usage. `export * as` is an active early stage feature propsal that may change. You may opt-in
-to using it anyway by putting `esproposal.export_star_as=enable` into the `[options]` section of your `.flowconfig`.
+Experimental `export * as` usage. `export * as` is an active early stage feature proposal that may change. You may
+opt-in to using it anyway by putting `esproposal.export_star_as=enable` into the `[options]` section of your
+`.flowconfig`.
 
    3| export * as foo from "./test";
                   ^^^

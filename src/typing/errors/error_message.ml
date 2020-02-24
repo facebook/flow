@@ -2218,7 +2218,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "export * as";
         text " usage. ";
         code "export * as";
-        text " is an active early stage feature propsal that ";
+        text " is an active early stage feature proposal that ";
         text "may change. You may opt-in to using it anyway by putting ";
         code "esproposal.export_star_as=enable";
         text " into the ";
