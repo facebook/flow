@@ -1,8 +1,8 @@
 // @flow
 
 enum F {
-  A,
-  B
+  Foo,
+  Bar,
 }
 
 module.exports = F;

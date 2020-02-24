@@ -407,6 +407,7 @@ let rec extract_type cx this_t =
   | AnyT _ -> FailureAnyType
   | DefT (_, _, InstanceT _) as t -> Success t
   | DefT (_, _, ObjT _) as t -> Success t
+  | DefT (_, _, EnumObjectT _) as t -> Success t
   | ExactT (_, t) -> extract_type cx t
   | ModuleT _ as t -> SuccessModule t
   | ThisTypeAppT (_, c, _, ts_opt) ->
@@ -480,7 +481,6 @@ let rec extract_type cx this_t =
   | ShapeT _
   | ThisClassT _
   | DefT (_, _, TypeT _)
-  | DefT (_, _, EnumObjectT _)
   | DefT (_, _, EnumT _) ->
     FailureUnhandledType this_t
 
@@ -561,6 +561,19 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     let members = extract_members_as_map ~exclude_proto_members cx static in
     let prot_members = extract_members_as_map ~exclude_proto_members cx proto in
     Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+  | Success (DefT (enum_reason, trust, EnumObjectT enum)) ->
+    let { members; representation_t; _ } = enum in
+    let enum_t = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+    let proto_members =
+      if exclude_proto_members then
+        SMap.empty
+      else
+        let proto = get_builtin_typeapp cx enum_reason "$EnumProto" [enum_t; representation_t] in
+        (* `$EnumProto` has a null proto, so we set `exclude_proto_members` to true *)
+        extract_members_as_map ~exclude_proto_members:true cx proto
+    in
+    let result = SMap.map (fun member_loc -> (Some member_loc, enum_t)) members in
+    Success (AugmentableSMap.augment proto_members ~with_bindings:result)
   | Success (IntersectionT (_, rep)) ->
     (* Intersection type should autocomplete for every property of
          every type in the intersection *)
