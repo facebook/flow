@@ -151,5 +151,14 @@ References:
              ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_relative.js:16:1
 
-Found 9 errors
+Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./not_flow`? (`untyped-import`)
+
+   16| require('./not_flow');
+       ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 10 errors
