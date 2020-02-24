@@ -255,7 +255,7 @@ module rec TypeTerm : sig
   and enum_t = {
     enum_id: ALoc.id;
     enum_name: string;
-    members: SSet.t;
+    members: ALoc.t SMap.t;
     representation_t: t;
   }
 

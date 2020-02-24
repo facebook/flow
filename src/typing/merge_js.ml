@@ -788,7 +788,7 @@ module ContextOptimizer = struct
         SigHash.add_aloc sig_hash (enum_id :> ALoc.t);
         Base.List.iter
           ~f:(SigHash.add sig_hash)
-          (SSet.elements members |> Base.List.stable_sort ~compare:String.compare);
+          (SMap.keys members |> Base.List.stable_sort ~compare:String.compare);
         e'
 
       method! type_ cx pole t =

@@ -7955,8 +7955,11 @@ and warn_or_ignore_optional_chaining optional cx loc =
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
   let { id = (name_loc, { Ast.Identifier.name; _ }); body } = enum in
-  let name_of_defaulted_member (_, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) =
-    name
+  let defaulted_members =
+    Base.List.fold
+      ~init:SMap.empty
+      ~f:(fun acc (member_loc, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) ->
+        SMap.add name member_loc acc)
   in
   let enum_id = Context.make_aloc_id cx name_loc in
   let (representation_t, members) =
@@ -7966,7 +7969,7 @@ and mk_enum cx ~enum_reason enum =
       let (members, bool_type, _) =
         Base.List.fold_left
           ~f:
-            (fun (names, bool_type, seen_values)
+            (fun (members_map, bool_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, init_value) = init in
             let bool_type =
@@ -7986,8 +7989,8 @@ and mk_enum cx ~enum_reason enum =
                 seen_values
               | None -> BoolMap.add init_value member_loc seen_values
             in
-            (SSet.add name names, bool_type, seen_values))
-          ~init:(SSet.empty, None, BoolMap.empty)
+            (SMap.add name member_loc members_map, bool_type, seen_values))
+          ~init:(SMap.empty, None, BoolMap.empty)
           members
       in
       (DefT (reason, literal_trust (), BoolT bool_type), members)
@@ -7996,7 +7999,7 @@ and mk_enum cx ~enum_reason enum =
       let (members, num_type, _) =
         Base.List.fold_left
           ~f:
-            (fun (names, num_type, seen_values)
+            (fun (members_map, num_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
             let num_type =
@@ -8015,8 +8018,8 @@ and mk_enum cx ~enum_reason enum =
                 seen_values
               | None -> NumberMap.add init_value member_loc seen_values
             in
-            (SSet.add name names, num_type, seen_values))
-          ~init:(SSet.empty, Truthy, NumberMap.empty)
+            (SMap.add name member_loc members_map, num_type, seen_values))
+          ~init:(SMap.empty, Truthy, NumberMap.empty)
           members
       in
       (DefT (reason, literal_trust (), NumT num_type), members)
@@ -8025,7 +8028,7 @@ and mk_enum cx ~enum_reason enum =
       let (members, str_type, _) =
         Base.List.fold_left
           ~f:
-            (fun (names, str_type, seen_values)
+            (fun (members_map, str_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
             let str_type =
@@ -8044,18 +8047,17 @@ and mk_enum cx ~enum_reason enum =
                 seen_values
               | None -> SMap.add init_value member_loc seen_values
             in
-            (SSet.add name names, str_type, seen_values))
-          ~init:(SSet.empty, Truthy, SMap.empty)
+            (SMap.add name member_loc members_map, str_type, seen_values))
+          ~init:(SMap.empty, Truthy, SMap.empty)
           members
       in
       (DefT (reason, literal_trust (), StrT str_type), members)
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
       ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
-        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
+        defaulted_members members )
     | (_, SymbolBody { SymbolBody.members }) ->
       let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
-      ( DefT (reason, literal_trust (), SymbolT),
-        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
+      (DefT (reason, literal_trust (), SymbolT), defaulted_members members)
   in
   { enum_id; enum_name = name; members; representation_t }

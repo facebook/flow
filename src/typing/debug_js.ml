@@ -224,7 +224,7 @@ and _json_of_t_impl json_cx t =
         [
           ("enum_id", JSON_String (ALoc.debug_to_string (enum_id :> ALoc.t)));
           ("enum_name", JSON_String enum_name);
-          ("members", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)));
+          ("members", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SMap.keys members)));
           ("representation_t", _json_of_t json_cx representation_t);
         ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]

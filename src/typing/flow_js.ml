@@ -6415,7 +6415,7 @@ struct
               cx
               trace
               (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
-          else if SSet.mem member_name members then
+          else if SMap.mem member_name members then
             let enum_type =
               reposition
                 cx
@@ -6425,7 +6425,7 @@ struct
             in
             rec_flow_t cx trace ~use_op:unknown_use (enum_type, tout)
           else
-            let suggestion = typo_suggestion (SSet.elements members) member_name in
+            let suggestion = typo_suggestion (SMap.keys members) member_name in
             add_output
               cx
               ~trace
