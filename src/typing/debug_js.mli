@@ -5,35 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val json_of_aloc :
-  ?strip_root:Path.t option ->
-  ?catch_offset_errors:bool ->
-  offset_table:Offset_utils.t option ->
-  ALoc.t ->
-  Hh_json.json
-
-val json_of_t :
-  ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.t -> Hh_json.json
-
-val jstr_of_t :
-  ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.t -> string
-
-val json_of_use_t :
-  ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.use_t -> Hh_json.json
-
-val jstr_of_use_t :
-  ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.use_t -> string
-
-val json_of_graph :
-  ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Hh_json.json
-
-val jstr_of_graph : ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> string
-
-val json_of_scope :
-  ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Scope.t -> Hh_json.json
-
-val json_of_env : ?size:int -> ?depth:int -> Context.t -> Scope.t list -> Hh_json.json
-
 val string_of_scope_entry : Context.t -> Scope.Entry.t -> string
 
 val string_of_scope_entries : Context.t -> Scope.Entry.t SMap.t -> string

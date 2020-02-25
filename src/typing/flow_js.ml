@@ -1114,7 +1114,7 @@ struct
         (* Debugging *)
         (*************)
         | (_, DebugPrintT reason) ->
-          let str = Debug_js.jstr_of_t ~depth:10 cx l in
+          let str = Debug_js.dump_t ~depth:10 cx l in
           add_output cx ~trace (Error_message.EDebugPrint (reason, str))
         | (DefT (_, _, NumT (Literal (_, (n, _)))), DebugSleepT _) ->
           let n = ref n in
