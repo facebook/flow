@@ -1039,10 +1039,6 @@ end = struct
           Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
           let focused_to_check = CheckedSet.focused to_check in
           let merged_dependents = CheckedSet.dependents to_check in
-          (* Assert that there are no dependencies. They should never have been added to the
-          * to_check set. This isn't critical, we are just making sure that our expected invariants
-          * hold. *)
-          assert (FilenameSet.is_empty (CheckedSet.dependencies to_check));
           let skipped_count = ref 0 in
           let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
           let record_slow_file file time =
@@ -1072,7 +1068,10 @@ end = struct
           Hh_logger.info
             "Check will skip %d of %d files"
             !skipped_count
-            (CheckedSet.cardinal to_check);
+            (* We can just add these counts without worrying about files which are in both sets. We
+             * got these both from a CheckedSet. CheckedSet's representation ensures that a single
+             * file cannot have more than one kind. *)
+            (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
           let files = FilenameSet.union focused_to_check dependents_to_check in
           let%lwt intermediate_result_callback =
             mk_intermediate_result_callback
