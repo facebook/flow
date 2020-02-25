@@ -1,3 +1,8 @@
+### 0.119.1
+
+Notable bug fixes:
+* Fixed a bug that would cause Flow to crash on some rechecks.
+
 ### 0.119.0
 
 New Features:
