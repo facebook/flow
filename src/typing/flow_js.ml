@@ -6410,7 +6410,8 @@ struct
             GetPropT (_, access_reason, Named (_, member_name), tout) ) ->
           (* We guarantee in the parser that enum member names won't start with lowercase
            * "a" through "z", these are reserved for methods. *)
-          if Base.Char.is_lowercase member_name.[0] then
+          if (not @@ Base.String.is_empty member_name) && Base.Char.is_lowercase member_name.[0]
+          then
             rec_flow
               cx
               trace
