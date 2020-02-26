@@ -856,9 +856,7 @@ end = struct
         return Ty.(TypeOf FunProtoCall)
     | ModuleT (reason, exports, _) -> module_t env reason exports t
     | NullProtoT _ -> return Ty.Null
-    | DefT (reason, _, EnumObjectT { enum_name; _ }) ->
-      let symbol = symbol_from_reason env reason enum_name in
-      return Ty.(EnumDecl symbol)
+    | DefT (reason, trust, EnumObjectT enum) -> enum_t ~env reason trust enum
     | DefT (reason, _, EnumT { enum_name; _ }) ->
       let symbol = symbol_from_reason env reason enum_name in
       return (Ty.Generic (symbol, Ty.EnumKind, None))
@@ -1108,6 +1106,38 @@ end = struct
           { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props = static_flds }
       in
       Ty.mk_inter (parent_class, [props_obj])
+
+  and enum_t ~env enum_reason trust enum =
+    match Env.get_member_expansion_info env with
+    | None ->
+      let { T.enum_name; _ } = enum in
+      let symbol = symbol_from_reason env enum_reason enum_name in
+      return Ty.(EnumDecl symbol)
+    | Some (_, env) ->
+      let { T.members; representation_t; _ } = enum in
+      let enum_t = T.mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+      let proto_t =
+        Flow_js.get_builtin_typeapp
+          Env.(env.genv.cx)
+          enum_reason
+          "$EnumProto"
+          [enum_t; representation_t]
+      in
+      let%bind proto_ty = type__ ~env:(Env.expand_primitive_members env) proto_t in
+      let%bind enum_ty = type__ ~env enum_t in
+      let%map members_ty =
+        SMap.keys members
+        |> List.map (fun name ->
+               Ty.(
+                 NamedProp
+                   {
+                     name;
+                     prop = Field (enum_ty, { fld_polarity = Positive; fld_optional = false });
+                     from_proto = false;
+                   }))
+        |> return
+      in
+      Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
 
   and instance_t =
     let to_generic ~env kind r inst =

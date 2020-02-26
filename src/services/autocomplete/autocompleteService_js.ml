@@ -324,7 +324,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
   | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
   | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
-    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ ) as t ->
+    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ | EnumDecl _ ) as t ->
     (SMap.empty, [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)])
   | Any _
   | Top
@@ -335,7 +335,6 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | TypeOf _
   | ClassDecl _
   | InterfaceDecl _
-  | EnumDecl _
   | Utility _
   | Module _
   | Mu _
