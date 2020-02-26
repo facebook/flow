@@ -147,8 +147,8 @@ type member_expansion_info = {
    * - if the flag was IMInstance then we could be looking at the superclass of another
    *   InstanceT, in which case we want to look at the superclass as an instance. *)
   instance_member_expansion_mode: instance_member_expansion_mode;
-  (* Keep track of whether we're currently expanding the members of a primitive *)
-  within_primitive: bool;
+  (* Keep track of whether we're currently expanding the proto members *)
+  within_proto: bool;
 }
 
 type t = {
@@ -227,7 +227,7 @@ let init ~options ~genv ~tparams ~imported_names =
             {
               member_expansion_options;
               instance_member_expansion_mode = IMUnset;
-              within_primitive = false;
+              within_proto = false;
             } ));
   }
 
@@ -287,17 +287,17 @@ let expand_static_members e =
           (true, { info with instance_member_expansion_mode = IMStatic }));
   }
 
-let expand_primitive_members e =
+let expand_proto_members e =
   {
     e with
     member_expansion_info =
       Base.Option.map e.member_expansion_info ~f:(fun (_, info) ->
-          (true, { info with within_primitive = true; instance_member_expansion_mode = IMUnset }));
+          (true, { info with within_proto = true; instance_member_expansion_mode = IMUnset }));
   }
 
 (* We let ty_normalizer access this separately from get_member_expansion_info
  * because this is relevant after we've descended below the top level of the type *)
-let within_primitive e =
+let within_proto e =
   match e.member_expansion_info with
   | None -> false
-  | Some (_, { within_primitive; _ }) -> within_primitive
+  | Some (_, { within_proto; _ }) -> within_proto

@@ -867,7 +867,7 @@ end = struct
     | None -> return ty
     | Some (_, env) ->
       let t = Flow_js.get_builtin_type Env.(env.genv.cx) reason builtin in
-      type__ ~env:(Env.expand_primitive_members env) t
+      type__ ~env:(Env.expand_proto_members env) t
 
   and type_variable ~env id =
     let (root_id, constraints) =
@@ -976,7 +976,7 @@ end = struct
     Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
   and obj_prop ~env (x, p) =
-    let from_proto = Env.within_primitive env in
+    let from_proto = Env.within_proto env in
     match p with
     | T.Field (_, t, polarity) ->
       let fld_polarity = type_polarity polarity in
@@ -1123,7 +1123,7 @@ end = struct
           "$EnumProto"
           [enum_t; representation_t]
       in
-      let%bind proto_ty = type__ ~env:(Env.expand_primitive_members env) proto_t in
+      let%bind proto_ty = type__ ~env:(Env.expand_proto_members env) proto_t in
       let%bind enum_ty = type__ ~env enum_t in
       let%map members_ty =
         SMap.keys members
