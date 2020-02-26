@@ -315,7 +315,7 @@ let tests =
                     [
                       E.expression (E.literal (Literals.string "a"));
                       E.expression (E.literal (Literals.string "b"));
-                      E.expression (E.function_ ());
+                      E.expression (E.sequence [E.function_ ()]);
                       E.expression (E.literal (Literals.number 1. "1"));
                     ])
                (E.identifier "__d")

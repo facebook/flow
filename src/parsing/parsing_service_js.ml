@@ -230,14 +230,6 @@ let extract_docblock =
       | (_, "@preventMunge") :: xs ->
         (* dupes are ok since they can only be truthy *)
         parse_attributes (errors, { info with preventMunge = true }) xs
-      | (csx_loc, "@csx") :: xs ->
-        let acc =
-          if info.jsx <> None then
-            ((csx_loc, MultipleJSXAttributes) :: errors, info)
-          else
-            (errors, { info with jsx = Some Csx_pragma })
-        in
-        parse_attributes acc xs
       | [(jsx_loc, "@jsx")] -> ((jsx_loc, InvalidJSXAttribute None) :: errors, info)
       | (jsx_loc, "@jsx") :: (expr_loc, expr) :: xs ->
         let acc =
@@ -254,7 +246,7 @@ let extract_docblock =
               let (jsx_expr, _) =
                 Parser_flow.jsx_pragma_expression (padding ^ expr) expr_loc.Loc.source
               in
-              (errors, { info with jsx = Some (Jsx_pragma (expr, jsx_expr)) })
+              (errors, { info with jsx = Some (expr, jsx_expr) })
             with
             | Parse_error.Error [] -> ((expr_loc, InvalidJSXAttribute None) :: errors, info)
             | Parse_error.Error ((_, e) :: _) ->

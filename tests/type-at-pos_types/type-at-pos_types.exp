@@ -901,7 +901,7 @@ stack-overflow-bugfix.js:14:10 = {
   "end":6
 }
 recursive.js:3:25 = {
-  "type":"type V$1 = {|m: () => V$1|};\n{|m: () => V$1|}",
+  "type":"type V$1 = {|m: () => V$1|}; {|m: () => V$1|}",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -916,7 +916,7 @@ recursive.js:3:25 = {
   "end":27
 }
 recursive.js:6:11 = {
-  "type":"type V$2 = null | {|data: number, next: V$2|};\n(n: number) => (null | {|data: number, next: V$2|})",
+  "type":"type V$2 = null | {|data: number, next: V$2|}; (n: number) => (null | {|data: number, next: V$2|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -931,7 +931,7 @@ recursive.js:6:11 = {
   "end":14
 }
 recursive.js:13:12 = {
-  "type":"type V$3 = null | {|data: number, next: V$3|};\ntype V$5 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|};\n(n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|})",
+  "type":"type V$3 = null | {|data: number, next: V$3|}; type V$5 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|}; (n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -946,7 +946,7 @@ recursive.js:13:12 = {
   "end":14
 }
 recursive.js:23:12 = {
-  "type":"type V$3 = null | {|data: number, next: V$3|};\ntype V$7 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|};\ntype V$9 = null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|};\n(n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|})",
+  "type":"type V$3 = null | {|data: number, next: V$3|}; type V$7 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}; type V$9 = null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|}; (n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -961,7 +961,7 @@ recursive.js:23:12 = {
   "end":14
 }
 recursive.js:38:2 = {
-  "type":"type V$2 = (x: V$2) => V$3;\ntype V$3 = (x: V$2) => V$3;\n(x: (x: V$2) => V$3) => (x: V$2) => V$3",
+  "type":"type V$2 = (x: V$2) => V$3; type V$3 = (x: V$2) => V$3; (x: (x: V$2) => V$3) => (x: V$2) => V$3",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -976,7 +976,7 @@ recursive.js:38:2 = {
   "end":3
 }
 recursive.js:41:17 = {
-  "type":"type V$1 = (x: V$1) => V$2;\ntype V$2 = (x: V$1) => V$2;\ntype Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2}",
+  "type":"type V$1 = (x: V$1) => V$2; type V$2 = (x: V$1) => V$2; type Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2}",
   "reasons":[],
   "loc":{
     "source":"recursive.js",

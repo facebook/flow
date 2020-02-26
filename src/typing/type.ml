@@ -91,7 +91,7 @@ module rec TypeTerm : sig
     (* a merged tvar that had no lowers *)
     | MergedT of reason * use_t list
     (* constrains some properties of an object *)
-    | ShapeT of t
+    | ShapeT of reason * t
     | MatchingPropT of reason * string * t
     (* & types *)
     | IntersectionT of reason * InterRep.t
@@ -255,7 +255,7 @@ module rec TypeTerm : sig
   and enum_t = {
     enum_id: ALoc.id;
     enum_name: string;
-    members: SSet.t;
+    members: ALoc.t SMap.t;
     representation_t: t;
   }
 
@@ -835,12 +835,12 @@ module rec TypeTerm : sig
     | SingletonBoolP of ALoc.t * bool (* true or false *)
     | SingletonStrP of ALoc.t * bool * string (* string literal *)
     | SingletonNumP of ALoc.t * bool * number_literal
-    | BoolP (* boolean *)
+    | BoolP of ALoc.t (* boolean *)
     | FunP (* function *)
-    | NumP (* number *)
+    | NumP of ALoc.t (* number *)
     | ObjP (* object *)
-    | StrP (* string *)
-    | SymbolP (* symbol *)
+    | StrP of ALoc.t (* string *)
+    | SymbolP of ALoc.t (* symbol *)
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
@@ -2542,7 +2542,7 @@ end = struct
     | OpenPredT { reason; m_pos = _; m_neg = _; base_t = _ } -> reason
     | ReposT (reason, _) -> reason
     | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
-    | ShapeT t -> reason_of_t t
+    | ShapeT (reason, _) -> reason
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
     | TypeAppT (reason, _, _, _) -> reason
@@ -2712,7 +2712,7 @@ end = struct
       OpenPredT { reason = f reason; base_t; m_pos; m_neg }
     | ReposT (reason, t) -> ReposT (f reason, t)
     | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
-    | ShapeT t -> ShapeT (mod_reason_of_t f t)
+    | ShapeT (reason, t) -> ShapeT (f reason, t)
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
     | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
@@ -3827,12 +3827,12 @@ let rec string_of_predicate = function
   | SingletonNumP (_, _, (_, raw)) -> spf "number `%s`" raw
   (* typeof *)
   | VoidP -> "undefined"
-  | BoolP -> "boolean"
-  | StrP -> "string"
-  | NumP -> "number"
+  | BoolP _ -> "boolean"
+  | StrP _ -> "string"
+  | NumP _ -> "number"
   | FunP -> "function"
   | ObjP -> "object"
-  | SymbolP -> "symbol"
+  | SymbolP _ -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
   | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
@@ -4118,3 +4118,9 @@ end = struct
 
   let map f tparams = Base.Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
 end
+
+let push_type_alias_reason r t =
+  match desc_of_reason ~unwrap:false r with
+  | RTypeAlias (n, _, _) ->
+    mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (n, None, desc))) t
+  | _ -> t

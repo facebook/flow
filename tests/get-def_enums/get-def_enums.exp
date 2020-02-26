@@ -1,0 +1,32 @@
+main.js:5:6
+Flags:
+main.js:5:1,5:17
+
+main.js:8:11
+Flags:
+main.js:5:1,5:17
+
+main.js:11:11
+Flags:
+library.js:3:1,6:1
+
+main.js:14:13
+Flags:
+main.js:5:9,5:11
+
+main.js:17:13
+Flags:
+main.js:5:14,5:16
+
+main.js:20:13
+Flags:
+library.js:4:3,4:5
+
+main.js:23:13
+Flags:
+[LIB] core.js:928:3,928:6
+
+main.js:26:13
+Flags:
+[LIB] core.js:929:3,929:9
+

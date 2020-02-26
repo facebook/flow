@@ -3021,3 +3021,58 @@ suggest_optional_chaining_3.js = {
     "newText":"valueOf()"
   }
 }
+enums.js = {
+  "label":"Bar",
+  "kind":6,
+  "detail":"E",
+  "inlineDetail":"E",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Foo",
+  "kind":6,
+  "detail":"E",
+  "inlineDetail":"E",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"cast",
+  "kind":3,
+  "detail":"(string) => (void | E)",
+  "inlineDetail":"(_: string)",
+  "itemType":"void | E",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"cast(${1:_})"
+  }
+}
+{
+  "label":"isValid",
+  "kind":3,
+  "detail":"(string) => boolean",
+  "inlineDetail":"(_: string)",
+  "itemType":"boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"isValid(${1:_})"
+  }
+}
+{
+  "label":"members",
+  "kind":3,
+  "detail":"() => Iterable<E>",
+  "inlineDetail":"()",
+  "itemType":"Iterable<E>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"members()"
+  }
+}

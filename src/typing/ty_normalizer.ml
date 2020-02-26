@@ -44,6 +44,7 @@ type error_kind =
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
   | TypeTooBig
+  | RecursionLimit
 
 type error = error_kind * string
 
@@ -65,6 +66,7 @@ let error_kind_to_string = function
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
   | TypeTooBig -> "Type too big"
+  | RecursionLimit -> "recursion limit"
 
 let error_to_string (kind, msg) = spf "[%s] %s" (error_kind_to_string kind) msg
 
@@ -586,9 +588,8 @@ end = struct
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
-      | RTypeAlias (name, true, _)
-      | RType name ->
-        return (symbol_from_reason env reason name)
+      | RTypeAlias (name, Some loc, _) -> return (symbol_from_loc env loc name)
+      | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract local type alias name from reason: " ^ desc in
@@ -625,11 +626,9 @@ end = struct
   (*************************)
 
   let rec type__ =
-    let type_debug ~env t state =
+    let type_debug ~env ~depth t state =
       let cx = Env.get_cx env in
-      let depth = env.Env.depth - 1 in
-      let indent = String.make (2 * depth) ' ' in
-      let prefix = spf "%s[Norm|run_id:%d|depth:%d]" indent (get_run_id ()) depth in
+      let prefix = spf "%*s[Norm|run_id:%d|depth:%d]" (2 * depth) "" (get_run_id ()) depth in
       prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
       let result = type_with_expand_members ~env t state in
       let result_str =
@@ -643,10 +642,14 @@ end = struct
     fun ~env t ->
       let env = Env.descend env in
       let options = env.Env.options in
-      if options.Env.verbose_normalizer then
-        type_debug ~env t
-      else
-        type_with_expand_members ~env t
+      let depth = env.Env.depth - 1 in
+      match Env.max_depth env with
+      | Some max_depth when depth > max_depth -> terr ~kind:RecursionLimit (Some t)
+      | _ ->
+        if options.Env.verbose_normalizer then
+          type_debug ~env ~depth t
+        else
+          type_with_expand_members ~env t
 
   (* If we're interested in seeing the type's members, then we should skip
    * recovering type parameters/aliases. *)
@@ -694,13 +697,13 @@ end = struct
         | _ ->
           begin
             match desc_of_reason ~unwrap:false reason with
-            | RTypeAlias (name, true, _) ->
+            | RTypeAlias (name, Some _, _) ->
               (* The default action is to avoid expansion by using the type alias name,
-           when this can be trusted. The one case where we want to skip this process
-           is when recovering the body of a type alias A. In that case the environment
-           field under_type_alias will be 'Some A'. If the type alias name in the reason
-           is also A, then we are still at the top-level of the type-alias, so we
-           proceed by expanding one level preserving the same environment. *)
+                 when this can be trusted. The one case where we want to skip this process
+                 is when recovering the body of a type alias A. In that case the environment
+                 field under_type_alias will be 'Some A'. If the type alias name in the reason
+                 is also A, then we are still at the top-level of the type-alias, so we
+                 proceed by expanding one level preserving the same environment. *)
               let continue =
                 match env.Env.under_type_alias with
                 | Some name' -> name = name'
@@ -713,8 +716,8 @@ end = struct
                 return (generic_talias symbol None)
             | _ ->
               (* We are now beyond the point of the one-off expansion. Reset the environment
-           assigning None to under_type_alias, so that aliases are used in subsequent
-           invocations. *)
+                 assigning None to under_type_alias, so that aliases are used in subsequent
+                 invocations. *)
               let env = Env.{ env with under_type_alias = None } in
               type_after_reason ~env t
           end)
@@ -800,7 +803,7 @@ end = struct
       Ty.Utility (Ty.Keys ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
-    | ShapeT t ->
+    | ShapeT (_, t) ->
       let%map t = type__ ~env t in
       Ty.Utility (Ty.Shape t)
     | TypeDestructorTriggerT (_, r, _, _, _) ->
@@ -853,9 +856,7 @@ end = struct
         return Ty.(TypeOf FunProtoCall)
     | ModuleT (reason, exports, _) -> module_t env reason exports t
     | NullProtoT _ -> return Ty.Null
-    | DefT (reason, _, EnumObjectT { enum_name; _ }) ->
-      let symbol = symbol_from_reason env reason enum_name in
-      return Ty.(EnumDecl symbol)
+    | DefT (reason, trust, EnumObjectT enum) -> enum_t ~env reason trust enum
     | DefT (reason, _, EnumT { enum_name; _ }) ->
       let symbol = symbol_from_reason env reason enum_name in
       return (Ty.Generic (symbol, Ty.EnumKind, None))
@@ -866,7 +867,7 @@ end = struct
     | None -> return ty
     | Some (_, env) ->
       let t = Flow_js.get_builtin_type Env.(env.genv.cx) reason builtin in
-      type__ ~env:(Env.expand_primitive_members env) t
+      type__ ~env:(Env.expand_proto_members env) t
 
   and type_variable ~env id =
     let (root_id, constraints) =
@@ -975,7 +976,7 @@ end = struct
     Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
   and obj_prop ~env (x, p) =
-    let from_proto = Env.within_primitive env in
+    let from_proto = Env.within_proto env in
     match p with
     | T.Field (_, t, polarity) ->
       let fld_polarity = type_polarity polarity in
@@ -1105,6 +1106,38 @@ end = struct
           { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props = static_flds }
       in
       Ty.mk_inter (parent_class, [props_obj])
+
+  and enum_t ~env enum_reason trust enum =
+    match Env.get_member_expansion_info env with
+    | None ->
+      let { T.enum_name; _ } = enum in
+      let symbol = symbol_from_reason env enum_reason enum_name in
+      return Ty.(EnumDecl symbol)
+    | Some (_, env) ->
+      let { T.members; representation_t; _ } = enum in
+      let enum_t = T.mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+      let proto_t =
+        Flow_js.get_builtin_typeapp
+          Env.(env.genv.cx)
+          enum_reason
+          "$EnumProto"
+          [enum_t; representation_t]
+      in
+      let%bind proto_ty = type__ ~env:(Env.expand_proto_members env) proto_t in
+      let%bind enum_ty = type__ ~env enum_t in
+      let%map members_ty =
+        SMap.keys members
+        |> List.map (fun name ->
+               Ty.(
+                 NamedProp
+                   {
+                     name;
+                     prop = Field (enum_ty, { fld_polarity = Positive; fld_optional = false });
+                     from_proto = false;
+                   }))
+        |> return
+      in
+      Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
 
   and instance_t =
     let to_generic ~env kind r inst =

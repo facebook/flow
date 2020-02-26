@@ -1,0 +1,3 @@
+// does not have a flow pragma
+
+module.exports = 123;

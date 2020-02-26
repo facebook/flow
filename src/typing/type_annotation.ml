@@ -477,7 +477,8 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
             let t = List.hd ts in
-            reconstruct_ast (ShapeT t) targs)
+            let reason = mk_reason (RShapeOf (desc_of_t t)) (loc_of_t t) in
+            reconstruct_ast (ShapeT (reason, t)) targs)
       (* $Diff<T, S> *)
       | "$Diff" ->
         check_type_arg_arity cx loc t_ast targs 2 (fun () ->

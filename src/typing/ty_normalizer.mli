@@ -25,6 +25,7 @@ type error_kind =
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
   | TypeTooBig
+  | RecursionLimit
 
 type error = error_kind * string
 

@@ -149,7 +149,7 @@ type 'loc virtual_reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * bool (* trust in normalization *) * 'loc virtual_reason_desc
+  | RTypeAlias of string * 'loc option (* reliable def loc *) * 'loc virtual_reason_desc
   | ROpaqueType of string
   | RTypeParam of
       string * ('loc virtual_reason_desc * 'loc) * (*reason op *)
@@ -209,6 +209,7 @@ type 'loc virtual_reason_desc =
   | RRefined of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
+  | RShapeOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
@@ -272,7 +273,8 @@ let rec map_desc_locs f = function
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RImplicitReturn desc -> RImplicitReturn (map_desc_locs f desc)
-  | RTypeAlias (s, b, d) -> RTypeAlias (s, b, map_desc_locs f d)
+  | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
+  | RTypeAlias (s, Some b, d) -> RTypeAlias (s, Some (f b), map_desc_locs f d)
   | RTypeParam (s, (d1, l1), (d2, l2)) ->
     RTypeParam (s, (map_desc_locs f d1, f l1), (map_desc_locs f d2, f l2))
   | RPropertyOf (s, d) -> RPropertyOf (s, map_desc_locs f d)
@@ -299,6 +301,7 @@ let rec map_desc_locs f = function
   | RPredicateCallNeg desc -> RPredicateCallNeg (map_desc_locs f desc)
   | RRefined desc -> RRefined (map_desc_locs f desc)
   | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
+  | RShapeOf desc -> RShapeOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
   | RTrusted desc -> RTrusted (map_desc_locs f desc)
   | RPrivate desc -> RPrivate (map_desc_locs f desc)
@@ -683,6 +686,7 @@ let rec string_of_desc = function
   | RRefined d -> spf "refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> spf "`%s`" x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
+  | RShapeOf d -> spf "%s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
   | RCommonJSExports x -> spf "module `%s`" x
@@ -1413,6 +1417,7 @@ let classification_of_reason r =
   | RRefined _
   | RIncompatibleInstantiation _
   | RSpreadOf _
+  | RShapeOf _
   | RObjectPatternRestProp
   | RCommonJSExports _
   | RModule _
@@ -1448,5 +1453,5 @@ let is_scalar_reason r =
 let is_array_reason r = classification_of_reason r = `Array
 
 let invalidate_rtype_alias = function
-  | RTypeAlias (name, true, desc) -> RTypeAlias (name, false, desc)
+  | RTypeAlias (name, Some _, desc) -> RTypeAlias (name, None, desc)
   | desc -> desc

@@ -317,7 +317,7 @@ and 'loc t' =
   (* enums *)
   | EEnumInvalidMemberAccess of {
       member_name: string option;
-      members: SSet.t;
+      suggestion: string option;
       access_reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
@@ -349,7 +349,7 @@ and 'loc t' =
   | EEnumInvalidCheck of {
       reason: 'loc virtual_reason;
       enum_name: string;
-      members: SSet.t;
+      example_member: string option;
     }
   | EEnumMemberUsedAsType of {
       reason: 'loc virtual_reason;
@@ -803,11 +803,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         computed_property_reason = map_reason computed_property_reason;
         union_reason = map_reason union_reason;
       }
-  | EEnumInvalidMemberAccess { member_name; members; access_reason; enum_reason } ->
+  | EEnumInvalidMemberAccess { member_name; suggestion; access_reason; enum_reason } ->
     EEnumInvalidMemberAccess
       {
         member_name;
-        members;
+        suggestion;
         access_reason = map_reason access_reason;
         enum_reason = map_reason enum_reason;
       }
@@ -836,8 +836,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         remaining_member_to_check;
         number_remaining_members_to_check;
       }
-  | EEnumInvalidCheck { reason; enum_name; members } ->
-    EEnumInvalidCheck { reason = map_reason reason; enum_name; members }
+  | EEnumInvalidCheck { reason; enum_name; example_member } ->
+    EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
   | EEnumCheckedInIf reason -> EEnumCheckedInIf (map_reason reason)
@@ -2218,7 +2218,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "export * as";
         text " usage. ";
         code "export * as";
-        text " is an active early stage feature propsal that ";
+        text " is an active early stage feature proposal that ";
         text "may change. You may opt-in to using it anyway by putting ";
         code "esproposal.export_star_as=enable";
         text " into the ";
@@ -2886,19 +2886,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumInvalidMemberAccess { member_name; members; access_reason; enum_reason } ->
+  | EEnumInvalidMemberAccess { member_name; suggestion; access_reason; enum_reason } ->
     let features =
       [text "Cannot access "; desc access_reason]
       @
       match member_name with
       | Some name ->
-        let suggestion =
-          match typo_suggestion (SSet.elements members) name with
-          | Some suggestion -> [text " Did you mean the member "; code suggestion; text "?"]
-          | None -> []
-        in
         [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
-        @ suggestion
+        @ Base.Option.value_map suggestion ~default:[] ~f:(fun suggestion ->
+              [text " Did you mean the member "; code suggestion; text "?"])
       | None ->
         [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
     in
@@ -2976,12 +2972,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
     in
     Normal { features }
-  | EEnumInvalidCheck { reason; enum_name; members } ->
-    let example_member =
-      match SSet.choose_opt members with
-      | Some name -> name
-      | None -> "A"
-    in
+  | EEnumInvalidCheck { reason; enum_name; example_member } ->
+    let example_member = Base.Option.value ~default:"A" example_member in
     let features =
       [
         text "Invalid enum member check at ";

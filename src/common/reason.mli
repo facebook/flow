@@ -99,7 +99,7 @@ type 'loc virtual_reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * bool * 'loc virtual_reason_desc
+  | RTypeAlias of string * 'loc option * 'loc virtual_reason_desc
   | ROpaqueType of string
   | RTypeParam of string * ('loc virtual_reason_desc * 'loc) * ('loc virtual_reason_desc * 'loc)
   | RTypeof of string
@@ -157,6 +157,7 @@ type 'loc virtual_reason_desc =
   | RRefined of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
+  | RShapeOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string

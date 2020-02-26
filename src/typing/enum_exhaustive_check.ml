@@ -49,7 +49,7 @@ let detect_invalid_check cx (t, (check_reason, check)) =
           match search_for_enum_type cx check_t with
           | SingleEnum (_, { enum_id = check_enum_id; _ }) when ALoc.equal_id enum_id check_enum_id
             ->
-            if not @@ SSet.mem member_name members_remaining then
+            if not @@ SMap.mem member_name members_remaining then
               Flow_js.add_output
                 cx
                 (Error_message.EEnumMemberAlreadyChecked
@@ -59,13 +59,13 @@ let detect_invalid_check cx (t, (check_reason, check)) =
                      enum_reason;
                      member_name;
                    });
-            (SSet.remove member_name members_remaining, SMap.add member_name case_reason seen)
+            (SMap.remove member_name members_remaining, SMap.add member_name case_reason seen)
           | _ -> (members_remaining, seen)
         in
         let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
         begin
-          match (SSet.choose_opt left_over, default_case) with
-          | (Some remaining_member_to_check, None) ->
+          match (SMap.choose_opt left_over, default_case) with
+          | (Some (remaining_member_to_check, _), None) ->
             Flow_js.add_output
               cx
               (Error_message.EEnumNotAllChecked
@@ -73,7 +73,7 @@ let detect_invalid_check cx (t, (check_reason, check)) =
                    reason = check_reason;
                    enum_reason;
                    remaining_member_to_check;
-                   number_remaining_members_to_check = SSet.cardinal left_over;
+                   number_remaining_members_to_check = SMap.cardinal left_over;
                  })
           | (None, Some default_case_reason) ->
             Flow_js.add_output
@@ -83,8 +83,11 @@ let detect_invalid_check cx (t, (check_reason, check)) =
           | _ -> ()
         end
       | ExhaustiveCheckInvalid reasons ->
+        let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
         List.iter
           (fun reason ->
-            Flow_js.add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; members }))
+            Flow_js.add_output
+              cx
+              (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
           reasons
     end

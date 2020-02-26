@@ -42,6 +42,12 @@ echo
 assert_ok "$FLOW" coverage --strip-root --pretty coverage.js
 
 echo "-----------------------------"
+echo "any-refinement.js"
+echo "-----------------------------"
+echo
+assert_ok "$FLOW" coverage --strip-root --pretty any-refinement.js
+
+echo "-----------------------------"
 echo "unicode.js"
 echo "-----------------------------"
 echo

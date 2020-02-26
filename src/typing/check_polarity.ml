@@ -153,7 +153,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance
-    | ShapeT t -> check_polarity cx ?trace tparams polarity t
+    | ShapeT (_, t) -> check_polarity cx ?trace tparams polarity t
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _

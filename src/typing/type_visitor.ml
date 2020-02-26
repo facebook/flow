@@ -54,7 +54,7 @@ class ['a] t =
       | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
       | MergedT (_, uses) -> List.fold_left (self#use_type_ cx) acc uses
-      | ShapeT t -> self#type_ cx pole acc t
+      | ShapeT (_, t) -> self#type_ cx pole acc t
       | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
@@ -181,12 +181,12 @@ class ['a] t =
       | SingletonBoolP _ -> acc
       | SingletonStrP _ -> acc
       | SingletonNumP _ -> acc
-      | BoolP -> acc
+      | BoolP _ -> acc
       | FunP -> acc
-      | NumP -> acc
+      | NumP _ -> acc
       | ObjP -> acc
-      | StrP -> acc
-      | SymbolP -> acc
+      | StrP _ -> acc
+      | SymbolP _ -> acc
       | VoidP -> acc
       | ArrP -> acc
       | PropExistsP _ -> acc

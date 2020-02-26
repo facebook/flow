@@ -226,41 +226,6 @@ let is_builtin_or_flowlib cx =
       end
     | _ -> false)
 
-let apply_docblock_overrides (mtdt : Context.metadata) docblock_info =
-  Context.(
-    let metadata =
-      let jsx =
-        match Docblock.jsx docblock_info with
-        | Some (Docblock.Jsx_pragma (expr, jsx_expr)) ->
-          let jsx_expr = Ast_loc_utils.loc_to_aloc_mapper#expression jsx_expr in
-          Options.Jsx_pragma (expr, jsx_expr)
-        | Some Docblock.Csx_pragma -> Options.Jsx_csx
-        | None -> Options.Jsx_react
-      in
-      { mtdt with jsx }
-    in
-    let metadata =
-      match Docblock.flow docblock_info with
-      | None -> metadata
-      | Some Docblock.OptIn -> { metadata with checked = true }
-      | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true }
-      | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true }
-      | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
-      (* --all (which sets metadata.checked = true) overrides @noflow, so there are
-     currently no scenarios where we'd change checked = true to false. in the
-     future, there may be a case where checked defaults to true (but is not
-     forced to be true ala --all), but for now we do *not* want to force
-     checked = false here. *)
-      | Some Docblock.OptOut -> metadata
-    in
-    let metadata =
-      if Docblock.preventMunge docblock_info then
-        { metadata with munge_underscores = false }
-      else
-        metadata
-    in
-    metadata)
-
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
    * type without actually creating the flow so as not to disturb type inference.
@@ -394,7 +359,7 @@ let merge_component
       (fun (cxs, tasts, impl_cxs) filename ->
         (* create cx *)
         let info = get_docblock_unsafe filename in
-        let metadata = apply_docblock_overrides metadata info in
+        let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
         let rev_table = FilenameMap.find filename rev_aloc_tables in
         let cx = Context.make sig_cx metadata filename aloc_tables rev_table module_ref phase in
@@ -823,7 +788,7 @@ module ContextOptimizer = struct
         SigHash.add_aloc sig_hash (enum_id :> ALoc.t);
         Base.List.iter
           ~f:(SigHash.add sig_hash)
-          (SSet.elements members |> Base.List.stable_sort ~compare:String.compare);
+          (SMap.keys members |> Base.List.stable_sort ~compare:String.compare);
         e'
 
       method! type_ cx pole t =

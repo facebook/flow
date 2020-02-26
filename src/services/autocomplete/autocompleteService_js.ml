@@ -114,7 +114,7 @@ let lsp_completion_of_type =
       Some Lsp.Completion.Variable)
 
 let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
-  let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
+  let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   let func_details =
     match ty with
@@ -146,6 +146,7 @@ let ty_normalizer_options =
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
       expand_toplevel_members = None;
+      max_depth = Some 50;
     }
 
 type autocomplete_service_result =
@@ -323,7 +324,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
   | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
   | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
-    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ ) as t ->
+    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ | EnumDecl _ ) as t ->
     (SMap.empty, [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)])
   | Any _
   | Top
@@ -334,7 +335,6 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | TypeOf _
   | ClassDecl _
   | InterfaceDecl _
-  | EnumDecl _
   | Utility _
   | Module _
   | Mu _

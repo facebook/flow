@@ -315,3 +315,6 @@ assert_ok \
 printf "suggest_optional_chaining_3.js = "
 assert_ok \
   "$FLOW" autocomplete --lsp suggest_optional_chaining_3.js 4 3 < suggest_optional_chaining_3.js
+
+printf "enums.js = "
+assert_ok "$FLOW" autocomplete --lsp enums.js 10 3 < enums.js

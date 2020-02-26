@@ -158,7 +158,7 @@ let substituter =
                * so we can point at the op which instantiated the types that
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in
-              EvalT (x', TypeDestructorT (use_op, r, d'), Eval.generate_id ())
+              Flow_cache.Eval.id x' (TypeDestructorT (use_op, r, d'))
           (* We only want to change the EvalT id if the rest of the EvalT actually changed *)
           | EvalT (t', dt, _id) ->
             let t'' = self#type_ cx map_cx t' in
@@ -166,7 +166,7 @@ let substituter =
             if t' == t'' && dt == dt' then
               t
             else
-              EvalT (t'', dt', Eval.generate_id ())
+              Flow_cache.Eval.id t'' dt'
           | ModuleT _
           | InternalT (ExtendsT _) ->
             failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
@@ -176,8 +176,8 @@ let substituter =
           t
         else
           match Reason.desc_of_reason ~unwrap:false (reason_of_t t_out) with
-          | Reason.RTypeAlias (name, true, d) ->
-            let desc = Reason.RTypeAlias (name, false, d) in
+          | Reason.RTypeAlias (name, Some _, d) ->
+            let desc = Reason.RTypeAlias (name, None, d) in
             mod_reason_of_t (Reason.replace_desc_reason desc) t_out
           | _ -> t_out
 

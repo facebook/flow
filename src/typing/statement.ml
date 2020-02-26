@@ -979,15 +979,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           } ) ) as stmt ->
     let r = DescFormat.type_reason name name_loc in
     let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-    let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
+    let (((t_loc, t), _) as right_ast) = Anno.convert cx tparams_map right in
     let t =
-      let mod_reason = update_desc_reason (fun desc -> RTypeAlias (name, true, desc)) in
-      let rec loop = function
-        | ExactT (r, t) -> ExactT (mod_reason r, loop t)
-        | MaybeT (r, t) -> MaybeT (mod_reason r, loop t)
-        | t -> mod_reason_of_t mod_reason t
-      in
-      loop t
+      mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some t_loc, desc))) t
     in
     let type_ =
       poly_type_of_tparams
@@ -5713,7 +5707,7 @@ and jsx_title cx openingElement children closingElement locs =
       let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
       let (_, children) = collapse_children cx children in
       (t, name, attributes, children)
-    | (Identifier (loc, { Identifier.name }), Options.Jsx_react, _) ->
+    | (Identifier (loc, { Identifier.name }), _, _) ->
       if Type_inference_hooks_js.dispatch_id_hook cx name loc then
         let t = Unsoundness.at InferenceHooks loc_element in
         let name = Identifier ((loc, t), { Identifier.name }) in
@@ -5721,54 +5715,23 @@ and jsx_title cx openingElement children closingElement locs =
         let (_, children) = collapse_children cx children in
         (t, name, attributes, children)
       else
-        let reason = mk_reason (RReactElement (Some name)) loc_element in
+        let reason =
+          match jsx_mode with
+          | Options.Jsx_react -> mk_reason (RReactElement (Some name)) loc_element
+          | Options.Jsx_pragma _ -> mk_reason (RJSXElement (Some name)) loc_element
+        in
         let c =
           if name = String.capitalize_ascii name then
             identifier cx (mk_ident ~comments:None name) loc
           else
-            DefT (mk_reason (RIdentifier name) loc, make_trust (), SingletonStrT name)
+            let strt =
+              (* TODO: why are these different? *)
+              match jsx_mode with
+              | Options.Jsx_react -> SingletonStrT name
+              | Options.Jsx_pragma _ -> StrT (Literal (None, name))
+            in
+            DefT (mk_reason (RIdentifier name) loc, make_trust (), strt)
         in
-        let (o, attributes', unresolved_params, children) =
-          jsx_mk_props cx reason c name attributes children
-        in
-        let t = jsx_desugar cx name c o attributes unresolved_params locs in
-        let name = Identifier ((loc, c), { Identifier.name }) in
-        (t, name, attributes', children)
-    | (Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _) ->
-      if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-        let t = Unsoundness.at InferenceHooks loc_element in
-        let name = Identifier ((loc, t), { Identifier.name }) in
-        let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-        let (_, children) = collapse_children cx children in
-        (t, name, attributes, children)
-      else
-        let reason = mk_reason (RJSXElement (Some name)) loc_element in
-        let c =
-          if name = String.capitalize_ascii name then
-            identifier cx (mk_ident ~comments:None name) loc
-          else
-            DefT (mk_reason (RIdentifier name) loc, make_trust (), StrT (Literal (None, name)))
-        in
-        let (o, attributes', unresolved_params, children) =
-          jsx_mk_props cx reason c name attributes children
-        in
-        let t = jsx_desugar cx name c o attributes unresolved_params locs in
-        let name = Identifier ((loc, c), { Identifier.name }) in
-        (t, name, attributes', children)
-    | (Identifier (loc, { Identifier.name }), Options.Jsx_csx, _) ->
-      (*
-       * It's a bummer to duplicate this case, but CSX does not want the
-       * "if name = String.capitalize name" restriction.
-       *)
-      if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-        let t = Unsoundness.at InferenceHooks loc_element in
-        let name = Identifier ((loc, t), { Identifier.name }) in
-        let attributes' = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-        let (_, children) = collapse_children cx children in
-        (t, name, attributes', children)
-      else
-        let reason = mk_reason (RJSXElement (Some name)) loc_element in
-        let c = identifier cx (mk_ident ~comments:None name) loc in
         let (o, attributes', unresolved_params, children) =
           jsx_mk_props cx reason c name attributes children
         in
@@ -5792,7 +5755,7 @@ and jsx_title cx openingElement children closingElement locs =
         | None -> Tast_utils.error_mapper#jsx_member_expression member
       in
       (t, MemberExpression member', attributes', children)
-    | (MemberExpression member, Options.(Jsx_csx | Jsx_pragma _), _) ->
+    | (MemberExpression member, Options.Jsx_pragma _, _) ->
       let t = Unsoundness.at InferenceHooks loc_element in
       let name' = Tast_utils.error_mapper#jsx_name name in
       let el_name = jsx_title_member_to_string member in
@@ -6056,10 +6019,6 @@ and jsx_desugar cx name component_t props attributes children locs =
     | _ ->
       let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
       func_call cx reason ~use_op ~call_strict_arity:false f None argts)
-  | Options.Jsx_csx ->
-    let reason = mk_reason (RJSXFunctionCall name) loc_element in
-    let use_op = Op (JSXCreateElement { op = reason; component = reason_of_t component_t }) in
-    func_call cx reason ~use_op ~call_strict_arity:false component_t None [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *
@@ -6477,12 +6436,12 @@ and predicates_of_condition cx ~cond e =
     let bool = BoolT.at loc |> with_trust bogus_trust in
     let pred_and_not_undef =
       match typename with
-      | "boolean" -> Some (BoolP, true)
+      | "boolean" -> Some (BoolP loc, true)
       | "function" -> Some (FunP, true)
-      | "number" -> Some (NumP, true)
+      | "number" -> Some (NumP loc, true)
       | "object" -> Some (ObjP, true)
-      | "string" -> Some (StrP, true)
-      | "symbol" -> Some (SymbolP, true)
+      | "string" -> Some (StrP loc, true)
+      | "symbol" -> Some (SymbolP loc, true)
       | "undefined" -> Some (VoidP, false)
       | _ -> None
     in
@@ -7996,8 +7955,11 @@ and warn_or_ignore_optional_chaining optional cx loc =
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
   let { id = (name_loc, { Ast.Identifier.name; _ }); body } = enum in
-  let name_of_defaulted_member (_, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) =
-    name
+  let defaulted_members =
+    Base.List.fold
+      ~init:SMap.empty
+      ~f:(fun acc (member_loc, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) ->
+        SMap.add name member_loc acc)
   in
   let enum_id = Context.make_aloc_id cx name_loc in
   let (representation_t, members) =
@@ -8007,7 +7969,7 @@ and mk_enum cx ~enum_reason enum =
       let (members, bool_type, _) =
         Base.List.fold_left
           ~f:
-            (fun (names, bool_type, seen_values)
+            (fun (members_map, bool_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, init_value) = init in
             let bool_type =
@@ -8027,8 +7989,8 @@ and mk_enum cx ~enum_reason enum =
                 seen_values
               | None -> BoolMap.add init_value member_loc seen_values
             in
-            (SSet.add name names, bool_type, seen_values))
-          ~init:(SSet.empty, None, BoolMap.empty)
+            (SMap.add name member_loc members_map, bool_type, seen_values))
+          ~init:(SMap.empty, None, BoolMap.empty)
           members
       in
       (DefT (reason, literal_trust (), BoolT bool_type), members)
@@ -8037,7 +7999,7 @@ and mk_enum cx ~enum_reason enum =
       let (members, num_type, _) =
         Base.List.fold_left
           ~f:
-            (fun (names, num_type, seen_values)
+            (fun (members_map, num_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
             let num_type =
@@ -8056,8 +8018,8 @@ and mk_enum cx ~enum_reason enum =
                 seen_values
               | None -> NumberMap.add init_value member_loc seen_values
             in
-            (SSet.add name names, num_type, seen_values))
-          ~init:(SSet.empty, Truthy, NumberMap.empty)
+            (SMap.add name member_loc members_map, num_type, seen_values))
+          ~init:(SMap.empty, Truthy, NumberMap.empty)
           members
       in
       (DefT (reason, literal_trust (), NumT num_type), members)
@@ -8066,7 +8028,7 @@ and mk_enum cx ~enum_reason enum =
       let (members, str_type, _) =
         Base.List.fold_left
           ~f:
-            (fun (names, str_type, seen_values)
+            (fun (members_map, str_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
             let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
             let str_type =
@@ -8085,18 +8047,17 @@ and mk_enum cx ~enum_reason enum =
                 seen_values
               | None -> SMap.add init_value member_loc seen_values
             in
-            (SSet.add name names, str_type, seen_values))
-          ~init:(SSet.empty, Truthy, SMap.empty)
+            (SMap.add name member_loc members_map, str_type, seen_values))
+          ~init:(SMap.empty, Truthy, SMap.empty)
           members
       in
       (DefT (reason, literal_trust (), StrT str_type), members)
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
       ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
-        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
+        defaulted_members members )
     | (_, SymbolBody { SymbolBody.members }) ->
       let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
-      ( DefT (reason, literal_trust (), SymbolT),
-        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
+      (DefT (reason, literal_trust (), SymbolT), defaulted_members members)
   in
   { enum_id; enum_name = name; members; representation_t }

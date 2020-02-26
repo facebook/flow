@@ -1114,7 +1114,7 @@ struct
         (* Debugging *)
         (*************)
         | (_, DebugPrintT reason) ->
-          let str = Debug_js.jstr_of_t ~depth:10 cx l in
+          let str = Debug_js.dump_t ~depth:10 cx l in
           add_output cx ~trace (Error_message.EDebugPrint (reason, str))
         | (DefT (_, _, NumT (Literal (_, (n, _)))), DebugSleepT _) ->
           let n = ref n in
@@ -2145,6 +2145,7 @@ struct
           in
           let void_t = VoidT.why r |> with_trust bogus_trust in
           let null_t = NullT.why r |> with_trust bogus_trust in
+          let t = push_type_alias_reason r t in
           let rep = UnionRep.make (f void_t) (f null_t) [f t] in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
         | (MaybeT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _)) ->
@@ -2153,11 +2154,14 @@ struct
            * part is that spreads should distribute through unions, so `{...?T}`
            * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
           rec_flow cx trace (t, u)
-        | (MaybeT (_, t), UseT (_, MaybeT _)) -> rec_flow cx trace (t, u)
+        | (MaybeT (r, t), UseT (_, MaybeT _)) ->
+          let t = push_type_alias_reason r t in
+          rec_flow cx trace (t, u)
         | (MaybeT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (MaybeT (reason, t), _) ->
           let reason = replace_desc_reason RNullOrVoid reason in
+          let t = push_type_alias_reason reason t in
           rec_flow cx trace (NullT.make reason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (VoidT.make reason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
@@ -2815,6 +2819,7 @@ struct
           let filter_void t = TypeUtil.quick_subtype checked_trust t void in
           let filter_null t = TypeUtil.quick_subtype checked_trust t null in
           let filter_null_and_void t = filter_void t || filter_null t in
+          let maybe = push_type_alias_reason r maybe in
           (* if the union doesn't contain void or null,
          then everything in it must be upper-bounded by maybe *)
           begin
@@ -3007,7 +3012,9 @@ struct
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         (* maybe and optional types are just special union types *)
-        | (t1, UseT (use_op, MaybeT (_, t2))) -> rec_flow cx trace (t1, UseT (use_op, t2))
+        | (t1, UseT (use_op, MaybeT (r2, t2))) ->
+          let t2 = push_type_alias_reason r2 t2 in
+          rec_flow cx trace (t1, UseT (use_op, t2))
         | (t1, UseT (use_op, OptionalT { reason = _; type_ = t2; use_desc = _ })) ->
           rec_flow cx trace (t1, UseT (use_op, t2))
         (* special treatment for some operations on intersections: these
@@ -3408,10 +3415,13 @@ struct
         (* ExactT<X> comes from annotation, may behave as LB or UB *)
 
         (* when $Exact<LB> ~> UB, forward to MakeExactT *)
-        | (ExactT (r, t), _) -> rec_flow cx trace (t, MakeExactT (r, Upper u))
+        | (ExactT (r, t), _) ->
+          let t = push_type_alias_reason r t in
+          rec_flow cx trace (t, MakeExactT (r, Upper u))
         (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
         | (DefT (_, _, ObjT { flags; _ }), UseT (use_op, ExactT (r, t))) ->
           if flags.exact && Obj_type.sealed_in_op r flags.sealed then
+            let t = push_type_alias_reason r t in
             rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
           else
             let reasons = FlowError.ordered_reasons (reason_of_t l, r) in
@@ -3428,7 +3438,7 @@ struct
         (* Shapes need to be trapped here to avoid error-ing when used as exact types.
            Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
            to be used just as o is allowed to be used. *)
-        | (ShapeT o, (UseT (_, ExactT _) | MakeExactT _)) -> rec_flow cx trace (o, u)
+        | (ShapeT (_, o), (UseT (_, ExactT _) | MakeExactT _)) -> rec_flow cx trace (o, u)
         (* inexact LB ~> $Exact<UB>. error *)
         | (_, UseT (use_op, ExactT (ru, _))) ->
           let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
@@ -4634,24 +4644,24 @@ struct
 
         (* When something of type ShapeT(o) is used, it behaves like it had type o.
 
-        On the other hand, things that can be passed to something of type
-        ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
-        those properties should be transferable to o.
+           On the other hand, things that can be passed to something of type
+           ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
+           those properties should be transferable to o.
 
-        Because a property x with a type OptionalT(t) could be considered
-        missing or having type t, we consider such a property to be transferable
-        if t is a subtype of x's type in o. Otherwise, the property should be
-        assignable to o.
+           Because a property x with a type OptionalT(t) could be considered
+           missing or having type t, we consider such a property to be transferable
+           if t is a subtype of x's type in o. Otherwise, the property should be
+           assignable to o.
 
-        TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
-        ObjRestT express related meta-operations on objects. Consolidate these
-        meta-operations and ensure consistency of their semantics. **)
-        | (ShapeT o, _) -> rec_flow cx trace (o, u)
-        | (DefT (reason, _, ObjT ({ call_t = None; _ } as o)), UseT (use_op, ShapeT proto)) ->
+           TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
+           ObjRestT express related meta-operations on objects. Consolidate these
+           meta-operations and ensure consistency of their semantics. **)
+        | (ShapeT (r, o), _) -> rec_flow cx trace (reposition cx ~trace (aloc_of_reason r) o, u)
+        | (DefT (reason, _, ObjT ({ call_t = None; _ } as o)), UseT (use_op, ShapeT (_, proto))) ->
           let props = Context.find_real_props cx o.props_tmap in
           match_shape cx trace ~use_op proto reason props
         | ( DefT (reason, _, InstanceT (_, _, _, ({ inst_call_t = None; _ } as i))),
-            UseT (use_op, ShapeT proto) ) ->
+            UseT (use_op, ShapeT (_, proto)) ) ->
           let own_props = Context.find_props cx i.own_props in
           let proto_props = Context.find_props cx i.proto_props in
           let proto_props =
@@ -4667,7 +4677,7 @@ struct
          * this.
          *
          * This invariant is important for the React setState() type definition. *)
-        | (_, UseT (use_op, ShapeT o)) ->
+        | (_, UseT (use_op, ShapeT (_, o))) ->
           add_output
             cx
             ~trace
@@ -6400,12 +6410,13 @@ struct
             GetPropT (_, access_reason, Named (_, member_name), tout) ) ->
           (* We guarantee in the parser that enum member names won't start with lowercase
            * "a" through "z", these are reserved for methods. *)
-          if Base.Char.is_lowercase member_name.[0] then
+          if (not @@ Base.String.is_empty member_name) && Base.Char.is_lowercase member_name.[0]
+          then
             rec_flow
               cx
               trace
               (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
-          else if SSet.mem member_name members then
+          else if SMap.mem member_name members then
             let enum_type =
               reposition
                 cx
@@ -6414,25 +6425,25 @@ struct
                 (mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum)
             in
             rec_flow_t cx trace ~use_op:unknown_use (enum_type, tout)
-          else (
+          else
+            let suggestion = typo_suggestion (SMap.keys members) member_name in
             add_output
               cx
               ~trace
               (Error_message.EEnumInvalidMemberAccess
-                 { member_name = Some member_name; members; access_reason; enum_reason });
+                 { member_name = Some member_name; suggestion; access_reason; enum_reason });
             rec_flow_t cx trace ~use_op:unknown_use (AnyT.error access_reason, tout)
-          )
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
         | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
           ->
           rec_flow cx trace (enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum), u)
-        | (DefT (enum_reason, _, EnumObjectT { members; _ }), GetElemT (_, access_reason, _, _)) ->
+        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, access_reason, _, _)) ->
           add_output
             cx
             ~trace
             (Error_message.EEnumInvalidMemberAccess
-               { member_name = None; members; access_reason; enum_reason })
+               { member_name = None; suggestion = None; access_reason; enum_reason })
         | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, _))
         | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, _)) ->
           add_output
@@ -7624,7 +7635,7 @@ struct
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ })
-    | UseT (use_op, ShapeT t) ->
+    | UseT (use_op, ShapeT (_, t)) ->
       covariant_flow ~use_op t;
       true
     | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance })) ->
@@ -9585,7 +9596,6 @@ struct
     writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin action
 
   and match_shape cx trace ~use_op proto reason props =
-    (* TODO: ShapeT should have its own reason *)
     let reason_op = reason_of_t proto in
     SMap.iter
       (fun x p ->
@@ -9776,18 +9786,18 @@ struct
     (***********************)
     (* typeof _ ~ "boolean" *)
     (***********************)
-    | BoolP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.boolean l, t)
-    | NotP BoolP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_boolean l, t)
+    | BoolP loc -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.boolean loc l, t)
+    | NotP (BoolP _) -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_boolean l, t)
     (***********************)
     (* typeof _ ~ "string" *)
     (***********************)
-    | StrP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.string l, t)
-    | NotP StrP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_string l, t)
+    | StrP loc -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.string loc l, t)
+    | NotP (StrP _) -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_string l, t)
     (***********************)
     (* typeof _ ~ "symbol" *)
     (***********************)
-    | SymbolP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.symbol l, t)
-    | NotP SymbolP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_symbol l, t)
+    | SymbolP loc -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.symbol loc l, t)
+    | NotP (SymbolP _) -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_symbol l, t)
     (*********************)
     (* _ ~ "some string" *)
     (*********************)
@@ -9809,8 +9819,8 @@ struct
     (***********************)
     (* typeof _ ~ "number" *)
     (***********************)
-    | NumP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.number l, t)
-    | NotP NumP -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_number l, t)
+    | NumP loc -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.number loc l, t)
+    | NotP (NumP _) -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_number l, t)
     (***********************)
     (* typeof _ ~ "function" *)
     (***********************)

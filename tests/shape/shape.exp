@@ -1,3 +1,21 @@
+Error --------------------------------------------------------------------------------------------------- spread.js:2:28
+
+Cannot determine a type for object literal [1]. object type [2] is inexact, so it may contain `y` with a type that
+conflicts with `y`'s definition in object literal [1]. Can you make object type [2] exact?
+
+   spread.js:2:28
+   2| const o = { y: 0, x: 0, ...p, }; // error: cannot determine type inexact
+                                 ^
+
+References:
+   spread.js:2:11
+   2| const o = { y: 0, x: 0, ...p, }; // error: cannot determine type inexact
+                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   spread.js:1:23
+   1| declare var p: $Shape<{ x: number, ... }>;
+                            ^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:11:23
 
 Cannot assign `f()` to `a` because undefined [1] is incompatible with `$Shape` of `Foo` [2].
@@ -229,4 +247,4 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors

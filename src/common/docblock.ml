@@ -12,19 +12,12 @@ type flow_mode =
   | OptInWeak
   | OptOut
 
-type jsx_pragma =
-  (*
-   * Specifies a function that should be invoked instead of React.createElement
-   * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
-   * followed: children are varargs after a props argument.
-   *)
-  | Jsx_pragma of (string * (Loc.t, Loc.t) Flow_ast.Expression.t)
-  (*
-   * Alternate mode for interpreting JSX syntax. The element name is treated
-   * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
-   * Children are part of props instead of a separate argument.
-   *)
-  | Csx_pragma
+(*
+  * Specifies a function that should be invoked instead of React.createElement
+  * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
+  * followed: children are varargs after a props argument.
+  *)
+type jsx_pragma = string * (Loc.t, Loc.t) Flow_ast.Expression.t
 
 type t = {
   flow: flow_mode option;
