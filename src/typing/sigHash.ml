@@ -493,15 +493,15 @@ let add_loc state loc =
     add_int state loc._end.column)
 
 let add_aloc state aloc =
-  (* When abstract locations (and types-first) are enabled, this should always be true. This is
-   * because the sig AST contains only abstract locations, and the sig context, under types-first,
+  (* When keyed locations (and types-first) are enabled, this should always be true. This is
+   * because the sig AST contains only keyed locations, and the sig context, under types-first,
    * is built from the sig AST.
    *
    * When they are not enabled, this should always be false.
    *
    * TODO assert this based on config flags rather than checking it.
    *)
-  if ALoc.ALocRepresentationDoNotUse.is_abstract aloc then (
+  if ALoc.ALocRepresentationDoNotUse.is_keyed aloc then (
     let source = ALoc.source aloc in
     let key = ALoc.ALocRepresentationDoNotUse.get_key_exn aloc in
     add_option state add_file_key source;

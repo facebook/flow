@@ -445,7 +445,7 @@ let do_parse ~parse_options ~info content file =
             let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
             let (aloc_table, sig_ast) =
               if abstract_locations then
-                let (aloc_table, sig_ast) = Ast_loc_utils.abstractify_alocs file sig_ast in
+                let (aloc_table, sig_ast) = Ast_loc_utils.keyify_alocs file sig_ast in
                 (Some aloc_table, sig_ast)
               else
                 (None, sig_ast)
