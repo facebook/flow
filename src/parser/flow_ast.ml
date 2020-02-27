@@ -1406,11 +1406,16 @@ and Class : sig
 
     and ('M, 'T) t' = {
       key: ('M, 'T) Expression.Object.Property.key;
-      value: ('M, 'T) Expression.t option;
+      value: ('M, 'T) value;
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
     }
+
+    and ('M, 'T) value =
+      | Declared
+      | Uninitialized
+      | Initialized of ('M, 'T) Expression.t
     [@@deriving show]
   end
 
@@ -1419,7 +1424,7 @@ and Class : sig
 
     and ('M, 'T) t' = {
       key: 'M PrivateName.t;
-      value: ('M, 'T) Expression.t option;
+      value: ('M, 'T) Class.Property.value;
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;

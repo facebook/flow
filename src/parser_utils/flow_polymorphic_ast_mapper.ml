@@ -264,16 +264,24 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Class.Property in
       let { key; value; annot; static; variance } = prop in
       let key' = this#object_key key in
-      let value' = Base.Option.map ~f:this#expression value in
+      let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
       { key = key'; value = value'; annot = annot'; static; variance = variance' }
+
+    method class_property_value (value : ('M, 'T) Ast.Class.Property.value)
+        : ('N, 'U) Ast.Class.Property.value =
+      let open Ast.Class.Property in
+      match value with
+      | Declared -> Declared
+      | Uninitialized -> Uninitialized
+      | Initialized expr -> Initialized (this#expression expr)
 
     method class_private_field (prop : ('M, 'T) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
       let { key; value; annot; static; variance } = prop in
       let key' = this#private_name key in
-      let value' = Base.Option.map ~f:this#expression value in
+      let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
       { key = key'; value = value'; annot = annot'; static; variance = variance' }

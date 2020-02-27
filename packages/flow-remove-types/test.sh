@@ -9,6 +9,11 @@ echo "Test: flow-remove-types test/source.js"
 DIFF=$(./flow-remove-types test/source.js | diff test/expected.js -);
 if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
 
+# Test expected output with --ignore-uninitialized-fields flag
+echo "Test: flow-remove-types --ignore-uninitialized-fields test/source.js"
+DIFF=$(./flow-remove-types --ignore-uninitialized-fields test/source.js | diff test/expected-uninitialized-fields.js -);
+if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
+
 # Test expected output with --pretty flag
 echo "Test: flow-remove-types --pretty test/source.js"
 DIFF=$(./flow-remove-types --pretty test/source.js | diff test/expected-pretty.js -);

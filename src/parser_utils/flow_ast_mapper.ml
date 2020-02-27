@@ -357,18 +357,30 @@ class ['loc] mapper =
       let open Ast.Class.Property in
       let { key; value; annot; static = _; variance = _ } = prop in
       let key' = this#object_key key in
-      let value' = map_opt this#expression value in
+      let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       if key == key' && value == value' && annot' == annot then
         prop
       else
         { prop with key = key'; value = value'; annot = annot' }
 
+    method class_property_value (value : ('loc, 'loc) Ast.Class.Property.value) =
+      let open Ast.Class.Property in
+      match value with
+      | Declared -> value
+      | Uninitialized -> value
+      | Initialized x ->
+        let x' = this#expression x in
+        if x == x' then
+          value
+        else
+          Initialized x'
+
     method class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
       let { key; value; annot; static = _; variance = _ } = prop in
       let key' = this#private_name key in
-      let value' = map_opt this#expression value in
+      let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       if key == key' && value == value' && annot' == annot then
         prop

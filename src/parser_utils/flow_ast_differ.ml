@@ -887,10 +887,17 @@ let program
     ( if key1 != key2 || s1 != s2 || var1 != var2 then
       None
     else
-      let vals = diff_if_changed_nonopt_fn expression val1 val2 in
+      let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [vals; annots] )
     |> Base.Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
+  and class_property_value val1 val2 : node change list option =
+    let open Ast.Class.Property in
+    match (val1, val2) with
+    | (Declared, Declared) -> Some []
+    | (Uninitialized, Uninitialized) -> Some []
+    | (Initialized e1, Initialized e2) -> Some (diff_if_changed expression e1 e2)
+    | _ -> None
   and class_method
       (m1 : (Loc.t, Loc.t) Ast.Class.Method.t') (m2 : (Loc.t, Loc.t) Ast.Class.Method.t') :
       node change list option =

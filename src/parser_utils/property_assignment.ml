@@ -274,7 +274,7 @@ let eval_property_assignment class_body =
          ssa_walk#expecting_return_or_throw (fun () ->
              List.iter
                (function
-                 | (property_id, Some default_initializer) ->
+                 | (property_id, Ast.Class.Property.Initialized default_initializer) ->
                    ssa_walk#initialize_property property_id default_initializer
                  | _ -> ())
                property_declarations;

@@ -23,6 +23,11 @@ var usage = 'Usage: flow-remove-types [options] [sources] \n' +
 '  -a, --all         Transform all files, not just those with a @flow comment\n' +
 '  -p, --pretty      Remove flow types without replacing with spaces, \n' +
 '                    producing prettier output but may require using source maps\n' +
+'      --ignore-uninitialized-fields\n' +
+'                    Removes uninitialized class fields (`foo;`, `foo: string;`)\n' +
+'                    completely rather than only removing the type. THIS IS NOT\n' +
+'                    SPEC COMPLIANT! Instead, use `declare foo: string;` for\n' +
+'                    type-only fields.\n' +
 '  -m, --sourcemaps  Also output source map files. Optionally pass "inline"\n' +
 '  -q, --quiet       Does not produce any output concerning successful progress.\n' +
 
@@ -79,6 +84,7 @@ var outDir;
 var outFile;
 var all;
 var pretty;
+var ignoreUninitializedFields;
 var sourceMaps;
 var inlineSourceMaps;
 var quiet;
@@ -104,6 +110,8 @@ while (i < process.argv.length) {
     all = true;
   } else if (arg === '-p' || arg === '--pretty') {
     pretty = true;
+  } else if (arg === '--ignore-uninitialized-fields') {
+    ignoreUninitializedFields = true;
   } else if (arg === '-m' || arg === '--sourcemaps') {
     sourceMaps = true;
     if (process.argv[i] === 'inline') {
@@ -242,7 +250,11 @@ function btoa(str) {
 
 function transformSource(content, filepath) {
   try {
-    return flowRemoveTypes(content, { all: all, pretty: pretty });
+    return flowRemoveTypes(content, {
+      all: all,
+      pretty: pretty,
+      ignoreUninitializedFields: ignoreUninitializedFields,
+    });
   } catch (error) {
     if (error.loc) {
       var line = error.loc.line - 1;

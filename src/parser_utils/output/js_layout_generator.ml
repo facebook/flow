@@ -1561,11 +1561,21 @@ and class_method (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); s
         ] )
 
 and class_property_helper loc key value static annot variance_ =
+  let (declare, value) =
+    match value with
+    | Ast.Class.Property.Declared -> (true, None)
+    | Ast.Class.Property.Uninitialized -> (false, None)
+    | Ast.Class.Property.Initialized expr -> (false, Some expr)
+  in
   source_location_with_comments
     ( loc,
       with_semicolon
         (fuse
            [
+             ( if declare then
+               fuse [Atom "declare"; space]
+             else
+               Empty );
              ( if static then
                fuse [Atom "static"; space]
              else

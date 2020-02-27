@@ -65,6 +65,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method class_property : ('M, 'T) Ast.Class.Property.t' -> ('N, 'U) Ast.Class.Property.t'
 
+    method class_property_value :
+      ('M, 'T) Ast.Class.Property.value -> ('N, 'U) Ast.Class.Property.value
+
     method comment : 'M Ast.Comment.t -> 'N Ast.Comment.t
 
     method t_comment : 'T Ast.Comment.t -> 'U Ast.Comment.t

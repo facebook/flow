@@ -7187,15 +7187,17 @@ and mk_class_sig =
       let (annot_t, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
       let (field, get_init) =
         match init with
-        | None -> (Annot annot_t, Fn.const None)
-        | Some expr ->
+        | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
+        | Ast.Class.Property.Uninitialized ->
+          (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
+        | Ast.Class.Property.Initialized expr ->
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer
               ( Func_stmt_sig.field_initializer tparams_map reason expr annot_t,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
             fun () ->
-              Some (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
-          )
+              Ast.Class.Property.Initialized
+                (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr)) )
       in
       (field, annot_t, annot_ast, get_init)
     in
@@ -7399,7 +7401,11 @@ and mk_class_sig =
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
-              if value <> None then warn_or_ignore_class_properties cx ~static loc;
+              (match value with
+              | Property.Declared
+              | Property.Uninitialized ->
+                ()
+              | Property.Initialized _ -> warn_or_ignore_class_properties cx ~static loc);
 
               let reason = mk_reason (RProperty (Some name)) loc in
               let polarity = Anno.polarity variance in
@@ -7426,7 +7432,11 @@ and mk_class_sig =
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
-              if value <> None then warn_or_ignore_class_properties cx ~static loc;
+              (match value with
+              | Property.Declared
+              | Property.Uninitialized ->
+                ()
+              | Property.Initialized _ -> warn_or_ignore_class_properties cx ~static loc);
 
               let reason = mk_reason (RProperty (Some name)) loc in
               let polarity = Anno.polarity variance in
