@@ -6,19 +6,31 @@ const server = http.createServer((req, res) => {
   res.end();
 });
 
-// server.listen(handle[, callback])
+// server.listen(options[, callback])
 // -
-// server.listen(handle);
-server.listen({});
+// server.listen(options);
 server.listen({port: 8080, host: 'localhost', backlog: 123, exclusive: true});
-server.listen({fd: '/var/run/mysocket'});
-// server.listen(handle, callback);
-server.listen({}, () => {});
-server.listen({}, function() {});
+server.listen({path: '/var/run/mysocket'});
+// server.listen(options, callback);
 server.listen({port: 8080, host: 'localhost', backlog: 123, exclusive: true}, () => {});
 server.listen({port: 8080, host: 'localhost', backlog: 123, exclusive: true}, function() {});
-server.listen({fd: '/var/run/mysocket'}, () => {});
-server.listen({fd: '/var/run/mysocket'}, function() {});
+server.listen({path: '/var/run/mysocket'}, () => {});
+server.listen({path: '/var/run/mysocket'}, function() {});
+
+// server.listen(handle[, backlog][, callback])
+// -
+// server.listen(handle);
+server.listen(server);
+server.listen({_handle: {}});
+server.listen({fd: 13});
+// server.listen(handle, backlog);
+server.listen({fd: 13}, 123);
+// server.listen(handle, callback);
+server.listen({fd: 13}, () => {});
+server.listen({fd: 13}, function() {});
+// server.listen(handle, backlog, callback);
+server.listen({fd: 13}, 123, () => {});
+server.listen({fd: 13}, 123, function() {});
 
 // server.listen(path[, callback])
 // -
@@ -64,6 +76,8 @@ server.listen(8000, undefined, 123, () => {});
 server.listen(8000, undefined, 123, function() {});
 
 // These should fail
+server.listen({});
+server.listen({fd: 'file descriptor must be a number'});
 server.listen(() => {}, {});
 server.listen(function() {}, {});
 server.listen({}, () => {}, 'localhost', 123);
