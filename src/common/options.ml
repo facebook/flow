@@ -52,6 +52,7 @@ type trust_mode =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
+  opt_autofix_exports: bool;
   opt_arch: arch;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
@@ -83,7 +84,6 @@ type t = {
   opt_include_warnings: bool;
   opt_lazy_mode: lazy_mode;
   opt_lint_severities: Severity.severity LintSettings.t;
-  opt_lsp_code_actions: bool;
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;

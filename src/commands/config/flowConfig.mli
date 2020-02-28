@@ -54,6 +54,8 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
+val autofix_exports : config -> bool
+
 val babel_loose_array_spread : config -> bool
 
 val disable_live_non_parse_errors : config -> bool
@@ -109,8 +111,6 @@ val include_warnings : config -> bool
 val lazy_mode : config -> Options.lazy_mode option
 
 val log_file : config -> Path.t option
-
-val lsp_code_actions : config -> bool
 
 val max_files_checked_per_worker : config -> int
 
