@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # create_class.js
-printf "create_class.js:3:7 = "
+printf "create_class.js:4:7 = "
 assert_ok "$FLOW" type-at-pos create_class.js 4 7 --strip-root
 printf "create_class.js:19:7 = "
 assert_ok "$FLOW" type-at-pos create_class.js 19 7 --strip-root

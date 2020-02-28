@@ -4,27 +4,25 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# import.js
-printf "import.js:5:1 = "
-assert_ok "$FLOW" type-at-pos import.js 5 1 --strip-root --pretty
+# exports-class-cjs.js
+printf "exports-class-cjs.js:3:24 = "
+assert_ok "$FLOW" type-at-pos exports-class-cjs.js 3 24 --strip-root --pretty
+printf "exports-class-cjs.js:5:25 = "
+assert_ok "$FLOW" type-at-pos exports-class-cjs.js 5 25 --strip-root --pretty
 
-# exports.js
-printf "exports.js:3:24 = "
-assert_ok "$FLOW" type-at-pos exports.js 3 24 --strip-root --pretty
-printf "exports.js:5:25 = "
-assert_ok "$FLOW" type-at-pos exports.js 5 25 --strip-root --pretty
-
-# import_lib.js
-printf "import_lib.js:7:8 = "
-assert_ok "$FLOW" type-at-pos import_lib.js 7 8 --strip-root --pretty
-printf "import_lib.js:7:25 (--expand-json-output) = "
-assert_ok "$FLOW" type-at-pos import_lib.js 7 25 --strip-root --pretty --expand-json-output
-
-# import_lib_named.js
-printf "import_lib_named.js:3:15 (--expand-json-output) = "
-assert_ok "$FLOW" type-at-pos import_lib_named.js 3 15 --strip-root --pretty --expand-json-output
-printf "import_lib_named.js:3:27 (--expand-json-output) = "
-assert_ok "$FLOW" type-at-pos import_lib_named.js 3 27 --strip-root --pretty --expand-json-output
+# import-interface.js
+printf "import-interface.js:3:15 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import-interface.js 3 15 --strip-root --pretty --expand-json-output
+printf "import-interface.js:3:25 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import-interface.js 3 25 --strip-root --pretty --expand-json-output
+printf "import-interface.js:5:15 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import-interface.js 5 15 --strip-root --pretty --expand-json-output
+printf "import-interface.js:5:27 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import-interface.js 5 27 --strip-root --pretty --expand-json-output
+printf "import-interface.js:5:38 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import-interface.js 5 38 --strip-root --pretty --expand-json-output
+printf "import-interface.js:5:48 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import-interface.js 5 48 --strip-root --pretty --expand-json-output
 
 # import-class-as-type.js
 printf "import-class-as-type.js:8:13 = "
@@ -35,6 +33,26 @@ printf "import-class-as-type.js:10:13 = "
 assert_ok "$FLOW" type-at-pos import-class-as-type.js 10 13 --strip-root --pretty
 printf "import-class-as-type.js:11:13 = "
 assert_ok "$FLOW" type-at-pos import-class-as-type.js 11 13 --strip-root --pretty
+
+# import-class_of_poly_instance-es6.js
+printf "import-class_of_poly_instance-es6.js:4:8 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-es6.js 4 8 --strip-root --pretty --expand-json-output
+printf "import-class_of_poly_instance-es6.js:5:13 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-es6.js 5 13 --strip-root --pretty --expand-json-output
+printf "import-class_of_poly_instance-es6.js:7:13 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-es6.js 7 13 --strip-root --pretty --expand-json-output
+printf "import-class_of_poly_instance-es6.js:8:13 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-es6.js 8 13 --strip-root --pretty --expand-json-output
+
+# import-class_of_poly_instance-cjs.js
+printf "import-class_of_poly_instance-cjs.js:3:8 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-cjs.js 3 8 --strip-root --pretty --expand-json-output
+printf "import-class_of_poly_instance-cjs.js:4:13 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-cjs.js 4 13 --strip-root --pretty --expand-json-output
+printf "import-class_of_poly_instance-cjs.js:6:13 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-cjs.js 6 13 --strip-root --pretty --expand-json-output
+printf "import-class_of_poly_instance-cjs.js:7:13 = "
+assert_ok "$FLOW" type-at-pos import-class_of_poly_instance-cjs.js 7 13 --strip-root --pretty --expand-json-output
 
 # import-default.js
 printf "import-default.js:15:13 = "
@@ -51,6 +69,8 @@ printf "import-default.js:20:13 = "
 assert_ok "$FLOW" type-at-pos import-default.js 20 13 --strip-root --pretty
 printf "import-default.js:21:13 = "
 assert_ok "$FLOW" type-at-pos import-default.js 21 13 --strip-root --pretty
+printf "import-default.js:26:7 = "
+assert_ok "$FLOW" type-at-pos import-default.js 26 7 --strip-root --pretty --expand-json-output
 
 # import-rec-export.js
 printf "import-rec-export.js:3:10 = "
@@ -93,18 +113,6 @@ printf "require-class.js:5:16 = "
 assert_ok "$FLOW" type-at-pos require-class.js 5 16 --strip-root --expand-json-output --pretty
 printf "require-class.js:6:16 = "
 assert_ok "$FLOW" type-at-pos require-class.js 6 16 --strip-root --expand-json-output --pretty
-
-# test.js
-printf "test.js:5:1 = "
-assert_ok "$FLOW" type-at-pos test.js 5 1 --strip-root --pretty
-printf "test.js:8:7 = "
-assert_ok "$FLOW" type-at-pos test.js 8 7 --strip-root --pretty
-printf "test.js:10:7 = "
-assert_ok "$FLOW" type-at-pos test.js 10 7 --strip-root --pretty
-printf "test.js:12:7 = "
-assert_ok "$FLOW" type-at-pos test.js 12 7 --strip-root --pretty
-printf "test.js:14:7 = "
-assert_ok "$FLOW" type-at-pos test.js 14 7 --strip-root --pretty
 
 # import-type.js
 printf "import-type.js:3:20 = "

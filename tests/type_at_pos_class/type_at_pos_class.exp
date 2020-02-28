@@ -673,21 +673,14 @@ class-statics-poly.js:17:5 = {
   "start":5,
   "end":5
 }
-declare_class.js:3:15 = {
-  "type":"class C",
-  "reasons":[],
-  "loc":{
-    "source":"declare_class.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":15,"offset":24},
-    "end":{"line":3,"column":15,"offset":25}
-  },
-  "path":"declare_class.js",
-  "line":3,
-  "endline":3,
-  "start":15,
-  "end":15
-}
+declare_class.js:3:15 = class C
+declare_class.js:3:15,3:15
+declare_class.js:4:5 = {|C: class C|}
+declare_class.js:4:5,4:5
+declare_class.js:6:15 = class P<X>
+declare_class.js:6:15,6:15
+declare_class.js:7:5 = {|P: class P<X>|}
+declare_class.js:7:5,7:5
 FluxStore.js:14:5 = {
   "type":"Class<FluxStore<any>>",
   "reasons":[],

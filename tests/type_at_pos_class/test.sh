@@ -126,7 +126,13 @@ assert_ok "$FLOW" type-at-pos class-statics-poly.js 17 5 --strip-root --pretty
 
 # declare_class.js
 printf "declare_class.js:3:15 = "
-assert_ok "$FLOW" type-at-pos declare_class.js 3 15 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos declare_class.js 3 15 --strip-root
+printf "declare_class.js:4:5 = "
+assert_ok "$FLOW" type-at-pos declare_class.js 4 5 --strip-root
+printf "declare_class.js:6:15 = "
+assert_ok "$FLOW" type-at-pos declare_class.js 6 15 --strip-root
+printf "declare_class.js:7:5 = "
+assert_ok "$FLOW" type-at-pos declare_class.js 7 5 --strip-root
 
 # FluxStore.js
 printf "FluxStore.js:14:5 = "

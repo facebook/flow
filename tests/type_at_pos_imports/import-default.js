@@ -21,3 +21,6 @@ declare var f5: ImportedTypeofDefaultClass; // ImportedTypeofDefaultClass
 declare var f6: ImportedTypeofDefaultPolyClass; // ImportedTypeofDefaultPolyClass<number>
 declare var f7: ImportedTypeofDefaultClassFuncall; // ImportedTypeofDefaultClassFuncall
 declare var f8: ImportedValueDefaultClassFuncall; // ImportedValueDefaultClassFuncall
+
+declare function f7_(): ImportedTypeofDefaultClassFuncall;
+const r7 = f7_();

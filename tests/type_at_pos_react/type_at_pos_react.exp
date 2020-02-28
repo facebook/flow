@@ -1,4 +1,4 @@
-create_class.js:3:7 = 
+create_class.js:4:7 = 
   Class<React$Component<{bar: string, foo?: string}, {baz: number}>>
   &
   {

@@ -33,9 +33,16 @@ let builtin_value = function
   | FunProtoBind -> "Function.prototype.bind"
   | FunProtoCall -> "Function.prototype.call"
 
+let dump_import_mode = function
+  | ValueMode -> "value"
+  | TypeMode -> "type"
+  | TypeofMode -> "typeof"
+
+let dump_import_ident (_, id, mode) = spf "`%s` (%s)" id (dump_import_mode mode)
+
 let ctor_of_provenance = function
   | Local -> "Local"
-  | Remote { imported_as = Some _ } -> "Imported"
+  | Remote { imported_as = Some ii } -> spf "Imported as %s" (dump_import_ident ii)
   | Remote { imported_as = None } -> "Remote"
   | Library { imported_as = Some _ } -> "Library (Imported)"
   | Library { imported_as = None } -> "Library (Remote)"
