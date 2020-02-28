@@ -79,8 +79,21 @@ function beforeOrEqual(
   return a.line <= b.line;
 }
 
-// Returns true IFF the ast location falls within the error loc
-function errorLocMatchesAstLoc(errorLoc: FlowLoc, astLoc: Object): boolean {
+/**
+ * For non-JSXText nodes, returns true IFF the ast location falls within the
+ * error loc. For JSXText nodes, also returns true if the error loc falls within
+ * the ast loc, as JSXText errors may point to only a portion of a JSXText node.
+ */
+function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
+  const astLoc = ast.loc;
+  if (
+    ast.type === 'JSXText' &&
+    beforeOrEqual(astLoc.start, errorLoc.start) &&
+    beforeOrEqual(errorLoc.end, astLoc.end)
+  ) {
+    return true;
+  }
+
   const errorLocFixedStart = {
     line: errorLoc.start.line,
     column: errorLoc.start.column - 1,
@@ -99,7 +112,7 @@ export default function (errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
-    if (ast.loc && errorLocMatchesAstLoc(errorLoc, ast.loc)) {
+    if (ast.loc && errorLocMatchesAstLoc(errorLoc, ast)) {
       return path.getPath();
     }
     ast = path.next();

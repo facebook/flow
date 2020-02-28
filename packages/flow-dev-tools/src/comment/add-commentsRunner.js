@@ -877,6 +877,38 @@ function addCommentToCode(
         lines.slice(ast.loc.start.line),
       )
       .join('\n');
+  } else if (inJSX && ast.type === 'JSXText') {
+    /* Ignore the case where the error's loc starts after the last non-whitespace
+     * character of the line. This can occur when an error's loc spans the
+     * children of a JSX element. We cannot safely add a comment to the line
+     * before the error's loc, as it may be contained within a JSXOpeningElement.
+     *
+     *     Loc
+     *      |
+     *      v
+     * <jsx>
+     *   JSXElement, JSXExpressionContainer, or JSXText here...
+     * <jsx>
+     */
+    if (lines[loc.start.line - 1].trimEnd().length <= loc.start.column - 1) {
+      return code;
+    }
+
+    /*
+     * Otherwise add an expression container above the text with our comment.
+     *
+     * <jsx>
+     *   {// Comment}
+     *   JSX Text Here
+     * <jsx>
+     */
+    return []
+      .concat(
+        lines.slice(0, loc.start.line - 1),
+        formatComment(comment, lines[loc.start.line - 1], {jsx: true, wrap}),
+        lines.slice(loc.start.line - 1),
+      )
+      .join('\n');
   }
 
   return code;
