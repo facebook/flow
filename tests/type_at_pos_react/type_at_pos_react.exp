@@ -338,7 +338,7 @@ react_component.js:32:13 = {
     "kind":"Generic",
     "typeArgs":[{"kind":"Num"}],
     "type":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:43-64"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:23-35"},
       "name":"ComponentType"
     },
     "kind":"type alias"
@@ -361,7 +361,7 @@ react_component.js:32:29 = {
   "expanded_type":{
     "kind":"TypeAlias",
     "name":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:43-64"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:23-35"},
       "name":"ComponentType"
     },
     "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
@@ -369,7 +369,7 @@ react_component.js:32:29 = {
       "kind":"Generic",
       "typeArgs":[{"kind":"Bound","bound":"P"}],
       "type":{
-        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:159:45-82"},
+        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:159:14-32"},
         "name":"React$ComponentType"
       },
       "kind":"type alias"

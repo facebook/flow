@@ -131,6 +131,12 @@ type instance_member_expansion_mode =
   | IMStatic
   | IMInstance
 
+module SymbolSet = Set.Make (struct
+  type t = Ty_symbol.symbol
+
+  let compare = Pervasives.compare
+end)
+
 (* Info used for implementation of `expand_toplevel_members` *)
 type member_expansion_info = {
   (* Information that was passed in via options *)
@@ -204,7 +210,7 @@ type t = {
      (coming from different scopes for example). Ideally we would use the location
      or a unique ID of the type alias to make this distinction, but at the moment
      keeping this information around introduces a small space regression. *)
-  under_type_alias: string option;
+  under_type_alias: SymbolSet.t;
   (* Info used in the implementation of `expand_toplevel_members`.
    * This is stored separately from the `expand_toplevel_members` option so that
    * we can keep track of more information than what we ask the caller to specify.
@@ -220,7 +226,7 @@ let init ~options ~genv ~tparams ~imported_names =
     depth = 0;
     tparams;
     imported_names;
-    under_type_alias = None;
+    under_type_alias = SymbolSet.empty;
     member_expansion_info =
       Base.Option.map options.expand_toplevel_members ~f:(fun member_expansion_options ->
           ( true,
@@ -301,3 +307,7 @@ let within_proto e =
   match e.member_expansion_info with
   | None -> false
   | Some (_, { within_proto; _ }) -> within_proto
+
+let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
+
+let seen_type_alias name e = SymbolSet.mem name e.under_type_alias

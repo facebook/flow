@@ -442,12 +442,12 @@ type-destructor.js:23:6,23:13
 
 type-destructor.js:27:6
 Flags: --evaluate-type-destructors
-type Prop$Values = number | string
+type Prop$Values = string | number
 type-destructor.js:27:6,27:16
 
 type-destructor.js:31:6
 Flags: --evaluate-type-destructors
-type ValuesOfFrozenObject = "a" | "b"
+type ValuesOfFrozenObject = "b" | "a"
 type-destructor.js:31:6,31:25
 
 type-destructor.js:34:6
@@ -593,7 +593,7 @@ type-destructor.js:116:6,116:22
 
 type-destructor.js:118:6
 Flags: --evaluate-type-destructors
-type TupleMapMixedPairPoly<X> = [(null | X), mixed]
+type TupleMapMixedPairPoly<X> = [(X | null), mixed]
 type-destructor.js:118:6,118:26
 
 type-destructor.js:123:6
@@ -644,7 +644,7 @@ type-destructor.js:179:6,179:28
 
 type-destructor.js:186:6
 Flags: --evaluate-type-destructors
-type V$0 = X | {|h: V$0|};
+type V$0 = {|h: V$0|} | X;
 type RecursiveTypeDestructorPoly<X> = {|f: ({|h: V$0|} | X)|}
 type-destructor.js:186:6,186:32
 

@@ -224,10 +224,6 @@ end = struct
   (* Type ctors *)
   (**************)
 
-  let generic_class name targs = Ty.mk_generic_class name targs
-
-  let generic_interface name targs = Ty.mk_generic_interface name targs
-
   let generic_talias name targs = Ty.mk_generic_talias name targs
 
   let builtin_t name = generic_talias (Ty.builtin_symbol name) None
@@ -620,7 +616,7 @@ end = struct
               let ts = T.TypeMap.keys bounds.Constraint.lower in
               List.fold_left (fun a t -> loop cx a seen t) acc ts)
         | T.AnnotT (_, t, _) -> loop cx acc seen t
-        | _ -> t :: acc
+        | _ -> List.rev (t :: acc)
       in
       fun ~env t ->
         let cx = Env.get_cx env in
@@ -650,6 +646,16 @@ end = struct
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract imported type alias name from reason: " ^ desc in
+        terr ~kind:BadTypeAlias ~msg None
+
+    let opaque_type_alias_symbol env reason =
+      match desc_of_reason ~unwrap:false reason with
+      | ROpaqueType name
+      | RType name ->
+        return (symbol_from_reason env reason name)
+      | desc ->
+        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+        let msg = "could not extract opaque name from reason: " ^ desc in
         terr ~kind:BadTypeAlias ~msg None
 
     let instance_symbol env reason =
@@ -721,7 +727,9 @@ end = struct
    * recovering type parameters/aliases. *)
   and type_with_expand_members ~env t =
     match Env.get_member_expansion_info env with
-    | Some (_, env) -> type_after_reason ~env:(Env.continue_expanding_members env) t
+    | Some (_, env) ->
+      let env = Env.continue_expanding_members env in
+      type_after_reason ~cont:type_with_expand_members ~env t
     | None -> type_poly ~env t
 
   (* Before we start pattern-matching on the structure of the input type, we can
@@ -729,6 +737,7 @@ end = struct
      - Type parameters: we use RPolyTest reasons for these
      - Type aliases: we use RTypeAlias reasons for these *)
   and type_poly ~env t =
+    let next = type_with_alias_reason in
     (* The RPolyTest description is used for types that represent type parameters.
        When normalizing, we want such types to be replaced by the type parameter,
        whose name is part of the description, but only in the case that the parameter
@@ -739,15 +748,16 @@ end = struct
     match desc_of_reason ~unwrap:false reason with
     | RPolyTest (name, _) ->
       let loc = Reason.def_aloc_of_reason reason in
-      let default t = type_with_alias_reason ~env t in
+      let default t = next ~env t in
       lookup_tparam ~default env t name loc
-    | _ -> type_with_alias_reason ~env t
+    | _ -> next ~env t
 
   and type_with_alias_reason ~env t =
+    let next = type_after_reason ~cont:type_with_alias_reason in
+    let reason = Type.reason_of_t t in
     if Env.expand_type_aliases env then
-      type_after_reason ~env t
+      next ~env t
     else
-      let reason = Type.reason_of_t t in
       Type.(
         (* These type are treated as transparent when it comes to the type alias
          * annotation.
@@ -758,43 +768,34 @@ end = struct
         match t with
         | OpenT _
         | TypeDestructorTriggerT _ ->
-          type_after_reason ~env t
-        | EvalT _ when Env.evaluate_type_destructors env -> type_after_reason ~env t
+          next ~env t
+        | EvalT _ when Env.evaluate_type_destructors env -> next ~env t
         | _ ->
           begin
             match desc_of_reason ~unwrap:false reason with
-            | RTypeAlias (name, Some _, _) ->
+            | RTypeAlias (name, Some loc, _) ->
               (* The default action is to avoid expansion by using the type alias name,
                  when this can be trusted. The one case where we want to skip this process
                  is when recovering the body of a type alias A. In that case the environment
                  field under_type_alias will be 'Some A'. If the type alias name in the reason
                  is also A, then we are still at the top-level of the type-alias, so we
                  proceed by expanding one level preserving the same environment. *)
-              let continue =
-                match env.Env.under_type_alias with
-                | Some name' -> name = name'
-                | None -> false
-              in
-              if continue then
-                type_after_reason ~env t
-              else
-                let symbol = symbol_from_reason env reason name in
-                return (generic_talias symbol None)
+              let symbol = symbol_from_loc env loc name in
+              return (generic_talias symbol None)
             | _ ->
               (* We are now beyond the point of the one-off expansion. Reset the environment
                  assigning None to under_type_alias, so that aliases are used in subsequent
                  invocations. *)
-              let env = Env.{ env with under_type_alias = None } in
-              type_after_reason ~env t
+              next ~env t
           end)
 
-  and type_after_reason ~env t =
+  and type_after_reason ~env ~cont t =
     let open Type in
     match t with
     | OpenT (_, id) -> type_variable ~env id
     | BoundT (reason, name) -> bound_t ~env reason name
     | AnnotT (_, t, _) -> type__ ~env t
-    | EvalT (t, d, id) -> eval_t ~env t id d
+    | EvalT (t, d, id) -> eval_t ~env ~cont t id d
     | ExactT (_, t) -> exact_t ~env t
     | CustomFunT (_, f) -> custom_fun ~env f
     | InternalT i -> internal_t t i
@@ -1205,6 +1206,19 @@ end = struct
       in
       Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
 
+  and member_expand_object ~env member_expansion_info super inst =
+    let { T.own_props; proto_props; _ } = inst in
+    let%bind own_ty_props = obj_props ~env own_props None None in
+    let%bind proto_ty_props = obj_props ~env proto_props None None in
+    let%map obj_props =
+      if Env.(member_expansion_info.member_expansion_options.include_proto_members) then
+        let%map super_ty = type__ ~env:(Env.expand_instance_members env) super in
+        (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
+      else
+        return (own_ty_props @ proto_ty_props)
+    in
+    Ty.Obj { Ty.obj_exact = true; obj_frozen = false; obj_literal = false; obj_props }
+
   and instance_t =
     let to_generic ~env kind r inst =
       let%bind symbol = Reason_utils.instance_symbol env r in
@@ -1216,33 +1230,18 @@ end = struct
       in
       Ty.Generic (symbol, kind, targs)
     in
-    let to_object ~env member_expansion_info super own_props proto_props =
-      let%bind own_ty_props = obj_props ~env own_props None None in
-      let%bind proto_ty_props = obj_props ~env proto_props None None in
-      let%map obj_props =
-        if Env.(member_expansion_info.member_expansion_options.include_proto_members) then
-          let%map super_ty = type__ ~env:(Env.expand_instance_members env) super in
-          (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
-        else
-          return (own_ty_props @ proto_ty_props)
-      in
-      Ty.(Obj { obj_exact = true; obj_frozen = false; obj_literal = false; obj_props })
-    in
     fun ~env r static super inst ->
-      let { T.inst_kind; own_props; inst_call_t; proto_props; _ } = inst in
+      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
       match inst_kind with
       | T.InterfaceKind { inline = true } -> inline_interface ~env super own_props inst_call_t
       | T.InterfaceKind { inline = false } -> to_generic ~env Ty.InterfaceKind r inst
       | T.ClassKind ->
-        begin
-          match Env.get_member_expansion_info env with
-          | None -> to_generic ~env Ty.ClassKind r inst
-          | Some (Env.{ instance_member_expansion_mode = IMStatic; _ }, env) ->
-            type__ ~env:(Env.continue_expanding_members env) static
-          | Some ((Env.{ instance_member_expansion_mode = IMUnset | IMInstance; _ } as info), env)
-            ->
-            to_object ~env info super own_props proto_props
-        end
+        (match Env.get_member_expansion_info env with
+        | None -> to_generic ~env Ty.ClassKind r inst
+        | Some (Env.{ instance_member_expansion_mode = IMStatic; _ }, env) ->
+          type__ ~env:(Env.continue_expanding_members env) static
+        | Some ((Env.{ instance_member_expansion_mode = IMUnset | IMInstance; _ } as info), env) ->
+          member_expand_object ~env info super inst)
 
   and inline_interface =
     let rec extends = function
@@ -1372,106 +1371,120 @@ end = struct
     match t with
     | T.DefT (_, _, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
-    | T.DefT (r, _, T.TypeT (kind, t)) -> type_t ~env r kind t ps
     | T.DefT (_, _, T.FunT (static, _, f)) ->
       let%map fun_t = fun_ty ~env static f ps in
       Ty.Fun fun_t
     | _ -> terr ~kind:BadPoly (Some t)
 
-  (* Type Aliases *)
-  and type_t =
-    Type.(
-      (* NOTE the use of the reason within `t` instead of the one passed with
-       the constructor TypeT. The latter is an RType, which is somewhat more
-       unwieldy as it is used more pervasively. *)
-      let local env t ta_tparams =
-        let reason = TypeUtil.reason_of_t t in
-        let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
-        let env = Env.{ env with under_type_alias = Some symbol.Ty.sym_name } in
-        let%bind ta_type = type__ ~env t in
-        return (Ty.named_alias symbol ?ta_tparams ~ta_type)
-      in
-      let import env r t ps =
-        let%bind symbol = Reason_utils.imported_type_alias_symbol env r in
-        let env = Env.{ env with under_type_alias = Some symbol.Ty.sym_name } in
-        let%bind ty = type__ ~env t in
-        match ty with
-        | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
-        | Ty.ClassDecl _
-        | Ty.InterfaceDecl _ ->
-          (* Normalize imports of the form "import typeof { C } from 'm';" (where C
-           is defined as a class/interface in 'm') as a Ty.ClassDecl/InterfaceDecl,
-           instead of Ty.TypeAlias.
-           The provenance information on the class should point to the defining
-           location. This way we avoid the indirection of the import location on
-           the alias symbol. *)
-          return ty
-        | _ -> return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
-      in
-      let opaque env t ps =
-        match t with
-        | OpaqueT (r, o) -> opaque_type_t ~env r o ps
-        | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
-      in
-      let type_param env r t =
-        match desc_of_reason r with
-        | RType name ->
-          let loc = Reason.def_aloc_of_reason r in
-          let default t = type_with_alias_reason ~env t in
-          lookup_tparam ~default env t name loc
-        | RThisType -> type__ ~env t
-        | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
-      in
-      fun ~env r kind t ps ->
-        match kind with
-        | TypeAliasKind -> local env t ps
-        | ImportClassKind -> class_t ~env t ps
-        | ImportTypeofKind -> import env r t ps
-        | OpaqueKind -> opaque env t ps
-        | TypeParamKind -> type_param env r t
-        (* The following cases are not common *)
-        | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t))
-
   and exact_t ~env t = type__ ~env t >>| Ty.mk_exact
 
   and type_app =
-    let go ~env ~expand_type_aliases targs = function
-      | Ty.ClassDecl (name, _) -> return (generic_class name targs)
-      | Ty.InterfaceDecl (name, _) -> return (generic_interface name targs)
-      | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
-        begin
-          match ta_type with
-          | Some ta_type when expand_type_aliases ->
-            begin
-              match Base.Option.both ta_tparams targs with
-              | Some (ps, ts) -> Substitution.run ps ts ta_type
-              | None -> return ta_type
-            end
-          | _ ->
-            let targs =
-              if Env.omit_targ_defaults env then
-                remove_targs_matching_defaults targs ta_tparams
-              else
-                targs
-            in
-            return (generic_talias ta_name targs)
-        end
-      | Ty.(Any _ | Bot _ | Top) as ty -> return ty
-      (* "Fix" type application on recursive types *)
-      | Ty.TVar (Ty.RVar v, None) -> return (Ty.TVar (Ty.RVar v, targs))
-      | Ty.Utility (Ty.Class _) as ty when Base.Option.is_none targs -> return ty
-      | ty -> terr ~kind:BadTypeApp ~msg:(Ty_debug.string_of_ctor ty) None
+    let mk_generic ~env symbol kind tparams targs =
+      let%bind targs = optMapM (type__ ~env) targs in
+      let%map targs =
+        if Env.omit_targ_defaults env then
+          let%map (_, tparams) = type_params_t ~env tparams in
+          remove_targs_matching_defaults targs tparams
+        else
+          return targs
+      in
+      Ty.Generic (symbol, kind, targs)
     in
-    fun ~env t targs ->
-      let%bind ty = type__ ~env t in
+    let instance_app ~env r static super inst tparams targs =
+      match Env.get_member_expansion_info env with
+      | None ->
+        let%bind symbol = Reason_utils.instance_symbol env r in
+        let kind =
+          match inst.T.inst_kind with
+          | T.InterfaceKind _ -> Ty.InterfaceKind
+          | T.ClassKind -> Ty.ClassKind
+        in
+        mk_generic ~env symbol kind tparams targs
+      | Some (Env.{ instance_member_expansion_mode = IMStatic; _ }, env) ->
+        type__ ~env:(Env.continue_expanding_members env) static
+      | Some ((Env.{ instance_member_expansion_mode = IMUnset | IMInstance; _ } as info), env) ->
+        member_expand_object ~env info super inst
+    in
+    let type_t_app ~env r kind body_t tparams targs =
+      let open Type in
       let (env, expand_type_aliases) =
         match (Env.expand_type_aliases env, Env.get_member_expansion_info env) with
         | (true, _) -> (env, true)
         | (_, Some (_, env)) -> (env, true)
         | _ -> (env, false)
       in
-      let%bind targs = optMapM (type__ ~env) targs in
-      go ~env ~expand_type_aliases targs ty
+      let%bind symbol =
+        match kind with
+        | TypeAliasKind -> Reason_utils.local_type_alias_symbol env r
+        | ImportTypeofKind -> Reason_utils.imported_type_alias_symbol env r
+        | OpaqueKind -> Reason_utils.opaque_type_alias_symbol env r
+        | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"TypeParamKind" None
+        | ImportClassKind -> terr ~kind:BadTypeAlias ~msg:"ImportClassKind" None
+        | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"InstanceKind" None
+      in
+      if expand_type_aliases && not (Env.seen_type_alias symbol env) then
+        let%bind targs = optMapM (type__ ~env) targs in
+        let%bind (env, tparams) = type_params_t ~env tparams in
+        let%bind body_t =
+          let env = Env.set_type_alias symbol env in
+          type__ ~env:(Env.continue_expanding_members env) body_t
+        in
+        match (targs, tparams) with
+        | (Some targs, Some tparams) -> Substitution.run tparams targs body_t
+        | _ -> return body_t
+      else
+        mk_generic ~env symbol Ty.TypeAliasKind tparams targs
+    in
+    let singleton_poly ~env targs tparams t =
+      let open Type in
+      match t with
+      | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, i)))
+      | DefT (_, _, TypeT (_, DefT (r, _, InstanceT (static, super, _, i))))
+      | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, i)))) ->
+        instance_app ~env r static super i tparams targs
+      | DefT (r, _, TypeT (kind, body_t)) -> type_t_app ~env r kind body_t tparams targs
+      | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> type_app ~env t targs
+      | _ ->
+        let msg = "PolyT:" ^ Type.string_of_ctor t in
+        terr ~kind:BadTypeApp ~msg None
+    in
+    let singleton ~env targs t =
+      let open Type in
+      match t with
+      | AnyT _ -> type__ ~env t
+      | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
+      | ThisClassT (_, t)
+      | DefT (_, _, TypeT (_, t)) ->
+        (* This is likely an error - cannot apply on non-polymorphic type.
+         * E.g type Foo = any; var x: Foo<number> *)
+        type__ ~env t
+      | DefT (_, _, ClassT t) when targs = None ->
+        (* For example see tests/type-at-pos_class/FluxStore.js *)
+        let%map t = type__ ~env t in
+        Ty.Utility (Ty.Class t)
+      | _ ->
+        (* This is most likely already a Flow error: E.g.
+         *
+         *   function f<A>(): void { }
+         *   type Foo = f<number>;
+         *
+         * gives "Cannot use function as a type."
+         *)
+        let msg = Type.string_of_ctor t in
+        terr ~kind:BadTypeApp ~msg None
+    in
+    fun ~env t targs ->
+      match Lookahead.peek ~env t with
+      | Lookahead.Recursive -> terr ~kind:BadTypeApp ~msg:"recursive" (Some t)
+      | Lookahead.LowerBounds [] ->
+        (* It's unlikely that an upper bound would be useful here *)
+        return (Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper))
+      | Lookahead.LowerBounds ts ->
+        (* TypeAppT distributes over multiple lower bounds. *)
+        let%map tys = mapM (singleton ~env targs) ts in
+        (match tys with
+        | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
+        | t :: ts -> Ty.mk_union (t, ts))
 
   and opaque_t ~env reason opaque_type =
     let name = opaque_type.Type.opaque_name in
@@ -1491,8 +1504,8 @@ end = struct
       let opaque_source = ALoc.source (def_aloc_of_reason reason) in
       let opaque_symbol = symbol_from_reason env reason name in
       (* Compare the current file (of the query) and the file that the opaque
-       type is defined. If they differ, then hide the underlying/super type.
-       Otherwise, display the underlying/super type. *)
+         type is defined. If they differ, then hide the underlying/super type.
+         Otherwise, display the underlying/super type. *)
       if Some current_source <> opaque_source then
         return (Ty.named_alias ?ta_tparams opaque_symbol)
       else
@@ -1504,7 +1517,7 @@ end = struct
           | _ -> None
           (* declare opaque type C; *)
           (* TODO: This will potentially report a remote name.
-         The same fix for T25963804 should be applied here as well. *)
+           The same fix for T25963804 should be applied here as well. *)
         in
         let%map ta_type = option (type__ ~env) t_opt in
         Ty.named_alias ?ta_tparams ?ta_type opaque_symbol)
@@ -1821,7 +1834,7 @@ end = struct
       in
       mk_spread ty target prefix_tys head_slice
 
-  and type_destructor_t ~env use_op reason id t d =
+  and type_destructor_t ~env ~cont use_op reason id t d =
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
       Context.with_normalizer_mode cx (fun cx ->
@@ -1832,7 +1845,10 @@ end = struct
               match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
               | exception Flow_js.Attempted_operation_on_bound _ ->
                 type_destructor_unevaluated ~env t d
-              | (_, tout) -> type__ ~env tout))
+              | (_, tout) ->
+                (match Lookahead.peek env tout with
+                | Lookahead.LowerBounds [t] -> cont ~env t
+                | _ -> type__ ~env tout)))
     else
       type_destructor_unevaluated ~env t d
 
@@ -1884,9 +1900,9 @@ end = struct
     in
     type__ ~env t'
 
-  and eval_t ~env t id = function
+  and eval_t ~env ~cont t id = function
     | Type.LatentPredT _ -> latent_pred_t ~env id t
-    | Type.TypeDestructorT (use_op, r, d) -> type_destructor_t ~env use_op r id t d
+    | Type.TypeDestructorT (use_op, r, d) -> type_destructor_t ~env ~cont use_op r id t d
 
   and uses_t =
     let rec uses_t_aux ~env acc uses =
@@ -1920,6 +1936,58 @@ end = struct
       (* return the recorded use type *)
       return t
 
+  let rec type_after_reason_ = type_after_reason ~cont:type_after_reason_
+
+  (* Type Aliases *)
+  let type_t =
+    let open Type in
+    let local env reason t ta_tparams =
+      let%bind ta_name = Reason_utils.local_type_alias_symbol env reason in
+      let env = Env.set_type_alias ta_name env in
+      let%map t = type_after_reason_ ~env t in
+      Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type = Some t }
+    in
+    let import env reason t ta_tparams =
+      let%bind ta_name = Reason_utils.imported_type_alias_symbol env reason in
+      let env = Env.set_type_alias ta_name env in
+      let%bind t = type__ ~env t in
+      match t with
+      | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
+      | Ty.ClassDecl _
+      | Ty.InterfaceDecl _ ->
+        (* Normalize imports of the form "import typeof { C } from 'm';" (where C
+         * is defined as a class/interface in 'm') as a Ty.ClassDecl/InterfaceDecl,
+         * instead of Ty.TypeAlias.
+         * The provenance information on the class should point to the defining
+         * location. This way we avoid the indirection of the import location on
+         * the alias symbol. *)
+        return t
+      | _ -> return (Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type = Some t })
+    in
+    let opaque env t ps =
+      match t with
+      | OpaqueT (r, o) -> opaque_type_t ~env r o ps
+      | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
+    in
+    let type_param env r t =
+      match desc_of_reason r with
+      | RType name ->
+        let loc = Reason.def_aloc_of_reason r in
+        let default t = type_with_alias_reason ~env t in
+        lookup_tparam ~default env t name loc
+      | RThisType -> type__ ~env t
+      | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
+    in
+    fun ~env r kind t ps ->
+      match kind with
+      | TypeAliasKind -> local env r t ps
+      | ImportClassKind -> class_t ~env t ps
+      | ImportTypeofKind -> import env r t ps
+      | OpaqueKind -> opaque env t ps
+      | TypeParamKind -> type_param env r t
+      (* The following cases are not common *)
+      | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
+
   (* The normalizer input, Type.t, is a rather flat structure. It encompasses types
      that expressions might have (e.g. number, string, object), but also types that
      represent declarations (e.g. class and type alias declarations). This representation
@@ -1938,7 +2006,9 @@ end = struct
       match t with
       | ModuleT (reason, exports, _) -> module_t env reason exports
       | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r -> obj_module_t ~env r o
-      | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
+      | DefT (_r, _, TypeT (kind, t)) ->
+        let r = Type.reason_of_t t in
+        type_t ~env r kind t None
       | DefT (_, _, PolyT { tparams; t_out = DefT (r, _, TypeT (kind, t)); _ }) ->
         let%bind (env, ps) = type_params_t ~env tparams in
         type_t ~env r kind t ps
