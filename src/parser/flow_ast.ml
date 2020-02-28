@@ -349,6 +349,7 @@ and Statement : sig
     type ('M, 'T) t = {
       label: ('M, 'M) Identifier.t;
       body: ('M, 'T) Statement.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

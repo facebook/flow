@@ -243,7 +243,7 @@ module Statements = struct
   let expression ?(loc = Loc.none) ?directive expression =
     (loc, Expression { Expression.expression; directive })
 
-  let labeled label body = (Loc.none, Labeled { Labeled.label; body })
+  let labeled ?comments label body = (Loc.none, Labeled { Labeled.label; body; comments })
 
   let variable_declarator_generic id init = (Loc.none, { VariableDeclaration.Declarator.id; init })
 

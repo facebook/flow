@@ -578,6 +578,7 @@ module Statement
 
   and maybe_labeled =
     with_loc (fun env ->
+        let leading = Peek.comments env in
         match (Parse.expression env, Peek.token env) with
         | ((loc, Ast.Expression.Identifier label), T_COLON) ->
           let (_, { Identifier.name; comments = _ }) = label in
@@ -593,7 +594,8 @@ module Statement
             else
               Parse.statement env
           in
-          Statement.Labeled { Statement.Labeled.label; body }
+          Statement.Labeled
+            { Statement.Labeled.label; body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         | (expression, _) ->
           Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
           let open Statement in

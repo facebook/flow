@@ -1054,7 +1054,7 @@ struct
       method! labeled_statement _loc (stmt : (L.t, L.t) Ast.Statement.Labeled.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Labeled in
-            let { label; body } = stmt in
+            let { label; body; comments = _ } = stmt in
             possible_labeled_continues <-
               AbruptCompletion.continue (Some label) :: possible_labeled_continues;
             let completion_state =

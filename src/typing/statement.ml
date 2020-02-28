@@ -886,7 +886,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | _ -> ast
     end
   | ( top_loc,
-      Labeled { Labeled.label = (_, { Ast.Identifier.name; comments = _ }) as lab_ast; body } ) ->
+      Labeled
+        { Labeled.label = (_, { Ast.Identifier.name; comments = _ }) as lab_ast; body; comments } )
+    ->
     (match body with
     | (loc, While _)
     | (loc, DoWhile _)
@@ -906,7 +908,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
         |> Abnormal.ignore_break_or_continue_to_label label
       in
-      let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast }) in
+      let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
       ignore
         ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
           : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t );
@@ -928,7 +930,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
         |> Abnormal.ignore_break_to_label label
       in
-      let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast }) in
+      let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
       ignore
         ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
           : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t );

@@ -1089,10 +1089,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method labeled_statement (stmt : ('M, 'T) Ast.Statement.Labeled.t)
         : ('N, 'U) Ast.Statement.Labeled.t =
       let open Ast.Statement.Labeled in
-      let { label; body } = stmt in
+      let { label; body; comments } = stmt in
       let label' = this#label_identifier label in
       let body' = this#statement body in
-      { label = label'; body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { label = label'; body = body'; comments = comments' }
 
     method literal (expr : 'M Ast.Literal.t) : 'N Ast.Literal.t =
       let open Ast.Literal in

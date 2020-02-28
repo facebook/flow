@@ -543,8 +543,11 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                   statement_after_test ~pretty_semicolon consequent;
                 ]
           end
-      | S.Labeled { S.Labeled.label; body } ->
-        fuse [identifier label; Atom ":"; pretty_space; statement body]
+      | S.Labeled { S.Labeled.label; body; comments } ->
+        layout_node_with_simple_comments_opt
+          loc
+          comments
+          (fuse [identifier label; Atom ":"; pretty_space; statement body])
       | S.Break { S.Break.label; comments } ->
         let s_break = Atom "break" in
         with_semicolon

@@ -144,8 +144,12 @@ with type t = Impl.t = struct
             ("consequent", statement consequent);
             ("alternate", option statement alternate);
           ]
-      | (loc, Labeled { Labeled.label; body }) ->
-        node "LabeledStatement" loc [("label", identifier label); ("body", statement body)]
+      | (loc, Labeled { Labeled.label; body; comments }) ->
+        node
+          ?comments
+          "LabeledStatement"
+          loc
+          [("label", identifier label); ("body", statement body)]
       | (loc, Break { Break.label; comments }) ->
         node ?comments "BreakStatement" loc [("label", option identifier label)]
       | (loc, Continue { Continue.label; comments }) ->

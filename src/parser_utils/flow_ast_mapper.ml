@@ -1318,13 +1318,14 @@ class ['loc] mapper =
 
     method labeled_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Labeled.t) =
       let open Ast.Statement.Labeled in
-      let { label; body } = stmt in
+      let { label; body; comments } = stmt in
       let label' = this#label_identifier label in
       let body' = this#statement body in
-      if label == label' && body == body' then
+      let comments' = this#syntax_opt comments in
+      if label == label' && body == body' && comments == comments' then
         stmt
       else
-        { label = label'; body = body' }
+        { label = label'; body = body'; comments = comments' }
 
     method literal _loc (expr : 'loc Ast.Literal.t) = expr
 
