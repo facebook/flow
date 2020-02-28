@@ -1446,12 +1446,11 @@ type-alias.js:34:6 {
     "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:15-26"},"name":"TKlass"},
     "typeParams":null,
     "body":{
-      "kind":"ClassDecl",
-      "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"},
-      "typeParams":null
+      "kind":"Typeof",
+      "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"}
     }
   },
-  "type":"type TKlass = class Klass",
+  "type":"type TKlass = typeof Klass",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",

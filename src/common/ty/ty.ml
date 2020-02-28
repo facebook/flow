@@ -130,6 +130,7 @@ and arr_t = {
 }
 
 and type_alias = {
+  ta_import: bool;
   ta_name: symbol;
   ta_tparams: type_param list option;
   ta_type: t option;
@@ -213,6 +214,7 @@ and builtin_value =
   | FunProtoApply
   | FunProtoBind
   | FunProtoCall
+  | TSymbol of symbol
 [@@deriving
   visitors
     {
@@ -579,7 +581,8 @@ let rec mk_exact ty =
 let mk_array ~readonly ~literal t =
   Arr { arr_readonly = readonly; arr_literal = literal; arr_elt_t = t }
 
-let named_alias ?ta_tparams ?ta_type name = TypeAlias { ta_name = name; ta_tparams; ta_type }
+let named_alias ?ta_tparams ?ta_type name =
+  TypeAlias { ta_import = false; ta_name = name; ta_tparams; ta_type }
 
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"

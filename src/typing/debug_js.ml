@@ -247,7 +247,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
     | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
-    | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
+    | DefT (_, trust, TypeT (kind, arg)) ->
+      p ~trust:(Some trust) ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
     | DefT (_, trust, EnumT { enum_id; enum_name; members = _; representation_t = _ })
     | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _; representation_t = _ }) ->
       p

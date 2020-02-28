@@ -64,6 +64,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | FunProtoApply -> Atom "Function.prototype.apply"
     | FunProtoBind -> Atom "Function.prototype.bind"
     | FunProtoCall -> Atom "Function.prototype.call"
+    | TSymbol { sym_name; _ } -> Atom sym_name
   in
   (* The depth parameter is useful for formatting unions: Top-level does not
      get parentheses.
@@ -161,7 +162,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
         else
           Empty );
       ]
-  and type_alias { ta_name = { sym_name = name; _ }; ta_tparams; ta_type } =
+  and type_alias { ta_name = { sym_name = name; _ }; ta_tparams; ta_type; _ } =
     fuse
       ( [Atom "type"; space; identifier name; option (type_parameter ~depth:0) ta_tparams]
       @ Base.Option.value_map ta_type ~default:[] ~f:(fun t ->

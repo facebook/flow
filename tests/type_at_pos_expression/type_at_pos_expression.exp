@@ -209,7 +209,7 @@ jsx.js:11:17 = {
   "end":19
 }
 jsx.js:18:12 = {
-  "type":"{|r: class C|}",
+  "type":"{|r: typeof C|}",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -239,7 +239,7 @@ jsx.js:18:14 = {
   "end":14
 }
 jsx.js:18:12 = {
-  "type":"{|r: class C|}",
+  "type":"{|r: typeof C|}",
   "reasons":[],
   "loc":{
     "source":"jsx.js",

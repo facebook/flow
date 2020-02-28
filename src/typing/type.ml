@@ -3840,6 +3840,14 @@ let rec string_of_predicate = function
   | LatentP (OpenT (_, id), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t, i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
+let string_of_type_t_kind = function
+  | TypeAliasKind -> "TypeAliasKind"
+  | TypeParamKind -> "TypeParamKind"
+  | OpaqueKind -> "OpaqueKind"
+  | ImportTypeofKind -> "ImportTypeofKind"
+  | ImportClassKind -> "ImportClassKind"
+  | InstanceKind -> "InstanceKind"
+
 let name_of_propref = function
   | Named (_, x) -> Some x
   | Computed _ -> None

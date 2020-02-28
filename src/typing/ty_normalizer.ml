@@ -845,7 +845,7 @@ end = struct
     | DefT (_, _, TypeT _) -> terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
     | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
     | DefT (r, _, InstanceT (static, super, _, t)) -> instance_t ~env r static super t
-    | DefT (_, _, ClassT t) -> class_t ~env t None
+    | DefT (_, _, ClassT t) -> class_t ~env t
     | DefT (_, _, IdxWrapper t) ->
       Base.Option.iter
         (Env.get_member_expansion_info env)
@@ -858,7 +858,7 @@ end = struct
         (generic_talias
            (Ty_symbol.builtin_symbol "React$AbstractComponent")
            (Some [config; instance]))
-    | ThisClassT (_, t) -> this_class_t ~env t None
+    | ThisClassT (_, t) -> this_class_t ~env t
     | ThisTypeAppT (_, c, _, ts) ->
       begin
         match Env.get_member_expansion_info env with
@@ -1312,63 +1312,31 @@ end = struct
       let if_body = { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props } in
       Ty.InlineInterface { Ty.if_extends; if_body }
 
-  and class_t =
-    let go ~env ps ty =
-      match ty with
-      | Ty.Generic (name, kind, _) ->
-        begin
-          match kind with
-          | Ty.InterfaceKind -> return (Ty.InterfaceDecl (name, ps))
-          | Ty.TypeAliasKind
-          | Ty.EnumKind ->
-            return (Ty.Utility (Ty.Class ty))
-          | Ty.ClassKind ->
-            (* If some parameters have been passed, then we are in the `PolyT-ThisClassT`
-             * case of Flow_js.canonicalize_imported_type. This case should still be
-             * normalized to an abstract class declaration. If no parameters are passed
-             * then this is a `Class<T>` with an instance T. *)
-            begin
-              match ps with
-              | Some _ -> return (Ty.ClassDecl (name, ps))
-              | None -> return (Ty.Utility (Ty.Class ty))
-            end
-        end
-      | Ty.Utility (Ty.Class _ | Ty.Exists)
-      | Ty.Bot _
-      | Ty.Any _
-      | Ty.Top
-      | Ty.Union _
-      | Ty.Inter _ ->
-        return (Ty.Utility (Ty.Class ty))
-      | Ty.Bound (bloc, bname) ->
-        let pred (loc, name) = name = bname && loc = bloc in
-        if List.exists pred env.Env.tparams then
-          return (Ty.Utility (Ty.Class (Ty.Bound (bloc, bname))))
-        else
-          terr ~kind:BadClassT ~msg:"bound" None
-      | ty -> terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
-    in
-    fun ~env t ps ->
-      match (t, Env.get_member_expansion_info env) with
-      | (T.DefT (r, _, T.InstanceT (static, _, _, inst)), _)
-        when desc_of_reason ~unwrap:false r = RReactComponent ->
-        let { Type.own_props; _ } = inst in
-        react_component_class ~env static own_props
-      | (_, Some (_, env)) -> type__ ~env:(Env.continue_expanding_members env) t
-      | (_, None) ->
-        let%bind t = type__ ~env t in
-        go ~env ps t
+  (* The Class<T> utility type *)
+  and class_t ~env t =
+    match (t, Env.get_member_expansion_info env) with
+    | (T.DefT (r, _, T.InstanceT (static, _, _, inst)), _)
+      when desc_of_reason ~unwrap:false r = RReactComponent ->
+      let { Type.own_props; _ } = inst in
+      react_component_class ~env static own_props
+    | (_, Some (_, env)) -> type__ ~env:(Env.continue_expanding_members env) t
+    | (_, None) ->
+      let%map ty = type__ ~env t in
+      Ty.Utility (Ty.Class ty)
 
-  and this_class_t ~env t ps =
+  and this_class_t ~env t =
+    let open Type in
     match Env.get_member_expansion_info env with
     | Some (Env.{ instance_member_expansion_mode = IMUnset; _ }, env) ->
       type__ ~env:(Env.expand_static_members env) t
     | Some (Env.{ instance_member_expansion_mode = IMInstance | IMStatic; _ }, env) ->
       type__ ~env:(Env.continue_expanding_members env) t
     | None ->
-      (match%bind type__ ~env t with
-      | Ty.Generic (name, Ty.ClassKind, _) -> return (Ty.ClassDecl (name, ps))
-      | ty -> terr ~kind:BadThisClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t))
+      (match t with
+      | DefT (r, _, InstanceT (_, _, _, { inst_kind = ClassKind; _ })) ->
+        let%map symbol = Reason_utils.instance_symbol env r in
+        Ty.TypeOf (Ty.TSymbol symbol)
+      | _ -> terr ~kind:BadThisClassT ~msg:(string_of_ctor t) (Some t))
 
   and type_params_t ~env tparams =
     let (env, results) =
@@ -1390,11 +1358,11 @@ end = struct
     (env, ps)
 
   and poly_ty ~env t typeparams =
-    let%bind (env, ps) = type_params_t ~env typeparams in
+    let open Type in
     match t with
-    | T.DefT (_, _, T.ClassT t) -> class_t ~env t ps
-    | T.ThisClassT (_, t) -> this_class_t ~env t ps
-    | T.DefT (_, _, T.FunT (static, _, f)) ->
+    | ThisClassT (_, t) -> this_class_t ~env t
+    | DefT (_, _, FunT (static, _, f)) ->
+      let%bind (env, ps) = type_params_t ~env typeparams in
       let%map fun_t = fun_ty ~env static f ps in
       Ty.Fun fun_t
     | _ -> terr ~kind:BadPoly (Some t)
@@ -1438,12 +1406,14 @@ end = struct
       in
       let%bind symbol =
         match kind with
-        | TypeAliasKind -> Reason_utils.local_type_alias_symbol env r
-        | ImportTypeofKind -> Reason_utils.imported_type_alias_symbol env r
+        | TypeAliasKind
+        | InstanceKind ->
+          Reason_utils.local_type_alias_symbol env r
+        | ImportTypeofKind
+        | ImportClassKind ->
+          Reason_utils.imported_type_alias_symbol env r
         | OpaqueKind -> Reason_utils.opaque_type_alias_symbol env r
         | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"TypeParamKind" None
-        | ImportClassKind -> terr ~kind:BadTypeAlias ~msg:"ImportClassKind" None
-        | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"InstanceKind" None
       in
       if expand_type_aliases && not (Env.seen_type_alias symbol env) then
         let%bind targs = optMapM (type__ ~env) targs in
@@ -1970,7 +1940,7 @@ end = struct
       let%bind ta_name = Reason_utils.local_type_alias_symbol env reason in
       let env = Env.set_type_alias ta_name env in
       let%map t = type_after_reason_ ~env t in
-      Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type = Some t }
+      Ty.TypeAlias { Ty.ta_import = false; ta_name; ta_tparams; ta_type = Some t }
     in
     let import env reason t ta_tparams =
       let%bind ta_name = Reason_utils.imported_type_alias_symbol env reason in
@@ -1987,7 +1957,7 @@ end = struct
          * location. This way we avoid the indirection of the import location on
          * the alias symbol. *)
         return t
-      | _ -> return (Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type = Some t })
+      | _ -> return (Ty.TypeAlias { Ty.ta_import = true; ta_name; ta_tparams; ta_type = Some t })
     in
     let opaque env t ps =
       match t with
@@ -2006,7 +1976,7 @@ end = struct
     fun ~env r kind t ps ->
       match kind with
       | TypeAliasKind -> local env r t ps
-      | ImportClassKind -> class_t ~env t ps
+      | ImportClassKind -> class_t ~env t
       | ImportTypeofKind -> import env r t ps
       | OpaqueKind -> opaque env t ps
       | TypeParamKind -> type_param env r t
@@ -2027,21 +1997,78 @@ end = struct
   *)
   let rec toplevel =
     let open Type in
-    let singleton ~env ~orig_t t =
-      match t with
-      | ModuleT (reason, exports, _) -> module_t env reason exports
-      | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r -> obj_module_t ~env r o
-      | DefT (_r, _, TypeT (kind, t)) ->
-        let r = Type.reason_of_t t in
-        type_t ~env r kind t None
-      | DefT (_, _, PolyT { tparams; t_out = DefT (r, _, TypeT (kind, t)); _ }) ->
+    let class_or_interface_decl ~env r tparams static super inst =
+      let%bind ps =
+        match tparams with
+        | Some tparams ->
+          let%map (_, ps) = type_params_t ~env tparams in
+          ps
+        | None -> return None
+      in
+      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+      let desc = desc_of_reason ~unwrap:false r in
+      match (inst_kind, desc) with
+      | (_, Reason.RReactComponent) -> react_component_class ~env static own_props
+      | (T.InterfaceKind { inline = false }, _) ->
+        let%map symbol = Reason_utils.instance_symbol env r in
+        Ty.InterfaceDecl (symbol, ps)
+      | (T.InterfaceKind { inline = true }, _) -> inline_interface ~env super own_props inst_call_t
+      | (T.ClassKind, _) ->
+        let%map symbol = Reason_utils.instance_symbol env r in
+        Ty.ClassDecl (symbol, ps)
+    in
+    let singleton_poly ~env ~orig_t tparams = function
+      (* Imported interfaces *)
+      | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
+        class_or_interface_decl ~env r (Some tparams) static super inst
+      (* Classes *)
+      | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+      (* Interfaces *)
+      | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
+        class_or_interface_decl ~env r (Some tparams) static super inst
+      (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
+         The initial abstraction is wrapper within an abstraction and a type application.
+         The current case unwraps the abstraction and application to reveal the
+         initial imported type. *)
+      | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> toplevel ~env t
+      (* Type Aliases *)
+      | DefT (r, _, TypeT (kind, t)) ->
         let%bind (env, ps) = type_params_t ~env tparams in
         type_t ~env r kind t ps
       | _ -> type__ ~env orig_t
     in
+    let singleton ~env ~orig_t t =
+      match t with
+      (* Polymorphic variants - see singleton_poly *)
+      | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env ~orig_t tparams t_out
+      (* Modules *)
+      | ModuleT (reason, exports, _) -> module_t env reason exports
+      | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r -> obj_module_t ~env r o
+      (* Monomorphic Classes/Interfaces *)
+      | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+      | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
+      | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
+      | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
+        class_or_interface_decl ~env r None static super inst
+      (* Monomorphic Type Aliases *)
+      | DefT (r, _, TypeT (kind, t)) ->
+        let r =
+          match kind with
+          | ImportClassKind -> r
+          | _ -> Type.reason_of_t t
+        in
+        type_t ~env r kind t None
+      (* Types *)
+      | _ -> type__ ~env orig_t
+    in
+    let singleton_with_member_expansion ~env ~orig_t t =
+      match Env.get_member_expansion_info env with
+      | Some _ -> type__ ~env t
+      | None -> singleton ~env ~orig_t t
+    in
     fun ~env t ->
       match Lookahead.peek ~env t with
-      | Lookahead.LowerBounds [l] -> singleton ~env ~orig_t:t l
+      | Lookahead.LowerBounds [l] -> singleton_with_member_expansion ~env ~orig_t:t l
       | Lookahead.Recursive
       | Lookahead.LowerBounds _ ->
         type__ ~env t
@@ -2166,19 +2193,26 @@ end = struct
         []
         imported_locs
 
-    let extract_ident ~options ~genv scheme =
-      let { Type.TypeScheme.tparams; type_ = t } = scheme in
-      let imported_names = ALocMap.empty in
-      let env = Env.init ~options ~genv ~tparams ~imported_names in
-      match%map toplevel ~env t with
-      | Ty.TypeAlias { Ty.ta_name = { Ty.sym_def_loc; _ }; _ }
-      | Ty.ClassDecl ({ Ty.sym_def_loc; _ }, _)
-      | Ty.InterfaceDecl ({ Ty.sym_def_loc; _ }, _) ->
-        Some sym_def_loc
-      | Ty.Utility (Ty.Class (Ty.Generic ({ Ty.sym_def_loc; _ }, _, None))) ->
+    let extract_ident =
+      let rec def_loc_of_ty =
+        let open Ty in
+        function
+        | TypeAlias { ta_import = false; ta_name = { sym_def_loc; _ }; _ }
+        | ClassDecl ({ sym_def_loc; _ }, _)
+        | InterfaceDecl ({ sym_def_loc; _ }, _)
+        | Utility (Class (Generic ({ sym_def_loc; _ }, _, None)))
         (* This is an acceptable proxy only if the class is not polymorphic *)
-        Some sym_def_loc
-      | _ -> None
+        | TypeOf (TSymbol { sym_def_loc; _ }) ->
+          Some sym_def_loc
+        | TypeAlias { ta_import = true; ta_type = Some t; _ } -> def_loc_of_ty t
+        | _ -> None
+      in
+      fun ~options ~genv scheme ->
+        let { Type.TypeScheme.tparams; type_ = t } = scheme in
+        let imported_names = ALocMap.empty in
+        let env = Env.init ~options ~genv ~tparams ~imported_names in
+        let%map ty = toplevel ~env t in
+        def_loc_of_ty ty
 
     let normalize_imports ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t =
       let state = State.empty in

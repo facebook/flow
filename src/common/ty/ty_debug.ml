@@ -26,13 +26,6 @@ let dump_bot_kind = function
   | EmptyTypeDestructorTriggerT _ -> "EmptyTypeDestructorTriggerT"
   | NoLowerWithUpper u -> spf "NoLowerWithUpper (%s)" (dump_bot_upper_bound_kind u)
 
-let builtin_value = function
-  | FunProto -> "Function.prototype"
-  | ObjProto -> "Object.prototype"
-  | FunProtoApply -> "Function.prototype.apply"
-  | FunProtoBind -> "Function.prototype.bind"
-  | FunProtoCall -> "Function.prototype.call"
-
 let dump_import_mode = function
   | ValueMode -> "value"
   | TypeMode -> "type"
@@ -54,6 +47,14 @@ let dump_symbol { sym_provenance; sym_def_loc; sym_name; _ } =
     sym_name
     (ctor_of_provenance sym_provenance)
     (Reason.string_of_aloc sym_def_loc)
+
+let builtin_value = function
+  | FunProto -> "Function.prototype"
+  | ObjProto -> "Object.prototype"
+  | FunProtoApply -> "Function.prototype.apply"
+  | FunProtoBind -> "Function.prototype.bind"
+  | FunProtoCall -> "Function.prototype.call"
+  | TSymbol s -> dump_symbol s
 
 let rec dump_opt (f : 'a -> string) (o : 'a option) =
   match o with
@@ -225,9 +226,10 @@ and dump_t ?(depth = 10) t =
     | Union (t1, t2, ts) ->
       spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1 :: t2 :: ts)))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
-    | TypeAlias { ta_name; ta_tparams; ta_type } ->
+    | TypeAlias { ta_import; ta_name; ta_tparams; ta_type } ->
       spf
-        "TypeAlias (%s, %s, %s)"
+        "TypeAlias (import:%b, %s, %s, %s)"
+        ta_import
         (dump_symbol ta_name)
         (dump_type_params ~depth ta_tparams)
         (Base.Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
@@ -316,6 +318,16 @@ let json_of_t ~strip_root =
           ("name", JSON_String sym_name);
         ])
   in
+  let json_of_builtin_value =
+    Hh_json.(
+      function
+      | FunProto -> JSON_String "Function.prototype"
+      | ObjProto -> JSON_String "Object.prototype"
+      | FunProtoApply -> JSON_String "Function.prototype.apply"
+      | FunProtoBind -> JSON_String "Function.prototype.bind"
+      | FunProtoCall -> JSON_String "Function.prototype.call"
+      | TSymbol s -> json_of_symbol s)
+  in
   let rec json_of_t t =
     Hh_json.(
       JSON_Object
@@ -353,7 +365,7 @@ let json_of_t ~strip_root =
           [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
         | Inter (t0, t1, ts) ->
           [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
-        | TypeAlias { ta_name; ta_tparams; ta_type } ->
+        | TypeAlias { ta_name; ta_tparams; ta_type; _ } ->
           [
             ("name", json_of_symbol ta_name);
             ("typeParams", json_of_type_params ta_tparams);
@@ -363,7 +375,7 @@ let json_of_t ~strip_root =
           Hh_json.(
             let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
             [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
-        | TypeOf b -> [("name", JSON_String (builtin_value b))]
+        | TypeOf b -> [("name", json_of_builtin_value b)]
         | Module (name, _) ->
           [("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
         | ClassDecl (name, tparams) ->

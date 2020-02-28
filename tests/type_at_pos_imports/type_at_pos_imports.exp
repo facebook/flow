@@ -644,14 +644,18 @@ import-star.js:5:31 = {
 }
 import-typeof-class.js:6:16 {
   "expanded_type":{
-    "kind":"ClassDecl",
-    "name":{
-      "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
-      "name":"C"
-    },
-    "typeParams":null
+    "kind":"TypeAlias",
+    "name":{"provenance":{"kind":"Local","loc":"import-typeof-class.js:3:17"},"name":"C"},
+    "typeParams":null,
+    "body":{
+      "kind":"Typeof",
+      "name":{
+        "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
+        "name":"C"
+      }
+    }
   },
-  "type":"class C",
+  "type":"type C = typeof C",
   "reasons":[],
   "loc":{
     "source":"import-typeof-class.js",
@@ -667,14 +671,18 @@ import-typeof-class.js:6:16 {
 }
 import-typeof-class.js:7:16 {
   "expanded_type":{
-    "kind":"ClassDecl",
-    "name":{
-      "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
-      "name":"C"
-    },
-    "typeParams":null
+    "kind":"TypeAlias",
+    "name":{"provenance":{"kind":"Local","loc":"import-typeof-class.js:4:17"},"name":"D"},
+    "typeParams":null,
+    "body":{
+      "kind":"Typeof",
+      "name":{
+        "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
+        "name":"C"
+      }
+    }
   },
-  "type":"class C",
+  "type":"type D = typeof C",
   "reasons":[],
   "loc":{
     "source":"import-typeof-class.js",
@@ -689,7 +697,7 @@ import-typeof-class.js:7:16 {
   "end":16
 }
 module-export-0.js:7:13 = {
-  "type":"{|+A: class A|}",
+  "type":"{|+A: typeof A|}",
   "reasons":[],
   "loc":{
     "source":"module-export-0.js",

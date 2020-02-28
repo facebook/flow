@@ -50,7 +50,7 @@ exact.js:28:6,28:6
 
 react-component.js:12:6
 Flags:
-type ReactA = ElementProps<class MyComponent>
+type ReactA = ElementProps<typeof MyComponent>
 react-component.js:12:6,12:11
 
 react-component.js:14:6

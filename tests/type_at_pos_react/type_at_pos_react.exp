@@ -123,7 +123,7 @@ react_component.js:3:9 = {|
       +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>,
       +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>
     },
-    +Component: class React$Component<Props, State = void>,
+    +Component: typeof React$Component,
     +ConcurrentMode: ({children?: React$Node}) => React$Node,
     +DOM: any,
     +Fragment: ({children?: React$Node}) => React$Node,
@@ -132,7 +132,7 @@ react_component.js:3:9 = {|
       void,
     >,
     +PropTypes: ReactPropTypes,
-    +PureComponent: class React$PureComponent<Props, State = void>,
+    +PureComponent: typeof React$PureComponent,
     +StrictMode: ({children?: React$Node}) => React$Node,
     +Suspense: React$ComponentType<
       {children?: React$Node, fallback?: React$Node},
