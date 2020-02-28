@@ -21,7 +21,7 @@ let check_type_visitor wrap =
 
       method! private on_named_prop env =
         function
-        | Field (t, _) -> self#on_t env t
+        | Field { t; _ } -> self#on_t env t
         | Method _ -> wrap (Reason.RMethod None)
         | Get _
         | Set _ ->

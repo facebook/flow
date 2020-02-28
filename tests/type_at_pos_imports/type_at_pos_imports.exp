@@ -292,6 +292,36 @@ import-default.js:21:13 = {
   "start":13,
   "end":14
 }
+import-star.js:5:7 = {
+  "type":"{|foo: () => MyUnionType|}",
+  "reasons":[],
+  "loc":{
+    "source":"import-star.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":7,"offset":64},
+    "end":{"line":5,"column":23,"offset":81}
+  },
+  "path":"import-star.js",
+  "line":5,
+  "endline":5,
+  "start":7,
+  "end":23
+}
+import-star.js:5:31 = {
+  "type":"{|+MyPolyType: type MyPolyType<T> = {f: T}, +MyStringType: type MyStringType = \"A\", +MyUnionType: type MyUnionType = \"A\" | \"B\" | \"C\", +foo: () => MyUnionType|}",
+  "reasons":[],
+  "loc":{
+    "source":"import-star.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":31,"offset":88},
+    "end":{"line":5,"column":41,"offset":99}
+  },
+  "path":"import-star.js",
+  "line":5,
+  "endline":5,
+  "start":31,
+  "end":41
+}
 import-typeof-class.js:6:16 {
   "expanded_type":{
     "kind":"ClassDecl",

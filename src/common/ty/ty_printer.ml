@@ -227,12 +227,12 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
         | NamedProp { name = key; prop = named_prop; _ } ->
           begin
             match named_prop with
-            | Field (t, { fld_polarity; fld_optional }) ->
+            | Field { t; polarity; optional } ->
               fuse
                 [
-                  variance_ fld_polarity;
+                  variance_ polarity;
                   to_key key;
-                  ( if fld_optional then
+                  ( if optional then
                     Atom "?"
                   else
                     Empty );

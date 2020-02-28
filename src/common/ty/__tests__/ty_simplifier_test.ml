@@ -31,8 +31,7 @@ module UnionSimplification = struct
                         {
                           name = "f";
                           prop =
-                            Ty.Field
-                              (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false });
+                            Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
                           from_proto = false;
                         };
                     ];
@@ -48,8 +47,7 @@ module UnionSimplification = struct
                         {
                           name = "f";
                           prop =
-                            Ty.Field
-                              (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false });
+                            Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
                           from_proto = false;
                         };
                     ];
@@ -68,9 +66,7 @@ module UnionSimplification = struct
                   Ty.NamedProp
                     {
                       name = "f";
-                      prop =
-                        Ty.Field
-                          (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false });
+                      prop = Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
                       from_proto = false;
                     };
                 ];
@@ -96,8 +92,7 @@ module UnionSimplification = struct
                         {
                           name = "f";
                           prop =
-                            Ty.Field
-                              (Ty.Num None, { Ty.fld_polarity = Ty.Positive; fld_optional = false });
+                            Ty.Field { t = Ty.Num None; polarity = Ty.Positive; optional = false };
                           from_proto = false;
                         };
                     ];
@@ -113,8 +108,7 @@ module UnionSimplification = struct
                         {
                           name = "f";
                           prop =
-                            Ty.Field
-                              (Ty.Num None, { Ty.fld_polarity = Ty.Negative; fld_optional = false });
+                            Ty.Field { t = Ty.Num None; polarity = Ty.Negative; optional = false };
                           from_proto = false;
                         };
                     ];
@@ -152,8 +146,7 @@ module BotAndTopSimplification = struct
                           name = "f";
                           prop =
                             Ty.Field
-                              ( Ty.Bot Ty.EmptyType,
-                                { Ty.fld_polarity = Ty.Neutral; fld_optional = false } );
+                              { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
                           from_proto = false;
                         };
                     ];
@@ -170,8 +163,11 @@ module BotAndTopSimplification = struct
                           name = "f";
                           prop =
                             Ty.Field
-                              ( Ty.Bot Ty.EmptyMatchingPropT,
-                                { Ty.fld_polarity = Ty.Neutral; fld_optional = false } );
+                              {
+                                t = Ty.Bot Ty.EmptyMatchingPropT;
+                                polarity = Ty.Neutral;
+                                optional = false;
+                              };
                           from_proto = false;
                         };
                     ];
@@ -192,8 +188,7 @@ module BotAndTopSimplification = struct
                       name = "f";
                       prop =
                         Ty.Field
-                          ( Ty.Bot Ty.EmptyType,
-                            { Ty.fld_polarity = Ty.Neutral; fld_optional = false } );
+                          { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
                       from_proto = false;
                     };
                 ];

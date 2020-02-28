@@ -52,6 +52,12 @@ assert_ok "$FLOW" type-at-pos import-default.js 20 13 --strip-root --pretty
 printf "import-default.js:21:13 = "
 assert_ok "$FLOW" type-at-pos import-default.js 21 13 --strip-root --pretty
 
+# import-star.js
+printf "import-star.js:5:7 = "
+assert_ok "$FLOW" type-at-pos import-star.js 5 7 --strip-root --pretty
+printf "import-star.js:5:31 = "
+assert_ok "$FLOW" type-at-pos import-star.js 5 31 --strip-root --pretty
+
 # import-typeof-class.js
 printf "import-typeof-class.js:6:16 "
 assert_ok "$FLOW" type-at-pos import-typeof-class.js 6 16 --strip-root --pretty --expand-json-output

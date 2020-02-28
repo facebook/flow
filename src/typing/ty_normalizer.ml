@@ -1032,36 +1032,57 @@ end = struct
     in
     let%map obj_props =
       match Env.get_member_expansion_info env with
-      | None -> obj_props ~env props_tmap call_t dict_t
+      | None -> obj_props_t ~env props_tmap call_t dict_t
       | Some (Env.{ member_expansion_options = { include_proto_members = false; _ }; _ }, env) ->
-        obj_props ~env props_tmap call_t dict_t
+        obj_props_t ~env props_tmap call_t dict_t
       | Some (Env.{ member_expansion_options = { include_proto_members = true; _ }; _ }, env) ->
         let%bind proto = type__ ~env:(Env.continue_expanding_members env) proto_t in
-        let%map obj_props = obj_props ~env props_tmap call_t dict_t in
+        let%map obj_props = obj_props_t ~env props_tmap call_t dict_t in
         Ty.SpreadProp proto :: obj_props
     in
     Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
-  and obj_prop ~env (x, p) =
-    let from_proto = Env.within_proto env in
-    match p with
-    | T.Field (_, t, polarity) ->
-      let fld_polarity = type_polarity polarity in
-      let%map (t, fld_optional) = opt_t ~env t in
-      [Ty.(NamedProp { name = x; prop = Field (t, { fld_polarity; fld_optional }); from_proto })]
-    | T.Method (_, t) ->
-      let%map tys = method_ty ~env t in
-      List.map (fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto }) tys
-    | T.Get (_, t) ->
-      let%map t = type__ ~env t in
-      [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto }]
-    | T.Set (_, t) ->
-      let%map t = type__ ~env t in
-      [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto }]
-    | T.GetSet (loc1, t1, loc2, t2) ->
-      let%bind p1 = obj_prop ~env (x, T.Get (loc1, t1)) in
-      let%map p2 = obj_prop ~env (x, T.Set (loc2, t2)) in
-      p1 @ p2
+  and obj_prop_t =
+    (* Value-level object types should not have properties of type type alias. For
+       convience reasons it is possible for a non-module-like Type.ObjT to include
+       such types as properties. Here we explicitly filter them out, since we
+       cannot use type__ to normalize them.
+    *)
+    let is_type_alias = function
+      | T.DefT (_, _, T.TypeT _)
+      | T.DefT (_, _, T.PolyT { t_out = T.DefT (_, _, T.TypeT _); _ }) ->
+        true
+      | _ -> false
+    in
+    let keep_field ~env t =
+      match Lookahead.peek ~env t with
+      | Lookahead.LowerBounds [t] -> not (is_type_alias t)
+      | _ -> true
+    in
+    fun ~env (x, p) ->
+      let from_proto = Env.within_proto env in
+      match p with
+      | T.Field (_, t, polarity) ->
+        if keep_field ~env t then
+          let polarity = type_polarity polarity in
+          let%map (t, optional) = opt_t ~env t in
+          let prop = Ty.Field { t; polarity; optional } in
+          [Ty.NamedProp { name = x; prop; from_proto }]
+        else
+          return []
+      | T.Method (_, t) ->
+        let%map tys = method_ty ~env t in
+        List.map (fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto }) tys
+      | T.Get (_, t) ->
+        let%map t = type__ ~env t in
+        [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto }]
+      | T.Set (_, t) ->
+        let%map t = type__ ~env t in
+        [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto }]
+      | T.GetSet (loc1, t1, loc2, t2) ->
+        let%bind p1 = obj_prop_t ~env (x, T.Get (loc1, t1)) in
+        let%map p2 = obj_prop_t ~env (x, T.Set (loc2, t2)) in
+        p1 @ p2
 
   and call_prop_from_t ~env t =
     let ts =
@@ -1072,7 +1093,7 @@ end = struct
     let%map ts = concat_fold_m (method_ty ~env) ts in
     Base.List.map ~f:(fun t -> Ty.CallProp t) ts
 
-  and obj_props =
+  and obj_props_t =
     (* call property *)
     let do_calls ~env = function
       | Some call_id ->
@@ -1081,7 +1102,7 @@ end = struct
         call_prop_from_t ~env ft
       | None -> return []
     in
-    let do_props ~env props = concat_fold_m (obj_prop ~env) props in
+    let do_props ~env props = concat_fold_m (obj_prop_t ~env) props in
     let do_dict ~env = function
       | Some d ->
         let { T.dict_polarity; dict_name; key; value } = d in
@@ -1139,7 +1160,7 @@ end = struct
       | T.DefT (_, _, T.ObjT { T.props_tmap; _ }) ->
         Context.find_props cx props_tmap
         |> SMap.bindings
-        |> mapM (fun (name, p) -> obj_prop ~env (name, p))
+        |> mapM (fun (name, p) -> obj_prop_t ~env (name, p))
         >>| List.concat
       | _ -> return []
     in
@@ -1191,25 +1212,20 @@ end = struct
           [enum_t; representation_t]
       in
       let%bind proto_ty = type__ ~env:(Env.expand_proto_members env) proto_t in
-      let%bind enum_ty = type__ ~env enum_t in
-      let%map members_ty =
-        SMap.keys members
-        |> List.map (fun name ->
-               Ty.(
-                 NamedProp
-                   {
-                     name;
-                     prop = Field (enum_ty, { fld_polarity = Positive; fld_optional = false });
-                     from_proto = false;
-                   }))
-        |> return
+      let%map enum_ty = type__ ~env enum_t in
+      let members_ty =
+        List.map
+          (fun name ->
+            let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
+            Ty.NamedProp { name; prop; from_proto = false })
+          (SMap.keys members)
       in
       Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
 
   and member_expand_object ~env member_expansion_info super inst =
     let { T.own_props; proto_props; _ } = inst in
-    let%bind own_ty_props = obj_props ~env own_props None None in
-    let%bind proto_ty_props = obj_props ~env proto_props None None in
+    let%bind own_ty_props = obj_props_t ~env own_props None None in
+    let%bind proto_ty_props = obj_props_t ~env proto_props None None in
     let%map obj_props =
       if Env.(member_expansion_info.member_expansion_options.include_proto_members) then
         let%map super_ty = type__ ~env:(Env.expand_instance_members env) super in
@@ -1260,12 +1276,12 @@ end = struct
         List.fold_left
           (fun (key, value, pole, ps) p ->
             match p with
-            | Ty.NamedProp { name = "$key"; prop = Ty.Field (t, _); _ } ->
+            | Ty.NamedProp { name = "$key"; prop = Ty.Field { t; _ }; _ } ->
               (* The $key's polarity is fixed to neutral so we ignore it *)
               (Some t, value, pole, ps)
-            | Ty.NamedProp { name = "$value"; prop = Ty.Field (t, { Ty.fld_polarity; _ }); _ } ->
+            | Ty.NamedProp { name = "$value"; prop = Ty.Field { t; polarity; _ }; _ } ->
               (* The dictionary's polarity is determined by that of $value *)
-              (key, Some t, Some fld_polarity, ps)
+              (key, Some t, Some polarity, ps)
             | _ -> (key, value, pole, p :: ps))
           (None, None, None, [])
           props
@@ -1284,7 +1300,7 @@ end = struct
     fun ~env super own_props inst_call_t ->
       let%bind super = type__ ~env super in
       let%bind if_extends = extends super in
-      let%map obj_props = obj_props ~env own_props inst_call_t None (* dict *) in
+      let%map obj_props = obj_props_t ~env own_props inst_call_t None in
       let obj_props = fix_dict_props obj_props in
       let if_body = { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props } in
       Ty.InlineInterface { Ty.if_extends; if_body }
@@ -1797,7 +1813,7 @@ end = struct
         let obj_frozen = false in
         let obj_literal = false in
         let props = SMap.fold (fun k p acc -> (k, p) :: acc) prop_map [] in
-        let%bind obj_props = concat_fold_m (obj_prop ~env) props in
+        let%bind obj_props = concat_fold_m (obj_prop_t ~env) props in
         let%bind obj_props =
           match dict with
           | Some { key; value; dict_name; dict_polarity } ->
@@ -2037,17 +2053,14 @@ end = struct
   and obj_module_prop ~env (x, p) =
     match p with
     | T.Field (_, t, polarity) ->
-      let fld_polarity = type_polarity polarity in
-      let (t, fld_optional) =
+      let polarity = type_polarity polarity in
+      let (t, optional) =
         match t with
         | T.OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
         | t -> (t, false)
       in
       let%map t = toplevel ~env t in
-      [
-        Ty.NamedProp
-          { name = x; prop = Ty.Field (t, { Ty.fld_polarity; fld_optional }); from_proto = false };
-      ]
+      [Ty.NamedProp { name = x; prop = Ty.Field { t; polarity; optional }; from_proto = false }]
     | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"module-prop" None
 
   and obj_module_props ~env props_id =

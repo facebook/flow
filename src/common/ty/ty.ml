@@ -153,15 +153,14 @@ and prop =
   | SpreadProp of t
 
 and named_prop =
-  | Field of t * field
+  | Field of {
+      t: t;
+      polarity: polarity;
+      optional: opt;
+    }
   | Method of fun_t
   | Get of t
   | Set of t
-
-and field = {
-  fld_polarity: polarity;
-  fld_optional: opt;
-}
 
 and dict = {
   dict_polarity: polarity;
@@ -523,11 +522,7 @@ let mk_field_props prop_list =
   Base.List.map
     ~f:(fun (id, t, opt) ->
       NamedProp
-        {
-          name = id;
-          prop = Field (t, { fld_polarity = Neutral; fld_optional = opt });
-          from_proto = false;
-        })
+        { name = id; prop = Field { t; polarity = Neutral; optional = opt }; from_proto = false })
     prop_list
 
 let mk_object ?(obj_exact = false) ?(obj_frozen = false) ?(obj_literal = false) obj_props =

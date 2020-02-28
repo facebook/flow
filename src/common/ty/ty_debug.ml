@@ -118,12 +118,12 @@ and dump_fun_t ~depth { fun_params; fun_rest_param; fun_return; fun_type_params;
     (dump_t ~depth fun_static)
     (dump_t ~depth fun_return)
 
-and dump_field ~depth name { fld_polarity; fld_optional } t =
+and dump_field ~depth x t polarity optional =
   spf
     "%s%s%s: %s"
-    (dump_polarity fld_polarity)
-    name
-    ( if fld_optional then
+    (dump_polarity polarity)
+    x
+    ( if optional then
       "?"
     else
       "" )
@@ -136,7 +136,7 @@ and dump_prop ~depth = function
   | SpreadProp t -> dump_spread ~depth t
 
 and dump_named_prop ~depth x = function
-  | Field (t, field) -> dump_field ~depth x field t
+  | Field { t; polarity; optional } -> dump_field ~depth x t polarity optional
   | Method t -> dump_fun_t ~depth t
   | Get t -> spf "get %s" (dump_t ~depth t)
   | Set t -> spf "get %s" (dump_t ~depth t)
@@ -462,12 +462,12 @@ let json_of_t ~strip_root =
     Hh_json.(
       JSON_Object
         (match p with
-        | Field (t, { fld_polarity; fld_optional }) ->
+        | Field { t; polarity; optional } ->
           [
             ("kind", JSON_String "field");
             ("type", json_of_t t);
-            ("polarity", json_of_polarity fld_polarity);
-            ("optional", JSON_Bool fld_optional);
+            ("polarity", json_of_polarity polarity);
+            ("optional", JSON_Bool optional);
           ]
         | Method t -> [("kind", JSON_String "Method"); ("funtype", JSON_Object (json_of_fun_t t))]
         | Get t -> [("kind", JSON_String "Get"); ("type", json_of_t t)]

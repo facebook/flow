@@ -201,11 +201,11 @@ end
 let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   let open Ty in
   let ty_of_named_prop = function
-    | Field (t, { fld_optional = false; _ })
+    | Field { t; optional = false; _ }
     | Get t
     | Set t ->
       t
-    | Field (t, { fld_optional = true; _ }) -> Union (t, Void, [])
+    | Field { t; optional = true; _ } -> Union (t, Void, [])
     | Method ft -> Fun ft
   in
   let members_of_obj obj_props =
@@ -706,7 +706,7 @@ let type_exports_of_module_ty ~ac_loc =
   (* workaround while the ty normalizer sometimes renders modules as objects *)
   | Obj { obj_props; _ } ->
     Base.List.filter_map obj_props ~f:(function
-        | NamedProp { name; prop = Field (ty, _); _ } when is_type_export ty ->
+        | NamedProp { name; prop = Field { t = ty; _ }; _ } when is_type_export ty ->
           Some (autocomplete_create_result (name, ac_loc) ty)
         | _ -> None)
   | _ -> []

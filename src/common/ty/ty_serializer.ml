@@ -158,16 +158,16 @@ and obj_named_prop =
   in
   fun x prop ->
     match prop with
-    | Field (t, fld) ->
+    | Field { t; polarity; optional } ->
       type_ t >>| fun t ->
       {
         T.Object.Property.key = to_key x;
         value = T.Object.Property.Init t;
-        optional = fld.fld_optional;
+        optional;
         static = false;
         proto = false;
         _method = false;
-        variance = variance_ fld.fld_polarity;
+        variance = variance_ polarity;
       }
     | Method f ->
       function_ f >>| fun fun_t ->
