@@ -15,16 +15,6 @@ export default suite(
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
-    test('initialize', [
-      lspStart({needsFlowServer: false}),
-      lspRequestAndWaitUntilResponse(
-        'initialize',
-        lspInitializeParams,
-      ).verifyAllLSPMessagesInStep(
-        ['initialize{"codeActionProvider":false}'],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
     test('textDocument/codeAction #0', [
       addFile('error1.js.ignored', 'error1.js'),
       lspStartAndConnect(),

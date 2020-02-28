@@ -471,43 +471,52 @@ let send_lsp_to_server (cenv : connected_env) (metadata : LspProt.metadata) (mes
 
 (************************************************************************)
 
-let do_initialize flowconfig : Initialize.result =
-  let code_action_provider = Initialize.CodeActionBool (FlowConfig.autofix_exports flowconfig) in
-  Initialize.
-    {
-      server_capabilities =
-        {
-          textDocumentSync =
-            {
-              want_openClose = true;
-              want_change = IncrementalSync;
-              want_willSave = false;
-              want_willSaveWaitUntil = false;
-              want_didSave = Some { includeText = false };
-            };
-          hoverProvider = true;
-          completionProvider =
-            Some { resolveProvider = false; completion_triggerCharacters = ["."; " "] };
-          signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
-          definitionProvider = true;
-          typeDefinitionProvider = false;
-          referencesProvider = true;
-          documentHighlightProvider = true;
-          documentSymbolProvider = true;
-          workspaceSymbolProvider = false;
-          codeActionProvider = code_action_provider;
-          codeLensProvider = None;
-          documentFormattingProvider = false;
-          documentRangeFormattingProvider = false;
-          documentOnTypeFormattingProvider = None;
-          renameProvider = true;
-          documentLinkProvider = None;
-          executeCommandProvider = None;
-          implementationProvider = false;
-          typeCoverageProvider = true;
-          rageProvider = true;
-        };
-    }
+let do_initialize params : Initialize.result =
+  let open Initialize in
+  let codeActionProvider =
+    (* currently the only code actions we provide are quickfixes which use CodeAction literals *)
+    match params.client_capabilities.textDocument.codeAction.codeActionLiteralSupport with
+    | Some { codeAction_valueSet }
+      when List.exists ~f:(( = ) CodeActionKind.quickfix) codeAction_valueSet ->
+      CodeActionOptions { codeActionKinds = [CodeActionKind.quickfix] }
+    | Some _
+    | None ->
+      CodeActionBool false
+  in
+  {
+    server_capabilities =
+      {
+        textDocumentSync =
+          {
+            want_openClose = true;
+            want_change = IncrementalSync;
+            want_willSave = false;
+            want_willSaveWaitUntil = false;
+            want_didSave = Some { includeText = false };
+          };
+        hoverProvider = true;
+        completionProvider =
+          Some { resolveProvider = false; completion_triggerCharacters = ["."; " "] };
+        signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
+        definitionProvider = true;
+        typeDefinitionProvider = false;
+        referencesProvider = true;
+        documentHighlightProvider = true;
+        documentSymbolProvider = true;
+        workspaceSymbolProvider = false;
+        codeActionProvider;
+        codeLensProvider = None;
+        documentFormattingProvider = false;
+        documentRangeFormattingProvider = false;
+        documentOnTypeFormattingProvider = None;
+        renameProvider = true;
+        documentLinkProvider = None;
+        executeCommandProvider = None;
+        implementationProvider = false;
+        typeCoverageProvider = true;
+        rageProvider = true;
+      };
+  }
 
 let show_connected (env : connected_env) : state =
   (* report that we're connected to telemetry/connectionStatus *)
@@ -1648,7 +1657,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       | Ok () -> ()
       | Error msg -> raise (Error.ServerErrorStart (msg, { Initialize.retry = false }))
     end;
-    let response = ResponseMessage (id, InitializeResult (do_initialize flowconfig)) in
+    let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
