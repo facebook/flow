@@ -329,7 +329,7 @@ generics.js:30:13 = {
   "end":13
 }
 ill-formed.js:30:13 = {
-  "type":"Foo<number>",
+  "type":"(unknown)",
   "reasons":[],
   "loc":{
     "source":"ill-formed.js",

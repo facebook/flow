@@ -41,6 +41,7 @@ type error_kind =
   | BadEvalT
   | BadUse
   | ShadowTypeParam
+  | UnexpectedTypeCtor of string
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
   | TypeTooBig
@@ -63,6 +64,7 @@ let error_kind_to_string = function
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
   | ShadowTypeParam -> "Shadowed type parameters"
+  | UnexpectedTypeCtor c -> spf "Unexpected type constructor (%s)" c
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
   | TypeTooBig -> "Type too big"
@@ -585,6 +587,48 @@ end = struct
     | (Some targ_lst, Some tparam_lst) -> Some (remove_if_able targ_lst tparam_lst)
     | _ -> targs
 
+  (* Utility that determines the next immediate concrete constructor, ie. reads
+     through OpenTs and AnnotTs. This is useful in determining, for example, the
+     toplevel cosntructor and adjusting the logic accordingly. *)
+  module Lookahead : sig
+    type t =
+      | Recursive
+      | LowerBounds of Type.t list
+
+    val peek : env:Env.t -> Type.t -> t
+  end = struct
+    type t =
+      | Recursive
+      | LowerBounds of Type.t list
+
+    exception RecursiveExn
+
+    let peek =
+      let rec loop cx acc seen t =
+        match t with
+        | T.OpenT (_, id) ->
+          let (root_id, constraints) = Context.find_constraints cx id in
+          if ISet.mem root_id seen then
+            raise RecursiveExn
+          else
+            let seen = ISet.add root_id seen in
+            (match constraints with
+            | Constraint.Resolved (_, t)
+            | Constraint.FullyResolved (_, t) ->
+              loop cx acc seen t
+            | Constraint.Unresolved bounds ->
+              let ts = T.TypeMap.keys bounds.Constraint.lower in
+              List.fold_left (fun a t -> loop cx a seen t) acc ts)
+        | T.AnnotT (_, t, _) -> loop cx acc seen t
+        | _ -> t :: acc
+      in
+      fun ~env t ->
+        let cx = Env.get_cx env in
+        match loop cx [] ISet.empty t with
+        | exception RecursiveExn -> Recursive
+        | ts -> LowerBounds ts
+  end
+
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
@@ -619,6 +663,28 @@ end = struct
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract instance name from reason: " ^ desc in
         terr ~kind:BadInstanceT ~msg None
+
+    let module_symbol_opt env reason =
+      match desc_of_reason reason with
+      | RModule name
+      | RCommonJSExports name
+      | RUntypedModule name ->
+        let symbol = symbol_from_reason env reason name in
+        return (Some symbol)
+      | RExports -> return None
+      | desc ->
+        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+        let msg = "could not extract module name from reason: " ^ desc in
+        terr ~kind:UnsupportedTypeCtor ~msg None
+
+    let is_module_reason r =
+      match desc_of_reason r with
+      | RModule _
+      | RCommonJSExports _
+      | RUntypedModule _
+      | RExports ->
+        true
+      | _ -> false
   end
 
   (*************************)
@@ -775,7 +841,7 @@ end = struct
       let%map ts = mapM (type__ ~env) ts in
       Ty.mk_inter (t0, t1 :: ts)
     | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-    | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
+    | DefT (_, _, TypeT _) -> terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
     | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
     | DefT (r, _, InstanceT (static, super, _, t)) -> instance_t ~env r static super t
     | DefT (_, _, ClassT t) -> class_t ~env t None
@@ -854,7 +920,7 @@ end = struct
               explicit_any)
       else
         return Ty.(TypeOf FunProtoCall)
-    | ModuleT (reason, exports, _) -> module_t env reason exports t
+    | ModuleT _ -> terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
     | NullProtoT _ -> return Ty.Null
     | DefT (reason, trust, EnumObjectT enum) -> enum_t ~env reason trust enum
     | DefT (reason, _, EnumT { enum_name; _ }) ->
@@ -1282,7 +1348,7 @@ end = struct
       | Ty.Generic (name, Ty.ClassKind, _) -> return (Ty.ClassDecl (name, ps))
       | ty -> terr ~kind:BadThisClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t))
 
-  and poly_ty ~env t typeparams =
+  and type_params_t ~env tparams =
     let (env, results) =
       Nel.fold_left
         (fun (env, rs) tp ->
@@ -1291,14 +1357,18 @@ end = struct
           let name = tp.T.name in
           (Env.add_typeparam env (loc, name), r :: rs))
         (env, [])
-        typeparams
+        tparams
     in
-    let%bind ps = List.rev results |> all in
+    let%map ps = List.rev results |> all in
     let ps =
       match ps with
       | [] -> None
       | _ -> Some ps
     in
+    (env, ps)
+
+  and poly_ty ~env t typeparams =
+    let%bind (env, ps) = type_params_t ~env typeparams in
     match t with
     | T.DefT (_, _, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
@@ -1346,8 +1416,9 @@ end = struct
       let type_param env r t =
         match desc_of_reason r with
         | RType name ->
-          let symbol = symbol_from_reason env r name in
-          return (Ty.named_alias symbol)
+          let loc = Reason.def_aloc_of_reason r in
+          let default t = type_with_alias_reason ~env t in
+          lookup_tparam ~default env t name loc
         | RThisType -> type__ ~env t
         | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in
@@ -1817,29 +1888,6 @@ end = struct
     | Type.LatentPredT _ -> latent_pred_t ~env id t
     | Type.TypeDestructorT (use_op, r, d) -> type_destructor_t ~env use_op r id t d
 
-  and module_t =
-    let mk_module env symbol_opt exports =
-      let cjs_export = optM (type__ ~env) T.(exports.cjs_export) in
-      let exports =
-        Context.find_exports Env.(env.genv.cx) T.(exports.exports_tmap)
-        |> SMap.map snd
-        |> SMap.bindings
-        |> mapM (type__ ~env |> sndMapM)
-      in
-      let%bind exports = exports in
-      let%map cjs_export = cjs_export in
-      Ty.Module (symbol_opt, Ty.{ exports; cjs_export })
-    in
-    fun env reason exports t ->
-      match desc_of_reason reason with
-      | RModule name
-      | RCommonJSExports name
-      | RUntypedModule name ->
-        let symbol = symbol_from_reason env reason name in
-        mk_module env (Some symbol) exports
-      | RExports -> mk_module env None exports
-      | _ -> terr ~kind:UnsupportedTypeCtor (Some t)
-
   and uses_t =
     let rec uses_t_aux ~env acc uses =
       match uses with
@@ -1872,9 +1920,85 @@ end = struct
       (* return the recorded use type *)
       return t
 
+  (* The normalizer input, Type.t, is a rather flat structure. It encompasses types
+     that expressions might have (e.g. number, string, object), but also types that
+     represent declarations (e.g. class and type alias declarations). This representation
+     makes it harder to enforce invariants that intuitively should exist. E.g.
+
+     - Type alias, class declaration types, etc. do not nest.
+
+     - Type aliases, class declarations and modules are toplevel or parts of modules.
+
+     To restore these, we trap Type.t constructors that should only appear at the
+     toplevel, like modules, type aliases, etc.
+  *)
+  let rec toplevel =
+    let open Type in
+    let singleton ~env ~orig_t t =
+      match t with
+      | ModuleT (reason, exports, _) -> module_t env reason exports
+      | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r -> obj_module_t ~env r o
+      | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
+      | DefT (_, _, PolyT { tparams; t_out = DefT (r, _, TypeT (kind, t)); _ }) ->
+        let%bind (env, ps) = type_params_t ~env tparams in
+        type_t ~env r kind t ps
+      | _ -> type__ ~env orig_t
+    in
+    fun ~env t ->
+      match Lookahead.peek ~env t with
+      | Lookahead.LowerBounds [l] -> singleton ~env ~orig_t:t l
+      | Lookahead.Recursive
+      | Lookahead.LowerBounds _ ->
+        type__ ~env t
+
+  and module_t env reason exports =
+    let%bind symbol_opt = Reason_utils.module_symbol_opt env reason in
+    let cjs_export = optM (toplevel ~env) exports.Type.cjs_export in
+    let exports =
+      Context.find_exports Env.(env.genv.cx) exports.Type.exports_tmap
+      |> SMap.map snd
+      |> SMap.bindings
+      |> mapM (toplevel ~env |> sndMapM)
+    in
+    let%bind exports = exports in
+    let%map cjs_export = cjs_export in
+    Ty.Module (symbol_opt, Ty.{ exports; cjs_export })
+
+  and obj_module_prop ~env (x, p) =
+    match p with
+    | T.Field (_, t, polarity) ->
+      let fld_polarity = type_polarity polarity in
+      let (t, fld_optional) =
+        match t with
+        | T.OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
+        | t -> (t, false)
+      in
+      let%map t = toplevel ~env t in
+      [
+        Ty.NamedProp
+          { name = x; prop = Ty.Field (t, { Ty.fld_polarity; fld_optional }); from_proto = false };
+      ]
+    | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"module-prop" None
+
+  and obj_module_props ~env props_id =
+    let cx = Env.get_cx env in
+    let props = SMap.bindings (Context.find_props cx props_id) in
+    concat_fold_m (obj_module_prop ~env) props
+
+  and obj_module_t ~env reason o =
+    let { T.flags; props_tmap; _ } = o in
+    let { T.exact = obj_exact; T.frozen = obj_frozen; _ } = flags in
+    let obj_literal =
+      match Reason.desc_of_reason reason with
+      | Reason.RObjectLit -> true
+      | _ -> false
+    in
+    let%map obj_props = obj_module_props ~env props_tmap in
+    Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
+
   let run_type ~options ~genv ~imported_names ~tparams state t =
     let env = Env.init ~options ~genv ~tparams ~imported_names in
-    let (result, state) = run state (type__ ~env t) in
+    let (result, state) = run state (toplevel ~env t) in
     let result =
       match result with
       | Ok t when options.Env.optimize_types ->
@@ -1954,7 +2078,7 @@ end = struct
       let { Type.TypeScheme.tparams; type_ = t } = scheme in
       let imported_names = ALocMap.empty in
       let env = Env.init ~options ~genv ~tparams ~imported_names in
-      match%map type__ ~env t with
+      match%map toplevel ~env t with
       | Ty.TypeAlias { Ty.ta_name = { Ty.sym_def_loc; _ }; _ }
       | Ty.ClassDecl ({ Ty.sym_def_loc; _ }, _)
       | Ty.InterfaceDecl ({ Ty.sym_def_loc; _ }, _) ->

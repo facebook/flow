@@ -22,6 +22,7 @@ type error_kind =
   | BadEvalT
   | BadUse
   | ShadowTypeParam
+  | UnexpectedTypeCtor of string
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
   | TypeTooBig
