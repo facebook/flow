@@ -76,6 +76,7 @@ val autofix_exports :
   (Replacement_printer.patch * string list, string) result Lwt.t
 
 val code_actions_at_loc :
+  reader:Parsing_heaps.Reader.reader ->
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
