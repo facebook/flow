@@ -1386,12 +1386,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     Abnormal.throw_stmt_control_flow_exception
       (loc, Return { Return.argument = argument_ast; comments })
       Abnormal.Return
-  | (loc, Throw { Throw.argument }) ->
+  | (loc, Throw { Throw.argument; comments }) ->
     let argument_ast = expression cx argument in
     Env.reset_current_activation loc;
     Abnormal.save Abnormal.Throw;
     Abnormal.throw_stmt_control_flow_exception
-      (loc, Throw { Throw.argument = argument_ast })
+      (loc, Throw { Throw.argument = argument_ast; comments })
       Abnormal.Throw
   (***************************************************************************)
   (* Try-catch-finally statements have a lot of control flow possibilities. (To

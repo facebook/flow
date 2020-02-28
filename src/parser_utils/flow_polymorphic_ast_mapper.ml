@@ -1439,8 +1439,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method throw (stmt : ('M, 'T) Ast.Statement.Throw.t) : ('N, 'U) Ast.Statement.Throw.t =
       let open Ast.Statement.Throw in
-      let { argument } = stmt in
-      { argument = this#expression argument }
+      let { argument; comments } = stmt in
+      let argument' = this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
 
     method try_catch (stmt : ('M, 'T) Ast.Statement.Try.t) : ('N, 'U) Ast.Statement.Try.t =
       let open Ast.Statement.Try in

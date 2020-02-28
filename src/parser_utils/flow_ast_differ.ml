@@ -535,7 +535,7 @@ let program
       | ((_, ExportNamedDeclaration export1), (_, ExportNamedDeclaration export2)) ->
         export_named_declaration export1 export2
       | ((loc, Try try1), (_, Try try2)) -> try_ loc try1 try2
-      | ((_, Throw throw1), (_, Throw throw2)) -> Some (throw_statement throw1 throw2)
+      | ((loc, Throw throw1), (_, Throw throw2)) -> Some (throw_statement loc throw1 throw2)
       | ((_, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2)) ->
         type_alias d_t_alias1 d_t_alias2
       | ((_, TypeAlias t_alias1), (_, TypeAlias t_alias2)) -> type_alias t_alias1 t_alias2
@@ -1511,12 +1511,15 @@ let program
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [comments; diff_if_changed_nonopt_fn expression argument1 argument2]
   and throw_statement
-      (stmt1 : (Loc.t, Loc.t) Ast.Statement.Throw.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.Throw.t)
-      : node change list =
+      loc
+      (stmt1 : (Loc.t, Loc.t) Ast.Statement.Throw.t)
+      (stmt2 : (Loc.t, Loc.t) Ast.Statement.Throw.t) : node change list =
     let open Ast.Statement.Throw in
-    let { argument = argument1 } = stmt1 in
-    let { argument = argument2 } = stmt2 in
-    diff_if_changed expression argument1 argument2
+    let { argument = argument1; comments = comments1 } = stmt1 in
+    let { argument = argument2; comments = comments2 } = stmt2 in
+    let argument = diff_if_changed expression argument1 argument2 in
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    argument @ comments
   and labeled_statement
       (labeled1 : (Loc.t, Loc.t) Ast.Statement.Labeled.t)
       (labeled2 : (Loc.t, Loc.t) Ast.Statement.Labeled.t) : node change list =

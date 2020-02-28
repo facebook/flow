@@ -611,9 +611,12 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                in
                fuse_with_space [s_return; arg]
              | None -> s_return)
-      | S.Throw { S.Throw.argument } ->
+      | S.Throw { S.Throw.argument; comments } ->
         with_semicolon
-          (fuse_with_space [Atom "throw"; group [wrap_in_parens_on_break (expression argument)]])
+        @@ layout_node_with_simple_comments_opt
+             loc
+             comments
+             (fuse_with_space [Atom "throw"; group [wrap_in_parens_on_break (expression argument)]])
       | S.Try { S.Try.block = b; handler; finalizer; comments } ->
         layout_node_with_simple_comments_opt
           loc

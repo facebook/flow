@@ -452,13 +452,14 @@ module Statement
 
   and throw =
     with_loc (fun env ->
+        let leading = Peek.comments env in
         let start_loc = Peek.loc env in
         Expect.token env T_THROW;
         if Peek.is_line_terminator env then error_at env (start_loc, Parse_error.NewlineAfterThrow);
         let argument = Parse.expression env in
         Eat.semicolon env;
         let open Statement in
-        Throw { Throw.argument })
+        Throw { Throw.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () })
 
   and try_ =
     with_loc (fun env ->

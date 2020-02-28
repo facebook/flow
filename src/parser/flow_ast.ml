@@ -423,7 +423,11 @@ and Statement : sig
   end
 
   module Throw : sig
-    type ('M, 'T) t = { argument: ('M, 'T) Expression.t } [@@deriving show]
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module Try : sig

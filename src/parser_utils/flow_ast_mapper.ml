@@ -1727,8 +1727,13 @@ class ['loc] mapper =
 
     method throw _loc (stmt : ('loc, 'loc) Ast.Statement.Throw.t) =
       let open Ast.Statement.Throw in
-      let { argument } = stmt in
-      id this#expression argument stmt (fun argument -> { argument })
+      let { argument; comments } = stmt in
+      let argument' = this#expression argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        stmt
+      else
+        { argument = argument'; comments = comments' }
 
     method try_catch _loc (stmt : ('loc, 'loc) Ast.Statement.Try.t) =
       let open Ast.Statement.Try in

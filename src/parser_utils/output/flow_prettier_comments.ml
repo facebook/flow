@@ -121,7 +121,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
         cases
   | Return { Return.argument; comments = _ } ->
     node_list_of_option ~f:statement_list_of_expression argument
-  | Throw { Throw.argument } -> statement_list_of_expression argument
+  | Throw { Throw.argument; comments = _ } -> statement_list_of_expression argument
   | Try { Try.block = (_, { Block.body }); handler; finalizer; _ } ->
     let handler_nodes =
       Base.Option.value_map

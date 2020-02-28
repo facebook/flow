@@ -542,7 +542,7 @@ struct
 
       method! throw _loc (stmt : (L.t, L.t) Ast.Statement.Throw.t) =
         let open Ast.Statement.Throw in
-        let { argument } = stmt in
+        let { argument; comments = _ } = stmt in
         ignore @@ this#expression argument;
         this#raise_abrupt_completion AbruptCompletion.throw
 
