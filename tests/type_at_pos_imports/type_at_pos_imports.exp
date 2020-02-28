@@ -292,6 +292,21 @@ import-default.js:21:13 = {
   "start":13,
   "end":14
 }
+import-rec-export.js:3:10 = {
+  "type":"empty",
+  "reasons":[],
+  "loc":{
+    "source":"import-rec-export.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":10,"offset":20}
+  },
+  "path":"import-rec-export.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":10
+}
 import-star.js:5:7 = {
   "type":"{|foo: () => MyUnionType|}",
   "reasons":[],

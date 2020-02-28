@@ -52,6 +52,10 @@ assert_ok "$FLOW" type-at-pos import-default.js 20 13 --strip-root --pretty
 printf "import-default.js:21:13 = "
 assert_ok "$FLOW" type-at-pos import-default.js 21 13 --strip-root --pretty
 
+# import-rec-export.js
+printf "import-rec-export.js:3:10 = "
+assert_ok "$FLOW" type-at-pos import-rec-export.js 3 10 --strip-root --pretty
+
 # import-star.js
 printf "import-star.js:5:7 = "
 assert_ok "$FLOW" type-at-pos import-star.js 5 7 --strip-root --pretty
