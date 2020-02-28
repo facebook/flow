@@ -511,7 +511,7 @@ let do_initialize params : Initialize.result =
         documentOnTypeFormattingProvider = None;
         renameProvider = true;
         documentLinkProvider = None;
-        executeCommandProvider = None;
+        executeCommandProvider = Some { commands = ["log"] };
         implementationProvider = false;
         typeCoverageProvider = true;
         rageProvider = true;
