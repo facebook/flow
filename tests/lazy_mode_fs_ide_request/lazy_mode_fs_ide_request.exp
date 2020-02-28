@@ -1,0 +1,8 @@
+
+Server should start in fs lazy mode
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 0/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+foo.js:3:8,3:30
