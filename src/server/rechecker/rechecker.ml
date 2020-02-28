@@ -257,12 +257,9 @@ let rec recheck_single
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
    * rechecks. But something is better than nothing... *)
-  let rec loop
-      ?(files_to_recheck = FilenameSet.empty)
-      ?(files_to_force = CheckedSet.empty)
-      ?(profiling = [])
-      genv
-      env =
+  let rec loop ~profiling genv env =
+    let files_to_recheck = FilenameSet.empty in
+    let files_to_force = CheckedSet.empty in
     match%lwt recheck_single ~files_to_recheck ~files_to_force genv env with
     | Error env ->
       (* No more work to do for now *)
@@ -271,6 +268,6 @@ let recheck_loop =
       (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
       loop ~profiling:(recheck_profiling :: profiling) genv env
   in
-  (fun genv env -> loop genv env)
+  (fun genv env -> loop ~profiling:[] genv env)
 
 let recheck_single ?files_to_force genv env = recheck_single ?files_to_force genv env
