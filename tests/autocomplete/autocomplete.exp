@@ -2177,7 +2177,7 @@ unqualified-type-annotation.js = {
       "func_details":null
     },
     {"name":"Typesafe","type":"interface Typesafety","func_details":null},
-    {"name":"Typhoon","type":"type ./type-exports.js = string","func_details":null},
+    {"name":"Typhoon","type":"type Typhoon = string","func_details":null},
     {"name":"Typnotism","type":"type Typnotism = number","func_details":null},
     {"name":"Tyrant","type":"type Tyrant = string","func_details":null},
     {"name":"Tympanic","type":"type Tympanic = number","func_details":null},

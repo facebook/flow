@@ -637,7 +637,7 @@ end = struct
 
     let imported_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
-      | RNamedImportedType (name, _)
+      | RNamedImportedType (_, name)
       | RDefaultImportedType (name, _)
       | RImportStarType name
       | RImportStarTypeOf name
