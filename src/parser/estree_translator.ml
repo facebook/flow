@@ -473,13 +473,14 @@ with type t = Impl.t = struct
           "AssignmentExpression"
           loc
           [("operator", string operator); ("left", pattern left); ("right", expression right)]
-      | (loc, Update { Update.operator; argument; prefix }) ->
+      | (loc, Update { Update.operator; argument; prefix; comments }) ->
         let operator =
           match operator with
           | Update.Increment -> "++"
           | Update.Decrement -> "--"
         in
         node
+          ?comments
           "UpdateExpression"
           loc
           [

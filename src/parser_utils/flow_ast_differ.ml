@@ -981,7 +981,7 @@ let program
       | ((_, Logical l1), (_, Logical l2)) -> logical l1 l2
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
       | (expr, (loc, TypeCast t2)) -> Some (type_cast_added expr loc t2)
-      | ((_, Update update1), (_, Update update2)) -> update update1 update2
+      | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
       | ((_, Sequence seq1), (_, Sequence seq2)) -> sequence seq1 seq2
       | (_, _) -> None
     in
@@ -1978,14 +1978,17 @@ let program
       in
       ({ loc with _end = loc.start }, Insert (Some "", [Raw "("])) :: List.rev append_annot_rev)
   and update
+      loc
       (update1 : (Loc.t, Loc.t) Ast.Expression.Update.t)
       (update2 : (Loc.t, Loc.t) Ast.Expression.Update.t) : node change list option =
     let open Ast.Expression.Update in
-    let { operator = op1; argument = arg1; prefix = p1 } = update1 in
-    let { operator = op2; argument = arg2; prefix = p2 } = update2 in
+    let { operator = op1; argument = arg1; prefix = p1; comments = comments1 } = update1 in
+    let { operator = op2; argument = arg2; prefix = p2; comments = comments2 } = update2 in
     if op1 != op2 || p1 != p2 then
       None
     else
-      Some (expression arg1 arg2)
+      let argument = expression arg1 arg2 in
+      let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+      Some (argument @ comments)
   in
   program' program1 program2 |> List.sort change_compare

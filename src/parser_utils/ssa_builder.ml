@@ -510,7 +510,7 @@ struct
       (* read and write (when the argument is an identifier) *)
       method! update_expression _loc (expr : (L.t, L.t) Ast.Expression.Update.t) =
         let open Ast.Expression.Update in
-        let { argument; operator = _; prefix = _ } = expr in
+        let { argument; operator = _; prefix = _; comments = _ } = expr in
         begin
           match argument with
           | (_, Ast.Expression.Identifier x) ->

@@ -379,7 +379,8 @@ module Expressions = struct
 
   let unary_not (b : (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
 
-  let update ~op ~prefix argument = (Loc.none, Update { Update.operator = op; prefix; argument })
+  let update ?comments ~op ~prefix argument =
+    (Loc.none, Update { Update.operator = op; prefix; argument; comments })
 
   let increment ~prefix argument = update ~op:Update.Increment ~prefix argument
 

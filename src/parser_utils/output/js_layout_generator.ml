@@ -969,18 +969,21 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                  Empty );
                expr;
              ]
-      | E.Update { E.Update.operator; prefix; argument } ->
-        let s_operator =
-          match operator with
-          | E.Update.Increment -> Atom "++"
-          | E.Update.Decrement -> Atom "--"
-        in
-        (* we never need to wrap `argument` in parens because it must be a valid
+      | E.Update { E.Update.operator; prefix; argument; comments } ->
+        layout_node_with_simple_comments_opt
+          loc
+          comments
+          (let s_operator =
+             match operator with
+             | E.Update.Increment -> Atom "++"
+             | E.Update.Decrement -> Atom "--"
+           in
+           (* we never need to wrap `argument` in parens because it must be a valid
          left-hand side expression *)
-        if prefix then
-          fuse [s_operator; expression ~ctxt argument]
-        else
-          fuse [expression ~ctxt argument; s_operator]
+           if prefix then
+             fuse [s_operator; expression ~ctxt argument]
+           else
+             fuse [expression ~ctxt argument; s_operator])
       | E.Class class_ -> class_base class_
       | E.Yield { E.Yield.argument; delegate; comments } ->
         layout_node_with_simple_comments_opt loc comments

@@ -1071,7 +1071,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
         | Await -> "await ")
     in
     do_wrap (op ^ x)
-  | Update { Update.operator; prefix; argument } ->
+  | Update { Update.operator; prefix; argument; comments = _ } ->
     let x = code_desc_of_expression ~wrap:true argument in
     let op =
       Update.(

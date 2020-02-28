@@ -1165,11 +1165,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
         | None -> literal_expr right
         | Some _ -> T.FixMe.mk_expr_type loc
       end
-    | (loc, Update stuff) ->
-      let open Ast.Expression.Update in
-      (* This operation has a simple result type. *)
-      let { operator = _; argument = _; prefix = _ } = stuff in
-      (loc, T.Number)
+    | (loc, Update _) -> (loc, T.Number)
     | (loc, JSXElement e) ->
       let open Ast.JSX in
       let { openingElement; closingElement = _; children = _ } = e in

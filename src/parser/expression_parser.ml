@@ -514,7 +514,16 @@ module Expression
           strict_error env Parse_error.StrictLHSPrefix
         | _ -> ());
         let loc = Loc.btwn begin_loc end_loc in
-        Cover_expr (loc, Expression.(Update { Update.operator; prefix = true; argument })))
+        Cover_expr
+          ( loc,
+            Expression.(
+              Update
+                {
+                  Update.operator;
+                  prefix = true;
+                  argument;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }) ))
     | Some operator ->
       Eat.token env;
       let (end_loc, argument) = with_loc unary env in
@@ -563,8 +572,18 @@ module Expression
         | _ -> ());
         let end_loc = Peek.loc env in
         Eat.token env;
+        let trailing = Peek.comments env in
         let loc = Loc.btwn (fst argument) end_loc in
-        Cover_expr (loc, Expression.(Update { Update.operator; prefix = false; argument }))
+        Cover_expr
+          ( loc,
+            Expression.(
+              Update
+                {
+                  Update.operator;
+                  prefix = false;
+                  argument;
+                  comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+                }) )
 
   and left_hand_side_cover env =
     let start_loc = Peek.loc env in

@@ -999,6 +999,7 @@ and Expression : sig
       operator: operator;
       argument: ('M, 'T) Expression.t;
       prefix: bool;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

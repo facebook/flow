@@ -1473,9 +1473,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method update_expression (expr : ('M, 'T) Ast.Expression.Update.t)
         : ('N, 'U) Ast.Expression.Update.t =
       let open Ast.Expression.Update in
-      let { argument; operator; prefix } = expr in
+      let { argument; operator; prefix; comments } = expr in
       let argument' = this#expression argument in
-      { argument = argument'; operator; prefix }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; operator; prefix; comments = comments' }
 
     method variable_declaration (decl : ('M, 'T) Ast.Statement.VariableDeclaration.t)
         : ('N, 'U) Ast.Statement.VariableDeclaration.t =

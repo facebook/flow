@@ -1781,8 +1781,13 @@ class ['loc] mapper =
 
     method update_expression _loc (expr : ('loc, 'loc) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
-      let { argument; operator = _; prefix = _ } = expr in
-      id this#expression argument expr (fun argument -> { expr with argument })
+      let { argument; operator = _; prefix = _; comments } = expr in
+      let argument' = this#expression argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        expr
+      else
+        { expr with argument = argument'; comments = comments' }
 
     method variable_declaration _loc (decl : ('loc, 'loc) Ast.Statement.VariableDeclaration.t) =
       let open Ast.Statement.VariableDeclaration in
