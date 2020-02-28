@@ -33,7 +33,7 @@ create_class.js:31:7 =
     |}
   }
 create_class.js:31:7,31:20
-create_class_state.js:16:5 = (unknown)
+create_class_state.js:16:5 = React$Component<any, State> | any
 create_class_state.js:16:5,16:8
 lazy_ref.js:14:9 = {|default: React$AbstractComponent<empty, {|moo: (x: string) => void|}>|}
 lazy_ref.js:14:9,14:9

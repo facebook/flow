@@ -1147,13 +1147,30 @@ end = struct
         (Flow_js.get_builtin (Env.get_cx env) "$ReadOnlyArray" reason)
 
   (* Used for instances of React.createClass(..) *)
-  and react_component =
+  and react_component_instance =
     let react_props ~env ~default props name =
       match SMap.find name props with
       | exception Not_found -> return default
       | Type.Field (_, t, _) -> type__ ~env t
       | _ -> return default
     in
+    let inexactify = function
+      | Ty.Obj ({ Ty.obj_exact = true; _ } as obj) -> Ty.Obj { obj with Ty.obj_exact = false }
+      | ty -> ty
+    in
+    fun ~env own_props ->
+      let cx = Env.(env.genv.cx) in
+      let own_props = Context.find_props cx own_props in
+      let%bind props_ty = react_props ~env ~default:Ty.explicit_any own_props "props" in
+      let%bind state_ty = react_props ~env ~default:Ty.explicit_any own_props "state" in
+      (* The inferred type for state is unsealed, which has its exact bit set.
+       * However, Ty.t does not account for unsealed and exact sealed objects are
+       * incompatible with exact and unsealed, so making state inexact here. *)
+      let state_ty = inexactify state_ty in
+      return (generic_builtin_t "React$Component" [props_ty; state_ty])
+
+  (* Used for return of React.createClass(..) *)
+  and react_component_class =
     let react_static_props ~env static =
       let cx = Env.(env.genv.cx) in
       match static with
@@ -1164,21 +1181,9 @@ end = struct
         >>| List.concat
       | _ -> return []
     in
-    let inexactify = function
-      | Ty.Obj ({ Ty.obj_exact = true; _ } as obj) -> Ty.Obj { obj with Ty.obj_exact = false }
-      | ty -> ty
-    in
     fun ~env static own_props ->
-      let cx = Env.(env.genv.cx) in
-      let own_props = Context.find_props cx own_props in
-      let%bind props_ty = react_props ~env ~default:Ty.explicit_any own_props "props" in
-      let%bind state_ty = react_props ~env ~default:Ty.explicit_any own_props "state" in
-      let%map static_flds = react_static_props ~env static in
-      (* The inferred type for state is unsealed, which has its exact bit set.
-       * However, Ty.t does not account for unsealed and exact sealed objects are
-       * incompatible with exact and unsealed, so making state inexact here. *)
-      let state_ty = inexactify state_ty in
-      let parent_instance = generic_builtin_t "React$Component" [props_ty; state_ty] in
+      let%bind static_flds = react_static_props ~env static in
+      let%bind parent_instance = react_component_instance ~env own_props in
       let parent_class = Ty.Utility (Ty.Class parent_instance) in
       (*
        * {
@@ -1193,7 +1198,7 @@ end = struct
         Ty.Obj
           { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props = static_flds }
       in
-      Ty.mk_inter (parent_class, [props_obj])
+      return (Ty.mk_inter (parent_class, [props_obj]))
 
   and enum_t ~env enum_reason trust enum =
     match Env.get_member_expansion_info env with
@@ -1248,10 +1253,12 @@ end = struct
     in
     fun ~env r static super inst ->
       let { T.inst_kind; own_props; inst_call_t; _ } = inst in
-      match inst_kind with
-      | T.InterfaceKind { inline = true } -> inline_interface ~env super own_props inst_call_t
-      | T.InterfaceKind { inline = false } -> to_generic ~env Ty.InterfaceKind r inst
-      | T.ClassKind ->
+      let desc = desc_of_reason ~unwrap:false r in
+      match (inst_kind, desc) with
+      | (_, Reason.RReactComponent) -> react_component_instance ~env own_props
+      | (T.InterfaceKind { inline = true }, _) -> inline_interface ~env super own_props inst_call_t
+      | (T.InterfaceKind { inline = false }, _) -> to_generic ~env Ty.InterfaceKind r inst
+      | (T.ClassKind, _) ->
         (match Env.get_member_expansion_info env with
         | None -> to_generic ~env Ty.ClassKind r inst
         | Some (Env.{ instance_member_expansion_mode = IMStatic; _ }, env) ->
@@ -1346,7 +1353,7 @@ end = struct
       | (T.DefT (r, _, T.InstanceT (static, _, _, inst)), _)
         when desc_of_reason ~unwrap:false r = RReactComponent ->
         let { Type.own_props; _ } = inst in
-        react_component ~env static own_props
+        react_component_class ~env static own_props
       | (_, Some (_, env)) -> type__ ~env:(Env.continue_expanding_members env) t
       | (_, None) ->
         let%bind t = type__ ~env t in
