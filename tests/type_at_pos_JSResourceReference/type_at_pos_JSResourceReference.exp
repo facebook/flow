@@ -1,0 +1,11 @@
+main.js:7:13
+Flags:
+type SurfaceEntryPoint<TRoute: Route<>> = $ReadOnly<
+  {
+    getComponent: () => JSResourceReference<Module<TRoute>>,
+    getNavigationOptions: () => number,
+    getRoute: () => Class<TRoute>
+  },
+>
+main.js:7:13,7:29
+

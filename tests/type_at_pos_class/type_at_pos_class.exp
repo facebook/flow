@@ -283,6 +283,21 @@ class-3.js:10:9 = {
   "start":9,
   "end":9
 }
+class-4.js:9:6 = {
+  "type":"Y",
+  "reasons":[],
+  "loc":{
+    "source":"class-4.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":6,"offset":79},
+    "end":{"line":9,"column":10,"offset":84}
+  },
+  "path":"class-4.js",
+  "line":9,
+  "endline":9,
+  "start":6,
+  "end":10
+}
 class-bound.js:4:6 = {
   "type":"type C<T: R<any>> = Class<T>",
   "reasons":[],
@@ -673,6 +688,21 @@ declare_class.js:3:15 = {
   "start":15,
   "end":15
 }
+FluxStore.js:14:5 = {
+  "type":"Class<FluxStore<any>>",
+  "reasons":[],
+  "loc":{
+    "source":"FluxStore.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":5,"offset":227},
+    "end":{"line":14,"column":9,"offset":232}
+  },
+  "path":"FluxStore.js",
+  "line":14,
+  "endline":14,
+  "start":5,
+  "end":9
+}
 implements.js:7:8 = {
   "type":"interface IA<T>",
   "reasons":[],
@@ -687,6 +717,21 @@ implements.js:7:8 = {
   "endline":4,
   "start":23,
   "end":24
+}
+multi-inheritance.js:6:7 = {
+  "type":"(unknown)",
+  "reasons":[],
+  "loc":{
+    "source":"multi-inheritance.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":7,"offset":90},
+    "end":{"line":6,"column":11,"offset":95}
+  },
+  "path":"multi-inheritance.js",
+  "line":6,
+  "endline":6,
+  "start":7,
+  "end":11
 }
 type-utils.js:5:13 {
   "expanded_type":{

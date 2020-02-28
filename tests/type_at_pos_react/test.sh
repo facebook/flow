@@ -12,6 +12,16 @@ assert_ok "$FLOW" type-at-pos create_class.js 19 7 --strip-root
 printf "create_class.js:31:7 = "
 assert_ok "$FLOW" type-at-pos create_class.js 31 7 --strip-root
 
+# create_class_state.js
+printf "create_class_state.js:16:5 = "
+assert_ok "$FLOW" type-at-pos create_class_state.js 16 5 --strip-root
+
+# lazy_ref.js
+printf "lazy_ref.js:14:9 = "
+assert_ok "$FLOW" type-at-pos lazy_ref.js 14 9 --strip-root
+printf "lazy_ref.js:19:9 = "
+assert_ok "$FLOW" type-at-pos lazy_ref.js 19 9 --strip-root
+
 # react_component.js
 printf "react_component.js:3:9 = "
 assert_ok "$FLOW" type-at-pos react_component.js 3 9 --strip-root

@@ -328,6 +328,21 @@ generics.js:30:13 = {
   "start":13,
   "end":13
 }
+ill-formed.js:30:13 = {
+  "type":"Foo<number>",
+  "reasons":[],
+  "loc":{
+    "source":"ill-formed.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":7,"offset":46},
+    "end":{"line":5,"column":7,"offset":47}
+  },
+  "path":"ill-formed.js",
+  "line":5,
+  "endline":5,
+  "start":7,
+  "end":7
+}
 implicit-instantiation.js:5:10{
   "expanded_type":{"kind":"Num"},
   "type":"number",
@@ -885,7 +900,7 @@ optional.js:14:10 = {
   "start":10,
   "end":10
 }
-stack-overflow-bugfix.js:14:10 = {
+stack-overflow-bugfix.js:5:6 = {
   "type":"type T = {+fn: <A, B>() => (value: B) => (value: C<B>) => S<A, C<C<B>>>}",
   "reasons":[],
   "loc":{

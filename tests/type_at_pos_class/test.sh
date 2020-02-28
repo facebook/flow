@@ -26,14 +26,14 @@ assert_ok "$FLOW" type-at-pos class-0.js 21 5 --strip-root --pretty
 printf "class-0.js:24:5 = "
 assert_ok "$FLOW" type-at-pos class-0.js 24 5 --strip-root --pretty
 
-#class-1.js
+# class-1.js
 # TODO this is not the ideal type
 printf "class-1.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-1.js 4 3 --strip-root --pretty
 printf "class-1.js:8:3 = "
 assert_ok "$FLOW" type-at-pos class-1.js 8 3 --strip-root --pretty
 
-#class-2.js
+# class-2.js
 printf "class-2.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-2.js 4 3 --strip-root --pretty
 printf "class-2.js:9:9 = "
@@ -45,13 +45,17 @@ assert_ok "$FLOW" type-at-pos class-2.js 12 7 --strip-root --pretty
 printf "class-2.js:13:7 = "
 assert_ok "$FLOW" type-at-pos class-2.js 13 7 --strip-root --pretty
 
-#class-3.js
+# class-3.js
 printf "class-3.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-3.js 4 3 --strip-root --pretty
 printf "class-3.js:9:9 = "
 assert_ok "$FLOW" type-at-pos class-3.js 9 9 --strip-root --pretty
 printf "class-3.js:10:9 = "
 assert_ok "$FLOW" type-at-pos class-3.js 10 9 --strip-root --pretty
+
+# class-4.js
+printf "class-4.js:9:6 = "
+assert_ok "$FLOW" type-at-pos class-4.js 9 6 --strip-root --pretty
 
 # class-bound.js
 printf "class-bound.js:4:6 = "
@@ -124,9 +128,17 @@ assert_ok "$FLOW" type-at-pos class-statics-poly.js 17 5 --strip-root --pretty
 printf "declare_class.js:3:15 = "
 assert_ok "$FLOW" type-at-pos declare_class.js 3 15 --strip-root --pretty
 
+# FluxStore.js
+printf "FluxStore.js:14:5 = "
+assert_ok "$FLOW" type-at-pos FluxStore.js 14 5 --strip-root --pretty
+
 # implements.js
 printf "implements.js:7:8 = "
 assert_ok "$FLOW" type-at-pos implements.js 4 23 --strip-root --pretty
+
+# multi-inheritance.js
+printf "multi-inheritance.js:6:7 = "
+assert_ok "$FLOW" type-at-pos multi-inheritance.js 6 7 --strip-root --pretty
 
 # type-utils.js
 printf "type-utils.js:5:13 "

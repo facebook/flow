@@ -71,3 +71,7 @@ assert_ok "$FLOW" type-at-pos function-poly-4.js 9 7 --strip-root --pretty
 # function-poly-5.js
 printf "function-poly-5.js:3:10 = "
 assert_ok "$FLOW" type-at-pos function-poly-5.js 3 10 --strip-root --pretty
+
+# function-poly-6.js
+printf "function-poly-6.js:7:6 = "
+assert_ok "$FLOW" type-at-pos function-poly-6.js 7 6 --strip-root --pretty

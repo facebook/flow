@@ -17,3 +17,8 @@ interface I {
   get y(): string;
   set y(x: number): void;
 }
+
+function* gen(): Generator<number, void, number> {
+//        ^
+  yield 1;
+}

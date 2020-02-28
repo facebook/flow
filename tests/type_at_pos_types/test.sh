@@ -64,6 +64,10 @@ assert_ok "$FLOW" type-at-pos generics.js 22 1 --strip-root --pretty
 printf "generics.js:30:13 = "
 assert_ok "$FLOW" type-at-pos generics.js 30 13 --strip-root --pretty
 
+# ill-formed.js
+printf "ill-formed.js:30:13 = "
+assert_ok "$FLOW" type-at-pos ill-formed.js 5 7 --strip-root --pretty
+
 # implicit-instantiation.js
 printf "implicit-instantiation.js:5:10"
 assert_ok "$FLOW" type-at-pos implicit-instantiation.js 5 10 --strip-root --pretty --expand-json-output
@@ -165,7 +169,7 @@ assert_ok "$FLOW" type-at-pos optional.js 14 10 --strip-root --pretty
 # stack-overflow-bugfix.js
 # This used to cause Stack overflow due to a normalizer bug in Substitution
 # with a mapping of the form: A -> Bound(A)
-printf "stack-overflow-bugfix.js:14:10 = "
+printf "stack-overflow-bugfix.js:5:6 = "
 assert_ok "$FLOW" type-at-pos stack-overflow-bugfix.js 5 6 --strip-root --pretty --expand-type-aliases
 
 # recursive.js

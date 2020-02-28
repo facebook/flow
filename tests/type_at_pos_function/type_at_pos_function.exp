@@ -373,3 +373,18 @@ function-poly-5.js:3:10 = {
   "start":10,
   "end":12
 }
+function-poly-6.js:7:6 = {
+  "type":"(unknown)",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-6.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":6,"offset":81},
+    "end":{"line":7,"column":8,"offset":84}
+  },
+  "path":"function-poly-6.js",
+  "line":7,
+  "endline":7,
+  "start":6,
+  "end":8
+}

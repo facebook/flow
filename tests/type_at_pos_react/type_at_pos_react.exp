@@ -33,6 +33,12 @@ create_class.js:31:7 =
     |}
   }
 create_class.js:31:7,31:20
+create_class_state.js:16:5 = (unknown)
+create_class_state.js:16:5,16:8
+lazy_ref.js:14:9 = {|default: React$AbstractComponent<empty, {|moo: (x: string) => void|}>|}
+lazy_ref.js:14:9,14:9
+lazy_ref.js:19:9 = Promise<{|default: React$AbstractComponent<empty, void>|}>
+lazy_ref.js:19:9,19:9
 react_component.js:3:9 = {|
   +AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React$AbstractComponent<
     Config,

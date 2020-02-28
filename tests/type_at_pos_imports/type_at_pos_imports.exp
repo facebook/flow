@@ -567,3 +567,26 @@ import-type.js:3:20 = {
   "start":15,
   "end":25
 }
+import-type.js:7:7 = {
+  "expanded_type":{
+    "kind":"Generic",
+    "type":{
+      "provenance":{"kind":"Imported","loc":"exports-type.js:3:27-41"},
+      "name":"MyUnionType"
+    },
+    "kind":"type alias"
+  },
+  "type":"MyUnionType",
+  "reasons":[],
+  "loc":{
+    "source":"import-type.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":7,"offset":105},
+    "end":{"line":7,"column":7,"offset":106}
+  },
+  "path":"import-type.js",
+  "line":7,
+  "endline":7,
+  "start":7,
+  "end":7
+}
