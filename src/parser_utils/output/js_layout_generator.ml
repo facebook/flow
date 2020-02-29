@@ -649,12 +649,15 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                | Some b -> fuse [pretty_space; Atom "finally"; pretty_space; block b]
                | None -> Empty);
              ])
-      | S.While { S.While.test; body } ->
-        fuse
-          [
-            statement_with_test "while" (expression test);
-            statement_after_test ~pretty_semicolon body;
-          ]
+      | S.While { S.While.test; body; comments } ->
+        layout_node_with_simple_comments_opt
+          loc
+          comments
+          (fuse
+             [
+               statement_with_test "while" (expression test);
+               statement_after_test ~pretty_semicolon body;
+             ])
       | S.DoWhile { S.DoWhile.body; test; comments } ->
         with_semicolon
         @@ layout_node_with_simple_comments_opt

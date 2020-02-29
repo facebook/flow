@@ -140,7 +140,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
         nodes @ node_list_of_option ~f:get_children_nodes_expr init)
       []
       declarations
-  | While { While.test; body } -> [statement_of_expression test; body]
+  | While { While.test; body; comments = _ } -> [statement_of_expression test; body]
   | DoWhile { DoWhile.test; body; comments = _ } -> [statement_of_expression test; body]
   | For { For.init; test; update; body } ->
     let init_nodes =

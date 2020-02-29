@@ -538,6 +538,7 @@ module Statement
 
   and while_ =
     with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_WHILE;
         Expect.token env T_LPAREN;
         let test = Parse.expression env in
@@ -548,8 +549,13 @@ module Statement
        (see sec-semantics-static-semantics-early-errors). *)
         if (not (in_strict_mode env)) && is_labelled_function body then
           function_as_statement_error_at env (fst body);
-
-        Statement.While { Statement.While.test; body })
+        let trailing = Peek.comments env in
+        Statement.While
+          {
+            Statement.While.test;
+            body;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   and with_ env =
     let (loc, stmt) =

@@ -219,7 +219,7 @@ module Statements = struct
 
   let block children = (Loc.none, Block { Block.body = children })
 
-  let while_ test body = (Loc.none, While { While.test; body })
+  let while_ test ?comments body = (Loc.none, While { While.test; body; comments })
 
   let do_while body ?comments test = (Loc.none, DoWhile { DoWhile.body; test; comments })
 

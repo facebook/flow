@@ -1496,10 +1496,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method while_ (stuff : ('M, 'T) Ast.Statement.While.t) : ('N, 'U) Ast.Statement.While.t =
       let open Ast.Statement.While in
-      let { test; body } = stuff in
+      let { test; body; comments } = stuff in
       let test' = this#predicate_expression test in
       let body' = this#statement body in
-      { test = test'; body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { test = test'; body = body'; comments = comments' }
 
     method with_ (stuff : ('M, 'T) Ast.Statement.With.t) : ('N, 'U) Ast.Statement.With.t =
       let open Ast.Statement.With in

@@ -1811,13 +1811,14 @@ class ['loc] mapper =
 
     method while_ _loc (stuff : ('loc, 'loc) Ast.Statement.While.t) =
       let open Ast.Statement.While in
-      let { test; body } = stuff in
+      let { test; body; comments } = stuff in
       let test' = this#predicate_expression test in
       let body' = this#statement body in
-      if test == test' && body == body' then
+      let comments' = this#syntax_opt comments in
+      if test == test' && body == body' && comments == comments' then
         stuff
       else
-        { test = test'; body = body' }
+        { test = test'; body = body'; comments = comments' }
 
     method with_ _loc (stuff : ('loc, 'loc) Ast.Statement.With.t) =
       let open Ast.Statement.With in

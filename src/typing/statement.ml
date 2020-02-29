@@ -1578,7 +1578,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
      [Pre] while c S [Post]
   *)
   (***************************************************************************)
-  | (loc, While { While.test; body }) ->
+  | (loc, While { While.test; body; comments }) ->
     let save_break = Abnormal.clear_saved (Abnormal.Break None) in
     let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
     (* generate loop test preds and their complements *)
@@ -1617,7 +1617,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     (* if we broke out of the loop, havoc vars changed by loop body *)
     if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-    (loc, While { While.test = test_ast; body = body_ast })
+    (loc, While { While.test = test_ast; body = body_ast; comments })
   (***************************************************************************)
   (* Refinements for `do-while` are derived by the following Hoare logic rule:
 

@@ -177,8 +177,8 @@ with type t = Impl.t = struct
             ("handler", option catch handler);
             ("finalizer", option block finalizer);
           ]
-      | (loc, While { While.test; body }) ->
-        node "WhileStatement" loc [("test", expression test); ("body", statement body)]
+      | (loc, While { While.test; body; comments }) ->
+        node ?comments "WhileStatement" loc [("test", expression test); ("body", statement body)]
       | (loc, DoWhile { DoWhile.body; test; comments }) ->
         node ?comments "DoWhileStatement" loc [("body", statement body); ("test", expression test)]
       | (loc, For { For.init = init_; test; update; body }) ->

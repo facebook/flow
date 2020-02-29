@@ -518,7 +518,7 @@ let program
       | ((_, Block block1), (_, Block block2)) -> block block1 block2
       | ((_, For for1), (_, For for2)) -> for_statement for1 for2
       | ((_, ForIn for_in1), (_, ForIn for_in2)) -> for_in_statement for_in1 for_in2
-      | ((_, While while1), (_, While while2)) -> Some (while_statement while1 while2)
+      | ((loc, While while1), (_, While while2)) -> Some (while_statement loc while1 while2)
       | ((_, ForOf for_of1), (_, ForOf for_of2)) -> for_of_statement for_of1 for_of2
       | ((loc, DoWhile do_while1), (_, DoWhile do_while2)) ->
         Some (do_while_statement loc do_while1 do_while2)
@@ -1452,14 +1452,16 @@ let program
     | (LeftPattern _, LeftDeclaration _) ->
       None
   and while_statement
-      (stmt1 : (Loc.t, Loc.t) Ast.Statement.While.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.While.t)
-      : node change list =
+      loc
+      (stmt1 : (Loc.t, Loc.t) Ast.Statement.While.t)
+      (stmt2 : (Loc.t, Loc.t) Ast.Statement.While.t) : node change list =
     let open Ast.Statement.While in
-    let { test = test1; body = body1 } = stmt1 in
-    let { test = test2; body = body2 } = stmt2 in
+    let { body = body1; test = test1; comments = comments1 } = stmt1 in
+    let { body = body2; test = test2; comments = comments2 } = stmt2 in
     let test = diff_if_changed expression test1 test2 in
     let body = diff_if_changed statement body1 body2 in
-    test @ body
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    test @ body @ comments
   and for_of_statement
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.ForOf.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.ForOf.t)
       : node change list option =

@@ -612,7 +612,7 @@ struct
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.While in
-            let { test; body } = stmt in
+            let { test; body; comments = _ } = stmt in
             (* placeholder for environment at the end of the loop body *)
             let env1 = this#fresh_ssa_env in
             this#merge_self_ssa_env env1;
