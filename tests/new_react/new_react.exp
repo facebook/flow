@@ -42,11 +42,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- classes.js:7:1
 
-Cannot extend `React.Component` [1] with `Foo` because:
- - property `y_` is missing in function type [2] but exists in object type [3] in the first argument of property
-   `setState`.
- - property `y_` is missing in `State` [4] but exists in object type [3] in the first argument of property `setState`.
- - object type [3] is incompatible with null or undefined [5] in the first argument of property `setState`.
+Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in function type [2] but exists in
+object type [3] in the first argument of property `setState`.
 
    classes.js:7:1
        v------------------------------------------------
@@ -92,12 +89,108 @@ References:
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
                      ^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- classes.js:7:1
+
+Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in `State` [2] but exists in object
+type [3] in the first argument of property `setState`.
+
+   classes.js:7:1
+       v------------------------------------------------
+    7| class Foo extends React.Component<Props, State> {
+    8|   static defaultProps: DefaultProps;
+    9|
+   10|   is_mounted: boolean;
+   11|
+   12|   static bar(): void {}
+   13|
+   14|   qux(): void {
+   15|     var _: string = this.props.x;
+   16|   }
+   17|
+   18|   constructor(props) {
+   19|     super(props);
+   20|     this.state = { y: "" };
+   21|   }
+   22|
+   23|   setState(o: { y_: string }): void { }
+   24|
+   25|   componentDidMount(): void {
+   26|     this.is_mounted = true;
+   27|   }
+   28|
+   29|   componentWillReceiveProps(
+   30|     nextProps: Object,
+   31|     nextContext: any
+   32|   ): void {
+   33|     this.qux();
+   34|   }
+   35|
+   36| }
+       ^
+
+References:
+   classes.js:7:19
+    7| class Foo extends React.Component<Props, State> {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:7:42
     7| class Foo extends React.Component<Props, State> {
-                                                ^^^^^ [4]
+                                                ^^^^^ [2]
+   classes.js:23:15
+   23|   setState(o: { y_: string }): void { }
+                     ^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- classes.js:7:1
+
+Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with null or undefined [3] in the
+first argument of property `setState`.
+
+   classes.js:7:1
+       v------------------------------------------------
+    7| class Foo extends React.Component<Props, State> {
+    8|   static defaultProps: DefaultProps;
+    9|
+   10|   is_mounted: boolean;
+   11|
+   12|   static bar(): void {}
+   13|
+   14|   qux(): void {
+   15|     var _: string = this.props.x;
+   16|   }
+   17|
+   18|   constructor(props) {
+   19|     super(props);
+   20|     this.state = { y: "" };
+   21|   }
+   22|
+   23|   setState(o: { y_: string }): void { }
+   24|
+   25|   componentDidMount(): void {
+   26|     this.is_mounted = true;
+   27|   }
+   28|
+   29|   componentWillReceiveProps(
+   30|     nextProps: Object,
+   31|     nextContext: any
+   32|   ): void {
+   33|     this.qux();
+   34|   }
+   35|
+   36| }
+       ^
+
+References:
+   classes.js:7:19
+    7| class Foo extends React.Component<Props, State> {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js:23:15
+   23|   setState(o: { y_: string }): void { }
+                     ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:35:19
    35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
-                         ^^^^^^^^^^^^^^ [5]
+                         ^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -150,10 +243,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
- - class `Foo` [3] is incompatible with number [1] in property `type`.
+Cannot assign `<Foo />` to `foo` because number [1] is not a React component.
+
+   classes.js:39:25
+   39| var foo: $jsx<number> = <Foo/>;
+                               ^^^^^^
+
+References:
+   classes.js:39:15
+   39| var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:39:25
+
+Cannot assign `<Foo />` to `foo` because number [1] is incompatible with string [2] in type argument `ElementType`.
 
    classes.js:39:25
     39| var foo: $jsx<number> = <Foo/>;
@@ -166,9 +270,23 @@ References:
    <BUILTINS>/react.js:170:5
    170|   | string
             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:39:25
+
+Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in property `type`.
+
+   classes.js:39:25
+   39| var foo: $jsx<number> = <Foo/>;
+                               ^^^^^^
+
+References:
    classes.js:7:7
-     7| class Foo extends React.Component<Props, State> {
-              ^^^ [3]
+    7| class Foo extends React.Component<Props, State> {
+             ^^^ [1]
+   classes.js:39:15
+   39| var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
@@ -252,11 +370,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
-Cannot assign `<FooLegacy />` to `foo_legacy` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
- - class React component [3] is incompatible with number [1] in property `type`.
- - number [4] is not an object in type argument `ElementType`.
+Cannot assign `<FooLegacy />` to `foo_legacy` because number [1] is not a React component.
+
+   classes.js:79:32
+   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                      ^^^^^^^^^^^^
+
+References:
+   classes.js:79:22
+   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:79:32
+
+Cannot assign `<FooLegacy />` to `foo_legacy` because number [1] is incompatible with string [2] in type argument
+`ElementType`.
 
    classes.js:79:32
     79| var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -269,65 +398,101 @@ References:
    <BUILTINS>/react.js:170:5
    170|   | string
             ^^^^^^ [2]
-   classes.js:43:17
-                        v------------------
-    43| var FooLegacy = React.createClass({
-    44|   is_mounted: (undefined: ?boolean),
-    45|
-    46|   propTypes: {
-    47|     x: React.PropTypes.number.isRequired
-    48|   },
-    49|
-    50|   getDefaultProps(): DefaultProps { return {} },
-    51|
-    52|   statics: {
-    53|     bar(): void {}
-    54|   },
-    55|
-    56|   qux(): void {
-    57|     var _: string = this.props.x;
-      :
-    62|   },
-    63|
-    64|   setState(o: { y_: string }): void { },
-    65|
-    66|   componentDidMount(): void {
-    67|     this.is_mounted = true;
-    68|   },
-    69|
-    70|   componentWillReceiveProps(
-    71|     nextProps: Object,
-    72|     nextContext: any
-    73|   ): void {
-    74|     this.qux();
-    75|   },
-    76| });
-        -^ [3]
-   classes.js:78:26
-    78| FooLegacy.defaultProps = 0;
-                                 ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
-Cannot create `FooLegacy` element because:
- - number [1] is not an object.
- - property `x` is missing in props [2] but exists in propTypes of React component [3].
+Cannot assign `<FooLegacy />` to `foo_legacy` because class React component [1] is incompatible with number [2] in
+property `type`.
 
    classes.js:79:32
    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                      ^^^^^^^^^^^^ [2]
+                                      ^^^^^^^^^^^^
+
+References:
+   classes.js:43:17
+                       v------------------
+   43| var FooLegacy = React.createClass({
+   44|   is_mounted: (undefined: ?boolean),
+   45|
+   46|   propTypes: {
+   47|     x: React.PropTypes.number.isRequired
+   48|   },
+   49|
+   50|   getDefaultProps(): DefaultProps { return {} },
+   51|
+   52|   statics: {
+   53|     bar(): void {}
+   54|   },
+   55|
+   56|   qux(): void {
+   57|     var _: string = this.props.x;
+     :
+   62|   },
+   63|
+   64|   setState(o: { y_: string }): void { },
+   65|
+   66|   componentDidMount(): void {
+   67|     this.is_mounted = true;
+   68|   },
+   69|
+   70|   componentWillReceiveProps(
+   71|     nextProps: Object,
+   72|     nextContext: any
+   73|   ): void {
+   74|     this.qux();
+   75|   },
+   76| });
+       -^ [1]
+   classes.js:79:22
+   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:79:32
+
+Cannot assign `<FooLegacy />` to `foo_legacy` because number [1] is not an object in type argument `ElementType`.
+
+   classes.js:79:32
+   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                      ^^^^^^^^^^^^
 
 References:
    classes.js:78:26
    78| FooLegacy.defaultProps = 0;
                                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:79:32
+
+Cannot create `FooLegacy` element because number [1] is not an object.
+
+   classes.js:79:32
+   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                      ^^^^^^^^^^^^
+
+References:
+   classes.js:78:26
+   78| FooLegacy.defaultProps = 0;
+                                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:79:32
+
+Cannot create `FooLegacy` element because property `x` is missing in props [1] but exists in propTypes of React
+component [2].
+
+   classes.js:79:32
+   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                      ^^^^^^^^^^^^ [1]
+
+References:
    classes.js:46:14
                     v
    46|   propTypes: {
    47|     x: React.PropTypes.number.isRequired
    48|   },
-         ^ [3]
+         ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- import-react.js:16:1
@@ -388,9 +553,24 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:19:27
 
-Cannot assign `this.props.z` to `qux` because:
- - number [1] is incompatible with string [2].
- - undefined [1] is incompatible with string [2].
+Cannot assign `this.props.z` to `qux` because number [1] is incompatible with string [2].
+
+   new_react.js:19:27
+    19|         var qux: string = this.props.z;
+                                  ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
+                                           ^^^^^^ [1]
+   new_react.js:19:18
+    19|         var qux: string = this.props.z;
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:19:27
+
+Cannot assign `this.props.z` to `qux` because undefined [1] is incompatible with string [2].
 
    new_react.js:19:27
     19|         var qux: string = this.props.z;
@@ -475,10 +655,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:32:17
 
-Cannot assign `C.displayName` to `x` because:
- - null or undefined [1] is incompatible with number [2].
- - undefined [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `C.displayName` to `x` because null or undefined [1] is incompatible with number [2].
 
    new_react.js:32:17
    32| var x: number = C.displayName;
@@ -491,9 +668,40 @@ References:
    new_react.js:32:8
    32| var x: number = C.displayName;
               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:32:17
+
+Cannot assign `C.displayName` to `x` because undefined [1] is incompatible with number [2].
+
+   new_react.js:32:17
+   32| var x: number = C.displayName;
+                       ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:87:24
+   87|   static displayName?: ?string;
+                              ^^^^^^^ [1]
+   new_react.js:32:8
+   32| var x: number = C.displayName;
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:32:17
+
+Cannot assign `C.displayName` to `x` because string [1] is incompatible with number [2].
+
+   new_react.js:32:17
+   32| var x: number = C.displayName;
+                       ^^^^^^^^^^^^^
+
+References:
    <BUILTINS>/react.js:87:25
    87|   static displayName?: ?string;
-                               ^^^^^^ [3]
+                               ^^^^^^ [1]
+   new_react.js:32:8
+   32| var x: number = C.displayName;
+              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_component.js:14:12
@@ -571,9 +779,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props.js:14:25
 
-Cannot assign `this.props.x` to `a` because:
- - string [1] is incompatible with number [2].
- - undefined [1] is incompatible with number [2].
+Cannot assign `this.props.x` to `a` because string [1] is incompatible with number [2].
+
+   props.js:14:25
+    14|         var a: number = this.props.x; // error
+                                ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
+                                           ^^^^^^ [1]
+   props.js:14:16
+    14|         var a: number = this.props.x; // error
+                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- props.js:14:25
+
+Cannot assign `this.props.x` to `a` because undefined [1] is incompatible with number [2].
 
    props.js:14:25
     14|         var a: number = this.props.x; // error
@@ -608,9 +831,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props.js:16:25
 
-Cannot assign `this.props.z` to `c` because:
- - number [1] is incompatible with string [2].
- - undefined [1] is incompatible with string [2].
+Cannot assign `this.props.z` to `c` because number [1] is incompatible with string [2].
+
+   props.js:16:25
+    16|         var c: string = this.props.z; // error
+                                ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
+                                           ^^^^^^ [1]
+   props.js:16:16
+    16|         var c: string = this.props.z; // error
+                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- props.js:16:25
+
+Cannot assign `this.props.z` to `c` because undefined [1] is incompatible with string [2].
 
    props.js:16:25
     16|         var c: string = this.props.z; // error
@@ -627,9 +865,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props.js:20:15
 
-Cannot create `TestProps` element because:
- - boolean [1] is incompatible with string [2] in property `x`.
- - boolean [3] is incompatible with number [4] in property `z`.
+Cannot create `TestProps` element because boolean [1] is incompatible with string [2] in property `x`.
 
    props.js:20:15
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
@@ -642,12 +878,23 @@ References:
    <BUILTINS>/react.js:488:36
    488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- props.js:20:15
+
+Cannot create `TestProps` element because boolean [1] is incompatible with number [2] in property `z`.
+
+   props.js:20:15
+    20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    props.js:20:49
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                                        ^^^^^ [3]
+                                                        ^^^^^ [1]
    <BUILTINS>/react.js:486:36
    486|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [4]
+                                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- props.js:27:2
@@ -691,9 +938,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- props2.js:15:16
 
-Cannot create `C` element because:
- - number [1] is incompatible with string [2] in property `bar`.
- - number [3] is incompatible with string [2] in property `foo`.
+Cannot create `C` element because number [1] is incompatible with string [2] in property `bar`.
 
    props2.js:15:16
     15|         return <C {...this.state} foo = {0} />;
@@ -706,9 +951,23 @@ References:
    <BUILTINS>/react.js:488:36
    488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- props2.js:15:16
+
+Cannot create `C` element because number [1] is incompatible with string [2] in property `foo`.
+
+   props2.js:15:16
+    15|         return <C {...this.state} foo = {0} />;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    props2.js:15:42
     15|         return <C {...this.state} foo = {0} />;
-                                                 ^ [3]
+                                                 ^ [1]
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
+                                           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- props3.js:49:16

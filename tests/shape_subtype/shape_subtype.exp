@@ -57,9 +57,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:2
 
-Cannot cast `z13.p` to empty because:
- - number [1] is incompatible with empty [2].
- - string [3] is incompatible with empty [2].
+Cannot cast `z13.p` to empty because number [1] is incompatible with empty [2].
 
    test.js:36:2
    36| (z13.p : empty); //flow error
@@ -72,9 +70,23 @@ References:
    test.js:36:10
    36| (z13.p : empty); //flow error
                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:36:2
+
+Cannot cast `z13.p` to empty because string [1] is incompatible with empty [2].
+
+   test.js:36:2
+   36| (z13.p : empty); //flow error
+        ^^^^^
+
+References:
    test.js:35:36
    35| let z13 : $Shape<typeof o7> = {p : "3"}; // no error
-                                          ^^^ [3]
+                                          ^^^ [1]
+   test.js:36:10
+   36| (z13.p : empty); //flow error
+                ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:38:24

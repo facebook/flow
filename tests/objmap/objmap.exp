@@ -454,9 +454,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:19:2
 
-Cannot cast object literal to `Foo` because:
- - string [1] is incompatible with number [2] in property `a`.
- - string [3] is incompatible with number [4] in property `b`.
+Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `a`.
 
    identity.js:19:2
         v
@@ -473,19 +471,32 @@ References:
    identity.js:7:8
     7|     a: number,
               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:19:2
+
+Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `b`.
+
+   identity.js:19:2
+        v
+   19| ({
+   20|   a: 'asd', // Error: string ~> number
+   21|   b: 'asd', // Error: string ~> number
+   22| }: Foo);
+       ^
+
+References:
    identity.js:21:6
    21|   b: 'asd', // Error: string ~> number
-            ^^^^^ [3]
+            ^^^^^ [1]
    identity.js:8:8
     8|     b: number,
-              ^^^^^^ [4]
+              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:24:3
 
-Cannot cast `any` to `Foo` because:
- - string [1] is incompatible with number [2] in property `a`.
- - string [3] is incompatible with number [4] in property `b`.
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`.
 
    identity.js:24:3
          v-----
@@ -502,19 +513,49 @@ References:
    identity.js:7:8
     7|     a: number,
               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:24:3
+
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`.
+
+   identity.js:24:3
+         v-----
+   24| ((any: {
+   25|   a: string, // Error: string ~> number
+   26|   b: string, // Error: string ~> number
+   27| }): Foo);
+       ^
+
+References:
    identity.js:26:6
    26|   b: string, // Error: string ~> number
-            ^^^^^^ [3]
+            ^^^^^^ [1]
    identity.js:8:8
     8|     b: number,
-              ^^^^^^ [4]
+              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:29:3
 
-Cannot cast object literal to `Foo` because:
- - property `a` is missing in object type [1] but exists in object type [2].
- - property `b` is missing in object type [1] but exists in object type [2].
+Cannot cast object literal to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
+
+   identity.js:29:3
+   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+         ^^^^^^
+
+References:
+   identity.js:29:7
+   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+             ^^ [1]
+   identity.js:29:12
+   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+                  ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:29:3
+
+Cannot cast object literal to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
 
    identity.js:29:3
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
@@ -531,9 +572,24 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:3
 
-Cannot cast `any` to `Foo` because:
- - property `a` is missing in object type [1] but exists in object type [2].
- - property `b` is missing in object type [1] but exists in object type [2].
+Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
+
+   identity.js:31:3
+   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+         ^^^^^^^
+
+References:
+   identity.js:31:8
+   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]
+   identity.js:31:13
+   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                   ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:31:3
+
+Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
 
    identity.js:31:3
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
@@ -550,9 +606,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:38:2
 
-Cannot cast `foo` to object type because:
- - number [1] is incompatible with string [2] in property `a`.
- - number [3] is incompatible with string [4] in property `b`.
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`.
 
    identity.js:38:2
    38| (foo: {
@@ -565,12 +619,23 @@ References:
    identity.js:39:6
    39|   a: string, // Error: number ~> string
             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:38:2
+
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`.
+
+   identity.js:38:2
+   38| (foo: {
+        ^^^
+
+References:
    identity.js:8:8
     8|     b: number,
-              ^^^^^^ [3]
+              ^^^^^^ [1]
    identity.js:40:6
    40|   b: string, // Error: number ~> string
-            ^^^^^^ [4]
+            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:43:2

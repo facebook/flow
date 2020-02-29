@@ -111,9 +111,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:12
 
-Cannot create `Component2` element because:
- - property `bar` is missing in `Props` [1] but exists in props [2].
- - property `foo` is missing in `Props` [1] but exists in props [2].
+Cannot create `Component2` element because property `bar` is missing in `Props` [1] but exists in props [2].
+
+   inexact_config.js:12:12
+   12| const _c = <Component2 foo={3} bar={3} />; // error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:10:29
+   10| function Component2(props : Props) : React$Node { return null; }
+                                   ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:12:12
+
+Cannot create `Component2` element because property `foo` is missing in `Props` [1] but exists in props [2].
 
    inexact_config.js:12:12
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -200,9 +212,27 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propTypes.js:15:1
 
-Cannot create `D` element because:
- - property `name` is missing in props [1] but exists in propTypes of React component [2].
- - property `title` is missing in props [1] but exists in propTypes of React component [2].
+Cannot create `D` element because property `name` is missing in props [1] but exists in propTypes of React
+component [2].
+
+   propTypes.js:15:1
+   15| <D />; // errors: properties `name` and `title` not found
+       ^^^^^ [1]
+
+References:
+   propTypes.js:9:14
+                    v
+    9|   propTypes: {
+   10|     name: React.PropTypes.string.isRequired,
+   11|     ...C.propTypes,
+   12|   }
+         ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ propTypes.js:15:1
+
+Cannot create `D` element because property `title` is missing in props [1] but exists in propTypes of React
+component [2].
 
    propTypes.js:15:1
    15| <D />; // errors: properties `name` and `title` not found

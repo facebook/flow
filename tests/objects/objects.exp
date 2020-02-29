@@ -1,8 +1,7 @@
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
-Cannot assign `y` to `x` because:
- - property `bar` is missing in object type [1] but exists in object type [2] in property `x`.
- - property `foo` is missing in object type [2] but exists in object type [1] in property `x`.
+Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
+`x`.
 
    compatibility.js:3:9
    3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -15,6 +14,24 @@ References:
    compatibility.js:2:47
    2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
                                                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
+
+Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
+`x`.
+
+   compatibility.js:3:9
+   3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
+              ^
+
+References:
+   compatibility.js:2:47
+   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                    ^^^^^^^^^^^^^^^ [1]
+   compatibility.js:2:20
+   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                         ^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- compatibility.js:7:9

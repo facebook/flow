@@ -416,9 +416,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- registerElement.js:48:48
 
-Cannot call `document.registerElement` with object literal bound to `options` because:
- - string [1] is incompatible with null [2] in the second argument of property `prototype.attributeChangedCallback`.
- - string [3] is incompatible with null [4] in the third argument of property `prototype.attributeChangedCallback`.
+Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
+null [2] in the second argument of property `prototype.attributeChangedCallback`.
 
    registerElement.js:48:48
                                                        v
@@ -440,12 +439,33 @@ References:
    <BUILTINS>/dom.js:707:36
    707|                 oldAttributeValue: null,
                                            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- registerElement.js:48:48
+
+Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
+null [2] in the third argument of property `prototype.attributeChangedCallback`.
+
+   registerElement.js:48:48
+                                                       v
+    48|     document.registerElement('custom-element', {
+    49|       prototype: {
+    50|         attributeChangedCallback(
+    51|           localName: string,
+    52|           oldVal: string, // Error: This might be null
+    53|           newVal: string, // Error: This might be null
+    54|           namespace: string) {}
+    55|       },
+    56|     });
+            ^
+
+References:
    registerElement.js:53:19
     53|           newVal: string, // Error: This might be null
-                          ^^^^^^ [3]
+                          ^^^^^^ [1]
    <BUILTINS>/dom.js:722:36
    722|                 newAttributeValue: null,
-                                           ^^^^ [4]
+                                           ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ traversal.js:29:5

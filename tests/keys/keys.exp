@@ -1,8 +1,20 @@
 Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
 
-Cannot cast `k` to string literal `c` because:
- - string literal `a` [1] is incompatible with string literal `c` [2].
- - string literal `b` [1] is incompatible with string literal `c` [2].
+Cannot cast `k` to string literal `c` because string literal `a` [1] is incompatible with string literal `c` [2].
+
+   errors.js:9:2
+   9| (k: 'c');
+       ^ [1]
+
+References:
+   errors.js:9:5
+   9| (k: 'c');
+          ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
+
+Cannot cast `k` to string literal `c` because string literal `b` [1] is incompatible with string literal `c` [2].
 
    errors.js:9:2
    9| (k: 'c');

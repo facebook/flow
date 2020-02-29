@@ -345,9 +345,27 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_maybe_type.js:52:21
 
-Cannot assign `y.filter(...)` to `z` because:
- - number [1] is incompatible with string [2] in type argument `T` [3].
- - string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot assign `y.filter(...)` to `z` because number [1] is incompatible with string [2] in type argument `T` [3].
+
+   non_maybe_type.js:52:21
+   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
+                           ^^^^^^^^^^^^^^^^^
+
+References:
+   non_maybe_type.js:42:27
+   42| declare function bar () : Node
+                                 ^^^^ [1]
+   non_maybe_type.js:52:13
+   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
+                   ^^^^ [2]
+   non_maybe_type.js:35:17
+   35| declare class A<T> {
+                       ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ non_maybe_type.js:52:21
+
+Cannot assign `y.filter(...)` to `z` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    non_maybe_type.js:52:21
    52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken

@@ -65,10 +65,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
 
-Cannot cast `d` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
- - boolean [4] is incompatible with undefined [2].
+Cannot cast `d` to undefined because number [1] is incompatible with undefined [2].
 
    array_rest.js:10:2
    10| (d: void); // error: number|string|boolean ~> void
@@ -81,12 +78,40 @@ References:
    array_rest.js:10:5
    10| (d: void); // error: number|string|boolean ~> void
            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
+
+Cannot cast `d` to undefined because string [1] is incompatible with undefined [2].
+
+   array_rest.js:10:2
+   10| (d: void); // error: number|string|boolean ~> void
+        ^
+
+References:
    array_rest.js:1:14
     1| let xs = [0, "", true];
-                    ^^ [3]
+                    ^^ [1]
+   array_rest.js:10:5
+   10| (d: void); // error: number|string|boolean ~> void
+           ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
+
+Cannot cast `d` to undefined because boolean [1] is incompatible with undefined [2].
+
+   array_rest.js:10:2
+   10| (d: void); // error: number|string|boolean ~> void
+        ^
+
+References:
    array_rest.js:1:18
     1| let xs = [0, "", true];
-                        ^^^^ [4]
+                        ^^^^ [1]
+   array_rest.js:10:5
+   10| (d: void); // error: number|string|boolean ~> void
+           ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:12:6
@@ -170,46 +195,92 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
 
-Cannot cast `q` to undefined because:
- - number [1] is incompatible with undefined [2].
- - boolean [3] is incompatible with undefined [2].
- - string [4] is incompatible with undefined [2].
- - null [5] is incompatible with undefined [2].
- - null [6] is incompatible with undefined [2].
+Cannot cast `q` to undefined because number [1] is incompatible with undefined [2].
+
+   defaults.js:9:4
+   9|   (q:void);
+         ^
+
+References:
+   defaults.js:3:29
+   3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
+                                  ^ [1]
+   defaults.js:9:6
+   9|   (q:void);
+           ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
+
+Cannot cast `q` to undefined because boolean [1] is incompatible with undefined [2].
+
+   defaults.js:9:4
+   9|   (q:void);
+         ^
+
+References:
+   defaults.js:3:35
+   3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
+                                        ^^^^ [1]
+   defaults.js:9:6
+   9|   (q:void);
+           ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
+
+Cannot cast `q` to undefined because string [1] is incompatible with undefined [2].
+
+   defaults.js:9:4
+   9|   (q:void);
+         ^
+
+References:
+   defaults.js:3:48
+   3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
+                                                     ^^ [1]
+   defaults.js:9:6
+   9|   (q:void);
+           ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
+
+Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
 
    defaults.js:9:4
     9|   (q:void);
           ^
 
 References:
-   defaults.js:3:29
-    3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
-                                   ^ [1]
+   defaults.js:14:20
+   14| obj_prop_fun({p:{q:null}}); // ok, provides add'l lower bound
+                          ^^^^ [1]
    defaults.js:9:6
     9|   (q:void);
             ^^^^ [2]
-   defaults.js:3:35
-    3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
-                                         ^^^^ [3]
-   defaults.js:3:48
-    3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
-                                                      ^^ [4]
-   defaults.js:14:20
-   14| obj_prop_fun({p:{q:null}}); // ok, provides add'l lower bound
-                          ^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
+
+Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
+
+   defaults.js:9:4
+    9|   (q:void);
+          ^
+
+References:
    defaults.js:71:28
    71| obj_prop_fun(({} : {p?:{q?:null}})); // ok
-                                  ^^^^ [6]
+                                  ^^^^ [1]
+   defaults.js:9:6
+    9|   (q:void);
+            ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:23:4
 
-Cannot cast `q` to undefined because:
- - string [1] is incompatible with undefined [2].
- - number [3] is incompatible with undefined [2].
- - boolean [4] is incompatible with undefined [2].
- - null [5] is incompatible with undefined [2].
- - null [6] is incompatible with undefined [2].
+Cannot cast `q` to undefined because string [1] is incompatible with undefined [2].
 
    defaults.js:23:4
    23|   (q:void);
@@ -222,26 +293,79 @@ References:
    defaults.js:23:6
    23|   (q:void);
             ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:23:4
+
+Cannot cast `q` to undefined because number [1] is incompatible with undefined [2].
+
+   defaults.js:23:4
+   23|   (q:void);
+          ^
+
+References:
    defaults.js:17:13
    17|   var {p:{q=0}={q:true}} = o;
-                   ^ [3]
+                   ^ [1]
+   defaults.js:23:6
+   23|   (q:void);
+            ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:23:4
+
+Cannot cast `q` to undefined because boolean [1] is incompatible with undefined [2].
+
+   defaults.js:23:4
+   23|   (q:void);
+          ^
+
+References:
    defaults.js:17:19
    17|   var {p:{q=0}={q:true}} = o;
-                         ^^^^ [4]
+                         ^^^^ [1]
+   defaults.js:23:6
+   23|   (q:void);
+            ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:23:4
+
+Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
+
+   defaults.js:23:4
+   23|   (q:void);
+          ^
+
+References:
    defaults.js:28:20
    28| obj_prop_var({p:{q:null}}); // ok, provides add'l lower bound
-                          ^^^^ [5]
+                          ^^^^ [1]
+   defaults.js:23:6
+   23|   (q:void);
+            ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:23:4
+
+Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
+
+   defaults.js:23:4
+   23|   (q:void);
+          ^
+
+References:
    defaults.js:72:28
    72| obj_prop_var(({} : {p?:{q?:null}})); // ok
-                                  ^^^^ [6]
+                                  ^^^^ [1]
+   defaults.js:23:6
+   23|   (q:void);
+            ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:35:4
 
-Cannot cast `o.r` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
- - null [4] is incompatible with undefined [2].
+Cannot cast `o.r` to undefined because number [1] is incompatible with undefined [2].
 
    defaults.js:35:4
    35|   (o.r:void);
@@ -254,12 +378,40 @@ References:
    defaults.js:35:8
    35|   (o.r:void);
               ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:35:4
+
+Cannot cast `o.r` to undefined because string [1] is incompatible with undefined [2].
+
+   defaults.js:35:4
+   35|   (o.r:void);
+          ^^^
+
+References:
    defaults.js:30:52
    30| function obj_rest({p:{q,...o}={q:0,r:0}}={p:{q:0,r:""}}) {
-                                                          ^^ [3]
+                                                          ^^ [1]
+   defaults.js:35:8
+   35|   (o.r:void);
+              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:35:4
+
+Cannot cast `o.r` to undefined because null [1] is incompatible with undefined [2].
+
+   defaults.js:35:4
+   35|   (o.r:void);
+          ^^^
+
+References:
    defaults.js:40:20
    40| obj_rest({p:{q:0,r:null}});
-                          ^^^^ [4]
+                          ^^^^ [1]
+   defaults.js:35:8
+   35|   (o.r:void);
+              ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:43:3

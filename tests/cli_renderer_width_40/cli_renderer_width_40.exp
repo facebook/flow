@@ -287,23 +287,13 @@ References:
 Error ---------------- wrap_group.js:6:2
 
 Cannot cast object literal to object
-type because:
- - number [1] is incompatible with
-   string [2] in property
-   `breaks.on.multiple.lines.a` of index
-   0 of property
-   `long.error.message.that.hopefully`
-   of index 0 of property
-   `to.be.a.really` of index 0 of
-   property `this.is.going`.
- - number [3] is incompatible with
-   string [4] in property
-   `breaks.on.multiple.lines.b` of index
-   0 of property
-   `long.error.message.that.hopefully`
-   of index 0 of property
-   `to.be.a.really` of index 0 of
-   property `this.is.going`.
+type because number [1] is incompatible
+with string [2] in property
+`breaks.on.multiple.lines.a` of index 0
+of property
+`long.error.message.that.hopefully` of
+index 0 of property `to.be.a.really` of
+index 0 of property `this.is.going`.
 
    wrap_group.js:6:2
         v
@@ -347,12 +337,61 @@ References:
    wrap_group.js:54:59
    54|                                     multiple: {lines: {a: string, b: string}},
                                                                  ^^^^^^ [2]
+
+
+Error ---------------- wrap_group.js:6:2
+
+Cannot cast object literal to object
+type because number [1] is incompatible
+with string [2] in property
+`breaks.on.multiple.lines.b` of index 0
+of property
+`long.error.message.that.hopefully` of
+index 0 of property `to.be.a.really` of
+index 0 of property `this.is.going`.
+
+   wrap_group.js:6:2
+        v
+    6| ({
+    7|   this: {
+    8|     is: {
+    9|       going: [
+   10|         {
+   11|           to: {
+   12|             be: {
+   13|               a: {
+   14|                 really: [
+   15|                   {
+   16|                     long: {
+   17|                       error: {
+   18|                         message: {
+   19|                           that: {
+   20|                             hopefully: [
+     :
+   22|                             ],
+   23|                           },
+   24|                         },
+   25|                       },
+   26|                     },
+   27|                   },
+   28|                 ],
+   29|               },
+   30|             },
+   31|           },
+   32|         },
+   33|       ],
+   34|     },
+   35|   },
+   36| }: {
+       ^
+
+References:
    wrap_group.js:21:74
    21|                               {breaks: {on: {multiple: {lines: {a: 1, b: 2}}}}},
-                                                                                ^ [3]
+                                                                                ^ [1]
    wrap_group.js:54:70
    54|                                     multiple: {lines: {a: string, b: string}},
-                                                                            ^^^^^^ [4]
+                                                                            ^^^^^^ [2]
 
 
 

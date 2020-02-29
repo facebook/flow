@@ -17,24 +17,36 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:7:16
 
-Cannot assign `o.m()` to `y` because:
- - string [1] is incompatible with number [2].
- - boolean [3] is incompatible with number [2].
+Cannot assign `o.m()` to `y` because string [1] is incompatible with number [2].
+
+   proto.js:7:16
+   7| var y:number = o.m();
+                     ^^^^^
+
+References:
+   proto.js:8:7
+   8| o.x = "...";
+            ^^^^^ [1]
+   proto.js:7:7
+   7| var y:number = o.m();
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- proto.js:7:16
+
+Cannot assign `o.m()` to `y` because boolean [1] is incompatible with number [2].
 
    proto.js:7:16
     7| var y:number = o.m();
                       ^^^^^
 
 References:
-   proto.js:8:7
-    8| o.x = "...";
-             ^^^^^ [1]
+   proto.js:10:42
+   10| Foo.prototype = { m: function() { return false; } }
+                                                ^^^^^ [1]
    proto.js:7:7
     7| var y:number = o.m();
              ^^^^^^ [2]
-   proto.js:10:42
-   10| Foo.prototype = { m: function() { return false; } }
-                                                ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- sealed.js:3:1

@@ -34,9 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:28:16
 
-Cannot assign `e.set(...)` to `x` because:
- - undefined [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot assign `e.set(...)` to `x` because undefined [1] is incompatible with string [2].
 
    generics.js:28:16
    28| var x:string = e.set(0);
@@ -49,9 +47,23 @@ References:
    generics.js:28:7
    28| var x:string = e.set(0);
              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ generics.js:28:16
+
+Cannot assign `e.set(...)` to `x` because number [1] is incompatible with string [2].
+
+   generics.js:28:16
+   28| var x:string = e.set(0);
+                      ^^^^^^^^
+
+References:
    generics.js:28:22
    28| var x:string = e.set(0);
-                            ^ [3]
+                            ^ [1]
+   generics.js:28:7
+   28| var x:string = e.set(0);
+             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ generics.js:39:41

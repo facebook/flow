@@ -1,8 +1,32 @@
 Error ------------------------------------------------------------------------------------------------------ Bad.js:17:3
 
-Cannot call `compose` with compose intermediate value bound to the first parameter because:
- - property `foo` is missing in props [1] but exists in `Props` [2].
- - string [3] is incompatible with number [4] in property `bar`.
+Cannot call `compose` with compose intermediate value bound to the first parameter because property `foo` is missing in
+props [1] but exists in `Props` [2].
+
+   Bad.js:17:3
+         v------------------------
+   17|   withProps(({ buz }) => ({
+   18|     bar: buz,
+   19|   })),
+         --^
+
+References:
+   hocs.js:15:25
+                               v-
+   15| ): (React.ComponentType<{|
+   16|   ...Props,
+   17|   ...ExtraProps,
+   18| |}>) => React.ComponentType<Props> {
+       -^ [1]
+   Bad.js:11:21
+   11| const Bad = (props: Props) => null;
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ Bad.js:17:3
+
+Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible
+with number [2] in property `bar`.
 
    Bad.js:17:3
           v------------------------
@@ -12,22 +36,12 @@ Cannot call `compose` with compose intermediate value bound to the first paramet
           --^
 
 References:
-   hocs.js:15:25
-                                v-
-    15| ): (React.ComponentType<{|
-    16|   ...Props,
-    17|   ...ExtraProps,
-    18| |}>) => React.ComponentType<Props> {
-        -^ [1]
-   Bad.js:11:21
-    11| const Bad = (props: Props) => null;
-                            ^^^^^ [2]
    <BUILTINS>/core.js:165:31
    165|     toString(radix?: number): string;
-                                      ^^^^^^ [3]
+                                      ^^^^^^ [1]
    Bad.js:8:8
      8|   bar: number,
-               ^^^^^^ [4]
+               ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:7:1

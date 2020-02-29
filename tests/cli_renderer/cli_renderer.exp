@@ -85,9 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:10:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:10:4
    10|   ([x, y]: [empty, empty]);
@@ -100,19 +98,28 @@ References:
    code_frame_omit.js:10:13
    10|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:10:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:10:4
+   10|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:9:13
     9|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:10:20
    10|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:16:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:16:4
    16|   ([x, y]: [empty, empty]);
@@ -125,19 +132,28 @@ References:
    code_frame_omit.js:16:13
    16|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:16:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:16:4
+   16|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:9:13
     9|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:16:20
    16|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:17:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:17:4
    17|   ([x, y]: [empty, empty]);
@@ -150,19 +166,28 @@ References:
    code_frame_omit.js:17:13
    17|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:17:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:17:4
+   17|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:9:13
     9|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:17:20
    17|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:26:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:26:4
    26|   ([x, y]: [empty, empty]);
@@ -175,19 +200,28 @@ References:
    code_frame_omit.js:26:13
    26|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:26:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:26:4
+   26|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:25:13
    25|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:26:20
    26|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:32:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:32:4
    32|   ([x, y]: [empty, empty]);
@@ -200,19 +234,28 @@ References:
    code_frame_omit.js:32:13
    32|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:32:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:32:4
+   32|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:25:13
    25|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:32:20
    32|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:33:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:33:4
    33|   ([x, y]: [empty, empty]);
@@ -225,19 +268,28 @@ References:
    code_frame_omit.js:33:13
    33|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:33:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:33:4
+   33|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:25:13
    25|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:33:20
    33|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:43:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:43:4
    43|   ([x, y]: [empty, empty]);
@@ -250,19 +302,28 @@ References:
    code_frame_omit.js:43:13
    43|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:43:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:43:4
+   43|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:42:13
    42|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:43:20
    43|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:49:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:49:4
    49|   ([x, y]: [empty, empty]);
@@ -275,19 +336,28 @@ References:
    code_frame_omit.js:49:13
    49|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:49:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:49:4
+   49|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:42:13
    42|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:49:20
    49|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:50:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    code_frame_omit.js:50:4
    50|   ([x, y]: [empty, empty]);
@@ -300,20 +370,28 @@ References:
    code_frame_omit.js:50:13
    50|   ([x, y]: [empty, empty]);
                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ code_frame_omit.js:50:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   code_frame_omit.js:50:4
+   50|   ([x, y]: [empty, empty]);
+          ^^^^^^
+
+References:
    code_frame_omit.js:42:13
    42|   const y = 42;
-                   ^^ [3]
+                   ^^ [1]
    code_frame_omit.js:50:20
    50|   ([x, y]: [empty, empty]);
-                          ^^^^^ [4]
+                          ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- group.js:6:2
 
-Cannot cast object literal to object type because:
- - number [1] is incompatible with string [2] in property `a`.
- - number [3] is incompatible with string [4] in property `b`.
- - number [5] is incompatible with string [6] in property `c`.
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `a`.
 
    group.js:6:2
         v
@@ -331,18 +409,50 @@ References:
    group.js:11:6
    11|   a: string,
             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- group.js:6:2
+
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `b`.
+
+   group.js:6:2
+        v
+    6| ({
+    7|   a: 1,
+    8|   b: 2,
+    9|   c: 3,
+   10| }: {
+       ^
+
+References:
    group.js:8:6
     8|   b: 2,
-            ^ [3]
+            ^ [1]
    group.js:12:6
    12|   b: string,
-            ^^^^^^ [4]
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- group.js:6:2
+
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `c`.
+
+   group.js:6:2
+        v
+    6| ({
+    7|   a: 1,
+    8|   b: 2,
+    9|   c: 3,
+   10| }: {
+       ^
+
+References:
    group.js:9:6
     9|   c: 3,
-            ^ [5]
+            ^ [1]
    group.js:13:6
    13|   c: string,
-            ^^^^^^ [6]
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- haste_dupes/dupe2.js:1:1
@@ -495,12 +605,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- layout.js:8:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - object literal [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
- - object literal [7] is incompatible with empty [8] in index 3.
- - object literal [9] is incompatible with empty [10] in index 4.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    layout.js:8:4
    8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
@@ -513,40 +618,79 @@ References:
    layout.js:8:42
    8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
                                                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:8:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 1.
+
+   layout.js:8:4
+   8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:25
    7|   const o = {a: {b: {c: {d: 42}}}};
-                              ^^^^^^^ [3]
+                              ^^^^^^^ [1]
    layout.js:8:49
    8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                      ^^^^^ [4]
+                                                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:8:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:8:4
+   8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:21
    7|   const o = {a: {b: {c: {d: 42}}}};
-                          ^^^^^^^^^^^^ [5]
+                          ^^^^^^^^^^^^ [1]
    layout.js:8:56
    8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                             ^^^^^ [6]
+                                                             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:8:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 3.
+
+   layout.js:8:4
+   8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:17
    7|   const o = {a: {b: {c: {d: 42}}}};
-                      ^^^^^^^^^^^^^^^^^ [7]
+                      ^^^^^^^^^^^^^^^^^ [1]
    layout.js:8:63
    8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                                    ^^^^^ [8]
+                                                                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:8:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 4.
+
+   layout.js:8:4
+   8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:13
    7|   const o = {a: {b: {c: {d: 42}}}};
-                  ^^^^^^^^^^^^^^^^^^^^^^ [9]
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    layout.js:8:70
    8|   ([o.a.b.c.d, o.a.b.c, o.a.b, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                                           ^^^^^ [10]
+                                                                           ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- layout.js:9:4
 
-Cannot cast array literal to tuple type because:
- - object literal [1] is incompatible with empty [2] in index 0.
- - object literal [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
- - object literal [7] is incompatible with empty [8] in index 3.
- - number [9] is incompatible with empty [10] in index 4.
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 0.
 
    layout.js:9:4
    9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
@@ -559,40 +703,79 @@ References:
    layout.js:9:42
    9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
                                                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:9:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 1.
+
+   layout.js:9:4
+   9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:17
    7|   const o = {a: {b: {c: {d: 42}}}};
-                      ^^^^^^^^^^^^^^^^^ [3]
+                      ^^^^^^^^^^^^^^^^^ [1]
    layout.js:9:49
    9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                      ^^^^^ [4]
+                                                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:9:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:9:4
+   9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:21
    7|   const o = {a: {b: {c: {d: 42}}}};
-                          ^^^^^^^^^^^^ [5]
+                          ^^^^^^^^^^^^ [1]
    layout.js:9:56
    9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                             ^^^^^ [6]
+                                                             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:9:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 3.
+
+   layout.js:9:4
+   9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:25
    7|   const o = {a: {b: {c: {d: 42}}}};
-                              ^^^^^^^ [7]
+                              ^^^^^^^ [1]
    layout.js:9:63
    9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                                    ^^^^^ [8]
+                                                                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- layout.js:9:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 4.
+
+   layout.js:9:4
+   9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:29
    7|   const o = {a: {b: {c: {d: 42}}}};
-                                  ^^ [9]
+                                  ^^ [1]
    layout.js:9:70
    9|   ([o, o.a, o.a.b, o.a.b.c, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                                           ^^^^^ [10]
+                                                                           ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:10:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - object literal [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
- - object literal [7] is incompatible with empty [8] in index 3.
- - object literal [9] is incompatible with empty [10] in index 4.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    layout.js:10:4
    10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
@@ -605,40 +788,79 @@ References:
    layout.js:10:42
    10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
                                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:10:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 1.
+
+   layout.js:10:4
+   10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:13
     7|   const o = {a: {b: {c: {d: 42}}}};
-                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
    layout.js:10:49
    10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                       ^^^^^ [4]
+                                                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:10:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:10:4
+   10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:25
     7|   const o = {a: {b: {c: {d: 42}}}};
-                               ^^^^^^^ [5]
+                               ^^^^^^^ [1]
    layout.js:10:56
    10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                              ^^^^^ [6]
+                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:10:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 3.
+
+   layout.js:10:4
+   10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:17
     7|   const o = {a: {b: {c: {d: 42}}}};
-                       ^^^^^^^^^^^^^^^^^ [7]
+                       ^^^^^^^^^^^^^^^^^ [1]
    layout.js:10:63
    10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                                     ^^^^^ [8]
+                                                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:10:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 4.
+
+   layout.js:10:4
+   10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:21
     7|   const o = {a: {b: {c: {d: 42}}}};
-                           ^^^^^^^^^^^^ [9]
+                           ^^^^^^^^^^^^ [1]
    layout.js:10:70
    10|   ([o.a.b.c.d, o, o.a.b.c, o.a, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                                            ^^^^^ [10]
+                                                                            ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:11:4
 
-Cannot cast array literal to tuple type because:
- - object literal [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
- - object literal [7] is incompatible with empty [8] in index 3.
- - object literal [9] is incompatible with empty [10] in index 4.
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 0.
 
    layout.js:11:4
    11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
@@ -651,40 +873,79 @@ References:
    layout.js:11:42
    11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
                                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:11:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   layout.js:11:4
+   11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:29
     7|   const o = {a: {b: {c: {d: 42}}}};
-                                   ^^ [3]
+                                   ^^ [1]
    layout.js:11:49
    11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                       ^^^^^ [4]
+                                                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:11:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:11:4
+   11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:17
     7|   const o = {a: {b: {c: {d: 42}}}};
-                       ^^^^^^^^^^^^^^^^^ [5]
+                       ^^^^^^^^^^^^^^^^^ [1]
    layout.js:11:56
    11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                              ^^^^^ [6]
+                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:11:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 3.
+
+   layout.js:11:4
+   11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:25
     7|   const o = {a: {b: {c: {d: 42}}}};
-                               ^^^^^^^ [7]
+                               ^^^^^^^ [1]
    layout.js:11:63
    11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                                     ^^^^^ [8]
+                                                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:11:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 4.
+
+   layout.js:11:4
+   11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:21
     7|   const o = {a: {b: {c: {d: 42}}}};
-                           ^^^^^^^^^^^^ [9]
+                           ^^^^^^^^^^^^ [1]
    layout.js:11:70
    11|   ([o, o.a.b.c.d, o.a, o.a.b.c, o.a.b]: [empty, empty, empty, empty, empty]);
-                                                                            ^^^^^ [10]
+                                                                            ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:12:4
 
-Cannot cast array literal to tuple type because:
- - object literal [1] is incompatible with empty [2] in index 0.
- - object literal [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
- - object literal [7] is incompatible with empty [8] in index 3.
- - number [9] is incompatible with empty [10] in index 4.
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 0.
 
    layout.js:12:4
    12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
@@ -697,40 +958,79 @@ References:
    layout.js:12:42
    12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
                                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:12:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 1.
+
+   layout.js:12:4
+   12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:13
     7|   const o = {a: {b: {c: {d: 42}}}};
-                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
    layout.js:12:49
    12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                       ^^^^^ [4]
+                                                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:12:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:12:4
+   12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:25
     7|   const o = {a: {b: {c: {d: 42}}}};
-                               ^^^^^^^ [5]
+                               ^^^^^^^ [1]
    layout.js:12:56
    12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                              ^^^^^ [6]
+                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:12:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 3.
+
+   layout.js:12:4
+   12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:17
     7|   const o = {a: {b: {c: {d: 42}}}};
-                       ^^^^^^^^^^^^^^^^^ [7]
+                       ^^^^^^^^^^^^^^^^^ [1]
    layout.js:12:63
    12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                                     ^^^^^ [8]
+                                                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:12:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 4.
+
+   layout.js:12:4
+   12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:29
     7|   const o = {a: {b: {c: {d: 42}}}};
-                                   ^^ [9]
+                                   ^^ [1]
    layout.js:12:70
    12|   ([o.a.b, o, o.a.b.c, o.a, o.a.b.c.d]: [empty, empty, empty, empty, empty]);
-                                                                            ^^^^^ [10]
+                                                                            ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:13:4
 
-Cannot cast array literal to tuple type because:
- - object literal [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
- - object literal [7] is incompatible with empty [8] in index 3.
- - object literal [9] is incompatible with empty [10] in index 4.
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 0.
 
    layout.js:13:4
    13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
@@ -743,38 +1043,79 @@ References:
    layout.js:13:42
    13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
                                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:13:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   layout.js:13:4
+   13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:29
     7|   const o = {a: {b: {c: {d: 42}}}};
-                                   ^^ [3]
+                                   ^^ [1]
    layout.js:13:49
    13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                       ^^^^^ [4]
+                                                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:13:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:13:4
+   13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:25
     7|   const o = {a: {b: {c: {d: 42}}}};
-                               ^^^^^^^ [5]
+                               ^^^^^^^ [1]
    layout.js:13:56
    13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                              ^^^^^ [6]
+                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:13:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 3.
+
+   layout.js:13:4
+   13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:17
     7|   const o = {a: {b: {c: {d: 42}}}};
-                       ^^^^^^^^^^^^^^^^^ [7]
+                       ^^^^^^^^^^^^^^^^^ [1]
    layout.js:13:63
    13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                                     ^^^^^ [8]
+                                                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:13:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 4.
+
+   layout.js:13:4
+   13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    layout.js:7:13
     7|   const o = {a: {b: {c: {d: 42}}}};
-                   ^^^^^^^^^^^^^^^^^^^^^^ [9]
+                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
    layout.js:13:70
    13|   ([o.a.b, o.a.b.c.d, o.a.b.c, o.a, o]: [empty, empty, empty, empty, empty]);
-                                                                            ^^^^^ [10]
+                                                                            ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:18:4
 
-Cannot cast array literal to tuple type because:
- - object literal [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
- - number [5] is incompatible with empty [6] in index 2.
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 0.
 
    layout.js:18:4
    18|   ([o, o.a, o.b]: [empty, empty, empty]);
@@ -787,26 +1128,45 @@ References:
    layout.js:18:20
    18|   ([o, o.a, o.b]: [empty, empty, empty]);
                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:18:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   layout.js:18:4
+   18|   ([o, o.a, o.b]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:17
    17|   const o = {a: 1, b: 2};
-                       ^ [3]
+                       ^ [1]
    layout.js:18:27
    18|   ([o, o.a, o.b]: [empty, empty, empty]);
-                                 ^^^^^ [4]
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:18:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 2.
+
+   layout.js:18:4
+   18|   ([o, o.a, o.b]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:23
    17|   const o = {a: 1, b: 2};
-                             ^ [5]
+                             ^ [1]
    layout.js:18:34
    18|   ([o, o.a, o.b]: [empty, empty, empty]);
-                                        ^^^^^ [6]
+                                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:19:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - object literal [3] is incompatible with empty [4] in index 1.
- - number [5] is incompatible with empty [6] in index 2.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    layout.js:19:4
    19|   ([o.a, o, o.b]: [empty, empty, empty]);
@@ -819,26 +1179,45 @@ References:
    layout.js:19:20
    19|   ([o.a, o, o.b]: [empty, empty, empty]);
                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:19:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 1.
+
+   layout.js:19:4
+   19|   ([o.a, o, o.b]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:13
    17|   const o = {a: 1, b: 2};
-                   ^^^^^^^^^^^^ [3]
+                   ^^^^^^^^^^^^ [1]
    layout.js:19:27
    19|   ([o.a, o, o.b]: [empty, empty, empty]);
-                                 ^^^^^ [4]
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:19:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 2.
+
+   layout.js:19:4
+   19|   ([o.a, o, o.b]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:23
    17|   const o = {a: 1, b: 2};
-                             ^ [5]
+                             ^ [1]
    layout.js:19:34
    19|   ([o.a, o, o.b]: [empty, empty, empty]);
-                                        ^^^^^ [6]
+                                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:20:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    layout.js:20:4
    20|   ([o.a, o.b, o]: [empty, empty, empty]);
@@ -851,26 +1230,45 @@ References:
    layout.js:20:20
    20|   ([o.a, o.b, o]: [empty, empty, empty]);
                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:20:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   layout.js:20:4
+   20|   ([o.a, o.b, o]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:23
    17|   const o = {a: 1, b: 2};
-                             ^ [3]
+                             ^ [1]
    layout.js:20:27
    20|   ([o.a, o.b, o]: [empty, empty, empty]);
-                                 ^^^^^ [4]
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:20:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:20:4
+   20|   ([o.a, o.b, o]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:13
    17|   const o = {a: 1, b: 2};
-                   ^^^^^^^^^^^^ [5]
+                   ^^^^^^^^^^^^ [1]
    layout.js:20:34
    20|   ([o.a, o.b, o]: [empty, empty, empty]);
-                                        ^^^^^ [6]
+                                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:21:4
 
-Cannot cast array literal to tuple type because:
- - object literal [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
- - number [5] is incompatible with empty [6] in index 2.
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 0.
 
    layout.js:21:4
    21|   ([o, o.b, o.a]: [empty, empty, empty]);
@@ -883,26 +1281,45 @@ References:
    layout.js:21:20
    21|   ([o, o.b, o.a]: [empty, empty, empty]);
                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:21:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   layout.js:21:4
+   21|   ([o, o.b, o.a]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:23
    17|   const o = {a: 1, b: 2};
-                             ^ [3]
+                             ^ [1]
    layout.js:21:27
    21|   ([o, o.b, o.a]: [empty, empty, empty]);
-                                 ^^^^^ [4]
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:21:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 2.
+
+   layout.js:21:4
+   21|   ([o, o.b, o.a]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:17
    17|   const o = {a: 1, b: 2};
-                       ^ [5]
+                       ^ [1]
    layout.js:21:34
    21|   ([o, o.b, o.a]: [empty, empty, empty]);
-                                        ^^^^^ [6]
+                                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:22:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - object literal [3] is incompatible with empty [4] in index 1.
- - number [5] is incompatible with empty [6] in index 2.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    layout.js:22:4
    22|   ([o.b, o, o.a]: [empty, empty, empty]);
@@ -915,26 +1332,45 @@ References:
    layout.js:22:20
    22|   ([o.b, o, o.a]: [empty, empty, empty]);
                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:22:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 1.
+
+   layout.js:22:4
+   22|   ([o.b, o, o.a]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:13
    17|   const o = {a: 1, b: 2};
-                   ^^^^^^^^^^^^ [3]
+                   ^^^^^^^^^^^^ [1]
    layout.js:22:27
    22|   ([o.b, o, o.a]: [empty, empty, empty]);
-                                 ^^^^^ [4]
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:22:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 2.
+
+   layout.js:22:4
+   22|   ([o.b, o, o.a]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:17
    17|   const o = {a: 1, b: 2};
-                       ^ [5]
+                       ^ [1]
    layout.js:22:34
    22|   ([o.b, o, o.a]: [empty, empty, empty]);
-                                        ^^^^^ [6]
+                                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- layout.js:23:4
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
- - object literal [5] is incompatible with empty [6] in index 2.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    layout.js:23:4
    23|   ([o.b, o.a, o]: [empty, empty, empty]);
@@ -947,25 +1383,45 @@ References:
    layout.js:23:20
    23|   ([o.b, o.a, o]: [empty, empty, empty]);
                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:23:4
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   layout.js:23:4
+   23|   ([o.b, o.a, o]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:17
    17|   const o = {a: 1, b: 2};
-                       ^ [3]
+                       ^ [1]
    layout.js:23:27
    23|   ([o.b, o.a, o]: [empty, empty, empty]);
-                                 ^^^^^ [4]
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- layout.js:23:4
+
+Cannot cast array literal to tuple type because object literal [1] is incompatible with empty [2] in index 2.
+
+   layout.js:23:4
+   23|   ([o.b, o.a, o]: [empty, empty, empty]);
+          ^^^^^^^^^^^^^
+
+References:
    layout.js:17:13
    17|   const o = {a: 1, b: 2};
-                   ^^^^^^^^^^^^ [5]
+                   ^^^^^^^^^^^^ [1]
    layout.js:23:34
    23|   ([o.b, o.a, o]: [empty, empty, empty]);
-                                        ^^^^^ [6]
+                                        ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- reference_order/test.js:9:2
 
-Cannot cast array literal to tuple type because:
- - number [1] is incompatible with empty [2] in index 0.
- - number [3] is incompatible with empty [4] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 
    reference_order/test.js:9:2
    9| ([a, b]: [empty, empty]);
@@ -978,12 +1434,23 @@ References:
    reference_order/test.js:9:11
    9| ([a, b]: [empty, empty]);
                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- reference_order/test.js:9:2
+
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
+
+   reference_order/test.js:9:2
+   9| ([a, b]: [empty, empty]);
+       ^^^^^^
+
+References:
    reference_order/b.js:6:18
    6| export const b = 42;
-                       ^^ [3]
+                       ^^ [1]
    reference_order/test.js:9:18
    9| ([a, b]: [empty, empty]);
-                       ^^^^^ [4]
+                       ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ wrap.js:6:2
@@ -1038,11 +1505,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ wrap_group.js:6:2
 
-Cannot cast object literal to object type because:
- - number [1] is incompatible with string [2] in property `breaks.on.multiple.lines.a` of index 0 of property
-   `long.error.message.that.hopefully` of index 0 of property `to.be.a.really` of index 0 of property `this.is.going`.
- - number [3] is incompatible with string [4] in property `breaks.on.multiple.lines.b` of index 0 of property
-   `long.error.message.that.hopefully` of index 0 of property `to.be.a.really` of index 0 of property `this.is.going`.
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property
+`breaks.on.multiple.lines.a` of index 0 of property `long.error.message.that.hopefully` of index 0 of property
+`to.be.a.really` of index 0 of property `this.is.going`.
 
    wrap_group.js:6:2
         v
@@ -1086,12 +1551,56 @@ References:
    wrap_group.js:54:59
    54|                                     multiple: {lines: {a: string, b: string}},
                                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ wrap_group.js:6:2
+
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property
+`breaks.on.multiple.lines.b` of index 0 of property `long.error.message.that.hopefully` of index 0 of property
+`to.be.a.really` of index 0 of property `this.is.going`.
+
+   wrap_group.js:6:2
+        v
+    6| ({
+    7|   this: {
+    8|     is: {
+    9|       going: [
+   10|         {
+   11|           to: {
+   12|             be: {
+   13|               a: {
+   14|                 really: [
+   15|                   {
+   16|                     long: {
+   17|                       error: {
+   18|                         message: {
+   19|                           that: {
+   20|                             hopefully: [
+     :
+   22|                             ],
+   23|                           },
+   24|                         },
+   25|                       },
+   26|                     },
+   27|                   },
+   28|                 ],
+   29|               },
+   30|             },
+   31|           },
+   32|         },
+   33|       ],
+   34|     },
+   35|   },
+   36| }: {
+       ^
+
+References:
    wrap_group.js:21:74
    21|                               {breaks: {on: {multiple: {lines: {a: 1, b: 2}}}}},
-                                                                                ^ [3]
+                                                                                ^ [1]
    wrap_group.js:54:70
    54|                                     multiple: {lines: {a: string, b: string}},
-                                                                            ^^^^^^ [4]
+                                                                            ^^^^^^ [2]
 
 
 

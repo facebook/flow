@@ -1,8 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- Closure.js:20:14
 
-Cannot call `takes_string` with `global_x` bound to `_` because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
 
    Closure.js:20:14
    20| takes_string(global_x); // error
@@ -15,16 +13,28 @@ References:
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:20:14
+
+Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
+
+   Closure.js:20:14
+   20| takes_string(global_x); // error
+                    ^^^^^^^^
+
+References:
    Closure.js:22:12
    22| global_x = 42;  // shouldn't pollute linear refinement
-                  ^^ [3]
+                  ^^ [1]
+   Closure.js:6:25
+    6| function takes_string(_:string) { }
+                               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:38:16
 
-Cannot call `takes_string` with `local_x` bound to `_` because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
 
    Closure.js:38:16
    38|   takes_string(local_x); // error
@@ -37,16 +47,28 @@ References:
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:38:16
+
+Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
+
+   Closure.js:38:16
+   38|   takes_string(local_x); // error
+                      ^^^^^^^
+
+References:
    Closure.js:40:13
    40|   local_x = 42;  // shouldn't pollute linear refinement
-                   ^^ [3]
+                   ^^ [1]
+   Closure.js:6:25
+    6| function takes_string(_:string) { }
+                               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:57:14
 
-Cannot call `takes_string` with `global_y` bound to `_` because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
 
    Closure.js:57:14
    57| takes_string(global_y); // error
@@ -59,16 +81,28 @@ References:
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:57:14
+
+Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
+
+   Closure.js:57:14
+   57| takes_string(global_y); // error
+                    ^^^^^^^^
+
+References:
    Closure.js:59:12
    59| global_y = 42;  // shouldn't pollute linear refinement
-                  ^^ [3]
+                  ^^ [1]
+   Closure.js:6:25
+    6| function takes_string(_:string) { }
+                               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:77:16
 
-Cannot call `takes_string` with `local_y` bound to `_` because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
 
    Closure.js:77:16
    77|   takes_string(local_y); // error
@@ -81,9 +115,23 @@ References:
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:77:16
+
+Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
+
+   Closure.js:77:16
+   77|   takes_string(local_y); // error
+                      ^^^^^^^
+
+References:
    Closure.js:79:13
    79|   local_y = 42;  // shouldn't pollute linear refinement
-                   ^^ [3]
+                   ^^ [1]
+   Closure.js:6:25
+    6| function takes_string(_:string) { }
+                               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- cond_havoc.js:12:10
@@ -105,9 +153,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- const.js:20:38
 
-Cannot assign `var_x` to `y` because:
- - null or undefined [1] is incompatible with number [2].
- - null [3] is incompatible with number [2].
+Cannot assign `var_x` to `y` because null or undefined [1] is incompatible with number [2].
 
    const.js:20:38
    20|     call_me = () => { var y:number = var_x; };  // error
@@ -120,9 +166,23 @@ References:
    const.js:20:29
    20|     call_me = () => { var y:number = var_x; };  // error
                                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- const.js:20:38
+
+Cannot assign `var_x` to `y` because null [1] is incompatible with number [2].
+
+   const.js:20:38
+   20|     call_me = () => { var y:number = var_x; };  // error
+                                            ^^^^^
+
+References:
    const.js:22:11
    22|   var_x = null;
-                 ^^^^ [3]
+                 ^^^^ [1]
+   const.js:20:29
+   20|     call_me = () => { var y:number = var_x; };  // error
+                                   ^^^^^^ [2]
 
 
 

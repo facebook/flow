@@ -17,9 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- error.js:9:3
 
-Cannot cast `any` to null because:
- - null or undefined [1] is incompatible with null [2].
- - number [3] is incompatible with null [2].
+Cannot cast `any` to null because null or undefined [1] is incompatible with null [2].
 
    error.js:9:3
    9| ((any: ?number): null);
@@ -32,16 +30,28 @@ References:
    error.js:9:18
    9| ((any: ?number): null);
                        ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- error.js:9:3
+
+Cannot cast `any` to null because number [1] is incompatible with null [2].
+
+   error.js:9:3
+   9| ((any: ?number): null);
+        ^^^^^^^^^^^^
+
+References:
    error.js:9:9
    9| ((any: ?number): null);
-              ^^^^^^ [3]
+              ^^^^^^ [1]
+   error.js:9:18
+   9| ((any: ?number): null);
+                       ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:10:3
 
-Cannot cast `any` to undefined because:
- - null or undefined [1] is incompatible with undefined [2].
- - number [3] is incompatible with undefined [2].
+Cannot cast `any` to undefined because null or undefined [1] is incompatible with undefined [2].
 
    error.js:10:3
    10| ((any: ?number): void);
@@ -54,9 +64,23 @@ References:
    error.js:10:18
    10| ((any: ?number): void);
                         ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- error.js:10:3
+
+Cannot cast `any` to undefined because number [1] is incompatible with undefined [2].
+
+   error.js:10:3
+   10| ((any: ?number): void);
+         ^^^^^^^^^^^^
+
+References:
    error.js:10:9
    10| ((any: ?number): void);
-               ^^^^^^ [3]
+               ^^^^^^ [1]
+   error.js:10:18
+   10| ((any: ?number): void);
+                        ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:16:3
@@ -143,9 +167,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ nullable.js:15:17
 
-Cannot call `qux` with `x` bound to `x` because:
- - null or undefined [1] is incompatible with string [2].
- - null [3] is incompatible with string [2].
+Cannot call `qux` with `x` bound to `x` because null or undefined [1] is incompatible with string [2].
 
    nullable.js:15:17
    15|   grault(); qux(x);
@@ -158,9 +180,23 @@ References:
    nullable.js:5:16
     5| function qux(x:string) { }
                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ nullable.js:15:17
+
+Cannot call `qux` with `x` bound to `x` because null [1] is incompatible with string [2].
+
+   nullable.js:15:17
+   15|   grault(); qux(x);
+                       ^
+
+References:
    nullable.js:13:25
    13| function grault() { x = null; }
-                               ^^^^ [3]
+                               ^^^^ [1]
+   nullable.js:5:16
+    5| function qux(x:string) { }
+                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- simple_nullable.js:4:5

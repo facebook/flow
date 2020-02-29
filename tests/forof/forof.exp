@@ -150,9 +150,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:87:4
 
-Cannot cast `x` to string because:
- - number [1] is incompatible with string [2].
- - boolean [3] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
    forof.js:87:4
    87|   (x : string) //error
@@ -165,9 +163,23 @@ References:
    forof.js:87:8
    87|   (x : string) //error
               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:87:4
+
+Cannot cast `x` to string because boolean [1] is incompatible with string [2].
+
+   forof.js:87:4
+   87|   (x : string) //error
+          ^
+
+References:
    forof.js:61:9
    61|   yield true;
-               ^^^^ [3]
+               ^^^^ [1]
+   forof.js:87:8
+   87|   (x : string) //error
+              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:2:17

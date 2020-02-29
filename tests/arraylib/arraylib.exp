@@ -51,10 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:21:24
 
-Cannot assign `h.concat(...)` to `n` because:
- - string [1] is incompatible with number [2] in array element.
- - string [3] is incompatible with number [2] in array element.
- - string [4] is incompatible with number [2] in array element.
+Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
 
    array_lib.js:21:24
    21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
@@ -67,12 +64,40 @@ References:
    array_lib.js:21:14
    21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:21:24
+
+Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
+
+   array_lib.js:21:24
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    array_lib.js:21:38
    21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                            ^^^ [3]
+                                            ^^^ [1]
+   array_lib.js:21:14
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:21:24
+
+Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
+
+   array_lib.js:21:24
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    array_lib.js:21:43
    21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                                 ^^^ [4]
+                                                 ^^^ [1]
+   array_lib.js:21:14
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:46:29
@@ -133,9 +158,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:63:48
 
-Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because:
- - number [1] is incompatible with string [2] in array element.
- - number [3] is incompatible with string [2] in array element.
+Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because number [1] is incompatible with string [2] in array
+element.
 
    array_lib.js:63:48
    63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -148,9 +172,24 @@ References:
    array_lib.js:63:38
    63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:63:48
+
+Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because number [1] is incompatible with string [2] in array
+element.
+
+   array_lib.js:63:48
+   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                                      ^^^^^^^^^^^^^^
+
+References:
    array_lib.js:63:60
    63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
-                                                                  ^ [3]
+                                                                  ^ [1]
+   array_lib.js:63:38
+   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- length.js:7:1

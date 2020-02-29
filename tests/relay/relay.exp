@@ -148,9 +148,21 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:18:1
 
-Cannot create `Profile` element because:
- - property `foo` is missing in props [1] but exists in object type [2].
- - property `user` is missing in props [1] but exists in object type [2].
+Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   main.js:18:1
+   18| <Profile />; // Error: Missing user and foo
+       ^^^^^^^^^^^ [1]
+
+References:
+   Relay.js:46:24
+   46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:18:1
+
+Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
 
    main.js:18:1
    18| <Profile />; // Error: Missing user and foo
@@ -181,9 +193,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:20:1
 
-Cannot create `Profile` element because:
- - object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
- - string [3] is incompatible with number [4] in property `foo`.
+Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
 
    main.js:20:1
    20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
@@ -196,19 +206,28 @@ References:
    Profile.graphql.js:12:3
    12|   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:20:1
+
+Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
+
+   main.js:20:1
+   20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    main.js:20:26
    20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-                                ^^^^^ [3]
+                                ^^^^^ [1]
    Profile.js:14:8
    14|   foo: number,
-              ^^^^^^ [4]
+              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:21:1
 
-Cannot create `Profile` element because:
- - mixed [1] is incompatible with `Profile_userRef` [2] in property `user`.
- - mixed [3] is incompatible with number [4] in property `foo`.
+Cannot create `Profile` element because mixed [1] is incompatible with `Profile_userRef` [2] in property `user`.
 
    main.js:21:1
    21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
@@ -221,12 +240,23 @@ References:
    Profile.graphql.js:12:3
    12|   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:21:1
+
+Cannot create `Profile` element because mixed [1] is incompatible with number [2] in property `foo`.
+
+   main.js:21:1
+   21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    main.js:21:43
    21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-                                                 ^^^^^ [3]
+                                                 ^^^^^ [1]
    Profile.js:14:8
    14|   foo: number,
-              ^^^^^^ [4]
+              ^^^^^^ [2]
 
 
 

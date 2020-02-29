@@ -627,9 +627,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:34:5
 
-Cannot cast `1 ? 2 : 3` to empty because:
- - number [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2].
 
    expression.js:34:5
    34| ((((1 ? 2 : 3): empty): T).p: empty);
@@ -642,9 +640,23 @@ References:
    expression.js:34:17
    34| ((((1 ? 2 : 3): empty): T).p: empty);
                        ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:34:5
+
+Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2].
+
+   expression.js:34:5
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+           ^^^^^^^^^
+
+References:
    expression.js:34:13
    34| ((((1 ? 2 : 3): empty): T).p: empty);
-                   ^ [3]
+                   ^ [1]
+   expression.js:34:17
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+                       ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:35:2
@@ -666,9 +678,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:35:5
 
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because:
- - number [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2].
 
    expression.js:35:5
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
@@ -681,9 +691,23 @@ References:
    expression.js:35:27
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:35:5
+
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2].
+
+   expression.js:35:5
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+           ^^^^^^^^^^^^^^^^^^^
+
+References:
    expression.js:35:23
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-                             ^ [3]
+                             ^ [1]
+   expression.js:35:27
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+                                 ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:36:2

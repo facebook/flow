@@ -204,9 +204,21 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:83:2
 
-Cannot get `c.baz` because:
- - property `baz` (did you mean `bar`?) is missing in object type [1].
- - property `baz` is missing in object type [1].
+Cannot get `c.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
+
+   type_widening.js:83:2
+   83| (c.baz: number); // Error, baz does not appear in all branches
+        ^^^^^
+
+References:
+   type_widening.js:3:27
+    3| function spread<T>(x: T): { ...T, ...{||} } { return (null: any)}
+                                 ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- type_widening.js:83:2
+
+Cannot get `c.baz` because property `baz` is missing in object type [1].
 
    type_widening.js:83:2
    83| (c.baz: number); // Error, baz does not appear in all branches
@@ -317,9 +329,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:117:2
 
-Cannot get `optional_spread.baz` because:
- - property `baz` (did you mean `bar`?) is missing in object type [1].
- - property `baz` is missing in object type [1].
+Cannot get `optional_spread.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
+
+   type_widening.js:117:2
+   117| (optional_spread.baz: number); // Error, baz does not appear in all branches, might be undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
+   type_widening.js:3:27
+     3| function spread<T>(x: T): { ...T, ...{||} } { return (null: any)}
+                                  ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:117:2
+
+Cannot get `optional_spread.baz` because property `baz` is missing in object type [1].
 
    type_widening.js:117:2
    117| (optional_spread.baz: number); // Error, baz does not appear in all branches, might be undefined
@@ -381,11 +405,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:171:2
 
-Cannot cast `indexer_spread2.bar` to string because:
- - undefined [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
- - number [4] is incompatible with string [2].
- - number [5] is incompatible with string [2].
+Cannot cast `indexer_spread2.bar` to string because undefined [1] is incompatible with string [2].
 
    type_widening.js:171:2
    171| (indexer_spread2.bar: string); // Error, possibly number or undefined
@@ -398,23 +418,62 @@ References:
    type_widening.js:171:23
    171| (indexer_spread2.bar: string); // Error, possibly number or undefined
                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:171:2
+
+Cannot cast `indexer_spread2.bar` to string because number [1] is incompatible with string [2].
+
+   type_widening.js:171:2
+   171| (indexer_spread2.bar: string); // Error, possibly number or undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:156:36
    156|   indexer2 = ({foo: 3}: {[string]: number});
-                                           ^^^^^^ [3]
+                                           ^^^^^^ [1]
+   type_widening.js:171:23
+   171| (indexer_spread2.bar: string); // Error, possibly number or undefined
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:171:2
+
+Cannot cast `indexer_spread2.bar` to string because number [1] is incompatible with string [2].
+
+   type_widening.js:171:2
+   171| (indexer_spread2.bar: string); // Error, possibly number or undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:160:37
    160|   indexer2 = ({baz: ''}: {[string]: number, baz: string});
-                                            ^^^^^^ [4]
+                                            ^^^^^^ [1]
+   type_widening.js:171:23
+   171| (indexer_spread2.bar: string); // Error, possibly number or undefined
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:171:2
+
+Cannot cast `indexer_spread2.bar` to string because number [1] is incompatible with string [2].
+
+   type_widening.js:171:2
+   171| (indexer_spread2.bar: string); // Error, possibly number or undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:162:37
    162|   indexer2 = ({qux: ''}: {[string]: number, qux: string});
-                                            ^^^^^^ [5]
+                                            ^^^^^^ [1]
+   type_widening.js:171:23
+   171| (indexer_spread2.bar: string); // Error, possibly number or undefined
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:172:2
 
-Cannot cast `indexer_spread2.baz` to string because:
- - undefined [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
- - number [4] is incompatible with string [2].
+Cannot cast `indexer_spread2.baz` to string because undefined [1] is incompatible with string [2].
 
    type_widening.js:172:2
    172| (indexer_spread2.baz: string); // Error, possibly number or undefined
@@ -427,19 +486,45 @@ References:
    type_widening.js:172:23
    172| (indexer_spread2.baz: string); // Error, possibly number or undefined
                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:172:2
+
+Cannot cast `indexer_spread2.baz` to string because number [1] is incompatible with string [2].
+
+   type_widening.js:172:2
+   172| (indexer_spread2.baz: string); // Error, possibly number or undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:156:36
    156|   indexer2 = ({foo: 3}: {[string]: number});
-                                           ^^^^^^ [3]
+                                           ^^^^^^ [1]
+   type_widening.js:172:23
+   172| (indexer_spread2.baz: string); // Error, possibly number or undefined
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:172:2
+
+Cannot cast `indexer_spread2.baz` to string because number [1] is incompatible with string [2].
+
+   type_widening.js:172:2
+   172| (indexer_spread2.baz: string); // Error, possibly number or undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:162:37
    162|   indexer2 = ({qux: ''}: {[string]: number, qux: string});
-                                            ^^^^^^ [4]
+                                            ^^^^^^ [1]
+   type_widening.js:172:23
+   172| (indexer_spread2.baz: string); // Error, possibly number or undefined
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:173:2
 
-Cannot cast `indexer_spread2.qux` to string because:
- - undefined [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot cast `indexer_spread2.qux` to string because undefined [1] is incompatible with string [2].
 
    type_widening.js:173:2
    173| (indexer_spread2.qux: string); // Error, Possibly number or undefined
@@ -452,9 +537,23 @@ References:
    type_widening.js:173:23
    173| (indexer_spread2.qux: string); // Error, Possibly number or undefined
                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:173:2
+
+Cannot cast `indexer_spread2.qux` to string because number [1] is incompatible with string [2].
+
+   type_widening.js:173:2
+   173| (indexer_spread2.qux: string); // Error, Possibly number or undefined
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:156:36
    156|   indexer2 = ({foo: 3}: {[string]: number});
-                                           ^^^^^^ [3]
+                                           ^^^^^^ [1]
+   type_widening.js:173:23
+   173| (indexer_spread2.qux: string); // Error, Possibly number or undefined
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:183:28
@@ -476,9 +575,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:194:2
 
-Cannot cast `indexer_on_second_spread.foo` to number because:
- - undefined [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot cast `indexer_on_second_spread.foo` to number because undefined [1] is incompatible with number [2].
 
    type_widening.js:194:2
    194| (indexer_on_second_spread.foo: number); // Error, may be void or string
@@ -491,9 +588,23 @@ References:
    type_widening.js:194:32
    194| (indexer_on_second_spread.foo: number); // Error, may be void or string
                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_widening.js:194:2
+
+Cannot cast `indexer_on_second_spread.foo` to number because string [1] is incompatible with number [2].
+
+   type_widening.js:194:2
+   194| (indexer_on_second_spread.foo: number); // Error, may be void or string
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    type_widening.js:188:29
    188|   indexer_on_second = {foo: 'string'};
-                                    ^^^^^^^^ [3]
+                                    ^^^^^^^^ [1]
+   type_widening.js:194:32
+   194| (indexer_on_second_spread.foo: number); // Error, may be void or string
+                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:195:2

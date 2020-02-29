@@ -196,9 +196,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- headers.js:18:19
 
-Cannot assign `e.get(...)` to `h` because:
- - null [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `e.get(...)` to `h` because null [1] is incompatible with number [2].
 
    headers.js:18:19
      18| const h: number = e.get('Content-Type'); // not correct
@@ -211,9 +209,23 @@ References:
    headers.js:18:10
      18| const h: number = e.get('Content-Type'); // not correct
                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- headers.js:18:19
+
+Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+
+   headers.js:18:19
+     18| const h: number = e.get('Content-Type'); // not correct
+                           ^^^^^^^^^^^^^^^^^^^^^
+
+References:
    <BUILTINS>/bom.js:1377:31
    1377|     get(name: string): null | string;
-                                       ^^^^^^ [3]
+                                       ^^^^^^ [1]
+   headers.js:18:10
+     18| const h: number = e.get('Content-Type'); // not correct
+                  ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- headers.js:28:1
@@ -255,17 +267,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because:
- - enum [1] is incompatible with undefined [2] in property `cache`.
- - enum [3] is incompatible with undefined [4] in property `credentials`.
- - `Headers` [5] is incompatible with object type [6] in property `headers`.
- - `Headers` [5] is incompatible with undefined [6] in property `headers`.
- - string [7] is incompatible with undefined [8] in property `integrity`.
- - string [9] is incompatible with undefined [10] in property `method`.
- - enum [11] is incompatible with undefined [12] in property `mode`.
- - enum [13] is incompatible with undefined [14] in property `redirect`.
- - string [15] is incompatible with undefined [16] in property `referrer`.
- - enum [17] is incompatible with undefined [18] in property `referrerPolicy`.
+Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property `cache`.
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -278,54 +280,167 @@ References:
    <BUILTINS>/bom.js:1416:11
    1416|   cache?: CacheType,
                    ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property
+`credentials`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1471:18
    1471|     credentials: CredentialsType;
-                          ^^^^^^^^^^^^^^^ [3]
+                          ^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1417:17
    1417|   credentials?: CredentialsType,
-                         ^^^^^^^^^^^^^^^ [4]
+                         ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompatible with object type [2] in property
+`headers`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1472:14
    1472|     headers: Headers;
-                      ^^^^^^^ [5]
+                      ^^^^^^^ [1]
    <BUILTINS>/bom.js:1418:13
    1418|   headers?: HeadersInit,
-                     ^^^^^^^^^^^ [6]
+                     ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompatible with undefined [2] in property
+`headers`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
+   <BUILTINS>/bom.js:1472:14
+   1472|     headers: Headers;
+                      ^^^^^^^ [1]
+   <BUILTINS>/bom.js:1418:13
+   1418|   headers?: HeadersInit,
+                     ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because string [1] is incompatible with undefined [2] in property
+`integrity`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1473:16
    1473|     integrity: string;
-                        ^^^^^^ [7]
+                        ^^^^^^ [1]
    <BUILTINS>/bom.js:1419:15
    1419|   integrity?: string,
-                       ^^^^^^ [8]
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because string [1] is incompatible with undefined [2] in property
+`method`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1474:13
    1474|     method: string;
-                     ^^^^^^ [9]
+                     ^^^^^^ [1]
    <BUILTINS>/bom.js:1421:12
    1421|   method?: string,
-                    ^^^^^^ [10]
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property `mode`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1475:11
    1475|     mode: ModeType;
-                   ^^^^^^^^ [11]
+                   ^^^^^^^^ [1]
    <BUILTINS>/bom.js:1422:10
    1422|   mode?: ModeType,
-                  ^^^^^^^^ [12]
+                  ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property
+`redirect`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1476:15
    1476|     redirect: RedirectType;
-                       ^^^^^^^^^^^^ [13]
+                       ^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1423:14
    1423|   redirect?: RedirectType,
-                      ^^^^^^^^^^^^ [14]
+                      ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because string [1] is incompatible with undefined [2] in property
+`referrer`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1477:15
    1477|     referrer: string;
-                       ^^^^^^ [15]
+                       ^^^^^^ [1]
    <BUILTINS>/bom.js:1424:14
    1424|   referrer?: string,
-                      ^^^^^^ [16]
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property
+`referrerPolicy`.
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
    <BUILTINS>/bom.js:1478:21
    1478|     referrerPolicy: ReferrerPolicyType;
-                             ^^^^^^^^^^^^^^^^^^ [17]
+                             ^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1425:20
    1425|   referrerPolicy?: ReferrerPolicyType,
-                            ^^^^^^^^^^^^^^^^^^ [18]
+                            ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:8:32
@@ -570,9 +685,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:31
 
-Cannot call `URLSearchParams` with array literal bound to `query` because:
- - string [1] is incompatible with tuple type [2] in array element.
- - string [3] is incompatible with tuple type [2] in array element.
+Cannot call `URLSearchParams` with array literal bound to `query` because string [1] is incompatible with tuple type [2]
+in array element.
 
    urlsearchparams.js:4:31
       4| const b = new URLSearchParams(['key1', 'value1']); // not correct
@@ -585,9 +699,24 @@ References:
    <BUILTINS>/bom.js:1386:58
    1386|     constructor(query?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
                                                                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:31
+
+Cannot call `URLSearchParams` with array literal bound to `query` because string [1] is incompatible with tuple type [2]
+in array element.
+
+   urlsearchparams.js:4:31
+      4| const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                       ^^^^^^^^^^^^^^^^^^
+
+References:
    urlsearchparams.js:4:40
       4| const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                                ^^^^^^^^ [3]
+                                                ^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1386:58
+   1386|     constructor(query?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
+                                                                  ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- urlsearchparams.js:9:1
@@ -710,9 +839,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- urlsearchparams.js:18:19
 
-Cannot assign `e.get(...)` to `h` because:
- - null [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `e.get(...)` to `h` because null [1] is incompatible with number [2].
 
    urlsearchparams.js:18:19
      18| const h: number = e.get('key1'); // not correct
@@ -725,9 +852,23 @@ References:
    urlsearchparams.js:18:10
      18| const h: number = e.get('key1'); // not correct
                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- urlsearchparams.js:18:19
+
+Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+
+   urlsearchparams.js:18:19
+     18| const h: number = e.get('key1'); // not correct
+                           ^^^^^^^^^^^^^
+
+References:
    <BUILTINS>/bom.js:1391:31
    1391|     get(name: string): null | string;
-                                       ^^^^^^ [3]
+                                       ^^^^^^ [1]
+   urlsearchparams.js:18:10
+     18| const h: number = e.get('key1'); // not correct
+                  ^^^^^^ [2]
 
 
 

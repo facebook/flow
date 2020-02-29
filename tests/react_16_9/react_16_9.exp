@@ -14,9 +14,27 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:12
 
-Cannot create `React.Profiler` element because:
- - property `id` is missing in props [1] but exists in object type [2].
- - property `onRender` is missing in props [1] but exists in object type [2].
+Cannot create `React.Profiler` element because property `id` is missing in props [1] but exists in object type [2].
+
+   profiler.js:17:12
+    17| const _b = <React.Profiler />; // Error, id and onRender are required
+                   ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:402:56
+                                                               v-
+   402|   declare export var Profiler: React$AbstractComponent<{|
+   403|     children?: React$Node,
+   404|     id: string,
+   405|     onRender: ProfilerOnRenderFnType,
+   406|   |}, void>;
+          -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ profiler.js:17:12
+
+Cannot create `React.Profiler` element because property `onRender` is missing in props [1] but exists in object
+type [2].
 
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required

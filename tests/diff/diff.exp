@@ -186,10 +186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:21:2
 
-Cannot cast `four` to object type because:
- - property `a` is missing in object type [1] but exists in object type [2].
- - property `b` is missing in object type [1] but exists in object type [2].
- - `B` [3] is incompatible with `C` [4] in property `b`.
+Cannot cast `four` to object type because property `a` is missing in object type [1] but exists in object type [2].
 
    union.js:21:2
    21| (four : {a : A, b : C, c : C}); //error
@@ -202,19 +199,45 @@ References:
    union.js:21:9
    21| (four : {a : A, b : C, c : C}); //error
                ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:21:2
+
+Cannot cast `four` to object type because property `b` is missing in object type [1] but exists in object type [2].
+
+   union.js:21:2
+   21| (four : {a : A, b : C, c : C}); //error
+        ^^^^
+
+References:
+   union.js:18:26
+   18| declare var four : $Diff<{a: A, b: B, c: C}, {a: A} | {b: B}>;
+                                ^^^^^^^^^^^^^^^^^^ [1]
+   union.js:21:9
+   21| (four : {a : A, b : C, c : C}); //error
+               ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:21:2
+
+Cannot cast `four` to object type because `B` [1] is incompatible with `C` [2] in property `b`.
+
+   union.js:21:2
+   21| (four : {a : A, b : C, c : C}); //error
+        ^^^^
+
+References:
    union.js:18:36
    18| declare var four : $Diff<{a: A, b: B, c: C}, {a: A} | {b: B}>;
-                                          ^ [3]
+                                          ^ [1]
    union.js:21:21
    21| (four : {a : A, b : C, c : C}); //error
-                           ^ [4]
+                           ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:24:20
 
-Cannot instantiate `$Diff` because:
- - undefined property `b` [1] is incompatible with `B` [2].
- - undefined property `a` [3] is incompatible with `A` [4].
+Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2].
 
    union.js:24:20
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
@@ -227,19 +250,28 @@ References:
    union.js:24:71
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
                                                                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- union.js:24:20
+
+Cannot instantiate `$Diff` because undefined property `a` [1] is incompatible with `A` [2].
+
+   union.js:24:20
+   24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    union.js:24:42
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
-                                                ^^^^^^^^^^^^^ [3]
+                                                ^^^^^^^^^^^^^ [1]
    union.js:24:62
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
-                                                                    ^ [4]
+                                                                    ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:30:2
 
-Cannot cast `six` to object type because:
- - property `c` is missing in object type [1] but exists in object type [2].
- - property `d` is missing in object type [3] but exists in object type [2].
+Cannot cast `six` to object type because property `c` is missing in object type [1] but exists in object type [2].
 
    union.js:30:2
    30| (six : {c : C, d : D}); // error
@@ -252,9 +284,23 @@ References:
    union.js:30:8
    30| (six : {c : C, d : D}); // error
               ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:30:2
+
+Cannot cast `six` to object type because property `d` is missing in object type [1] but exists in object type [2].
+
+   union.js:30:2
+   30| (six : {c : C, d : D}); // error
+        ^^^
+
+References:
    union.js:28:25
    28| declare var six : $Diff<{a: A, b : B, c : C} | {a : A, b: B, d : D}, {a : A} | {b: B}>;
-                               ^^^^^^^^^^^^^^^^^^^^ [3]
+                               ^^^^^^^^^^^^^^^^^^^^ [1]
+   union.js:30:8
+   30| (six : {c : C, d : D}); // error
+              ^^^^^^^^^^^^^^ [2]
 
 
 

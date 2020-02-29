@@ -17,9 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- break.js:8:20
 
-Cannot assign `z` to `w` because:
- - possibly uninitialized variable [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `z` to `w` because possibly uninitialized variable [1] is incompatible with number [2].
 
    break.js:8:20
    8|     var w:number = z; // 2 errors: ?string !~> number
@@ -32,9 +30,23 @@ References:
    break.js:8:11
    8|     var w:number = z; // 2 errors: ?string !~> number
                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- break.js:8:20
+
+Cannot assign `z` to `w` because string [1] is incompatible with number [2].
+
+   break.js:8:20
+   8|     var w:number = z; // 2 errors: ?string !~> number
+                         ^
+
+References:
    break.js:5:30
    5|         if (x == null) { z = ""; break; }
-                                   ^^ [3]
+                                   ^^ [1]
+   break.js:8:11
+   8|     var w:number = z; // 2 errors: ?string !~> number
+                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:16:24
@@ -56,9 +68,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- break.js:19:24
 
-Cannot assign `x` to `z` because:
- - boolean [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
 
    break.js:19:24
    19|         var z:number = x; // 2 errors: (boolean | string) !~> number
@@ -71,16 +81,28 @@ References:
    break.js:19:15
    19|         var z:number = x; // 2 errors: (boolean | string) !~> number
                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- break.js:19:24
+
+Cannot assign `x` to `z` because string [1] is incompatible with number [2].
+
+   break.js:19:24
+   19|         var z:number = x; // 2 errors: (boolean | string) !~> number
+                              ^
+
+References:
    break.js:17:13
    17|         x = "";
-                   ^^ [3]
+                   ^^ [1]
+   break.js:19:15
+   19|         var z:number = x; // 2 errors: (boolean | string) !~> number
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:23:20
 
-Cannot assign `x` to `w` because:
- - boolean [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `x` to `w` because boolean [1] is incompatible with number [2].
 
    break.js:23:20
    23|     var w:number = x; // 2 errors: (boolean | string) !~> number
@@ -93,9 +115,23 @@ References:
    break.js:23:11
    23|     var w:number = x; // 2 errors: (boolean | string) !~> number
                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- break.js:23:20
+
+Cannot assign `x` to `w` because string [1] is incompatible with number [2].
+
+   break.js:23:20
+   23|     var w:number = x; // 2 errors: (boolean | string) !~> number
+                          ^
+
+References:
    break.js:17:13
    17|         x = "";
-                   ^^ [3]
+                   ^^ [1]
+   break.js:23:11
+   23|     var w:number = x; // 2 errors: (boolean | string) !~> number
+                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:31:22
@@ -117,9 +153,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- break.js:35:22
 
-Cannot assign `x` to `z` because:
- - boolean [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
 
    break.js:35:22
    35|       let z:number = x; // 2 errors: (boolean | string) !~> number
@@ -132,16 +166,28 @@ References:
    break.js:35:13
    35|       let z:number = x; // 2 errors: (boolean | string) !~> number
                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- break.js:35:22
+
+Cannot assign `x` to `z` because string [1] is incompatible with number [2].
+
+   break.js:35:22
+   35|       let z:number = x; // 2 errors: (boolean | string) !~> number
+                            ^
+
+References:
    break.js:32:11
    32|       x = "";
-                 ^^ [3]
+                 ^^ [1]
+   break.js:35:13
+   35|       let z:number = x; // 2 errors: (boolean | string) !~> number
+                   ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:40:20
 
-Cannot assign `x` to `w` because:
- - boolean [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `x` to `w` because boolean [1] is incompatible with number [2].
 
    break.js:40:20
    40|     var w:number = x; // 2 errors: (boolean | string) !~> number
@@ -154,9 +200,23 @@ References:
    break.js:40:11
    40|     var w:number = x; // 2 errors: (boolean | string) !~> number
                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- break.js:40:20
+
+Cannot assign `x` to `w` because string [1] is incompatible with number [2].
+
+   break.js:40:20
+   40|     var w:number = x; // 2 errors: (boolean | string) !~> number
+                          ^
+
+References:
    break.js:32:11
    32|       x = "";
-                 ^^ [3]
+                 ^^ [1]
+   break.js:40:11
+   40|     var w:number = x; // 2 errors: (boolean | string) !~> number
+                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:46:24

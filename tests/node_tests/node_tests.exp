@@ -40,10 +40,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
 
-Cannot cast `hmac.read()` to number because:
- - null or undefined [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
- - `Buffer` [4] is incompatible with number [2].
+Cannot cast `hmac.read()` to number because null or undefined [1] is incompatible with number [2].
 
    crypto/crypto.js:12:8
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
@@ -56,12 +53,40 @@ References:
    crypto/crypto.js:12:21
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
+
+Cannot cast `hmac.read()` to number because string [1] is incompatible with number [2].
+
+   crypto/crypto.js:12:8
+     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                ^^^^^^^^^^^
+
+References:
    <BUILTINS>/node.js:1841:26
    1841|   read(size?: number): ?(string | Buffer);
-                                  ^^^^^^ [3]
+                                  ^^^^^^ [1]
+   crypto/crypto.js:12:21
+     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
+
+Cannot cast `hmac.read()` to number because `Buffer` [1] is incompatible with number [2].
+
+   crypto/crypto.js:12:8
+     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                ^^^^^^^^^^^
+
+References:
    <BUILTINS>/node.js:1841:35
    1841|   read(size?: number): ?(string | Buffer);
-                                           ^^^^^^ [4]
+                                           ^^^^^^ [1]
+   crypto/crypto.js:12:21
+     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                             ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- crypto/crypto.js:16:5
@@ -1552,9 +1577,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- json_file/test.js:6:2
 
-Cannot cast `data.abc` to boolean because:
- - null or undefined [1] is incompatible with boolean [2].
- - string [3] is incompatible with boolean [2].
+Cannot cast `data.abc` to boolean because null or undefined [1] is incompatible with boolean [2].
 
    json_file/test.js:6:2
    6| (data.abc: boolean); // error, should be ?string
@@ -1567,9 +1590,23 @@ References:
    json_file/test.js:6:12
    6| (data.abc: boolean); // error, should be ?string
                  ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- json_file/test.js:6:2
+
+Cannot cast `data.abc` to boolean because string [1] is incompatible with boolean [2].
+
+   json_file/test.js:6:2
+   6| (data.abc: boolean); // error, should be ?string
+       ^^^^^^^^
+
+References:
    json_file/package/index.json:6:18
    6|   "abc": (null: ?string)
-                       ^^^^^^ [3]
+                       ^^^^^^ [1]
+   json_file/test.js:6:12
+   6| (data.abc: boolean); // error, should be ?string
+                 ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- json_file/test.js:9:2
@@ -1880,9 +1917,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
 
-Cannot call `process.nextTick` because:
- - number [1] is incompatible with string [2] in the first argument.
- - null [3] is incompatible with boolean [4] in the third argument.
+Cannot call `process.nextTick` because number [1] is incompatible with string [2] in the first argument.
 
    process/nextTick.js:12:1
        v----------------
@@ -1901,12 +1936,29 @@ References:
    process/nextTick.js:13:7
    13|   (a: string, b: number, c: boolean) => {},
              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
+
+Cannot call `process.nextTick` because null [1] is incompatible with boolean [2] in the third argument.
+
+   process/nextTick.js:12:1
+       v----------------
+   12| process.nextTick(
+   13|   (a: string, b: number, c: boolean) => {},
+   14|   0, // Error: number ~> string
+   15|   1,
+   16|   null // Error: null ~> boolean
+   17| );
+       ^
+
+References:
    process/nextTick.js:16:3
    16|   null // Error: null ~> boolean
-         ^^^^ [3]
+         ^^^^ [1]
    process/nextTick.js:13:29
    13|   (a: string, b: number, c: boolean) => {},
-                                   ^^^^^^^ [4]
+                                   ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:19:1
@@ -1988,9 +2040,24 @@ References:
 
 Error -------------------------------------------------------------------------------------------- stream/stream.js:45:6
 
-Cannot cast `error` to null because:
- - `Error` [1] is incompatible with null [2].
- - undefined [1] is incompatible with null [2].
+Cannot cast `error` to null because `Error` [1] is incompatible with null [2].
+
+   stream/stream.js:45:6
+     45|     (error: null); // error
+              ^^^^^
+
+References:
+   <BUILTINS>/node.js:1969:18
+   1969|     cb: (error?: Error) => void,
+                          ^^^^^ [1]
+   stream/stream.js:45:13
+     45|     (error: null); // error
+                     ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- stream/stream.js:45:6
+
+Cannot cast `error` to null because undefined [1] is incompatible with null [2].
 
    stream/stream.js:45:6
      45|     (error: null); // error

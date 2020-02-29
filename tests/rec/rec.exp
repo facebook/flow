@@ -88,16 +88,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because:
- - property `e` is missing in `B` [1] but exists in `A` [2] in the first argument.
- - property `e` is missing in `C` [1] but exists in `A` [2] in the first argument.
- - property `k` is missing in `A` [1] but exists in `B` [3] in the first argument.
- - property `k` is missing in `C` [1] but exists in `B` [3] in the first argument.
- - property `v` is missing in `A` [1] but exists in `B` [3] in the first argument.
- - property `v` is missing in `C` [1] but exists in `B` [3] in the first argument.
- - string literal `a` [4] is incompatible with string literal `b` [5] in property `kind` of the first argument.
- - string literal `a` [4] is incompatible with string literal `c` [6] in property `kind` of the first argument.
- - string literal `b` [5] is incompatible with string literal `c` [6] in property `kind` of the first argument.
+Cannot return function because property `e` is missing in `B` [1] but exists in `A` [2] in the first argument.
 
    issue6155.js:15:12
    15|     return (type) => cases[type.kind](type);
@@ -110,18 +101,145 @@ References:
    issue6155.js:9:9
     9|     a: (A) => R,
                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `e` is missing in `C` [1] but exists in `A` [2] in the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:9:9
+    9|     a: (A) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `k` is missing in `A` [1] but exists in `B` [2] in the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
    issue6155.js:10:9
    10|     b: (B) => R,
-               ^ [3]
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `k` is missing in `C` [1] but exists in `B` [2] in the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `v` is missing in `A` [1] but exists in `B` [2] in the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `v` is missing in `C` [1] but exists in `B` [2] in the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because string literal `a` [1] is incompatible with string literal `b` [2] in property `kind` of
+the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    issue6155.js:3:17
     3| type A = {kind: 'a', e: Type};
-                       ^^^ [4]
+                       ^^^ [1]
    issue6155.js:4:17
     4| type B = {kind: 'b', k: Type, v: Type};
-                       ^^^ [5]
+                       ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because string literal `a` [1] is incompatible with string literal `c` [2] in property `kind` of
+the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:3:17
+    3| type A = {kind: 'a', e: Type};
+                       ^^^ [1]
    issue6155.js:5:17
     5| type C = {kind: 'c'};
-                       ^^^ [6]
+                       ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because string literal `b` [1] is incompatible with string literal `c` [2] in property `kind` of
+the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:4:17
+    4| type B = {kind: 'b', k: Type, v: Type};
+                       ^^^ [1]
+   issue6155.js:5:17
+    5| type C = {kind: 'c'};
+                       ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- recursive_react_component.js:21:11

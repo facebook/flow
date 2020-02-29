@@ -1,8 +1,6 @@
 Error -------------------------------------------------------------------------------------- computed_properties.js:12:2
 
-Cannot cast `x1?.["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `x1?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:12:2
    12| (x1?.["foo"]: empty);
@@ -15,9 +13,23 @@ References:
    computed_properties.js:12:15
    12| (x1?.["foo"]: empty);
                      ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:12:2
+
+Cannot cast `x1?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:12:2
+   12| (x1?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:12:15
+   12| (x1?.["foo"]: empty);
+                     ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:13:2
@@ -54,9 +66,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
 
-Cannot cast `y1?.["bar"]?.["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1?.["bar"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:15:2
    15| (y1?.["bar"]?.["foo"]: empty);
@@ -69,9 +79,23 @@ References:
    computed_properties.js:15:24
    15| (y1?.["bar"]?.["foo"]: empty);
                               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
+
+Cannot cast `y1?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:15:2
+   15| (y1?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:15:24
+   15| (y1?.["bar"]?.["foo"]: empty);
+                              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
@@ -138,10 +162,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
 
-Cannot cast `y1?.["baz"]?.["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - null or undefined [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
+Cannot cast `y1?.["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:17:2
    17| (y1?.["baz"]?.["foo"]: empty);
@@ -154,12 +175,40 @@ References:
    computed_properties.js:17:24
    17| (y1?.["baz"]?.["foo"]: empty);
                               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
+
+Cannot cast `y1?.["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+
+   computed_properties.js:17:2
+   17| (y1?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:4:24
     4| type Y = {bar: X, baz: ?X};
-                              ^^ [3]
+                              ^^ [1]
+   computed_properties.js:17:24
+   17| (y1?.["baz"]?.["foo"]: empty);
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
+
+Cannot cast `y1?.["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:17:2
+   17| (y1?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [4]
+                      ^^^^^^ [1]
+   computed_properties.js:17:24
+   17| (y1?.["baz"]?.["foo"]: empty);
+                              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
@@ -179,9 +228,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
 
-Cannot cast `y2?.["baz"]?.["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y2?.["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:18:2
    18| (y2?.["baz"]?.["foo"]: empty);
@@ -194,16 +241,28 @@ References:
    computed_properties.js:18:24
    18| (y2?.["baz"]?.["foo"]: empty);
                               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
+
+Cannot cast `y2?.["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:18:2
+   18| (y2?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:18:24
+   18| (y2?.["baz"]?.["foo"]: empty);
+                              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:20:2
 
-Cannot cast `y1?.["bar"]["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1?.["bar"]["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:20:2
    20| (y1?.["bar"]["foo"]: empty);
@@ -216,9 +275,23 @@ References:
    computed_properties.js:20:22
    20| (y1?.["bar"]["foo"]: empty);
                             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:20:2
+
+Cannot cast `y1?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:20:2
+   20| (y1?.["bar"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:20:22
+   20| (y1?.["bar"]["foo"]: empty);
+                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
@@ -255,9 +328,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
 
-Cannot cast `y1?.["baz"]["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1?.["baz"]["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:22:2
    22| (y1?.["baz"]["foo"]: empty);
@@ -270,9 +341,23 @@ References:
    computed_properties.js:22:22
    22| (y1?.["baz"]["foo"]: empty);
                             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
+
+Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:22:2
+   22| (y1?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:22:22
+   22| (y1?.["baz"]["foo"]: empty);
+                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
@@ -433,9 +518,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
 
-Cannot cast `y1["baz"]?.["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:27:2
    27| (y1["baz"]?.["foo"]: empty);
@@ -448,16 +531,28 @@ References:
    computed_properties.js:27:22
    27| (y1["baz"]?.["foo"]: empty);
                             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
+
+Cannot cast `y1["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:27:2
+   27| (y1["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:27:22
+   27| (y1["baz"]?.["foo"]: empty);
+                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:28:2
 
-Cannot cast `y2["baz"]?.["foo"]` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y2["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
 
    computed_properties.js:28:2
    28| (y2["baz"]?.["foo"]: empty);
@@ -470,9 +565,23 @@ References:
    computed_properties.js:28:22
    28| (y2["baz"]?.["foo"]: empty);
                             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:28:2
+
+Cannot cast `y2["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:28:2
+   28| (y2["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   computed_properties.js:28:22
+   28| (y2["baz"]?.["foo"]: empty);
+                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:30:2
@@ -558,9 +667,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
 
-Cannot get `y1?.["baz"]["foo"]` because:
- - an index signature declaring the expected key / value type is missing in null or undefined [1].
- - an index signature declaring the expected key / value type is missing in null or undefined [2].
+Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:32:2
    32| ((y1?.["baz"])["foo"]: empty);
@@ -570,9 +678,21 @@ References:
    computed_properties.js:4:24
     4| type Y = {bar: X, baz: ?X};
                               ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
+
+Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
+
+   computed_properties.js:32:2
+   32| ((y1?.["baz"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
    computed_properties.js:9:17
     9| declare var y1: ?Y;
-                       ^^ [2]
+                       ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:33:2
@@ -735,9 +855,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
 
-Cannot cast `a.a` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `a.a` to empty because null or undefined [1] is incompatible with empty [2].
 
    deletion.js:20:2
    20| (a.a: empty); // don't refine a.a to definitely exist
@@ -750,9 +868,23 @@ References:
    deletion.js:20:7
    20| (a.a: empty); // don't refine a.a to definitely exist
              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
+
+Cannot cast `a.a` to empty because number [1] is incompatible with empty [2].
+
+   deletion.js:20:2
+   20| (a.a: empty); // don't refine a.a to definitely exist
+        ^^^
+
+References:
    deletion.js:18:22
    18| declare var a: ?{a: ?number}
-                            ^^^^^^ [3]
+                            ^^^^^^ [1]
+   deletion.js:20:7
+   20| (a.a: empty); // don't refine a.a to definitely exist
+             ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
@@ -799,9 +931,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
 
-Cannot cast `x1?.()` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `x1?.()` to empty because null or undefined [1] is incompatible with empty [2].
 
    function_calls.js:8:2
    8| (x1?.(): empty);
@@ -814,9 +944,23 @@ References:
    function_calls.js:8:10
    8| (x1?.(): empty);
                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
+
+Cannot cast `x1?.()` to empty because number [1] is incompatible with empty [2].
+
+   function_calls.js:8:2
+   8| (x1?.(): empty);
+       ^^^^^^
+
+References:
    function_calls.js:3:16
    3| type X = () => number;
-                     ^^^^^^ [3]
+                     ^^^^^^ [1]
+   function_calls.js:8:10
+   8| (x1?.(): empty);
+               ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:9:2
@@ -935,10 +1079,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
 
-Cannot cast `foo?.bar?.()` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - null or undefined [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
+Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:9:2
    9| (foo?.bar?.(): empty);
@@ -951,12 +1092,40 @@ References:
    method_calls.js:9:16
    9| (foo?.bar?.(): empty);
                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
+
+Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:9:2
+   9| (foo?.bar?.(): empty);
+       ^^^^^^^^^^^^
+
+References:
    method_calls.js:4:8
    4|   bar: ?(() => number),
-             ^^^^^^^^^^^^^^^ [3]
+             ^^^^^^^^^^^^^^^ [1]
+   method_calls.js:9:16
+   9| (foo?.bar?.(): empty);
+                     ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
+
+Cannot cast `foo?.bar?.()` to empty because number [1] is incompatible with empty [2].
+
+   method_calls.js:9:2
+   9| (foo?.bar?.(): empty);
+       ^^^^^^^^^^^^
+
+References:
    method_calls.js:4:16
    4|   bar: ?(() => number),
-                     ^^^^^^ [4]
+                     ^^^^^^ [1]
+   method_calls.js:9:16
+   9| (foo?.bar?.(): empty);
+                     ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
@@ -975,9 +1144,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
 
-Cannot cast `foo.bar?.()` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `foo.bar?.()` to empty because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:10:2
    10| (foo.bar?.(): empty);
@@ -990,9 +1157,23 @@ References:
    method_calls.js:10:15
    10| (foo.bar?.(): empty);
                      ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
+
+Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2].
+
+   method_calls.js:10:2
+   10| (foo.bar?.(): empty);
+        ^^^^^^^^^^^
+
+References:
    method_calls.js:4:16
     4|   bar: ?(() => number),
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   method_calls.js:10:15
+   10| (foo.bar?.(): empty);
+                     ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
@@ -1011,9 +1192,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
 
-Cannot cast `foo?.bar()` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `foo?.bar()` to empty because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:11:2
    11| (foo?.bar(): empty);
@@ -1026,16 +1205,28 @@ References:
    method_calls.js:11:14
    11| (foo?.bar(): empty);
                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
+
+Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2].
+
+   method_calls.js:11:2
+   11| (foo?.bar(): empty);
+        ^^^^^^^^^^
+
+References:
    method_calls.js:4:16
     4|   bar: ?(() => number),
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   method_calls.js:11:14
+   11| (foo?.bar(): empty);
+                    ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
 
-Cannot call `foo?.bar` because:
- - null or undefined [1] is not a function.
- - null or undefined [2] is not a function.
+Cannot call `foo?.bar` because null or undefined [1] is not a function.
 
    method_calls.js:12:2
    12| ((foo?.bar)(): empty);
@@ -1045,9 +1236,20 @@ References:
    method_calls.js:4:8
     4|   bar: ?(() => number),
               ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+
+Cannot call `foo?.bar` because null or undefined [1] is not a function.
+
+   method_calls.js:12:2
+   12| ((foo?.bar)(): empty);
+        ^^^^^^^^^^^^
+
+References:
    method_calls.js:7:18
     7| declare var foo: ?X;
-                        ^^ [2]
+                        ^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
@@ -1069,11 +1271,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
 
-Cannot assign `a.b?.()?.c?.d` to `y` because:
- - null or undefined [1] is incompatible with empty [2].
- - null or undefined [3] is incompatible with empty [2].
- - null or undefined [4] is incompatible with empty [2].
- - number [5] is incompatible with empty [2].
+Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
@@ -1086,23 +1284,62 @@ References:
    method_calls.js:15:8
    15| var y: empty = a.b?.()?.c?.d;
               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
+
+Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:15:16
+   15| var y: empty = a.b?.()?.c?.d;
+                      ^^^^^^^^^^^^^
+
+References:
    method_calls.js:14:29
    14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
-                                   ^^^^^^^^^^^^^^^^^^ [3]
+                                   ^^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:15:8
+   15| var y: empty = a.b?.()?.c?.d;
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
+
+Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:15:16
+   15| var y: empty = a.b?.()?.c?.d;
+                      ^^^^^^^^^^^^^
+
+References:
    method_calls.js:14:34
    14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
-                                        ^^^^^^^^^^^^ [4]
+                                        ^^^^^^^^^^^^ [1]
+   method_calls.js:15:8
+   15| var y: empty = a.b?.()?.c?.d;
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
+
+Cannot assign `a.b?.()?.c?.d` to `y` because number [1] is incompatible with empty [2].
+
+   method_calls.js:15:16
+   15| var y: empty = a.b?.()?.c?.d;
+                      ^^^^^^^^^^^^^
+
+References:
    method_calls.js:14:39
    14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
-                                             ^^^^^^ [5]
+                                             ^^^^^^ [1]
+   method_calls.js:15:8
+   15| var y: empty = a.b?.()?.c?.d;
+              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
 
-Cannot assign `a.c?.d?.e` to `x` because:
- - null or undefined [1] is incompatible with empty [2].
- - null or undefined [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
+Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:16:16
    16| var x: empty = a.c?.d?.e;
@@ -1115,19 +1352,45 @@ References:
    method_calls.js:16:8
    16| var x: empty = a.c?.d?.e;
               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
+
+Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:16:16
+   16| var x: empty = a.c?.d?.e;
+                      ^^^^^^^^^
+
+References:
    method_calls.js:14:58
    14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
-                                                                ^^^^^^^^^^^ [3]
+                                                                ^^^^^^^^^^^ [1]
+   method_calls.js:16:8
+   16| var x: empty = a.c?.d?.e;
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
+
+Cannot assign `a.c?.d?.e` to `x` because number [1] is incompatible with empty [2].
+
+   method_calls.js:16:16
+   16| var x: empty = a.c?.d?.e;
+                      ^^^^^^^^^
+
+References:
    method_calls.js:14:62
    14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
-                                                                    ^^^^^^ [4]
+                                                                    ^^^^^^ [1]
+   method_calls.js:16:8
+   16| var x: empty = a.c?.d?.e;
+              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:17:16
 
-Cannot assign `a.d?.e.f().g` to `w` because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot assign `a.d?.e.f().g` to `w` because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:17:16
    17| var w: empty = a.d?.e.f().g;
@@ -1140,17 +1403,28 @@ References:
    method_calls.js:17:8
    17| var w: empty = a.d?.e.f().g;
               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:17:16
+
+Cannot assign `a.d?.e.f().g` to `w` because number [1] is incompatible with empty [2].
+
+   method_calls.js:17:16
+   17| var w: empty = a.d?.e.f().g;
+                      ^^^^^^^^^^^^
+
+References:
    method_calls.js:14:94
    14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
-                                                                                                    ^^^^^^ [3]
+                                                                                                    ^^^^^^ [1]
+   method_calls.js:17:8
+   17| var w: empty = a.d?.e.f().g;
+              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
 
-Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because:
- - undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
+Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because undefined [1] is incompatible with empty [2].
 
    method_calls.js:20:16
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
@@ -1163,22 +1437,45 @@ References:
    method_calls.js:20:8
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
+
+Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1] is incompatible with empty [2].
+
+   method_calls.js:20:16
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    method_calls.js:19:33
    19| declare var b: {onClick?: () => number};
-                                       ^^^^^^ [3]
+                                       ^^^^^^ [1]
+   method_calls.js:20:8
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
+
+Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1] is incompatible with empty [2].
+
+   method_calls.js:20:16
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    method_calls.js:20:53
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
-                                                           ^^ [4]
+                                                           ^^ [1]
+   method_calls.js:20:8
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+              ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
 
-Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because:
- - null or undefined [1] is incompatible with empty [2].
- - null or undefined [3] is incompatible with empty [2].
- - null or undefined [4] is incompatible with empty [2].
- - null or undefined [5] is incompatible with empty [2].
- - number [6] is incompatible with empty [2].
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
@@ -1191,18 +1488,74 @@ References:
    method_calls.js:23:8
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
+
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:23:16
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
    method_calls.js:22:31
    22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
-                                     ^^^^^^^^^^^^^^^^^^^^^^ [3]
+                                     ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:23:8
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
+
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:23:16
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
    method_calls.js:22:38
    22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
-                                            ^^^^^^^^^^^^^^ [4]
+                                            ^^^^^^^^^^^^^^ [1]
+   method_calls.js:23:8
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
+
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+
+   method_calls.js:23:16
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
    method_calls.js:22:23
    22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:23:8
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
+
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because number [1] is incompatible with empty [2].
+
+   method_calls.js:23:16
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
    method_calls.js:22:45
    22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
-                                                   ^^^^^^ [6]
+                                                   ^^^^^^ [1]
+   method_calls.js:23:8
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+              ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:43:3
@@ -1286,9 +1639,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:6
 
-Cannot cast `this?.#baz` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - `X` [3] is incompatible with empty [2].
+Cannot cast `this?.#baz` to empty because null or undefined [1] is incompatible with empty [2].
 
    private_properties.js:15:6
    15|     (this?.#baz: empty);
@@ -1301,9 +1652,23 @@ References:
    private_properties.js:15:18
    15|     (this?.#baz: empty);
                         ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:15:6
+
+Cannot cast `this?.#baz` to empty because `X` [1] is incompatible with empty [2].
+
+   private_properties.js:15:6
+   15|     (this?.#baz: empty);
+            ^^^^^^^^^^
+
+References:
    private_properties.js:12:10
    12|   #baz: ?X
-                ^ [3]
+                ^ [1]
+   private_properties.js:15:18
+   15|     (this?.#baz: empty);
+                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:6
@@ -1836,9 +2201,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:129:4
 
-Cannot cast `b.y` to boolean literal `false` because:
- - boolean [1] is incompatible with boolean literal `false` [2].
- - undefined [1] is incompatible with boolean literal `false` [2].
+Cannot cast `b.y` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+
+   refinements.js:129:4
+   129|   (b.y: false); // nope
+           ^^^
+
+References:
+   refinements.js:103:34
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                                         ^^^^^^^ [1]
+   refinements.js:129:9
+   129|   (b.y: false); // nope
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:129:4
+
+Cannot cast `b.y` to boolean literal `false` because undefined [1] is incompatible with boolean literal `false` [2].
 
    refinements.js:129:4
    129|   (b.y: false); // nope
@@ -1884,9 +2264,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:142:4
 
-Cannot call `d.a` because:
- - undefined [1] is not a function.
- - property `a` is missing in null or undefined [2].
+Cannot call `d.a` because undefined [1] is not a function.
 
    refinements.js:142:4
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
@@ -1896,9 +2274,20 @@ References:
    refinements.js:140:22
    140| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:142:4
+
+Cannot call `d.a` because property `a` is missing in null or undefined [1].
+
+   refinements.js:142:4
+   142|   (d.a().b.c: number); // nope, never was a refinement in the first place
+           ^^^^^
+
+References:
    refinements.js:140:16
    140| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:142:4
@@ -1917,10 +2306,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:148:18
 
-Cannot assign `a11?.a || b11?.a` to `x11` because:
- - string [1] is incompatible with empty [2].
- - property `a` of unknown type [3] is incompatible with empty [2].
- - null or undefined [4] is incompatible with empty [2].
+Cannot assign `a11?.a || b11?.a` to `x11` because string [1] is incompatible with empty [2].
 
    refinements.js:148:18
    148| var x11: empty = a11?.a || b11?.a;
@@ -1933,12 +2319,40 @@ References:
    refinements.js:148:10
    148| var x11: empty = a11?.a || b11?.a;
                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:148:18
+
+Cannot assign `a11?.a || b11?.a` to `x11` because property `a` of unknown type [1] is incompatible with empty [2].
+
    refinements.js:148:18
    148| var x11: empty = a11?.a || b11?.a;
-                         ^^^^^^ [3]
+                         ^^^^^^^^^^^^^^^^
+
+References:
+   refinements.js:148:18
+   148| var x11: empty = a11?.a || b11?.a;
+                         ^^^^^^ [1]
+   refinements.js:148:10
+   148| var x11: empty = a11?.a || b11?.a;
+                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:148:18
+
+Cannot assign `a11?.a || b11?.a` to `x11` because null or undefined [1] is incompatible with empty [2].
+
+   refinements.js:148:18
+   148| var x11: empty = a11?.a || b11?.a;
+                         ^^^^^^^^^^^^^^^^
+
+References:
    refinements.js:146:18
    146| declare var b11: ?{};
-                         ^^^ [4]
+                         ^^^ [1]
+   refinements.js:148:10
+   148| var x11: empty = a11?.a || b11?.a;
+                 ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- refinements.js:148:28
@@ -2437,9 +2851,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements2.js:103:4
 
-Cannot cast `b1?.a` to number because:
- - null or undefined [1] is incompatible with number [2].
- - undefined [3] is incompatible with number [2].
+Cannot cast `b1?.a` to number because null or undefined [1] is incompatible with number [2].
 
    refinements2.js:103:4
    103|   (b1?.a: number) // b1.a may not exist and may not be number
@@ -2452,16 +2864,28 @@ References:
    refinements2.js:103:11
    103|   (b1?.a: number) // b1.a may not exist and may not be number
                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- refinements2.js:103:4
+
+Cannot cast `b1?.a` to number because undefined [1] is incompatible with number [2].
+
+   refinements2.js:103:4
+   103|   (b1?.a: number) // b1.a may not exist and may not be number
+           ^^^^^
+
+References:
    refinements2.js:100:23
    100| declare var b1: ?{a?: number};
-                              ^^^^^^ [3]
+                              ^^^^^^ [1]
+   refinements2.js:103:11
+   103|   (b1?.a: number) // b1.a may not exist and may not be number
+                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
 
-Cannot cast `x1?.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `x1?.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:12:2
    12| (x1?.foo: empty);
@@ -2474,9 +2898,23 @@ References:
    static_members.js:12:11
    12| (x1?.foo: empty);
                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:12:2
+
+Cannot cast `x1?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:12:2
+   12| (x1?.foo: empty);
+        ^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:12:11
+   12| (x1?.foo: empty);
+                 ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:13:2
@@ -2513,9 +2951,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:15:2
 
-Cannot cast `y1?.bar?.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1?.bar?.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:15:2
    15| (y1?.bar?.foo: empty);
@@ -2528,9 +2964,23 @@ References:
    static_members.js:15:16
    15| (y1?.bar?.foo: empty);
                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:15:2
+
+Cannot cast `y1?.bar?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:15:2
+   15| (y1?.bar?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:15:16
+   15| (y1?.bar?.foo: empty);
+                      ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:15:2
@@ -2597,10 +3047,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:2
 
-Cannot cast `y1?.baz?.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - null or undefined [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
+Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:17:2
    17| (y1?.baz?.foo: empty);
@@ -2613,12 +3060,40 @@ References:
    static_members.js:17:16
    17| (y1?.baz?.foo: empty);
                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:17:2
+
+Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+
+   static_members.js:17:2
+   17| (y1?.baz?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
    static_members.js:4:24
     4| type Y = {bar: X, baz: ?X};
-                              ^^ [3]
+                              ^^ [1]
+   static_members.js:17:16
+   17| (y1?.baz?.foo: empty);
+                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:17:2
+
+Cannot cast `y1?.baz?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:17:2
+   17| (y1?.baz?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [4]
+                      ^^^^^^ [1]
+   static_members.js:17:16
+   17| (y1?.baz?.foo: empty);
+                      ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:2
@@ -2638,9 +3113,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:2
 
-Cannot cast `y2?.baz?.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:18:2
    18| (y2?.baz?.foo: empty);
@@ -2653,16 +3126,28 @@ References:
    static_members.js:18:16
    18| (y2?.baz?.foo: empty);
                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:18:2
+
+Cannot cast `y2?.baz?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:18:2
+   18| (y2?.baz?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:18:16
+   18| (y2?.baz?.foo: empty);
+                      ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:20:2
 
-Cannot cast `y1?.bar.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1?.bar.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:20:2
    20| (y1?.bar.foo: empty);
@@ -2675,9 +3160,23 @@ References:
    static_members.js:20:15
    20| (y1?.bar.foo: empty);
                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:20:2
+
+Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:20:2
+   20| (y1?.bar.foo: empty);
+        ^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:20:15
+   20| (y1?.bar.foo: empty);
+                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:21:2
@@ -2714,9 +3213,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:2
 
-Cannot cast `y1?.baz.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1?.baz.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:22:2
    22| (y1?.baz.foo: empty);
@@ -2729,9 +3226,23 @@ References:
    static_members.js:22:15
    22| (y1?.baz.foo: empty);
                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:22:2
+
+Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:22:2
+   22| (y1?.baz.foo: empty);
+        ^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:22:15
+   22| (y1?.baz.foo: empty);
+                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:2
@@ -2888,9 +3399,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:2
 
-Cannot cast `y1.baz?.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:27:2
    27| (y1.baz?.foo: empty);
@@ -2903,16 +3412,28 @@ References:
    static_members.js:27:15
    27| (y1.baz?.foo: empty);
                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:27:2
+
+Cannot cast `y1.baz?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:27:2
+   27| (y1.baz?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:27:15
+   27| (y1.baz?.foo: empty);
+                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:28:2
 
-Cannot cast `y2.baz?.foo` to empty because:
- - null or undefined [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
 
    static_members.js:28:2
    28| (y2.baz?.foo: empty);
@@ -2925,9 +3446,23 @@ References:
    static_members.js:28:15
    28| (y2.baz?.foo: empty);
                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:28:2
+
+Cannot cast `y2.baz?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:28:2
+   28| (y2.baz?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
    static_members.js:3:16
     3| type X = {foo: number};
-                      ^^^^^^ [3]
+                      ^^^^^^ [1]
+   static_members.js:28:15
+   28| (y2.baz?.foo: empty);
+                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:30:2
@@ -3012,9 +3547,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:32:2
 
-Cannot get `y1?.baz.foo` because:
- - property `foo` is missing in null or undefined [1].
- - property `foo` is missing in null or undefined [2].
+Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
 
    static_members.js:32:2
    32| ((y1?.baz).foo: empty);
@@ -3024,9 +3557,20 @@ References:
    static_members.js:4:24
     4| type Y = {bar: X, baz: ?X};
                               ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:32:2
+
+Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
+
+   static_members.js:32:2
+   32| ((y1?.baz).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
    static_members.js:9:17
     9| declare var y1: ?Y;
-                       ^^ [2]
+                       ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:33:2

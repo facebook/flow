@@ -28,13 +28,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- collator.js:6:18
 
-Cannot call `Intl.Collator` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - string [3] is incompatible with enum [4] in property `usage`.
- - string [5] is incompatible with enum [6] in property `sensitivity`.
- - null [7] is incompatible with boolean [8] in property `ignorePunctuation`.
- - number [9] is incompatible with boolean [10] in property `numeric`.
- - string [11] is incompatible with enum [12] in property `caseFirst`.
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
+property `localeMatcher`.
 
    collator.js:6:18
                         v
@@ -55,36 +50,136 @@ References:
    <BUILTINS>/intl.js:48:19
    48|   localeMatcher?: 'lookup' | 'best fit',
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:6:18
+
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
+property `usage`.
+
+   collator.js:6:18
+                        v
+    6| Intl.Collator(1, {
+    7|   localeMatcher: 'look fit',
+    8|   usage: 'find',
+    9|   sensitivity: '',
+   10|   ignorePunctuation: null,
+   11|   numeric: 1,
+   12|   caseFirst: 'true'
+   13| }) // incorrect
+       ^
+
+References:
    collator.js:8:10
     8|   usage: 'find',
-                ^^^^^^ [3]
+                ^^^^^^ [1]
    <BUILTINS>/intl.js:49:11
    49|   usage?: 'sort' | 'search',
-                 ^^^^^^^^^^^^^^^^^ [4]
+                 ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:6:18
+
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
+property `sensitivity`.
+
+   collator.js:6:18
+                        v
+    6| Intl.Collator(1, {
+    7|   localeMatcher: 'look fit',
+    8|   usage: 'find',
+    9|   sensitivity: '',
+   10|   ignorePunctuation: null,
+   11|   numeric: 1,
+   12|   caseFirst: 'true'
+   13| }) // incorrect
+       ^
+
+References:
    collator.js:9:16
     9|   sensitivity: '',
-                      ^^ [5]
+                      ^^ [1]
    <BUILTINS>/intl.js:50:17
    50|   sensitivity?: 'base' | 'accent' | 'case' | 'variant',
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:6:18
+
+Cannot call `Intl.Collator` with object literal bound to `options` because null [1] is incompatible with boolean [2] in
+property `ignorePunctuation`.
+
+   collator.js:6:18
+                        v
+    6| Intl.Collator(1, {
+    7|   localeMatcher: 'look fit',
+    8|   usage: 'find',
+    9|   sensitivity: '',
+   10|   ignorePunctuation: null,
+   11|   numeric: 1,
+   12|   caseFirst: 'true'
+   13| }) // incorrect
+       ^
+
+References:
    collator.js:10:22
    10|   ignorePunctuation: null,
-                            ^^^^ [7]
+                            ^^^^ [1]
    <BUILTINS>/intl.js:51:23
    51|   ignorePunctuation?: boolean,
-                             ^^^^^^^ [8]
+                             ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:6:18
+
+Cannot call `Intl.Collator` with object literal bound to `options` because number [1] is incompatible with boolean [2]
+in property `numeric`.
+
+   collator.js:6:18
+                        v
+    6| Intl.Collator(1, {
+    7|   localeMatcher: 'look fit',
+    8|   usage: 'find',
+    9|   sensitivity: '',
+   10|   ignorePunctuation: null,
+   11|   numeric: 1,
+   12|   caseFirst: 'true'
+   13| }) // incorrect
+       ^
+
+References:
    collator.js:11:12
    11|   numeric: 1,
-                  ^ [9]
+                  ^ [1]
    <BUILTINS>/intl.js:52:13
    52|   numeric?: boolean,
-                   ^^^^^^^ [10]
+                   ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:6:18
+
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
+property `caseFirst`.
+
+   collator.js:6:18
+                        v
+    6| Intl.Collator(1, {
+    7|   localeMatcher: 'look fit',
+    8|   usage: 'find',
+    9|   sensitivity: '',
+   10|   ignorePunctuation: null,
+   11|   numeric: 1,
+   12|   caseFirst: 'true'
+   13| }) // incorrect
+       ^
+
+References:
    collator.js:12:14
    12|   caseFirst: 'true'
-                    ^^^^^^ [11]
+                    ^^^^^^ [1]
    <BUILTINS>/intl.js:53:15
    53|   caseFirst?: 'upper' | 'lower' | 'false',
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [12]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- collator.js:24:5
@@ -126,20 +221,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - number [3] is incompatible with string [4] in property `timeZone`.
- - string [5] is incompatible with boolean [6] in property `hour12`.
- - string [7] is incompatible with enum [8] in property `formatMatcher`.
- - string [9] is incompatible with enum [10] in property `weekday`.
- - string [11] is incompatible with enum [12] in property `era`.
- - string [13] is incompatible with enum [14] in property `year`.
- - string [15] is incompatible with enum [16] in property `month`.
- - string [17] is incompatible with enum [18] in property `day`.
- - string [19] is incompatible with enum [20] in property `hour`.
- - string [21] is incompatible with enum [22] in property `minute`.
- - string [23] is incompatible with enum [24] in property `second`.
- - string [25] is incompatible with enum [26] in property `timeZoneName`.
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `localeMatcher`.
 
    date_time_format.js:6:24
                                v
@@ -167,78 +250,402 @@ References:
    <BUILTINS>/intl.js:101:19
    101|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because number [1] is incompatible with
+string [2] in property `timeZone`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:8:13
      8|   timeZone: 1,
-                    ^ [3]
+                    ^ [1]
    <BUILTINS>/intl.js:102:14
    102|   timeZone?: string,
-                     ^^^^^^ [4]
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+boolean [2] in property `hour12`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:9:11
      9|   hour12: '',
-                  ^^ [5]
+                  ^^ [1]
    <BUILTINS>/intl.js:103:12
    103|   hour12?: boolean,
-                   ^^^^^^^ [6]
+                   ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `formatMatcher`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:10:18
     10|   formatMatcher: 'basic fit',
-                         ^^^^^^^^^^^ [7]
+                         ^^^^^^^^^^^ [1]
    <BUILTINS>/intl.js:104:19
    104|   formatMatcher?: 'basic' | 'best fit',
-                          ^^^^^^^^^^^^^^^^^^^^ [8]
+                          ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `weekday`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:11:12
     11|   weekday: '2-digit',
-                   ^^^^^^^^^ [9]
+                   ^^^^^^^^^ [1]
    <BUILTINS>/intl.js:105:13
    105|   weekday?: 'narrow' | 'short' | 'long',
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [10]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `era`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:12:8
     12|   era: '',
-               ^^ [11]
+               ^^ [1]
    <BUILTINS>/intl.js:106:9
    106|   era?: 'narrow' | 'short' | 'long',
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [12]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `year`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:13:9
     13|   year: '',
-                ^^ [13]
+                ^^ [1]
    <BUILTINS>/intl.js:107:10
    107|   year?: 'numeric' | '2-digit',
-                 ^^^^^^^^^^^^^^^^^^^^^ [14]
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `month`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:14:10
     14|   month: '',
-                 ^^ [15]
+                 ^^ [1]
    <BUILTINS>/intl.js:108:11
    108|   month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [16]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `day`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:15:8
     15|   day: '',
-               ^^ [17]
+               ^^ [1]
    <BUILTINS>/intl.js:109:9
    109|   day?: 'numeric' | '2-digit',
-                ^^^^^^^^^^^^^^^^^^^^^ [18]
+                ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `hour`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:16:9
     16|   hour: '',
-                ^^ [19]
+                ^^ [1]
    <BUILTINS>/intl.js:110:10
    110|   hour?: 'numeric' | '2-digit',
-                 ^^^^^^^^^^^^^^^^^^^^^ [20]
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `minute`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:17:11
     17|   minute: 'long',
-                  ^^^^^^ [21]
+                  ^^^^^^ [1]
    <BUILTINS>/intl.js:111:12
    111|   minute?: 'numeric' | '2-digit',
-                   ^^^^^^^^^^^^^^^^^^^^^ [22]
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `second`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:18:11
     18|   second: 'short',
-                  ^^^^^^^ [23]
+                  ^^^^^^^ [1]
    <BUILTINS>/intl.js:112:12
    112|   second?: 'numeric' | '2-digit',
-                   ^^^^^^^^^^^^^^^^^^^^^ [24]
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+enum [2] in property `timeZoneName`.
+
+   date_time_format.js:6:24
+                               v
+     6| Intl.DateTimeFormat(1, {
+     7|   localeMatcher: 'look',
+     8|   timeZone: 1,
+     9|   hour12: '',
+    10|   formatMatcher: 'basic fit',
+    11|   weekday: '2-digit',
+    12|   era: '',
+    13|   year: '',
+    14|   month: '',
+    15|   day: '',
+    16|   hour: '',
+    17|   minute: 'long',
+    18|   second: 'short',
+    19|   timeZoneName: 'narrow'
+    20| }) // incorrect
+        ^
+
+References:
    date_time_format.js:19:17
     19|   timeZoneName: 'narrow'
-                        ^^^^^^^^ [25]
+                        ^^^^^^^^ [1]
    <BUILTINS>/intl.js:113:18
    113|   timeZoneName?: 'short' | 'long',
-                         ^^^^^^^^^^^^^^^^ [26]
+                         ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:38:5
@@ -318,9 +725,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:7:43
 
-Cannot call `getCanonicalLocales` with array literal bound to `locales` because:
- - number [1] is incompatible with string [2] in array element.
- - number [3] is incompatible with string [2] in array element.
+Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
+string [2] in array element.
 
    intl.js:7:43
     7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
@@ -333,9 +739,24 @@ References:
    <BUILTINS>/intl.js:18:35
    18| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- intl.js:7:43
+
+Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
+string [2] in array element.
+
+   intl.js:7:43
+    7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
+                                                 ^^^^^^^^
+
+References:
    intl.js:7:48
     7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
-                                                      ^ [3]
+                                                      ^ [1]
+   <BUILTINS>/intl.js:18:35
+   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- intl.js:13:11
@@ -391,17 +812,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- number_format.js:6:22
 
-Cannot call `Intl.NumberFormat` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - string [3] is incompatible with enum [4] in property `style`.
- - number [5] is incompatible with string [6] in property `currency`.
- - string [7] is incompatible with enum [8] in property `currencyDisplay`.
- - number [9] is incompatible with boolean [10] in property `useGrouping`.
- - object literal [11] is incompatible with number [12] in property `minimumIntegerDigits`.
- - string [13] is incompatible with number [14] in property `minimumFractionDigits`.
- - null [15] is incompatible with number [16] in property `maximumFractionDigits`.
- - string [17] is incompatible with number [18] in property `minimumSignificantDigits`.
- - null [19] is incompatible with number [20] in property `maximumSignificantDigits`.
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with enum [2]
+in property `localeMatcher`.
 
    number_format.js:6:22
                              v
@@ -426,60 +838,276 @@ References:
    <BUILTINS>/intl.js:149:19
    149|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with enum [2]
+in property `style`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:8:10
      8|   style: 'octal',
-                 ^^^^^^^ [3]
+                 ^^^^^^^ [1]
    <BUILTINS>/intl.js:150:11
    150|   style?: 'decimal' | 'currency' | 'percent',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because number [1] is incompatible with
+string [2] in property `currency`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:9:13
      9|   currency: 123,
-                    ^^^ [5]
+                    ^^^ [1]
    <BUILTINS>/intl.js:151:14
    151|   currency?: string,
-                     ^^^^^^ [6]
+                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with enum [2]
+in property `currencyDisplay`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:10:20
     10|   currencyDisplay: 'sym',
-                           ^^^^^ [7]
+                           ^^^^^ [1]
    <BUILTINS>/intl.js:152:21
    152|   currencyDisplay?: 'symbol' | 'code' | 'name',
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [8]
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because number [1] is incompatible with
+boolean [2] in property `useGrouping`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:11:16
     11|   useGrouping: 5,
-                       ^ [9]
+                       ^ [1]
    <BUILTINS>/intl.js:153:17
    153|   useGrouping?: boolean,
-                        ^^^^^^^ [10]
+                        ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because object literal [1] is incompatible with
+number [2] in property `minimumIntegerDigits`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:12:25
     12|   minimumIntegerDigits: {},
-                                ^^ [11]
+                                ^^ [1]
    <BUILTINS>/intl.js:154:26
    154|   minimumIntegerDigits?: number,
-                                 ^^^^^^ [12]
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with
+number [2] in property `minimumFractionDigits`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:13:26
     13|   minimumFractionDigits: '',
-                                 ^^ [13]
+                                 ^^ [1]
    <BUILTINS>/intl.js:155:27
    155|   minimumFractionDigits?: number,
-                                  ^^^^^^ [14]
+                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because null [1] is incompatible with number [2]
+in property `maximumFractionDigits`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:14:26
     14|   maximumFractionDigits: null,
-                                 ^^^^ [15]
+                                 ^^^^ [1]
    <BUILTINS>/intl.js:156:27
    156|   maximumFractionDigits?: number,
-                                  ^^^^^^ [16]
+                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with
+number [2] in property `minimumSignificantDigits`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:15:29
     15|   minimumSignificantDigits: '',
-                                    ^^ [17]
+                                    ^^ [1]
    <BUILTINS>/intl.js:157:30
    157|   minimumSignificantDigits?: number,
-                                     ^^^^^^ [18]
+                                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because null [1] is incompatible with number [2]
+in property `maximumSignificantDigits`.
+
+   number_format.js:6:22
+                             v
+     6| Intl.NumberFormat(1, {
+     7|   localeMatcher: 'best',
+     8|   style: 'octal',
+     9|   currency: 123,
+    10|   currencyDisplay: 'sym',
+    11|   useGrouping: 5,
+    12|   minimumIntegerDigits: {},
+    13|   minimumFractionDigits: '',
+    14|   maximumFractionDigits: null,
+    15|   minimumSignificantDigits: '',
+    16|   maximumSignificantDigits: null
+    17| }) // incorrect
+        ^
+
+References:
    number_format.js:16:29
     16|   maximumSignificantDigits: null
-                                    ^^^^ [19]
+                                    ^^^^ [1]
    <BUILTINS>/intl.js:158:30
    158|   maximumSignificantDigits?: number,
-                                     ^^^^^^ [20]
+                                     ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- number_format.js:32:5
@@ -492,21 +1120,31 @@ Cannot resolve name `NumberFormat`.
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:3:11
 
-Cannot call `Intl.PluralRules` because:
- - null or undefined [1] is not a function.
- - a call signature declaring the expected parameter / return type is missing in statics of `Intl$PluralRules` [2].
+Cannot call `Intl.PluralRules` because null or undefined [1] is not a function.
+
+   plural_rules.js:3:11
+    3| const a = Intl.PluralRules(); // incorrect
+                 ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/intl.js:12:16
+   12|   PluralRules: ?Class<Intl$PluralRules>,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- plural_rules.js:3:11
+
+Cannot call `Intl.PluralRules` because a call signature declaring the expected parameter / return type is missing in
+statics of `Intl$PluralRules` [1].
 
    plural_rules.js:3:11
      3| const a = Intl.PluralRules(); // incorrect
                   ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:12:16
-    12|   PluralRules: ?Class<Intl$PluralRules>,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/intl.js:162:15
    162| declare class Intl$PluralRules {
-                      ^^^^^^^^^^^^^^^^ [2]
+                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:6:13
@@ -540,12 +1178,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- plural_rules.js:11:25
 
-Cannot call `PluralRules` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - string [3] is incompatible with enum [4] in property `type`.
- - string [5] is incompatible with number [6] in property `minimumIntegerDigits`.
- - `Intl$PluralRules` [7] is incompatible with number [8] in property `minimumSignificantDigits`.
- - string [9] is incompatible with number [10] in property `maximumSignificantDigits`.
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with enum [2] in
+property `localeMatcher`.
 
    plural_rules.js:11:25
                                 v
@@ -567,30 +1201,114 @@ References:
    <BUILTINS>/intl.js:188:19
    188|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:11:25
+
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with enum [2] in
+property `type`.
+
+   plural_rules.js:11:25
+                                v
+    11|   new PluralRules('en', {
+    12|     localeMatcher: 'best one',
+    13|     type: 'count',
+    14|     minimumIntegerDigits: '',
+    15|     minimumFractionDigits: a,
+    16|     maximumFractionDigits: b,
+    17|     minimumSignificantDigits: c,
+    18|     maximumSignificantDigits: ''
+    19|   }); // all kinds of incorrect
+          ^
+
+References:
    plural_rules.js:13:11
     13|     type: 'count',
-                  ^^^^^^^ [3]
+                  ^^^^^^^ [1]
    <BUILTINS>/intl.js:189:10
    189|   type?: 'cardinal' | 'ordinal',
-                 ^^^^^^^^^^^^^^^^^^^^^^ [4]
+                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:11:25
+
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with number [2] in
+property `minimumIntegerDigits`.
+
+   plural_rules.js:11:25
+                                v
+    11|   new PluralRules('en', {
+    12|     localeMatcher: 'best one',
+    13|     type: 'count',
+    14|     minimumIntegerDigits: '',
+    15|     minimumFractionDigits: a,
+    16|     maximumFractionDigits: b,
+    17|     minimumSignificantDigits: c,
+    18|     maximumSignificantDigits: ''
+    19|   }); // all kinds of incorrect
+          ^
+
+References:
    plural_rules.js:14:27
     14|     minimumIntegerDigits: '',
-                                  ^^ [5]
+                                  ^^ [1]
    <BUILTINS>/intl.js:190:26
    190|   minimumIntegerDigits?: number,
-                                 ^^^^^^ [6]
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:11:25
+
+Cannot call `PluralRules` with object literal bound to `options` because `Intl$PluralRules` [1] is incompatible with
+number [2] in property `minimumSignificantDigits`.
+
+   plural_rules.js:11:25
+                                v
+    11|   new PluralRules('en', {
+    12|     localeMatcher: 'best one',
+    13|     type: 'count',
+    14|     minimumIntegerDigits: '',
+    15|     minimumFractionDigits: a,
+    16|     maximumFractionDigits: b,
+    17|     minimumSignificantDigits: c,
+    18|     maximumSignificantDigits: ''
+    19|   }); // all kinds of incorrect
+          ^
+
+References:
    plural_rules.js:7:13
      7|   const c = new PluralRules(); // correct
-                    ^^^^^^^^^^^^^^^^^ [7]
+                    ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/intl.js:193:30
    193|   minimumSignificantDigits?: number,
-                                     ^^^^^^ [8]
+                                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:11:25
+
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with number [2] in
+property `maximumSignificantDigits`.
+
+   plural_rules.js:11:25
+                                v
+    11|   new PluralRules('en', {
+    12|     localeMatcher: 'best one',
+    13|     type: 'count',
+    14|     minimumIntegerDigits: '',
+    15|     minimumFractionDigits: a,
+    16|     maximumFractionDigits: b,
+    17|     minimumSignificantDigits: c,
+    18|     maximumSignificantDigits: ''
+    19|   }); // all kinds of incorrect
+          ^
+
+References:
    plural_rules.js:18:31
     18|     maximumSignificantDigits: ''
-                                      ^^ [9]
+                                      ^^ [1]
    <BUILTINS>/intl.js:194:30
    194|   maximumSignificantDigits?: number,
-                                     ^^^^^^ [10]
+                                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:30:3

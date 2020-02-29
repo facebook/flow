@@ -686,9 +686,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:2
 
-Cannot cast object literal to object type because:
- - number [1] is incompatible with empty [2] in property `a`.
- - ... 2 more errors.
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `a`.
 
    test.js:56:2
         v

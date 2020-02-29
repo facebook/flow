@@ -193,9 +193,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- locals.js:12:9
 
-Cannot call `foo` with `x` bound to `p` because:
- - number [1] is incompatible with boolean [2].
- - string [3] is incompatible with boolean [2].
+Cannot call `foo` with `x` bound to `p` because number [1] is incompatible with boolean [2].
 
    locals.js:12:9
    12|     foo(x);
@@ -208,9 +206,23 @@ References:
    locals.js:4:17
     4| function foo(p: bool) {}
                        ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- locals.js:12:9
+
+Cannot call `foo` with `x` bound to `p` because string [1] is incompatible with boolean [2].
+
+   locals.js:12:9
+   12|     foo(x);
+               ^
+
+References:
    locals.js:8:25
     8|         var x: number | string = 1337;
-                               ^^^^^^ [3]
+                               ^^^^^^ [1]
+   locals.js:4:17
+    4| function foo(p: bool) {}
+                       ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- locals.js:20:10

@@ -32,9 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
 
-Cannot assign `a.get(...)` to `d` because:
- - null or undefined [1] is incompatible with string [2].
- - `File` [3] is incompatible with string [2].
+Cannot assign `a.get(...)` to `d` because null or undefined [1] is incompatible with string [2].
 
    FormData.js:14:19
     14| const d: string = a.get('foo'); // incorrect
@@ -47,16 +45,28 @@ References:
    FormData.js:14:10
     14| const d: string = a.get('foo'); // incorrect
                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
+
+Cannot assign `a.get(...)` to `d` because `File` [1] is incompatible with string [2].
+
+   FormData.js:14:19
+    14| const d: string = a.get('foo'); // incorrect
+                          ^^^^^^^^^^^^
+
+References:
    <BUILTINS>/bom.js:531:25
    531|     get(name: string): ?FormDataEntryValue;
-                                ^^^^^^^^^^^^^^^^^^ [3]
+                                ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:14:10
+    14| const d: string = a.get('foo'); // incorrect
+                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:15:17
 
-Cannot assign `a.get(...)` to `e` because:
- - null or undefined [1] is incompatible with `Blob` [2].
- - string [3] is incompatible with `Blob` [2].
+Cannot assign `a.get(...)` to `e` because null or undefined [1] is incompatible with `Blob` [2].
 
    FormData.js:15:17
     15| const e: Blob = a.get('foo'); // incorrect
@@ -69,9 +79,23 @@ References:
    FormData.js:15:10
     15| const e: Blob = a.get('foo'); // incorrect
                  ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:15:17
+
+Cannot assign `a.get(...)` to `e` because string [1] is incompatible with `Blob` [2].
+
+   FormData.js:15:17
+    15| const e: Blob = a.get('foo'); // incorrect
+                        ^^^^^^^^^^^^
+
+References:
    <BUILTINS>/bom.js:531:25
    531|     get(name: string): ?FormDataEntryValue;
-                                ^^^^^^^^^^^^^^^^^^ [3]
+                                ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:15:10
+    15| const e: Blob = a.get('foo'); // incorrect
+                 ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:17:7
@@ -404,9 +428,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
 
-Cannot assign for-of element to destructuring because:
- - string [1] is incompatible with number [2] in index 0.
- - `File` [3] is incompatible with string [4] in index 1.
+Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 0.
 
    FormData.js:65:38
     65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -419,20 +441,28 @@ References:
    FormData.js:65:19
     65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
+
+Cannot assign for-of element to destructuring because `File` [1] is incompatible with string [2] in index 1.
+
+   FormData.js:65:38
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
    <BUILTINS>/bom.js:546:34
    546|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [3]
+                                         ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:65:27
     65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                                  ^^^^^^ [4]
+                                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
 
-Cannot assign for-of element to destructuring because:
- - `File` [1] is incompatible with number [2] in index 1.
- - string [1] is incompatible with number [2] in index 1.
- - number [2] is incompatible with string [3] in index 1.
+Cannot assign for-of element to destructuring because `File` [1] is incompatible with number [2] in index 1.
 
    FormData.js:66:38
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -445,18 +475,45 @@ References:
    FormData.js:66:27
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
+
+Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 1.
+
+   FormData.js:66:38
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:546:34
+   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:66:27
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
+
+Cannot assign for-of element to destructuring because number [1] is incompatible with string [2] in index 1.
+
+   FormData.js:66:38
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   FormData.js:66:27
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [1]
    <BUILTINS>/bom.js:525:27
    525| type FormDataEntryValue = string | File
-                                  ^^^^^^ [3]
+                                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
 
-Cannot assign for-of element to destructuring because:
- - string [1] is incompatible with number [2] in index 0.
- - `File` [3] is incompatible with number [4] in index 1.
- - string [3] is incompatible with number [4] in index 1.
- - number [4] is incompatible with string [5] in index 1.
+Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 0.
 
    FormData.js:67:38
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -469,15 +526,57 @@ References:
    FormData.js:67:19
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+
+Cannot assign for-of element to destructuring because `File` [1] is incompatible with number [2] in index 1.
+
+   FormData.js:67:38
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
    <BUILTINS>/bom.js:546:34
    546|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [3]
+                                         ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:67:27
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                  ^^^^^^ [4]
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+
+Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 1.
+
+   FormData.js:67:38
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:546:34
+   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:67:27
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+
+Cannot assign for-of element to destructuring because number [1] is incompatible with string [2] in index 1.
+
+   FormData.js:67:38
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   FormData.js:67:27
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [1]
    <BUILTINS>/bom.js:525:27
    525| type FormDataEntryValue = string | File
-                                  ^^^^^^ [5]
+                                  ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- Headers.js:8:19
@@ -559,58 +658,76 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:18:1
 
-Cannot call `o.observe` because:
- - function [1] requires another argument.
- - all branches are incompatible:
-    - Either undefined [2] is incompatible with object type [3].
-    - Or undefined [2] is incompatible with object type [4].
-    - Or undefined [2] is incompatible with object type [5].
+Cannot call `o.observe` because function [1] requires another argument.
 
    MutationObserver.js:18:1
     18| o.observe(); // incorrect
-        ^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:576:5
    576|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:18:1
+
+Cannot call `o.observe` because:
+ - Either undefined [1] is incompatible with object type [2].
+ - Or undefined [1] is incompatible with object type [3].
+ - Or undefined [1] is incompatible with object type [4].
+
+   MutationObserver.js:18:1
+    18| o.observe(); // incorrect
+        ^^^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/bom.js:562:7
    562|     | { childList: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/bom.js:563:7
    563|     | { attributes: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/bom.js:564:7
    564|     | { characterData: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:19:1
+
+Cannot call `o.observe` because function [1] requires another argument.
+
+   MutationObserver.js:19:1
+    19| o.observe('invalid'); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:576:5
+   576|     observe(target: Node, options: MutationObserverInit): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:19:1
 
 Cannot call `o.observe` because:
- - function [1] requires another argument.
- - all branches are incompatible:
-    - Either undefined [2] is incompatible with object type [3].
-    - Or undefined [2] is incompatible with object type [4].
-    - Or undefined [2] is incompatible with object type [5].
+ - Either undefined [1] is incompatible with object type [2].
+ - Or undefined [1] is incompatible with object type [3].
+ - Or undefined [1] is incompatible with object type [4].
 
    MutationObserver.js:19:1
     19| o.observe('invalid'); // incorrect
-        ^^^^^^^^^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:576:5
-   576|     observe(target: Node, options: MutationObserverInit): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:562:7
    562|     | { childList: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/bom.js:563:7
    563|     | { attributes: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/bom.js:564:7
    564|     | { characterData: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:19:11
@@ -629,30 +746,39 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:20:1
 
-Cannot call `o.observe` because:
- - function [1] requires another argument.
- - all branches are incompatible:
-    - Either undefined [2] is incompatible with object type [3].
-    - Or undefined [2] is incompatible with object type [4].
-    - Or undefined [2] is incompatible with object type [5].
+Cannot call `o.observe` because function [1] requires another argument.
 
    MutationObserver.js:20:1
     20| o.observe(div); // incorrect
-        ^^^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:576:5
    576|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:20:1
+
+Cannot call `o.observe` because:
+ - Either undefined [1] is incompatible with object type [2].
+ - Or undefined [1] is incompatible with object type [3].
+ - Or undefined [1] is incompatible with object type [4].
+
+   MutationObserver.js:20:1
+    20| o.observe(div); // incorrect
+        ^^^^^^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/bom.js:562:7
    562|     | { childList: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/bom.js:563:7
    563|     | { attributes: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/bom.js:564:7
    564|     | { characterData: true, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:21:16

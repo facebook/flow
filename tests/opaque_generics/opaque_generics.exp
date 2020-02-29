@@ -80,12 +80,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
 
-Cannot return `x` because:
- - number [1] is incompatible with string [2] in type argument `S` [3].
- - string [4] is incompatible with number [5] in type argument `T` [6].
- - in type argument `U` [7]:
-    - Either null [8] is incompatible with number [9].
-    - Or null [8] is incompatible with string [10].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `S` [3].
 
    importtest-polarity.js:39:12
    39|     return x;
@@ -101,27 +96,51 @@ References:
    test-polarity.js:22:24
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
                               ^ [3]
+
+
+Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
+
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+
+   importtest-polarity.js:39:12
+   39|     return x;
+                  ^
+
+References:
    importtest-polarity.js:38:40
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                              ^^^^^^ [4]
+                                              ^^^^^^ [1]
    importtest-polarity.js:38:89
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                               ^^^^^^ [5]
+                                                                                               ^^^^^^ [2]
    test-polarity.js:22:27
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
-                                 ^ [6]
+                                 ^ [3]
+
+
+Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
+
+Cannot return `x` because in type argument `U` [1]:
+ - Either null [2] is incompatible with number [3].
+ - Or null [2] is incompatible with string [4].
+
+   importtest-polarity.js:39:12
+   39|     return x;
+                  ^
+
+References:
    test-polarity.js:22:30
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
-                                    ^ [7]
+                                    ^ [1]
    importtest-polarity.js:38:115
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                         ^^^^ [8]
+                                                                                                                         ^^^^ [2]
    importtest-polarity.js:38:48
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                      ^^^^^^ [9]
+                                                      ^^^^^^ [3]
    importtest-polarity.js:38:57
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                               ^^^^^^ [10]
+                                                               ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:7:12

@@ -455,9 +455,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
-Cannot cast `(new Inherit()).foo()` to `Inherit` because:
- - `Base` [1] is incompatible with `Inherit` [2].
- - `Override` [3] is incompatible with `Inherit` [2].
+Cannot cast `(new Inherit()).foo()` to `Inherit` because `Base` [1] is incompatible with `Inherit` [2].
 
    test.js:23:2
    23| (new Inherit().foo(): Inherit); // error (cf. OK below)
@@ -470,16 +468,29 @@ References:
    test.js:23:23
    23| (new Inherit().foo(): Inherit); // error (cf. OK below)
                              ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+
+Cannot cast `(new Inherit()).foo()` to `Inherit` because `Override` [1] is incompatible with `Inherit` [2].
+
+   test.js:23:2
+   23| (new Inherit().foo(): Inherit); // error (cf. OK below)
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
    test.js:13:7
    13| class Override extends Base {
-             ^^^^^^^^ [3]
+             ^^^^^^^^ [1]
+   test.js:23:23
+   23| (new Inherit().foo(): Inherit); // error (cf. OK below)
+                             ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
-Cannot cast `(new InheritOverride()).bar_caller()` to `InheritOverride` because:
- - `Base` [1] is incompatible with `InheritOverride` [2].
- - `Override` [3] is incompatible with `InheritOverride` [2].
+Cannot cast `(new InheritOverride()).bar_caller()` to `InheritOverride` because `Base` [1] is incompatible with
+`InheritOverride` [2].
 
    test.js:29:2
    29| (new InheritOverride().bar_caller(): InheritOverride); // error
@@ -492,9 +503,24 @@ References:
    test.js:29:38
    29| (new InheritOverride().bar_caller(): InheritOverride); // error
                                             ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:2
+
+Cannot cast `(new InheritOverride()).bar_caller()` to `InheritOverride` because `Override` [1] is incompatible with
+`InheritOverride` [2].
+
+   test.js:29:2
+   29| (new InheritOverride().bar_caller(): InheritOverride); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    test.js:17:18
    17|   bar() { return new Override; } // OK (cf. error below)
-                        ^^^^^^^^^^^^ [3]
+                        ^^^^^^^^^^^^ [1]
+   test.js:29:38
+   29| (new InheritOverride().bar_caller(): InheritOverride); // error
+                                            ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:41:15
@@ -513,10 +539,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:1
 
-Cannot extend `Base2` [1] with `Override2` because:
- - `Override2` [2] is incompatible with `this` [3] in the return value of property `bar`.
- - `Override2` [4] is incompatible with `Base2` [5] in the first argument of property `grault`.
- - `this` [4] is incompatible with `Base2` [5] in the first argument of property `grault`.
+Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatible with `this` [3] in the return value
+of property `bar`.
 
    test.js:47:1
        v------------------------------
@@ -543,12 +567,70 @@ References:
    test.js:38:10
    38|   bar(): this { return this; }
                 ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:1
+
+Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatible with `Base2` [3] in the first
+argument of property `grault`.
+
+   test.js:47:1
+       v------------------------------
+   47| class Override2 extends Base2 {
+   48|   foo(): this { return this; } // OK
+   49|   qux(): this { return this; } // OK, too
+   50|
+   51|   bar(): Override2 { return new Override2; } // error (cf. OK above)
+   52|                                              // see exploit below
+   53|
+   54|   corge(that: this) { } // error
+   55|                         // see exploit below
+   56|   grault(that: this) { } // error, too
+   57| }
+       ^
+
+References:
+   test.js:47:25
+   47| class Override2 extends Base2 {
+                               ^^^^^ [1]
    test.js:56:16
    56|   grault(that: this) { } // error, too
-                      ^^^^ [4]
+                      ^^^^ [2]
    test.js:42:16
    42|   grault(that: Base2) { }
-                      ^^^^^ [5]
+                      ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:1
+
+Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible with `Base2` [3] in the first argument of
+property `grault`.
+
+   test.js:47:1
+       v------------------------------
+   47| class Override2 extends Base2 {
+   48|   foo(): this { return this; } // OK
+   49|   qux(): this { return this; } // OK, too
+   50|
+   51|   bar(): Override2 { return new Override2; } // error (cf. OK above)
+   52|                                              // see exploit below
+   53|
+   54|   corge(that: this) { } // error
+   55|                         // see exploit below
+   56|   grault(that: this) { } // error, too
+   57| }
+       ^
+
+References:
+   test.js:47:25
+   47| class Override2 extends Base2 {
+                               ^^^^^ [1]
+   test.js:56:16
+   56|   grault(that: this) { } // error, too
+                      ^^^^ [2]
+   test.js:42:16
+   42|   grault(that: Base2) { }
+                      ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:15

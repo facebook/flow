@@ -203,9 +203,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:144:27
 
-Cannot assign object literal to `c` because:
- - `A` [1] is incompatible with `C` [2] in property `a`.
- - `B` [3] is incompatible with `C` [2] in property `b`.
+Cannot assign object literal to `c` because `A` [1] is incompatible with `C` [2] in property `a`.
 
    dictionary.js:144:27
                                   v
@@ -223,9 +221,28 @@ References:
    dictionary.js:144:22
    144|   let c: {[k:string]:C} = {
                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:144:27
+
+Cannot assign object literal to `c` because `B` [1] is incompatible with `C` [2] in property `b`.
+
+   dictionary.js:144:27
+                                  v
+   144|   let c: {[k:string]:C} = {
+   145|     a: new A, // error, A not <: C
+   146|     b: new B, // error, A not <: C
+   147|     c: new C, // ok, C == C
+   148|   };
+          ^
+
+References:
    dictionary.js:146:8
    146|     b: new B, // error, A not <: C
-               ^^^^^ [3]
+               ^^^^^ [1]
+   dictionary.js:144:22
+   144|   let c: {[k:string]:C} = {
+                             ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:159:31

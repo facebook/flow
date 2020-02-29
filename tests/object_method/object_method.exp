@@ -17,25 +17,44 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:4:3
 
-Cannot call `this.m` because:
- - property `m` is missing in global object [1].
- - property `m` is missing in object literal [2].
- - property `m` is missing in object literal [3].
+Cannot call `this.m` because property `m` is missing in global object [1].
+
+   test3.js:4:3
+   4|   this.m();
+        ^^^^^^^^
+
+References:
+   test3.js:4:3
+   4|   this.m();
+        ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:4:3
+
+Cannot call `this.m` because property `m` is missing in object literal [1].
+
+   test3.js:4:3
+   4|   this.m();
+        ^^^^^^^^
+
+References:
+   test3.js:9:4
+   9|   ({ f }).f(); // passing container object as `this`
+         ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:4:3
+
+Cannot call `this.m` because property `m` is missing in object literal [1].
 
    test3.js:4:3
     4|   this.m();
          ^^^^^^^^
 
 References:
-   test3.js:4:3
-    4|   this.m();
-         ^^^^ [1]
-   test3.js:9:4
-    9|   ({ f }).f(); // passing container object as `this`
-          ^^^^^ [2]
    test3.js:18:5
    18| qux({ f: foo });  // error, since `this` is used non-trivially in `foo`
-           ^^^^^^^^^^ [3]
+           ^^^^^^^^^^ [1]
 
 
 

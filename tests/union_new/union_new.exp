@@ -259,9 +259,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
 
-Cannot cast `[].concat(...)[1]` to string because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
 
    test17.js:7:2
    7| ([].concat([0,1])[1]: string)
@@ -274,9 +272,23 @@ References:
    test17.js:7:23
    7| ([].concat([0,1])[1]: string)
                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
+
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
+
+   test17.js:7:2
+   7| ([].concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
    test17.js:7:15
    7| ([].concat([0,1])[1]: string)
-                    ^ [3]
+                    ^ [1]
+   test17.js:7:23
+   7| ([].concat([0,1])[1]: string)
+                            ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26

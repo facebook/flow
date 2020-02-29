@@ -204,24 +204,36 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:54
 
-Cannot return `y[0]` because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot return `y[0]` because number [1] is incompatible with string [2].
+
+   optional.js:7:54
+   7| function qux(x="hello",...y):string { foo(x); return y[0]; }
+                                                           ^^^^
+
+References:
+   optional.js:9:7
+   9| qux(0,0); // Error, number ~> string
+            ^ [1]
+   optional.js:7:30
+   7| function qux(x="hello",...y):string { foo(x); return y[0]; }
+                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:7:54
+
+Cannot return `y[0]` because number [1] is incompatible with string [2].
 
    optional.js:7:54
     7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                                                             ^^^^
 
 References:
-   optional.js:9:7
-    9| qux(0,0); // Error, number ~> string
-             ^ [1]
+   optional.js:10:11
+   10| qux(0,...[42, ""]); // Error, number ~> string
+                 ^^ [1]
    optional.js:7:30
     7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                                     ^^^^^^ [2]
-   optional.js:10:11
-   10| qux(0,...[42, ""]); // Error, number ~> string
-                 ^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ optional_param2.js:7:19

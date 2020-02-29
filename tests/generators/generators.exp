@@ -427,9 +427,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:128:4
 
-Cannot cast `multiple_return_result.value` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
+Cannot cast `multiple_return_result.value` to undefined because number [1] is incompatible with undefined [2].
 
    generators.js:128:4
    128|   (multiple_return_result.value: void); // error: number|string ~> void
@@ -442,9 +440,23 @@ References:
    generators.js:128:34
    128|   (multiple_return_result.value: void); // error: number|string ~> void
                                          ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- generators.js:128:4
+
+Cannot cast `multiple_return_result.value` to undefined because string [1] is incompatible with undefined [2].
+
+   generators.js:128:4
+   128|   (multiple_return_result.value: void); // error: number|string ~> void
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    generators.js:123:12
    123|     return "foo";
-                   ^^^^^ [3]
+                   ^^^^^ [1]
+   generators.js:128:34
+   128|   (multiple_return_result.value: void); // error: number|string ~> void
+                                         ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ refi.js:5:4
@@ -483,9 +495,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:5:4
 
-Cannot cast `ret.value` to undefined because:
- - string [1] is incompatible with undefined [2].
- - number [3] is incompatible with undefined [2].
+Cannot cast `ret.value` to undefined because string [1] is incompatible with undefined [2].
 
    return.js:5:4
    5|   (ret.value: void); // error: string | number ~> void
@@ -498,16 +508,28 @@ References:
    return.js:5:15
    5|   (ret.value: void); // error: string | number ~> void
                     ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- return.js:5:4
+
+Cannot cast `ret.value` to undefined because number [1] is incompatible with undefined [2].
+
+   return.js:5:4
+   5|   (ret.value: void); // error: string | number ~> void
+         ^^^^^^^^^
+
+References:
    return.js:4:24
    4|   var ret = gen.return(0);
-                             ^ [3]
+                             ^ [1]
+   return.js:5:15
+   5|   (ret.value: void); // error: string | number ~> void
+                    ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:4
 
-Cannot cast `refuse_return_result.value` to string because:
- - undefined [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot cast `refuse_return_result.value` to string because undefined [1] is incompatible with string [2].
 
    return.js:20:4
     20|   (refuse_return_result.value: string); // error: number | void ~> string
@@ -520,9 +542,23 @@ References:
    return.js:20:32
     20|   (refuse_return_result.value: string); // error: number | void ~> string
                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- return.js:20:4
+
+Cannot cast `refuse_return_result.value` to string because number [1] is incompatible with string [2].
+
+   return.js:20:4
+   20|   (refuse_return_result.value: string); // error: number | void ~> string
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    return.js:14:12
-    14|     return 0;
-                   ^ [3]
+   14|     return 0;
+                  ^ [1]
+   return.js:20:32
+   20|   (refuse_return_result.value: string); // error: number | void ~> string
+                                      ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:11:4

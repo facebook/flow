@@ -185,9 +185,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:101:2
 
-Cannot cast `one` to `Three` because:
- - function [1] requires another argument from function type [2] in property `constructor`.
- - undefined [3] is incompatible with function type [4] in the return value of property `constructor`.
+Cannot cast `one` to `Three` because function [1] requires another argument from function type [2] in property
+`constructor`.
 
    test.js:101:2
    101| (one : Three); // error
@@ -203,12 +202,24 @@ References:
    test.js:94:30
     94| type Three = { foo : number, constructor() : () => void }
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:101:2
+
+Cannot cast `one` to `Three` because undefined [1] is incompatible with function type [2] in the return value of
+property `constructor`.
+
+   test.js:101:2
+   101| (one : Three); // error
+         ^^^
+
+References:
    test.js:82:26
     82|   constructor(x : number) {
-                                 ^ [3]
+                                 ^ [1]
    test.js:94:46
     94| type Three = { foo : number, constructor() : () => void }
-                                                     ^^^^^^^^^^ [4]
+                                                     ^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:106:2

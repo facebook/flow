@@ -184,10 +184,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
 
-Cannot cast `x.y` to boolean because:
- - string [1] is incompatible with boolean [2].
- - string [3] is incompatible with boolean [2].
- - string [4] is incompatible with boolean [2].
+Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
 
    heap.js:135:6
    135|     (x.y : boolean); // error, string
@@ -200,12 +197,40 @@ References:
    heap.js:135:12
    135|     (x.y : boolean); // error, string
                    ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
+
+Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
+
+   heap.js:135:6
+   135|     (x.y : boolean); // error, string
+             ^^^
+
+References:
    heap.js:131:13
    131|       x.y = "foo";
-                    ^^^^^ [3]
+                    ^^^^^ [1]
+   heap.js:135:12
+   135|     (x.y : boolean); // error, string
+                   ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
+
+Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
+
+   heap.js:135:6
+   135|     (x.y : boolean); // error, string
+             ^^^
+
+References:
    heap.js:133:13
    133|       x.y = "bar";
-                    ^^^^^ [4]
+                    ^^^^^ [1]
+   heap.js:135:12
+   135|     (x.y : boolean); // error, string
+                   ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:146:6
@@ -227,9 +252,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:159:6
 
-Cannot cast `x.y` to string because:
- - boolean [1] is incompatible with string [2].
- - boolean [3] is incompatible with string [2].
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
 
    heap.js:159:6
    159|     (x.y : string); // error
@@ -242,16 +265,28 @@ References:
    heap.js:159:12
    159|     (x.y : string); // error
                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:159:6
+
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+
+   heap.js:159:6
+   159|     (x.y : string); // error
+             ^^^
+
+References:
    heap.js:156:13
    156|       x.y = false;
-                    ^^^^^ [3]
+                    ^^^^^ [1]
+   heap.js:159:12
+   159|     (x.y : string); // error
+                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:172:6
 
-Cannot cast `x.y` to string because:
- - boolean [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
 
    heap.js:172:6
    172|     (x.y : string); // error
@@ -264,9 +299,23 @@ References:
    heap.js:172:12
    172|     (x.y : string); // error
                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:172:6
+
+Cannot cast `x.y` to string because number [1] is incompatible with string [2].
+
+   heap.js:172:6
+   172|     (x.y : string); // error
+             ^^^
+
+References:
    heap.js:169:13
    169|       x.y = 123;
-                    ^^^ [3]
+                    ^^^ [1]
+   heap.js:172:12
+   172|     (x.y : string); // error
+                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:188:6
@@ -302,9 +351,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
 
-Cannot cast `x` to intersection type because:
- - mixed [1] is incompatible with string [2].
- - mixed [1] is incompatible with number [3].
+Cannot cast `x` to intersection type because mixed [1] is incompatible with string [2].
 
    heap.js:193:6
    193|     (x: string & number);
@@ -317,9 +364,23 @@ References:
    heap.js:193:9
    193|     (x: string & number);
                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
+
+Cannot cast `x` to intersection type because mixed [1] is incompatible with number [2].
+
+   heap.js:193:6
+   193|     (x: string & number);
+             ^
+
+References:
+   heap.js:191:15
+   191|   function(x: mixed) {
+                      ^^^^^ [1]
    heap.js:193:18
    193|     (x: string & number);
-                         ^^^^^^ [3]
+                         ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- lex.js:6:4

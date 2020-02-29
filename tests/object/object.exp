@@ -1,8 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------- obj.js:8:1
 
-Cannot call method `defineProperty` because:
- - boolean [1] is incompatible with string [2] in the first argument of property `set`.
- - boolean [1] is incompatible with number [3] in the first argument of property `set`.
+Cannot call method `defineProperty` because boolean [1] is incompatible with string [2] in the first argument of
+property `set`.
 
    obj.js:8:1
    8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
@@ -15,9 +14,24 @@ References:
    obj.js:8:43
    8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
                                                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- obj.js:8:1
+
+Cannot call method `defineProperty` because boolean [1] is incompatible with number [2] in the first argument of
+property `set`.
+
+   obj.js:8:1
+   8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:8:68
+   8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+                                                                         ^^^^^^^ [1]
    obj.js:8:55
    8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
-                                                            ^^ [3]
+                                                            ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:11:2
@@ -126,9 +140,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:26:1
 
-Cannot call method `defineProperties` because:
- - property `d` is missing in object type [1].
- - string [2] is incompatible with number [3].
+Cannot call method `defineProperties` because property `d` is missing in object type [1].
 
    obj.js:26:1
    26| Object.defineProperties(y, {d: {value: 42}, a: {writable:false}, b:{get: () => "a"}});
@@ -138,12 +150,23 @@ References:
    obj.js:13:16
    13| declare var y: {|a: number, b: number|};
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:26:1
+
+Cannot call method `defineProperties` because string [1] is incompatible with number [2].
+
+   obj.js:26:1
+   26| Object.defineProperties(y, {d: {value: 42}, a: {writable:false}, b:{get: () => "a"}});
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    obj.js:26:80
    26| Object.defineProperties(y, {d: {value: 42}, a: {writable:false}, b:{get: () => "a"}});
-                                                                                      ^^^ [2]
+                                                                                      ^^^ [1]
    obj.js:13:32
    13| declare var y: {|a: number, b: number|};
-                                      ^^^^^^ [3]
+                                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:27:1

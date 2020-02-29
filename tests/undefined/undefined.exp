@@ -14,9 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
 
-Cannot cast `name` to boolean because:
- - string [1] is incompatible with boolean [2].
- - undefined [3] is incompatible with boolean [2].
+Cannot cast `name` to boolean because string [1] is incompatible with boolean [2].
 
    undefined2.js:7:6
    7|     (name: boolean); // error, string or void
@@ -29,16 +27,28 @@ References:
    undefined2.js:7:12
    7|     (name: boolean); // error, string or void
                  ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
+
+Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
+
+   undefined2.js:7:6
+   7|     (name: boolean); // error, string or void
+           ^^^^
+
+References:
    undefined2.js:6:30
    6|     var name = id ? 'John' : undefined;
-                                   ^^^^^^^^^ [3]
+                                   ^^^^^^^^^ [1]
+   undefined2.js:7:12
+   7|     (name: boolean); // error, string or void
+                 ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:13:6
 
-Cannot cast `bar[x]` to boolean because:
- - undefined [1] is incompatible with boolean [2].
- - string [3] is incompatible with boolean [2].
+Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2].
 
    undefined2.js:13:6
    13|     (bar[x]: boolean); // error, string or void
@@ -51,9 +61,23 @@ References:
    undefined2.js:13:14
    13|     (bar[x]: boolean); // error, string or void
                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- undefined2.js:13:6
+
+Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
+
+   undefined2.js:13:6
+   13|     (bar[x]: boolean); // error, string or void
+            ^^^^^^
+
+References:
    undefined2.js:11:7
    11|       'bar',
-             ^^^^^ [3]
+             ^^^^^ [1]
+   undefined2.js:13:14
+   13|     (bar[x]: boolean); // error, string or void
+                    ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:22:7
@@ -72,9 +96,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:29:6
 
-Cannot cast `bar[x]` to boolean because:
- - string [1] is incompatible with boolean [2].
- - string [3] is incompatible with boolean [2].
+Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
 
    undefined2.js:29:6
    29|     (bar[x]: boolean); // error, string only
@@ -87,9 +109,23 @@ References:
    undefined2.js:29:14
    29|     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- undefined2.js:29:6
+
+Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
+
+   undefined2.js:29:6
+   29|     (bar[x]: boolean); // error, string only
+            ^^^^^^
+
+References:
    undefined2.js:27:7
    27|       'bar',
-             ^^^^^ [3]
+             ^^^^^ [1]
+   undefined2.js:29:14
+   29|     (bar[x]: boolean); // error, string only
+                    ^^^^^^^ [2]
 
 
 

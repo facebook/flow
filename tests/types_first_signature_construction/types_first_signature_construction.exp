@@ -1,8 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- file1.js:4:1
 
-Cannot assign function to `bar` because:
- - string [1] is incompatible with number [2] in the first argument.
- - string [3] is incompatible with number [4] in the return value.
+Cannot assign function to `bar` because string [1] is incompatible with number [2] in the first argument.
 
    file1.js:4:1
    4| function bar(x: string): string { return ""; }
@@ -15,12 +13,23 @@ References:
    file1.js:5:25
    5| declare function bar(x: number): number; // error: cannot declare
                               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file1.js:4:1
+
+Cannot assign function to `bar` because string [1] is incompatible with number [2] in the return value.
+
+   file1.js:4:1
+   4| function bar(x: string): string { return ""; }
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    file1.js:4:26
    4| function bar(x: string): string { return ""; }
-                               ^^^^^^ [3]
+                               ^^^^^^ [1]
    file1.js:5:34
    5| declare function bar(x: number): number; // error: cannot declare
-                                       ^^^^^^ [4]
+                                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- file1.js:5:18
@@ -169,7 +178,7 @@ References:
 
 Found 11 errors
 ==== DIFF BETWEEN CLASSIC AND TYPES-FIRST =====
-164,166c164,166
+173,175c173,175
 <    file5.js:3:8
 <     3| var f: number = 1;
 <               ^^^^^^ [1]

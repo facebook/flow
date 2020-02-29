@@ -1,8 +1,6 @@
 Error --------------------------------------------------------------------------------------------- conditional.js:23:10
 
-Cannot return `x != null ? x : x != null` because:
- - number [1] is incompatible with string [2].
- - boolean [3] is incompatible with string [2].
+Cannot return `x != null ? x : x != null` because number [1] is incompatible with string [2].
 
    conditional.js:23:10
    23|   return (x != null) ? x : (x != null);
@@ -15,9 +13,23 @@ References:
    conditional.js:20:15
    20| function d(): string { // expected `: number | boolean`
                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- conditional.js:23:10
+
+Cannot return `x != null ? x : x != null` because boolean [1] is incompatible with string [2].
+
+   conditional.js:23:10
+   23|   return (x != null) ? x : (x != null);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    conditional.js:23:29
    23|   return (x != null) ? x : (x != null);
-                                   ^^^^^^^^^ [3]
+                                   ^^^^^^^^^ [1]
+   conditional.js:20:15
+   20| function d(): string { // expected `: number | boolean`
+                     ^^^^^^ [2]
 
 
 

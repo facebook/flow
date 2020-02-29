@@ -970,79 +970,33 @@ module ConcreteLocPrintableErrorSet = Set.Make (struct
   let compare = compare Loc.compare
 end)
 
-type 'a error_group =
-  (* Friendly errors without a root are never grouped. When traces are enabled
-   * all friendly errors will never group. *)
-  | Singleton of error_kind * 'a message list * 'a Friendly.t'
-  (* Friendly errors that share a root are grouped together. The errors list
-   * is reversed. *)
-  | Group of {
-      kind: error_kind;
-      root: 'a Friendly.error_root;
-      errors_rev: 'a Friendly.t' Nel.t;
-      omitted: int;
-    }
+type 'a error_group = error_kind * 'a message list * 'a Friendly.t'
 
 exception Interrupt_PrintableErrorSet_fold of Loc.t error_group list
 
 (* Folds an PrintableErrorSet into a grouped list. However, the group and all sub-groups
  * are in reverse order. *)
 let collect_errors_into_groups max set =
-  Friendly.(
-    try
-      let (_, acc) =
-        ConcreteLocPrintableErrorSet.fold
-          (fun (kind, trace, error) (n, acc) ->
-            let omit = Base.Option.value_map max ~default:false ~f:(fun max -> max <= n) in
-            let acc =
-              match error with
-              | error when trace <> [] ->
-                if omit then raise (Interrupt_PrintableErrorSet_fold acc);
-                Singleton (kind, trace, error) :: acc
-              | { root = None; _ } as error ->
-                if omit then raise (Interrupt_PrintableErrorSet_fold acc);
-                Singleton (kind, trace, error) :: acc
-              (* Friendly errors with a root might need to be grouped. *)
-              | { root = Some root; _ } as error ->
-                (match acc with
-                (* When the root location and message match the previous group, add our
-                 * friendly error to the group. We can do this by only looking at the last
-                 * group because PrintableErrorSet is sorted so that friendly errors with the same
-                 * root loc/message are stored next to each other.
-                 *
-                 * If we are now omitting errors then increment the omitted count
-                 * instead of adding a message. *)
-                | Group { kind = kind'; root = root'; errors_rev; omitted } :: acc'
-                  when kind = kind'
-                       && Loc.compare root.root_loc root'.root_loc = 0
-                       && root.root_message = root'.root_message ->
-                  Group
-                    {
-                      kind = kind';
-                      root = root';
-                      errors_rev =
-                        ( if omit then
-                          errors_rev
-                        else
-                          Nel.cons error errors_rev );
-                      omitted =
-                        ( if omit then
-                          omitted + 1
-                        else
-                          omitted );
-                    }
-                  :: acc'
-                (* If the roots did not match then we have a friendly singleton. *)
-                | _ ->
-                  if omit then raise (Interrupt_PrintableErrorSet_fold acc);
-                  Group { kind; root; errors_rev = Nel.one error; omitted = 0 } :: acc)
-            in
-            (n + 1, acc))
-          set
-          (0, [])
-      in
-      acc
-    with Interrupt_PrintableErrorSet_fold acc -> acc)
+  try
+    let (_, acc) =
+      ConcreteLocPrintableErrorSet.fold
+        (fun (kind, trace, error) (n, acc) ->
+          let omit = Base.Option.value_map max ~default:false ~f:(fun max -> max <= n) in
+          let acc =
+            match error with
+            | error when trace <> [] ->
+              if omit then raise (Interrupt_PrintableErrorSet_fold acc);
+              (kind, trace, error) :: acc
+            | error ->
+              if omit then raise (Interrupt_PrintableErrorSet_fold acc);
+              (kind, trace, error) :: acc
+          in
+          (n + 1, acc))
+        set
+        (0, [])
+    in
+    acc
+  with Interrupt_PrintableErrorSet_fold acc -> acc
 
 (* Human readable output *)
 module Cli_output = struct
@@ -2605,87 +2559,27 @@ module Cli_output = struct
       if hidden_branches then on_hidden_branches ();
       (a, b)
     in
-    match group with
+    let (_, trace, error) = group in
+
     (* Singleton errors concatenate the optional error root with the error
      * message and render a single message. Sometimes singletons will also
      * render a trace. *)
-    | Singleton (_, trace, error) ->
-      Friendly.(
-        let (primary_loc, { group_message; group_message_list }) =
-          check (message_group_of_error ~show_all_branches ~show_root:true error)
-        in
-        get_pretty_printed_friendly_error_group
-          ~stdin_file
-          ~strip_root
-          ~flags
-          ~severity
-          ~trace
-          ~root_loc:
-            (match error.root with
-            | Some { root_loc; _ } -> root_loc
-            | None -> error.loc)
-          ~primary_locs:(LocSet.singleton primary_loc)
-          ~message_group:{ group_message = capitalize group_message; group_message_list })
-    (* Groups either render a single error (if there is only a single group
-     * member) or a group will render a list of errors where some are
-     * optionally omitted. *)
-    | Group { kind = _; root; errors_rev; omitted } ->
-      Friendly.(
-        (* Constructs the message group. *)
-        let (primary_locs, message_group) =
-          match errors_rev with
-          (* When we only have a single message, append the root and move on. *)
-          | (error, []) when omitted = 0 ->
-            let (primary_loc, message_group) =
-              check (message_group_of_error ~show_all_branches ~show_root:true error)
-            in
-            (LocSet.singleton primary_loc, message_group)
-          (* When we have multiple members we need to put them in a group with the
-           * root message as the group message. *)
-          | _ ->
-            let acc =
-              if omitted = 0 then
-                []
-              else
-                [
-                  {
-                    group_message_list = [];
-                    group_message =
-                      [
-                        text
-                          ( "... "
-                          ^ string_of_int omitted
-                          ^ " more error"
-                          ^ ( if omitted = 1 then
-                              ""
-                            else
-                              "s" )
-                          ^ "." );
-                      ];
-                  };
-                ]
-            in
-            let (primary_locs, group_message_list) =
-              List.fold_left
-                (fun (primary_locs, acc) error ->
-                  let (primary_loc, message_group) =
-                    check (message_group_of_error ~show_all_branches ~show_root:false error)
-                  in
-                  (LocSet.add primary_loc primary_locs, message_group :: acc))
-                (LocSet.empty, acc)
-                (Nel.to_list errors_rev)
-            in
-            (primary_locs, { group_message = root.root_message @ [text ":"]; group_message_list })
-        in
-        get_pretty_printed_friendly_error_group
-          ~stdin_file
-          ~strip_root
-          ~flags
-          ~severity
-          ~trace:[]
-          ~root_loc:root.root_loc
-          ~primary_locs
-          ~message_group)
+    Friendly.(
+      let (primary_loc, { group_message; group_message_list }) =
+        check (message_group_of_error ~show_all_branches ~show_root:true error)
+      in
+      get_pretty_printed_friendly_error_group
+        ~stdin_file
+        ~strip_root
+        ~flags
+        ~severity
+        ~trace
+        ~root_loc:
+          (match error.root with
+          | Some { root_loc; _ } -> root_loc
+          | None -> error.loc)
+        ~primary_locs:(LocSet.singleton primary_loc)
+        ~message_group:{ group_message = capitalize group_message; group_message_list })
 
   let print_styles ~out_channel ~flags styles =
     let styles =

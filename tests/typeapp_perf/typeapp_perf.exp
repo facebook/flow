@@ -1,8 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test3.js:7:2
 
-Cannot cast `x.m()` to empty because:
- - string [1] is incompatible with empty [2].
- - number [3] is incompatible with empty [2].
+Cannot cast `x.m()` to empty because string [1] is incompatible with empty [2].
 
    test3.js:7:2
    7| (x.m(): empty); // error: string ~> empty, number ~> empty
@@ -15,9 +13,23 @@ References:
    test3.js:7:9
    7| (x.m(): empty); // error: string ~> empty, number ~> empty
               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:7:2
+
+Cannot cast `x.m()` to empty because number [1] is incompatible with empty [2].
+
+   test3.js:7:2
+   7| (x.m(): empty); // error: string ~> empty, number ~> empty
+       ^^^^^
+
+References:
    test3.js:6:30
    6| declare var x: C<string> | C<number>;
-                                   ^^^^^^ [3]
+                                   ^^^^^^ [1]
+   test3.js:7:9
+   7| (x.m(): empty); // error: string ~> empty, number ~> empty
+              ^^^^^ [2]
 
 
 

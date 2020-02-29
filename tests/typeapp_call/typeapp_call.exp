@@ -14,9 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:2
 
-Cannot cast `cond(...)` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
+Cannot cast `cond(...)` to undefined because number [1] is incompatible with undefined [2].
 
    call.js:12:2
    12| (cond(test, 0, ""): void); // errors: number|string ~> void
@@ -29,9 +27,23 @@ References:
    call.js:12:21
    12| (cond(test, 0, ""): void); // errors: number|string ~> void
                            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:12:2
+
+Cannot cast `cond(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   call.js:12:2
+   12| (cond(test, 0, ""): void); // errors: number|string ~> void
+        ^^^^^^^^^^^^^^^^^
+
+References:
    call.js:12:16
    12| (cond(test, 0, ""): void); // errors: number|string ~> void
-                      ^^ [3]
+                      ^^ [1]
+   call.js:12:21
+   12| (cond(test, 0, ""): void); // errors: number|string ~> void
+                           ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:15:2
@@ -236,9 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ new.js:10:2
 
-Cannot cast `c1.x` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
+Cannot cast `c1.x` to undefined because number [1] is incompatible with undefined [2].
 
    new.js:10:2
    10| (c1.x: void); // error: number|string ~> void
@@ -251,9 +261,23 @@ References:
    new.js:10:8
    10| (c1.x: void); // error: number|string ~> void
               ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:10:2
+
+Cannot cast `c1.x` to undefined because string [1] is incompatible with undefined [2].
+
+   new.js:10:2
+   10| (c1.x: void); // error: number|string ~> void
+        ^^^^
+
+References:
    new.js:9:7
     9| c1.m2("");
-             ^^ [3]
+             ^^ [1]
+   new.js:10:8
+   10| (c1.x: void); // error: number|string ~> void
+              ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ new.js:13:7

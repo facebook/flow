@@ -51,10 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:19:6
 
-Cannot cast `x` to undefined because:
- - string [1] is incompatible with undefined [2].
- - number [3] is incompatible with undefined [2].
- - boolean [4] is incompatible with undefined [2].
+Cannot cast `x` to undefined because string [1] is incompatible with undefined [2].
 
    all.js:19:6
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -67,12 +64,40 @@ References:
    all.js:19:9
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ all.js:19:6
+
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
+
+   all.js:19:6
+   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+            ^
+
+References:
    all.js:4:27
     4| declare var pnum: Promise<number>;
-                                 ^^^^^^ [3]
+                                 ^^^^^^ [1]
+   all.js:19:9
+   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+               ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ all.js:19:6
+
+Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2].
+
+   all.js:19:6
+   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+            ^
+
+References:
    all.js:9:3
     9|   true, // non-Promise values passed through
-         ^^^^ [4]
+         ^^^^ [1]
+   all.js:19:9
+   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+               ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:24:1
@@ -344,9 +369,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:225:21
 
-Cannot assign `num` to `b` because:
- - number [1] is incompatible with string [2].
- - undefined [3] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
    promise.js:225:21
    225|     var b: string = num; // Error: string ~> number
@@ -359,9 +382,23 @@ References:
    promise.js:225:12
    225|     var b: string = num; // Error: string ~> number
                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:225:21
+
+Cannot assign `num` to `b` because undefined [1] is incompatible with string [2].
+
+   promise.js:225:21
+   225|     var b: string = num; // Error: string ~> number
+                            ^^^
+
+References:
    promise.js:222:23
    222|   .catch(function(err) {})
-                              ^ [3]
+                              ^ [1]
+   promise.js:225:12
+   225|     var b: string = num; // Error: string ~> number
+                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ resolve_global.js:35:10

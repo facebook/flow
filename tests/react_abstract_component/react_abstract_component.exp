@@ -86,9 +86,26 @@ Cannot use type without exactly 2 type arguments.
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:2
 
-Cannot cast `ComponentNarrower` to AbstractComponent because:
- - property `bar` is missing in object type [1] but exists in object type [2].
- - property `foo` is missing in object type [1] but exists in object type [2].
+Cannot cast `ComponentNarrower` to AbstractComponent because property `bar` is missing in object type [1] but exists in
+object type [2].
+
+   classes_lower.js:17:2
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:17:45
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
+                                                   ^^ [1]
+   classes_lower.js:11:49
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:17:2
+
+Cannot cast `ComponentNarrower` to AbstractComponent because property `foo` is missing in object type [1] but exists in
+object type [2].
 
    classes_lower.js:17:2
    17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
@@ -158,9 +175,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- config.js:13:2
 
-Cannot cast `y` to `NotTheRightConfig` because:
- - property `baz` (did you mean `bar`?) is missing in `Props` [1] but exists in `NotTheRightConfig` [2].
- - property `qux` is missing in `Props` [1] but exists in `NotTheRightConfig` [2].
+Cannot cast `y` to `NotTheRightConfig` because property `baz` (did you mean `bar`?) is missing in `Props` [1] but exists
+in `NotTheRightConfig` [2].
+
+   config.js:13:2
+   13| (y: NotTheRightConfig); // Error, configs don't match
+        ^
+
+References:
+   config.js:8:29
+    8| declare var y: React$Config<Props, DefaultProps>;
+                                   ^^^^^ [1]
+   config.js:13:5
+   13| (y: NotTheRightConfig); // Error, configs don't match
+           ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:13:2
+
+Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Props` [1] but exists in
+`NotTheRightConfig` [2].
 
    config.js:13:2
    13| (y: NotTheRightConfig); // Error, configs don't match
@@ -177,9 +211,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- config.js:16:2
 
-Cannot cast `z` to config of React component because:
- - property `bar` (did you mean `baz`?) is missing in `NotTheRightConfig` [1] but exists in `Props` [2].
- - property `foo` is missing in `NotTheRightConfig` [1] but exists in `Props` [2].
+Cannot cast `z` to config of React component because property `bar` (did you mean `baz`?) is missing in
+`NotTheRightConfig` [1] but exists in `Props` [2].
+
+   config.js:16:2
+   16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+        ^
+
+References:
+   config.js:15:16
+   15| declare var z: NotTheRightConfig;
+                      ^^^^^^^^^^^^^^^^^ [1]
+   config.js:16:18
+   16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:16:2
+
+Cannot cast `z` to config of React component because property `foo` is missing in `NotTheRightConfig` [1] but exists in
+`Props` [2].
 
    config.js:16:2
    16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
@@ -504,10 +555,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
 
-Cannot call `x.displayName.toString` because:
- - property `toString` is missing in null or undefined [1].
- - property `toString` is missing in undefined [1].
- - property `toString` is missing in null [2].
+Cannot call `x.displayName.toString` because property `toString` is missing in null or undefined [1].
 
    get_set_props.js:8:3
      8|   x.displayName.toString(); // Error maybe null or undefined
@@ -517,9 +565,34 @@ References:
    <BUILTINS>/react.js:131:17
    131|   displayName?: ?string,
                         ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+
+Cannot call `x.displayName.toString` because property `toString` is missing in undefined [1].
+
+   get_set_props.js:8:3
+     8|   x.displayName.toString(); // Error maybe null or undefined
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:131:17
+   131|   displayName?: ?string,
+                        ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+
+Cannot call `x.displayName.toString` because property `toString` is missing in null [1].
+
+   get_set_props.js:8:3
+   8|   x.displayName.toString(); // Error maybe null or undefined
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    get_set_props.js:6:21
-     6|     x.displayName = null;
-                            ^^^^ [2]
+   6|     x.displayName = null;
+                          ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- get_set_props.js:9:3
@@ -588,9 +661,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
-Cannot call `foo` with `ref` bound to `a` because:
- - `HTMLElement` [1] is incompatible with `React.Component` [2].
- - mixed [3] is incompatible with `React.Component` [2].
+Cannot call `foo` with `ref` bound to `a` because `HTMLElement` [1] is incompatible with `React.Component` [2].
 
    strict.js:9:5
      9| foo(ref);
@@ -603,9 +674,23 @@ References:
    strict.js:7:26
      7| declare function foo(a: ?React$Component<any, any>): void;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
+
+Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with `React.Component` [2].
+
+   strict.js:9:5
+     9| foo(ref);
+            ^^^
+
+References:
    <BUILTINS>/react.js:171:36
    171|   | React$AbstractComponent<empty, mixed>;
-                                           ^^^^^ [3]
+                                           ^^^^^ [1]
+   strict.js:7:26
+     7| declare function foo(a: ?React$Component<any, any>): void;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7

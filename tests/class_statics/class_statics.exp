@@ -46,9 +46,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
-Cannot extend `A` [1] with `B` because:
- - string [2] is incompatible with number [3] in property `x`.
- - string [4] is incompatible with number [5] in the first argument of property `foo`.
+Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `x`.
 
    test.js:9:1
        v------------------
@@ -84,12 +82,47 @@ References:
    test.js:2:13
     2|   static x: number;
                    ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the first argument of property
+`foo`.
+
+   test.js:9:1
+       v------------------
+    9| class B extends A {
+   10|   static x: string; // error?
+   11|   static foo(x: string) { } // error?
+   12|   static main() {
+   13|     B.x = 0; // error
+   14|     B.x = "";
+   15|     B.foo(0); // error
+   16|     B.foo("");
+   17|     B.y = 0; // error
+   18|     B.bar(0); // error
+   19|     B.qux(0); // error
+   20|   }
+   21|   static create(): A {
+   22|     return new this();
+   23|   }
+   24|
+   25|   static badCreate(): number {
+   26|     return new this(); // error B ~> number
+   27|   }
+   28| }
+       ^
+
+References:
+   test.js:9:17
+    9| class B extends A {
+                       ^ [1]
    test.js:11:17
    11|   static foo(x: string) { } // error?
-                       ^^^^^^ [4]
+                       ^^^^^^ [2]
    test.js:4:17
     4|   static foo(x: number) { }
-                       ^^^^^^ [5]
+                       ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:11

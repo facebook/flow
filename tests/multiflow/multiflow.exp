@@ -370,9 +370,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:28:1
 
-Cannot call `funWithRestArray` because:
- - string [1] is incompatible with number literal `123` [2].
- - string [1] is incompatible with number [3] in array element.
+Cannot call `funWithRestArray` because string [1] is incompatible with number literal `123` [2].
 
    spread.js:28:1
    28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
@@ -385,9 +383,23 @@ References:
    spread.js:14:39
    14| function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                              ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:28:1
+
+Cannot call `funWithRestArray` because string [1] is incompatible with number [2] in array element.
+
+   spread.js:28:1
+   28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:28:37
+   28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
+                                           ^^^^^ [1]
    spread.js:14:59
    14| function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
-                                                                 ^^^^^^ [3]
+                                                                 ^^^^^^ [2]
 
 
 

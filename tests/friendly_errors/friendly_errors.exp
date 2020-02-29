@@ -330,9 +330,7 @@ References:
 
 Error ------------------------------------------------------------------------------- class-refinement-env-merge.js:12:6
 
-Cannot cast `this.p` to number because:
- - string [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot cast `this.p` to number because string [1] is incompatible with number [2].
 
    class-refinement-env-merge.js:12:6
    12|     (this.p: number);
@@ -345,9 +343,23 @@ References:
    class-refinement-env-merge.js:12:14
    12|     (this.p: number);
                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- class-refinement-env-merge.js:12:6
+
+Cannot cast `this.p` to number because string [1] is incompatible with number [2].
+
+   class-refinement-env-merge.js:12:6
+   12|     (this.p: number);
+            ^^^^^^
+
+References:
    class-refinement-env-merge.js:10:16
    10|       this.p = 'foo';
-                      ^^^^^ [3]
+                      ^^^^^ [1]
+   class-refinement-env-merge.js:12:14
+   12|     (this.p: number);
+                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ desc-class-properties.js:16:6
@@ -1071,9 +1083,7 @@ Invalid left-hand side in assignment expression.
 
 Error ----------------------------------------------------------------------------------------------------- order.js:8:2
 
-Cannot cast object literal to object type because:
- - number [1] is incompatible with boolean [2] in property `a`.
- - boolean [3] is incompatible with number [4] in property `c`.
+Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `a`.
 
    order.js:8:2
         v
@@ -1091,12 +1101,28 @@ References:
    order.js:13:6
    13|   a: boolean,
             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- order.js:8:2
+
+Cannot cast object literal to object type because boolean [1] is incompatible with number [2] in property `c`.
+
+   order.js:8:2
+        v
+    8| ({
+    9|   a: 42,
+   10|   b: ('foo': empty),
+   11|   c: true,
+   12| }: {
+       ^
+
+References:
    order.js:11:6
    11|   c: true,
-            ^^^^ [3]
+            ^^^^ [1]
    order.js:14:6
    14|   c: number,
-            ^^^^^^ [4]
+            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- order.js:10:7

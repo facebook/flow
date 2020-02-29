@@ -71,9 +71,24 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
-Cannot implement `IFooBar` [1] with `C5` because:
- - property `bar` is missing in `C5` [2] but exists in `IFooBar` [1].
- - property `foo` is missing in `C5` [2] but exists in `IFoo` [1].
+Cannot implement `IFooBar` [1] with `C5` because property `bar` is missing in `C5` [2] but exists in `IFooBar` [1].
+
+   test.js:18:1
+   18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:18:21
+   18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+                           ^^^^^^^ [1]
+   test.js:18:7
+   18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+             ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+Cannot implement `IFooBar` [1] with `C5` because property `foo` is missing in `C5` [2] but exists in `IFoo` [1].
 
    test.js:18:1
    18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found

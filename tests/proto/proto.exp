@@ -96,9 +96,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:16:2
 
-Cannot cast `o_optional.__proto__` to empty because:
- - object type [1] is incompatible with empty [2].
- - undefined [1] is incompatible with empty [2].
+Cannot cast `o_optional.__proto__` to empty because object type [1] is incompatible with empty [2].
+
+   annot.js:16:2
+   16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   annot.js:13:33
+   13| type O_optional = { __proto__?: { q: 0 } };
+                                       ^^^^^^^^ [1]
+   annot.js:16:24
+   16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+                              ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- annot.js:16:2
+
+Cannot cast `o_optional.__proto__` to empty because undefined [1] is incompatible with empty [2].
 
    annot.js:16:2
    16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty

@@ -117,10 +117,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because:
- - number [1] is incompatible with string [2] in property `a`.
- - number [3] is incompatible with string [4] in property `b`.
- - number [5] is incompatible with string [6] in property `c`.
+Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `a`.
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -133,18 +130,40 @@ References:
    class_shapes.js:4:6
     4|   a: string;    // exists in TestClass
             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
+
+Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `b`.
+
+   class_shapes.js:35:15
+   35| var w : Foo = z;
+                     ^
+
+References:
    class_shapes.js:31:6
    31|   b: number;  // conflicts with cast to Foo
-            ^^^^^^ [3]
+            ^^^^^^ [1]
    class_shapes.js:5:6
     5|   b: string;    // doesn't exist
-            ^^^^^^ [4]
+            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
+
+Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `c`.
+
+   class_shapes.js:35:15
+   35| var w : Foo = z;
+                     ^
+
+References:
    class_shapes.js:28:7
    28|   c: ?number; // conflicts with cast to Foo
-             ^^^^^^ [5]
+             ^^^^^^ [1]
    class_shapes.js:6:8
     6|   c?: ?string;  // exists in TestClass, optional
-              ^^^^^^ [6]
+              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- expr.js:14:13

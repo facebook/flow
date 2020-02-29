@@ -34,9 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:101:12
 
-Cannot return `(x != null) && (x > 10)` because:
- - boolean [1] is incompatible with string [2].
- - boolean [3] is incompatible with string [2].
+Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2].
 
    logical.js:101:12
    101|     return x != null && x > 10;
@@ -49,9 +47,23 @@ References:
    logical.js:99:23
     99| function logical3a(): string { // expected `: boolean`
                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:101:12
+
+Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2].
+
+   logical.js:101:12
+   101|     return x != null && x > 10;
+                   ^^^^^^^^^^^^^^^^^^^
+
+References:
    logical.js:101:25
    101|     return x != null && x > 10;
-                                ^^^^^^ [3]
+                                ^^^^^^ [1]
+   logical.js:99:23
+    99| function logical3a(): string { // expected `: boolean`
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:109:12
@@ -219,9 +231,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:329:12
 
-Cannot return `x && false && y` because:
- - number [1] is incompatible with array type [2].
- - boolean [3] is incompatible with array type [2].
+Cannot return `x && false && y` because number [1] is incompatible with array type [2].
 
    logical.js:329:12
    329|     return x && false && y;
@@ -234,9 +244,23 @@ References:
    logical.js:328:44
    328| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
                                                    ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:329:12
+
+Cannot return `x && false && y` because boolean [1] is incompatible with array type [2].
+
+   logical.js:329:12
+   329|     return x && false && y;
+                   ^^^^^^^^^^^^^^^
+
+References:
    logical.js:329:17
    329|     return x && false && y;
-                        ^^^^^ [3]
+                        ^^^^^ [1]
+   logical.js:328:44
+   328| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
+                                                   ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:348:13
@@ -320,10 +344,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:380:12
 
-Cannot return array literal because:
- - number [1] is incompatible with string [2] in property `x` of array element.
- - boolean [3] is incompatible with string [2] in property `x` of array element.
- - boolean [4] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
 
    logical.js:380:12
                    v
@@ -346,20 +367,65 @@ References:
    logical.js:379:42
    379| function logical13(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:380:12
+
+Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+
+   logical.js:380:12
+                   v
+   380|     return [
+   381|         {x: x && "bar"},
+   382|         {x: true && "bar"},
+   383|         {x: true && false},
+   384|         {x: false && false},
+   385|         {x: 1 && "bar"},
+   386|         {x: "foo" && "bar"},
+   387|         {x: "foo" && "bar"},
+   388|         {x: "foo" && "bar"},
+   389|     ];
+            ^
+
+References:
    logical.js:383:21
    383|         {x: true && false},
-                            ^^^^^ [3]
+                            ^^^^^ [1]
+   logical.js:379:42
+   379| function logical13(x: number): Array<{x: string}> {
+                                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:380:12
+
+Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+
+   logical.js:380:12
+                   v
+   380|     return [
+   381|         {x: x && "bar"},
+   382|         {x: true && "bar"},
+   383|         {x: true && false},
+   384|         {x: false && false},
+   385|         {x: 1 && "bar"},
+   386|         {x: "foo" && "bar"},
+   387|         {x: "foo" && "bar"},
+   388|         {x: "foo" && "bar"},
+   389|     ];
+            ^
+
+References:
    logical.js:384:13
    384|         {x: false && false},
-                    ^^^^^ [4]
+                    ^^^^^ [1]
+   logical.js:379:42
+   379| function logical13(x: number): Array<{x: string}> {
+                                                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:396:12
 
-Cannot return array literal because:
- - number [1] is incompatible with string [2] in property `x` of array element.
- - boolean [3] is incompatible with string [2] in property `x` of array element.
- - boolean [4] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
 
    logical.js:396:12
                    v
@@ -382,12 +448,60 @@ References:
    logical.js:395:42
    395| function logical14(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:396:12
+
+Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+
+   logical.js:396:12
+                   v
+   396|     return [
+   397|         {x: x || "bar"},
+   398|         {x: false || "bar"},
+   399|         {x: false || true},
+   400|         {x: true || false},
+   401|         {x: 0 || "bar"},
+   402|         {x: "foo" || "bar"},
+   403|         {x: "foo" || "bar"},
+   404|         {x: "foo" || "bar"},
+   405|     ];
+            ^
+
+References:
    logical.js:399:22
    399|         {x: false || true},
-                             ^^^^ [3]
+                             ^^^^ [1]
+   logical.js:395:42
+   395| function logical14(x: number): Array<{x: string}> {
+                                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:396:12
+
+Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+
+   logical.js:396:12
+                   v
+   396|     return [
+   397|         {x: x || "bar"},
+   398|         {x: false || "bar"},
+   399|         {x: false || true},
+   400|         {x: true || false},
+   401|         {x: 0 || "bar"},
+   402|         {x: "foo" || "bar"},
+   403|         {x: "foo" || "bar"},
+   404|         {x: "foo" || "bar"},
+   405|     ];
+            ^
+
+References:
    logical.js:400:13
    400|         {x: true || false},
-                    ^^^^ [4]
+                    ^^^^ [1]
+   logical.js:395:42
+   395| function logical14(x: number): Array<{x: string}> {
+                                                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:510:11

@@ -41,10 +41,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
 
-Cannot get `this.length` because:
- - property `length` is missing in `Number` [1].
- - property `length` is missing in `Number` [2].
- - property `length` is missing in `Number` [3].
+Cannot get `this.length` because property `length` is missing in `Number` [1].
 
    apply.js:2:10
     2|   return this.length; // expect []/"" this
@@ -54,12 +51,34 @@ References:
    apply.js:12:12
    12| test.apply(0, ["", 0]); // error: lookup `length` on Number
                   ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
+
+Cannot get `this.length` because property `length` is missing in `Number` [1].
+
+   apply.js:2:10
+    2|   return this.length; // expect []/"" this
+                ^^^^^^^^^^^
+
+References:
    apply.js:35:25
    35| (test.call.apply(test, [0, 123, 'foo']): void);
-                               ^ [2]
+                               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
+
+Cannot get `this.length` because property `length` is missing in `Number` [1].
+
+   apply.js:2:10
+    2|   return this.length; // expect []/"" this
+                ^^^^^^^^^^^
+
+References:
    apply.js:40:25
    40| (test.bind.apply(test, [0, 123]): (b: number) => number);
-                               ^ [3]
+                               ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:6:1
@@ -296,9 +315,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:4:10
 
-Cannot get `this.length` because:
- - property `length` is missing in `Number` [1].
- - property `length` is missing in `Number` [2].
+Cannot get `this.length` because property `length` is missing in `Number` [1].
 
    call.js:4:10
     4|   return this.length; // expect []/"" this
@@ -308,9 +325,20 @@ References:
    call.js:11:11
    11| test.call(0, "", 0); // error: lookup `length` on Number
                  ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:4:10
+
+Cannot get `this.length` because property `length` is missing in `Number` [1].
+
+   call.js:4:10
+    4|   return this.length; // expect []/"" this
+                ^^^^^^^^^^^
+
+References:
    call.js:30:24
    30| (test.apply.call(test, 0, [0, 'foo']): number);
-                              ^ [2]
+                              ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:14:1
@@ -773,18 +801,30 @@ Cannot call `f` with `123` bound to `x` because number [1] is not an array.
 
 Error ------------------------------------------------------------------------------------------------ rest_type.js:20:3
 
-Cannot call `f` because:
- - string [1] is not an array.
- - rest array [2] is incompatible with string [1].
+Cannot call `f` because string [1] is not an array.
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors
-         ^^^^^^^^^^ [2]
+         ^^^^^^^^^^
 
 References:
    rest_type.js:18:30
    18| type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                     ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_type.js:20:3
+
+Cannot call `f` because rest array [1] is incompatible with string [2].
+
+   rest_type.js:20:3
+   20|   f('hello'); // Error - string ~> array - luckily this errors
+         ^^^^^^^^^^ [1]
+
+References:
+   rest_type.js:18:30
+   18| type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- rest_type.js:31:22

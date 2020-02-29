@@ -17,11 +17,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- map.js:23:21
 
-Cannot call `Map` with array literal bound to `iterable` because:
- - string [1] is incompatible with tuple type [2] in type argument `Yield` [3] of the return value of property
-   `@@iterator`.
- - number [4] is incompatible with tuple type [2] in type argument `Yield` [3] of the return value of property
-   `@@iterator`.
+Cannot call `Map` with array literal bound to `iterable` because string [1] is incompatible with tuple type [2] in type
+argument `Yield` [3] of the return value of property `@@iterator`.
 
    map.js:23:21
     23|     let x = new Map(['foo', 123]); // error
@@ -37,16 +34,32 @@ References:
    <BUILTINS>/core.js:539:22
    539| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:23:21
+
+Cannot call `Map` with array literal bound to `iterable` because number [1] is incompatible with tuple type [2] in type
+argument `Yield` [3] of the return value of property `@@iterator`.
+
+   map.js:23:21
+    23|     let x = new Map(['foo', 123]); // error
+                            ^^^^^^^^^^^^
+
+References:
    map.js:23:29
     23|     let x = new Map(['foo', 123]); // error
-                                    ^^^ [4]
+                                    ^^^ [1]
+   <BUILTINS>/core.js:596:37
+   596|     constructor(iterable: ?Iterable<[K, V]>): void;
+                                            ^^^^^^ [2]
+   <BUILTINS>/core.js:539:22
+   539| interface $Iterator<+Yield,+Return,-Next> {
+                             ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:24:34
 
-Cannot assign `new Map(...)` to `y` because:
- - string [1] is incompatible with number [2] in type argument `K` [3].
- - number [4] is incompatible with string [5] in type argument `V` [6].
+Cannot assign `new Map(...)` to `y` because string [1] is incompatible with number [2] in type argument `K` [3].
 
    map.js:24:34
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -62,22 +75,31 @@ References:
    <BUILTINS>/core.js:594:19
    594| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                           ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:24:34
+
+Cannot assign `new Map(...)` to `y` because number [1] is incompatible with string [2] in type argument `V` [3].
+
+   map.js:24:34
+    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                         ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    map.js:24:51
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                          ^^^ [4]
+                                                          ^^^ [1]
    map.js:24:24
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                               ^^^^^^ [5]
+                               ^^^^^^ [2]
    <BUILTINS>/core.js:594:22
    594| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
-                             ^ [6]
+                             ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ map.js:29:6
 
-Cannot cast `x.get(...)` to boolean because:
- - undefined [1] is incompatible with boolean [2].
- - number [3] is incompatible with boolean [2].
+Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2].
 
    map.js:29:6
     29|     (x.get('foo'): boolean); // error, string | void
@@ -90,9 +112,23 @@ References:
    map.js:29:20
     29|     (x.get('foo'): boolean); // error, string | void
                            ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ map.js:29:6
+
+Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2].
+
+   map.js:29:6
+   29|     (x.get('foo'): boolean); // error, string | void
+            ^^^^^^^^^^^^
+
+References:
    map.js:28:27
-    28|   function(x: Map<string, number>) {
-                                  ^^^^^^ [3]
+   28|   function(x: Map<string, number>) {
+                                 ^^^^^^ [1]
+   map.js:29:20
+   29|     (x.get('foo'): boolean); // error, string | void
+                          ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:30:11
@@ -141,16 +177,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
-Cannot call `WeakSet` with array literal bound to `iterable` because:
- - in type argument `Yield` [1] of the return value of property `@@iterator`:
-    - Either number [2] is incompatible with object type [3].
-    - Or number [2] is incompatible with read-only array type [4].
- - in type argument `Yield` [1] of the return value of property `@@iterator`:
-    - Either number [5] is incompatible with object type [3].
-    - Or number [5] is incompatible with read-only array type [4].
- - in type argument `Yield` [1] of the return value of property `@@iterator`:
-    - Either number [6] is incompatible with object type [3].
-    - Or number [6] is incompatible with read-only array type [4].
+Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
+property `@@iterator`:
+ - Either number [2] is incompatible with object type [3].
+ - Or number [2] is incompatible with read-only array type [4].
 
    weakset.js:19:23
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -169,12 +199,58 @@ References:
    <BUILTINS>/core.js:655:34
    655| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
                                          ^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
+
+Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
+property `@@iterator`:
+ - Either number [2] is incompatible with object type [3].
+ - Or number [2] is incompatible with read-only array type [4].
+
+   weakset.js:19:23
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:539:22
+   539| interface $Iterator<+Yield,+Return,-Next> {
+                             ^^^^^ [1]
    weakset.js:19:27
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                  ^ [5]
+                                  ^ [2]
+   <BUILTINS>/core.js:655:26
+   655| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                 ^^^^^ [3]
+   <BUILTINS>/core.js:655:34
+   655| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                         ^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
+
+Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
+property `@@iterator`:
+ - Either number [2] is incompatible with object type [3].
+ - Or number [2] is incompatible with read-only array type [4].
+
+   weakset.js:19:23
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:539:22
+   539| interface $Iterator<+Yield,+Return,-Next> {
+                             ^^^^^ [1]
    weakset.js:19:30
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                     ^ [6]
+                                     ^ [2]
+   <BUILTINS>/core.js:655:26
+   655| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                 ^^^^^ [3]
+   <BUILTINS>/core.js:655:34
+   655| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                         ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:36:23
