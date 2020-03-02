@@ -33,7 +33,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Break break -> Break (this#break break)
           | ClassDeclaration cls -> ClassDeclaration (this#class_ cls)
           | Continue cont -> Continue (this#continue cont)
-          | Debugger -> Debugger
+          | Debugger dbg -> Debugger (this#debugger dbg)
           | DeclareClass stuff -> DeclareClass (this#declare_class stuff)
           | DeclareExportDeclaration decl ->
             DeclareExportDeclaration (this#declare_export_declaration annot decl)
@@ -318,7 +318,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { label = label'; comments = comments' }
 
-    method debugger () = ()
+    method debugger (dbg : 'M Ast.Statement.Debugger.t) : 'N Ast.Statement.Debugger.t =
+      let open Ast.Statement.Debugger in
+      let { comments } = dbg in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { comments = comments' }
 
     method declare_class (decl : ('M, 'T) Ast.Statement.DeclareClass.t)
         : ('N, 'U) Ast.Statement.DeclareClass.t =

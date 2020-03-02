@@ -59,9 +59,7 @@ class ['loc] mapper =
         id_loc this#class_ loc cls stmt (fun cls -> (loc, ClassDeclaration cls))
       | (loc, Continue cont) ->
         id_loc this#continue loc cont stmt (fun cont -> (loc, Continue cont))
-      | (loc, Debugger) ->
-        this#debugger loc;
-        stmt
+      | (loc, Debugger dbg) -> id_loc this#debugger loc dbg stmt (fun dbg -> (loc, Debugger dbg))
       | (loc, DeclareClass stuff) ->
         id_loc this#declare_class loc stuff stmt (fun stuff -> (loc, DeclareClass stuff))
       | (loc, DeclareExportDeclaration decl) ->
@@ -411,7 +409,14 @@ class ['loc] mapper =
       else
         { label = label'; comments = comments' }
 
-    method debugger _loc = ()
+    method debugger _loc (dbg : 'loc Ast.Statement.Debugger.t) =
+      let open Ast.Statement.Debugger in
+      let { comments } = dbg in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        dbg
+      else
+        { comments = comments' }
 
     method declare_class _loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in

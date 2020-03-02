@@ -85,7 +85,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method continue : 'M Ast.Statement.Continue.t -> 'N Ast.Statement.Continue.t
 
-    method debugger : unit -> unit
+    method debugger : 'M Ast.Statement.Debugger.t -> 'N Ast.Statement.Debugger.t
 
     method declare_class :
       ('M, 'T) Ast.Statement.DeclareClass.t -> ('N, 'U) Ast.Statement.DeclareClass.t

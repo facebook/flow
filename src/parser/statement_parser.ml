@@ -189,9 +189,12 @@ module Statement
 
   and debugger =
     with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DEBUGGER;
+        let trailing = Peek.comments env in
         Eat.semicolon env;
-        Statement.Debugger)
+        Statement.Debugger
+          { Statement.Debugger.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
 
   and do_while =
     with_loc (fun env ->

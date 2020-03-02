@@ -524,6 +524,7 @@ let program
         Some (do_while_statement loc do_while1 do_while2)
       | ((_, Switch switch1), (_, Switch switch2)) -> switch_statement switch1 switch2
       | ((loc, Return return1), (_, Return return2)) -> return_statement loc return1 return2
+      | ((loc, Debugger dbg1), (_, Debugger dbg2)) -> debugger_statement loc dbg1 dbg2
       | ((loc, Labeled labeled1), (_, Labeled labeled2)) ->
         Some (labeled_statement loc labeled1 labeled2)
       | ((_, With with1), (_, With with2)) -> Some (with_statement with1 with2)
@@ -1504,6 +1505,14 @@ let program
     let test = diff_if_changed expression test1 test2 in
     let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     List.concat [body; test; comments]
+  and debugger_statement
+      loc (stmt1 : Loc.t Ast.Statement.Debugger.t) (stmt2 : Loc.t Ast.Statement.Debugger.t) :
+      node change list option =
+    let open Ast.Statement.Debugger in
+    let { comments = comments1 } = stmt1 in
+    let { comments = comments2 } = stmt2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [comments_diff]
   and return_statement
       loc
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Return.t)

@@ -189,7 +189,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
   | DeclareExportDeclaration _ -> []
   | ImportDeclaration _ -> []
   | Expression { Expression.expression; _ } -> get_children_nodes_expr expression
-  | Debugger -> []
+  | Debugger _ -> []
   | Empty -> []
   | EnumDeclaration _ -> []
   | Break _ -> []

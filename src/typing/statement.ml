@@ -507,7 +507,7 @@ and statement_decl cx =
         | ForOf.LeftDeclaration (_, decl) -> variable_decl cx decl
         | _ -> ());
         statement_decl cx body)
-  | (_, Debugger) -> ()
+  | (_, Debugger _) -> ()
   | (_, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
     (match id with
     | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
@@ -1970,7 +1970,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
         (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; async }))
-  | (_, Debugger) as stmt -> stmt
+  | (_, Debugger _) as stmt -> stmt
   | (loc, FunctionDeclaration func) ->
     let { Ast.Function.id; sig_loc; _ } = func in
     let (fn_type, func_ast) = mk_function_declaration None cx sig_loc func in

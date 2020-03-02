@@ -224,7 +224,7 @@ with type t = Impl.t = struct
         in
         node type_ loc [("left", left); ("right", expression right); ("body", statement body)]
       | (loc, EnumDeclaration enum) -> enum_declaration (loc, enum)
-      | (loc, Debugger) -> node "DebuggerStatement" loc []
+      | (loc, Debugger { Debugger.comments }) -> node ?comments "DebuggerStatement" loc []
       | (loc, ClassDeclaration c) -> class_declaration (loc, c)
       | (loc, InterfaceDeclaration i) -> interface_declaration (loc, i)
       | (loc, VariableDeclaration var) -> variable_declaration (loc, var)

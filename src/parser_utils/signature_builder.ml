@@ -117,7 +117,7 @@ module Signature = struct
     | (_, Continue _)
     | (_, Throw _)
     | (_, Return _)
-    | (_, Debugger)
+    | (_, Debugger _)
     | (_, With _) ->
       assert false
 
@@ -480,7 +480,7 @@ class type_hoister =
              | (_, Continue _)
              | (_, Throw _)
              | (_, Return _)
-             | (_, Debugger)
+             | (_, Debugger _)
              | (_, With _) ->
                stmt)
 
@@ -538,7 +538,7 @@ class type_hoister =
       | (_, Continue _)
       | (_, Throw _)
       | (_, Return _)
-      | (_, Debugger)
+      | (_, Debugger _)
       | (_, With _) ->
         stmt
 

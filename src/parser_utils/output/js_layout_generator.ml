@@ -518,7 +518,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
     ( loc,
       match stmt with
       | S.Empty -> Atom ";"
-      | S.Debugger -> with_semicolon (Atom "debugger")
+      | S.Debugger { S.Debugger.comments } ->
+        with_semicolon @@ layout_node_with_simple_comments_opt loc comments (Atom "debugger")
       | S.Block b -> block (loc, b)
       | S.Expression { S.Expression.expression = expr; _ } ->
         let ctxt = { normal_context with left = In_expression_statement } in

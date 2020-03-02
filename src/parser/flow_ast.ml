@@ -370,6 +370,10 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module Debugger : sig
+    type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
+  end
+
   module With : sig
     type ('M, 'T) t = {
       _object: ('M, 'T) Expression.t;
@@ -763,7 +767,7 @@ and Statement : sig
     | Break of 'M Break.t
     | ClassDeclaration of ('M, 'T) Class.t
     | Continue of 'M Continue.t
-    | Debugger
+    | Debugger of 'M Debugger.t
     | DeclareClass of ('M, 'T) DeclareClass.t
     | DeclareExportDeclaration of ('M, 'T) DeclareExportDeclaration.t
     | DeclareFunction of ('M, 'T) DeclareFunction.t
