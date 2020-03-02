@@ -404,7 +404,7 @@ class ['loc] mapper =
       let { label; comments } = cont in
       let label' = map_opt this#label_identifier label in
       let comments' = this#syntax_opt comments in
-      if label == label' then
+      if label == label' && comments == comments' then
         cont
       else
         { label = label'; comments = comments' }
