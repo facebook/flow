@@ -243,8 +243,6 @@ end = struct
     (* TODO: enable this in tests *)
     | ([], Some "tokens", None)
     (* Flow doesn't support this *)
-    | (_, Some "leadingComments", None)
-    | (_, Some "trailingComments", None)
     | (_, Some "innerComments", None) ->
       true
     | _ -> false
