@@ -27,7 +27,7 @@ external hash : string -> (int64[@unboxed]) -> (hash[@unboxed])
 
 (* Unlike Int64.to_string, which returns a decimal string, this returns a hex
  * string which is padded out to the full 16 bytes. *)
-external to_string : (hash[@unboxed]) -> string = "caml_xx_to_string" "caml_xx_to_string_unboxed"
+let to_string (hash : hash) : string = Printf.sprintf "%016Lx" hash
 
 (* 0 <= result < modulus *)
 let modulo hash modulus =

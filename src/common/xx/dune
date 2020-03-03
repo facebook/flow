@@ -4,3 +4,5 @@
   (c_names xx_stubs)
   (libraries lz4)
 )
+
+(dirs (:standard __tests__))
