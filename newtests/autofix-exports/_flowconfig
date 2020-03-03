@@ -1,4 +1,5 @@
 [options]
 experimental.types_first=true
 experimental.well_formed_exports=true
+experimental.autofix_exports=true
 all=true
