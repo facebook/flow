@@ -172,7 +172,7 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
  * to include the new changes *)
 let rec recheck_single
     ?(files_to_recheck = FilenameSet.empty)
-    ?(files_to_force = CheckedSet.empty)
+    ~files_to_force
     ?(file_watcher_metadata = MonitorProt.empty_file_watcher_metadata)
     ?(recheck_reasons_list_rev = [])
     genv
@@ -270,4 +270,4 @@ let recheck_loop =
   in
   (fun genv env -> loop ~profiling:[] genv env)
 
-let recheck_single ?files_to_force genv env = recheck_single ?files_to_force genv env
+let recheck_single ~files_to_force genv env = recheck_single ~files_to_force genv env

@@ -9,7 +9,7 @@
 val process_updates : options:Options.t -> ServerEnv.env -> SSet.t -> Utils_js.FilenameSet.t
 
 val recheck_single :
-  ?files_to_force:CheckedSet.t ->
+  files_to_force:CheckedSet.t ->
   ServerEnv.genv ->
   ServerEnv.env ->
   (Profiling_js.finished * ServerEnv.env, ServerEnv.env) result Lwt.t
