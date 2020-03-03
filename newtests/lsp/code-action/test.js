@@ -123,6 +123,11 @@ export default suite(
                   ],
                 },
               },
+              command: {
+                title: '',
+                command: 'log',
+                arguments: ['Apply suggestion'],
+              },
             },
           ])}}`,
         ],

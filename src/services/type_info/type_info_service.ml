@@ -192,7 +192,14 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
                 kind = CodeActionKind.quickfix;
                 diagnostics = relevant_diagnostics;
                 action =
-                  CodeAction.EditOnly WorkspaceEdit.{ changes = SMap.singleton uri [textEdit] };
+                  CodeAction.BothEditThenCommand
+                    ( WorkspaceEdit.{ changes = SMap.singleton uri [textEdit] },
+                      {
+                        (* https://github.com/microsoft/language-server-protocol/issues/933 *)
+                        Command.title = "";
+                        command = "log";
+                        arguments = [Hh_json.JSON_String "Apply suggestion"];
+                      } );
               }
           :: actions
         | _ -> actions)
