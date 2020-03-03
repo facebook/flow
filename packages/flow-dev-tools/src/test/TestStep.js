@@ -318,6 +318,13 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         completion: {},
         hover: {},
         definition: {},
+        codeAction: {
+          codeActionLiteralSupport: {
+            codeActionKind: {
+              valueSet: ['quickfix'],
+            },
+          },
+        },
       },
       window: {status: {}, progress: {}, actionRequired: {}},
       telemetry: {connectionStatus: {}},

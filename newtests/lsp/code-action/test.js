@@ -15,13 +15,29 @@ export default suite(
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
-    test('initialize', [
+    test('initialize with quickfix support', [
       lspStart({needsFlowServer: false}),
       lspRequestAndWaitUntilResponse(
         'initialize',
         lspInitializeParams,
       ).verifyAllLSPMessagesInStep(
-        ['initialize{"codeActionProvider":true}'],
+        ['initialize{"codeActionProvider":{"codeActionKinds":["quickfix"]}}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('initialize without quickfix support', [
+      lspStart({needsFlowServer: false}),
+      lspRequestAndWaitUntilResponse('initialize', {
+        ...lspInitializeParams,
+        capabilities: {
+          ...lspInitializeParams.capabilities,
+          textDocument: {
+            ...lspInitializeParams.capabilities.textDocument,
+            codeAction: {},
+          },
+        },
+      }).verifyAllLSPMessagesInStep(
+        ['initialize{"codeActionProvider":false}'],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),

@@ -913,6 +913,8 @@ let parse_initialize (params : json option) : Initialize.params =
           Jget.obj_opt json "codeActionLiteralSupport" |> parse_codeActionLiteralSupport;
       }
     and parse_codeActionLiteralSupport json =
+      Jget.obj_opt json "codeActionKind" |> parse_codeActionKind
+    and parse_codeActionKind json =
       Base.Option.(
         Jget.array_opt json "valueSet" >>= fun ls -> Some { codeAction_valueSet = parse_kinds ls })
     and parse_window json =
