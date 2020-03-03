@@ -41,5 +41,93 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for PropMissing errors', [
+      addFile('prop-missing.js.ignored', 'prop-missing.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/prop-missing.js'},
+        range: {
+          start: {
+            line: 3,
+            character: 2,
+          },
+          end: {
+            line: 3,
+            character: 9,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 3,
+                  character: 2,
+                },
+                end: {
+                  line: 3,
+                  character: 9,
+                },
+              },
+              message:
+                'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          `textDocument/codeAction{${JSON.stringify([
+            {
+              title: 'Apply suggestion',
+              kind: 'quickfix',
+              diagnostics: [
+                {
+                  range: {
+                    start: {
+                      line: 3,
+                      character: 2,
+                    },
+                    end: {
+                      line: 3,
+                      character: 9,
+                    },
+                  },
+                  severity: 1,
+                  code: 'InferError',
+                  source: 'Flow',
+                  message:
+                    'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+                  relatedInformation: [],
+                  relatedLocations: [],
+                },
+              ],
+              edit: {
+                changes: {
+                  '<PLACEHOLDER_PROJECT_URL>/prop-missing.js': [
+                    {
+                      range: {
+                        start: {
+                          line: 3,
+                          character: 2,
+                        },
+                        end: {
+                          line: 3,
+                          character: 9,
+                        },
+                      },
+                      newText: 'facebook',
+                    },
+                  ],
+                },
+              },
+            },
+          ])}}`,
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 );

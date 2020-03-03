@@ -141,7 +141,7 @@ let suggest ~options ~env ~profiling file_key file_content =
     Ok (tc_errors, tc_warnings, suggest_warnings, file_patch)
   | (None, errors, _) -> Error errors
 
-let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
+let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
   let open Lsp in
   let CodeActionRequest.{ textDocument; range = _; context } = params in
   let uri = TextDocumentIdentifier.(textDocument.uri) |> string_of_uri in
@@ -170,6 +170,35 @@ let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_content
     else
       []
   in
+  let code_actions_of_errors errors =
+    Flow_error.ErrorSet.fold
+      (fun error actions ->
+        match
+          Flow_error.msg_of_error error
+          |> Error_message.map_loc_of_error_message (Parsing_heaps_utils.loc_of_aloc ~reader)
+          |> Error_message.friendly_message_of_msg
+        with
+        | Error_message.PropMissing { loc; suggestion = Some suggestion; _ } ->
+          let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
+          let relevant_diagnostics =
+            context.CodeActionRequest.diagnostics
+            |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
+          in
+          let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
+          CodeAction.Action
+            CodeAction.
+              {
+                title = "Apply suggestion";
+                kind = CodeActionKind.quickfix;
+                diagnostics = relevant_diagnostics;
+                action =
+                  CodeAction.EditOnly WorkspaceEdit.{ changes = SMap.singleton uri [textEdit] };
+              }
+          :: actions
+        | _ -> actions)
+      errors
+      []
+  in
   Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
   | (Some (full_cx, ast, file_sig, typed_ast), _, _)
     when CodeActionKind.contains_kind_opt
@@ -179,8 +208,14 @@ let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_content
     (* The current ide-lsp-server/flow-lsp-client doesn't necessarily get restarted for every project.
      * Checking the option here ensures that the flow server doesn't do too much work for code
      * action requests on projects where code actions are not enabled in the `.flowconfig`. *)
-    if options.Options.opt_autofix_exports then
-      Ok (autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast)
-    else
-      Ok []
+    let experimental_code_actions =
+      if options.Options.opt_autofix_exports then
+        autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast
+      else
+        []
+    in
+    let code_actions =
+      experimental_code_actions @ code_actions_of_errors (Context.errors full_cx)
+    in
+    Ok code_actions
   | _ -> Ok []

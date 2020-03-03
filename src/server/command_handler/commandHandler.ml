@@ -877,7 +877,7 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
-let find_code_actions ~options ~env ~profiling ~params ~client =
+let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   let CodeActionRequest.{ textDocument; range; _ } = params in
   let (file_key, file, loc) =
     Flow_lsp_conversions.lsp_textDocument_and_range_to_flow textDocument range client
@@ -886,6 +886,7 @@ let find_code_actions ~options ~env ~profiling ~params ~client =
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
     Type_info_service.code_actions_at_loc
+      ~reader
       ~options
       ~env
       ~profiling
@@ -1493,8 +1494,9 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
       Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
 
-let handle_persistent_code_action_request ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let%lwt result = find_code_actions ~options ~profiling ~env ~client ~params in
+let handle_persistent_code_action_request
+    ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
+  let%lwt result = find_code_actions ~reader ~options ~profiling ~env ~client ~params in
   match result with
   | Ok code_actions ->
     let json_of_code_action = function
@@ -2153,7 +2155,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     | (LspToServer (RequestMessage (id, CodeActionRequest params)), metadata) ->
       mk_parallelizable_persistent
         ~options
-        (handle_persistent_code_action_request ~options ~id ~params ~metadata)
+        (handle_persistent_code_action_request ~reader ~options ~id ~params ~metadata)
     | (LspToServer (RequestMessage (id, CompletionRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc = params.Completion.loc in
