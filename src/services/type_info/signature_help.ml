@@ -73,6 +73,22 @@ module Callee_finder = struct
 
       method covers_target loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
 
+      (* only recurse if this loc covers the target. *)
+      method short_circuit : 'a. ALoc.t -> 'a -> ('a -> 'a) -> 'a =
+        fun loc x f ->
+          if this#covers_target loc then
+            f x
+          else
+            x
+
+      method! statement stmt =
+        let (loc, _) = stmt in
+        this#short_circuit loc stmt super#statement
+
+      method! expression expr =
+        let ((loc, _), _) = expr in
+        this#short_circuit loc expr super#expression
+
       method! call annot expr =
         let { Flow_ast.Expression.Call.callee = ((_, t), _); arguments; _ } = expr in
         let (args_loc, arg_list) = arguments in
@@ -101,7 +117,7 @@ module Callee_finder = struct
       let _ = finder#program ast in
       None
     with Found { tparams; type_; active_parameter } ->
-      Some (Type.TypeScheme.{ tparams; type_ }, active_parameter)
+      Some ({ Type.TypeScheme.tparams; type_ }, active_parameter)
 end
 
 let ty_normalizer_options =
