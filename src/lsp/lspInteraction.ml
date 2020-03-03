@@ -33,6 +33,7 @@ type trigger =
   | ServerConnected
   | SignatureHelp
   | TypeCoverage
+  | ExecuteCommand
   | UnknownTrigger
 
 (* Source of the trigger *)
@@ -98,6 +99,7 @@ let string_of_trigger = function
   | ServerConnected -> "ServerConnected"
   | SignatureHelp -> "SignatureHelp"
   | TypeCoverage -> "TypeCoverage"
+  | ExecuteCommand -> "ExecuteCommand"
   | UnknownTrigger -> "UnknownTrigger"
 
 let string_of_ux = function
@@ -138,7 +140,8 @@ let source_of_trigger = function
   | Rage
   | Rename
   | SignatureHelp
-  | TypeCoverage ->
+  | TypeCoverage
+  | ExecuteCommand ->
     Client
   | PushedErrorsEndOfRecheck _
   | PushedErrorsEnvChange
@@ -263,84 +266,86 @@ let flush () = FlowInteractionLogger.flush ()
 (* Not every message the the lsp process receives triggers an interaction. This function
  * enumerates which methods we care about and what trigger they correspond to *)
 let trigger_of_lsp_msg =
-  Lsp.(
-    function
-    (* Requests from the client which we care about *)
-    | RequestMessage (_, CodeActionRequest _) -> Some CodeAction
-    | RequestMessage (_, CompletionRequest _) -> Some Completion
-    | RequestMessage (_, DefinitionRequest _) -> Some Definition
-    | RequestMessage (_, DocumentHighlightRequest _) -> Some DocumentHighlight
-    | RequestMessage (_, DocumentSymbolRequest _) -> Some DocumentSymbol
-    | RequestMessage (_, FindReferencesRequest _) -> Some FindReferences
-    | RequestMessage (_, HoverRequest _) -> Some Hover
-    | RequestMessage (_, RageRequest) -> Some Rage
-    | RequestMessage (_, RenameRequest _) -> Some Rename
-    | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
-    | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
-    (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
-     * the client *)
-    | RequestMessage (_, CompletionItemResolveRequest _)
-    | RequestMessage (_, DocumentFormattingRequest _)
-    | RequestMessage (_, DocumentOnTypeFormattingRequest _)
-    | RequestMessage (_, DocumentRangeFormattingRequest _)
-    | RequestMessage (_, InitializeRequest _)
-    | RequestMessage (_, ShowMessageRequestRequest _)
-    | RequestMessage (_, ShowStatusRequest _)
-    | RequestMessage (_, ShutdownRequest)
-    | RequestMessage (_, CodeLensResolveRequest _)
-    | RequestMessage (_, DocumentCodeLensRequest _)
-    (* TODO not sure if this is right, just need to unbreak the build. *)
-    | RequestMessage (_, TypeDefinitionRequest _)
-    | RequestMessage (_, UnknownRequest _)
-    | RequestMessage (_, WorkspaceSymbolRequest _)
-    | RequestMessage (_, RegisterCapabilityRequest _) ->
-      None
-    (* No responses trigger interactions *)
-    | ResponseMessage (_, InitializeResult _)
-    | ResponseMessage (_, ShutdownResult)
-    | ResponseMessage (_, CodeLensResolveResult _)
-    | ResponseMessage (_, HoverResult _)
-    | ResponseMessage (_, DefinitionResult _)
-    | ResponseMessage (_, CompletionResult _)
-    | ResponseMessage (_, CompletionItemResolveResult _)
-    | ResponseMessage (_, SignatureHelpResult _)
-    | ResponseMessage (_, WorkspaceSymbolResult _)
-    | ResponseMessage (_, DocumentSymbolResult _)
-    | ResponseMessage (_, FindReferencesResult _)
-    | ResponseMessage (_, GoToImplementationResult _)
-    | ResponseMessage (_, DocumentHighlightResult _)
-    | ResponseMessage (_, DocumentCodeLensResult _)
-    | ResponseMessage (_, TypeCoverageResult _)
-    (* TODO not sure if this is right, just need to unbreak the build. *)
-    | ResponseMessage (_, TypeDefinitionResult _)
-    | ResponseMessage (_, DocumentFormattingResult _)
-    | ResponseMessage (_, DocumentRangeFormattingResult _)
-    | ResponseMessage (_, DocumentOnTypeFormattingResult _)
-    | ResponseMessage (_, ShowMessageRequestResult _)
-    | ResponseMessage (_, ShowStatusResult _)
-    | ResponseMessage (_, RageResult _)
-    | ResponseMessage (_, RenameResult _)
-    | ResponseMessage (_, ErrorResult _)
-    | ResponseMessage (_, CodeActionResult _) ->
-      None
-    (* Only a few notifications can trigger an interaction *)
-    | NotificationMessage (DidOpenNotification _) -> Some DidOpen
-    | NotificationMessage (DidCloseNotification _) -> Some DidClose
-    | NotificationMessage (DidSaveNotification _) -> Some DidSave
-    | NotificationMessage (DidChangeNotification _) -> Some DidChange
-    (* Most notifications we ignore *)
-    | NotificationMessage ExitNotification
-    | NotificationMessage (CancelRequestNotification _)
-    | NotificationMessage (PublishDiagnosticsNotification _)
-    | NotificationMessage (LogMessageNotification _)
-    | NotificationMessage (TelemetryNotification _)
-    | NotificationMessage (ShowMessageNotification _)
-    | NotificationMessage (ProgressNotification _)
-    | NotificationMessage (ActionRequiredNotification _)
-    | NotificationMessage (ConnectionStatusNotification _)
-    | NotificationMessage InitializedNotification
-    | NotificationMessage SetTraceNotification
-    | NotificationMessage LogTraceNotification
-    | NotificationMessage (UnknownNotification _)
-    | NotificationMessage (DidChangeWatchedFilesNotification _) ->
-      None)
+  let open Lsp in
+  function
+  (* Requests from the client which we care about *)
+  | RequestMessage (_, CodeActionRequest _) -> Some CodeAction
+  | RequestMessage (_, CompletionRequest _) -> Some Completion
+  | RequestMessage (_, DefinitionRequest _) -> Some Definition
+  | RequestMessage (_, DocumentHighlightRequest _) -> Some DocumentHighlight
+  | RequestMessage (_, DocumentSymbolRequest _) -> Some DocumentSymbol
+  | RequestMessage (_, FindReferencesRequest _) -> Some FindReferences
+  | RequestMessage (_, HoverRequest _) -> Some Hover
+  | RequestMessage (_, RageRequest) -> Some Rage
+  | RequestMessage (_, RenameRequest _) -> Some Rename
+  | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
+  | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
+  | RequestMessage (_, ExecuteCommandRequest _) -> Some ExecuteCommand
+  (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
+    * the client *)
+  | RequestMessage (_, CompletionItemResolveRequest _)
+  | RequestMessage (_, DocumentFormattingRequest _)
+  | RequestMessage (_, DocumentOnTypeFormattingRequest _)
+  | RequestMessage (_, DocumentRangeFormattingRequest _)
+  | RequestMessage (_, InitializeRequest _)
+  | RequestMessage (_, ShowMessageRequestRequest _)
+  | RequestMessage (_, ShowStatusRequest _)
+  | RequestMessage (_, ShutdownRequest)
+  | RequestMessage (_, CodeLensResolveRequest _)
+  | RequestMessage (_, DocumentCodeLensRequest _)
+  (* TODO not sure if this is right, just need to unbreak the build. *)
+  | RequestMessage (_, TypeDefinitionRequest _)
+  | RequestMessage (_, UnknownRequest _)
+  | RequestMessage (_, WorkspaceSymbolRequest _)
+  | RequestMessage (_, RegisterCapabilityRequest _) ->
+    None
+  (* No responses trigger interactions *)
+  | ResponseMessage (_, InitializeResult _)
+  | ResponseMessage (_, ShutdownResult)
+  | ResponseMessage (_, CodeLensResolveResult _)
+  | ResponseMessage (_, HoverResult _)
+  | ResponseMessage (_, DefinitionResult _)
+  | ResponseMessage (_, CompletionResult _)
+  | ResponseMessage (_, CompletionItemResolveResult _)
+  | ResponseMessage (_, SignatureHelpResult _)
+  | ResponseMessage (_, WorkspaceSymbolResult _)
+  | ResponseMessage (_, DocumentSymbolResult _)
+  | ResponseMessage (_, FindReferencesResult _)
+  | ResponseMessage (_, GoToImplementationResult _)
+  | ResponseMessage (_, DocumentHighlightResult _)
+  | ResponseMessage (_, DocumentCodeLensResult _)
+  | ResponseMessage (_, TypeCoverageResult _)
+  | ResponseMessage (_, ExecuteCommandResult _)
+  (* TODO not sure if this is right, just need to unbreak the build. *)
+  | ResponseMessage (_, TypeDefinitionResult _)
+  | ResponseMessage (_, DocumentFormattingResult _)
+  | ResponseMessage (_, DocumentRangeFormattingResult _)
+  | ResponseMessage (_, DocumentOnTypeFormattingResult _)
+  | ResponseMessage (_, ShowMessageRequestResult _)
+  | ResponseMessage (_, ShowStatusResult _)
+  | ResponseMessage (_, RageResult _)
+  | ResponseMessage (_, RenameResult _)
+  | ResponseMessage (_, ErrorResult _)
+  | ResponseMessage (_, CodeActionResult _) ->
+    None
+  (* Only a few notifications can trigger an interaction *)
+  | NotificationMessage (DidOpenNotification _) -> Some DidOpen
+  | NotificationMessage (DidCloseNotification _) -> Some DidClose
+  | NotificationMessage (DidSaveNotification _) -> Some DidSave
+  | NotificationMessage (DidChangeNotification _) -> Some DidChange
+  (* Most notifications we ignore *)
+  | NotificationMessage ExitNotification
+  | NotificationMessage (CancelRequestNotification _)
+  | NotificationMessage (PublishDiagnosticsNotification _)
+  | NotificationMessage (LogMessageNotification _)
+  | NotificationMessage (TelemetryNotification _)
+  | NotificationMessage (ShowMessageNotification _)
+  | NotificationMessage (ProgressNotification _)
+  | NotificationMessage (ActionRequiredNotification _)
+  | NotificationMessage (ConnectionStatusNotification _)
+  | NotificationMessage InitializedNotification
+  | NotificationMessage SetTraceNotification
+  | NotificationMessage LogTraceNotification
+  | NotificationMessage (UnknownNotification _)
+  | NotificationMessage (DidChangeWatchedFilesNotification _) ->
+    None

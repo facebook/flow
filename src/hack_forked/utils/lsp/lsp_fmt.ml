@@ -346,6 +346,21 @@ let print_documentCodeLens (r : DocumentCodeLens.result) : json =
   JSON_Array (List.map r ~f:print_codeLens)
 
 (************************************************************************)
+(* workspace/executeCommand Request                                     *)
+(************************************************************************)
+
+let parse_executeCommand (params : json option) : ExecuteCommand.params =
+  ExecuteCommand.
+    {
+      command = Jget.string_exn params "command";
+      arguments =
+        Jget.array_opt params "arguments"
+        |> Base.Option.map ~f:(Base.List.map ~f:(fun j -> Base.Option.value_exn j));
+    }
+
+let print_executeCommand (() : ExecuteCommand.result) : json = JSON_Null
+
+(************************************************************************)
 (* textDocument/publishDiagnostics notification                         *)
 (************************************************************************)
 
@@ -1144,6 +1159,7 @@ let request_name_to_string (request : lsp_request) : string =
   | RageRequest -> "telemetry/rage"
   | RenameRequest _ -> "textDocument/rename"
   | DocumentCodeLensRequest _ -> "textDocument/codeLens"
+  | ExecuteCommandRequest _ -> "workspace/executeCommand"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -1172,6 +1188,7 @@ let result_name_to_string (result : lsp_result) : string =
   | RageResult _ -> "telemetry/rage"
   | RenameResult _ -> "textDocument/rename"
   | DocumentCodeLensResult _ -> "textDocument/codeLens"
+  | ExecuteCommandResult _ -> "workspace/executeCommand"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -1234,6 +1251,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/codeLens" -> DocumentCodeLensRequest (parse_documentCodeLens params)
   | "textDocument/signatureHelp" -> SignatureHelpRequest (parse_signatureHelp params)
   | "telemetry/rage" -> RageRequest
+  | "workspace/executeCommand" -> ExecuteCommandRequest (parse_executeCommand params)
   | "completionItem/resolve"
   | "window/showMessageRequest"
   | "window/showStatus"
@@ -1291,6 +1309,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | RageRequest
   | RenameRequest _
   | DocumentCodeLensRequest _
+  | ExecuteCommandRequest _
   | UnknownRequest _ ->
     raise (Error.Parse ("Don't know how to parse LSP response " ^ method_))
 
@@ -1343,6 +1362,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | RageRequest
     | RenameRequest _
     | DocumentCodeLensRequest _
+    | ExecuteCommandRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -1378,6 +1398,7 @@ let print_lsp_response ?include_error_stack_trace (id : lsp_id) (result : lsp_re
     | RageResult r -> print_rage r
     | RenameResult r -> print_documentRename r
     | DocumentCodeLensResult r -> print_documentCodeLens r
+    | ExecuteCommandResult r -> print_executeCommand r
     | SignatureHelpResult r -> print_signatureHelp r
     | ShowMessageRequestResult _
     | ShowStatusResult _

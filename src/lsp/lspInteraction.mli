@@ -28,6 +28,7 @@ type trigger =
   | ServerConnected
   | SignatureHelp
   | TypeCoverage
+  | ExecuteCommand
   | UnknownTrigger
 
 type ux =

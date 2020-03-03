@@ -757,6 +757,17 @@ module DocumentCodeLens : sig
   and codelensParams = { textDocument: TextDocumentIdentifier.t }
 end
 
+module ExecuteCommand : sig
+  type params = executeCommandParams
+
+  and result = unit
+
+  and executeCommandParams = {
+    command: string;
+    arguments: Hh_json.json list option;
+  }
+end
+
 module LogMessage : sig
   type params = logMessageParams
 
@@ -942,6 +953,7 @@ type lsp_request =
   | RageRequest
   | RenameRequest of Rename.params
   | DocumentCodeLensRequest of DocumentCodeLens.params
+  | ExecuteCommandRequest of ExecuteCommand.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -969,6 +981,7 @@ type lsp_result =
   | RageResult of Rage.result
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
+  | ExecuteCommandResult of ExecuteCommand.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 
