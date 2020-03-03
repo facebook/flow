@@ -472,7 +472,7 @@ let send_lsp_to_server (cenv : connected_env) (metadata : LspProt.metadata) (mes
 (************************************************************************)
 
 let do_initialize flowconfig : Initialize.result =
-  let code_action_provider = FlowConfig.lsp_code_actions flowconfig in
+  let code_action_provider = FlowConfig.autofix_exports flowconfig in
   Initialize.
     {
       server_capabilities =

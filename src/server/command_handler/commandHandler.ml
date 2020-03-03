@@ -885,7 +885,7 @@ let find_code_actions ~options ~env ~profiling ~params ~client =
        * Checking the option here ensures the the flow server doesn't do too much work for code
        * action requests on projects where code actions are not enabled in the `.flowconfig`.
        *)
-      if not options.Options.opt_lsp_code_actions then
+      if not options.Options.opt_autofix_exports then
         Lwt.return (Ok [])
       else
         let (file_key, file, loc) = lsp_textDocument_and_range_to_flow textDocument range client in
