@@ -40,7 +40,7 @@ class Bar extends Other            /*.*/                 {
   answer         = 42;
 
   // Class Property
-  prop     ;
+            
 
   method()        {
     return;
@@ -49,7 +49,7 @@ class Bar extends Other            /*.*/                 {
 
 // Class expression implements interface
 var SomeClass = class Baz                {
-  prop     ;
+            
 
   method()        {
     return;
@@ -124,7 +124,7 @@ import SomeClass from 'some-module'
 
 export class MyClass    extends SomeClass                          {
 
-  value   
+          
 
   constructor(value   ) {
     this.value = value
@@ -188,7 +188,7 @@ class MyClass {
 
 // Comment type includes are emptied out
 class MyClass {
-  /*:: prop        ; */
+  /*::               */
 }
 
 // Inferred predicate

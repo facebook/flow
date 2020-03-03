@@ -845,9 +845,13 @@ with type t = Impl.t = struct
         ]
     and class_private_field
         (loc, { Class.PrivateField.key = (_, key); value; annot; static; variance = variance_ }) =
-      node
-        "ClassPrivateProperty"
-        loc
+      let (value, declare) =
+        match value with
+        | Class.Property.Declared -> (None, true)
+        | Class.Property.Uninitialized -> (None, false)
+        | Class.Property.Initialized x -> (Some x, false)
+      in
+      let props =
         [
           ("key", identifier key);
           ("value", option expression value);
@@ -855,6 +859,13 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
+        @
+        if declare then
+          [("declare", bool declare)]
+        else
+          []
+      in
+      node "ClassPrivateProperty" loc props
     and class_property (loc, { Class.Property.key; value; annot; static; variance = variance_ }) =
       let (key, computed) =
         match key with
@@ -864,9 +875,13 @@ with type t = Impl.t = struct
           failwith "Internal Error: Private name found in class prop"
         | Expression.Object.Property.Computed expr -> (expression expr, true)
       in
-      node
-        "ClassProperty"
-        loc
+      let (value, declare) =
+        match value with
+        | Class.Property.Declared -> (None, true)
+        | Class.Property.Uninitialized -> (None, false)
+        | Class.Property.Initialized x -> (Some x, false)
+      in
+      let props =
         [
           ("key", key);
           ("value", option expression value);
@@ -875,6 +890,13 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
+        @
+        if declare then
+          [("declare", bool declare)]
+        else
+          []
+      in
+      node "ClassProperty" loc props
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body }) =
       let open Statement.EnumDeclaration in
       let enum_body =

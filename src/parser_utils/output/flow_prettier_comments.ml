@@ -330,11 +330,16 @@ and get_children_nodes_class { Ast.Class.body = (_, { Ast.Class.Body.body }); _ 
       | Ast.Class.Body.Method (_, { Ast.Class.Method.value = (_, funct); _ }) ->
         get_children_nodes_function funct
       | Ast.Class.Body.Property (_, { Ast.Class.Property.value; _ }) ->
-        node_list_of_option ~f:statement_list_of_expression value
+        get_children_nodes_class_property_value value
       | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.value; _ }) ->
-        node_list_of_option ~f:statement_list_of_expression value)
+        get_children_nodes_class_property_value value)
     []
     body
+
+and get_children_nodes_class_property_value = function
+  | Ast.Class.Property.Declared -> []
+  | Ast.Class.Property.Uninitialized -> []
+  | Ast.Class.Property.Initialized expr -> statement_list_of_expression expr
 
 and get_children_nodes_member { Ast.Expression.Member._object; property; _ } =
   (let open Ast.Expression.Member in

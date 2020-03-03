@@ -181,6 +181,11 @@ function method(param /*: string */) /*: number */ {
   // ...
 }
 
+// declared class fields
+class MyClass {
+  declare prop: string;
+}
+
 // Comment type includes are emptied out
 class MyClass {
   /*:: prop: string; */

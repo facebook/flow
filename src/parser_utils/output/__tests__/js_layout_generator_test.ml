@@ -1392,6 +1392,9 @@ let tests =
              ~pretty:true
              "class a {\n  #a;\n  #b = c;\n  static #b = c;\n}";
            assert_statement_string ~ctxt ~pretty:true "class a {\n  +#a: a;\n  #b: b = c;\n}" );
+         ( "class_declared_fields" >:: fun ctxt ->
+           assert_statement_string ~ctxt "class a{declare x;}";
+           assert_statement_string ~ctxt "class a{declare x:string;}" );
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
