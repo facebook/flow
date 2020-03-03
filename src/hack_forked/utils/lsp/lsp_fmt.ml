@@ -969,7 +969,19 @@ let print_initialize (r : Initialize.result) : json =
               ("documentHighlightProvider", Some (JSON_Bool cap.documentHighlightProvider));
               ("documentSymbolProvider", Some (JSON_Bool cap.documentSymbolProvider));
               ("workspaceSymbolProvider", Some (JSON_Bool cap.workspaceSymbolProvider));
-              ("codeActionProvider", Some (JSON_Bool cap.codeActionProvider));
+              ( "codeActionProvider",
+                Some
+                  (match cap.codeActionProvider with
+                  | CodeActionBool b -> JSON_Bool b
+                  | CodeActionOptions { codeActionKinds } ->
+                    JSON_Object
+                      [
+                        ( "codeActionKinds",
+                          JSON_Array
+                            (List.map
+                               ~f:(fun k -> JSON_String (CodeActionKind.string_of_kind k))
+                               codeActionKinds) );
+                      ]) );
               ( "codeLensProvider",
                 Base.Option.map cap.codeLensProvider ~f:(fun codelens ->
                     JSON_Object [("resolveProvider", JSON_Bool codelens.codelens_resolveProvider)])

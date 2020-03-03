@@ -281,7 +281,7 @@ module Initialize : sig
     documentHighlightProvider: bool;
     documentSymbolProvider: bool;
     workspaceSymbolProvider: bool;
-    codeActionProvider: bool;
+    codeActionProvider: codeActionOptions;
     codeLensProvider: codeLensOptions option;
     documentFormattingProvider: bool;
     documentRangeFormattingProvider: bool;
@@ -300,6 +300,10 @@ module Initialize : sig
   }
 
   and signatureHelpOptions = { sighelp_triggerCharacters: string list }
+
+  and codeActionOptions =
+    | CodeActionBool of bool
+    | CodeActionOptions of { codeActionKinds: CodeActionKind.t list }
 
   and codeLensOptions = { codelens_resolveProvider: bool }
 

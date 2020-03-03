@@ -444,7 +444,7 @@ module Initialize = struct
     (* ie. document outline *)
     workspaceSymbolProvider: bool;
     (* ie. find-symbol-in-project *)
-    codeActionProvider: bool;
+    codeActionProvider: codeActionOptions;
     codeLensProvider: codeLensOptions option;
     documentFormattingProvider: bool;
     documentRangeFormattingProvider: bool;
@@ -467,6 +467,10 @@ module Initialize = struct
   and signatureHelpOptions = {
     sighelp_triggerCharacters: string list; (* wire "triggerCharacters" *)
   }
+
+  and codeActionOptions =
+    | CodeActionBool of bool
+    | CodeActionOptions of { codeActionKinds: CodeActionKind.t list }
 
   and codeLensOptions = { codelens_resolveProvider: bool (* wire "resolveProvider" *) }
 
