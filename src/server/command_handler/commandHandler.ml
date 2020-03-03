@@ -1504,10 +1504,16 @@ let handle_persistent_code_action_request ~options ~id ~params ~metadata ~client
   let%lwt result = find_code_actions ~options ~profiling ~env ~client ~params in
   match result with
   | Ok code_actions ->
+    let json_of_code_action = function
+      | CodeAction.Command Command.{ title; command = _; arguments = _ }
+      | CodeAction.Action CodeAction.{ title; kind = _; diagnostics = _; action = _ } ->
+        Hh_json.JSON_String title
+    in
+    let extra_data = Some (Hh_json.JSON_Array (List.map json_of_code_action code_actions)) in
     Lwt.return
       ( (),
         LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
-        metadata )
+        with_data ~extra_data metadata )
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_autocomplete_lsp
