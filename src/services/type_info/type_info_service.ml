@@ -142,40 +142,45 @@ let suggest ~options ~env ~profiling file_key file_content =
   | (None, errors, _) -> Error errors
 
 let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
-  Lsp.(
-    CodeAction.(
-      CodeActionRequest.(
-        CodeActionKind.(
-          let { textDocument; range = _; context } = params in
-          let uri = TextDocumentIdentifier.(textDocument.uri) |> Lsp.string_of_uri in
-          Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
-          | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
-            Autofix_exports.(
-              let fixable_locs = set_of_fixable_signature_verification_locations file_sig in
-              if
-                contains_kind_opt ~default:true quickfix context.only && LocSet.mem loc fixable_locs
-              then
-                match
-                  fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc
-                with
-                | new_ast ->
-                  let diff = Insert_type.mk_diff ast new_ast in
-                  let edits =
-                    Replacement_printer.mk_loc_patch_ast_differ diff ast
-                    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
-                  in
-                  Ok
-                    [
-                      Action
-                        {
-                          CodeAction.title = "insert type annotation";
-                          kind = quickfix;
-                          (* Handing back the diagnostics we were given is a placeholder for
-               eventually generating the diagnostics for the errors we are fixing *)
-                          diagnostics = CodeActionRequest.(context.diagnostics);
-                          action = EditOnly WorkspaceEdit.{ changes = SMap.of_list [(uri, edits)] };
-                        };
-                    ]
-              else
-                Ok [])
-          | _ -> Ok []))))
+  let open Lsp in
+  let CodeActionRequest.{ textDocument; range = _; context } = params in
+  let uri = TextDocumentIdentifier.(textDocument.uri) |> string_of_uri in
+  let autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast =
+    let open Autofix_exports in
+    let fixable_locs = set_of_fixable_signature_verification_locations file_sig in
+    if LocSet.mem loc fixable_locs then
+      match fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc with
+      | new_ast ->
+        let diff = Insert_type.mk_diff ast new_ast in
+        let edits =
+          Replacement_printer.mk_loc_patch_ast_differ diff ast
+          |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+        in
+        [
+          CodeAction.Action
+            {
+              CodeAction.title = "insert type annotation";
+              kind = CodeActionKind.quickfix;
+              (* Handing back the diagnostics we were given is a placeholder for
+              eventually generating the diagnostics for the errors we are fixing *)
+              diagnostics = context.CodeActionRequest.diagnostics;
+              action = CodeAction.EditOnly WorkspaceEdit.{ changes = SMap.of_list [(uri, edits)] };
+            };
+        ]
+    else
+      []
+  in
+  Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
+  | (Some (full_cx, ast, file_sig, typed_ast), _, _)
+    when CodeActionKind.contains_kind_opt
+           ~default:true
+           CodeActionKind.quickfix
+           context.CodeActionRequest.only ->
+    (* The current ide-lsp-server/flow-lsp-client doesn't necessarily get restarted for every project.
+     * Checking the option here ensures that the flow server doesn't do too much work for code
+     * action requests on projects where code actions are not enabled in the `.flowconfig`. *)
+    if options.Options.opt_autofix_exports then
+      Ok (autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast)
+    else
+      Ok []
+  | _ -> Ok []

@@ -878,28 +878,21 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~options ~env ~profiling ~params ~client =
-  CodeActionRequest.(
-    Flow_lsp_conversions.(
-      let { textDocument; range; _ } = params in
-      (* The current ide-lsp-server/flow-lsp-client doesn't necisarrily get restart for every project.
-       * Checking the option here ensures the the flow server doesn't do too much work for code
-       * action requests on projects where code actions are not enabled in the `.flowconfig`.
-       *)
-      if not options.Options.opt_autofix_exports then
-        Lwt.return (Ok [])
-      else
-        let (file_key, file, loc) = lsp_textDocument_and_range_to_flow textDocument range client in
-        match File_input.content_of_file_input file with
-        | Error msg -> Lwt.return (Error msg)
-        | Ok file_contents ->
-          Type_info_service.code_actions_at_loc
-            ~options
-            ~env
-            ~profiling
-            ~params
-            ~file_key
-            ~file_contents
-            ~loc))
+  let CodeActionRequest.{ textDocument; range; _ } = params in
+  let (file_key, file, loc) =
+    Flow_lsp_conversions.lsp_textDocument_and_range_to_flow textDocument range client
+  in
+  match File_input.content_of_file_input file with
+  | Error msg -> Lwt.return (Error msg)
+  | Ok file_contents ->
+    Type_info_service.code_actions_at_loc
+      ~options
+      ~env
+      ~profiling
+      ~params
+      ~file_key
+      ~file_contents
+      ~loc
 
 type command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
