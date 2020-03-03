@@ -318,6 +318,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         completion: {},
         hover: {},
         definition: {},
+        signatureHelp: {},
         codeAction: {
           codeActionLiteralSupport: {
             codeActionKind: {
