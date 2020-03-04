@@ -19,6 +19,139 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
+                         ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
+  3: function f0(x) { g0(x) }
+                         ^ OpenT [`x`]
+  2: function g0(y:string) { }
+                   ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
+
+
+Error --------------------------------------------------------------------------------------------------- Traces.js:8:27
+
+Cannot call `g1` with `y` bound to `b` because number [1] is incompatible with string [2].
+
+   Traces.js:8:27
+   8| function f1(x, y) { g1(x, y) }
+                                ^
+
+References:
+   Traces.js:9:11
+   9| f1("hey", 0);
+                ^ [1]
+   Traces.js:7:25
+   7| function g1(a:string, b:string) { }
+                              ^^^^^^ [2]
+
+Trace:
+* path 1:
+  8: function f1(x, y) { g1(x, y) }
+                               ^ NumT [number]
+  8: function f1(x, y) { g1(x, y) }
+                               ^ ~> UseT(FunParam, OpenT) [`y`] (from [not shown])
+  8: function f1(x, y) { g1(x, y) }
+                               ^ OpenT [`y`]
+  7: function g1(a:string, b:string) { }
+                             ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
+
+
+Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:14:25
+   14| f2(function(x) { return x * x });
+                               ^
+
+References:
+   Traces.js:12:22
+   12| function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
+
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
+ 14: f2(function(x) { return x * x });
+                             ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+
+
+Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:14:29
+   14| f2(function(x) { return x * x });
+                                   ^
+
+References:
+   Traces.js:12:22
+   12| function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
+
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                                 ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
+ 14: f2(function(x) { return x * x });
+                                 ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+
+
+Error -------------------------------------------------------------------------------------------------- Traces.js:19:29
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:19:29
+   19| function double(n) { return n * 2 }
+                                   ^
+
+References:
+   Traces.js:17:22
+   17| function g3(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
+
+Trace:
+* path 1:
+ 19: function double(n) { return n * 2 }
+                                 ^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> UseT(FunParam, OpenT) [`n`] (from [not shown])
+ 19: function double(n) { return n * 2 }
+                                 ^ OpenT [`n`]
+ 19: function double(n) { return n * 2 }
+                                 ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+
+
+
+Found 5 errors
+Error --------------------------------------------------------------------------------------------------- Traces.js:3:21
+
+Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with string [2].
+
+   Traces.js:3:21
+   3| function f0(x) { g0(x) }
+                          ^
+
+References:
+   Traces.js:4:4
+   4| f0(0);
+         ^ [1]
+   Traces.js:2:15
+   2| function g0(y:string) { }
+                    ^^^^^^ [2]
+
+Trace:
+* path 1:
+  3: function f0(x) { g0(x) }
+                         ^ NumT [number]
+  3: function f0(x) { g0(x) }
                          ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
   3: function f0(x) { g0(x) }
                          ^ OpenT [`x`]
@@ -199,6 +332,275 @@ Trace:
                             ^^^^ OpenT [`xlam`]
  17: function g3(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
+
+
+
+Found 5 errors
+Error --------------------------------------------------------------------------------------------------- Traces.js:3:21
+
+Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with string [2].
+
+   Traces.js:3:21
+   3| function f0(x) { g0(x) }
+                          ^
+
+References:
+   Traces.js:4:4
+   4| f0(0);
+         ^ [1]
+   Traces.js:2:15
+   2| function g0(y:string) { }
+                    ^^^^^^ [2]
+
+Trace:
+* path 1:
+  3: function f0(x) { g0(x) }
+                         ^ NumT [number]
+  3: function f0(x) { g0(x) }
+                         ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
+  3: function f0(x) { g0(x) }
+                         ^ OpenT [`x`]
+  2: function g0(y:string) { }
+                   ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 5)
+* path 2:
+  4: f0(0);
+        ^ NumT [number]
+  3: function f0(x) { g0(x) }
+                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+  3: function f0(x) { g0(x) }
+                         ^ ~> ReposLowerT [`x`]
+* path 3:
+  4: f0(0);
+     ^^ FunT [function]
+  4: f0(0);
+     ^^^^^ ~> CallT [call of `f0`] (from path 4)
+* path 4:
+  4: f0(0);
+     ^^ OpenT [`f0`]
+  4: f0(0);
+     ^^^^^ ~> CallT [call of `f0`]
+* path 5:
+  3: function f0(x) { g0(x) }
+                      ^^ FunT [function]
+  3: function f0(x) { g0(x) }
+                      ^^ ~> UseT(AssignVar, OpenT) [function] (from [not shown])
+  3: function f0(x) { g0(x) }
+                      ^^ OpenT [`g0`]
+  3: function f0(x) { g0(x) }
+                      ^^^^^ ~> CallT [call of `g0`]
+
+
+Error --------------------------------------------------------------------------------------------------- Traces.js:8:27
+
+Cannot call `g1` with `y` bound to `b` because number [1] is incompatible with string [2].
+
+   Traces.js:8:27
+   8| function f1(x, y) { g1(x, y) }
+                                ^
+
+References:
+   Traces.js:9:11
+   9| f1("hey", 0);
+                ^ [1]
+   Traces.js:7:25
+   7| function g1(a:string, b:string) { }
+                              ^^^^^^ [2]
+
+Trace:
+* path 1:
+  8: function f1(x, y) { g1(x, y) }
+                               ^ NumT [number]
+  8: function f1(x, y) { g1(x, y) }
+                               ^ ~> UseT(FunParam, OpenT) [`y`] (from path 2)
+  8: function f1(x, y) { g1(x, y) }
+                               ^ OpenT [`y`]
+  7: function g1(a:string, b:string) { }
+                             ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 5)
+* path 2:
+  9: f1("hey", 0);
+               ^ NumT [number]
+  8: function f1(x, y) { g1(x, y) }
+                    ^ ~> UseT(FunParam, OpenT) [`y`] (from path 3)
+  8: function f1(x, y) { g1(x, y) }
+                               ^ ~> ReposLowerT [`y`]
+* path 3:
+  9: f1("hey", 0);
+     ^^ FunT [function]
+  9: f1("hey", 0);
+     ^^^^^^^^^^^^ ~> CallT [call of `f1`] (from path 4)
+* path 4:
+  9: f1("hey", 0);
+     ^^ OpenT [`f1`]
+  9: f1("hey", 0);
+     ^^^^^^^^^^^^ ~> CallT [call of `f1`]
+* path 5:
+  8: function f1(x, y) { g1(x, y) }
+                         ^^ FunT [function]
+  8: function f1(x, y) { g1(x, y) }
+                         ^^ ~> UseT(AssignVar, OpenT) [function] (from [not shown])
+  8: function f1(x, y) { g1(x, y) }
+                         ^^ OpenT [`g1`]
+  8: function f1(x, y) { g1(x, y) }
+                         ^^^^^^^^ ~> CallT [call of `g1`]
+
+
+Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:14:25
+   14| f2(function(x) { return x * x });
+                               ^
+
+References:
+   Traces.js:12:22
+   12| function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
+
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                             ^ ~> ReposLowerT [`x`]
+* path 3:
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ FunT [function]
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 4)
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ OpenT [`xlam`]
+ 12: function g2(ylam: (s:string) => number) { }
+                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
+* path 4:
+ 14: f2(function(x) { return x * x });
+        ^^^^^^^^^^^ FunT [function]
+ 13: function f2(xlam) { g2(xlam) }
+                 ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 5)
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ ~> ReposLowerT [`xlam`]
+* path 5:
+ 14: f2(function(x) { return x * x });
+     ^^ FunT [function]
+ 14: f2(function(x) { return x * x });
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> CallT [call of `f2`] (from [not shown])
+
+
+Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:14:29
+   14| f2(function(x) { return x * x });
+                                   ^
+
+References:
+   Traces.js:12:22
+   12| function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
+
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                                 ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                                 ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> ReposLowerT [`x`]
+* path 3:
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ FunT [function]
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 4)
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ OpenT [`xlam`]
+ 12: function g2(ylam: (s:string) => number) { }
+                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
+* path 4:
+ 14: f2(function(x) { return x * x });
+        ^^^^^^^^^^^ FunT [function]
+ 13: function f2(xlam) { g2(xlam) }
+                 ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 5)
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ ~> ReposLowerT [`xlam`]
+* path 5:
+ 14: f2(function(x) { return x * x });
+     ^^ FunT [function]
+ 14: f2(function(x) { return x * x });
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> CallT [call of `f2`] (from [not shown])
+
+
+Error -------------------------------------------------------------------------------------------------- Traces.js:19:29
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:19:29
+   19| function double(n) { return n * 2 }
+                                   ^
+
+References:
+   Traces.js:17:22
+   17| function g3(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
+
+Trace:
+* path 1:
+ 19: function double(n) { return n * 2 }
+                                 ^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> UseT(FunParam, OpenT) [`n`] (from path 2)
+ 19: function double(n) { return n * 2 }
+                                 ^ OpenT [`n`]
+ 19: function double(n) { return n * 2 }
+                                 ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                     ^ ~> UseT(FunParam, OpenT) [`n`] (from path 3)
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> ReposLowerT [`n`]
+* path 3:
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ FunT [function]
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 4)
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ OpenT [`xlam`]
+ 17: function g3(ylam: (s:string) => number) { }
+                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
+* path 4:
+ 20: f3(double);
+        ^^^^^^ OpenT [`double`]
+ 18: function f3(xlam) { g3(xlam) }
+                 ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 5)
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ ~> ReposLowerT [`xlam`]
+* path 5:
+ 20: f3(double);
+     ^^ FunT [function]
+ 20: f3(double);
+     ^^^^^^^^^^ ~> CallT [call of `f3`] (from [not shown])
 
 
 
