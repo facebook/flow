@@ -444,6 +444,7 @@ module Statement
         case_list env (seen_default, acc)
     in
     with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_SWITCH;
         Expect.token env T_LPAREN;
         let discriminant = Parse.expression env in
@@ -451,7 +452,13 @@ module Statement
         Expect.token env T_LCURLY;
         let cases = case_list env (false, []) in
         Expect.token env T_RCURLY;
-        Statement.Switch { Statement.Switch.discriminant; cases })
+        let trailing = Peek.comments env in
+        Statement.Switch
+          {
+            Statement.Switch.discriminant;
+            cases;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   and throw =
     with_loc (fun env ->

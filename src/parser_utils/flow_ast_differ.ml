@@ -522,7 +522,7 @@ let program
       | ((_, ForOf for_of1), (_, ForOf for_of2)) -> for_of_statement for_of1 for_of2
       | ((loc, DoWhile do_while1), (_, DoWhile do_while2)) ->
         Some (do_while_statement loc do_while1 do_while2)
-      | ((_, Switch switch1), (_, Switch switch2)) -> switch_statement switch1 switch2
+      | ((loc, Switch switch1), (_, Switch switch2)) -> switch_statement loc switch1 switch2
       | ((loc, Return return1), (_, Return return2)) -> return_statement loc return1 return2
       | ((loc, Debugger dbg1), (_, Debugger dbg2)) -> debugger_statement loc dbg1 dbg2
       | ((loc, Continue cont1), (_, Continue cont2)) -> continue_statement loc cont1 cont2
@@ -1553,14 +1553,16 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     List.concat [label_diff; body_diff; comments_diff]
   and switch_statement
+      (loc : Loc.t)
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Switch.t)
       (stmt2 : (Loc.t, Loc.t) Ast.Statement.Switch.t) : node change list option =
     let open Ast.Statement.Switch in
-    let { discriminant = discriminant1; cases = cases1 } = stmt1 in
-    let { discriminant = discriminant2; cases = cases2 } = stmt2 in
+    let { discriminant = discriminant1; cases = cases1; comments = comments1 } = stmt1 in
+    let { discriminant = discriminant2; cases = cases2; comments = comments2 } = stmt2 in
     let discriminant = Some (diff_if_changed expression discriminant1 discriminant2) in
     let cases = diff_and_recurse_no_trivial switch_case cases1 cases2 in
-    join_diff_list [discriminant; cases]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [discriminant; cases; comments]
   and switch_case
       ((_, s1) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
       ((_, s2) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t) : node change list option =

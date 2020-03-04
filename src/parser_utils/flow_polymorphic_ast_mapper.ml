@@ -1410,10 +1410,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method switch (switch : ('M, 'T) Ast.Statement.Switch.t) : ('N, 'U) Ast.Statement.Switch.t =
       let open Ast.Statement.Switch in
-      let { discriminant; cases } = switch in
+      let { discriminant; cases; comments } = switch in
       let discriminant' = this#expression discriminant in
       let cases' = Base.List.map ~f:(this#on_loc_annot * this#switch_case) cases in
-      { discriminant = discriminant'; cases = cases' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { discriminant = discriminant'; cases = cases'; comments = comments' }
 
     method switch_case (case : ('M, 'T) Ast.Statement.Switch.Case.t') =
       let open Ast.Statement.Switch.Case in

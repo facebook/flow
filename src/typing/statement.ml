@@ -1076,7 +1076,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | (_, OpaqueType _) -> (loc, OpaqueType opaque_type_ast)
       | _ -> assert false))
   (*******************************************************)
-  | (switch_loc, Switch { Switch.discriminant; cases }) ->
+  | (switch_loc, Switch { Switch.discriminant; cases; comments }) ->
     (* add default if absent *)
     let (cases, added_default) =
       Switch.Case.(
@@ -1299,7 +1299,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             else
               ExhaustiveCheckInvalid (List.rev invalid_checks) );
         let ast =
-          (switch_loc, Switch { Switch.discriminant = discriminant_ast; cases = cases_ast })
+          ( switch_loc,
+            Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )
         in
         match uniform_switch_exit exits with
         | None -> ast

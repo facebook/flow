@@ -415,6 +415,7 @@ and Statement : sig
     type ('M, 'T) t = {
       discriminant: ('M, 'T) Expression.t;
       cases: ('M, 'T) Case.t list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

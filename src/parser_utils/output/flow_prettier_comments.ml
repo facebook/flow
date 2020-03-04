@@ -108,7 +108,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
   | With { With._object; body } -> [statement_of_expression _object; body]
   | TypeAlias _ -> []
   | OpaqueType _ -> []
-  | Switch { Switch.discriminant; cases } ->
+  | Switch { Switch.discriminant; cases; comments = _ } ->
     get_children_nodes_expr discriminant
     @ List.fold_left
         (fun nodes (_, { Switch.Case.test; consequent }) ->

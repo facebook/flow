@@ -569,7 +569,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
              | None -> s_continue)
       | S.With { S.With._object; body } ->
         fuse [statement_with_test "with" (expression _object); statement_after_test body]
-      | S.Switch { S.Switch.discriminant; cases } ->
+      | S.Switch { S.Switch.discriminant; cases; comments } ->
         let case_nodes =
           let rec helper acc = function
             | [] -> List.rev acc
@@ -595,7 +595,10 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
             (Atom "{", Atom "}")
             [join pretty_hardline case_nodes]
         in
-        fuse [statement_with_test "switch" (expression discriminant); pretty_space; cases_node]
+        layout_node_with_simple_comments_opt
+          loc
+          comments
+          (fuse [statement_with_test "switch" (expression discriminant); pretty_space; cases_node])
       | S.Return { S.Return.argument; comments } ->
         let s_return = Atom "return" in
         with_semicolon

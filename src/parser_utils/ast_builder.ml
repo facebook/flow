@@ -277,7 +277,8 @@ module Statements = struct
     let expr = (Loc.none, Ast.Expression.Literal (Literals.string txt)) in
     expression ~directive:txt expr
 
-  let switch discriminant cases = (Loc.none, Switch { Switch.discriminant; cases })
+  let switch ?comments discriminant cases =
+    (Loc.none, Switch { Switch.discriminant; cases; comments })
 
   let switch_case ?(loc = Loc.none) ?test consequent = (loc, { Switch.Case.test; consequent })
 

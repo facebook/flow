@@ -883,7 +883,7 @@ struct
       method! switch _loc (switch : (L.t, L.t) Ast.Statement.Switch.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Switch in
-            let { discriminant; cases } = switch in
+            let { discriminant; cases; comments = _ } = switch in
             ignore @@ this#expression discriminant;
             let (env, case_completion_states) =
               List.fold_left
