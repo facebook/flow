@@ -159,7 +159,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                 ( Ok results,
                   ("result", JSON_String result_string)
                   :: ("count", JSON_Number (results |> List.length |> string_of_int))
-                  :: ("errors", JSON_Array (List.map (fun s -> JSON_String s) errors_to_log))
+                  :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   :: json_props_to_log )
               | AcEmpty reason ->
                 ( Ok [],
@@ -1504,7 +1504,9 @@ let handle_persistent_code_action_request
       | CodeAction.Action CodeAction.{ title; kind = _; diagnostics = _; action = _ } ->
         Hh_json.JSON_String title
     in
-    let extra_data = Some (Hh_json.JSON_Array (List.map json_of_code_action code_actions)) in
+    let extra_data =
+      Some (Hh_json.JSON_Array (Base.List.map ~f:json_of_code_action code_actions))
+    in
     Lwt.return
       ( (),
         LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
@@ -1854,7 +1856,7 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env
   let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
   let items =
     collect_rage ~profiling ~options:genv.ServerEnv.options ~reader ~env ~files:None
-    |> List.map (fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
+    |> Base.List.map ~f:(fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
   in
   let response = ResponseMessage (id, RageResult items) in
   Lwt.return ((), LspProt.LspFromServer (Some response), metadata)

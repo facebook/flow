@@ -100,8 +100,8 @@ let explain ~flowconfig_name ~root ~options ~libs raw_file =
 let json_of_files_with_explanations files =
   Hh_json.(
     let properties =
-      List.map
-        (fun (file, res) ->
+      Base.List.map
+        ~f:(fun (file, res) ->
           (file, JSON_Object [("explanation", JSON_String (string_of_file_result res))]))
         files
     in

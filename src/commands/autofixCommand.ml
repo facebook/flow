@@ -13,7 +13,9 @@ open CommandSpec
 module InsertType = struct
   let spec =
     Autofix_options.(
-      let ambiguity_strategies_list = String.concat ", " @@ List.map fst ambiguity_strategies in
+      let ambiguity_strategies_list =
+        String.concat ", " @@ Base.List.map ~f:fst ambiguity_strategies
+      in
       {
         name = "insert type";
         doc = "[EXPERIMENTAL] Insert type information at file and position";

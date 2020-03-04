@@ -434,7 +434,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   match spread cx trace ~use_op reason (resolved, acc) with
                   | Ok ((_, _, x), []) -> mk_object cx reason options x
                   | Ok ((_, _, x0), (_, _, x1) :: xs) ->
-                    let xs = List.map (fun (_, _, x) -> x) xs in
+                    let xs = Base.List.map ~f:(fun (_, _, x) -> x) xs in
                     UnionT
                       ( reason,
                         UnionRep.make

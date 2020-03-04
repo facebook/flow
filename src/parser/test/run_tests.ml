@@ -478,8 +478,8 @@ end = struct
                     List.rev (Some (Expression diff_value) :: List.rev elems)
                   else
                     (* apply the diff *)
-                    List.mapi
-                      (fun index elem ->
+                    Base.List.mapi
+                      ~f:(fun index elem ->
                         if index <> diff_index then
                           elem
                         else

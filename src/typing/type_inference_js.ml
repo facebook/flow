@@ -279,8 +279,8 @@ let scan_for_lint_suppressions =
               Loc_collections.LocSet.empty
           in
           let arg_locs =
-            List.map
-              (function
+            Base.List.map
+              ~f:(function
                 | (_, (_, loc)) :: _ -> Some loc
                 | [] -> None)
               settings_list

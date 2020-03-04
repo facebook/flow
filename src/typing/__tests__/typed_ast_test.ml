@@ -219,7 +219,7 @@ let system_diff ~f prefix =
 let pp_diff =
   let aloc_pp fmt x = Loc.pp fmt (ALoc.to_loc_exn x) in
   let string_of_ast stmts =
-    List.map (Flow_ast.Statement.show aloc_pp aloc_pp) stmts |> String.concat "\n"
+    Base.List.map ~f:(Flow_ast.Statement.show aloc_pp aloc_pp) stmts |> String.concat "\n"
   in
   let string_of_src stmts =
     let none_mapper = new loc_none_mapper in

@@ -96,8 +96,8 @@ module ObjectExpressionAcc = struct
         match (t, ts) with
         | (Spread t, ts) ->
           let ts =
-            List.map
-              (function
+            Base.List.map
+              ~f:(function
                 | Spread t -> Object.Spread.Type t
                 | Slice { slice_pmap } ->
                   Object.Spread.Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
@@ -107,8 +107,8 @@ module ObjectExpressionAcc = struct
         | (Slice { slice_pmap = prop_map }, Spread t :: ts) ->
           let head_slice = { Type.Object.Spread.reason; prop_map; dict = None } in
           let ts =
-            List.map
-              (function
+            Base.List.map
+              ~f:(function
                 | Spread t -> Object.Spread.Type t
                 | Slice { slice_pmap } ->
                   Object.Spread.Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
@@ -5707,14 +5707,16 @@ and jsx_title cx openingElement children closingElement locs =
       let fbt_reason = mk_reason RFbt loc_element in
       let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
       let name = Identifier ((loc_id, t), id) in
-      let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
+      let attributes = Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes in
       let (_, children) = collapse_children cx children in
       (t, name, attributes, children)
     | (Identifier (loc, { Identifier.name }), _, _) ->
       if Type_inference_hooks_js.dispatch_id_hook cx name loc then
         let t = Unsoundness.at InferenceHooks loc_element in
         let name = Identifier ((loc, t), { Identifier.name }) in
-        let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
+        let attributes =
+          Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes
+        in
         let (_, children) = collapse_children cx children in
         (t, name, attributes, children)
       else

@@ -71,7 +71,7 @@ let autocomplete_response_to_json ~strip_root response =
           (* TODO: remove this? kept for BC *)
         ]
     | Ok completions ->
-      let results = List.map (autocomplete_result_to_json ~strip_root) completions in
+      let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) completions in
       JSON_Object [("result", JSON_Array results)])
 
 let lsp_completion_of_type =
@@ -227,7 +227,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   in
   let members_of_union (t1, t2, ts) =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
-      (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
+      (members_of_ty t1, members_of_ty t2, Base.List.map ~f:members_of_ty ts |> List.split)
     in
     let errs = Base.List.concat (errs1 :: errs2 :: errss) in
     let universe =
@@ -279,7 +279,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   in
   let members_of_intersection (t1, t2, ts) =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
-      (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
+      (members_of_ty t1, members_of_ty t2, Base.List.map ~f:members_of_ty ts |> List.split)
     in
     let errs = Base.List.concat (errs1 :: errs2 :: errss) in
     let special_cases =
@@ -411,7 +411,7 @@ let autocomplete_member
   | Ok (mems, errors_to_log) ->
     let results =
       mems
-      |> List.map (fun (name, MemberInfo.{ ty; from_proto; from_nullable }) ->
+      |> Base.List.map ~f:(fun (name, MemberInfo.{ ty; from_proto; from_nullable }) ->
              let rank =
                if from_proto then
                  1
@@ -616,7 +616,7 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
   | Ok (mems, errors_to_log) ->
     let results =
       mems
-      |> List.map (fun (name, MemberInfo.{ ty; _ }) ->
+      |> Base.List.map ~f:(fun (name, MemberInfo.{ ty; _ }) ->
              autocomplete_create_result ~insert_text:(name ^ "=") (name, ac_loc) ty)
     in
     AcResult { results; errors_to_log }
@@ -679,7 +679,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
   Pervasives.ignore (search#program typed_ast);
   search#ids
-  |> List.map (fun ((_, t), Flow_ast.Identifier.{ name; _ }) -> (name, t))
+  |> Base.List.map ~f:(fun ((_, t), Flow_ast.Identifier.{ name; _ }) -> (name, t))
   |> Ty_normalizer.from_types
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -714,8 +714,8 @@ let type_exports_of_module_ty ~ac_loc =
 let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let tparam_results =
-    List.map
-      (fun (_, name) ->
+    Base.List.map
+      ~f:(fun (_, name) ->
         {
           res_loc = ac_loc;
           res_kind = Some Lsp.Completion.TypeParameter;

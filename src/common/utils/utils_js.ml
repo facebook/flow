@@ -20,13 +20,17 @@ module FilenameMap = WrappedMap.Make (File_key)
 module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
 
 let debug_string_of_filename_set set =
-  set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
+  set
+  |> FilenameSet.elements
+  |> Base.List.map ~f:File_key.to_string
+  |> String.concat ", "
+  |> spf "[%s]"
 
 let debug_string_of_filename_map value_to_string map =
   map
   |> FilenameMap.map value_to_string
   |> FilenameMap.elements
-  |> List.map (fun (file, value) -> spf "  %s: %s" (File_key.to_string file) value)
+  |> Base.List.map ~f:(fun (file, value) -> spf "  %s: %s" (File_key.to_string file) value)
   |> String.concat "\n"
 
 let assert_false s =

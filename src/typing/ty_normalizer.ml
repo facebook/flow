@@ -1072,7 +1072,7 @@ end = struct
           return []
       | T.Method (_, t) ->
         let%map tys = method_ty ~env t in
-        List.map (fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto }) tys
+        Base.List.map ~f:(fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto }) tys
       | T.Get (_, t) ->
         let%map t = type__ ~env t in
         [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto }]
@@ -1219,8 +1219,8 @@ end = struct
       let%bind proto_ty = type__ ~env:(Env.expand_proto_members env) proto_t in
       let%map enum_ty = type__ ~env enum_t in
       let members_ty =
-        List.map
-          (fun name ->
+        Base.List.map
+          ~f:(fun name ->
             let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
             Ty.NamedProp { name; prop; from_proto = false })
           (SMap.keys members)

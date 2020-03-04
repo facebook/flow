@@ -9108,8 +9108,8 @@ struct
           let ts = choices_of_spec spec in
           assert (List.length ts = List.length msgs);
           let branches =
-            List.mapi
-              (fun i msg ->
+            Base.List.mapi
+              ~f:(fun i msg ->
                 let reason = reason_of_t (List.nth ts i) in
                 (reason, msg))
               msgs
@@ -9174,10 +9174,10 @@ struct
       (* NB: Even though we know the use_op for the original constraint, don't
        embed it in the nested constraints to avoid unnecessary verbosity. We
        will unwrap the original use_op once in EUnionSpeculationFailed. *)
-      List.mapi (fun i u -> (i, reason_of_t l, l, UseT (Op (Speculation use_op), u))) us
+      Base.List.mapi ~f:(fun i u -> (i, reason_of_t l, l, UseT (Op (Speculation use_op), u))) us
     | IntersectionCases (ls, u) ->
-      List.mapi
-        (fun i l ->
+      Base.List.mapi
+        ~f:(fun i l ->
           (i, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))
         ls
 
@@ -11082,8 +11082,8 @@ struct
            * should flow VoidT to every remaining parameter, however we don't. This
            * is consistent with how we treat arrays almost everywhere else *)
           ( used_pairs
-            @ List.map
-                (fun (_, param) ->
+            @ Base.List.map
+                ~f:(fun (_, param) ->
                   let use_op =
                     Frame
                       ( FunRestParam
@@ -11171,8 +11171,8 @@ struct
 
   and resolve_call_list cx ~trace ~use_op reason_op args resolve_to =
     let unresolved =
-      List.map
-        (function
+      Base.List.map
+        ~f:(function
           | Arg t -> UnresolvedArg t
           | SpreadArg t -> UnresolvedSpreadArg t)
         args

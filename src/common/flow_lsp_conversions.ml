@@ -168,7 +168,7 @@ let flow_edit_to_textedit (edit : Loc.t * string) : Lsp.TextEdit.t =
 
 let flow_loc_patch_to_lsp_edits (p : (Loc.t * string) list) : Lsp.TextEdit.t list =
   let convert_edit (loc, text) = { Lsp.TextEdit.range = loc_to_lsp_range loc; newText = text } in
-  List.map convert_edit p
+  Base.List.map ~f:convert_edit p
 
 (* ~, . and .. have no meaning in file urls so we don't canonicalize them *)
 (* but symlinks must be canonicalized before being used in flow: *)

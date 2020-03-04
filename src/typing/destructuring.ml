@@ -273,7 +273,7 @@ let rec pattern cx ~expr ~f acc (loc, p) =
 
 and array_elements cx ~expr ~f acc =
   let open Ast.Pattern.Array in
-  List.mapi (fun i ->
+  Base.List.mapi ~f:(fun i ->
       Base.Option.map ~f:(function
           | Element (loc, { Element.argument = p; default = d }) ->
             let acc = array_element cx acc i loc in

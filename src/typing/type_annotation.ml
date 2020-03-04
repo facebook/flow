@@ -1372,8 +1372,8 @@ and convert_object =
             match (t, ts) with
             | (Acc.Spread t, ts) ->
               let ts =
-                List.map
-                  (function
+                Base.List.map
+                  ~f:(function
                     | Acc.Spread t -> Type t
                     | Acc.Slice { dict; pmap } ->
                       Slice { Type.Object.Spread.reason; prop_map = pmap; dict })
@@ -1383,8 +1383,8 @@ and convert_object =
             | (Acc.Slice { dict; pmap = prop_map }, Acc.Spread t :: ts) ->
               let head_slice = { Type.Object.Spread.reason; prop_map; dict } in
               let ts =
-                List.map
-                  (function
+                Base.List.map
+                  ~f:(function
                     | Acc.Spread t -> Type t
                     | Acc.Slice { dict; pmap } ->
                       Slice { Type.Object.Spread.reason; prop_map = pmap; dict })

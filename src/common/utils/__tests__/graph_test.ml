@@ -15,7 +15,7 @@ let string_of_sset set = set |> SSet.elements |> String.concat ", " |> Printf.sp
 let string_of_smap map =
   map
   |> SMap.elements
-  |> List.map (fun (key, value) -> Printf.sprintf "  %s: %s" key (string_of_sset value))
+  |> Base.List.map ~f:(fun (key, value) -> Printf.sprintf "  %s: %s" key (string_of_sset value))
   |> String.concat "\n"
 
 let assert_ssets_equal ~ctxt expected actual =

@@ -350,7 +350,9 @@ module Make (F : Func_sig.S) = struct
             tparams_map = SMap.map (Flow.subst cx map) x.tparams_map;
             super = subst_super cx map x.super;
             constructor =
-              List.map (fun (loc, sig_, g, h) -> (loc, F.subst cx map sig_, g, h)) x.constructor;
+              Base.List.map
+                ~f:(fun (loc, sig_, g, h) -> (loc, F.subst cx map sig_, g, h))
+                x.constructor;
             static = subst_sig cx map x.static;
             instance = subst_sig cx map x.instance;
           })

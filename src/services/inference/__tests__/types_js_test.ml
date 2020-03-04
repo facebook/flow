@@ -19,19 +19,21 @@ module FilenameSetSet = Set.Make (FilenameSet)
 
 let debug_string_of_filename_set_set =
   FilenameSetSet.elements
-  %> List.map debug_string_of_filename_set
-  %> List.map (spf "  %s")
+  %> Base.List.map ~f:debug_string_of_filename_set
+  %> Base.List.map ~f:(spf "  %s")
   %> String.concat "\n"
   %> spf "[\n%s\n]"
 
-let filename_set_set_of_nested_list = List.map FilenameSet.of_list %> FilenameSetSet.of_list
+let filename_set_set_of_nested_list = Base.List.map ~f:FilenameSet.of_list %> FilenameSetSet.of_list
 
 let assert_components_equal ~ctxt expected actual =
   (* `expected`, for convenience, is just a list of lists. `actual` is a list of Nel.ts. *)
   let expected =
-    expected |> List.map (List.map make_fake_file_key) |> filename_set_set_of_nested_list
+    expected
+    |> Base.List.map ~f:(Base.List.map ~f:make_fake_file_key)
+    |> filename_set_set_of_nested_list
   in
-  let actual = actual |> List.map Nel.to_list |> filename_set_set_of_nested_list in
+  let actual = actual |> Base.List.map ~f:Nel.to_list |> filename_set_set_of_nested_list in
   assert_equal
     ~ctxt
     ~cmp:FilenameSetSet.equal
@@ -107,7 +109,7 @@ let make_options () =
     dummy_options_flags
 
 let prepare_freshparsed freshparsed =
-  freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list
+  freshparsed |> Base.List.map ~f:make_fake_file_key |> FilenameSet.of_list
 
 let checked_files_of_graph ~implementation_dependency_graph =
   (* Get all the files from the implementation_dependency_graph and consider them focused *)

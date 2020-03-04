@@ -9,7 +9,8 @@ open Utils_js
 
 let make_fake_file_key filename = File_key.SourceFile ("/tmp/fake/path/" ^ filename ^ ".js")
 
-let make_filename_set filenames = filenames |> List.map make_fake_file_key |> FilenameSet.of_list
+let make_filename_set filenames =
+  filenames |> Base.List.map ~f:make_fake_file_key |> FilenameSet.of_list
 
 let make_dependency_graph lst =
   List.fold_left
