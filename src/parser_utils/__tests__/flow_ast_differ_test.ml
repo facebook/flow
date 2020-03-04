@@ -694,7 +694,7 @@ class double_sequence_mapper =
 let edits_of_source algo source mapper =
   let (ast, _) = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
-  let edits = program algo ast new_ast |> Ast_diff_printer.edits_of_changes None in
+  let edits = program algo ast new_ast |> Ast_diff_printer.edits_of_changes in
   (* Extract columns from the locs *)
   Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) edits
 
@@ -1511,13 +1511,13 @@ let tests =
            let (ast_var, _) = Parser_flow.program "var x = 6;" in
            let edits_trivial =
              program Trivial ast_empty ast_var
-             |> Ast_diff_printer.edits_of_changes None
+             |> Ast_diff_printer.edits_of_changes
              |> Base.List.map ~f:(fun (loc, text) ->
                     Loc.((loc.start.column, loc._end.column), text))
            in
            let edits_standard =
              program Standard ast_empty ast_var
-             |> Ast_diff_printer.edits_of_changes None
+             |> Ast_diff_printer.edits_of_changes
              |> Base.List.map ~f:(fun (loc, text) ->
                     Loc.((loc.start.column, loc._end.column), text))
            in

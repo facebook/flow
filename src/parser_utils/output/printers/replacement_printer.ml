@@ -27,7 +27,7 @@ let with_content_of_file_input file f =
     Utils_js.assert_false error_msg
 
 let mk_loc_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list) : loc_patch =
-  Ast_diff_printer.edits_of_changes None diff
+  Ast_diff_printer.edits_of_changes diff
 
 let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list) (content : string)
     : patch =

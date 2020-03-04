@@ -22,18 +22,7 @@ and expression_context_group =
   | In_arrow_func
   | In_for_init
 
-type comment_attach =
-  | Preceding
-  | Enclosing
-  | Following
-
-type comment_map =
-  (comment_attach * (Loc.t, Loc.t) Flow_ast.Statement.t * Loc.t Flow_ast.Comment.t) list
-  Loc_collections.LocMap.t
-
 val normal_context : expression_context
-
-val with_attached_comments : comment_map option ref
 
 val program :
   preserve_docblock:bool ->

@@ -7,7 +7,6 @@
 
 module Ast = Flow_ast
 open Layout
-module LocMap = Loc_collections.LocMap
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
    ambiguity. We pass whether we're in one of these special cases down through
@@ -33,14 +32,6 @@ and expression_context_group =
   | In_for_init
 
 (* `for ((x in y);;);` would become a for-in *)
-
-type comment_attach =
-  | Preceding
-  | Enclosing
-  | Following
-
-type comment_map =
-  (comment_attach * (Loc.t, Loc.t) Ast.Statement.t * Loc.t Ast.Comment.t) list LocMap.t
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
@@ -376,73 +367,53 @@ let utf8_escape =
   fun ~quote str ->
     str |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str)) |> Buffer.contents
 
-let layout_from_comment anchor loc_node (loc_cm, comment) =
+let layout_from_comment_preceding loc_node (loc_cm, comment) =
   let open Ast.Comment in
   let comment_text =
     match comment with
     | Line txt -> Printf.sprintf "//%s\n" txt
     | Block txt ->
-      (match (Loc.lines_intersect loc_node loc_cm, anchor) with
-      | (false, Preceding) -> Printf.sprintf "\n/*%s*/" txt
-      | (false, Following) -> Printf.sprintf "/*%s*/\n" txt
-      | (false, Enclosing) -> Printf.sprintf "/*%s*/\n" txt
-      | _ -> Printf.sprintf "/*%s*/" txt)
+      if Loc.lines_intersect loc_node loc_cm then
+        Printf.sprintf "\n/*%s*/" txt
+      else
+        Printf.sprintf "/*%s*/" txt
   in
   SourceLocation (loc_cm, Atom comment_text)
 
-let with_attached_comments : comment_map option ref = ref None
+let layout_from_comment_following loc_node (loc_cm, comment) =
+  let open Ast.Comment in
+  let comment_text =
+    match comment with
+    | Line txt -> Printf.sprintf "//%s\n" txt
+    | Block txt ->
+      if Loc.lines_intersect loc_node loc_cm then
+        Printf.sprintf "/*%s*/\n" txt
+      else
+        Printf.sprintf "/*%s*/" txt
+  in
+  SourceLocation (loc_cm, Atom comment_text)
 
-let layout_node_with_comments current_loc layout_node =
-  Layout.(
-    match !with_attached_comments with
-    | None -> layout_node
-    | Some attached when LocMap.is_empty attached -> layout_node
-    | Some attached ->
-      (match LocMap.find_opt current_loc attached with
-      | None
-      | Some [] ->
-        layout_node
-      | Some comments ->
-        with_attached_comments := Some (LocMap.remove current_loc attached);
-        let matched =
-          List.fold_left
-            (fun nodes comment ->
-              let (anchor, (loc_st, _), comment) = comment in
-              match anchor with
-              | Preceding -> nodes @ [layout_from_comment anchor loc_st comment]
-              | Following -> [layout_from_comment anchor loc_st comment] @ nodes
-              | Enclosing ->
-                (* TODO(festevezga)(T29896911) print enclosing comments using full statement *)
-                [layout_from_comment anchor loc_st comment] @ nodes)
-            [layout_node]
-            comments
-        in
-        Concat matched))
-
-let layout_node_with_simple_comments current_loc comments layout_node =
+let layout_node_with_comments current_loc comments layout_node =
   let { Ast.Syntax.leading; trailing; _ } = comments in
-  let preceding = List.map (layout_from_comment Preceding current_loc) leading in
-  let following = List.map (layout_from_comment Following current_loc) trailing in
+  let preceding = List.map (layout_from_comment_preceding current_loc) leading in
+  let following = List.map (layout_from_comment_following current_loc) trailing in
   Concat (preceding @ [layout_node] @ following)
 
-let layout_node_with_simple_comments_opt current_loc comments layout_node =
+let layout_node_with_comments_opt current_loc comments layout_node =
   match comments with
-  | Some c -> layout_node_with_simple_comments current_loc c layout_node
+  | Some c -> layout_node_with_comments current_loc c layout_node
   | None -> layout_node
 
 let source_location_with_comments ?comments (current_loc, layout_node) =
+  let layout = SourceLocation (current_loc, layout_node) in
   match comments with
-  | Some comments ->
-    layout_node_with_simple_comments
-      current_loc
-      comments
-      (SourceLocation (current_loc, layout_node))
-  | None -> layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
+  | Some comments -> layout_node_with_comments current_loc comments layout
+  | None -> layout
 
 let identifier_with_comments (current_loc, { Ast.Identifier.name; comments }) =
   let node = Identifier (current_loc, name) in
   match comments with
-  | Some comments -> layout_node_with_simple_comments current_loc comments node
+  | Some comments -> layout_node_with_comments current_loc comments node
   | None -> node
 
 (* Generate JS layouts *)
@@ -519,13 +490,13 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       match stmt with
       | S.Empty -> Atom ";"
       | S.Debugger { S.Debugger.comments } ->
-        with_semicolon @@ layout_node_with_simple_comments_opt loc comments (Atom "debugger")
+        with_semicolon @@ layout_node_with_comments_opt loc comments (Atom "debugger")
       | S.Block b -> block (loc, b)
       | S.Expression { S.Expression.expression = expr; _ } ->
         let ctxt = { normal_context with left = In_expression_statement } in
         with_semicolon (expression_with_parens ~precedence:0 ~ctxt expr)
       | S.If { S.If.test; consequent; alternate; comments } ->
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           begin
@@ -545,14 +516,14 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                 ]
           end
       | S.Labeled { S.Labeled.label; body; comments } ->
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           (fuse [identifier label; Atom ":"; pretty_space; statement body])
       | S.Break { S.Break.label; comments } ->
         let s_break = Atom "break" in
         with_semicolon
-        @@ layout_node_with_simple_comments_opt
+        @@ layout_node_with_comments_opt
              loc
              comments
              (match label with
@@ -561,14 +532,14 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.Continue { S.Continue.label; comments } ->
         let s_continue = Atom "continue" in
         with_semicolon
-        @@ layout_node_with_simple_comments_opt
+        @@ layout_node_with_comments_opt
              loc
              comments
              (match label with
              | Some l -> fuse [s_continue; space; identifier l]
              | None -> s_continue)
       | S.With { S.With._object; body; comments } ->
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           (fuse [statement_with_test "with" (expression _object); statement_after_test body])
@@ -598,14 +569,14 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
             (Atom "{", Atom "}")
             [join pretty_hardline case_nodes]
         in
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           (fuse [statement_with_test "switch" (expression discriminant); pretty_space; cases_node])
       | S.Return { S.Return.argument; comments } ->
         let s_return = Atom "return" in
         with_semicolon
-        @@ layout_node_with_simple_comments_opt
+        @@ layout_node_with_comments_opt
              loc
              comments
              (match argument with
@@ -623,12 +594,12 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
              | None -> s_return)
       | S.Throw { S.Throw.argument; comments } ->
         with_semicolon
-        @@ layout_node_with_simple_comments_opt
+        @@ layout_node_with_comments_opt
              loc
              comments
              (fuse_with_space [Atom "throw"; group [wrap_in_parens_on_break (expression argument)]])
       | S.Try { S.Try.block = b; handler; finalizer; comments } ->
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           (fuse
@@ -657,7 +628,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                | None -> Empty);
              ])
       | S.While { S.While.test; body; comments } ->
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           (fuse
@@ -667,7 +638,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
              ])
       | S.DoWhile { S.DoWhile.body; test; comments } ->
         with_semicolon
-        @@ layout_node_with_simple_comments_opt
+        @@ layout_node_with_comments_opt
              loc
              comments
              (fuse
@@ -810,7 +781,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           | Empty :: tl -> (false, Atom "," :: tl)
           | _ -> (true, rev_elements)
         in
-        layout_node_with_simple_comments_opt loc comments
+        layout_node_with_comments_opt loc comments
         @@ group
              [
                new_list
@@ -820,7 +791,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                  (List.rev rev_elements);
              ]
       | E.Object { E.Object.properties; comments } ->
-        layout_node_with_simple_comments_opt loc comments
+        layout_node_with_comments_opt loc comments
         @@ group
              [
                new_list
@@ -935,7 +906,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           else
             expression ~ctxt callee
         in
-        layout_node_with_simple_comments_opt loc comments
+        layout_node_with_comments_opt loc comments
         @@ group
              [
                fuse_with_space [Atom "new"; callee_layout];
@@ -967,7 +938,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           in
           expression_with_parens ~precedence ~ctxt argument
         in
-        layout_node_with_simple_comments_opt loc comments
+        layout_node_with_comments_opt loc comments
         @@ fuse
              [
                s_operator;
@@ -980,7 +951,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                expr;
              ]
       | E.Update { E.Update.operator; prefix; argument; comments } ->
-        layout_node_with_simple_comments_opt
+        layout_node_with_comments_opt
           loc
           comments
           (let s_operator =
@@ -996,7 +967,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
              fuse [expression ~ctxt argument; s_operator])
       | E.Class class_ -> class_base class_
       | E.Yield { E.Yield.argument; delegate; comments } ->
-        layout_node_with_simple_comments_opt loc comments
+        layout_node_with_comments_opt loc comments
         @@ fuse
              [
                Atom "yield";
