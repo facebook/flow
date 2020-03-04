@@ -135,9 +135,7 @@ let suggest ~options ~env ~profiling file_key file_content =
     let ast_with_suggestions = visitor#program ast in
     let suggest_warnings = visitor#warnings () in
     let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in
-    let file_patch =
-      Replacement_printer.mk_patch_ast_differ ast_diff ast_with_suggestions file_content
-    in
+    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff file_content in
     Ok (tc_errors, tc_warnings, suggest_warnings, file_patch)
   | (None, errors, _) -> Error errors
 
@@ -153,7 +151,7 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
       | new_ast ->
         let diff = Insert_type.mk_diff ast new_ast in
         let edits =
-          Replacement_printer.mk_loc_patch_ast_differ diff ast
+          Replacement_printer.mk_loc_patch_ast_differ diff
           |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
         in
         [

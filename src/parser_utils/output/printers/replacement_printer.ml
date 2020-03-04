@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
-
 type patch = (int * int * string) list
 
 (* Location patches retain all the information needed to send edits over the LSP *)
@@ -28,23 +26,18 @@ let with_content_of_file_input file f =
     in
     Utils_js.assert_false error_msg
 
-let mk_loc_patch_ast_differ
-    (diff : Flow_ast_differ.node Flow_ast_differ.change list) (ast : (Loc.t, Loc.t) Ast.program) :
-    loc_patch =
-  let attached_comments = Some (Flow_prettier_comments.attach_comments ast) in
-  Ast_diff_printer.edits_of_changes attached_comments diff
+let mk_loc_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list) : loc_patch =
+  Ast_diff_printer.edits_of_changes None diff
 
-let mk_patch_ast_differ
-    (diff : Flow_ast_differ.node Flow_ast_differ.change list)
-    (ast : (Loc.t, Loc.t) Ast.program)
-    (content : string) : patch =
+let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list) (content : string)
+    : patch =
   let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
   let offset loc = Offset_utils.offset offset_table loc in
-  mk_loc_patch_ast_differ diff ast
+  mk_loc_patch_ast_differ diff
   |> Base.List.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
-let mk_patch_ast_differ_unsafe diff ast file =
-  with_content_of_file_input file @@ mk_patch_ast_differ diff ast
+let mk_patch_ast_differ_unsafe diff file =
+  with_content_of_file_input file @@ mk_patch_ast_differ diff
 
 let print (patch : patch) (content : string) : string =
   let patch_sorted =
