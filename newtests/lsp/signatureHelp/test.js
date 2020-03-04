@@ -55,13 +55,7 @@ export default suite(
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/nestedClasses.js',
           {line: 4, character: 9}, // `f(class {|})`
-          JSON.stringify({
-            signatures: [
-              {label: '(x: mixed): void', parameters: [{label: 'x: mixed'}]},
-            ],
-            activeSignature: 0,
-            activeParameter: 0,
-          }),
+          '{null}',
         ),
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/nestedFunctions.js',
@@ -84,20 +78,7 @@ export default suite(
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/nestedFunctions.js',
           {line: 8, character: 2}, // inside nested function body
-          JSON.stringify({
-            signatures: [
-              {
-                label: '(a: string, f: F, b: number): void',
-                parameters: [
-                  {label: 'a: string'},
-                  {label: 'f: F'},
-                  {label: 'b: number'},
-                ],
-              },
-            ],
-            activeSignature: 0,
-            activeParameter: 1,
-          }),
+          '{null}',
         ),
       ]),
     ];
