@@ -378,6 +378,7 @@ and Statement : sig
     type ('M, 'T) t = {
       _object: ('M, 'T) Expression.t;
       body: ('M, 'T) Statement.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

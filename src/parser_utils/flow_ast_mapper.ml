@@ -1828,13 +1828,14 @@ class ['loc] mapper =
 
     method with_ _loc (stuff : ('loc, 'loc) Ast.Statement.With.t) =
       let open Ast.Statement.With in
-      let { _object; body } = stuff in
+      let { _object; body; comments } = stuff in
       let _object' = this#expression _object in
       let body' = this#statement body in
-      if _object == _object' && body == body' then
+      let comments' = this#syntax_opt comments in
+      if _object == _object' && body == body' && comments == comments' then
         stuff
       else
-        { _object = _object'; body = body' }
+        { _object = _object'; body = body'; comments = comments' }
 
     method type_alias _loc (stuff : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in

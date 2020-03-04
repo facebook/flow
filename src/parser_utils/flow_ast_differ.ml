@@ -528,7 +528,7 @@ let program
       | ((loc, Continue cont1), (_, Continue cont2)) -> continue_statement loc cont1 cont2
       | ((loc, Labeled labeled1), (_, Labeled labeled2)) ->
         Some (labeled_statement loc labeled1 labeled2)
-      | ((_, With with1), (_, With with2)) -> Some (with_statement with1 with2)
+      | ((loc, With with1), (_, With with2)) -> Some (with_statement loc with1 with2)
       | ((_, ExportDefaultDeclaration export1), (_, ExportDefaultDeclaration export2)) ->
         export_default_declaration export1 export2
       | ((_, DeclareExportDeclaration export1), (_, DeclareExportDeclaration export2)) ->
@@ -770,14 +770,16 @@ let program
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [comments; expr_diff; cons_diff; alt_diff]
   and with_statement
-      (with1 : (Loc.t, Loc.t) Ast.Statement.With.t) (with2 : (Loc.t, Loc.t) Ast.Statement.With.t) :
-      node change list =
+      (loc : Loc.t)
+      (with1 : (Loc.t, Loc.t) Ast.Statement.With.t)
+      (with2 : (Loc.t, Loc.t) Ast.Statement.With.t) : node change list =
     let open Ast.Statement.With in
-    let { _object = _object1; body = body1 } = with1 in
-    let { _object = _object2; body = body2 } = with2 in
+    let { _object = _object1; body = body1; comments = comments1 } = with1 in
+    let { _object = _object2; body = body2; comments = comments2 } = with2 in
     let _object_diff = diff_if_changed expression _object1 _object2 in
     let body_diff = diff_if_changed statement body1 body2 in
-    _object_diff @ body_diff
+    let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    List.concat [_object_diff; body_diff; comments_diff]
   and try_
       loc (try1 : (Loc.t, Loc.t) Ast.Statement.Try.t) (try2 : (Loc.t, Loc.t) Ast.Statement.Try.t) =
     let open Ast.Statement.Try in

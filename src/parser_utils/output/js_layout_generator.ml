@@ -567,8 +567,11 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
              (match label with
              | Some l -> fuse [s_continue; space; identifier l]
              | None -> s_continue)
-      | S.With { S.With._object; body } ->
-        fuse [statement_with_test "with" (expression _object); statement_after_test body]
+      | S.With { S.With._object; body; comments } ->
+        layout_node_with_simple_comments_opt
+          loc
+          comments
+          (fuse [statement_with_test "with" (expression _object); statement_after_test body])
       | S.Switch { S.Switch.discriminant; cases; comments } ->
         let case_nodes =
           let rec helper acc = function

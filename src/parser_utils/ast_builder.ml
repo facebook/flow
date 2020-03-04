@@ -284,7 +284,7 @@ module Statements = struct
 
   let break ?comments ?label () = (Loc.none, Break { Break.label; comments })
 
-  let with_ _object body = (Loc.none, With { With._object; body })
+  let with_ ?comments _object body = (Loc.none, With { With._object; body; comments })
 
   let enum_declaration ?(loc = Loc.none) id body =
     (loc, EnumDeclaration { EnumDeclaration.id; body })

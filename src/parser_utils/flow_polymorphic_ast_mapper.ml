@@ -1509,10 +1509,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method with_ (stuff : ('M, 'T) Ast.Statement.With.t) : ('N, 'U) Ast.Statement.With.t =
       let open Ast.Statement.With in
-      let { _object; body } = stuff in
+      let { _object; body; comments } = stuff in
       let _object' = this#expression _object in
       let body' = this#statement body in
-      { _object = _object'; body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { _object = _object'; body = body'; comments = comments' }
 
     method type_alias (stuff : ('M, 'T) Ast.Statement.TypeAlias.t)
         : ('N, 'U) Ast.Statement.TypeAlias.t =

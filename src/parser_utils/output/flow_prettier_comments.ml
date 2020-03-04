@@ -105,7 +105,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
   | If { If.test; consequent; alternate; comments = _ } ->
     [statement_of_expression test; consequent] @ statement_list_of_option alternate
   | Labeled { Labeled.body; _ } -> [body]
-  | With { With._object; body } -> [statement_of_expression _object; body]
+  | With { With._object; body; comments = _ } -> [statement_of_expression _object; body]
   | TypeAlias _ -> []
   | OpaqueType _ -> []
   | Switch { Switch.discriminant; cases; comments = _ } ->
