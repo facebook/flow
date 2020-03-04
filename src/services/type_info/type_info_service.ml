@@ -197,7 +197,7 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
                       {
                         (* https://github.com/microsoft/language-server-protocol/issues/933 *)
                         Command.title = "";
-                        command = "log";
+                        command = Command.Command "log";
                         arguments = [Hh_json.JSON_String "Apply suggestion"];
                       } );
               }

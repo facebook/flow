@@ -45,11 +45,13 @@ type markedString =
   | MarkedCode of string * string
 
 module Command : sig
+  type name = Command of string
+
   type t = {
     (* title of the command, like `save` *)
     title: string;
     (* the identifier of the actual command handler *)
-    command: string;
+    command: name;
     (* wire: it can be omitted *)
     arguments: Hh_json.json list;
   }
@@ -314,7 +316,7 @@ module Initialize : sig
 
   and documentLinkOptions = { doclink_resolveProvider: bool }
 
-  and executeCommandOptions = { commands: string list }
+  and executeCommandOptions = { commands: Command.name list }
 
   and textDocumentSyncOptions = {
     want_openClose: bool;

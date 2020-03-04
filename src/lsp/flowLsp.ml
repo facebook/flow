@@ -397,7 +397,10 @@ let show_status
           | (true, Shown (id, existingParams)) ->
             let id = Base.Option.value_exn id in
             let notification = CancelRequestNotification { CancelRequest.id } in
-            let json = Lsp_fmt.print_lsp (NotificationMessage notification) in
+            let json =
+              let key = ienv.i_root |> Path.to_string in
+              Lsp_fmt.print_lsp ~key (NotificationMessage notification)
+            in
             to_stdout json;
             { ienv with i_status = Shown (None, existingParams) }
           | (_, _) -> ienv
@@ -413,7 +416,10 @@ let show_status
             else
               ShowMessageRequestRequest params.request
           in
-          let json = Lsp_fmt.print_lsp (RequestMessage (id, request)) in
+          let json =
+            let key = ienv.i_root |> Path.to_string in
+            Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
+          in
           to_stdout json;
 
           let mark_ienv_shown future_ienv =
@@ -511,7 +517,7 @@ let do_initialize params : Initialize.result =
         documentOnTypeFormattingProvider = None;
         renameProvider = true;
         documentLinkProvider = None;
-        executeCommandProvider = Some { commands = ["log"] };
+        executeCommandProvider = Some { commands = [Command.Command "log"] };
         implementationProvider = false;
         typeCoverageProvider = true;
         rageProvider = true;
@@ -770,7 +776,10 @@ let dismiss_tracks (state : state) : state =
   let decline_request_to_server (id : lsp_id) : unit =
     let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "Connection to server has been lost") in
     let stack = Exception.get_current_callstack_string 100 in
-    let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
+    let json =
+      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack))
+    in
     to_stdout json
   in
   let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request) :
@@ -954,7 +963,10 @@ let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : Do
     parse_and_cache flowconfig_name state (Lsp.string_of_uri uri)
   in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
-  let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
+  let json =
+    let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+    Lsp_fmt.print_lsp ~key (ResponseMessage (id, DocumentSymbolResult result))
+  in
   to_stdout json;
   state
 
@@ -1658,7 +1670,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       | Error msg -> raise (Error.ServerErrorStart (msg, { Initialize.retry = false }))
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
-    let json = Lsp_fmt.print_lsp response in
+    let json =
+      let key = Path.to_string i_root in
+      Lsp_fmt.print_lsp ~key response
+    in
     to_stdout json;
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
     Ok (try_connect flowconfig_name env, LogNeeded metadata)
@@ -1675,7 +1690,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       | _ -> ()
     end;
     let response = ResponseMessage (id, ShutdownResult) in
-    let json = Lsp_fmt.print_lsp response in
+    let json =
+      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      Lsp_fmt.print_lsp ~key response
+    in
     to_stdout json;
     Ok (Post_shutdown, LogNotNeeded)
   | (_, Client_message (NotificationMessage ExitNotification, _metadata)) ->
@@ -1762,7 +1780,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (* if there's no server then we have to reply here and now.               *)
     let result = do_rage flowconfig_name state in
     let response = ResponseMessage (id, RageResult result) in
-    let json = Lsp_fmt.print_lsp response in
+    let json =
+      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      Lsp_fmt.print_lsp ~key response
+    in
     to_stdout json;
     Ok (state, LogNeeded metadata)
   | (_, Client_message ((NotificationMessage (DidOpenNotification _) as c), metadata))
@@ -1808,7 +1829,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     | RequestMessage (id, _request) ->
       let e = Lsp_fmt.error_of_exn exn in
       let outgoing = ResponseMessage (id, ErrorResult (e, "")) in
-      to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
+      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false ~key outgoing);
       let metadata =
         let error_info = Some (LspProt.ExpectedError, e.Error.message, Utils.Callstack "") in
         { metadata with LspProt.error_info }
@@ -1850,7 +1872,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           | _ -> (outgoing, metadata, LspInteraction.Responded)
         in
         let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
-        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
+        let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false ~key outgoing);
         (state, metadata, ux)
     in
     Base.Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
@@ -1899,9 +1922,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
            * need to notify the client *)
           None)
     in
+    let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
     Base.Option.iter outgoing ~f:(fun outgoing ->
         let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
-        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing));
+        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false ~key outgoing));
     Base.Option.iter
       metadata.LspProt.interaction_tracking_id
       ~f:(log_interaction ~ux:LspInteraction.Errored state);
@@ -2241,7 +2265,8 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
       let () =
         match event with
         | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
-          let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
+          let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+          let json = Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack)) in
           to_stdout json
         | _ -> Lsp_helpers.telemetry_error to_stdout text
       in
