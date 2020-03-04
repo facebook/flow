@@ -229,7 +229,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
       (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
     in
-    let errs = List.concat (errs1 :: errs2 :: errss) in
+    let errs = Base.List.concat (errs1 :: errs2 :: errss) in
     let universe =
       (* set union of all child members *)
       List.fold_right
@@ -281,7 +281,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
       (members_of_ty t1, members_of_ty t2, List.map members_of_ty ts |> List.split)
     in
-    let errs = List.concat (errs1 :: errs2 :: errss) in
+    let errs = Base.List.concat (errs1 :: errs2 :: errss) in
     let special_cases =
       Base.List.filter_map
         ~f:(fun ty ->

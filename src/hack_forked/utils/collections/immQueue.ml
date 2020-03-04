@@ -56,6 +56,6 @@ let to_list x = x.outgoing @ List.rev x.incoming
 let concat t =
   {
     incoming = [];
-    outgoing = List.map to_list t |> List.concat;
+    outgoing = Base.List.concat_map ~f:to_list t;
     length = List.map (fun u -> u.length) t |> List.fold_left ( + ) 0;
   }

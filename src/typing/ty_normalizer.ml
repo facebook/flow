@@ -1178,7 +1178,7 @@ end = struct
         Context.find_props cx props_tmap
         |> SMap.bindings
         |> mapM (fun (name, p) -> obj_prop_t ~env (name, p))
-        >>| List.concat
+        >>| Base.List.concat
       | _ -> return []
     in
     fun ~env static own_props ->

@@ -382,7 +382,7 @@ let program
         | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
       in
       let recurse_into_changes =
-        Base.List.map ~f:recurse_into_change %> all %> map ~f:List.concat
+        Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
       in
       recurse_into_changes diffs)
   in
@@ -1301,7 +1301,7 @@ let program
     let test_diff = diff_if_changed expression test1 test2 in
     let cons_diff = diff_if_changed expression cons1 cons2 in
     let alt_diff = diff_if_changed expression alt1 alt2 in
-    List.concat [test_diff; cons_diff; alt_diff]
+    Base.List.concat [test_diff; cons_diff; alt_diff]
   and new_
       loc (new1 : (Loc.t, Loc.t) Ast.Expression.New.t) (new2 : (Loc.t, Loc.t) Ast.Expression.New.t)
       : node change list option =
@@ -1386,7 +1386,7 @@ let program
     if operator1 == operator2 then
       let left = diff_if_changed expression left1 left2 in
       let right = diff_if_changed expression right1 right2 in
-      Some (List.concat [left; right])
+      Some (Base.List.concat [left; right])
     else
       None
   and array loc arr1 arr2 : node change list option =
@@ -1507,7 +1507,7 @@ let program
     let body = diff_if_changed statement body1 body2 in
     let test = diff_if_changed expression test1 test2 in
     let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
-    List.concat [body; test; comments]
+    Base.List.concat [body; test; comments]
   and debugger_statement
       loc (stmt1 : Loc.t Ast.Statement.Debugger.t) (stmt2 : Loc.t Ast.Statement.Debugger.t) :
       node change list option =
@@ -1553,7 +1553,7 @@ let program
     let label_diff = diff_if_changed identifier label1 label2 in
     let body_diff = diff_if_changed statement body1 body2 in
     let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
-    List.concat [label_diff; body_diff; comments_diff]
+    Base.List.concat [label_diff; body_diff; comments_diff]
   and switch_statement
       (loc : Loc.t)
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Switch.t)

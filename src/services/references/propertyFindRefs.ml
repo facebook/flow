@@ -226,7 +226,7 @@ let find_refs_in_multiple_files ~reader genv all_deps def_info =
   (* The types got a little too complicated here. Writing out the intermediate types makes it a
    * bit clearer. *)
   let result : (FindRefsTypes.single_ref list list, string) Result.t = Result.all result in
-  let result : (FindRefsTypes.single_ref list, string) Result.t = result >>| List.concat in
+  let result : (FindRefsTypes.single_ref list, string) Result.t = result >>| Base.List.concat in
   Lwt.return result
 
 (* Get the source for each loc. Error if any loc is missing a source. *)
@@ -314,7 +314,7 @@ let find_related_defs_in_file ~reader options name file =
   let results : ((single_def_info * single_def_info) list list, string) result =
     !related_types |> Base.List.map ~f:(get_single_def_info_pairs_if_relevant cx) |> Result.all
   in
-  results >>| List.concat
+  results >>| Base.List.concat
 
 (* Returns all locations which are considered related to the given definition locations. Definition
  * locations are considered related if they refer to a property with the same name, and their

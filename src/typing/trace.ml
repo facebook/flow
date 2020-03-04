@@ -206,6 +206,6 @@ let reasons_of_trace ?(level = 0) trace =
   in
   let print_path i (steps : step list) =
     let desc = RCustom (spf "* path %d:" (i + 1)) in
-    locationless_reason desc :: List.concat (List.mapi (print_step steps) steps)
+    locationless_reason desc :: Base.List.concat (List.mapi (print_step steps) steps)
   in
-  List.concat (List.rev (IMap.fold (fun i flow acc -> print_path i flow :: acc) imap []))
+  Base.List.concat (List.rev (IMap.fold (fun i flow acc -> print_path i flow :: acc) imap []))
