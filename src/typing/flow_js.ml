@@ -10386,9 +10386,10 @@ struct
   (** As an optimization, skip id1 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
   and edges_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
+    let max = Context.max_trace_depth cx in
     if not opt then add_upper t2 trace bounds1;
     iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
-        add_upper t2 (Trace.concat_trace [trace_l; trace]) bounds)
+        add_upper t2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
     (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lower += t1
 *)
@@ -10397,25 +10398,28 @@ struct
   (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
   and edges_from_t cx trace ~use_op ?(opt = false) t1 (id2, bounds2) =
+    let max = Context.max_trace_depth cx in
     if not opt then add_lower t1 (trace, use_op) bounds2;
     iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
-        add_lower t1 (Trace.concat_trace [trace; trace_u], use_op) bounds)
+        add_lower t1 (Trace.concat_trace ~max [trace; trace_u], use_op) bounds)
 
   (* for each id' in id + bounds.lowertvars:
    id'.bounds.upper += us
 *)
   and edges_to_ts cx trace ?(opt = false) (id, bounds) us =
+    let max = Context.max_trace_depth cx in
     us
     |> UseTypeMap.iter (fun u trace_u ->
-           edges_to_t cx (Trace.concat_trace [trace; trace_u]) ~opt (id, bounds) u)
+           edges_to_t cx (Trace.concat_trace ~max [trace; trace_u]) ~opt (id, bounds) u)
 
   (* for each id' in id + bounds.uppertvars:
    id'.bounds.lower += ls
 *)
   and edges_from_ts cx trace ?(opt = false) ls (id, bounds) =
+    let max = Context.max_trace_depth cx in
     ls
     |> TypeMap.iter (fun l (trace_l, use_op) ->
-           edges_from_t cx (Trace.concat_trace [trace_l; trace]) ~use_op ~opt l (id, bounds))
+           edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~use_op ~opt l (id, bounds))
     (* for each id in id1 + bounds1.lowertvars:
    id.bounds.upper += t2
    for each l in bounds1.lower: l => t2
@@ -10455,9 +10459,10 @@ struct
   (** As an optimization, skip id1 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
   and edges_to_tvar cx trace ?(opt = false) (id1, bounds1) id2 =
+    let max = Context.max_trace_depth cx in
     if not opt then add_uppertvar id2 trace bounds1;
     iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
-        add_uppertvar id2 (Trace.concat_trace [trace_l; trace]) bounds)
+        add_uppertvar id2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
     (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lowertvars += id1
 *)
@@ -10466,9 +10471,10 @@ struct
   (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
   and edges_from_tvar cx trace ?(opt = false) id1 (id2, bounds2) =
+    let max = Context.max_trace_depth cx in
     if not opt then add_lowertvar id1 trace bounds2;
     iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
-        add_lowertvar id1 (Trace.concat_trace [trace; trace_u]) bounds)
+        add_lowertvar id1 (Trace.concat_trace ~max [trace; trace_u]) bounds)
 
   (* for each id in id1 + bounds1.lowertvars:
    id.bounds.upper += bounds2.upper
@@ -10476,10 +10482,11 @@ struct
    id.bounds.uppertvars += bounds2.uppertvars
 *)
   and add_upper_edges cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
+    let max = Context.max_trace_depth cx in
     edges_to_ts cx trace ~opt (id1, bounds1) bounds2.upper;
     edges_to_tvar cx trace ~opt (id1, bounds1) id2;
     iter_with_filter cx bounds2.uppertvars id2 (fun (tvar, _) trace_u ->
-        let trace = Trace.concat_trace [trace; trace_u] in
+        let trace = Trace.concat_trace ~max [trace; trace_u] in
         edges_to_tvar cx trace ~opt (id1, bounds1) tvar)
 
   (* for each id in id2 + bounds2.uppertvars:
@@ -10488,10 +10495,11 @@ struct
    id.bounds.lowertvars += bounds1.lowertvars
 *)
   and add_lower_edges cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
+    let max = Context.max_trace_depth cx in
     edges_from_ts cx trace ~opt bounds1.lower (id2, bounds2);
     edges_from_tvar cx trace ~opt id1 (id2, bounds2);
     iter_with_filter cx bounds1.lowertvars id1 (fun (tvar, _) trace_l ->
-        let trace = Trace.concat_trace [trace_l; trace] in
+        let trace = Trace.concat_trace ~max [trace_l; trace] in
         edges_from_tvar cx trace ~opt tvar (id2, bounds2))
 
   (***************)
@@ -11923,7 +11931,9 @@ struct
    propagates bounds across type variables, where nothing interesting is going
    on other than concatenating subtraces to make longer traces to describe
    transitive data flows *)
-  and join_flow cx ts (t1, t2) = __flow cx (t1, t2) (Trace.concat_trace ts)
+  and join_flow cx ts (t1, t2) =
+    let max = Context.max_trace_depth cx in
+    __flow cx (t1, t2) (Trace.concat_trace ~max ts)
 
   (* Call __flow while embedding traces. Typically this is used in code that
    simplifies a constraint to generate subconstraints: the current trace is
