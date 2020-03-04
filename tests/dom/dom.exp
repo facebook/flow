@@ -546,6 +546,50 @@ References:
                                                         ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- NamedNodeMap.js:9:5
+
+Cannot get `attributes[null]` because:
+ - Either null [1] is incompatible with number [2].
+ - Or null [1] is incompatible with string [3].
+
+   NamedNodeMap.js:9:5
+     9|     attributes[null];
+            ^^^^^^^^^^^^^^^^
+
+References:
+   NamedNodeMap.js:9:16
+     9|     attributes[null];
+                       ^^^^ [1]
+   <BUILTINS>/dom.js:667:11
+   667|   [index: number | string]: Attr;
+                  ^^^^^^ [2]
+   <BUILTINS>/dom.js:667:20
+   667|   [index: number | string]: Attr;
+                           ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- NamedNodeMap.js:10:5
+
+Cannot get `attributes[{...}]` because:
+ - Either object literal [1] is incompatible with number [2].
+ - Or object literal [1] is incompatible with string [3].
+
+   NamedNodeMap.js:10:5
+    10|     attributes[{}];
+            ^^^^^^^^^^^^^^
+
+References:
+   NamedNodeMap.js:10:16
+    10|     attributes[{}];
+                       ^^ [1]
+   <BUILTINS>/dom.js:667:11
+   667|   [index: number | string]: Attr;
+                  ^^^^^^ [2]
+   <BUILTINS>/dom.js:667:20
+   667|   [index: number | string]: Attr;
+                           ^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------------ URL.js:8:19
 
 Cannot get `c.path` because property `path` is missing in `URL` [1].
@@ -1184,7 +1228,7 @@ References:
 
 
 
-Found 46 errors
+Found 48 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
