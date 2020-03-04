@@ -38,12 +38,13 @@ let func_details params rest_param return =
 
 (* given a Loc.t within a function call, returns the type of the function being called *)
 module Callee_finder = struct
-  exception
-    Found of {
-      tparams: (ALoc.t * string) list;
-      type_: Type.t;
-      active_parameter: int;
-    }
+  type t = {
+    tparams: (ALoc.t * string) list;
+    type_: Type.t;
+    active_parameter: int;
+  }
+
+  exception Found of t option
 
   (* find the argument whose Loc contains `loc`, or the first one past it.
       the latter covers the `f(x,| y)` case, where your cursor is after the
@@ -106,9 +107,23 @@ module Callee_finder = struct
 
           let active_parameter = find_argument cursor arg_list 0 in
           this#annot_with_tparams (fun tparams ->
-              raise (Found { tparams; type_ = t; active_parameter }))
+              raise (Found (Some { tparams; type_ = t; active_parameter })))
         else
           super#call annot expr
+
+      method! class_body body =
+        let _ = super#class_body body in
+        let (loc, _) = body in
+        if this#covers_target loc then
+          raise (Found None)
+        else
+          body
+
+      method! function_body body =
+        let _ = super#function_body body in
+        match body with
+        | Flow_ast.Function.BodyBlock (loc, _) when this#covers_target loc -> raise (Found None)
+        | _ -> body
     end
 
   let find_opt loc ast =
@@ -116,8 +131,10 @@ module Callee_finder = struct
     try
       let _ = finder#program ast in
       None
-    with Found { tparams; type_; active_parameter } ->
+    with
+    | Found (Some { tparams; type_; active_parameter }) ->
       Some ({ Type.TypeScheme.tparams; type_ }, active_parameter)
+    | Found None -> None
 end
 
 let ty_normalizer_options =
