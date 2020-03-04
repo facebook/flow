@@ -1,6 +1,14 @@
 // @flow
 
 let tests = [
+  // hasAttributes
+  function(element: HTMLElement) {
+    element.hasAttributes();
+
+    // fails
+    element.hasAttributes('foo', 'bar');
+  },
+
   // scrollIntoView
   function(element: HTMLElement) {
     element.scrollIntoView();

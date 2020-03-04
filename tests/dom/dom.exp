@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2048:13
-   2048|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2049:13
+   2049|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2048:24
-   2048|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2049:24
+   2049|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -104,8 +104,8 @@ References:
    Element.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1504:22
-   1504|          behavior?: ('auto' | 'instant' | 'smooth'),
+   <BUILTINS>/dom.js:1505:22
+   1505|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -122,8 +122,8 @@ References:
    Element.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1505:19
-   1505|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   <BUILTINS>/dom.js:1506:19
+   1506|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -136,8 +136,8 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1503:25
-   1503|   scrollIntoView(arg?: (boolean | {
+   <BUILTINS>/dom.js:1504:25
+   1504|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
 
 
@@ -169,68 +169,82 @@ References:
                                           ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- HTMLElement.js:14:28
+Error ----------------------------------------------------------------------------------------------- HTMLElement.js:9:5
+
+Cannot call `element.hasAttributes` because no arguments are expected by function type [1].
+
+   HTMLElement.js:9:5
+      9|     element.hasAttributes('foo', 'bar');
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/dom.js:1493:3
+   1493|   hasAttributes(): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:22:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
 in property `behavior`.
 
-   HTMLElement.js:14:28
-     14|     element.scrollIntoView({behavior: 'invalid'});
+   HTMLElement.js:22:28
+     22|     element.scrollIntoView({behavior: 'invalid'});
                                     ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:14:39
-     14|     element.scrollIntoView({behavior: 'invalid'});
+   HTMLElement.js:22:39
+     22|     element.scrollIntoView({behavior: 'invalid'});
                                                ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1504:22
-   1504|          behavior?: ('auto' | 'instant' | 'smooth'),
+   <BUILTINS>/dom.js:1505:22
+   1505|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- HTMLElement.js:15:28
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:23:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
 in property `block`.
 
-   HTMLElement.js:15:28
-     15|     element.scrollIntoView({block: 'invalid'});
+   HTMLElement.js:23:28
+     23|     element.scrollIntoView({block: 'invalid'});
                                     ^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:15:36
-     15|     element.scrollIntoView({block: 'invalid'});
+   HTMLElement.js:23:36
+     23|     element.scrollIntoView({block: 'invalid'});
                                             ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1505:19
-   1505|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   <BUILTINS>/dom.js:1506:19
+   1506|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- HTMLElement.js:16:28
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:24:28
 
 Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
 
-   HTMLElement.js:16:28
-     16|     element.scrollIntoView(1);
+   HTMLElement.js:24:28
+     24|     element.scrollIntoView(1);
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1503:25
-   1503|   scrollIntoView(arg?: (boolean | {
+   <BUILTINS>/dom.js:1504:25
+   1504|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:38:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:46:6
 
 Cannot cast `element.getElementsByTagName(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible with
 `HTMLElement` [2] in type argument `Elem` [3].
 
-   HTMLElement.js:38:6
-     38|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
+   HTMLElement.js:46:6
+     46|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:38:56
-     38|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
+   HTMLElement.js:46:56
+     46|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
                                                                 ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/dom.js:1436:54
    1436|   getElementsByTagName(name: string): HTMLCollection<HTMLElement>;
@@ -240,22 +254,22 @@ References:
                                        ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:39:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:47:6
 
 Cannot cast `element.getElementsByTagNameNS(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible
 with `HTMLElement` [2] in type argument `Elem` [3].
 
-   HTMLElement.js:39:6
+   HTMLElement.js:47:6
               v------------------------------
-     39|     (element.getElementsByTagNameNS(
-     40|       null,
-     41|       str,
-     42|     ): HTMLCollection<HTMLAnchorElement>);
+     47|     (element.getElementsByTagNameNS(
+     48|       null,
+     49|       str,
+     50|     ): HTMLCollection<HTMLAnchorElement>);
              ^
 
 References:
-   HTMLElement.js:42:23
-     42|     ): HTMLCollection<HTMLAnchorElement>);
+   HTMLElement.js:50:23
+     50|     ): HTMLCollection<HTMLAnchorElement>);
                                ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/dom.js:1490:90
    1490|   getElementsByTagNameNS(namespaceURI: string | null, localName: string): HTMLCollection<HTMLElement>;
@@ -265,57 +279,57 @@ References:
                                        ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:43:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:51:6
 
 Cannot cast `element.querySelector(...)` to union type because `HTMLElement` [1] is incompatible with
 `HTMLAnchorElement` [2].
 
-   HTMLElement.js:43:6
-     43|     (element.querySelector(str): HTMLAnchorElement | null);
+   HTMLElement.js:51:6
+     51|     (element.querySelector(str): HTMLAnchorElement | null);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1594:36
-   1594|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1595:36
+   1595|   querySelector(selector: string): HTMLElement | null;
                                             ^^^^^^^^^^^ [1]
-   HTMLElement.js:43:34
-     43|     (element.querySelector(str): HTMLAnchorElement | null);
+   HTMLElement.js:51:34
+     51|     (element.querySelector(str): HTMLAnchorElement | null);
                                           ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:44:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:52:6
 
 Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLAnchorElement` [1] is incompatible with
 `HTMLElement` [2] in type argument `T` [3].
 
-   HTMLElement.js:44:6
-     44|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
+   HTMLElement.js:52:6
+     52|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:44:46
-     44|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
+   HTMLElement.js:52:46
+     52|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
                                                       ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1658:48
-   1658|   querySelectorAll(selector: string): NodeList<HTMLElement>;
+   <BUILTINS>/dom.js:1659:48
+   1659|   querySelectorAll(selector: string): NodeList<HTMLElement>;
                                                         ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:650:24
     650| declare class NodeList<T> {
                                 ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:47:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:55:6
 
 Cannot cast `element.getElementsByTagName(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible with
 `HTMLDivElement` [2] in type argument `Elem` [3].
 
-   HTMLElement.js:47:6
-     47|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
+   HTMLElement.js:55:6
+     55|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:47:58
-     47|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
+   HTMLElement.js:55:58
+     55|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
                                                                   ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/dom.js:1395:53
    1395|   getElementsByTagName(name: 'div'): HTMLCollection<HTMLDivElement>;
@@ -325,22 +339,22 @@ References:
                                        ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:48:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:56:6
 
 Cannot cast `element.getElementsByTagNameNS(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible
 with `HTMLDivElement` [2] in type argument `Elem` [3].
 
-   HTMLElement.js:48:6
+   HTMLElement.js:56:6
               v------------------------------
-     48|     (element.getElementsByTagNameNS(
-     49|       null,
-     50|       'div',
-     51|     ): HTMLCollection<HTMLAnchorElement>);
+     56|     (element.getElementsByTagNameNS(
+     57|       null,
+     58|       'div',
+     59|     ): HTMLCollection<HTMLAnchorElement>);
              ^
 
 References:
-   HTMLElement.js:51:23
-     51|     ): HTMLCollection<HTMLAnchorElement>);
+   HTMLElement.js:59:23
+     59|     ): HTMLCollection<HTMLAnchorElement>);
                                ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/dom.js:1449:89
    1449|   getElementsByTagNameNS(namespaceURI: string | null, localName: 'div'): HTMLCollection<HTMLDivElement>;
@@ -350,95 +364,95 @@ References:
                                        ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:52:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:60:6
 
 Cannot cast `element.querySelector(...)` to union type because `HTMLDivElement` [1] is incompatible with
 `HTMLAnchorElement` [2].
 
-   HTMLElement.js:52:6
-     52|     (element.querySelector('div'): HTMLAnchorElement | null);
+   HTMLElement.js:60:6
+     60|     (element.querySelector('div'): HTMLAnchorElement | null);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1547:35
-   1547|   querySelector(selector: 'div'): HTMLDivElement | null;
+   <BUILTINS>/dom.js:1548:35
+   1548|   querySelector(selector: 'div'): HTMLDivElement | null;
                                            ^^^^^^^^^^^^^^ [1]
-   HTMLElement.js:52:36
-     52|     (element.querySelector('div'): HTMLAnchorElement | null);
+   HTMLElement.js:60:36
+     60|     (element.querySelector('div'): HTMLAnchorElement | null);
                                             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:53:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:61:6
 
 Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLDivElement` [1] is incompatible with
 `HTMLAnchorElement` [2] in type argument `T` [3].
 
-   HTMLElement.js:53:6
-     53|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
+   HTMLElement.js:61:6
+     61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1611:47
-   1611|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
+   <BUILTINS>/dom.js:1612:47
+   1612|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
                                                        ^^^^^^^^^^^^^^ [1]
-   HTMLElement.js:53:48
-     53|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
+   HTMLElement.js:61:48
+     61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
                                                         ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:650:24
     650| declare class NodeList<T> {
                                 ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- HTMLElement.js:53:6
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:61:6
 
 Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLAnchorElement` [1] is incompatible with
 `HTMLDivElement` [2] in type argument `T` [3].
 
-   HTMLElement.js:53:6
-     53|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
+   HTMLElement.js:61:6
+     61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:53:48
-     53|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
+   HTMLElement.js:61:48
+     61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
                                                         ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1611:47
-   1611|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
+   <BUILTINS>/dom.js:1612:47
+   1612|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
                                                        ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:650:24
     650| declare class NodeList<T> {
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- HTMLElement.js:64:19
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:72:19
 
 Cannot call `element.focus` with object literal bound to `options` because string [1] is incompatible with boolean [2]
 in property `preventScroll`.
 
-   HTMLElement.js:64:19
-     64|     element.focus({preventScroll: 'invalid'});
+   HTMLElement.js:72:19
+     72|     element.focus({preventScroll: 'invalid'});
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   HTMLElement.js:64:35
-     64|     element.focus({preventScroll: 'invalid'});
+   HTMLElement.js:72:35
+     72|     element.focus({preventScroll: 'invalid'});
                                            ^^^^^^^^^ [1]
    <BUILTINS>/dom.js:1329:39
    1329| type FocusOptions = { preventScroll?: boolean, ... }
                                                ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- HTMLElement.js:65:19
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:73:19
 
 Cannot call `element.focus` with `1` bound to `options` because number [1] is incompatible with `FocusOptions` [2].
 
-   HTMLElement.js:65:19
-     65|     element.focus(1);
+   HTMLElement.js:73:19
+     73|     element.focus(1);
                            ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1670:19
-   1670|   focus(options?: FocusOptions): void;
+   <BUILTINS>/dom.js:1671:19
+   1671|   focus(options?: FocusOptions): void;
                            ^^^^^^^^^^^^ [2]
 
 
@@ -451,8 +465,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2977:43
-   2977|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2978:43
+   2978|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -465,8 +479,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2977:43
-   2977|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2978:43
+   2978|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -482,8 +496,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3358:45
-   3358|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3359:45
+   3359|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -499,8 +513,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3359:78
-   3359|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3360:78
+   3360|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -513,8 +527,8 @@ Cannot get `form.action` because property `action` is missing in null [1].
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3419:27
-   3419|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3420:27
+   3420|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -527,8 +541,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3437:44
-   3437|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3438:44
+   3438|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -541,8 +555,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3438:48
-   3438|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3439:48
+   3439|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -644,8 +658,8 @@ References:
    path2d.js:16:33
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:1913:83
-   1913|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:1914:83
+   1914|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -1072,11 +1086,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3901:1
+   <BUILTINS>/dom.js:3902:1
          v--------------------------------
-   3901| typeof NodeFilter.FILTER_ACCEPT |
-   3902| typeof NodeFilter.FILTER_REJECT |
-   3903| typeof NodeFilter.FILTER_SKIP;
+   3902| typeof NodeFilter.FILTER_ACCEPT |
+   3903| typeof NodeFilter.FILTER_REJECT |
+   3904| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1093,11 +1107,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3901:1
+   <BUILTINS>/dom.js:3902:1
          v--------------------------------
-   3901| typeof NodeFilter.FILTER_ACCEPT |
-   3902| typeof NodeFilter.FILTER_REJECT |
-   3903| typeof NodeFilter.FILTER_SKIP;
+   3902| typeof NodeFilter.FILTER_ACCEPT |
+   3903| typeof NodeFilter.FILTER_REJECT |
+   3904| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1156,11 +1170,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3901:1
+   <BUILTINS>/dom.js:3902:1
          v--------------------------------
-   3901| typeof NodeFilter.FILTER_ACCEPT |
-   3902| typeof NodeFilter.FILTER_REJECT |
-   3903| typeof NodeFilter.FILTER_SKIP;
+   3902| typeof NodeFilter.FILTER_ACCEPT |
+   3903| typeof NodeFilter.FILTER_REJECT |
+   3904| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1177,11 +1191,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3901:1
+   <BUILTINS>/dom.js:3902:1
          v--------------------------------
-   3901| typeof NodeFilter.FILTER_ACCEPT |
-   3902| typeof NodeFilter.FILTER_REJECT |
-   3903| typeof NodeFilter.FILTER_SKIP;
+   3902| typeof NodeFilter.FILTER_ACCEPT |
+   3903| typeof NodeFilter.FILTER_REJECT |
+   3904| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1228,7 +1242,7 @@ References:
 
 
 
-Found 48 errors
+Found 49 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
