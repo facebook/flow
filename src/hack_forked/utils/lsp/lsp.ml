@@ -93,10 +93,12 @@ type markedString =
  * identifier and the protocol currently doesn't specify a set of well known
  * commands. So executing a command requires some tool extension code. *)
 module Command = struct
+  type name = Command of string
+
   type t = {
     title: string;
     (* title of the command, like `save` *)
-    command: string;
+    command: name;
     (* the identifier of the actual command handler *)
     arguments: Hh_json.json list; (* wire: it can be omitted *)
   }
@@ -483,7 +485,7 @@ module Initialize = struct
   and documentLinkOptions = { doclink_resolveProvider: bool (* wire "resolveProvider" *) }
 
   and executeCommandOptions = {
-    commands: string list; (* the commands to be executed on the server *)
+    commands: Command.name list; (* the commands to be executed on the server *)
   }
 
   (* text document sync options say what messages the server requests the

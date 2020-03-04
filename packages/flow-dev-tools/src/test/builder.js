@@ -523,33 +523,28 @@ export class TestBuilder {
   // that are known to be specific to an instance of a test, and replaces
   // them with something fixed.
   sanitizeIncomingLSPMessage(params: any): any {
-    const params2 = JSON.parse(JSON.stringify(params));
+    // LSP sends back document URLs, to files within the test project
+    const replaceDirs = (dirs: Array<string>, str: string): string => {
+      let out = str;
+      for (let dir of dirs) {
+        let index;
+        while ((index = out.indexOf(dir)) >= 0) {
+          out =
+            out.substr(0, index) +
+            '<PLACEHOLDER_PROJECT_URL>' +
+            out.substr(index + dir.length);
+        }
+      }
+      return out;
+    };
+    const params2 = JSON.parse(
+      replaceDirs([this.getDirUrl(), this.dir], JSON.stringify(params)),
+    );
 
     // Legacy IDE sends back an array of objects where those objects have
     // a '.flowVersion' field
-    // LSP sends back document URLs, to files within the test project
-    const url = this.getDirUrl();
-    const urlslash = `${url}/`;
     function replace(obj: Object) {
-      function do_url_replace(str: string): string {
-        if (str.startsWith(urlslash)) {
-          return '<PLACEHOLDER_PROJECT_URL>/' + str.substr(urlslash.length);
-        } else {
-          return str;
-        }
-      }
       for (var k in obj) {
-        // workspace edits contain urls in the keys of a dictionary
-        if (typeof k == 'string') {
-          let new_k = do_url_replace(k);
-
-          if (k != new_k) {
-            obj[new_k] = obj[k];
-            delete obj[k];
-            k = new_k;
-          }
-        }
-
         if (!obj.hasOwnProperty(k)) {
           continue;
         }
@@ -563,8 +558,6 @@ export class TestBuilder {
           case 'string':
             if (k == 'flowVersion') {
               obj[k] = '<VERSION STUBBED FOR TEST>';
-            } else {
-              obj[k] = do_url_replace(obj[k]);
             }
             break;
         }

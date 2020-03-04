@@ -44,8 +44,6 @@ val parse_textEdit : Hh_json.json option -> Lsp.TextEdit.t option
 
 val print_textEdit : Lsp.TextEdit.t -> Hh_json.json
 
-val print_command : Lsp.Command.t -> Hh_json.json
-
 val parse_command : Hh_json.json option -> Lsp.Command.t
 
 val parse_formattingOptions : Hh_json.json option -> Lsp.DocumentFormatting.formattingOptions
@@ -106,11 +104,9 @@ val print_definition : Lsp.Definition.result -> Hh_json.json
 
 val parse_completionItem : Hh_json.json option -> Lsp.CompletionItemResolve.params
 
-val print_completionItem : Lsp.Completion.completionItem -> Hh_json.json
+val print_completionItem : key:string -> Lsp.Completion.completionItem -> Hh_json.json
 
 val parse_completion : Hh_json.json option -> Lsp.Completion.params
-
-val print_completion : Lsp.Completion.result -> Hh_json.json
 
 val parse_workspaceSymbol : Hh_json.json option -> Lsp.WorkspaceSymbol.params
 
@@ -152,8 +148,6 @@ val parse_initialize : Hh_json.json option -> Lsp.Initialize.params
 
 val print_initializeError : Lsp.Initialize.errorData -> Hh_json.json
 
-val print_initialize : Lsp.Initialize.result -> Hh_json.json
-
 val print_registerCapability : Lsp.RegisterCapability.params -> Hh_json.json
 
 val parse_didChangeWatchedFiles : Hh_json.json option -> Lsp.DidChangeWatchedFiles.params
@@ -185,8 +179,8 @@ val parse_lsp : Hh_json.json -> (Lsp.lsp_id -> Lsp.lsp_request) -> Lsp.lsp_messa
 val print_lsp_request : Lsp.lsp_id -> Lsp.lsp_request -> Hh_json.json
 
 val print_lsp_response :
-  ?include_error_stack_trace:bool -> Lsp.lsp_id -> Lsp.lsp_result -> Hh_json.json
+  ?include_error_stack_trace:bool -> key:string -> Lsp.lsp_id -> Lsp.lsp_result -> Hh_json.json
 
 val print_lsp_notification : Lsp.lsp_notification -> Hh_json.json
 
-val print_lsp : ?include_error_stack_trace:bool -> Lsp.lsp_message -> Hh_json.json
+val print_lsp : ?include_error_stack_trace:bool -> key:string -> Lsp.lsp_message -> Hh_json.json

@@ -142,22 +142,32 @@ let print_workspaceEdit (r : WorkspaceEdit.t) : json =
         ("changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes));
       ])
 
-let print_command (command : Command.t) : json =
-  Command.(
-    JSON_Object
-      [
-        ("title", JSON_String command.title);
-        ("command", JSON_String command.command);
-        ("arguments", JSON_Array command.arguments);
-      ])
+let print_command_name ~key name =
+  match name with
+  | Command.Command name -> Printf.sprintf "%s:%s" name key
+
+let print_command ~key (command : Command.t) : json =
+  let open Command in
+  let name = print_command_name ~key command.command in
+  JSON_Object
+    [
+      ("title", JSON_String command.title);
+      ("command", JSON_String name);
+      ("arguments", JSON_Array command.arguments);
+    ]
+
+let parse_command_name str =
+  let delim = String.index str ':' in
+  Lsp.Command.Command (String.sub str 0 delim)
 
 let parse_command (json : json option) : Command.t =
-  Command.
-    {
-      title = Jget.string_d json "title" "";
-      command = Jget.string_d json "command" "";
-      arguments = Jget.array_d json "arguments" ~default:[] |> List.filter_opt;
-    }
+  let open Command in
+  let name = Jget.string_d json "command" "" in
+  {
+    title = Jget.string_d json "title" "";
+    command = parse_command_name name;
+    arguments = Jget.array_d json "arguments" ~default:[] |> List.filter_opt;
+  }
 
 let parse_formattingOptions (json : json option) : DocumentFormatting.formattingOptions =
   {
@@ -184,12 +194,12 @@ let parse_codeLens (json : json option) : CodeLens.t =
       data = Jget.obj_exn json "data";
     }
 
-let print_codeLens (codeLens : CodeLens.t) : json =
+let print_codeLens ~key (codeLens : CodeLens.t) : json =
   CodeLens.(
     JSON_Object
       [
         ("range", print_range codeLens.range);
-        ("command", print_command codeLens.command);
+        ("command", print_command ~key codeLens.command);
         ( "data",
           match codeLens.data with
           | None -> JSON_Null
@@ -318,7 +328,7 @@ let print_signatureHelp (r : SignatureHelp.result) : json =
 
 let parse_codeLensResolve (params : json option) : CodeLensResolve.params = parse_codeLens params
 
-let print_codeLensResolve (r : CodeLensResolve.result) : json = print_codeLens r
+let print_codeLensResolve ~key (r : CodeLensResolve.result) : json = print_codeLens ~key r
 
 (************************************************************************)
 (* textDocument/rename Request                                          *)
@@ -342,8 +352,8 @@ let parse_documentCodeLens (params : json option) : DocumentCodeLens.params =
   DocumentCodeLens.
     { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
 
-let print_documentCodeLens (r : DocumentCodeLens.result) : json =
-  JSON_Array (List.map r ~f:print_codeLens)
+let print_documentCodeLens ~key (r : DocumentCodeLens.result) : json =
+  JSON_Array (List.map r ~f:(print_codeLens ~key))
 
 (************************************************************************)
 (* workspace/executeCommand Request                                     *)
@@ -462,7 +472,7 @@ let parse_codeActionRequest (j : json option) : CodeActionRequest.params =
 (* textDocument/CodeAction result                                       *)
 (************************************************************************)
 
-let print_codeAction (c : CodeAction.t) : json =
+let print_codeAction ~key (c : CodeAction.t) : json =
   CodeAction.(
     let (edit, command) =
       match c.action with
@@ -476,14 +486,14 @@ let print_codeAction (c : CodeAction.t) : json =
         ("kind", Some (JSON_String (CodeActionKind.string_of_kind c.kind)));
         ("diagnostics", Some (print_diagnostic_list c.diagnostics));
         ("edit", Base.Option.map edit ~f:print_documentRename);
-        ("command", Base.Option.map command ~f:print_command);
+        ("command", Base.Option.map command ~f:(print_command ~key));
       ])
 
-let print_codeActionResult (c : CodeAction.result) : json =
+let print_codeActionResult ~key (c : CodeAction.result) : json =
   CodeAction.(
     let print_command_or_action = function
-      | Command c -> print_command c
-      | Action c -> print_codeAction c
+      | Command c -> print_command ~key c
+      | Action c -> print_codeAction ~key c
     in
     JSON_Array (List.map c ~f:print_command_or_action))
 
@@ -652,7 +662,7 @@ let string_of_markedString (acc : string) (marked : markedString) : string =
   | MarkedCode (lang, code) -> acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n"
   | MarkedString str -> acc ^ str ^ "\n"
 
-let print_completionItem (item : Completion.completionItem) : json =
+let print_completionItem ~key (item : Completion.completionItem) : json =
   Completion.(
     Jprint.object_opt
       [
@@ -681,7 +691,7 @@ let print_completionItem (item : Completion.completionItem) : json =
           | Some [] ->
             None
           | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit)) );
-        ("command", Base.Option.map item.command print_command);
+        ("command", Base.Option.map item.command (print_command ~key));
         ("data", item.data);
       ])
 
@@ -709,12 +719,12 @@ let parse_completion (params : json option) : Completion.params =
         | None -> None);
     })
 
-let print_completion (r : Completion.result) : json =
+let print_completion ~key (r : Completion.result) : json =
   Completion.(
     JSON_Object
       [
         ("isIncomplete", JSON_Bool r.isIncomplete);
-        ("items", JSON_Array (List.map r.items ~f:print_completionItem));
+        ("items", JSON_Array (List.map r.items ~f:(print_completionItem ~key)));
       ])
 
 (************************************************************************)
@@ -946,7 +956,7 @@ let parse_initialize (params : json option) : Initialize.params =
 let print_initializeError (r : Initialize.errorData) : json =
   Initialize.(JSON_Object [("retry", JSON_Bool r.retry)])
 
-let print_initialize (r : Initialize.result) : json =
+let print_initialize ~key (r : Initialize.result) : json =
   Initialize.(
     let print_textDocumentSyncKind kind = int_ (textDocumentSyncKind_to_enum kind) in
     let cap = r.server_capabilities in
@@ -1019,7 +1029,8 @@ let print_initialize (r : Initialize.result) : json =
                     JSON_Object [("resolveProvider", JSON_Bool dlp.doclink_resolveProvider)]) );
               ( "executeCommandProvider",
                 Base.Option.map cap.executeCommandProvider ~f:(fun p ->
-                    JSON_Object [("commands", Jprint.string_array p.commands)]) );
+                    let strs = p.commands |> Base.List.map ~f:(print_command_name ~key) in
+                    JSON_Object [("commands", Jprint.string_array strs)]) );
               ("implementationProvider", Some (JSON_Bool cap.implementationProvider));
               ("typeCoverageProvider", Some (JSON_Bool cap.typeCoverageProvider));
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
@@ -1374,16 +1385,16 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
       ("params", params);
     ]
 
-let print_lsp_response ?include_error_stack_trace (id : lsp_id) (result : lsp_result) : json =
+let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : lsp_result) : json =
   let method_ = result_name_to_string result in
   let json =
     match result with
-    | InitializeResult r -> print_initialize r
+    | InitializeResult r -> print_initialize ~key r
     | ShutdownResult -> print_shutdown ()
-    | CodeLensResolveResult r -> print_codeLensResolve r
+    | CodeLensResolveResult r -> print_codeLensResolve ~key r
     | HoverResult r -> print_hover r
-    | CodeActionResult r -> print_codeActionResult r
-    | CompletionResult r -> print_completion r
+    | CodeActionResult r -> print_codeActionResult ~key r
+    | CompletionResult r -> print_completion ~key r
     | DefinitionResult r -> print_definition r
     | TypeDefinitionResult r -> print_definition r
     | WorkspaceSymbolResult r -> print_workspaceSymbol r
@@ -1397,7 +1408,7 @@ let print_lsp_response ?include_error_stack_trace (id : lsp_id) (result : lsp_re
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
     | RenameResult r -> print_documentRename r
-    | DocumentCodeLensResult r -> print_documentCodeLens r
+    | DocumentCodeLensResult r -> print_documentCodeLens ~key r
     | ExecuteCommandResult r -> print_executeCommand r
     | SignatureHelpResult r -> print_signatureHelp r
     | ShowMessageRequestResult _
@@ -1438,8 +1449,8 @@ let print_lsp_notification (notification : lsp_notification) : json =
   in
   JSON_Object [("jsonrpc", JSON_String "2.0"); ("method", JSON_String method_); ("params", params)]
 
-let print_lsp ?include_error_stack_trace (message : lsp_message) : json =
+let print_lsp ?include_error_stack_trace ~key (message : lsp_message) : json =
   match message with
   | RequestMessage (id, request) -> print_lsp_request id request
-  | ResponseMessage (id, result) -> print_lsp_response ?include_error_stack_trace id result
+  | ResponseMessage (id, result) -> print_lsp_response ?include_error_stack_trace ~key id result
   | NotificationMessage notification -> print_lsp_notification notification

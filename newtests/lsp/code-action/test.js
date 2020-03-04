@@ -125,7 +125,7 @@ export default suite(
               },
               command: {
                 title: '',
-                command: 'log',
+                command: 'log:<PLACEHOLDER_PROJECT_URL>',
                 arguments: ['Apply suggestion'],
               },
             },
