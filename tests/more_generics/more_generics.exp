@@ -68,7 +68,7 @@ Cannot call `y` because `U` [1] is not a function.
 
    poly.js:24:3
    24|   y();
-         ^^^
+         ^
 
 References:
    poly.js:22:20

@@ -4,7 +4,7 @@ Cannot call `foo` because inexact object type [1] is incompatible with exact obj
 
    test1.js:22:13
    22| var x = f()(foo(Comp));
-                   ^^^^^^^^^
+                   ^^^
 
 References:
    test1.js:12:29

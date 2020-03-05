@@ -338,18 +338,15 @@ References:
               ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:14:4
+Error -------------------------------------------------------------------------------------------- object_types.js:14:16
 
 Cannot cast `null` to number because string [1] is incompatible with number [2].
 
-   object_types.js:14:4
-   14| (((null: any): OneProp): number); // Error: There is no string in the final
-          ^^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:14:16
    14| (((null: any): OneProp): number); // Error: There is no string in the final
                       ^^^^^^^ [1]
+
+References:
    object_types.js:14:26
    14| (((null: any): OneProp): number); // Error: There is no string in the final
                                 ^^^^^^ [2]
@@ -378,20 +375,17 @@ References:
                                      ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:23:4
+Error -------------------------------------------------------------------------------------------- object_types.js:23:16
 
 Cannot cast `null` to union type because:
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with boolean [3].
 
-   object_types.js:23:4
-   23| (((null: any): ManyProps): string | boolean); // Error: There is no number in
-          ^^^^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:23:16
    23| (((null: any): ManyProps): string | boolean); // Error: There is no number in
                       ^^^^^^^^^ [1]
+
+References:
    object_types.js:23:28
    23| (((null: any): ManyProps): string | boolean); // Error: There is no number in
                                   ^^^^^^ [2]
@@ -419,20 +413,17 @@ References:
                                      ^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:32:4
+Error -------------------------------------------------------------------------------------------- object_types.js:32:16
 
 Cannot cast `null` to union type because:
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with boolean [3].
 
-   object_types.js:32:4
-   32| (((null: any): DictProps): string | boolean); // Error: There is no number in
-          ^^^^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:32:16
    32| (((null: any): DictProps): string | boolean); // Error: There is no number in
                       ^^^^^^^^^ [1]
+
+References:
    object_types.js:32:28
    32| (((null: any): DictProps): string | boolean); // Error: There is no number in
                                   ^^^^^^ [2]
@@ -507,7 +498,7 @@ References:
                  ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:73:3
+Error -------------------------------------------------------------------------------------------- object_types.js:73:15
 
 Cannot cast `'Diamonds'` to `SuiteEnum` because:
  - Either string [1] is incompatible with string literal `Spades` [2].
@@ -515,14 +506,11 @@ Cannot cast `'Diamonds'` to `SuiteEnum` because:
  - Or string [1] is incompatible with string literal `Diamonds` [4].
  - Or string [1] is incompatible with string literal `Clubs` [5].
 
-   object_types.js:73:3
-   73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
-         ^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:73:15
    73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
                      ^^^^^^ [1]
+
+References:
    object_types.js:52:11
    52|   SPADES: 'Spades',
                  ^^^^^^^^ [2]
@@ -565,7 +553,7 @@ References:
                                   ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- object_types.js:81:13
+Error -------------------------------------------------------------------------------------------- object_types.js:81:25
 
 Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because:
  - Either string [1] is incompatible with string literal `Spades` [2].
@@ -573,14 +561,11 @@ Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because:
  - Or string [1] is incompatible with string literal `Diamonds` [4].
  - Or string [1] is incompatible with string literal `Clubs` [5].
 
-   object_types.js:81:13
-   81| magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
-                   ^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:81:25
    81| magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
                                ^^^^^^ [1]
+
+References:
    object_types.js:52:11
    52|   SPADES: 'Spades',
                  ^^^^^^^^ [2]
@@ -623,7 +608,7 @@ References:
                  ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:97:3
+Error -------------------------------------------------------------------------------------------- object_types.js:97:15
 
 Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because:
  - Either string [1] is incompatible with string literal `Spades` [2].
@@ -631,14 +616,11 @@ Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because:
  - Or string [1] is incompatible with string literal `Diamonds` [4].
  - Or string [1] is incompatible with string literal `Clubs` [5].
 
-   object_types.js:97:3
-   97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
-         ^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:97:15
    97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
                      ^^^^^^ [1]
+
+References:
    object_types.js:90:11
    90|   SPADES: 'Spades',
                  ^^^^^^^^ [2]

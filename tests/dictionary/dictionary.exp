@@ -179,67 +179,43 @@ References:
                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:138:27
+Error ---------------------------------------------------------------------------------------------- dictionary.js:139:8
 
 Cannot assign object literal to `b` because `A` [1] is incompatible with `B` [2] in property `a`.
 
-   dictionary.js:138:27
-                                  v
-   138|   let b: {[k:string]:B} = {
-   139|     a: new A, // error, A not <: B
-   140|     b: new B, // ok, B == B
-   141|     c: new C, // ok, C <: A
-   142|   };
-          ^
-
-References:
    dictionary.js:139:8
    139|     a: new A, // error, A not <: B
                ^^^^^ [1]
+
+References:
    dictionary.js:138:22
    138|   let b: {[k:string]:B} = {
                              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:144:27
+Error ---------------------------------------------------------------------------------------------- dictionary.js:145:8
 
 Cannot assign object literal to `c` because `A` [1] is incompatible with `C` [2] in property `a`.
 
-   dictionary.js:144:27
-                                  v
-   144|   let c: {[k:string]:C} = {
-   145|     a: new A, // error, A not <: C
-   146|     b: new B, // error, A not <: C
-   147|     c: new C, // ok, C == C
-   148|   };
-          ^
-
-References:
    dictionary.js:145:8
    145|     a: new A, // error, A not <: C
                ^^^^^ [1]
+
+References:
    dictionary.js:144:22
    144|   let c: {[k:string]:C} = {
                              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:144:27
+Error ---------------------------------------------------------------------------------------------- dictionary.js:146:8
 
 Cannot assign object literal to `c` because `B` [1] is incompatible with `C` [2] in property `b`.
 
-   dictionary.js:144:27
-                                  v
-   144|   let c: {[k:string]:C} = {
-   145|     a: new A, // error, A not <: C
-   146|     b: new B, // error, A not <: C
-   147|     c: new C, // ok, C == C
-   148|   };
-          ^
-
-References:
    dictionary.js:146:8
    146|     b: new B, // error, A not <: C
                ^^^^^ [1]
+
+References:
    dictionary.js:144:22
    144|   let c: {[k:string]:C} = {
                              ^ [2]
@@ -1014,19 +990,14 @@ References:
                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:4:33
+Error ------------------------------------------------------------------------------------------------------ test.js:5:6
 
 Cannot assign object literal to `o` because number [1] is incompatible with string [2] in the return value of property
 `foo`.
 
-   test.js:4:33
-                                      v
-   4| var o: { foo: QueryFunction } = {
+   test.js:5:6
    5|   foo(params) {
-   6|     return params.count; // error, number ~/~ string
-   7|   }
-   8| };
-      ^
+           ^^^^^^^^
 
 References:
    test.js:1:23
@@ -1042,11 +1013,8 @@ Error --------------------------------------------------------------------------
 Cannot assign function to `o.foo` because number [1] is incompatible with string [2] in the return value.
 
    test_client.js:3:9
-              v------------------
    3| o.foo = function (params) {
-   4|   return params.count; // error, number ~/~ string
-   5| }
-      ^
+              ^^^^^^^^^^^^^^^^^
 
 References:
    test.js:1:23

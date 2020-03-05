@@ -68,7 +68,7 @@ Cannot call `fn1` because property `p` is missing in object literal [1].
 
    errors.js:18:1
    18| fn1({x: 42}); // We should get an error on this line.
-       ^^^^^^^^^^^^
+       ^^^
 
 References:
    errors.js:18:5
@@ -82,7 +82,7 @@ Cannot call `fn1` because an index signature declaring the expected key / value 
 
    errors.js:19:1
    19| fn1(null); // We should get an error on this line.
-       ^^^^^^^^^
+       ^^^
 
 References:
    errors.js:19:5
@@ -96,7 +96,7 @@ Cannot call `fn2` because property `p` is missing in object literal [1].
 
    errors.js:21:1
    21| fn2({x: 42})(); // We should get an error on this line.
-       ^^^^^^^^^^^^
+       ^^^
 
 References:
    errors.js:21:5
@@ -110,7 +110,7 @@ Cannot call `fn2` because an index signature declaring the expected key / value 
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.
-       ^^^^^^^^^
+       ^^^
 
 References:
    errors.js:22:5
@@ -124,7 +124,7 @@ Cannot call `fn3` because property `p` is missing in object literal [1].
 
    errors.js:24:1
    24| fn3({x: 42}); // We should get an error on this line.
-       ^^^^^^^^^^^^
+       ^^^
 
 References:
    errors.js:24:5
@@ -138,7 +138,7 @@ Cannot call `fn3` because property `p` is missing in null [1].
 
    errors.js:25:1
    25| fn3(null); // We should get an error on this line.
-       ^^^^^^^^^
+       ^^^
 
 References:
    errors.js:25:5
@@ -152,7 +152,7 @@ Cannot call `fn4` because property `p` is missing in object literal [1].
 
    errors.js:27:1
    27| fn4({x: 42})(); // We should get an error on this line.
-       ^^^^^^^^^^^^
+       ^^^
 
 References:
    errors.js:27:5
@@ -166,7 +166,7 @@ Cannot call `fn4` because property `p` is missing in null [1].
 
    errors.js:28:1
    28| fn4(null)(); // We should get an error on this line.
-       ^^^^^^^^^
+       ^^^
 
 References:
    errors.js:28:5
@@ -250,7 +250,7 @@ Cannot call `f4` because property `p` is missing in object type [1].
 
    errors2.js:25:2
    25| (f4(o): empty); // Error should point here.
-        ^^^^^
+        ^^
 
 References:
    errors2.js:21:16
@@ -264,7 +264,7 @@ Cannot call `f5` because property `p` is missing in object type [1].
 
    errors2.js:26:2
    26| (f5(o): empty); // Error should point here.
-        ^^^^^
+        ^^
 
 References:
    errors2.js:21:16
@@ -436,18 +436,15 @@ References:
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:21:2
+Error --------------------------------------------------------------------------------------------------- tvar3.js:21:10
 
 Cannot cast `fn2(...)` to function type because `A` [1] is incompatible with `B` [2] in the first argument.
 
-   tvar3.js:21:2
-   21| (fn2((a: A) => {}): B => void); // Error: B ~> A
-        ^^^^^^^^^^^^^^^^^
-
-References:
    tvar3.js:21:10
    21| (fn2((a: A) => {}): B => void); // Error: B ~> A
                 ^ [1]
+
+References:
    tvar3.js:21:21
    21| (fn2((a: A) => {}): B => void); // Error: B ~> A
                            ^ [2]
@@ -487,18 +484,15 @@ References:
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:23:2
+Error --------------------------------------------------------------------------------------------------- tvar3.js:23:13
 
 Cannot cast `fn4(...)` to function type because `B` [1] is incompatible with `C` [2] in the first argument.
 
-   tvar3.js:23:2
-   23| (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
-        ^^^^^^^^^^^^^^^^^^^^
-
-References:
    tvar3.js:23:13
    23| (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
                    ^ [1]
+
+References:
    tvar3.js:23:24
    23| (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
                               ^ [2]
@@ -589,18 +583,15 @@ References:
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:27:9
+Error --------------------------------------------------------------------------------------------------- tvar3.js:27:13
 
 Cannot call `fn7` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first argument.
 
-   tvar3.js:27:9
-   27| (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-               ^^^^^^^^^^^^
-
-References:
    tvar3.js:27:13
    27| (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
                    ^ [1]
+
+References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [2]
@@ -640,18 +631,15 @@ References:
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:9
+Error --------------------------------------------------------------------------------------------------- tvar3.js:28:13
 
 Cannot call `fn8` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first argument.
 
-   tvar3.js:28:9
-   28| (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
-               ^^^^^^^^^^^^
-
-References:
    tvar3.js:28:13
    28| (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
                    ^ [1]
+
+References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [2]
@@ -663,7 +651,7 @@ Cannot call `fn1` because property `p` is missing in object type [1].
 
    tvar4.js:24:1
    24| fn1({p: 42}, (x: {}) => {});
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^
 
 References:
    tvar4.js:24:18
@@ -677,7 +665,7 @@ Cannot call `fn2` because property `p` is missing in object type [1].
 
    tvar4.js:25:1
    25| fn2({p: 42}, (x: {}) => {})('foo');
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^
 
 References:
    tvar4.js:25:18
@@ -685,36 +673,30 @@ References:
                         ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar4.js:33:42
+Error --------------------------------------------------------------------------------------------------- tvar4.js:33:48
 
 Cannot call `fn3(...)` with object literal bound to the first parameter because number [1] is incompatible with
 string [2] in property `foo`.
 
-   tvar4.js:33:42
-   33| fn3((x: {foo: string, p: number}) => {})({foo: 42});
-                                                ^^^^^^^^^
-
-References:
    tvar4.js:33:48
    33| fn3((x: {foo: string, p: number}) => {})({foo: 42});
                                                       ^^ [1]
+
+References:
    tvar4.js:33:15
    33| fn3((x: {foo: string, p: number}) => {})({foo: 42});
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:38:1
+Error ---------------------------------------------------------------------------------------------------- tvar4.js:38:9
 
 Cannot call `fn3` because undefined property `p` [1] is incompatible with number [2].
 
-   tvar4.js:38:1
-   38| fn3((x: {foo: number}) => {})({foo: 42});
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    tvar4.js:38:9
    38| fn3((x: {foo: number}) => {})({foo: 42});
                ^^^^^^^^^^^^^ [1]
+
+References:
    tvar4.js:27:57
    27| function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
                                                                ^^^^^^ [2]
@@ -755,7 +737,7 @@ Cannot call `fn4` because property `p` is missing in object type [1].
 
    tvar4.js:51:1
    51| fn4((x: {}) => {})(42);
-       ^^^^^^^^^^^^^^^^^^
+       ^^^
 
 References:
    tvar4.js:51:9

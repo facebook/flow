@@ -47,52 +47,43 @@ References:
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- annot.js:8:46
+Error ---------------------------------------------------------------------------------------------------- annot.js:8:62
 
 Cannot assign object literal to `obj` because string [1] is incompatible with number [2] in property `i`.
 
-   annot.js:8:46
-   8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    annot.js:8:62
    8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
                                                                    ^^^^^ [1]
+
+References:
    annot.js:8:25
    8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
                               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- annot.js:10:26
+Error --------------------------------------------------------------------------------------------------- annot.js:10:31
 
 Cannot assign array literal to `arr` because string [1] is incompatible with number [2] in array element.
 
-   annot.js:10:26
-   10| var arr: Array<number> = [1,2,"..."];
-                                ^^^^^^^^^^^
-
-References:
    annot.js:10:31
    10| var arr: Array<number> = [1,2,"..."];
                                      ^^^^^ [1]
+
+References:
    annot.js:10:16
    10| var arr: Array<number> = [1,2,"..."];
                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- annot.js:13:23
+Error --------------------------------------------------------------------------------------------------- annot.js:13:28
 
 Cannot assign array literal to `array` because string [1] is incompatible with number [2] in array element.
 
-   annot.js:13:23
-   13| var array: number[] = [1,2,"..."];
-                             ^^^^^^^^^^^
-
-References:
    annot.js:13:28
    13| var array: number[] = [1,2,"..."];
                                   ^^^^^ [1]
+
+References:
    annot.js:13:12
    13| var array: number[] = [1,2,"..."];
                   ^^^^^^ [2]
@@ -127,23 +118,11 @@ References:
                              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- annot.js:45:21
+Error --------------------------------------------------------------------------------------------------- annot.js:46:14
 
 Cannot assign `batchRequests.map(...)` to `batchRequests` because property `path` is missing in object literal [1] but
 exists in object type [2] in array element.
 
-   annot.js:45:21
-                           v-------------------------------
-   45|     batchRequests = batchRequests.map((request) => {
-   46|       return {
-   47|         method: request.method,
-   48|         params: request.params,
-   49|         relative_url: request.path,
-   50|       };
-   51|     });
-           -^
-
-References:
    annot.js:46:14
                     v
    46|       return {
@@ -152,6 +131,8 @@ References:
    49|         relative_url: request.path,
    50|       };
              ^ [1]
+
+References:
    annot.js:37:26
    37|     batchRequests: Array<{method: string; path: string; params: ?Object}>,
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]

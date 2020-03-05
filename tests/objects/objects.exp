@@ -153,13 +153,13 @@ References:
                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- conversion.js:19:2
+Error ----------------------------------------------------------------------------------------------- conversion.js:19:4
 
 Cannot call `z.charAt` because property `charAt` is missing in `Number` [1].
 
-   conversion.js:19:2
+   conversion.js:19:4
    19| (z.charAt(0): string);
-        ^^^^^^^^^^^
+          ^^^^^^
 
 References:
    <BUILTINS>/core.js:48:25
@@ -167,13 +167,13 @@ References:
                                ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- objects.js:4:2
+Error --------------------------------------------------------------------------------------------------- objects.js:4:4
 
 Cannot get `x.foo` because property `foo` is missing in object type [1].
 
-   objects.js:4:2
+   objects.js:4:4
    4| (x.foo : string);     // error, key doesn't exist
-       ^^^^^
+         ^^^
 
 References:
    objects.js:3:9
@@ -181,13 +181,13 @@ References:
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- objects.js:5:2
+Error --------------------------------------------------------------------------------------------------- objects.js:5:4
 
 Cannot get `x['foo']` because property `foo` is missing in object type [1].
 
-   objects.js:5:2
+   objects.js:5:4
    5| (x['foo'] : string);  // error, key doesn't exist
-       ^^^^^^^^
+         ^^^^^
 
 References:
    objects.js:3:9
@@ -243,13 +243,13 @@ References:
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- objects.js:12:2
+Error -------------------------------------------------------------------------------------------------- objects.js:12:4
 
 Cannot get `x[`...`]` because property `foo` is missing in object type [1].
 
-   objects.js:12:2
+   objects.js:12:4
    12| (x[`foo`]: string);   // error, key doesn't exist
-        ^^^^^^^^
+          ^^^^^
 
 References:
    objects.js:3:9
@@ -271,13 +271,13 @@ References:
                      ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- objects.js:16:1
+Error -------------------------------------------------------------------------------------------------- objects.js:16:3
 
 Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in object type [1].
 
-   objects.js:16:1
+   objects.js:16:3
    16| y['bar'] = 'abc'; // error, property not found
-       ^^^^^^^^
+         ^^^^^
 
 References:
    objects.js:14:9

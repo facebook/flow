@@ -6,13 +6,13 @@ Cannot resolve name `doesNotExist`.
                   ^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:12:12
+Error ---------------------------------------------------------------------------------------------------- test.js:12:19
 
 Cannot get `{...}.y` because property `y` is missing in object literal [1].
 
-   test.js:12:12
+   test.js:12:19
    12| <a:b prop={{x: 3}.y} />; // Error, y does not exist on the object
-                  ^^^^^^^^
+                         ^
 
 References:
    test.js:12:12

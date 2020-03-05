@@ -1623,13 +1623,13 @@ Cannot use `A` as a type. Enum members are not separate types. Only the enum its
                      ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:23:1
+Error -------------------------------------------------------------------------------------------------- methods.js:23:3
 
 Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
 
-   methods.js:23:1
+   methods.js:23:3
     23| E.nonExistent; // Error
-        ^^^^^^^^^^^^^
+          ^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:927:43
@@ -1643,13 +1643,13 @@ References:
         -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:26:1
+Error -------------------------------------------------------------------------------------------------- methods.js:26:3
 
 Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
 
-   methods.js:26:1
+   methods.js:26:3
     26| E.nonExistent(); // Error
-        ^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:927:43
@@ -1681,13 +1681,13 @@ References:
        ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:32:1
+Error -------------------------------------------------------------------------------------------------- methods.js:32:3
 
 Cannot call `E.A` because property `A` is missing in `$EnumProto` [1].
 
-   methods.js:32:1
+   methods.js:32:3
     32| E.A(); // Error
-        ^^^^^
+          ^
 
 References:
    <BUILTINS>/core.js:927:43
@@ -1701,13 +1701,13 @@ References:
         -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:35:1
+Error -------------------------------------------------------------------------------------------------- methods.js:35:3
 
 Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1].
 
-   methods.js:35:1
+   methods.js:35:3
     35| E.toString(); // Error
-        ^^^^^^^^^^^^
+          ^^^^^^^^
 
 References:
    <BUILTINS>/core.js:927:43
@@ -2949,13 +2949,13 @@ References:
                             ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:8:11
+Error --------------------------------------------------------------------------------------------------- spread.js:8:15
 
 Cannot spread object literal because enum `E` [1] is not an object.
 
-   spread.js:8:11
+   spread.js:8:15
    8| const x = {...E}; // Error
-                ^^^^^^
+                    ^
 
 References:
    spread.js:3:1
@@ -2995,30 +2995,18 @@ References:
                               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:18:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:18:17
 
 Cannot instantiate `$Diff` because enum `E` [1] is not an object.
 
-   utility-types.js:18:11
-   18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
-                 ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   utility-types.js:18:17
    18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
                        ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:21:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:21:21
 
 Cannot instantiate `$ReadOnly` because enum `E` [1] is not an object.
 
-   utility-types.js:21:11
-   21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
-                 ^^^^^^^^^^^^^^^^^^^
-
-References:
-   utility-types.js:21:21
    21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
                            ^^^^^^^^ [1]
 
@@ -3072,16 +3060,10 @@ References:
            ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:33:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:33:17
 
 Cannot instantiate `$Rest` because enum `E` [1] is not an object.
 
-   utility-types.js:33:11
-   33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
-                 ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   utility-types.js:33:17
    33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
                        ^^^^^^^^ [1]
 

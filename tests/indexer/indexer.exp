@@ -12,18 +12,15 @@ References:
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:18:10
+Error ------------------------------------------------------------------------------------------------------- A.js:18:17
 
 Cannot return object literal because string [1] is incompatible with number [2] in property `foo`.
 
-   A.js:18:10
-   18|   return { foo: "bar" }
-                ^^^^^^^^^^^^^^
-
-References:
    A.js:18:17
    18|   return { foo: "bar" }
                        ^^^^^ [1]
+
+References:
    A.js:17:34
    17| function foo3(): {[key: string]: number} {
                                         ^^^^^^ [2]
@@ -43,35 +40,29 @@ References:
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:23:10
+Error ------------------------------------------------------------------------------------------------------- A.js:23:17
 
 Cannot return object literal because string [1] is incompatible with number [2] in property `foo`.
 
-   A.js:23:10
-   23|   return { foo: "bar" }
-                ^^^^^^^^^^^^^^
-
-References:
    A.js:23:17
    23|   return { foo: "bar" }
                        ^^^^^ [1]
+
+References:
    A.js:22:34
    22| function foo4(): {[key: number]: number} {
                                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:38:10
+Error ------------------------------------------------------------------------------------------------------- A.js:38:17
 
 Cannot return object literal because string [1] is incompatible with number [2] in property `foo`.
 
-   A.js:38:10
-   38|   return { foo: "bar" }
-                ^^^^^^^^^^^^^^
-
-References:
    A.js:38:17
    38|   return { foo: "bar" }
                        ^^^^^ [1]
+
+References:
    A.js:37:47
    37| function foo7(): {[key: string]: number; foo: number} {
                                                      ^^^^^^ [2]

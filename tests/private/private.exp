@@ -1,10 +1,10 @@
-Error ------------------------------------------------------------------------------------------------- private.js:11:22
+Error ------------------------------------------------------------------------------------------------- private.js:11:27
 
 Cannot get `this._x` because property `_x` is missing in `B` [1].
 
-   private.js:11:22
+   private.js:11:27
    11|     var _x: string = this._x;
-                            ^^^^^^^
+                                 ^^
 
 References:
    private.js:8:7

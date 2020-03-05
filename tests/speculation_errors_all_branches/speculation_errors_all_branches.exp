@@ -6,7 +6,7 @@ Cannot call `a` because:
 
    intersection-function.js:19:1
    19| a(true);
-       ^^^^^^^
+       ^
 
 References:
    intersection-function.js:19:3
@@ -28,7 +28,7 @@ Cannot call `b` because:
 
    intersection-function.js:23:1
    23| b(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:23:3
@@ -50,7 +50,7 @@ Cannot call `b` because:
 
    intersection-function.js:24:1
    24| b({p: 42});
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:24:3
@@ -77,7 +77,7 @@ Cannot call `c` because:
 
    intersection-function.js:30:1
    30| c(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:30:3
@@ -107,7 +107,7 @@ Cannot call `c` because:
 
    intersection-function.js:31:1
    31| c({a: {b: 42}});
-       ^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:31:3
@@ -139,7 +139,7 @@ Cannot call `d` because:
 
    intersection-function.js:36:1
    36| d(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:36:3
@@ -165,7 +165,7 @@ Cannot call `d` because:
 
    intersection-function.js:37:1
    37| d({a: 42});
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:37:3
@@ -194,7 +194,7 @@ Cannot call `d` because:
 
    intersection-function.js:38:1
    38| d({a: {b: 42}});
-       ^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:38:3
@@ -225,7 +225,7 @@ Cannot call `e` because:
 
    intersection-function.js:42:1
    42| e(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:42:3
@@ -247,7 +247,7 @@ Cannot call `e` because:
 
    intersection-function.js:44:1
    44| e(new Y());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:44:3
@@ -272,7 +272,7 @@ Cannot call `e` because:
 
    intersection-function.js:45:1
    45| e(new Z());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:45:3
@@ -294,7 +294,7 @@ Cannot call `e` because:
 
    intersection-function.js:46:1
    46| e({p: true});
-       ^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:46:3
@@ -320,7 +320,7 @@ Cannot call `f` because:
 
    intersection-function.js:51:1
    51| f(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:51:3
@@ -346,7 +346,7 @@ Cannot call `f` because:
 
    intersection-function.js:52:1
    52| f({p: 42});
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:52:7
@@ -375,7 +375,7 @@ Cannot call `f` because:
 
    intersection-function.js:54:1
    54| f(new Y());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:10:6
@@ -404,7 +404,7 @@ Cannot call `f` because:
 
    intersection-function.js:55:1
    55| f(new Z());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:55:3
@@ -430,7 +430,7 @@ Cannot call `f` because:
 
    intersection-function.js:56:1
    56| f(([1]: [number]));
-       ^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:56:9
@@ -459,7 +459,7 @@ Cannot call `f` because:
 
    intersection-function.js:57:1
    57| f(([1, 2]: [number, number]));
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:57:12
@@ -488,7 +488,7 @@ Cannot call `f` because:
 
    intersection-function.js:58:1
    58| f(([1, 2, 3]: [number, number, number]));
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:58:15
@@ -520,7 +520,7 @@ Cannot call `f` because:
 
    intersection-function.js:59:1
    59| f(((null: any): Array<number> & {p: number}));
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:59:17
@@ -560,7 +560,7 @@ Cannot call `g` because:
 
    intersection-function.js:63:1
    63| g(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:63:3
@@ -582,7 +582,7 @@ Cannot call `g` because:
 
    intersection-function.js:64:1
    64| g({});
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:64:3
@@ -604,7 +604,7 @@ Cannot call `h` because:
 
    intersection-function.js:68:1
    68| h(1, 2, 3);
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:66:19
@@ -626,7 +626,7 @@ Cannot call `i` because:
 
    intersection-function.js:72:1
    72| i(new Y(), 42);
-       ^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:72:12
@@ -651,7 +651,7 @@ Cannot call `j` because:
 
    intersection-function.js:76:1
    76| j(1, 2);
-       ^^^^^^^
+       ^
 
 References:
    intersection-function.js:76:6
@@ -676,7 +676,7 @@ Cannot call `k` because:
 
    intersection-function.js:80:1
    80| k(1, {p: 2});
-       ^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:80:10
@@ -701,7 +701,7 @@ Cannot call `m` because:
 
    intersection-function.js:84:1
    84| m((new W(): W<number>));
-       ^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:84:15
@@ -718,18 +718,15 @@ References:
                                  ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- sentinel.js:11:2
+Error ------------------------------------------------------------------------------------------------ sentinel.js:11:17
 
 Cannot cast object literal to `X` because string [1] is incompatible with number [2] in property `p`.
 
-   sentinel.js:11:2
-   11| ({type: 'A', p: 'foo'}: X);
-        ^^^^^^^^^^^^^^^^^^^^^
-
-References:
    sentinel.js:11:17
    11| ({type: 'A', p: 'foo'}: X);
                        ^^^^^ [1]
+
+References:
    sentinel.js:7:20
     7|   | {type: 'A', p: number}
                           ^^^^^^ [2]
@@ -1124,21 +1121,18 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:46:3
+Error ---------------------------------------------------------------------------------------------------- union.js:46:8
 
 Cannot cast array literal to `F` because:
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or tuple type [1] has an arity of 1 but tuple type [5] has an arity of 2.
 
-   union.js:46:3
-   46| (([1]: [number]): F);
-         ^^^^^^^^^^^^^
-
-References:
    union.js:46:8
    46| (([1]: [number]): F);
               ^^^^^^^^ [1]
+
+References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
@@ -1153,21 +1147,18 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:47:3
+Error --------------------------------------------------------------------------------------------------- union.js:47:11
 
 Cannot cast array literal to `F` because:
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or number [3] is incompatible with string [5] in index 0.
 
-   union.js:47:3
-   47| (([1, 2]: [number, number]): F);
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:47:11
    47| (([1, 2]: [number, number]): F);
                  ^^^^^^^^^^^^^^^^ [1]
+
+References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
@@ -1182,21 +1173,18 @@ References:
                                                         ^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:48:3
+Error --------------------------------------------------------------------------------------------------- union.js:48:14
 
 Cannot cast array literal to `F` because:
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or tuple type [1] has an arity of 3 but tuple type [5] has an arity of 2.
 
-   union.js:48:3
-   48| (([1, 2, 3]: [number, number, number]): F);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:48:14
    48| (([1, 2, 3]: [number, number, number]): F);
                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
@@ -1211,7 +1199,7 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:49:4
+Error --------------------------------------------------------------------------------------------------- union.js:49:16
 
 Cannot cast `null` to `F` because:
  - Either array type [1] is incompatible with object type [2].
@@ -1221,9 +1209,9 @@ Cannot cast `null` to `F` because:
  - Or array type [1] has an unknown number of elements, so is incompatible with tuple type [9].
  - Or object type [7] is incompatible with tuple type [9].
 
-   union.js:49:4
+   union.js:49:16
    49| (((null: any): Array<number> & {p: number}): F);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    union.js:49:16
@@ -1293,15 +1281,15 @@ References:
                          ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:56:3
+Error --------------------------------------------------------------------------------------------------- union.js:56:12
 
 Cannot cast `new W()` to `M` because:
  - Either number [1] is incompatible with string [2] in type argument `T` [3].
  - Or number [1] is incompatible with string [4] in property `p`.
 
-   union.js:56:3
+   union.js:56:12
    56| ((new W(): W<number>): M);
-         ^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^
 
 References:
    union.js:56:14

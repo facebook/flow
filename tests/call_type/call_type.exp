@@ -48,18 +48,15 @@ Cannot use type without at least 1 type argument.
                ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:3
+Error ----------------------------------------------------------------------------------------------------- test.js:13:9
 
 Cannot cast `null` to `C` because mixed [1] is incompatible with number [2].
 
-   test.js:13:3
-   13| ((null: mixed): C); // Error: mixed ~> number
-         ^^^^^^^^^^^
-
-References:
    test.js:13:9
    13| ((null: mixed): C); // Error: mixed ~> number
                ^^^^^ [1]
+
+References:
    test.js:13:17
    13| ((null: mixed): C); // Error: mixed ~> number
                        ^ [2]
@@ -96,18 +93,15 @@ References:
             ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:24:3
+Error ----------------------------------------------------------------------------------------------------- test.js:24:9
 
 Cannot cast `null` to `E` because mixed [1] is incompatible with number [2].
 
-   test.js:24:3
-   24| ((null: mixed): E); // Error: mixed ~> number
-         ^^^^^^^^^^^
-
-References:
    test.js:24:9
    24| ((null: mixed): E); // Error: mixed ~> number
                ^^^^^ [1]
+
+References:
    test.js:24:17
    24| ((null: mixed): E); // Error: mixed ~> number
                        ^ [2]
@@ -130,18 +124,15 @@ References:
            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:3
+Error ----------------------------------------------------------------------------------------------------- test.js:31:9
 
 Cannot cast `null` to `F` because mixed [1] is incompatible with number [2].
 
-   test.js:31:3
-   31| ((null: mixed): F); // Error: mixed ~> number
-         ^^^^^^^^^^^
-
-References:
    test.js:31:9
    31| ((null: mixed): F); // Error: mixed ~> number
                ^^^^^ [1]
+
+References:
    test.js:31:17
    31| ((null: mixed): F); // Error: mixed ~> number
                        ^ [2]
@@ -164,20 +155,17 @@ References:
            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:38:3
+Error ----------------------------------------------------------------------------------------------------- test.js:38:9
 
 Cannot cast `null` to `G` because:
  - Either cannot instantiate `$Call` because mixed [1] is incompatible with number [2] in the first argument.
  - Or cannot instantiate `$Call` because mixed [1] is incompatible with string [3] in the second argument.
 
-   test.js:38:3
-   38| ((null: mixed): G); // Error: mixed ~> number | string
-         ^^^^^^^^^^^
-
-References:
    test.js:38:9
    38| ((null: mixed): G); // Error: mixed ~> number | string
                ^^^^^ [1]
+
+References:
    test.js:35:21
    35| type G = $Call<Fn2, number, string>;
                            ^^^^^^ [2]
@@ -237,20 +225,17 @@ References:
            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- union.js:6:3
+Error ----------------------------------------------------------------------------------------------------- union.js:6:9
 
 Cannot cast `null` to `A` because:
  - Either mixed [1] is incompatible with string [2].
  - Or mixed [1] is incompatible with number [3].
 
-   union.js:6:3
-   6| ((null: mixed): A); // Error: mixed ~> number | string
-        ^^^^^^^^^^^
-
-References:
    union.js:6:9
    6| ((null: mixed): A); // Error: mixed ~> number | string
               ^^^^^ [1]
+
+References:
    union.js:3:40
    3| type A = $Call<(() => number) | (() => string)>;
                                              ^^^^^^ [2]
@@ -310,20 +295,17 @@ References:
           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:14:3
+Error ---------------------------------------------------------------------------------------------------- union.js:14:9
 
 Cannot cast `null` to `B` because:
  - Either mixed [1] is incompatible with string [2].
  - Or mixed [1] is incompatible with number [3].
 
-   union.js:14:3
-   14| ((null: mixed): B); // Error: mixed ~> number | string
-         ^^^^^^^^^^^
-
-References:
    union.js:14:9
    14| ((null: mixed): B); // Error: mixed ~> number | string
                ^^^^^ [1]
+
+References:
    union.js:11:60
    11| type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
                                                                   ^^^^^^ [2]
@@ -383,20 +365,17 @@ References:
            ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:22:3
+Error ---------------------------------------------------------------------------------------------------- union.js:22:9
 
 Cannot cast `null` to `C` because:
  - Either mixed [1] is incompatible with number [2].
  - Or mixed [1] is incompatible with string [3].
 
-   union.js:22:3
-   22| ((null: mixed): C); // Error: mixed ~> number | string
-         ^^^^^^^^^^^
-
-References:
    union.js:22:9
    22| ((null: mixed): C); // Error: mixed ~> number | string
                ^^^^^ [1]
+
+References:
    union.js:19:29
    19| type C = $Call<<T>(T) => T, number | string>;
                                    ^^^^^^ [2]

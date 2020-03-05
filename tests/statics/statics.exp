@@ -1,10 +1,10 @@
-Error --------------------------------------------------------------------------------------------- class_statics.js:6:1
+Error --------------------------------------------------------------------------------------------- class_statics.js:6:3
 
 Cannot assign function to `C.g` because property `g` is missing in statics of `C` [1].
 
-   class_statics.js:6:1
+   class_statics.js:6:3
    6| C.g = function(x:string) { C.f(x); };
-      ^^^
+        ^
 
 References:
    class_statics.js:1:7

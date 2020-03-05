@@ -12,13 +12,13 @@ References:
           ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- shadow_exports.js:4:1
+Error -------------------------------------------------------------------------------------------- shadow_exports.js:4:8
 
 Cannot assign `42` to `module.exports` because property `exports` is missing in statics of function type [1].
 
-   shadow_exports.js:4:1
+   shadow_exports.js:4:8
    4| module.exports = 42;
-      ^^^^^^^^^^^^^^
+             ^^^^^^^
 
 References:
    shadow_exports.js:3:21

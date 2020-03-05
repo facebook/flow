@@ -4,7 +4,7 @@ Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
    hoisted.js:10:3
    10|   f(); // error, possibly undefined
-         ^^^
+         ^
 
 References:
    hoisted.js:8:9
@@ -18,7 +18,7 @@ Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
    hoisted.js:17:3
    17|   f(); // error, possibly undefined
-         ^^^
+         ^
 
 References:
    hoisted.js:15:9
@@ -32,7 +32,7 @@ Cannot call `f` because uninitialized variable [1] is not a function.
 
    hoisted.js:31:3
    31|   f(); // error, possibly undefined
-         ^^^
+         ^
 
 References:
    hoisted.js:29:9
@@ -46,7 +46,7 @@ Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
    hoisted.js:38:3
    38|   f(); // error, possibly undefined
-         ^^^
+         ^
 
 References:
    hoisted.js:36:9
@@ -60,7 +60,7 @@ Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
    hoisted.js:45:3
    45|   f(); // error, possibly undefined
-         ^^^
+         ^
 
 References:
    hoisted.js:43:9

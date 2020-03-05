@@ -66,19 +66,16 @@ References:
                                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:23:5
+Error ------------------------------------------------------------------------------------------------- Profile.js:23:24
 
 Cannot create `ProfilePic` element because object literal [1] is incompatible with `ProfilePic_imageRef` [2] in property
 `image`.
 
-   Profile.js:23:5
-   23|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    Profile.js:23:24
    23|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    ProfilePic.graphql.js:11:3
    11|   ProfilePic_imageRef,
          ^^^^^^^^^^^^^^^^^^^ [2]
@@ -101,86 +98,95 @@ References:
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:15:1
+Error ----------------------------------------------------------------------------------------------------- main.js:15:2
 
 Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
 
+   main.js:15:2
+   15| <Profile user={userRef} />; // Error: Missing foo
+        ^^^^^^^
+
+References:
    main.js:15:1
    15| <Profile user={userRef} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    Relay.js:46:24
    46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:16:1
+Error ----------------------------------------------------------------------------------------------------- main.js:16:2
 
 Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
 
+   main.js:16:2
+   16| <Profile foo={42} />; // Error: Missing user
+        ^^^^^^^
+
+References:
    main.js:16:1
    16| <Profile foo={42} />; // Error: Missing user
        ^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    Relay.js:46:24
    46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:17:1
+Error ---------------------------------------------------------------------------------------------------- main.js:17:29
 
 Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
 
-   main.js:17:1
-   17| <Profile user={userRef} foo="bar" />; // Error: string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    main.js:17:29
    17| <Profile user={userRef} foo="bar" />; // Error: string ~> number
                                    ^^^^^ [1]
+
+References:
    Profile.js:14:8
    14|   foo: number,
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:18:1
+Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
 Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
 
+   main.js:18:2
+   18| <Profile />; // Error: Missing user and foo
+        ^^^^^^^
+
+References:
    main.js:18:1
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
-
-References:
    Relay.js:46:24
    46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:18:1
+Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
 Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
 
+   main.js:18:2
+   18| <Profile />; // Error: Missing user and foo
+        ^^^^^^^
+
+References:
    main.js:18:1
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
-
-References:
    Relay.js:46:24
    46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:19:1
+Error ---------------------------------------------------------------------------------------------------- main.js:19:16
 
 Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
 
-   main.js:19:1
+   main.js:19:16
    19| <Profile user={user} foo={42} />; // Error: You must pass in a ref
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^
 
 References:
    main.js:11:19
@@ -191,13 +197,13 @@ References:
          ^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:20:1
+Error ---------------------------------------------------------------------------------------------------- main.js:20:16
 
 Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
 
-   main.js:20:1
+   main.js:20:16
    20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^
 
 References:
    main.js:11:19
@@ -208,52 +214,43 @@ References:
          ^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:20:1
+Error ---------------------------------------------------------------------------------------------------- main.js:20:26
 
 Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
 
-   main.js:20:1
-   20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    main.js:20:26
    20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
                                 ^^^^^ [1]
+
+References:
    Profile.js:14:8
    14|   foo: number,
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:21:1
+Error ---------------------------------------------------------------------------------------------------- main.js:21:23
 
 Cannot create `Profile` element because mixed [1] is incompatible with `Profile_userRef` [2] in property `user`.
 
-   main.js:21:1
-   21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    main.js:21:23
    21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
                              ^^^^^ [1]
+
+References:
    Profile.graphql.js:12:3
    12|   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:21:1
+Error ---------------------------------------------------------------------------------------------------- main.js:21:43
 
 Cannot create `Profile` element because mixed [1] is incompatible with number [2] in property `foo`.
 
-   main.js:21:1
-   21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    main.js:21:43
    21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
                                                  ^^^^^ [1]
+
+References:
    Profile.js:14:8
    14|   foo: number,
               ^^^^^^ [2]

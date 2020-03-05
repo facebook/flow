@@ -1,11 +1,11 @@
-Error ----------------------------------------------------------------------------------------------- concretize.js:10:1
+Error ---------------------------------------------------------------------------------------------- concretize.js:10:16
 
 Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [2] in type argument `T` [3] of the first
 argument of property `onKeyDown`.
 
-   concretize.js:10:1
+   concretize.js:10:16
     10| <C1 onKeyDown={_onKeyDown} />;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       ^^^^^^^^^^
 
 References:
    <BUILTINS>/react-dom.js:181:21
@@ -19,14 +19,14 @@ References:
            ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- concretize.js:10:1
+Error ---------------------------------------------------------------------------------------------- concretize.js:10:16
 
 Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [2] in type argument `T` of the first
 argument of property `onKeyDown`.
 
-   concretize.js:10:1
+   concretize.js:10:16
     10| <C1 onKeyDown={_onKeyDown} />;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       ^^^^^^^^^^
 
 References:
    <BUILTINS>/react-dom.js:181:7
@@ -37,14 +37,14 @@ References:
                                                       ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:1
+Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
 Cannot create `Foo` element because undefined property `context` [1] is incompatible with object type [2] in type
 argument `Context`.
 
-   test.js:23:1
+   test.js:23:2
    23| <Foo x={props.t} />;
-       ^^^^^^^^^^^^^^^^^^^
+        ^^^
 
 References:
    test.js:17:10
@@ -55,14 +55,14 @@ References:
                   ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+Error ----------------------------------------------------------------------------------------------------- test.js:35:2
 
 Cannot create `Bar` element because undefined property `context` [1] is incompatible with object type [2] in type
 argument `Context`.
 
-   test.js:35:1
+   test.js:35:2
    35| <Bar y={props.t} />;
-       ^^^^^^^^^^^^^^^^^^^
+        ^^^
 
 References:
    test.js:29:10
@@ -73,13 +73,13 @@ References:
                   ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+Error ----------------------------------------------------------------------------------------------------- test.js:35:9
 
 Cannot create `Bar` element because `T` [1] is incompatible with object type [2] in type argument `Props`.
 
-   test.js:35:1
+   test.js:35:9
    35| <Bar y={props.t} />;
-       ^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^
 
 References:
    test.js:6:18

@@ -54,14 +54,14 @@ References:
                         ^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- instanceof.js:85:5
+Error ----------------------------------------------------------------------------------------------- instanceof.js:85:7
 
 Cannot assign `123` to `x[0]` because an index signature declaring the expected key / value type is missing in
 number [1].
 
-   instanceof.js:85:5
+   instanceof.js:85:7
    85|     x[0] = 123; // error
-           ^^^^
+             ^
 
 References:
    instanceof.js:81:34
@@ -86,13 +86,13 @@ References:
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- mixed.js:40:5
+Error ---------------------------------------------------------------------------------------------------- mixed.js:40:7
 
 Cannot get `x.p` because property `p` is missing in `Object` [1].
 
-   mixed.js:40:5
+   mixed.js:40:7
    40|     x.p;
-           ^^^
+             ^
 
 References:
    mixed.js:39:20
@@ -106,7 +106,7 @@ Cannot call `x` because a call signature declaring the expected parameter / retu
 
    mixed.js:46:5
    46|     x();
-           ^^^
+           ^
 
 References:
    mixed.js:45:20

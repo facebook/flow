@@ -1,15 +1,12 @@
-Error ------------------------------------------------------------------------------------------------------- qux.js:2:2
+Error ------------------------------------------------------------------------------------------------------- qux.js:2:7
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `x`.
 
-   qux.js:2:2
-   2| ({ x: "" }: Foo);
-       ^^^^^^^^^
-
-References:
    qux.js:2:7
    2| ({ x: "" }: Foo);
             ^^ [1]
+
+References:
    foo.js:1:24
    1| export type Foo = { x: number; }
                              ^^^^^^ [2]

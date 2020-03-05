@@ -189,35 +189,29 @@ References:
              ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:107:3
+Error --------------------------------------------------------------------------------------------------- test.js:107:16
 
 Cannot initialize property `s` with `0` because number [1] is incompatible with string [2].
 
-   test.js:107:3
-   107|   #s: string = 0; // Error, number ~> string
-          ^^^^^^^^^^^^^^^
-
-References:
    test.js:107:16
    107|   #s: string = 0; // Error, number ~> string
                        ^ [1]
+
+References:
    test.js:107:7
    107|   #s: string = 0; // Error, number ~> string
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:112:3
+Error --------------------------------------------------------------------------------------------------- test.js:112:24
 
 Cannot initialize property `ss` with `0` because number [1] is incompatible with string [2].
 
-   test.js:112:3
-   112|   static #ss: string = 0; // Error, number ~> string
-          ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    test.js:112:24
    112|   static #ss: string = 0; // Error, number ~> string
                                ^ [1]
+
+References:
    test.js:112:15
    112|   static #ss: string = 0; // Error, number ~> string
                       ^^^^^^ [2]

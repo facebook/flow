@@ -1,10 +1,10 @@
-Error ---------------------------------------------------------------------------------------------------- Sigma.js:13:5
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:13:7
 
 Cannot call `x.c` because property `c` is missing in `B` [1].
 
-   Sigma.js:13:5
+   Sigma.js:13:7
    13|     x.c(); // error
-           ^^^^^
+             ^
 
 References:
    Sigma.js:10:16
@@ -40,13 +40,13 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Sigma.js:24:5
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:24:7
 
 Cannot call `x.d` because property `d` is missing in `C` [1].
 
-   Sigma.js:24:5
+   Sigma.js:24:7
    24|     x.d(); // error
-           ^^^^^
+             ^
 
 References:
    Sigma.js:8:7
@@ -54,13 +54,13 @@ References:
              ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- Sigma.js:27:5
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:27:7
 
 Cannot call `x.c` because property `c` is missing in `A` [1].
 
-   Sigma.js:27:5
+   Sigma.js:27:7
    27|     x.c(); // error
-           ^^^^^
+             ^
 
 References:
    Sigma.js:19:16
@@ -85,13 +85,13 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:11:12
+Error ---------------------------------------------------------------------------------------------------- test.js:11:16
 
 Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1].
 
-   test.js:11:12
+   test.js:11:16
    11|     return obj.childProp_TYPO; // error (obj: ChildClass)
-                  ^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^
 
 References:
    test.js:5:7

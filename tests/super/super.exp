@@ -116,13 +116,13 @@ References:
                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- super.js:15:6
+Error --------------------------------------------------------------------------------------------------- super.js:15:12
 
 Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1].
 
-   super.js:15:6
+   super.js:15:12
    15|     (super.doesntExist()); // error, A doesn't have a doesntExist method
-            ^^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^^^
 
 References:
    super.js:8:17
@@ -144,13 +144,13 @@ References:
              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- super.js:20:12
+Error --------------------------------------------------------------------------------------------------- super.js:20:18
 
 Cannot get `super.g` because property `g` is missing in `A` [1].
 
-   super.js:20:12
+   super.js:20:18
    20|     return super.g;
-                  ^^^^^^^
+                        ^
 
 References:
    super.js:8:17

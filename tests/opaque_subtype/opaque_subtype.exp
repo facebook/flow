@@ -209,12 +209,12 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- typeapp-test.js:5:3
+Error ---------------------------------------------------------------------------------------------- typeapp-test.js:5:8
 
 Cannot assign `null` to `foo2.p` because property `p` is not writable.
 
    5|   foo2.p = null; // Error, covariant property p
-        ^^^^^^
+             ^
 
 
 

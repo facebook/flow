@@ -4,7 +4,7 @@ Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empt
 
    nullish_coalescing.js:4:4
    4|   (a ?? "hello" : empty);
-         ^^^^^^^^^^^^
+         ^
 
 References:
    nullish_coalescing.js:1:18
@@ -15,18 +15,15 @@ References:
                         ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:4:4
+Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:4:9
 
 Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2].
 
-   nullish_coalescing.js:4:4
-   4|   (a ?? "hello" : empty);
-         ^^^^^^^^^^^^
-
-References:
    nullish_coalescing.js:4:9
    4|   (a ?? "hello" : empty);
               ^^^^^^^ [1]
+
+References:
    nullish_coalescing.js:4:19
    4|   (a ?? "hello" : empty);
                         ^^^^^ [2]
@@ -38,7 +35,7 @@ Cannot cast `a ?? 42` to empty because string [1] is incompatible with empty [2]
 
    nullish_coalescing.js:6:4
    6|   (a ?? 42 : empty);
-         ^^^^^^^
+         ^
 
 References:
    nullish_coalescing.js:1:18
@@ -49,18 +46,15 @@ References:
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:6:4
+Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:6:9
 
 Cannot cast `a ?? 42` to empty because number [1] is incompatible with empty [2].
 
-   nullish_coalescing.js:6:4
-   6|   (a ?? 42 : empty);
-         ^^^^^^^
-
-References:
    nullish_coalescing.js:6:9
    6|   (a ?? 42 : empty);
               ^^ [1]
+
+References:
    nullish_coalescing.js:6:14
    6|   (a ?? 42 : empty);
                    ^^^^^ [2]
@@ -72,7 +66,7 @@ Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empt
 
    nullish_coalescing.js:16:4
    16|   (d ?? "hello" : empty);
-          ^^^^^^^^^^^^
+          ^
 
 References:
    nullish_coalescing.js:1:18
@@ -89,7 +83,7 @@ Cannot cast `d ?? "hello"` to empty because number [1] is incompatible with empt
 
    nullish_coalescing.js:16:4
    16|   (d ?? "hello" : empty);
-          ^^^^^^^^^^^^
+          ^
 
 References:
    nullish_coalescing.js:1:30
@@ -100,18 +94,15 @@ References:
                          ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:4
+Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:9
 
 Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2].
 
-   nullish_coalescing.js:16:4
-   16|   (d ?? "hello" : empty);
-          ^^^^^^^^^^^^
-
-References:
    nullish_coalescing.js:16:9
    16|   (d ?? "hello" : empty);
                ^^^^^^^ [1]
+
+References:
    nullish_coalescing.js:16:19
    16|   (d ?? "hello" : empty);
                          ^^^^^ [2]

@@ -1,22 +1,16 @@
-Error -------------------------------------------------------------------------------------------------- lib/test.js:7:1
+Error ------------------------------------------------------------------------------------------------- lib/test.js:8:10
 
 Cannot extend mixins `_module.C` [1] with `D` because string [2] is incompatible with number [3] in the return value of
 property `foo`.
 
-   lib/test.js:7:1
-      v----------------------------------
-   7| declare class D extends _module.C {
+   lib/test.js:8:10
    8|   foo(): string;
-   9| }
-      ^
+               ^^^^^^ [2]
 
 References:
    lib/test.js:7:25
    7| declare class D extends _module.C {
                               ^^^^^^^^^ [1]
-   lib/test.js:8:10
-   8|   foo(): string;
-               ^^^^^^ [2]
    lib/test.js:2:10
    2|   foo(): number;
                ^^^^^^ [3]

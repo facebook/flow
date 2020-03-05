@@ -1,19 +1,12 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:2:33
+Error ------------------------------------------------------------------------------------------------------ test.js:4:8
 
 Cannot assign object literal to `o1` because string [1] is incompatible with number [2] in property `bar`.
 
-   test.js:2:33
-                                      v
-   2| var o1: {[key: Key1]: number} = {
-   3|   foo: 0,
-   4|   bar: "", // error: string ~/~ number
-   5| };
-      ^
-
-References:
    test.js:4:8
    4|   bar: "", // error: string ~/~ number
              ^^ [1]
+
+References:
    test.js:2:23
    2| var o1: {[key: Key1]: number} = {
                             ^^^^^^ [2]

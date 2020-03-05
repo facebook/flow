@@ -947,13 +947,13 @@ It is unsafe to call a property function in the constructor before all class pro
                    ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:773:5
+Error --------------------------------------------------------------------------------------------------- test.js:773:10
 
 Cannot call `this.p` because number [1] is not a function.
 
-   test.js:773:5
+   test.js:773:10
    773|     this.p(); // ExpectError Cannot call `this.p` because number is not a function.
-            ^^^^^^^^
+                 ^
 
 References:
    test.js:771:7

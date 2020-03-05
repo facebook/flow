@@ -1,10 +1,10 @@
-Error ------------------------------------------------------------------------------------------------ obj_annot.js:4:12
+Error ------------------------------------------------------------------------------------------------ obj_annot.js:4:18
 
 Cannot get `param.id` because property `id` is missing in object type [1].
 
-   obj_annot.js:4:12
+   obj_annot.js:4:18
    4|     return param.id;
-                 ^^^^^^^^
+                       ^^
 
 References:
    obj_annot.js:3:21

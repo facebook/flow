@@ -39,13 +39,13 @@ References:
         ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1].
 
-   apply.js:2:10
+   apply.js:2:15
     2|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    apply.js:12:12
@@ -53,13 +53,13 @@ References:
                   ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1].
 
-   apply.js:2:10
+   apply.js:2:15
     2|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    apply.js:35:25
@@ -67,13 +67,13 @@ References:
                                ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1].
 
-   apply.js:2:10
+   apply.js:2:15
     2|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    apply.js:40:25
@@ -87,7 +87,7 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
 
    apply.js:6:1
      6| test.apply("", ["", 0], 'error')
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:127:18
@@ -95,13 +95,13 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:15:1
+Error ---------------------------------------------------------------------------------------------------- apply.js:15:6
 
 Cannot call `test.apply` because function [1] requires another argument.
 
-   apply.js:15:1
+   apply.js:15:6
    15| test.apply("", [""]); // error: void ~> number
-       ^^^^^^^^^^^^^^^^^^^^
+            ^^^^^
 
 References:
    apply.js:1:1
@@ -285,13 +285,13 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- bind.js:19:5
+Error ----------------------------------------------------------------------------------------------------- bind.js:19:7
 
 Cannot call `x.bind` because property `bind` is missing in object type [1].
 
-   bind.js:19:5
+   bind.js:19:7
    19|     x.bind(x, 'foo'); // error
-           ^^^^^^^^^^^^^^^^
+             ^^^^
 
 References:
    bind.js:18:15
@@ -313,13 +313,13 @@ References:
                                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:4:10
+Error ----------------------------------------------------------------------------------------------------- call.js:4:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1].
 
-   call.js:4:10
+   call.js:4:15
     4|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    call.js:11:11
@@ -327,13 +327,13 @@ References:
                  ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:4:10
+Error ----------------------------------------------------------------------------------------------------- call.js:4:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1].
 
-   call.js:4:10
+   call.js:4:15
     4|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    call.js:30:24
@@ -341,13 +341,13 @@ References:
                               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:14:1
+Error ----------------------------------------------------------------------------------------------------- call.js:14:6
 
 Cannot call `test.call` because function [1] requires another argument.
 
-   call.js:14:1
+   call.js:14:6
    14| test.call("", ""); // error: void ~> number
-       ^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    call.js:3:1
@@ -459,55 +459,46 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:47:7
+Error ---------------------------------------------------------------------------------------------------- call.js:47:11
 
 Cannot call `f` with object literal bound to `y` because string [1] is incompatible with string literal `bar` [2] in
 property `x`.
 
-   call.js:47:7
-   47|     f({x: "foo"}); // error, "foo" !~> "bar"
-             ^^^^^^^^^^
-
-References:
    call.js:47:11
    47|     f({x: "foo"}); // error, "foo" !~> "bar"
                  ^^^^^ [1]
+
+References:
    call.js:46:24
    46|     function f(y: { x: "bar" }): void {}
                               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:53:7
+Error ---------------------------------------------------------------------------------------------------- call.js:53:11
 
 Cannot call `f` with object literal bound to `y` because number [1] is incompatible with number literal `123` [2] in
 property `x`.
 
-   call.js:53:7
-   53|     f({x: 234}); // error, 234 !~> 123
-             ^^^^^^^^
-
-References:
    call.js:53:11
    53|     f({x: 234}); // error, 234 !~> 123
                  ^^^ [1]
+
+References:
    call.js:52:24
    52|     function f(y: { x: 123 }): void {}
                               ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:59:7
+Error ---------------------------------------------------------------------------------------------------- call.js:59:11
 
 Cannot call `f` with object literal bound to `y` because boolean [1] is incompatible with boolean literal `false` [2] in
 property `x`.
 
-   call.js:59:7
-   59|     f({x: true}); // error, true !~> false
-             ^^^^^^^^^
-
-References:
    call.js:59:11
    59|     f({x: true}); // error, true !~> false
                  ^^^^ [1]
+
+References:
    call.js:58:24
    58|     function f(y: { x: false }): void {}
                               ^^^^^ [2]
@@ -701,13 +692,13 @@ References:
                                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- rest.js:36:10
+Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
 
 Cannot call `xs.pop` because property `pop` is missing in `T` [1].
 
-   rest.js:36:10
+   rest.js:36:13
    36|   return xs.pop(); // Error - no bound on T
-                ^^^^^^^^
+                   ^^^
 
 References:
    rest.js:35:39
@@ -721,9 +712,12 @@ Cannot call `string_rest_t` because rest array [1] is incompatible with string [
 
    rest.js:38:55
    38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
-                                                             ^^^^^^^^^^^^^^^ [1]
+                                                             ^^^^^^^^^^^^^
 
 References:
+   rest.js:38:55
+   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                                             ^^^^^^^^^^^^^^^ [1]
    rest.js:38:27
    38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
                                  ^^^^^^ [2]
@@ -735,9 +729,12 @@ Cannot call `empty_rest_t` because rest array [1] is incompatible with empty [2]
 
    rest.js:39:53
    39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
-                                                           ^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^
 
 References:
+   rest.js:39:53
+   39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
+                                                           ^^^^^^^^^^^^^^ [1]
    rest.js:29:26
    29| function empty_rest_t<T: empty>(...xs: T): void {}
                                 ^^^^^ [2]
@@ -762,11 +759,8 @@ Error --------------------------------------------------------------------------
 Cannot return function because rest array [1] is incompatible with number [2] in the return value.
 
    rest.js:58:10
-                v------------------
    58|   return function(...args) {
-   59|     return args; // Error: Array ~> number
-   60|   }
-         ^
+                ^^^^^^^^^^^^^^^^^
 
 References:
    rest.js:57:4
@@ -783,7 +777,7 @@ Cannot call `requires_first_param` because function [1] requires another argumen
 
    rest.js:64:1
    64| requires_first_param(); // Error: missing first arg
-       ^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
    rest.js:63:1
@@ -805,7 +799,7 @@ Cannot call `f` because string [1] is not an array.
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors
-         ^^^^^^^^^^
+         ^
 
 References:
    rest_type.js:18:30
@@ -819,9 +813,12 @@ Cannot call `f` because rest array [1] is incompatible with string [2].
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors
-         ^^^^^^^^^^ [1]
+         ^
 
 References:
+   rest_type.js:20:3
+   20|   f('hello'); // Error - string ~> array - luckily this errors
+         ^^^^^^^^^^ [1]
    rest_type.js:18:30
    18| type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                     ^^^^^^ [2]

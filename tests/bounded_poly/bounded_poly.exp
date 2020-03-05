@@ -49,18 +49,15 @@ References:
                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:22:8
+Error ---------------------------------------------------------------------------------------------------- test.js:22:10
 
 Cannot instantiate `C` because string [1] is incompatible with number [2] in type argument `T`.
 
-   test.js:22:8
-   22| var c: C<string> = new C; // error, since T = string is incompatible with number
-              ^^^^^^^^^
-
-References:
    test.js:22:10
    22| var c: C<string> = new C; // error, since T = string is incompatible with number
                 ^^^^^^ [1]
+
+References:
    test.js:7:12
     7| class C<T: number> {
                   ^^^^^^ [2]
@@ -103,18 +100,15 @@ References:
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:23:17
+Error ---------------------------------------------------------------------------------------------------- test.js:23:23
 
 Cannot call `c.qux` because number [1] is incompatible with string [2] in type argument `U`.
 
-   test.js:23:17
-   23| var q: number = c.qux(0);
-                       ^^^^^^^^
-
-References:
    test.js:23:23
    23| var q: number = c.qux(0);
                              ^ [1]
+
+References:
    test.js:22:10
    22| var c: C<string> = new C; // error, since T = string is incompatible with number
                 ^^^^^^ [2]

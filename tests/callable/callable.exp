@@ -5,7 +5,7 @@ type [1].
 
    primitives.js:6:1
    6| dict(); // error, callable signature not found
-      ^^^^^^
+      ^^^^
 
 References:
    primitives.js:5:11

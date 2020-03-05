@@ -22,18 +22,15 @@ Unreachable code.
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- index.js:50:10
+Error --------------------------------------------------------------------------------------------------- index.js:50:14
 
 Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2].
 
-   index.js:50:10
-   50|   return c ? 1 : invariant();
-                ^^^^^^^^^^^^^^^^^^^
-
-References:
    index.js:50:14
    50|   return c ? 1 : invariant();
                     ^ [1]
+
+References:
    index.js:49:23
    49| function foo(c: bool):string {
                              ^^^^^^ [2]

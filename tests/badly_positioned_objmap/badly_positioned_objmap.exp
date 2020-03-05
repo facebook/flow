@@ -4,7 +4,7 @@ Cannot call `c` because string [1] is not a valid argument of `$ObjMap` [2].
 
    objmap.js:5:1
    5| c('string')();
-      ^^^^^^^^^^^
+      ^
 
 References:
    objmap.js:5:3

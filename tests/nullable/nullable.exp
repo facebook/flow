@@ -1,134 +1,110 @@
-Error ----------------------------------------------------------------------------------------------------- error.js:8:3
+Error ----------------------------------------------------------------------------------------------------- error.js:8:8
 
 Cannot cast `any` to number because null or undefined [1] is incompatible with number [2].
 
-   error.js:8:3
-   8| ((any: ?number): number);
-        ^^^^^^^^^^^^
-
-References:
    error.js:8:8
    8| ((any: ?number): number);
              ^^^^^^^ [1]
+
+References:
    error.js:8:18
    8| ((any: ?number): number);
                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- error.js:9:3
+Error ----------------------------------------------------------------------------------------------------- error.js:9:8
 
 Cannot cast `any` to null because null or undefined [1] is incompatible with null [2].
 
-   error.js:9:3
-   9| ((any: ?number): null);
-        ^^^^^^^^^^^^
-
-References:
    error.js:9:8
    9| ((any: ?number): null);
              ^^^^^^^ [1]
+
+References:
    error.js:9:18
    9| ((any: ?number): null);
                        ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- error.js:9:3
+Error ----------------------------------------------------------------------------------------------------- error.js:9:9
 
 Cannot cast `any` to null because number [1] is incompatible with null [2].
 
-   error.js:9:3
-   9| ((any: ?number): null);
-        ^^^^^^^^^^^^
-
-References:
    error.js:9:9
    9| ((any: ?number): null);
               ^^^^^^ [1]
+
+References:
    error.js:9:18
    9| ((any: ?number): null);
                        ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- error.js:10:3
+Error ---------------------------------------------------------------------------------------------------- error.js:10:8
 
 Cannot cast `any` to undefined because null or undefined [1] is incompatible with undefined [2].
 
-   error.js:10:3
-   10| ((any: ?number): void);
-         ^^^^^^^^^^^^
-
-References:
    error.js:10:8
    10| ((any: ?number): void);
               ^^^^^^^ [1]
+
+References:
    error.js:10:18
    10| ((any: ?number): void);
                         ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- error.js:10:3
+Error ---------------------------------------------------------------------------------------------------- error.js:10:9
 
 Cannot cast `any` to undefined because number [1] is incompatible with undefined [2].
 
-   error.js:10:3
-   10| ((any: ?number): void);
-         ^^^^^^^^^^^^
-
-References:
    error.js:10:9
    10| ((any: ?number): void);
                ^^^^^^ [1]
+
+References:
    error.js:10:18
    10| ((any: ?number): void);
                         ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- error.js:16:3
+Error ---------------------------------------------------------------------------------------------------- error.js:16:8
 
 Cannot cast `any` to union type because null or undefined [1] is incompatible with null [2].
 
-   error.js:16:3
-   16| ((any: ?number): number | null);
-         ^^^^^^^^^^^^
-
-References:
    error.js:16:8
    16| ((any: ?number): number | null);
               ^^^^^^^ [1]
+
+References:
    error.js:16:27
    16| ((any: ?number): number | null);
                                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- error.js:17:3
+Error ---------------------------------------------------------------------------------------------------- error.js:17:8
 
 Cannot cast `any` to union type because null or undefined [1] is incompatible with undefined [2].
 
-   error.js:17:3
-   17| ((any: ?number): number | void);
-         ^^^^^^^^^^^^
-
-References:
    error.js:17:8
    17| ((any: ?number): number | void);
               ^^^^^^^ [1]
+
+References:
    error.js:17:27
    17| ((any: ?number): number | void);
                                  ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- maybe.js:5:3
+Error ---------------------------------------------------------------------------------------------------- maybe.js:5:11
 
 Cannot cast `123` to nullable string because number [1] is incompatible with string [2].
 
-   maybe.js:5:3
-   5| ((123: ?(?number)): ?string); // error (only num ~> string)
-        ^^^^^^^^^^^^^^^
-
-References:
    maybe.js:5:11
    5| ((123: ?(?number)): ?string); // error (only num ~> string)
                 ^^^^^^ [1]
+
+References:
    maybe.js:5:22
    5| ((123: ?(?number)): ?string); // error (only num ~> string)
                            ^^^^^^ [2]

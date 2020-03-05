@@ -46,13 +46,13 @@ References:
                                       ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+Error ---------------------------------------------------------------------------------------------------- test.js:21:17
 
 Cannot get `ColorIdToNumber.XXX` because property `XXX` is missing in object literal [1].
 
-   test.js:21:1
+   test.js:21:17
    21| ColorIdToNumber.XXX; // oops
-       ^^^^^^^^^^^^^^^^^^^
+                       ^^^
 
 References:
    test.js:13:23

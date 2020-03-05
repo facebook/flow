@@ -38,7 +38,7 @@ Cannot call `baz` because uninitialized variable [1] is not a function.
 
    unreachable.js:5:19
     5|   return bar(x) + baz(y);
-                         ^^^^^^
+                         ^^^
 
 References:
    unreachable.js:13:7

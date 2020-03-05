@@ -1,16 +1,13 @@
-Error --------------------------------------------------------------------------------------------------- apply.js:12:15
+Error --------------------------------------------------------------------------------------------------- apply.js:12:22
 
 Cannot call `apply` with array literal bound to `args` because number [1] is incompatible with number literal `123` [2]
 in the second argument.
 
-   apply.js:12:15
-   12| apply(noRest, ['hi', 456]); // Error - 456 ~> 123
-                     ^^^^^^^^^^^
-
-References:
    apply.js:12:22
    12| apply(noRest, ['hi', 456]); // Error - 456 ~> 123
                             ^^^ [1]
+
+References:
    apply.js:10:29
    10| function noRest(x: 'hi', y: 123): true { return true; }
                                    ^^^ [2]
@@ -88,19 +85,16 @@ References:
                                   ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:31:19
+Error --------------------------------------------------------------------------------------------------- apply.js:31:26
 
 Cannot call `applyType` with array literal bound to `args` because number [1] is incompatible with number literal
 `123` [2] in the second argument.
 
-   apply.js:31:19
-   31| applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
-                         ^^^^^^^^^^^
-
-References:
    apply.js:31:26
    31| applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
                                 ^^^ [1]
+
+References:
    apply.js:10:29
    10| function noRest(x: 'hi', y: 123): true { return true; }
                                    ^^^ [2]
@@ -212,14 +206,14 @@ References:
                                                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:34:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:34:3
 
 Cannot create `ExpectsProps` element because property `name` is missing in object type [1] but exists in object type [2]
 in the first argument.
 
-   jsx.js:34:2
+   jsx.js:34:3
    34| (<ExpectsProps />); // Error - missing prop
-        ^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^
 
 References:
    jsx.js:10:14
@@ -247,28 +241,31 @@ References:
                                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:38:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:38:3
 
 Cannot create `ExpectsChildrenTuple` element because rest array [1] has an arity of 0 but tuple type [2] has an arity of
 1.
 
+   jsx.js:38:3
+   38| (<ExpectsChildrenTuple />); // Error - missing child
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
    jsx.js:38:2
    38| (<ExpectsChildrenTuple />); // Error - missing child
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    jsx.js:37:61
    37| declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:40:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:40:3
 
 Cannot create `ExpectsChildrenTuple` element because number [1] is incompatible with string [2] in index 0.
 
-   jsx.js:40:2
+   jsx.js:40:3
    40| (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^
 
 References:
    jsx.js:40:25
@@ -279,28 +276,31 @@ References:
                                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:41:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:41:3
 
 Cannot create `ExpectsChildrenTuple` element because rest array [1] has an arity of 2 but tuple type [2] has an arity of
 1.
 
+   jsx.js:41:3
+   41| (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
    jsx.js:41:2
    41| (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    jsx.js:37:61
    37| declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:46:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:46:3
 
 Cannot create `ExpectsChildrenArray` element because number [1] is incompatible with string [2] in array element.
 
-   jsx.js:46:2
+   jsx.js:46:3
    46| (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^
 
 References:
    jsx.js:46:25
@@ -311,13 +311,13 @@ References:
                                                                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- spread.js:7:1
+Error --------------------------------------------------------------------------------------------------- spread.js:7:37
 
 Cannot call `fun` because no more than 2 arguments are expected by function [1].
 
-   spread.js:7:1
+   spread.js:7:37
    7| fun(...['hi'], ...[], ...[123], ...[true]); // Error - true is unused
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                          ^^^^
 
 References:
    spread.js:3:1
@@ -325,13 +325,13 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- spread.js:8:1
+Error --------------------------------------------------------------------------------------------------- spread.js:8:31
 
 Cannot call `fun` because no more than 2 arguments are expected by function [1].
 
-   spread.js:8:1
+   spread.js:8:31
    8| fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                    ^^^
 
 References:
    spread.js:3:1
@@ -368,35 +368,29 @@ References:
                                              ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:28:1
+Error -------------------------------------------------------------------------------------------------- spread.js:28:37
 
 Cannot call `funWithRestArray` because string [1] is incompatible with number literal `123` [2].
 
-   spread.js:28:1
-   28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    spread.js:28:37
    28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
                                            ^^^^^ [1]
+
+References:
    spread.js:14:39
    14| function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                              ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:28:1
+Error -------------------------------------------------------------------------------------------------- spread.js:28:37
 
 Cannot call `funWithRestArray` because string [1] is incompatible with number [2] in array element.
 
-   spread.js:28:1
-   28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    spread.js:28:37
    28| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
                                            ^^^^^ [1]
+
+References:
    spread.js:14:59
    14| function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                                                  ^^^^^^ [2]

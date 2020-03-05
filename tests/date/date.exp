@@ -32,13 +32,13 @@ References:
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:18:1
+Error ----------------------------------------------------------------------------------------------------- date.js:18:5
 
 Cannot call `Date` because object literal [1] is incompatible with `Date` [2].
 
-   date.js:18:1
+   date.js:18:5
     18| new Date({});
-        ^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:18:10
@@ -49,13 +49,13 @@ References:
                               ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:19:1
+Error ----------------------------------------------------------------------------------------------------- date.js:19:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:19:1
+   date.js:19:5
     19| new Date(2015, '6');
-        ^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:19:16
@@ -66,13 +66,13 @@ References:
                                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:20:1
+Error ----------------------------------------------------------------------------------------------------- date.js:20:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:20:1
+   date.js:20:5
     20| new Date(2015, 6, '18');
-        ^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:20:19
@@ -83,13 +83,13 @@ References:
                                                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:21:1
+Error ----------------------------------------------------------------------------------------------------- date.js:21:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:21:1
+   date.js:21:5
     21| new Date(2015, 6, 18, '11');
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:21:23
@@ -100,13 +100,13 @@ References:
                                                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:22:1
+Error ----------------------------------------------------------------------------------------------------- date.js:22:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:22:1
+   date.js:22:5
     22| new Date(2015, 6, 18, 11, '55');
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:22:27
@@ -117,13 +117,13 @@ References:
                                                                                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:23:1
+Error ----------------------------------------------------------------------------------------------------- date.js:23:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:23:1
+   date.js:23:5
     23| new Date(2015, 6, 18, 11, 55, '42');
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:23:31
@@ -134,13 +134,13 @@ References:
                                                                                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:24:1
+Error ----------------------------------------------------------------------------------------------------- date.js:24:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:24:1
+   date.js:24:5
     24| new Date(2015, 6, 18, 11, 55, 42, '999');
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:24:35
@@ -151,7 +151,7 @@ References:
                                                                                                                                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:25:1
+Error ----------------------------------------------------------------------------------------------------- date.js:25:5
 
 Cannot call `Date` because:
  - Either no arguments are expected by function type [1].
@@ -160,9 +160,9 @@ Cannot call `Date` because:
  - Or no more than 1 argument is expected by function type [4].
  - Or no more than 7 arguments are expected by function type [5].
 
-   date.js:25:1
+   date.js:25:5
     25| new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    <BUILTINS>/core.js:389:5
@@ -182,13 +182,13 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- date.js:26:1
+Error ----------------------------------------------------------------------------------------------------- date.js:26:5
 
 Cannot call `Date` because string [1] is incompatible with number [2].
 
-   date.js:26:1
+   date.js:26:5
     26| new Date('2015', 6);
-        ^^^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    date.js:26:10
@@ -205,7 +205,7 @@ Cannot add `d` and `12` because `Date` [1] is incompatible with number [2].
 
    date.js:31:17
    31| var n3:number = d + 12; // expect error
-                       ^^^^^^
+                       ^
 
 References:
    date.js:1:9
@@ -222,7 +222,7 @@ Cannot add `d` and `12` because `Date` [1] is incompatible with number [2].
 
    date.js:32:16
    32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
-                      ^^^^^^
+                      ^
 
 References:
    date.js:1:9

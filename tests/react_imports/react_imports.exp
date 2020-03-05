@@ -38,13 +38,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:7:8
+Error ------------------------------------------------------------------------------------------ commonjs-pascal.js:7:14
 
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
-   commonjs-pascal.js:7:8
+   commonjs-pascal.js:7:14
      7| (null: React.Missing); // Error
-               ^^^^^^^^^^^^^
+                     ^^^^^^^
 
 References:
    <BUILTINS>/react.js:452:27
@@ -92,13 +92,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- commonjs.js:7:8
+Error ------------------------------------------------------------------------------------------------- commonjs.js:7:14
 
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
-   commonjs.js:7:8
+   commonjs.js:7:14
    7| (null: React.Missing); // Error
-             ^^^^^^^^^^^^^
+                   ^^^^^^^
 
 References:
    commonjs.js:1:15
@@ -146,13 +146,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------- es-default-pascal.js:7:8
+Error ---------------------------------------------------------------------------------------- es-default-pascal.js:7:14
 
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
-   es-default-pascal.js:7:8
+   es-default-pascal.js:7:14
      7| (null: React.Missing); // Error: Not in default export.
-               ^^^^^^^^^^^^^
+                     ^^^^^^^
 
 References:
    <BUILTINS>/react.js:452:27
@@ -177,13 +177,13 @@ References:
                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es-default.js:5:19
+Error ----------------------------------------------------------------------------------------------- es-default.js:5:25
 
 Cannot get `React.Node` because property `Node` is missing in object type [1].
 
-   es-default.js:5:19
+   es-default.js:5:25
      5| ('Hello, world!': React.Node); // Error: Not in default export.
-                          ^^^^^^^^^^
+                                ^^^^
 
 References:
    <BUILTINS>/react.js:412:26
@@ -222,13 +222,13 @@ References:
           -^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ es-default.js:6:6
+Error ----------------------------------------------------------------------------------------------- es-default.js:6:12
 
 Cannot get `React.Node` because property `Node` is missing in object type [1].
 
-   es-default.js:6:6
+   es-default.js:6:12
      6| ({}: React.Node); // Error: Not in default export.
-             ^^^^^^^^^^
+                   ^^^^
 
 References:
    <BUILTINS>/react.js:412:26
@@ -267,13 +267,13 @@ References:
           -^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ es-default.js:7:8
+Error ----------------------------------------------------------------------------------------------- es-default.js:7:14
 
 Cannot get `React.Missing` because property `Missing` is missing in object type [1].
 
-   es-default.js:7:8
+   es-default.js:7:14
      7| (null: React.Missing); // Error: Not in default export.
-               ^^^^^^^^^^^^^
+                     ^^^^^^^
 
 References:
    <BUILTINS>/react.js:412:26
@@ -352,13 +352,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:7:8
+Error -------------------------------------------------------------------------------------- es-namespace-pascal.js:7:14
 
 Cannot get `React.Missing` because property `Missing` is missing in module `React` [1].
 
-   es-namespace-pascal.js:7:8
+   es-namespace-pascal.js:7:14
    7| (null: React.Missing); // Error
-             ^^^^^^^^^^^^^
+                   ^^^^^^^
 
 References:
    es-namespace-pascal.js:1:1
@@ -406,13 +406,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- es-namespace.js:7:8
+Error --------------------------------------------------------------------------------------------- es-namespace.js:7:14
 
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
-   es-namespace.js:7:8
+   es-namespace.js:7:14
    7| (null: React.Missing); // Error
-             ^^^^^^^^^^^^^
+                   ^^^^^^^
 
 References:
    es-namespace.js:1:1

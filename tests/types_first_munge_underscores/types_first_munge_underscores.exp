@@ -4,13 +4,13 @@ Check with munge_underscores = false (by default) should return no errors:
 Found 0 errors
 
 Check with --munge-underscore-members flag should return one error on the _x update:
-Error ---------------------------------------------------------------------------------------------------- import.js:6:1
+Error ---------------------------------------------------------------------------------------------------- import.js:6:3
 
 Cannot assign `1` to `a._x` because property `_x` is missing in `A` [1].
 
-   import.js:6:1
+   import.js:6:3
    6| a._x = 1; // error when munge_underscores = true
-      ^^^^
+        ^^
 
 References:
    import.js:5:11
@@ -22,13 +22,13 @@ References:
 Found 1 error
 
 Check with munge_underscores=true in .flowconfig should return one error on the _x update:
-Error ---------------------------------------------------------------------------------------------------- import.js:6:1
+Error ---------------------------------------------------------------------------------------------------- import.js:6:3
 
 Cannot assign `1` to `a._x` because property `_x` is missing in `A` [1].
 
-   import.js:6:1
+   import.js:6:3
    6| a._x = 1; // error when munge_underscores = true
-      ^^^^
+        ^^
 
 References:
    import.js:5:11

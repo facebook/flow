@@ -1,10 +1,10 @@
-Error ---------------------------------------------------------------------------------------------------- class.js:3:13
+Error ---------------------------------------------------------------------------------------------------- class.js:3:15
 
 Cannot get `A.bar` because property `bar` is missing in statics of `A` [1].
 
-   class.js:3:13
+   class.js:3:15
    3| var test1 = A.bar; // Error bar doesn't exist
-                  ^^^^^
+                    ^^^
 
 References:
    class.js:1:7
@@ -29,13 +29,13 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:8:13
+Error ---------------------------------------------------------------------------------------------------- class.js:8:27
 
 Cannot get `a.constructor.bar` because property `bar` is missing in statics of `A` [1].
 
-   class.js:8:13
+   class.js:8:27
    8| var test4 = a.constructor.bar; // Error bar doesn't exist
-                  ^^^^^^^^^^^^^^^^^
+                                ^^^
 
 References:
    class.js:7:9

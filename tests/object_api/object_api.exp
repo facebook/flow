@@ -1,10 +1,10 @@
-Error --------------------------------------------------------------------------------------------------------- c.js:5:1
+Error --------------------------------------------------------------------------------------------------------- c.js:5:3
 
 Cannot call `c.foo` because property `foo` is missing in object literal [1].
 
-   c.js:5:1
+   c.js:5:3
    5| c.foo();
-      ^^^^^^^
+        ^^^
 
 References:
    b.js:4:23
@@ -168,13 +168,13 @@ References:
                                      ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- object_missing.js:5:5
+Error ------------------------------------------------------------------------------------------- object_missing.js:5:12
 
 Cannot call method `doesNotExist` because property `doesNotExist` is missing in statics of `Object` [1].
 
-   object_missing.js:5:5
+   object_missing.js:5:12
     5|     Object.doesNotExist();
-           ^^^^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:45:15
@@ -182,12 +182,12 @@ References:
                      ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- object_prototype.js:31:1
+Error ----------------------------------------------------------------------------------------- object_prototype.js:31:3
 
 Cannot assign function to `b.toString` because property `toString` is not writable.
 
    31| b.toString = function(): string { return 'foo'; };
-       ^^^^^^^^^^
+         ^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:38:26
@@ -241,13 +241,13 @@ References:
                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- object_prototype.js:49:1
+Error ----------------------------------------------------------------------------------------- object_prototype.js:49:7
 
 Cannot assign function to `123.toString` because property `toString` is missing in number [1].
 
-   object_prototype.js:49:1
+   object_prototype.js:49:7
    49| (123).toString = function() {}; // error
-       ^^^^^^^^^^^^^^
+             ^^^^^^^^
 
 References:
    object_prototype.js:49:2
@@ -283,12 +283,12 @@ References:
                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- object_prototype.js:68:1
+Error ----------------------------------------------------------------------------------------- object_prototype.js:68:3
 
 Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` is not writable.
 
    68| b.hasOwnProperty = function() { return false; };
-       ^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:71:32
@@ -343,12 +343,12 @@ References:
                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- object_prototype.js:93:1
+Error ----------------------------------------------------------------------------------------- object_prototype.js:93:3
 
 Cannot assign function to `b.propertyIsEnumerable` because property `propertyIsEnumerable` is not writable.
 
    93| b.propertyIsEnumerable = function() { return false; };
-       ^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:96:38
@@ -405,12 +405,12 @@ References:
                                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:119:1
+Error ---------------------------------------------------------------------------------------- object_prototype.js:119:3
 
 Cannot assign function to `b.valueOf` because property `valueOf` is not writable.
 
    119| b.valueOf = function() { return {}; };
-        ^^^^^^^^^
+          ^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:122:25
@@ -447,12 +447,12 @@ References:
                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:147:1
+Error ---------------------------------------------------------------------------------------- object_prototype.js:147:3
 
 Cannot assign function to `b.toLocaleString` because property `toLocaleString` is not writable.
 
    147| b.toLocaleString = function() { return 'derp'; };
-        ^^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:150:32
@@ -555,13 +555,13 @@ References:
                        ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- proto.js:17:2
+Error --------------------------------------------------------------------------------------------------- proto.js:17:14
 
 Cannot get `inst1_proto.m` because property `m` is missing in super of `C1` [1].
 
-   proto.js:17:2
+   proto.js:17:14
    17| (inst1_proto.m: empty); // TODO error: function ~> empty
-        ^^^^^^^^^^^^^
+                    ^
 
 References:
    proto.js:17:2

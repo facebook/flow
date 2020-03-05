@@ -1,15 +1,12 @@
-Error ---------------------------------------------------------------------------------------------------- basic.js:2:28
+Error ---------------------------------------------------------------------------------------------------- basic.js:2:32
 
 Cannot assign `42` to `x` because explicit 'any' [1] is incompatible with trusted number [2].
 
-   basic.js:2:28
-   2| var x: $Trusted<number> = (42: any); //Fail
-                                 ^^^^^^^
-
-References:
    basic.js:2:32
    2| var x: $Trusted<number> = (42: any); //Fail
                                      ^^^ [1]
+
+References:
    basic.js:2:8
    2| var x: $Trusted<number> = (42: any); //Fail
              ^^^^^^^^^^^^^^^^ [2]
@@ -32,35 +29,29 @@ References:
               ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- errmsg.js:3:28
+Error --------------------------------------------------------------------------------------------------- errmsg.js:3:32
 
 Cannot assign `42` to `a` because explicit 'any' [1] is incompatible with trusted number [2].
 
-   errmsg.js:3:28
-   3| var a: $Trusted<number> = (42: any)
-                                 ^^^^^^^
-
-References:
    errmsg.js:3:32
    3| var a: $Trusted<number> = (42: any)
                                      ^^^ [1]
+
+References:
    errmsg.js:3:8
    3| var a: $Trusted<number> = (42: any)
              ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- errmsg.js:4:15
+Error --------------------------------------------------------------------------------------------------- errmsg.js:4:19
 
 Cannot assign `42` to `b` because private number [1] is incompatible with explicit 'any' [2].
 
-   errmsg.js:4:15
-   4| var b: any = (42: $Private<number>)
-                    ^^^^^^^^^^^^^^^^^^^^
-
-References:
    errmsg.js:4:19
    4| var b: any = (42: $Private<number>)
                         ^^^^^^^^^^^^^^^^ [1]
+
+References:
    errmsg.js:4:8
    4| var b: any = (42: $Private<number>)
              ^^^ [2]

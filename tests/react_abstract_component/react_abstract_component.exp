@@ -1,10 +1,10 @@
-Error ----------------------------------------------------------------------------------------------------- HOC.js:26:24
+Error ----------------------------------------------------------------------------------------------------- HOC.js:26:26
 
 Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
 
-   HOC.js:26:24
+   HOC.js:26:26
    26|   C.defaultProps = {...x.defaultProps};
-                              ^^^^^^^^^^^^^^
+                                ^^^^^^^^^^^^
 
 References:
    HOC.js:19:6
@@ -12,13 +12,13 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- HOC.js:41:24
+Error ----------------------------------------------------------------------------------------------------- HOC.js:41:26
 
 Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
 
-   HOC.js:41:24
+   HOC.js:41:26
    41|   C.defaultProps = {...x.defaultProps, baz: 3};
-                              ^^^^^^^^^^^^^^
+                                ^^^^^^^^^^^^
 
 References:
    HOC.js:34:6
@@ -245,60 +245,69 @@ References:
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- config.js:39:12
+Error -------------------------------------------------------------------------------------------------- config.js:39:13
 
 Cannot create `WrappedComponent` element because property `bar` is missing in props [1] but exists in object type [2].
 
+   config.js:39:13
+   39| const _c = <WrappedComponent foo={3} />; // Error missing bar
+                   ^^^^^^^^^^^^^^^^
+
+References:
    config.js:39:12
    39| const _c = <WrappedComponent foo={3} />; // Error missing bar
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    config.js:30:41
    30| class Component extends React.Component<{foo: number, bar: number}> {
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:9:12
+Error ------------------------------------------------------------------------------------------- create_element.js:9:13
 
 Cannot create `C` element because property `bar` (did you mean `baz`?) is missing in props [1] but exists in object
 type [2].
 
+   create_element.js:9:13
+   9| const _c = <C baz={4} />; // Error missing bar
+                  ^
+
+References:
    create_element.js:9:12
    9| const _c = <C baz={4} />; // Error missing bar
                  ^^^^^^^^^^^^^ [1]
-
-References:
    create_element.js:5:40
    5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:10:12
+Error ------------------------------------------------------------------------------------------ create_element.js:10:13
 
 Cannot create `C` element because property `baz` (did you mean `bar`?) is missing in props [1] but exists in object
 type [2].
 
+   create_element.js:10:13
+   10| const _d = <C bar={3} />; // Error missing baz
+                   ^
+
+References:
    create_element.js:10:12
    10| const _d = <C bar={3} />; // Error missing baz
                   ^^^^^^^^^^^^^ [1]
-
-References:
    create_element.js:5:40
     5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:16:12
+Error ------------------------------------------------------------------------------------------ create_element.js:16:41
 
 Cannot create `C` element because in property `ref`:
  - Either number [1] is incompatible with string [2] in property `current`.
  - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
    function type [4].
 
-   create_element.js:16:12
+   create_element.js:16:41
     16| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                ^^^^^^
 
 References:
    create_element.js:5:94
@@ -315,20 +324,17 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:19:12
+Error ------------------------------------------------------------------------------------------ create_element.js:19:49
 
 Cannot create `C` element because in property `key`:
  - Either object literal [1] is incompatible with string [2].
  - Or object literal [1] is incompatible with number [3].
 
-   create_element.js:19:12
-    19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    create_element.js:19:49
     19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
                                                         ^^^^^^^^ [1]
+
+References:
    <BUILTINS>/react.js:190:26
    190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
@@ -337,16 +343,19 @@ References:
                                           ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- destructors.js:9:12
+Error ---------------------------------------------------------------------------------------------- destructors.js:9:13
 
 Cannot create `C` element because property `bar` (did you mean `baz`?) is missing in props [1] but exists in object
 type [2].
 
+   destructors.js:9:13
+   9| const _b = <C baz={3} />; // Error, bar missing
+                  ^
+
+References:
    destructors.js:9:12
    9| const _b = <C baz={3} />; // Error, bar missing
                  ^^^^^^^^^^^^^ [1]
-
-References:
    destructors.js:5:40
    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -381,29 +390,35 @@ References:
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:12
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13
 
 Cannot create `WrappedBoth` element because property `bar` is missing in object type [1] but exists in props [2].
 
-   double_wrapped.js:23:12
+   double_wrapped.js:23:13
    23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^^^
 
 References:
    double_wrapped.js:4:43
     4| class MyComponent extends React.Component<{| foo: number |}> {
                                                  ^^^^^^^^^^^^^^^^^ [1]
+   double_wrapped.js:23:12
+   23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:12
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:13
 
 Cannot create `WrappedBoth` element because property `foo` is missing in props [1] but exists in object type [2].
 
+   double_wrapped.js:24:13
+   24| const _b = <WrappedBoth />; // Error, missing prop foo
+                   ^^^^^^^^^^^
+
+References:
    double_wrapped.js:24:12
    24| const _b = <WrappedBoth />; // Error, missing prop foo
                   ^^^^^^^^^^^^^^^ [1]
-
-References:
    double_wrapped.js:4:43
     4| class MyComponent extends React.Component<{| foo: number |}> {
                                                  ^^^^^^^^^^^^^^^^^ [2]
@@ -423,14 +438,14 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------- error_positioning/error_positioning.js:39:12
+Error --------------------------------------------------------------------- error_positioning/error_positioning.js:39:13
 
 Cannot create `C` element because property `component` is missing in object type [1] but exists in props [2] in property
 `component`.
 
-   error_positioning/error_positioning.js:39:12
+   error_positioning/error_positioning.js:39:13
    39| const _a = <C component={View}></ C>;
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^
 
 References:
    error_positioning/View.js:4:54
@@ -553,13 +568,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
 Cannot call `x.displayName.toString` because property `toString` is missing in null or undefined [1].
 
-   get_set_props.js:8:3
+   get_set_props.js:8:17
      8|   x.displayName.toString(); // Error maybe null or undefined
-          ^^^^^^^^^^^^^^^^^^^^^^^^
+                        ^^^^^^^^
 
 References:
    <BUILTINS>/react.js:131:17
@@ -567,13 +582,13 @@ References:
                         ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
 Cannot call `x.displayName.toString` because property `toString` is missing in undefined [1].
 
-   get_set_props.js:8:3
+   get_set_props.js:8:17
      8|   x.displayName.toString(); // Error maybe null or undefined
-          ^^^^^^^^^^^^^^^^^^^^^^^^
+                        ^^^^^^^^
 
 References:
    <BUILTINS>/react.js:131:17
@@ -581,13 +596,13 @@ References:
                         ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
 Cannot call `x.displayName.toString` because property `toString` is missing in null [1].
 
-   get_set_props.js:8:3
+   get_set_props.js:8:17
    8|   x.displayName.toString(); // Error maybe null or undefined
-        ^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^
 
 References:
    get_set_props.js:6:21
@@ -595,14 +610,14 @@ References:
                           ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- get_set_props.js:9:3
+Error --------------------------------------------------------------------------------------------- get_set_props.js:9:5
 
 Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing in
 `React.AbstractComponentStatics` [1].
 
-   get_set_props.js:9:3
+   get_set_props.js:9:5
      9|   x.definitelyNotHere.toString(); // Error missing prop
-          ^^^^^^^^^^^^^^^^^^^
+            ^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:130:47
@@ -631,13 +646,13 @@ References:
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- no_annot_fun.js:3:29
+Error --------------------------------------------------------------------------------------------- no_annot_fun.js:3:35
 
 Cannot get `props.LOL` because property `LOL` is missing in props [1].
 
-   no_annot_fun.js:3:29
+   no_annot_fun.js:3:35
    3| function Component(props) { props.LOL ; return null} // Error, missing LOL
-                                  ^^^^^^^^^
+                                        ^^^
 
 References:
    no_annot_fun.js:4:37
@@ -645,15 +660,18 @@ References:
                                           ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- strict.js:4:11
+Error --------------------------------------------------------------------------------------------------- strict.js:4:12
 
 Cannot create `Component` element because props [1] is incompatible with empty [2].
 
+   strict.js:4:12
+     4| const c = <Component f = {3}/>;
+                   ^^^^^^^^^
+
+References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/react.js:171:29
    171|   | React$AbstractComponent<empty, mixed>;
                                     ^^^^^ [2]

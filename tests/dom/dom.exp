@@ -55,35 +55,30 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:27:48
+Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:27:64
 
 Cannot call `ClipboardEvent` with object literal bound to `eventInit` because object literal [1] is incompatible with
 `DataTransfer` [2] in property `clipboardData`.
 
-   ClipboardEvent.js:27:48
-                                                       v----------------
-    27|     const invalid2 = new ClipboardEvent('cut', {clipboardData: {
-    28|       'text/plain': 'thats not how you do it'}}); // invalid
-              ----------------------------------------^
-
-References:
    ClipboardEvent.js:27:64
                                                                        v
     27|     const invalid2 = new ClipboardEvent('cut', {clipboardData: {
     28|       'text/plain': 'thats not how you do it'}}); // invalid
               ---------------------------------------^ [1]
+
+References:
    <BUILTINS>/dom.js:565:58
    565| type ClipboardEvent$Init = Event$Init & { clipboardData: DataTransfer | null, ... };
                                                                  ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- ClipboardEvent.js:32:7
+Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:32:23
 
 Cannot call `e.clipboardData.getData` because property `getData` is missing in null or undefined [1].
 
-   ClipboardEvent.js:32:7
+   ClipboardEvent.js:32:23
     32|       e.clipboardData.getData('text/plain'); // invalid: null check required
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^
 
 References:
    <BUILTINS>/dom.js:569:19
@@ -141,13 +136,13 @@ References:
                                  ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- HTMLCollection.js:10:1
+Error ------------------------------------------------------------------------------------------- HTMLCollection.js:10:4
 
 Cannot get `el.className` because property `className` is missing in null [1].
 
-   HTMLCollection.js:10:1
+   HTMLCollection.js:10:4
     10| el.className // invalid
-        ^^^^^^^^^^^^
+           ^^^^^^^^^
 
 References:
    <BUILTINS>/dom.js:689:56
@@ -155,13 +150,13 @@ References:
                                                                ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- HTMLCollection.js:14:1
+Error ------------------------------------------------------------------------------------------- HTMLCollection.js:14:4
 
 Cannot get `el.className` because property `className` is missing in null [1].
 
-   HTMLCollection.js:14:1
+   HTMLCollection.js:14:4
     14| el.className // invalid
-        ^^^^^^^^^^^^
+           ^^^^^^^^^
 
 References:
    <BUILTINS>/dom.js:690:35
@@ -169,13 +164,13 @@ References:
                                           ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- HTMLElement.js:9:5
+Error ---------------------------------------------------------------------------------------------- HTMLElement.js:9:27
 
 Cannot call `element.hasAttributes` because no arguments are expected by function type [1].
 
-   HTMLElement.js:9:5
+   HTMLElement.js:9:27
       9|     element.hasAttributes('foo', 'bar');
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                   ^^^^^
 
 References:
    <BUILTINS>/dom.js:1493:3
@@ -424,19 +419,16 @@ References:
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- HTMLElement.js:72:19
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:72:35
 
 Cannot call `element.focus` with object literal bound to `options` because string [1] is incompatible with boolean [2]
 in property `preventScroll`.
 
-   HTMLElement.js:72:19
-     72|     element.focus({preventScroll: 'invalid'});
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    HTMLElement.js:72:35
      72|     element.focus({preventScroll: 'invalid'});
                                            ^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:1329:39
    1329| type FocusOptions = { preventScroll?: boolean, ... }
                                                ^^^^^^^ [2]
@@ -456,13 +448,13 @@ References:
                            ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:23:1
+Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:23:4
 
 Cannot get `el.className` because property `className` is missing in null [1].
 
-   HTMLFormElement.js:23:1
+   HTMLFormElement.js:23:4
      23| el.className // invalid
-         ^^^^^^^^^^^^
+            ^^^^^^^^^
 
 References:
    <BUILTINS>/dom.js:2978:43
@@ -470,13 +462,13 @@ References:
                                                    ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:27:1
+Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:27:4
 
 Cannot get `el.className` because property `className` is missing in null [1].
 
-   HTMLFormElement.js:27:1
+   HTMLFormElement.js:27:4
      27| el.className // invalid
-         ^^^^^^^^^^^^
+            ^^^^^^^^^
 
 References:
    <BUILTINS>/dom.js:2978:43
@@ -484,13 +476,13 @@ References:
                                                    ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ HTMLInputElement.js:7:5
+Error ------------------------------------------------------------------------------------------ HTMLInputElement.js:7:8
 
 Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2].
 
-   HTMLInputElement.js:7:5
+   HTMLInputElement.js:7:8
       7|     el.setRangeText('foo', 123); // end is required
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^
 
 References:
    HTMLInputElement.js:7:28
@@ -501,13 +493,13 @@ References:
                                                      ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:5
+Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:8
 
 Cannot call `el.setRangeText` because string [1] is incompatible with enum [2].
 
-   HTMLInputElement.js:10:5
+   HTMLInputElement.js:10:8
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^
 
 References:
    HTMLInputElement.js:10:38
@@ -518,13 +510,13 @@ References:
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:11:1
+Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:11:6
 
 Cannot get `form.action` because property `action` is missing in null [1].
 
-   HTMLSelectElement.js:11:1
+   HTMLSelectElement.js:11:6
      11| form.action // invalid
-         ^^^^^^^^^^^
+              ^^^^^^
 
 References:
    <BUILTINS>/dom.js:3420:27
@@ -532,13 +524,13 @@ References:
                                    ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:19:1
+Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:19:6
 
 Cannot get `item.value` because property `value` is missing in null [1].
 
-   HTMLSelectElement.js:19:1
+   HTMLSelectElement.js:19:6
      19| item.value // invalid
-         ^^^^^^^^^^
+              ^^^^^
 
 References:
    <BUILTINS>/dom.js:3438:44
@@ -546,13 +538,13 @@ References:
                                                     ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:22:1
+Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:22:6
 
 Cannot get `item.value` because property `value` is missing in null [1].
 
-   HTMLSelectElement.js:22:1
+   HTMLSelectElement.js:22:6
      22| item.value // invalid
-         ^^^^^^^^^^
+              ^^^^^
 
 References:
    <BUILTINS>/dom.js:3439:48
@@ -560,20 +552,17 @@ References:
                                                         ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- NamedNodeMap.js:9:5
+Error --------------------------------------------------------------------------------------------- NamedNodeMap.js:9:16
 
 Cannot get `attributes[null]` because:
  - Either null [1] is incompatible with number [2].
  - Or null [1] is incompatible with string [3].
 
-   NamedNodeMap.js:9:5
-     9|     attributes[null];
-            ^^^^^^^^^^^^^^^^
-
-References:
    NamedNodeMap.js:9:16
      9|     attributes[null];
                        ^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:667:11
    667|   [index: number | string]: Attr;
                   ^^^^^^ [2]
@@ -582,20 +571,17 @@ References:
                            ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- NamedNodeMap.js:10:5
+Error -------------------------------------------------------------------------------------------- NamedNodeMap.js:10:16
 
 Cannot get `attributes[{...}]` because:
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with string [3].
 
-   NamedNodeMap.js:10:5
-    10|     attributes[{}];
-            ^^^^^^^^^^^^^^
-
-References:
    NamedNodeMap.js:10:16
     10|     attributes[{}];
                        ^^ [1]
+
+References:
    <BUILTINS>/dom.js:667:11
    667|   [index: number | string]: Attr;
                   ^^^^^^ [2]
@@ -604,13 +590,13 @@ References:
                            ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ URL.js:8:19
+Error ------------------------------------------------------------------------------------------------------ URL.js:8:21
 
 Cannot get `c.path` because property `path` is missing in `URL` [1].
 
-   URL.js:8:19
+   URL.js:8:21
    8| const e: string = c.path; // not correct
-                        ^^^^^^
+                          ^^^^
 
 References:
    URL.js:5:11
@@ -618,13 +604,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- eventtarget.js:9:6
+Error ---------------------------------------------------------------------------------------------- eventtarget.js:9:13
 
 Cannot call `target.attachEvent` because undefined [1] is not a function.
 
-   eventtarget.js:9:6
+   eventtarget.js:9:13
      9|     (target.attachEvent('foo', listener): void); // invalid, may be undefined
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    ^^^^^^^^^^^
 
 References:
    <BUILTINS>/dom.js:249:17
@@ -632,13 +618,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- eventtarget.js:16:6
+Error --------------------------------------------------------------------------------------------- eventtarget.js:16:13
 
 Cannot call `target.detachEvent` because undefined [1] is not a function.
 
-   eventtarget.js:16:6
+   eventtarget.js:16:13
     16|     (target.detachEvent('foo', listener): void); // invalid, may be undefined
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    ^^^^^^^^^^^
 
 References:
    <BUILTINS>/dom.js:266:17
@@ -646,13 +632,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- path2d.js:16:6
+Error -------------------------------------------------------------------------------------------------- path2d.js:16:11
 
 Cannot call `path.arcTo` because string [1] is incompatible with number [2].
 
-   path2d.js:16:6
+   path2d.js:16:11
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^
 
 References:
    path2d.js:16:33
@@ -663,61 +649,37 @@ References:
                                                                                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- registerElement.js:48:48
+Error ----------------------------------------------------------------------------------------- registerElement.js:52:19
 
 Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
 null [2] in the second argument of property `prototype.attributeChangedCallback`.
 
-   registerElement.js:48:48
-                                                       v
-    48|     document.registerElement('custom-element', {
-    49|       prototype: {
-    50|         attributeChangedCallback(
-    51|           localName: string,
-    52|           oldVal: string, // Error: This might be null
-    53|           newVal: string, // Error: This might be null
-    54|           namespace: string) {}
-    55|       },
-    56|     });
-            ^
-
-References:
    registerElement.js:52:19
     52|           oldVal: string, // Error: This might be null
                           ^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:707:36
    707|                 oldAttributeValue: null,
                                            ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- registerElement.js:48:48
+Error ----------------------------------------------------------------------------------------- registerElement.js:53:19
 
 Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
 null [2] in the third argument of property `prototype.attributeChangedCallback`.
 
-   registerElement.js:48:48
-                                                       v
-    48|     document.registerElement('custom-element', {
-    49|       prototype: {
-    50|         attributeChangedCallback(
-    51|           localName: string,
-    52|           oldVal: string, // Error: This might be null
-    53|           newVal: string, // Error: This might be null
-    54|           namespace: string) {}
-    55|       },
-    56|     });
-            ^
-
-References:
    registerElement.js:53:19
     53|           newVal: string, // Error: This might be null
                           ^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:722:36
    722|                 newAttributeValue: null,
                                            ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ traversal.js:29:5
+Error ----------------------------------------------------------------------------------------------- traversal.js:29:14
 
 Cannot call `document.createNodeIterator` because:
  - Either object literal [1] is incompatible with `Attr` [2].
@@ -762,9 +724,9 @@ Cannot call `document.createNodeIterator` because:
  - Or object literal [1] is incompatible with `Node` [41].
  - Or object literal [1] is incompatible with `Node` [42].
 
-   traversal.js:29:5
+   traversal.js:29:14
      29|     document.createNodeIterator({}); // invalid
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^^^
 
 References:
    traversal.js:29:33
@@ -895,7 +857,7 @@ References:
                                          ^^^^ [42]
 
 
-Error ------------------------------------------------------------------------------------------------ traversal.js:33:5
+Error ----------------------------------------------------------------------------------------------- traversal.js:33:14
 
 Cannot call `document.createTreeWalker` because:
  - Either object literal [1] is incompatible with `Attr` [2].
@@ -940,9 +902,9 @@ Cannot call `document.createTreeWalker` because:
  - Or object literal [1] is incompatible with `Node` [41].
  - Or object literal [1] is incompatible with `Node` [42].
 
-   traversal.js:33:5
+   traversal.js:33:14
      33|     document.createTreeWalker({}); // invalid
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^
 
 References:
    traversal.js:33:31
@@ -1073,19 +1035,16 @@ References:
                                        ^^^^ [42]
 
 
-Error ---------------------------------------------------------------------------------------------- traversal.js:186:52
+Error ---------------------------------------------------------------------------------------------- traversal.js:186:60
 
 Cannot call `document.createNodeIterator` with function bound to `filter` because string [1] is incompatible with
 enum [2] in the return value.
 
-   traversal.js:186:52
-    186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                            ^^^^^^^^^^^^^^^^
-
-References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:3902:1
          v--------------------------------
    3902| typeof NodeFilter.FILTER_ACCEPT |
@@ -1094,19 +1053,16 @@ References:
          ----------------------------^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- traversal.js:188:52
+Error ---------------------------------------------------------------------------------------------- traversal.js:188:74
 
 Cannot call `document.createNodeIterator` with object literal bound to `filter` because string [1] is incompatible with
 enum [2] in the return value of property `acceptNode`.
 
-   traversal.js:188:52
-    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:3902:1
          v--------------------------------
    3902| typeof NodeFilter.FILTER_ACCEPT |
@@ -1115,7 +1071,7 @@ References:
          ----------------------------^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- traversal.js:189:5
+Error ---------------------------------------------------------------------------------------------- traversal.js:189:14
 
 Cannot call `document.createNodeIterator` because:
  - Either number [1] is incompatible with number literal `1` [2].
@@ -1126,9 +1082,9 @@ Cannot call `document.createNodeIterator` because:
  - Or number [1] is incompatible with number literal `132` [7].
  - Or number [1] is incompatible with number literal `133` [8].
 
-   traversal.js:189:5
+   traversal.js:189:14
     189|     document.createNodeIterator(document_body, -1, {}); // invalid
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^^^
 
 References:
    traversal.js:189:48
@@ -1157,19 +1113,16 @@ References:
                                                                             ^^^ [8]
 
 
-Error ---------------------------------------------------------------------------------------------- traversal.js:193:50
+Error ---------------------------------------------------------------------------------------------- traversal.js:193:58
 
 Cannot call `document.createTreeWalker` with function bound to `filter` because string [1] is incompatible with enum [2]
 in the return value.
 
-   traversal.js:193:50
-    193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                          ^^^^^^^^^^^^^^^^
-
-References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:3902:1
          v--------------------------------
    3902| typeof NodeFilter.FILTER_ACCEPT |
@@ -1178,19 +1131,16 @@ References:
          ----------------------------^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- traversal.js:195:50
+Error ---------------------------------------------------------------------------------------------- traversal.js:195:72
 
 Cannot call `document.createTreeWalker` with object literal bound to `filter` because string [1] is incompatible with
 enum [2] in the return value of property `acceptNode`.
 
-   traversal.js:195:50
-    195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
+
+References:
    <BUILTINS>/dom.js:3902:1
          v--------------------------------
    3902| typeof NodeFilter.FILTER_ACCEPT |
@@ -1199,7 +1149,7 @@ References:
          ----------------------------^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- traversal.js:196:5
+Error ---------------------------------------------------------------------------------------------- traversal.js:196:14
 
 Cannot call `document.createTreeWalker` because:
  - Either number [1] is incompatible with number literal `1` [2].
@@ -1210,9 +1160,9 @@ Cannot call `document.createTreeWalker` because:
  - Or number [1] is incompatible with number literal `132` [7].
  - Or number [1] is incompatible with number literal `133` [8].
 
-   traversal.js:196:5
+   traversal.js:196:14
     196|     document.createTreeWalker(document_body, -1, {}); // invalid
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^
 
 References:
    traversal.js:196:46

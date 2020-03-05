@@ -16,18 +16,15 @@ References:
                               ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- t2.js:16:4
+Error ------------------------------------------------------------------------------------------------------- t2.js:16:8
 
 Cannot call `f` with `42` bound to `x` because explicit 'any' [1] is incompatible with trusted number [2].
 
-   t2.js:16:4
-   16| f((42: any));
-          ^^^^^^^
-
-References:
    t2.js:16:8
    16| f((42: any));
               ^^^ [1]
+
+References:
    t2.js:11:15
    11| function f(x: number): $Trusted<number> {
                      ^^^^^^ [2]

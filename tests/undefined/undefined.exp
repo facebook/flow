@@ -1,10 +1,10 @@
-Error ------------------------------------------------------------------------------------------------- undefined.js:3:5
+Error ------------------------------------------------------------------------------------------------- undefined.js:3:7
 
 Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1].
 
-   undefined.js:3:5
+   undefined.js:3:7
    3|     x.foo();
-          ^^^^^^^
+            ^^^
 
 References:
    undefined.js:2:9

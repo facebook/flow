@@ -1,13 +1,13 @@
-Error ------------------------------------------------------------------------------------------- buffer/buffer.js:57:10
+Error ------------------------------------------------------------------------------------------- buffer/buffer.js:57:17
 
 Cannot call `Buffer.from` because:
  - Either no more than 1 argument is expected by function type [1].
  - Or no more than 2 arguments are expected by function type [2].
  - Or no more than 1 argument is expected by function type [3].
 
-   buffer/buffer.js:57:10
+   buffer/buffer.js:57:17
     57| buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        ^^^^
 
 References:
    <BUILTINS>/node.js:117:3
@@ -27,7 +27,7 @@ Cannot call `execSync` because string [1] is incompatible with number [2] in pro
 
    child_process/execSync.js:8:2
      8| (execSync('ls', {timeout: '250'})); // error, no signatures match
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^
 
 References:
    child_process/execSync.js:8:27
@@ -89,15 +89,15 @@ References:
                              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- crypto/crypto.js:16:5
+Error ------------------------------------------------------------------------------------------- crypto/crypto.js:16:10
 
 Cannot call `hmac.write` because:
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
-   crypto/crypto.js:16:5
+   crypto/crypto.js:16:10
      16|     hmac.write(123); // 2 errors: not a string or a Buffer
-             ^^^^^^^^^^^^^^^
+                  ^^^^^
 
 References:
    crypto/crypto.js:16:16
@@ -177,15 +177,15 @@ References:
                             ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- dns/dns.js:23:1
+Error -------------------------------------------------------------------------------------------------- dns/dns.js:23:5
 
 Cannot call `dns.lookup` because:
  - Either function type [1] requires another argument from call of method `lookup` [2].
  - Or function type [3] requires another argument from call of method `lookup` [2].
 
-   dns/dns.js:23:1
+   dns/dns.js:23:5
     23| dns.lookup(); // error
-        ^^^^^^^^^^^^ [2]
+            ^^^^^^
 
 References:
    <BUILTINS>/node.js:744:26
@@ -196,6 +196,9 @@ References:
    747|     callback: (err: ?Error, address: string, family: number) => void
    748|   ): void;
           ------^ [1]
+   dns/dns.js:23:1
+    23| dns.lookup(); // error
+        ^^^^^^^^^^^^ [2]
    <BUILTINS>/node.js:749:26
                                  v
    749|   declare function lookup(
@@ -205,18 +208,21 @@ References:
           ------^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- dns/dns.js:25:1
+Error -------------------------------------------------------------------------------------------------- dns/dns.js:25:5
 
 Cannot call `dns.lookup` because:
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with `LookupOptions` [3].
  - Or function type [4] requires another argument from call of method `lookup` [1].
 
+   dns/dns.js:25:5
+    25| dns.lookup("test.com"); // error
+            ^^^^^^
+
+References:
    dns/dns.js:25:1
     25| dns.lookup("test.com"); // error
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/node.js:746:14
    746|     options: number | LookupOptions,
                      ^^^^^^ [2]
@@ -232,13 +238,13 @@ References:
           ------^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- dns/dns.js:27:1
+Error -------------------------------------------------------------------------------------------------- dns/dns.js:27:5
 
 Cannot call `dns.lookup` because number [1] is incompatible with function type [2].
 
-   dns/dns.js:27:1
+   dns/dns.js:27:5
     27| dns.lookup("test.com", 4); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^^^
 
 References:
    dns/dns.js:27:24
@@ -249,14 +255,14 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- dns/dns.js:29:1
+Error -------------------------------------------------------------------------------------------------- dns/dns.js:29:5
 
 Cannot call `dns.lookup` because a call signature declaring the expected parameter / return type is missing in object
 literal [1] but exists in function type [2].
 
-   dns/dns.js:29:1
+   dns/dns.js:29:5
     29| dns.lookup("test.com", { family: 6 }); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^^^
 
 References:
    dns/dns.js:29:24
@@ -267,13 +273,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- dns/dns.js:31:1
+Error -------------------------------------------------------------------------------------------------- dns/dns.js:31:5
 
 Cannot call `dns.lookup` because no more than 2 arguments are expected by function type [1].
 
-   dns/dns.js:31:1
+   dns/dns.js:31:5
     31| dns.lookup("test.com", null, (err, address, family) => {}); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^^^
 
 References:
    <BUILTINS>/node.js:749:26
@@ -285,15 +291,15 @@ References:
           ------^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- dns/dns.js:33:1
+Error -------------------------------------------------------------------------------------------------- dns/dns.js:33:5
 
 Cannot call `dns.lookup` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with string [3].
 
-   dns/dns.js:33:1
+   dns/dns.js:33:5
     33| dns.lookup((err, address, family) => {}); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ^^^^^^
 
 References:
    dns/dns.js:33:12
@@ -307,13 +313,13 @@ References:
                     ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- events/events.js:9:1
+Error --------------------------------------------------------------------------------------------- events/events.js:9:9
 
 Cannot call `emitter.addListener` because function [1] requires another argument.
 
-   events/events.js:9:1
+   events/events.js:9:9
      9| emitter.addListener();                    // err: both args are required
-        ^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:810:3
@@ -350,13 +356,13 @@ References:
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:17:1
+Error ------------------------------------------------------------------------------------------- events/events.js:17:20
 
 Cannot call `emitter.eventNames` because no arguments are expected by function type [1].
 
-   events/events.js:17:1
+   events/events.js:17:20
     17| emitter.eventNames('foo')                 // err: does not process args
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+                           ^^^^^
 
 References:
    <BUILTINS>/node.js:812:3
@@ -364,13 +370,13 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:20:1
+Error -------------------------------------------------------------------------------------------- events/events.js:20:9
 
 Cannot call `emitter.listeners` because function [1] requires another argument.
 
-   events/events.js:20:1
+   events/events.js:20:9
     20| emitter.listeners();                      // err: requires `event`
-        ^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:813:3
@@ -378,13 +384,13 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:23:1
+Error -------------------------------------------------------------------------------------------- events/events.js:23:9
 
 Cannot call `emitter.listenerCount` because function [1] requires another argument.
 
-   events/events.js:23:1
+   events/events.js:23:9
     23| emitter.listenerCount();                  // err: requires `event`
-        ^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:814:3
@@ -420,13 +426,13 @@ References:
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:35:1
+Error -------------------------------------------------------------------------------------------- events/events.js:35:9
 
 Cannot call `emitter.prependListener` because function [1] requires another argument.
 
-   events/events.js:35:1
+   events/events.js:35:9
     35| emitter.prependListener();                // err: both args are required
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:817:3
@@ -448,13 +454,13 @@ References:
                                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:40:1
+Error -------------------------------------------------------------------------------------------- events/events.js:40:9
 
 Cannot call `emitter.prependOnceListener` because function [1] requires another argument.
 
-   events/events.js:40:1
+   events/events.js:40:9
     40| emitter.prependOnceListener();            // err: both args are required
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:818:3
@@ -491,13 +497,13 @@ References:
                                      ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:50:1
+Error -------------------------------------------------------------------------------------------- events/events.js:50:9
 
 Cannot call `emitter.removeListener` because function [1] requires another argument.
 
-   events/events.js:50:1
+   events/events.js:50:9
     50| emitter.removeListener();                 // err: both args are required
-        ^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:820:3
@@ -519,13 +525,13 @@ References:
                                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:55:1
+Error -------------------------------------------------------------------------------------------- events/events.js:55:9
 
 Cannot call `emitter.off` because function [1] requires another argument.
 
-   events/events.js:55:1
+   events/events.js:55:9
     55| emitter.off();                            // err: both args are required
-        ^^^^^^^^^^^^^
+                ^^^
 
 References:
    <BUILTINS>/node.js:821:3
@@ -561,13 +567,13 @@ References:
                              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:62:1
+Error ------------------------------------------------------------------------------------------- events/events.js:62:25
 
 Cannot call `emitter.getMaxListeners` because no arguments are expected by function type [1].
 
-   events/events.js:62:1
+   events/events.js:62:25
     62| emitter.getMaxListeners('foo');           // err: does not process args
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                ^^^^^
 
 References:
    <BUILTINS>/node.js:823:3
@@ -575,13 +581,13 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- events/events.js:65:1
+Error -------------------------------------------------------------------------------------------- events/events.js:65:9
 
 Cannot call `emitter.rawListeners` because function [1] requires another argument.
 
-   events/events.js:65:1
+   events/events.js:65:9
     65| emitter.rawListeners();                   // err: requires `event`
-        ^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:824:3
@@ -698,13 +704,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- http/get.js:13:1
+Error ------------------------------------------------------------------------------------------------- http/get.js:13:6
 
 Cannot call `http.get` because number [1] is incompatible with string [2].
 
-   http/get.js:13:1
+   http/get.js:13:6
      13| http.get(-1); // error
-         ^^^^^^^^^^^^
+              ^^^
 
 References:
    http/get.js:13:10
@@ -715,13 +721,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- http/get.js:14:1
+Error ------------------------------------------------------------------------------------------------- http/get.js:14:6
 
 Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`.
 
-   http/get.js:14:1
+   http/get.js:14:6
      14| http.get({port: 'expects number'}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^
 
 References:
    http/get.js:14:17
@@ -732,13 +738,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- http/get.js:15:1
+Error ------------------------------------------------------------------------------------------------- http/get.js:15:6
 
 Cannot call `http.get` because number [1] is incompatible with function type [2].
 
-   http/get.js:15:1
+   http/get.js:15:6
      15| http.get(url, {}, -1); // error
-         ^^^^^^^^^^^^^^^^^^^^^
+              ^^^
 
 References:
    http/get.js:15:19
@@ -749,13 +755,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- http/get.js:16:1
+Error ------------------------------------------------------------------------------------------------- http/get.js:16:6
 
 Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`.
 
-   http/get.js:16:1
+   http/get.js:16:6
      16| http.get(url, {port: 'expects number'}, () => {}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^
 
 References:
    http/get.js:16:22
@@ -766,13 +772,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- http/request.js:13:1
+Error --------------------------------------------------------------------------------------------- http/request.js:13:6
 
 Cannot call `http.request` because number [1] is incompatible with string [2].
 
-   http/request.js:13:1
+   http/request.js:13:6
      13| http.request(-1); // error
-         ^^^^^^^^^^^^^^^^
+              ^^^^^^^
 
 References:
    http/request.js:13:14
@@ -783,13 +789,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- http/request.js:14:1
+Error --------------------------------------------------------------------------------------------- http/request.js:14:6
 
 Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`.
 
-   http/request.js:14:1
+   http/request.js:14:6
      14| http.request({port: 'expects number'}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^^
 
 References:
    http/request.js:14:21
@@ -800,13 +806,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- http/request.js:15:1
+Error --------------------------------------------------------------------------------------------- http/request.js:15:6
 
 Cannot call `http.request` because number [1] is incompatible with function type [2].
 
-   http/request.js:15:1
+   http/request.js:15:6
      15| http.request(url, {}, -1); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^^
 
 References:
    http/request.js:15:23
@@ -817,13 +823,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- http/request.js:16:1
+Error --------------------------------------------------------------------------------------------- http/request.js:16:6
 
 Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`.
 
-   http/request.js:16:1
+   http/request.js:16:6
      16| http.request(url, {port: 'expects number'}, () => {}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^^
 
 References:
    http/request.js:16:26
@@ -834,13 +840,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:69:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:69:8
 
 Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
-   http/server.js:69:1
+   http/server.js:69:8
      69| server.listen({}, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:69:15
@@ -851,13 +857,13 @@ References:
                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:70:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:70:8
 
 Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
-   http/server.js:70:1
+   http/server.js:70:8
      70| server.listen({}, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:70:15
@@ -868,16 +874,16 @@ References:
                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:71:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:71:8
 
 Cannot call `server.listen` because:
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
 
-   http/server.js:71:1
+   http/server.js:71:8
      71| server.listen({}, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:71:15
@@ -894,16 +900,16 @@ References:
                          ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:72:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:72:8
 
 Cannot call `server.listen` because:
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
 
-   http/server.js:72:1
+   http/server.js:72:8
      72| server.listen({}, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:72:15
@@ -920,16 +926,16 @@ References:
                          ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:75:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:75:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
 
-   http/server.js:75:1
+   http/server.js:75:8
      75| server.listen(() => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:75:15
@@ -946,16 +952,16 @@ References:
                          ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:76:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:76:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
 
-   http/server.js:76:1
+   http/server.js:76:8
      76| server.listen(function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:76:15
@@ -972,13 +978,13 @@ References:
                          ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:79:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:79:8
 
 Cannot call `server.listen` because function [1] is incompatible with string [2].
 
-   http/server.js:79:1
+   http/server.js:79:8
      79| server.listen(8080, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:79:21
@@ -989,13 +995,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:80:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:80:8
 
 Cannot call `server.listen` because function [1] is incompatible with string [2].
 
-   http/server.js:80:1
+   http/server.js:80:8
      80| server.listen(8080, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:80:21
@@ -1006,16 +1012,16 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:81:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:81:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   http/server.js:81:1
+   http/server.js:81:8
      81| server.listen(8080, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:81:21
@@ -1032,16 +1038,16 @@ References:
                                             ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:82:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:82:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   http/server.js:82:1
+   http/server.js:82:8
      82| server.listen(8080, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:82:21
@@ -1058,16 +1064,16 @@ References:
                                             ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:83:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:83:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   http/server.js:83:1
+   http/server.js:83:8
      83| server.listen(8080, () => {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:83:21
@@ -1084,16 +1090,16 @@ References:
                                             ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:84:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:84:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   http/server.js:84:1
+   http/server.js:84:8
      84| server.listen(8080, function() {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    http/server.js:84:21
@@ -1110,13 +1116,13 @@ References:
                                             ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ https/get.js:13:1
+Error ------------------------------------------------------------------------------------------------ https/get.js:13:7
 
 Cannot call `https.get` because number [1] is incompatible with string [2].
 
-   https/get.js:13:1
+   https/get.js:13:7
      13| https.get(-1); // error
-         ^^^^^^^^^^^^^
+               ^^^
 
 References:
    https/get.js:13:11
@@ -1127,13 +1133,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ https/get.js:14:1
+Error ------------------------------------------------------------------------------------------------ https/get.js:14:7
 
 Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`.
 
-   https/get.js:14:1
+   https/get.js:14:7
      14| https.get({port: 'expects number'}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^
 
 References:
    https/get.js:14:18
@@ -1144,13 +1150,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ https/get.js:15:1
+Error ------------------------------------------------------------------------------------------------ https/get.js:15:7
 
 Cannot call `https.get` because number [1] is incompatible with function type [2].
 
-   https/get.js:15:1
+   https/get.js:15:7
      15| https.get(url, {}, -1); // error
-         ^^^^^^^^^^^^^^^^^^^^^^
+               ^^^
 
 References:
    https/get.js:15:20
@@ -1161,13 +1167,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ https/get.js:16:1
+Error ------------------------------------------------------------------------------------------------ https/get.js:16:7
 
 Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`.
 
-   https/get.js:16:1
+   https/get.js:16:7
      16| https.get(url, {port: 'expects number'}, () => {}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^
 
 References:
    https/get.js:16:23
@@ -1178,13 +1184,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- https/request.js:13:1
+Error -------------------------------------------------------------------------------------------- https/request.js:13:7
 
 Cannot call `https.request` because number [1] is incompatible with string [2].
 
-   https/request.js:13:1
+   https/request.js:13:7
      13| https.request(-1); // error
-         ^^^^^^^^^^^^^^^^^
+               ^^^^^^^
 
 References:
    https/request.js:13:15
@@ -1195,13 +1201,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- https/request.js:14:1
+Error -------------------------------------------------------------------------------------------- https/request.js:14:7
 
 Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`.
 
-   https/request.js:14:1
+   https/request.js:14:7
      14| https.request({port: 'expects number'}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^
 
 References:
    https/request.js:14:22
@@ -1212,13 +1218,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- https/request.js:15:1
+Error -------------------------------------------------------------------------------------------- https/request.js:15:7
 
 Cannot call `https.request` because number [1] is incompatible with function type [2].
 
-   https/request.js:15:1
+   https/request.js:15:7
      15| https.request(url, {}, -1); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^
 
 References:
    https/request.js:15:24
@@ -1229,13 +1235,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- https/request.js:16:1
+Error -------------------------------------------------------------------------------------------- https/request.js:16:7
 
 Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`.
 
-   https/request.js:16:1
+   https/request.js:16:7
      16| https.request(url, {port: 'expects number'}, () => {}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^
 
 References:
    https/request.js:16:27
@@ -1246,13 +1252,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:69:1
+Error --------------------------------------------------------------------------------------------- https/server.js:69:8
 
 Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
-   https/server.js:69:1
+   https/server.js:69:8
      69| server.listen({}, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:69:15
@@ -1263,13 +1269,13 @@ References:
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:70:1
+Error --------------------------------------------------------------------------------------------- https/server.js:70:8
 
 Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
-   https/server.js:70:1
+   https/server.js:70:8
      70| server.listen({}, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:70:15
@@ -1280,16 +1286,16 @@ References:
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:71:1
+Error --------------------------------------------------------------------------------------------- https/server.js:71:8
 
 Cannot call `server.listen` because:
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
 
-   https/server.js:71:1
+   https/server.js:71:8
      71| server.listen({}, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:71:15
@@ -1306,16 +1312,16 @@ References:
                          ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:72:1
+Error --------------------------------------------------------------------------------------------- https/server.js:72:8
 
 Cannot call `server.listen` because:
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
 
-   https/server.js:72:1
+   https/server.js:72:8
      72| server.listen({}, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:72:15
@@ -1332,16 +1338,16 @@ References:
                          ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:75:1
+Error --------------------------------------------------------------------------------------------- https/server.js:75:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
 
-   https/server.js:75:1
+   https/server.js:75:8
      75| server.listen(() => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:75:15
@@ -1358,16 +1364,16 @@ References:
                          ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:76:1
+Error --------------------------------------------------------------------------------------------- https/server.js:76:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
 
-   https/server.js:76:1
+   https/server.js:76:8
      76| server.listen(function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:76:15
@@ -1384,13 +1390,13 @@ References:
                          ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:79:1
+Error --------------------------------------------------------------------------------------------- https/server.js:79:8
 
 Cannot call `server.listen` because function [1] is incompatible with string [2].
 
-   https/server.js:79:1
+   https/server.js:79:8
      79| server.listen(8443, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:79:21
@@ -1401,13 +1407,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:80:1
+Error --------------------------------------------------------------------------------------------- https/server.js:80:8
 
 Cannot call `server.listen` because function [1] is incompatible with string [2].
 
-   https/server.js:80:1
+   https/server.js:80:8
      80| server.listen(8443, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:80:21
@@ -1418,16 +1424,16 @@ References:
                                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:81:1
+Error --------------------------------------------------------------------------------------------- https/server.js:81:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   https/server.js:81:1
+   https/server.js:81:8
      81| server.listen(8443, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:81:21
@@ -1444,16 +1450,16 @@ References:
                                             ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:82:1
+Error --------------------------------------------------------------------------------------------- https/server.js:82:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   https/server.js:82:1
+   https/server.js:82:8
      82| server.listen(8443, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:82:21
@@ -1470,16 +1476,16 @@ References:
                                             ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:83:1
+Error --------------------------------------------------------------------------------------------- https/server.js:83:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   https/server.js:83:1
+   https/server.js:83:8
      83| server.listen(8443, () => {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:83:21
@@ -1496,16 +1502,16 @@ References:
                                             ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:84:1
+Error --------------------------------------------------------------------------------------------- https/server.js:84:8
 
 Cannot call `server.listen` because:
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
 
-   https/server.js:84:1
+   https/server.js:84:8
      84| server.listen(8443, function() {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
 
 References:
    https/server.js:84:21
@@ -1796,7 +1802,7 @@ References:
                        ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- process/emitWarning.js:10:1
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:10:9
 
 Cannot call `process.emitWarning` because:
  - Either undefined [1] is incompatible with string [2].
@@ -1805,11 +1811,14 @@ Cannot call `process.emitWarning` because:
  - Or function type [5] requires another argument from call of method `emitWarning` [1].
  - Or function type [6] requires another argument from call of method `emitWarning` [1].
 
+   process/emitWarning.js:10:9
+     10| process.emitWarning(); // error
+                 ^^^^^^^^^^^
+
+References:
    process/emitWarning.js:10:1
      10| process.emitWarning(); // error
          ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/node.js:2589:24
    2589|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
@@ -1833,16 +1842,16 @@ References:
            ------^ [6]
 
 
-Error -------------------------------------------------------------------------------------- process/emitWarning.js:11:1
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:11:9
 
 Cannot call `process.emitWarning` because:
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
  - Or number [1] is incompatible with string [4].
 
-   process/emitWarning.js:11:1
+   process/emitWarning.js:11:9
      11| process.emitWarning(42); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^
+                 ^^^^^^^^^^^
 
 References:
    process/emitWarning.js:11:21
@@ -1859,15 +1868,15 @@ References:
                       ^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- process/emitWarning.js:12:1
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:12:9
 
 Cannot call `process.emitWarning` because:
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
-   process/emitWarning.js:12:1
+   process/emitWarning.js:12:9
      12| process.emitWarning("blah", 42); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 ^^^^^^^^^^^
 
 References:
    process/emitWarning.js:12:29
@@ -1881,13 +1890,13 @@ References:
                    ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- process/emitWarning.js:13:1
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:13:9
 
 Cannot call `process.emitWarning` because number [1] is incompatible with string [2].
 
-   process/emitWarning.js:13:1
+   process/emitWarning.js:13:9
      13| process.emitWarning("blah", "blah", 42); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 ^^^^^^^^^^^
 
 References:
    process/emitWarning.js:13:37
@@ -1915,85 +1924,55 @@ References:
                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:14:3
 
 Cannot call `process.nextTick` because number [1] is incompatible with string [2] in the first argument.
 
-   process/nextTick.js:12:1
-       v----------------
-   12| process.nextTick(
-   13|   (a: string, b: number, c: boolean) => {},
-   14|   0, // Error: number ~> string
-   15|   1,
-   16|   null // Error: null ~> boolean
-   17| );
-       ^
-
-References:
    process/nextTick.js:14:3
    14|   0, // Error: number ~> string
          ^ [1]
+
+References:
    process/nextTick.js:13:7
    13|   (a: string, b: number, c: boolean) => {},
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:16:3
 
 Cannot call `process.nextTick` because null [1] is incompatible with boolean [2] in the third argument.
 
-   process/nextTick.js:12:1
-       v----------------
-   12| process.nextTick(
-   13|   (a: string, b: number, c: boolean) => {},
-   14|   0, // Error: number ~> string
-   15|   1,
-   16|   null // Error: null ~> boolean
-   17| );
-       ^
-
-References:
    process/nextTick.js:16:3
    16|   null // Error: null ~> boolean
          ^^^^ [1]
+
+References:
    process/nextTick.js:13:29
    13|   (a: string, b: number, c: boolean) => {},
                                    ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:19:1
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:22:3
 
 Cannot call `process.nextTick` because string [1] is incompatible with number [2] in the second argument.
 
-   process/nextTick.js:19:1
-       v----------------
-   19| process.nextTick(
-   20|   (a: string, b: number, c: boolean) => {},
-   21|   'z',
-   22|   'y', // Error: string ~> number
-   23|   true
-   24| );
-       ^
-
-References:
    process/nextTick.js:22:3
    22|   'y', // Error: string ~> number
          ^^^ [1]
+
+References:
    process/nextTick.js:20:18
    20|   (a: string, b: number, c: boolean) => {},
                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:26:1
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:26:9
 
 Cannot call `process.nextTick` because function [1] requires another argument from function type [2].
 
-   process/nextTick.js:26:1
-         v----------------
+   process/nextTick.js:26:9
      26| process.nextTick(
-     27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-     28| );
-         ^
+                 ^^^^^^^^
 
 References:
    process/nextTick.js:27:3
@@ -2089,7 +2068,7 @@ References:
                   ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:52:1
+Error -------------------------------------------------------------------------------------------- stream/stream.js:52:8
 
 Cannot call `stream.pipeline` because:
  - Either `MyWriteStream` [1] is incompatible with `stream$Readable` [2].
@@ -2099,14 +2078,9 @@ Cannot call `stream.pipeline` because:
  - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [6].
  - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [7].
 
-   stream/stream.js:52:1
-         v---------------
+   stream/stream.js:52:8
      52| stream.pipeline(
-     53|   new MyWriteStream(), // error - first stream must be Readable
-     54|   new MyDuplex(),
-     55|   () => {},
-     56| );
-         ^
+                ^^^^^^^^
 
 References:
    stream/stream.js:53:3
@@ -2132,7 +2106,7 @@ References:
                  ^^^^^^^^^^^^^^^ [7]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:58:1
+Error -------------------------------------------------------------------------------------------- stream/stream.js:58:8
 
 Cannot call `stream.pipeline` because:
  - Either `MyWriteStream` [1] is incompatible with `stream$Duplex` [2].
@@ -2141,15 +2115,9 @@ Cannot call `stream.pipeline` because:
  - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [5].
  - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [6].
 
-   stream/stream.js:58:1
-         v---------------
+   stream/stream.js:58:8
      58| stream.pipeline(
-     59|   new MyDuplex(),
-     60|   new MyWriteStream(), // error - middle stream must be Duplex
-     61|   new MyDuplex(),
-     62|   () => {},
-     63| );
-         ^
+                ^^^^^^^^
 
 References:
    stream/stream.js:60:3
@@ -2172,7 +2140,7 @@ References:
                  ^^^^^^^^^^^^^ [6]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:65:1
+Error -------------------------------------------------------------------------------------------- stream/stream.js:65:8
 
 Cannot call `stream.pipeline` because:
  - Either `MyReadStream` [1] is incompatible with `stream$Writable` [2].
@@ -2181,15 +2149,9 @@ Cannot call `stream.pipeline` because:
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [5].
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [6].
 
-   stream/stream.js:65:1
-         v---------------
+   stream/stream.js:65:8
      65| stream.pipeline(
-     66|   new MyDuplex(),
-     67|   new MyDuplex(),
-     68|   new MyReadStream(), // error - last stream must be Writable
-     69|   () => {},
-     70| );
-         ^
+                ^^^^^^^^
 
 References:
    stream/stream.js:68:3

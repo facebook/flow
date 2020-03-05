@@ -61,13 +61,13 @@ References:
                              ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- iterator_result.js:23:16
+Error ----------------------------------------------------------------------------------------- iterator_result.js:23:18
 
 Cannot return object literal because boolean [1] is incompatible with boolean literal `false` [2] in property `done`.
 
-   iterator_result.js:23:16
+   iterator_result.js:23:18
     23|         return { done, value: "still going..." }; // Error string ~> void
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         ^^^^
 
 References:
    iterator_result.js:17:40
@@ -78,13 +78,13 @@ References:
                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- iterator_result.js:25:16
+Error ----------------------------------------------------------------------------------------- iterator_result.js:25:18
 
 Cannot return object literal because boolean [1] is incompatible with boolean literal `true` [2] in property `done`.
 
-   iterator_result.js:25:16
+   iterator_result.js:25:18
     25|         return { done }; // Error void ~> string
-                       ^^^^^^^^
+                         ^^^^
 
 References:
    iterator_result.js:17:40

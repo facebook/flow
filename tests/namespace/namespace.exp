@@ -15,18 +15,15 @@ References:
                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ namespace.js:3:12
+Error ------------------------------------------------------------------------------------------------ namespace.js:3:23
 
 Cannot assign function to `f` because string [1] is incompatible with number [2] in the first argument.
 
-   namespace.js:3:12
-   3| var f: T = function(x:string): void { }
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    namespace.js:3:23
    3| var f: T = function(x:string): void { }
                             ^^^^^^ [1]
+
+References:
    namespace.js:2:13
    2| type T = (x:number) => void;
                   ^^^^^^ [2]
@@ -49,19 +46,16 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- namespace.js:15:14
+Error ----------------------------------------------------------------------------------------------- namespace.js:15:16
 
 Cannot assign array literal to `s2` because string [1] is incompatible with number [2] in array element of array
 element.
 
-   namespace.js:15:14
-   15| var s2:Seq = [[""]];
-                    ^^^^^^
-
-References:
    namespace.js:15:16
    15| var s2:Seq = [[""]];
                       ^^ [1]
+
+References:
    namespace.js:13:12
    13| type Seq = number | Array<Seq>;
                   ^^^^^^ [2]

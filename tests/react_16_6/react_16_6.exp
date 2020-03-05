@@ -1,13 +1,13 @@
-Error ------------------------------------------------------------------------------------------------- Suspense.js:12:3
+Error ------------------------------------------------------------------------------------------------ Suspense.js:12:23
 
 Cannot create `Suspense` element because in property `fallback`:
  - Either inexact function [1] is incompatible with exact `React.Element` [2].
  - Or function [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 
-   Suspense.js:12:3
+   Suspense.js:12:23
    12|   <Suspense fallback={Loading} /> // Error: function is incompatible with exact React.Element
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                             ^^^^^^^
 
 References:
    Suspense.js:7:1
@@ -24,14 +24,14 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- lazy.js:9:12
+Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
 
 Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with `Promise` [2] in
 the return value.
 
-   lazy.js:9:12
+   lazy.js:9:18
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
-                   ^^^^^^^^^^^^^^^^^^^^^^^
+                         ^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:1
@@ -42,14 +42,14 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:10:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because class `ClassComponent` [1] is incompatible with
 `Promise` [2] in the return value.
 
-   lazy.js:10:12
+   lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
-                   ^^^^^^^^^^^^^^^^^^^^
+                         ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
@@ -60,14 +60,14 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:11:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
 
 Cannot call `React.lazy` with function bound to `component` because property `default` is missing in function [1] but
 exists in object type [2] in type argument `R` [3] of the return value.
 
-   lazy.js:11:12
+   lazy.js:11:34
     11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                         ^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:1
@@ -81,14 +81,14 @@ References:
                                ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:12:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
 
 Cannot call `React.lazy` with function bound to `component` because property `default` is missing in statics of
 `ClassComponent` [1] but exists in object type [2] in type argument `R` [3] of the return value.
 
-   lazy.js:12:12
+   lazy.js:12:34
     12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                         ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
@@ -102,13 +102,13 @@ References:
                                ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:19:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13
 
 Cannot create `LazyFunctionComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
 
-   lazy.js:19:12
+   lazy.js:19:13
    19| const _b = <LazyFunctionComponent />; // Error missing foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:14:31
@@ -122,13 +122,13 @@ References:
                                      ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:20:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:20:13
 
 Cannot create `LazyFunctionComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
 
-   lazy.js:20:12
+   lazy.js:20:13
    20| const _c = <LazyFunctionComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:31
@@ -142,13 +142,13 @@ References:
        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:21:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:21:13
 
 Cannot create `LazyFunctionComponent` element because string [1] is incompatible with number [2] in property `foo`.
 
-   lazy.js:21:12
+   lazy.js:21:13
    21| const _d = <LazyFunctionComponent foo="string" />; // Error wrong type for foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:21:39
@@ -159,46 +159,49 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:28:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:28:13
 
 Cannot create `LazyClassComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
 
+   lazy.js:28:13
+   28| const _f = <LazyClassComponent />; // Error missing foo
+                   ^^^^^^^^^^^^^^^^^^
+
+References:
    lazy.js:28:12
    28| const _f = <LazyClassComponent />; // Error missing foo
                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    lazy.js:7:46
     7| class ClassComponent extends React.Component<Props> {}
                                                     ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:29:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:29:13
 
 Cannot create `LazyClassComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
 
-   lazy.js:29:12
+   lazy.js:29:13
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:46
     7| class ClassComponent extends React.Component<Props> {}
                                                     ^^^^^ [1]
+   lazy.js:29:12
+   29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lazy.js:30:12
+Error ---------------------------------------------------------------------------------------------------- lazy.js:30:36
 
 Cannot create `LazyClassComponent` element because string [1] is incompatible with number [2] in property `foo`.
 
-   lazy.js:30:12
-   30| const _h = <LazyClassComponent foo="string" />; // Error wrong type for foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    lazy.js:30:36
    30| const _h = <LazyClassComponent foo="string" />; // Error wrong type for foo
                                           ^^^^^^^^ [1]
+
+References:
    lazy.js:5:22
     5| type Props = {| foo: number |};
                             ^^^^^^ [2]
@@ -218,13 +221,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- memo.js:12:12
+Error ---------------------------------------------------------------------------------------------------- memo.js:12:13
 
 Cannot create `MemoComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
 
-   memo.js:12:12
+   memo.js:12:13
    12| const _b = <MemoComponent />; // Error missing foo
-                  ^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^
 
 References:
    memo.js:9:23
@@ -235,13 +238,13 @@ References:
                              ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- memo.js:13:12
+Error ---------------------------------------------------------------------------------------------------- memo.js:13:13
 
 Cannot create `MemoComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
 
-   memo.js:13:12
+   memo.js:13:13
    13| const _c = <MemoComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^
 
 References:
    memo.js:7:23
@@ -252,13 +255,13 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- memo.js:14:12
+Error ---------------------------------------------------------------------------------------------------- memo.js:14:13
 
 Cannot create `MemoComponent` element because string [1] is incompatible with number [2] in property `foo`.
 
-   memo.js:14:12
+   memo.js:14:13
    14| const _d = <MemoComponent foo="string" />; // Error wrong type for foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^
 
 References:
    memo.js:14:31
@@ -269,13 +272,13 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- memo.js:19:12
+Error ---------------------------------------------------------------------------------------------------- memo.js:19:13
 
 Cannot create `MemoComponentWithEqual` element because property `foo` is missing in props [1] but exists in `Props` [2].
 
-   memo.js:19:12
+   memo.js:19:13
    19| const _f = <MemoComponentWithEqual />; // Error missing foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    memo.js:16:32
@@ -286,13 +289,13 @@ References:
                              ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- memo.js:20:12
+Error ---------------------------------------------------------------------------------------------------- memo.js:20:13
 
 Cannot create `MemoComponentWithEqual` element because property `bar` is missing in `Props` [1] but exists in props [2].
 
-   memo.js:20:12
+   memo.js:20:13
    20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    memo.js:7:23
@@ -303,13 +306,13 @@ References:
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- memo.js:21:12
+Error ---------------------------------------------------------------------------------------------------- memo.js:21:13
 
 Cannot create `MemoComponentWithEqual` element because string [1] is incompatible with number [2] in property `foo`.
 
-   memo.js:21:12
+   memo.js:21:13
    21| const _h = <MemoComponentWithEqual foo="string" />; // Error wrong type for foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    memo.js:21:40

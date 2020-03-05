@@ -29,19 +29,16 @@ References:
                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:12:5
+Error ---------------------------------------------------------------------------------------------------- test.js:12:11
 
 Cannot call `bar` with object literal bound to `config` because string [1] is incompatible with number [2] in property
 `foo`.
 
-   test.js:12:5
-   12| bar({foo: ""});
-           ^^^^^^^^^
-
-References:
    test.js:12:11
    12| bar({foo: ""});
                  ^^ [1]
+
+References:
    test.js:10:30
    10| function bar(config: { foo?: number }) {}
                                     ^^^^^^ [2]
@@ -61,30 +58,27 @@ References:
                      ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test2.js:10:27
+Error --------------------------------------------------------------------------------------------------- test2.js:10:34
 
 Cannot assign object literal to `d` because null [1] is incompatible with string [2] in property `foo`.
 
-   test2.js:10:27
-   10| var d: { foo?: string } = { foo: null }; // But this is an error
-                                 ^^^^^^^^^^^^^
-
-References:
    test2.js:10:34
    10| var d: { foo?: string } = { foo: null }; // But this is an error
                                         ^^^^ [1]
+
+References:
    test2.js:10:16
    10| var d: { foo?: string } = { foo: null }; // But this is an error
                       ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:54:9
+Error --------------------------------------------------------------------------------------------------- test3.js:54:16
 
 Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object literal [1].
 
-   test3.js:54:9
+   test3.js:54:16
    54|         this.x.b = 'hello';
-               ^^^^^^^^
+                      ^
 
 References:
    test3.js:53:18
@@ -109,13 +103,13 @@ References:
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- test3_exact_annot.js:7:2
+Error ----------------------------------------------------------------------------------------- test3_exact_annot.js:7:4
 
 Cannot get `a.b` because property `b` is missing in object type [1].
 
-   test3_exact_annot.js:7:2
+   test3_exact_annot.js:7:4
    7| (a.b: number); // error: property `b` not found
-       ^^^
+         ^
 
 References:
    test3_exact_annot.js:4:10
@@ -123,13 +117,13 @@ References:
                ^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- test3_failure.js:7:5
+Error -------------------------------------------------------------------------------------------- test3_failure.js:7:14
 
 Cannot assign `'hello'` to `this.o.x.b` because property `b` is missing in object literal [1].
 
-   test3_failure.js:7:5
+   test3_failure.js:7:14
    7|     this.o.x.b = 'hello'; // this is a spurious error (see test3.js for details)
-          ^^^^^^^^^^
+                   ^
 
 References:
    test3_failure.js:6:16

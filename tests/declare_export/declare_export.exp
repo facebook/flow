@@ -107,13 +107,13 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:40:1
+Error ---------------------------------------------------------------------------------------------- es6modules.js:40:15
 
 Cannot get `CJS_Clobb_Lit.doesntExist` because property `doesntExist` is missing in object literal [1].
 
-   es6modules.js:40:1
+   es6modules.js:40:15
    40| CJS_Clobb_Lit.doesntExist; // Error: doesntExist isn't a property
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ^^^^^^^^^^^
 
 References:
    CommonJS_Clobbering_Lit.js:6:18
@@ -128,13 +128,13 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:45:1
+Error ---------------------------------------------------------------------------------------------- es6modules.js:45:26
 
 Cannot get `CJS_Clobb_Lit_NS.default.default` because property `default` is missing in object literal [1].
 
-   es6modules.js:45:1
+   es6modules.js:45:26
    45| CJS_Clobb_Lit_NS.default.default; // Error: No 'default' property on the exported obj
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                ^^^^^^^
 
 References:
    CommonJS_Clobbering_Lit.js:6:18
@@ -219,13 +219,13 @@ Cannot import `childProp` because there is no `childProp` export in `CommonJS_Cl
                                         ^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:63:1
+Error ---------------------------------------------------------------------------------------------- es6modules.js:63:23
 
 Cannot get `(new CJS_Clobb_Class()).doesntExist` because property `doesntExist` is missing in `Test` [1].
 
-   es6modules.js:63:1
+   es6modules.js:63:23
    63| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                             ^^^^^^^^^^^
 
 References:
    es6modules.js:63:1
@@ -267,13 +267,13 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:70:1
+Error ----------------------------------------------------------------------------------------------- es6modules.js:70:5
 
 Cannot call `CJS_Clobb_Class_NS` because module `CommonJS_Clobbering_Class` [1] is not a function.
 
-   es6modules.js:70:1
+   es6modules.js:70:5
    70| new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-       ^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^
 
 References:
    es6modules.js:69:1
@@ -281,14 +281,14 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:71:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:71:37
 
 Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3` is missing in module
 `CommonJS_Clobbering_Class` [1].
 
-   es6modules.js:71:18
+   es6modules.js:71:37
    71| var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                           ^^^^^^^^^^^^^
 
 References:
    es6modules.js:69:1
@@ -373,13 +373,13 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:92:1
+Error ---------------------------------------------------------------------------------------------- es6modules.js:92:11
 
 Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in module `CommonJS_Named` [1].
 
-   es6modules.js:92:1
+   es6modules.js:92:11
    92| CJS_Named.doesntExist; // Error: doesntExist isn't a property
-       ^^^^^^^^^^^^^^^^^^^^^
+                 ^^^^^^^^^^^
 
 References:
    es6modules.js:89:1
@@ -693,14 +693,14 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:183:1
+Error --------------------------------------------------------------------------------------------- es6modules.js:183:38
 
 Cannot get `require(...).doesntExist` because property `doesntExist` is missing in module
 `ES6_Default_AnonFunction2` [1].
 
-   es6modules.js:183:1
+   es6modules.js:183:38
    183| require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                             ^^^^^^^^^^^
 
 References:
    es6modules.js:183:1

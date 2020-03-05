@@ -4,7 +4,7 @@ Cannot cast `x1?.["foo"]` to empty because null or undefined [1] is incompatible
 
    computed_properties.js:12:2
    12| (x1?.["foo"]: empty);
-        ^^^^^^^^^^^
+        ^^
 
 References:
    computed_properties.js:6:17
@@ -70,7 +70,7 @@ Cannot cast `y1?.["bar"]?.["foo"]` to empty because null or undefined [1] is inc
 
    computed_properties.js:15:2
    15| (y1?.["bar"]?.["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+        ^^
 
 References:
    computed_properties.js:9:17
@@ -166,7 +166,7 @@ Cannot cast `y1?.["baz"]?.["foo"]` to empty because null or undefined [1] is inc
 
    computed_properties.js:17:2
    17| (y1?.["baz"]?.["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+        ^^
 
 References:
    computed_properties.js:9:17
@@ -183,7 +183,7 @@ Cannot cast `y1?.["baz"]?.["foo"]` to empty because null or undefined [1] is inc
 
    computed_properties.js:17:2
    17| (y1?.["baz"]?.["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^
 
 References:
    computed_properties.js:4:24
@@ -232,7 +232,7 @@ Cannot cast `y2?.["baz"]?.["foo"]` to empty because null or undefined [1] is inc
 
    computed_properties.js:18:2
    18| (y2?.["baz"]?.["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^
 
 References:
    computed_properties.js:4:24
@@ -266,7 +266,7 @@ Cannot cast `y1?.["bar"]["foo"]` to empty because null or undefined [1] is incom
 
    computed_properties.js:20:2
    20| (y1?.["bar"]["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^
+        ^^
 
 References:
    computed_properties.js:9:17
@@ -332,7 +332,7 @@ Cannot cast `y1?.["baz"]["foo"]` to empty because null or undefined [1] is incom
 
    computed_properties.js:22:2
    22| (y1?.["baz"]["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^
+        ^^
 
 References:
    computed_properties.js:9:17
@@ -360,14 +360,14 @@ References:
                             ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
+Error ------------------------------------------------------------------------------------- computed_properties.js:22:14
 
 Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:22:2
+   computed_properties.js:22:14
    22| (y1?.["baz"]["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^
+                    ^^^^^
 
 References:
    computed_properties.js:4:24
@@ -407,14 +407,14 @@ References:
                             ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
+Error ------------------------------------------------------------------------------------- computed_properties.js:23:14
 
 Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:23:2
+   computed_properties.js:23:14
    23| (y2?.["baz"]["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^
+                    ^^^^^
 
 References:
    computed_properties.js:4:24
@@ -422,14 +422,14 @@ References:
                               ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
+Error -------------------------------------------------------------------------------------- computed_properties.js:25:5
 
 Cannot get `y1["bar"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:25:2
+   computed_properties.js:25:5
    25| (y1["bar"]?.["foo"]: empty);
-        ^^^^^^^^^
+           ^^^^^
 
 References:
    computed_properties.js:9:17
@@ -501,14 +501,14 @@ References:
         ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
+Error -------------------------------------------------------------------------------------- computed_properties.js:27:5
 
 Cannot get `y1["baz"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:27:2
+   computed_properties.js:27:5
    27| (y1["baz"]?.["foo"]: empty);
-        ^^^^^^^^^
+           ^^^^^
 
 References:
    computed_properties.js:9:17
@@ -522,7 +522,7 @@ Cannot cast `y1["baz"]?.["foo"]` to empty because null or undefined [1] is incom
 
    computed_properties.js:27:2
    27| (y1["baz"]?.["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^
 
 References:
    computed_properties.js:4:24
@@ -556,7 +556,7 @@ Cannot cast `y2["baz"]?.["foo"]` to empty because null or undefined [1] is incom
 
    computed_properties.js:28:2
    28| (y2["baz"]?.["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^
 
 References:
    computed_properties.js:4:24
@@ -601,14 +601,14 @@ References:
                               ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:30:2
+Error ------------------------------------------------------------------------------------- computed_properties.js:30:16
 
 Cannot get `y1?.["bar"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:30:2
+   computed_properties.js:30:16
    30| ((y1?.["bar"])["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^
 
 References:
    computed_properties.js:9:17
@@ -665,14 +665,14 @@ References:
                               ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
+Error ------------------------------------------------------------------------------------- computed_properties.js:32:16
 
 Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:32:2
+   computed_properties.js:32:16
    32| ((y1?.["baz"])["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^
 
 References:
    computed_properties.js:4:24
@@ -680,14 +680,14 @@ References:
                               ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
+Error ------------------------------------------------------------------------------------- computed_properties.js:32:16
 
 Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:32:2
+   computed_properties.js:32:16
    32| ((y1?.["baz"])["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^
 
 References:
    computed_properties.js:9:17
@@ -712,14 +712,14 @@ References:
                               ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- computed_properties.js:33:2
+Error ------------------------------------------------------------------------------------- computed_properties.js:33:16
 
 Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   computed_properties.js:33:2
+   computed_properties.js:33:16
    33| ((y2?.["baz"])["foo"]: empty);
-        ^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^
 
 References:
    computed_properties.js:4:24
@@ -887,13 +887,13 @@ References:
              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
+Error ------------------------------------------------------------------------------------------------- deletion.js:20:4
 
 Cannot get `a.a` because property `a` is missing in null or undefined [1].
 
-   deletion.js:20:2
+   deletion.js:20:4
    20| (a.a: empty); // don't refine a.a to definitely exist
-        ^^^
+          ^
 
 References:
    deletion.js:18:16
@@ -901,13 +901,13 @@ References:
                       ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- deletion.js:23:1
+Error ------------------------------------------------------------------------------------------------- deletion.js:23:8
 
 Cannot assign `42` to `w?.g.e` because property `e` is missing in null or undefined [1].
 
-   deletion.js:23:1
+   deletion.js:23:8
    23| (w?.g).e = 42; // should fail
-       ^^^^^^^^
+              ^
 
 References:
    deletion.js:6:16
@@ -915,13 +915,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- deletion.js:24:8
+Error ------------------------------------------------------------------------------------------------ deletion.js:24:15
 
 Cannot delete `w?.g.e` because property `e` is missing in null or undefined [1].
 
-   deletion.js:24:8
+   deletion.js:24:15
    24| delete (w?.g).e; // should fail
-              ^^^^^^^^
+                     ^
 
 References:
    deletion.js:6:16
@@ -935,7 +935,7 @@ Cannot cast `x1?.()` to empty because null or undefined [1] is incompatible with
 
    function_calls.js:8:2
    8| (x1?.(): empty);
-       ^^^^^^
+       ^^
 
 References:
    function_calls.js:5:17
@@ -995,13 +995,13 @@ References:
        ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- function_calls.js:13:1
+Error ------------------------------------------------------------------------------------------- function_calls.js:13:2
 
 Cannot call `x3?.()` because null or undefined [1] is not a function.
 
-   function_calls.js:13:1
+   function_calls.js:13:2
    13| (x3?.())();
-       ^^^^^^^^^^
+        ^^^^^^
 
 References:
    function_calls.js:11:17
@@ -1024,13 +1024,13 @@ References:
             ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- in_line_refinements.js:24:12
+Error ------------------------------------------------------------------------------------- in_line_refinements.js:24:14
 
 Cannot get `x.a` because property `a` is missing in null or undefined [1].
 
-   in_line_refinements.js:24:12
+   in_line_refinements.js:24:14
    24| x?.f2(x.a)(x.a); // havoc refinements
-                  ^^^
+                    ^
 
 References:
    in_line_refinements.js:3:16
@@ -1063,13 +1063,13 @@ References:
         ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ lhs_types.js:13:2
+Error ------------------------------------------------------------------------------------------------ lhs_types.js:13:9
 
 Cannot get `mixed?.foo` because property `foo` is missing in mixed [1].
 
-   lhs_types.js:13:2
+   lhs_types.js:13:9
    13| (mixed?.foo: ?number); // error, no lint
-        ^^^^^^^^^^
+               ^^^
 
 References:
    lhs_types.js:6:20
@@ -1083,7 +1083,7 @@ Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatibl
 
    method_calls.js:9:2
    9| (foo?.bar?.(): empty);
-       ^^^^^^^^^^^^
+       ^^^
 
 References:
    method_calls.js:7:18
@@ -1100,7 +1100,7 @@ Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatibl
 
    method_calls.js:9:2
    9| (foo?.bar?.(): empty);
-       ^^^^^^^^^^^^
+       ^^^^^^^^
 
 References:
    method_calls.js:4:8
@@ -1128,13 +1128,13 @@ References:
                      ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
+Error --------------------------------------------------------------------------------------------- method_calls.js:10:6
 
 Cannot call `foo.bar` because property `bar` is missing in null or undefined [1].
 
-   method_calls.js:10:2
+   method_calls.js:10:6
    10| (foo.bar?.(): empty);
-        ^^^^^^^^^^^
+            ^^^
 
 References:
    method_calls.js:7:18
@@ -1148,7 +1148,7 @@ Cannot cast `foo.bar?.()` to empty because null or undefined [1] is incompatible
 
    method_calls.js:10:2
    10| (foo.bar?.(): empty);
-        ^^^^^^^^^^^
+        ^^^^^^^
 
 References:
    method_calls.js:4:8
@@ -1176,13 +1176,13 @@ References:
                      ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
+Error --------------------------------------------------------------------------------------------- method_calls.js:11:7
 
 Cannot call `foo?.bar` because null or undefined [1] is not a function.
 
-   method_calls.js:11:2
+   method_calls.js:11:7
    11| (foo?.bar(): empty);
-        ^^^^^^^^^^
+             ^^^
 
 References:
    method_calls.js:4:8
@@ -1196,7 +1196,7 @@ Cannot cast `foo?.bar()` to empty because null or undefined [1] is incompatible 
 
    method_calls.js:11:2
    11| (foo?.bar(): empty);
-        ^^^^^^^^^^
+        ^^^
 
 References:
    method_calls.js:7:18
@@ -1224,13 +1224,13 @@ References:
                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:3
 
 Cannot call `foo?.bar` because null or undefined [1] is not a function.
 
-   method_calls.js:12:2
+   method_calls.js:12:3
    12| ((foo?.bar)(): empty);
-        ^^^^^^^^^^^^
+         ^^^^^^^^
 
 References:
    method_calls.js:4:8
@@ -1238,13 +1238,13 @@ References:
               ^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:3
 
 Cannot call `foo?.bar` because null or undefined [1] is not a function.
 
-   method_calls.js:12:2
+   method_calls.js:12:3
    12| ((foo?.bar)(): empty);
-        ^^^^^^^^^^^^
+         ^^^^^^^^
 
 References:
    method_calls.js:7:18
@@ -1275,7 +1275,7 @@ Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatib
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
-                      ^^^^^^^^^^^^^
+                      ^^^
 
 References:
    method_calls.js:14:21
@@ -1292,7 +1292,7 @@ Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatib
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
-                      ^^^^^^^^^^^^^
+                      ^^^^^^^
 
 References:
    method_calls.js:14:29
@@ -1309,7 +1309,7 @@ Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatib
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
-                      ^^^^^^^^^^^^^
+                      ^^^^^^^^^^
 
 References:
    method_calls.js:14:34
@@ -1343,7 +1343,7 @@ Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible w
 
    method_calls.js:16:16
    16| var x: empty = a.c?.d?.e;
-                      ^^^^^^^^^
+                      ^^^
 
 References:
    method_calls.js:14:53
@@ -1360,7 +1360,7 @@ Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible w
 
    method_calls.js:16:16
    16| var x: empty = a.c?.d?.e;
-                      ^^^^^^^^^
+                      ^^^^^^
 
 References:
    method_calls.js:14:58
@@ -1394,7 +1394,7 @@ Cannot assign `a.d?.e.f().g` to `w` because null or undefined [1] is incompatibl
 
    method_calls.js:17:16
    17| var w: empty = a.d?.e.f().g;
-                      ^^^^^^^^^^^^
+                      ^^^
 
 References:
    method_calls.js:14:75
@@ -1422,13 +1422,13 @@ References:
               ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
+Error -------------------------------------------------------------------------------------------- method_calls.js:20:37
 
 Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because undefined [1] is incompatible with empty [2].
 
-   method_calls.js:20:16
+   method_calls.js:20:37
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                           ^^^^^^^^^^^^^
 
 References:
    method_calls.js:19:27
@@ -1439,13 +1439,13 @@ References:
               ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
+Error -------------------------------------------------------------------------------------------- method_calls.js:20:37
 
 Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1] is incompatible with empty [2].
 
-   method_calls.js:20:16
+   method_calls.js:20:37
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                           ^^^^^^^^^^^^^
 
 References:
    method_calls.js:19:33
@@ -1456,18 +1456,15 @@ References:
               ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
+Error -------------------------------------------------------------------------------------------- method_calls.js:20:53
 
 Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1] is incompatible with empty [2].
 
-   method_calls.js:20:16
-   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    method_calls.js:20:53
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
                                                            ^^ [1]
+
+References:
    method_calls.js:20:8
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
               ^^^^^ [2]
@@ -1479,7 +1476,7 @@ Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is inc
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
-                      ^^^^^^^^^^^^^^^^^^^^
+                      ^
 
 References:
    method_calls.js:22:16
@@ -1496,7 +1493,7 @@ Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is inc
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
-                      ^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^
 
 References:
    method_calls.js:22:31
@@ -1513,7 +1510,7 @@ Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is inc
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
-                      ^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^
 
 References:
    method_calls.js:22:38
@@ -1686,13 +1683,13 @@ References:
             ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- refinements.js:15:3
+Error ---------------------------------------------------------------------------------------------- refinements.js:15:9
 
 Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
 
-   refinements.js:15:3
+   refinements.js:15:9
    15|   a.b.c.d; // bad
-         ^^^^^^^
+               ^
 
 References:
    refinements.js:9:27
@@ -1760,13 +1757,13 @@ References:
           ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- refinements.js:22:4
+Error ---------------------------------------------------------------------------------------------- refinements.js:22:9
 
 Cannot call `a.b?.f` because null or undefined [1] is not a function.
 
-   refinements.js:22:4
+   refinements.js:22:9
    22|   (a.b?.f(): ?number); // unneeded chain and bad
-          ^^^^^^^^
+               ^
 
 References:
    refinements.js:9:54
@@ -1883,13 +1880,13 @@ References:
               ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinements.js:59:4
+Error ---------------------------------------------------------------------------------------------- refinements.js:59:6
 
 Cannot get `x.a` because property `a` is missing in null or undefined [1].
 
-   refinements.js:59:4
+   refinements.js:59:6
    59|   (x.a: empty) // should fail
-          ^^^
+            ^
 
 References:
    refinements.js:52:23
@@ -1897,13 +1894,13 @@ References:
                              ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- refinements.js:66:3
+Error ---------------------------------------------------------------------------------------------- refinements.js:66:9
 
 Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
 
-   refinements.js:66:3
+   refinements.js:66:9
    66|   a.b.c.d; // bad
-         ^^^^^^^
+               ^
 
 References:
    refinements.js:9:27
@@ -1971,13 +1968,13 @@ References:
           ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- refinements.js:73:4
+Error ---------------------------------------------------------------------------------------------- refinements.js:73:9
 
 Cannot call `a.b?.f` because null or undefined [1] is not a function.
 
-   refinements.js:73:4
+   refinements.js:73:9
    73|   (a.b?.f(): ?number); // unneeded chain and bad
-          ^^^^^^^^
+               ^
 
 References:
    refinements.js:9:54
@@ -2111,13 +2108,13 @@ References:
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:108:4
+Error --------------------------------------------------------------------------------------------- refinements.js:108:6
 
 Cannot get `b.x` because property `x` is missing in null or undefined [1].
 
-   refinements.js:108:4
+   refinements.js:108:6
    108|   (b.x: false); // nope
-           ^^^
+             ^
 
 References:
    refinements.js:103:16
@@ -2153,13 +2150,13 @@ References:
                                                             ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:123:4
+Error --------------------------------------------------------------------------------------------- refinements.js:123:6
 
 Cannot get `b.z` because property `z` is missing in null or undefined [1].
 
-   refinements.js:123:4
+   refinements.js:123:6
    123|   (b.z.value: string); // error
-           ^^^
+             ^
 
 References:
    refinements.js:103:16
@@ -2233,13 +2230,13 @@ References:
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:129:4
+Error --------------------------------------------------------------------------------------------- refinements.js:129:6
 
 Cannot get `b.y` because property `y` is missing in null or undefined [1].
 
-   refinements.js:129:4
+   refinements.js:129:6
    129|   (b.y: false); // nope
-           ^^^
+             ^
 
 References:
    refinements.js:103:16
@@ -2247,14 +2244,14 @@ References:
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:136:4
+Error --------------------------------------------------------------------------------------------- refinements.js:136:9
 
 Cannot get `c[1][0]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   refinements.js:136:4
+   refinements.js:136:9
    136|   (c[1][0]: {}); // no
-           ^^^^^^^
+                ^
 
 References:
    refinements.js:132:22
@@ -2262,13 +2259,13 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:142:4
+Error --------------------------------------------------------------------------------------------- refinements.js:142:6
 
 Cannot call `d.a` because undefined [1] is not a function.
 
-   refinements.js:142:4
+   refinements.js:142:6
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
-           ^^^^^
+             ^
 
 References:
    refinements.js:140:22
@@ -2276,13 +2273,13 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:142:4
+Error --------------------------------------------------------------------------------------------- refinements.js:142:6
 
 Cannot call `d.a` because property `a` is missing in null or undefined [1].
 
-   refinements.js:142:4
+   refinements.js:142:6
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
-           ^^^^^
+             ^
 
 References:
    refinements.js:140:16
@@ -2290,13 +2287,13 @@ References:
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:142:4
+Error -------------------------------------------------------------------------------------------- refinements.js:142:12
 
 Cannot get `d.a().b.c` because property `c` is missing in undefined [1].
 
-   refinements.js:142:4
+   refinements.js:142:12
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
-           ^^^^^^^^^
+                   ^
 
 References:
    refinements.js:140:33
@@ -2310,7 +2307,7 @@ Cannot assign `a11?.a || b11?.a` to `x11` because string [1] is incompatible wit
 
    refinements.js:148:18
    148| var x11: empty = a11?.a || b11?.a;
-                         ^^^^^^^^^^^^^^^^
+                         ^^^^^^
 
 References:
    refinements.js:145:24
@@ -2327,24 +2324,21 @@ Cannot assign `a11?.a || b11?.a` to `x11` because property `a` of unknown type [
 
    refinements.js:148:18
    148| var x11: empty = a11?.a || b11?.a;
-                         ^^^^^^^^^^^^^^^^
+                         ^^^^^^ [1]
 
 References:
-   refinements.js:148:18
-   148| var x11: empty = a11?.a || b11?.a;
-                         ^^^^^^ [1]
    refinements.js:148:10
    148| var x11: empty = a11?.a || b11?.a;
                  ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- refinements.js:148:18
+Error -------------------------------------------------------------------------------------------- refinements.js:148:28
 
 Cannot assign `a11?.a || b11?.a` to `x11` because null or undefined [1] is incompatible with empty [2].
 
-   refinements.js:148:18
+   refinements.js:148:28
    148| var x11: empty = a11?.a || b11?.a;
-                         ^^^^^^^^^^^^^^^^
+                                   ^^^
 
 References:
    refinements.js:146:18
@@ -2355,13 +2349,13 @@ References:
                  ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- refinements.js:148:28
+Error -------------------------------------------------------------------------------------------- refinements.js:148:33
 
 Cannot get `b11?.a` because property `a` is missing in object type [1].
 
-   refinements.js:148:28
+   refinements.js:148:33
    148| var x11: empty = a11?.a || b11?.a;
-                                   ^^^^^^
+                                        ^
 
 References:
    refinements.js:146:19
@@ -2403,13 +2397,13 @@ References:
                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:10:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:10:6
 
 Cannot get `t.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:10:4
+   refinements2.js:10:6
    10|   (t.a: number); // no for two reasons
-          ^^^
+            ^
 
 References:
    refinements2.js:4:16
@@ -2451,13 +2445,13 @@ References:
                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:14:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:14:6
 
 Cannot get `t.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:14:4
+   refinements2.js:14:6
    14|   (t.a: number); // no for two reasons
-          ^^^
+            ^
 
 References:
    refinements2.js:4:16
@@ -2504,13 +2498,13 @@ References:
                        ^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:24:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:24:6
 
 Cannot get `s.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:24:4
+   refinements2.js:24:6
    24|   (s.a: (null | void)); // no for two reasons
-          ^^^
+            ^
 
 References:
    refinements2.js:21:16
@@ -2557,13 +2551,13 @@ References:
                        ^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:34:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:34:6
 
 Cannot get `s.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:34:4
+   refinements2.js:34:6
    34|   (s.a: (null | void)); // no for two reasons
-          ^^^
+            ^
 
 References:
    refinements2.js:21:16
@@ -2610,13 +2604,13 @@ References:
                        ^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:38:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:38:6
 
 Cannot get `s.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:38:4
+   refinements2.js:38:6
    38|   (s.a: (null | void)); // no for two reasons
-          ^^^
+            ^
 
 References:
    refinements2.js:21:16
@@ -2680,13 +2674,13 @@ References:
                        ^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:46:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:46:6
 
 Cannot get `s.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:46:4
+   refinements2.js:46:6
    46|   (s.a: (null | void)); // no for two reasons
-          ^^^
+            ^
 
 References:
    refinements2.js:21:16
@@ -2711,13 +2705,13 @@ References:
              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:60:3
+Error --------------------------------------------------------------------------------------------- refinements2.js:60:5
 
 Cannot get `w.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:60:3
+   refinements2.js:60:5
    60|   w.a; // no
-         ^^^
+           ^
 
 References:
    refinements2.js:53:16
@@ -2725,13 +2719,13 @@ References:
                       ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:68:3
+Error --------------------------------------------------------------------------------------------- refinements2.js:68:5
 
 Cannot get `a.b` because property `b` is missing in null or undefined [1].
 
-   refinements2.js:68:3
+   refinements2.js:68:5
    68|   a.b; // nope
-         ^^^
+           ^
 
 References:
    refinements2.js:63:16
@@ -2756,13 +2750,13 @@ References:
               ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:74:3
+Error --------------------------------------------------------------------------------------------- refinements2.js:74:5
 
 Cannot get `b.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:74:3
+   refinements2.js:74:5
    74|   b.a; //nope
-         ^^^
+           ^
 
 References:
    refinements2.js:72:16
@@ -2787,13 +2781,13 @@ References:
               ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:85:3
+Error --------------------------------------------------------------------------------------------- refinements2.js:85:5
 
 Cannot get `b.a` because property `a` is missing in null or undefined [1].
 
-   refinements2.js:85:3
+   refinements2.js:85:5
    85|   b.a; // nope
-         ^^^
+           ^
 
 References:
    refinements2.js:72:16
@@ -2818,13 +2812,13 @@ References:
               ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:94:3
+Error --------------------------------------------------------------------------------------------- refinements2.js:94:5
 
 Cannot get `c.d` because property `d` is missing in null or undefined [1].
 
-   refinements2.js:94:3
+   refinements2.js:94:5
    94|   c.d; //nope
-         ^^^
+           ^
 
 References:
    refinements2.js:89:16
@@ -2855,7 +2849,7 @@ Cannot cast `b1?.a` to number because null or undefined [1] is incompatible with
 
    refinements2.js:103:4
    103|   (b1?.a: number) // b1.a may not exist and may not be number
-           ^^^^^
+           ^^
 
 References:
    refinements2.js:100:17
@@ -2889,7 +2883,7 @@ Cannot cast `x1?.foo` to empty because null or undefined [1] is incompatible wit
 
    static_members.js:12:2
    12| (x1?.foo: empty);
-        ^^^^^^^
+        ^^
 
 References:
    static_members.js:6:17
@@ -2955,7 +2949,7 @@ Cannot cast `y1?.bar?.foo` to empty because null or undefined [1] is incompatibl
 
    static_members.js:15:2
    15| (y1?.bar?.foo: empty);
-        ^^^^^^^^^^^^
+        ^^
 
 References:
    static_members.js:9:17
@@ -3051,7 +3045,7 @@ Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatibl
 
    static_members.js:17:2
    17| (y1?.baz?.foo: empty);
-        ^^^^^^^^^^^^
+        ^^
 
 References:
    static_members.js:9:17
@@ -3068,7 +3062,7 @@ Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatibl
 
    static_members.js:17:2
    17| (y1?.baz?.foo: empty);
-        ^^^^^^^^^^^^
+        ^^^^^^^
 
 References:
    static_members.js:4:24
@@ -3117,7 +3111,7 @@ Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatibl
 
    static_members.js:18:2
    18| (y2?.baz?.foo: empty);
-        ^^^^^^^^^^^^
+        ^^^^^^^
 
 References:
    static_members.js:4:24
@@ -3151,7 +3145,7 @@ Cannot cast `y1?.bar.foo` to empty because null or undefined [1] is incompatible
 
    static_members.js:20:2
    20| (y1?.bar.foo: empty);
-        ^^^^^^^^^^^
+        ^^
 
 References:
    static_members.js:9:17
@@ -3217,7 +3211,7 @@ Cannot cast `y1?.baz.foo` to empty because null or undefined [1] is incompatible
 
    static_members.js:22:2
    22| (y1?.baz.foo: empty);
-        ^^^^^^^^^^^
+        ^^
 
 References:
    static_members.js:9:17
@@ -3245,13 +3239,13 @@ References:
                      ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:22:2
+Error ------------------------------------------------------------------------------------------ static_members.js:22:10
 
 Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
 
-   static_members.js:22:2
+   static_members.js:22:10
    22| (y1?.baz.foo: empty);
-        ^^^^^^^^^^^
+                ^^^
 
 References:
    static_members.js:4:24
@@ -3291,13 +3285,13 @@ References:
                      ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:23:2
+Error ------------------------------------------------------------------------------------------ static_members.js:23:10
 
 Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1].
 
-   static_members.js:23:2
+   static_members.js:23:10
    23| (y2?.baz.foo: empty);
-        ^^^^^^^^^^^
+                ^^^
 
 References:
    static_members.js:4:24
@@ -3305,13 +3299,13 @@ References:
                               ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:25:2
+Error ------------------------------------------------------------------------------------------- static_members.js:25:5
 
 Cannot get `y1.bar` because property `bar` is missing in null or undefined [1].
 
-   static_members.js:25:2
+   static_members.js:25:5
    25| (y1.bar?.foo: empty);
-        ^^^^^^
+           ^^^
 
 References:
    static_members.js:9:17
@@ -3383,13 +3377,13 @@ References:
         ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:27:2
+Error ------------------------------------------------------------------------------------------- static_members.js:27:5
 
 Cannot get `y1.baz` because property `baz` is missing in null or undefined [1].
 
-   static_members.js:27:2
+   static_members.js:27:5
    27| (y1.baz?.foo: empty);
-        ^^^^^^
+           ^^^
 
 References:
    static_members.js:9:17
@@ -3403,7 +3397,7 @@ Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible
 
    static_members.js:27:2
    27| (y1.baz?.foo: empty);
-        ^^^^^^^^^^^
+        ^^^^^^
 
 References:
    static_members.js:4:24
@@ -3437,7 +3431,7 @@ Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible
 
    static_members.js:28:2
    28| (y2.baz?.foo: empty);
-        ^^^^^^^^^^^
+        ^^^^^^
 
 References:
    static_members.js:4:24
@@ -3482,13 +3476,13 @@ References:
                        ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:30:2
+Error ------------------------------------------------------------------------------------------ static_members.js:30:12
 
 Cannot get `y1?.bar.foo` because property `foo` is missing in null or undefined [1].
 
-   static_members.js:30:2
+   static_members.js:30:12
    30| ((y1?.bar).foo: empty);
-        ^^^^^^^^^^^^^
+                  ^^^
 
 References:
    static_members.js:9:17
@@ -3545,13 +3539,13 @@ References:
                        ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:32:2
+Error ------------------------------------------------------------------------------------------ static_members.js:32:12
 
 Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
 
-   static_members.js:32:2
+   static_members.js:32:12
    32| ((y1?.baz).foo: empty);
-        ^^^^^^^^^^^^^
+                  ^^^
 
 References:
    static_members.js:4:24
@@ -3559,13 +3553,13 @@ References:
                               ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:32:2
+Error ------------------------------------------------------------------------------------------ static_members.js:32:12
 
 Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
 
-   static_members.js:32:2
+   static_members.js:32:12
    32| ((y1?.baz).foo: empty);
-        ^^^^^^^^^^^^^
+                  ^^^
 
 References:
    static_members.js:9:17
@@ -3590,13 +3584,13 @@ References:
                        ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- static_members.js:33:2
+Error ------------------------------------------------------------------------------------------ static_members.js:33:12
 
 Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1].
 
-   static_members.js:33:2
+   static_members.js:33:12
    33| ((y2?.baz).foo: empty);
-        ^^^^^^^^^^^^^
+                  ^^^
 
 References:
    static_members.js:4:24
@@ -3626,7 +3620,7 @@ with null [2].
 
    static_members.js:36:26
    36| const b: string | null = a?.a;
-                                ^^^^
+                                ^
 
 References:
    static_members.js:35:16
@@ -3643,7 +3637,7 @@ Cannot assign `c?.c` to `d` because null or undefined [1] is incompatible with n
 
    static_members.js:38:26
    38| const d: string | null = c?.c;
-                                ^^^^
+                                ^
 
 References:
    static_members.js:37:10

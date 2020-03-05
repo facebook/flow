@@ -57,18 +57,15 @@ References:
                              ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:24:34
+Error ----------------------------------------------------------------------------------------------------- map.js:24:44
 
 Cannot assign `new Map(...)` to `y` because string [1] is incompatible with number [2] in type argument `K` [3].
 
-   map.js:24:34
-    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    map.js:24:44
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                    ^^^^^ [1]
+
+References:
    map.js:24:16
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                        ^^^^^^ [2]
@@ -77,18 +74,15 @@ References:
                           ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:24:34
+Error ----------------------------------------------------------------------------------------------------- map.js:24:51
 
 Cannot assign `new Map(...)` to `y` because number [1] is incompatible with string [2] in type argument `V` [3].
 
-   map.js:24:34
-    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    map.js:24:51
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                           ^^^ [1]
+
+References:
    map.js:24:24
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                ^^^^^^ [2]

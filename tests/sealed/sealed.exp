@@ -49,13 +49,13 @@ References:
              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- sealed.js:3:1
+Error ---------------------------------------------------------------------------------------------------- sealed.js:3:3
 
 Cannot assign `0` to `o.z` because property `z` is missing in object type [1].
 
-   sealed.js:3:1
+   sealed.js:3:3
     3| o.z = 0;
-       ^^^
+         ^
 
 References:
    proto.js:12:15
@@ -63,13 +63,13 @@ References:
                      ^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- sealed.js:8:1
+Error ---------------------------------------------------------------------------------------------------- sealed.js:8:3
 
 Cannot assign `123` to `a.x` because property `x` is missing in new object [1].
 
-   sealed.js:8:1
+   sealed.js:8:3
    8| a.x = 123;
-      ^^^
+        ^
 
 References:
    sealed.js:7:9
@@ -77,13 +77,13 @@ References:
               ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- sealed.js:9:1
+Error ---------------------------------------------------------------------------------------------------- sealed.js:9:3
 
 Cannot assign `'abc'` to `a.y` because property `y` is missing in new object [1].
 
-   sealed.js:9:1
+   sealed.js:9:3
    9| a.y = 'abc'; // error, needs to be declared in Bar's constructor
-      ^^^
+        ^
 
 References:
    sealed.js:7:9

@@ -66,18 +66,15 @@ References:
                   ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:27:15
+Error ------------------------------------------------------------------------------------------------- classes.js:27:17
 
 Cannot instantiate `C` because number [1] is incompatible with string [2] in type argument `T`.
 
-   classes.js:27:15
-   27| var c_number: C<number> = new C(123); // Error number ~> ?string
-                     ^^^^^^^^^
-
-References:
    classes.js:27:17
    27| var c_number: C<number> = new C(123); // Error number ~> ?string
                        ^^^^^^ [1]
+
+References:
    classes.js:25:13
    25| class C<T: ?string = string> extends A<T> {}
                    ^^^^^^ [2]
@@ -196,18 +193,15 @@ References:
               ^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:42:20
+Error ------------------------------------------------------------------------------------------------- classes.js:42:26
 
 Cannot assign `new D(...)` to `d_star` because number [1] is incompatible with string [2] in type argument `T` [3].
 
-   classes.js:42:20
-   42| var d_star: D<*> = new D(10); // error, number ~> string
-                          ^^^^^^^^^
-
-References:
    classes.js:42:26
    42| var d_star: D<*> = new D(10); // error, number ~> string
                                 ^^ [1]
+
+References:
    classes.js:36:16
    36| class D<S, T = string> extends A<T> {}
                       ^^^^^^ [2]
@@ -337,18 +331,15 @@ Cannot resolve name `T`.
                    ^
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:62:15
+Error ------------------------------------------------------------------------------------------------- classes.js:62:17
 
 Cannot instantiate `I` because number [1] is incompatible with string [2] in type argument `T`.
 
-   classes.js:62:15
-   62| var i_number: I<number> = new I(123); // Error number ~> ?string
-                     ^^^^^^^^^
-
-References:
    classes.js:62:17
    62| var i_number: I<number> = new I(123); // Error number ~> ?string
                        ^^^^^^ [1]
+
+References:
    classes.js:60:13
    60| class I<T: ?string = *> extends A<T> {}
                    ^^^^^^ [2]

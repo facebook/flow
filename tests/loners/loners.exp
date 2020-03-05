@@ -1,10 +1,10 @@
-Error ---------------------------------------------------------------------------------------------------- loners.js:2:9
+Error --------------------------------------------------------------------------------------------------- loners.js:2:11
 
 Cannot get `o.z` because property `z` is missing in object literal [1].
 
-   loners.js:2:9
+   loners.js:2:11
    2| var z = o.z;
-              ^^^
+                ^
 
 References:
    loners.js:1:9

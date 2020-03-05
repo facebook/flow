@@ -60,18 +60,15 @@ References:
                           ^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- obj.js:10:30
+Error ----------------------------------------------------------------------------------------------------- obj.js:10:35
 
 Cannot assign object literal to `propTest2` because number [1] is incompatible with string [2] in property `x`.
 
-   obj.js:10:30
-   10| var propTest2: IHasXString = { x: 123 }; // Error string != number
-                                    ^^^^^^^^^^
-
-References:
    obj.js:10:35
    10| var propTest2: IHasXString = { x: 123 }; // Error string != number
                                          ^^^ [1]
+
+References:
    obj.js:6:6
     6|   x: string;
             ^^^^^^ [2]
@@ -124,18 +121,15 @@ References:
                   ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:12:26
+Error ------------------------------------------------------------------------------------------------ optional.js:12:43
 
 Cannot assign object literal to `test3` because boolean [1] is incompatible with number [2] in property `b`.
 
-   optional.js:12:26
-   12| var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
-                                ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    optional.js:12:43
    12| var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
                                                  ^^^^ [1]
+
+References:
    optional.js:5:7
     5|   b?: number,
              ^^^^^^ [2]

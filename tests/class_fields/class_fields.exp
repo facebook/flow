@@ -1,34 +1,28 @@
-Error ------------------------------------------------------------------------------------------------ base_class.js:9:3
+Error ----------------------------------------------------------------------------------------------- base_class.js:9:46
 
 Cannot initialize property `annotatedInitializedFieldInvalid` with `'asdf'` because string [1] is incompatible with
 number [2].
 
-   base_class.js:9:3
-   9|   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    base_class.js:9:46
    9|   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                    ^^^^^^ [1]
+
+References:
    base_class.js:9:37
    9|   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- base_class.js:16:3
+Error ---------------------------------------------------------------------------------------------- base_class.js:16:53
 
 Cannot initialize property `annotatedInitializedFieldInvalid` with `'asdf'` because string [1] is incompatible with
 number [2].
 
-   base_class.js:16:3
-   16|   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    base_class.js:16:53
    16|   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                            ^^^^^^ [1]
+
+References:
    base_class.js:16:44
    16|   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                   ^^^^^^ [2]
@@ -221,73 +215,61 @@ Classes may not have fields named `constructor`.
         ^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- derived_class.js:9:3
+Error -------------------------------------------------------------------------------------------- derived_class.js:9:51
 
 Cannot initialize property `base_annotatedInitializedFieldInvalid` with `'asdf'` because string [1] is incompatible with
 number [2].
 
-   derived_class.js:9:3
-   9|   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    derived_class.js:9:51
    9|   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                         ^^^^^^ [1]
+
+References:
    derived_class.js:9:42
    9|   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- derived_class.js:16:3
+Error ------------------------------------------------------------------------------------------- derived_class.js:16:58
 
 Cannot initialize property `base_annotatedInitializedFieldInvalid` with `'asdf'` because string [1] is incompatible with
 number [2].
 
-   derived_class.js:16:3
-   16|   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    derived_class.js:16:58
    16|   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                                 ^^^^^^ [1]
+
+References:
    derived_class.js:16:49
    16|   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                        ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- derived_class.js:28:3
+Error ------------------------------------------------------------------------------------------- derived_class.js:28:52
 
 Cannot initialize property `child_annotatedInitializedFieldInvalid` with `'asdf'` because string [1] is incompatible
 with number [2].
 
-   derived_class.js:28:3
-   28|   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    derived_class.js:28:52
    28|   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                           ^^^^^^ [1]
+
+References:
    derived_class.js:28:43
    28|   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- derived_class.js:35:3
+Error ------------------------------------------------------------------------------------------- derived_class.js:35:59
 
 Cannot initialize property `child_annotatedInitializedFieldInvalid` with `'asdf'` because string [1] is incompatible
 with number [2].
 
-   derived_class.js:35:3
-   35|   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    derived_class.js:35:59
    35|   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                                  ^^^^^^ [1]
+
+References:
    derived_class.js:35:50
    35|   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                         ^^^^^^ [2]
@@ -705,35 +687,29 @@ References:
                           ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- generic_class.js:26:3
+Error ------------------------------------------------------------------------------------------- generic_class.js:26:16
 
 Cannot initialize property `invalid` with `42` because number [1] is incompatible with `T` [2].
 
-   generic_class.js:26:3
-   26|   invalid: T = 42; // Error: number ~> Generic<T>
-         ^^^^^^^^^^^^^^^^
-
-References:
    generic_class.js:26:16
    26|   invalid: T = 42; // Error: number ~> Generic<T>
                       ^^ [1]
+
+References:
    generic_class.js:26:12
    26|   invalid: T = 42; // Error: number ~> Generic<T>
                   ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- generic_class.js:29:3
+Error ------------------------------------------------------------------------------------------- generic_class.js:29:23
 
 Cannot initialize property `invalid` with `42` because number [1] is incompatible with `T` [2].
 
-   generic_class.js:29:3
-   29|   static invalid: T = 42; // Error: number ~> Generic<T>
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    generic_class.js:29:23
    29|   static invalid: T = 42; // Error: number ~> Generic<T>
                              ^^ [1]
+
+References:
    generic_class.js:29:19
    29|   static invalid: T = 42; // Error: number ~> Generic<T>
                          ^ [2]

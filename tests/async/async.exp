@@ -87,19 +87,16 @@ implicitly-returned `Promise`.
                                     ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- async2.js:57:5
+Error -------------------------------------------------------------------------------------------------- async2.js:57:13
 
 Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
 undefined in type argument `R` [2].
 
-   async2.js:57:5
-    57|   : Promise<number> { // error, number != void
-            ^^^^^^^^^^^^^^^
-
-References:
    async2.js:57:13
     57|   : Promise<number> { // error, number != void
                     ^^^^^^ [1]
+
+References:
    <BUILTINS>/core.js:666:24
    666| declare class Promise<+R> {
                                ^ [2]

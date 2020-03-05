@@ -6,7 +6,7 @@ for documentation.
 
    arity.js:8:10
     8|   return g(o);
-                ^^^^
+                ^
 
 References:
    arity.js:3:26
@@ -32,7 +32,7 @@ for documentation.
 
    arity.js:12:10
    12|   return g<Columns>(o);
-                ^^^^^^^^^^^^^
+                ^
 
 References:
    arity.js:3:26
@@ -58,7 +58,7 @@ for documentation.
 
    arity.js:16:10
    16|   return g(o);
-                ^^^^
+                ^
 
 References:
    arity.js:3:26
@@ -84,7 +84,7 @@ for documentation.
 
    arity.js:20:10
    20|   return g<T>(o);
-                ^^^^^^^
+                ^
 
 References:
    arity.js:3:26
@@ -133,7 +133,7 @@ https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
 
    arity2.js:8:10
     8|   return g(o);
-                ^^^^
+                ^
 
 References:
    arity2.js:3:26
@@ -163,7 +163,7 @@ https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
 
    arity2.js:12:10
    12|   return g<Columns>(o);
-                ^^^^^^^^^^^^^
+                ^
 
 References:
    arity2.js:3:26
@@ -193,7 +193,7 @@ https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
 
    arity2.js:16:10
    16|   return g(o);
-                ^^^^
+                ^
 
 References:
    arity2.js:3:26
@@ -223,7 +223,7 @@ https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
 
    arity2.js:20:10
    20|   return g<T>(o);
-                ^^^^^^^
+                ^
 
 References:
    arity2.js:3:26
@@ -303,7 +303,7 @@ https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
 
    arity3.js:8:10
     8|   return g(o);
-                ^^^^
+                ^
 
 References:
    arity3.js:3:46
@@ -329,7 +329,7 @@ https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
 
    arity3.js:12:10
    12|   return g<Columns>(o);
-                ^^^^^^^^^^^^^
+                ^
 
 References:
    arity3.js:3:46
@@ -396,7 +396,7 @@ expects more than one argument. See https://flow.org/en/docs/types/utilities/#to
 
    arity4.js:8:10
     8|   return g(o);
-                ^^^^
+                ^
 
 References:
    arity4.js:3:30
@@ -418,7 +418,7 @@ expects more than one argument. See https://flow.org/en/docs/types/utilities/#to
 
    arity4.js:12:10
    12|   return g<Columns>(o);
-                ^^^^^^^^^^^^^
+                ^
 
 References:
    arity4.js:3:30
@@ -452,153 +452,113 @@ References:
        --------^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:19:2
+Error ------------------------------------------------------------------------------------------------- identity.js:20:6
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `a`.
 
-   identity.js:19:2
-        v
-   19| ({
-   20|   a: 'asd', // Error: string ~> number
-   21|   b: 'asd', // Error: string ~> number
-   22| }: Foo);
-       ^
-
-References:
    identity.js:20:6
    20|   a: 'asd', // Error: string ~> number
             ^^^^^ [1]
+
+References:
    identity.js:7:8
     7|     a: number,
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:19:2
+Error ------------------------------------------------------------------------------------------------- identity.js:21:6
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `b`.
 
-   identity.js:19:2
-        v
-   19| ({
-   20|   a: 'asd', // Error: string ~> number
-   21|   b: 'asd', // Error: string ~> number
-   22| }: Foo);
-       ^
-
-References:
    identity.js:21:6
    21|   b: 'asd', // Error: string ~> number
             ^^^^^ [1]
+
+References:
    identity.js:8:8
     8|     b: number,
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:24:3
+Error ------------------------------------------------------------------------------------------------- identity.js:25:6
 
 Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`.
 
-   identity.js:24:3
-         v-----
-   24| ((any: {
-   25|   a: string, // Error: string ~> number
-   26|   b: string, // Error: string ~> number
-   27| }): Foo);
-       ^
-
-References:
    identity.js:25:6
    25|   a: string, // Error: string ~> number
             ^^^^^^ [1]
+
+References:
    identity.js:7:8
     7|     a: number,
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:24:3
+Error ------------------------------------------------------------------------------------------------- identity.js:26:6
 
 Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`.
 
-   identity.js:24:3
-         v-----
-   24| ((any: {
-   25|   a: string, // Error: string ~> number
-   26|   b: string, // Error: string ~> number
-   27| }): Foo);
-       ^
-
-References:
    identity.js:26:6
    26|   b: string, // Error: string ~> number
             ^^^^^^ [1]
+
+References:
    identity.js:8:8
     8|     b: number,
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:29:3
+Error ------------------------------------------------------------------------------------------------- identity.js:29:7
 
 Cannot cast object literal to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
 
-   identity.js:29:3
-   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
-         ^^^^^^
-
-References:
    identity.js:29:7
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
              ^^ [1]
+
+References:
    identity.js:29:12
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
                   ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:29:3
+Error ------------------------------------------------------------------------------------------------- identity.js:29:7
 
 Cannot cast object literal to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
 
-   identity.js:29:3
-   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
-         ^^^^^^
-
-References:
    identity.js:29:7
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
              ^^ [1]
+
+References:
    identity.js:29:12
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
                   ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:31:3
+Error ------------------------------------------------------------------------------------------------- identity.js:31:8
 
 Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
 
-   identity.js:31:3
-   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
-         ^^^^^^^
-
-References:
    identity.js:31:8
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
               ^^ [1]
+
+References:
    identity.js:31:13
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
                    ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:31:3
+Error ------------------------------------------------------------------------------------------------- identity.js:31:8
 
 Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
 
-   identity.js:31:3
-   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
-         ^^^^^^^
-
-References:
    identity.js:31:8
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
               ^^ [1]
+
+References:
    identity.js:31:13
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
                    ^^^ [2]
@@ -655,23 +615,17 @@ References:
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:61:2
+Error ------------------------------------------------------------------------------------------------- identity.js:62:8
 
 Cannot cast object literal to `$ObjMap` because in property `foo`:
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   identity.js:61:2
-        v
-   61| ({
-   62|   foo: true, // Error: boolean ~> number | string
-   63| }: $ObjMap<
-       ^
-
-References:
    identity.js:62:8
    62|   foo: true, // Error: boolean ~> number | string
               ^^^^ [1]
+
+References:
    identity.js:65:10
    65|     foo: number | string,
                 ^^^^^^ [2]

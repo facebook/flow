@@ -142,13 +142,13 @@ References:
                 ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:19:2
+Error ----------------------------------------------------------------------------------------------------- type.js:19:6
 
 Cannot cast object literal to `O1` because `Y` [1] is incompatible with `X` [2] in property `x`.
 
-   type.js:19:2
+   type.js:19:6
    19| ({x: y}: O1); // Error: Y ~> X
-        ^^^^^^
+            ^
 
 References:
    type.js:6:16
@@ -159,18 +159,15 @@ References:
                             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:21:11
+Error ---------------------------------------------------------------------------------------------------- type.js:21:28
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type.js:21:11
-   21| type O2 = $Rest<{|x: X, y: Y|}, {|y: X|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type.js:21:28
    21| type O2 = $Rest<{|x: X, y: Y|}, {|y: X|}>;
                                   ^ [1]
+
+References:
    type.js:21:38
    21| type O2 = $Rest<{|x: X, y: Y|}, {|y: X|}>;
                                             ^ [2]
@@ -343,13 +340,13 @@ References:
             ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:36:2
+Error ----------------------------------------------------------------------------------------------------- type.js:36:6
 
 Cannot cast object literal to `O3` because `Y` [1] is incompatible with `X` [2] in property `x`.
 
-   type.js:36:2
+   type.js:36:6
    36| ({x: y}: O3); // Error: Y ~> X
-        ^^^^^^
+            ^
 
 References:
    type.js:6:16
@@ -510,13 +507,13 @@ References:
              ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:49:2
+Error ----------------------------------------------------------------------------------------------------- type.js:49:6
 
 Cannot cast object literal to `O4` because `Y` [1] is incompatible with `X` [2] in property `x`.
 
-   type.js:49:2
+   type.js:49:6
    49| ({x: y}: O4); // Error: Y ~> X
-        ^^^^^^
+            ^
 
 References:
    type.js:6:16
@@ -646,13 +643,13 @@ References:
                 ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:63:2
+Error ----------------------------------------------------------------------------------------------------- type.js:63:6
 
 Cannot cast object literal to `O5` because `Y` [1] is incompatible with `X` [2] in property `x`.
 
-   type.js:63:2
+   type.js:63:6
    63| ({x: y}: O5); // Error: Y ~> X
-        ^^^^^^
+            ^
 
 References:
    type.js:6:16
@@ -748,13 +745,13 @@ References:
                 ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:77:2
+Error ----------------------------------------------------------------------------------------------------- type.js:77:6
 
 Cannot cast object literal to `O6` because `Y` [1] is incompatible with `X` [2] in property `x`.
 
-   type.js:77:2
+   type.js:77:6
    77| ({x: y}: O6); // Error: Y ~> X
-        ^^^^^^
+            ^
 
 References:
    type.js:6:16
@@ -850,13 +847,13 @@ References:
                 ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:91:2
+Error ----------------------------------------------------------------------------------------------------- type.js:91:6
 
 Cannot cast object literal to `O7` because `Y` [1] is incompatible with `X` [2] in property `x`.
 
-   type.js:91:2
+   type.js:91:6
    91| ({x: y}: O7); // Error: Y ~> X
-        ^^^^^^
+            ^
 
 References:
    type.js:6:16
@@ -867,86 +864,71 @@ References:
                            ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:93:11
+Error ---------------------------------------------------------------------------------------------------- type.js:93:27
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type.js:93:11
-   93| type O8 = $Rest<{x: X, y: Y}, {|y: X|}>; // Error: Y ~> X
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type.js:93:27
    93| type O8 = $Rest<{x: X, y: Y}, {|y: X|}>; // Error: Y ~> X
                                  ^ [1]
+
+References:
    type.js:93:36
    93| type O8 = $Rest<{x: X, y: Y}, {|y: X|}>; // Error: Y ~> X
                                           ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:97:11
+Error ---------------------------------------------------------------------------------------------------- type.js:97:28
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type.js:97:11
-   97| type O9 = $Rest<{|x: X, y: Y|}, {y: X}>; // Error: Y ~> X
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type.js:97:28
    97| type O9 = $Rest<{|x: X, y: Y|}, {y: X}>; // Error: Y ~> X
                                   ^ [1]
+
+References:
    type.js:97:37
    97| type O9 = $Rest<{|x: X, y: Y|}, {y: X}>; // Error: Y ~> X
                                            ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- type.js:101:12
+Error --------------------------------------------------------------------------------------------------- type.js:101:29
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type.js:101:12
-   101| type O10 = $Rest<{|x: X, y: Y|}, {|y?: X|}>; // Error: Y ~> X
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type.js:101:29
    101| type O10 = $Rest<{|x: X, y: Y|}, {|y?: X|}>; // Error: Y ~> X
                                     ^ [1]
+
+References:
    type.js:101:40
    101| type O10 = $Rest<{|x: X, y: Y|}, {|y?: X|}>; // Error: Y ~> X
                                                ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- type.js:105:12
+Error --------------------------------------------------------------------------------------------------- type.js:105:30
 
 Cannot instantiate `$Rest` because undefined [1] is incompatible with `Y` [2].
 
-   type.js:105:12
-   105| type O11 = $Rest<{|x: X, y?: Y|}, {|y: Y|}>; // Error: void ~> Y
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type.js:105:30
    105| type O11 = $Rest<{|x: X, y?: Y|}, {|y: Y|}>; // Error: void ~> Y
                                      ^ [1]
+
+References:
    type.js:105:40
    105| type O11 = $Rest<{|x: X, y?: Y|}, {|y: Y|}>; // Error: void ~> Y
                                                ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- type.js:109:12
+Error --------------------------------------------------------------------------------------------------- type.js:109:18
 
 Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
 
-   type.js:109:12
-   109| type O12 = $Rest<{|x: X|}, {|y: Y|}>; // Error: void ~> Y
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type.js:109:18
    109| type O12 = $Rest<{|x: X|}, {|y: Y|}>; // Error: void ~> Y
                          ^^^^^^^^ [1]
+
+References:
    type.js:109:33
    109| type O12 = $Rest<{|x: X|}, {|y: Y|}>; // Error: void ~> Y
                                         ^ [2]
@@ -1017,13 +999,13 @@ References:
             ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:16:2
+Error ------------------------------------------------------------------------------------------------ type_dict.js:16:6
 
 Cannot cast object literal to `O1` because `X` [1] is incompatible with `Y` [2] in property `y`.
 
-   type_dict.js:16:2
+   type_dict.js:16:6
    16| ({y: x}: O1); // Error: X ~> Y
-        ^^^^^^
+            ^
 
 References:
    type_dict.js:5:16
@@ -1034,18 +1016,15 @@ References:
                             ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_dict.js:18:11
+Error ----------------------------------------------------------------------------------------------- type_dict.js:18:22
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type_dict.js:18:11
-   18| type O2 = $Rest<{|y: Y|}, {|[string]: X|}>; // Error: Y ~> X
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_dict.js:18:22
    18| type O2 = $Rest<{|y: Y|}, {|[string]: X|}>; // Error: Y ~> X
                             ^ [1]
+
+References:
    type_dict.js:18:39
    18| type O2 = $Rest<{|y: Y|}, {|[string]: X|}>; // Error: Y ~> X
                                              ^ [2]
@@ -1116,13 +1095,13 @@ References:
             ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:30:2
+Error ------------------------------------------------------------------------------------------------ type_dict.js:30:6
 
 Cannot cast object literal to `O3` because `X` [1] is incompatible with `Y` [2] in property `y`.
 
-   type_dict.js:30:2
+   type_dict.js:30:6
    30| ({y: x}: O3); // Error: X ~> Y
-        ^^^^^^
+            ^
 
 References:
    type_dict.js:5:16
@@ -1184,13 +1163,13 @@ References:
                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:42:2
+Error ------------------------------------------------------------------------------------------------ type_dict.js:42:6
 
 Cannot cast object literal to `O4` because `X` [1] is incompatible with `Y` [2] in property `y`.
 
-   type_dict.js:42:2
+   type_dict.js:42:6
    42| ({y: x}: O4); // Error: X ~> Y
-        ^^^^^^
+            ^
 
 References:
    type_dict.js:5:16
@@ -1252,13 +1231,13 @@ References:
                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:54:2
+Error ------------------------------------------------------------------------------------------------ type_dict.js:54:6
 
 Cannot cast object literal to `O5` because `X` [1] is incompatible with `Y` [2] in property `y`.
 
-   type_dict.js:54:2
+   type_dict.js:54:6
    54| ({y: x}: O5); // Error: X ~> Y
-        ^^^^^^
+            ^
 
 References:
    type_dict.js:5:16
@@ -1269,103 +1248,85 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_dict.js:56:11
+Error ----------------------------------------------------------------------------------------------- type_dict.js:56:21
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type_dict.js:56:11
-   56| type O6 = $Rest<{y: Y}, {|[string]: X|}>; // Error: Y ~> X
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_dict.js:56:21
    56| type O6 = $Rest<{y: Y}, {|[string]: X|}>; // Error: Y ~> X
                            ^ [1]
+
+References:
    type_dict.js:56:37
    56| type O6 = $Rest<{y: Y}, {|[string]: X|}>; // Error: Y ~> X
                                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_dict.js:60:11
+Error ----------------------------------------------------------------------------------------------- type_dict.js:60:22
 
 Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
 
-   type_dict.js:60:11
-   60| type O7 = $Rest<{|y: Y|}, {[string]: X}>; // Error: Y ~> X
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_dict.js:60:22
    60| type O7 = $Rest<{|y: Y|}, {[string]: X}>; // Error: Y ~> X
                             ^ [1]
+
+References:
    type_dict.js:60:38
    60| type O7 = $Rest<{|y: Y|}, {[string]: X}>; // Error: Y ~> X
                                             ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_dict.js:84:12
+Error ----------------------------------------------------------------------------------------------- type_dict.js:84:30
 
 Cannot instantiate `$Rest` because `X` [1] is incompatible with `Y` [2].
 
-   type_dict.js:84:12
-   84| type O13 = $Rest<{|[string]: X|}, {|[string]: Y|}>; // Error: X ~> Y
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_dict.js:84:30
    84| type O13 = $Rest<{|[string]: X|}, {|[string]: Y|}>; // Error: X ~> Y
                                     ^ [1]
+
+References:
    type_dict.js:84:47
    84| type O13 = $Rest<{|[string]: X|}, {|[string]: Y|}>; // Error: X ~> Y
                                                      ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_dict.js:96:12
+Error ----------------------------------------------------------------------------------------------- type_dict.js:96:30
 
 Cannot instantiate `$Rest` because `X` [1] is incompatible with `Y` [2].
 
-   type_dict.js:96:12
-   96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_dict.js:96:30
    96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
                                     ^ [1]
+
+References:
    type_dict.js:96:40
    96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
                                               ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_dict.js:96:12
+Error ----------------------------------------------------------------------------------------------- type_dict.js:96:30
 
 Cannot instantiate `$Rest` because undefined [1] is incompatible with `Y` [2].
 
-   type_dict.js:96:12
-   96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_dict.js:96:30
    96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
                                     ^ [1]
+
+References:
    type_dict.js:96:40
    96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
                                               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- type_generic.js:1:31
+Error --------------------------------------------------------------------------------------------- type_generic.js:1:37
 
 Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2].
 
-   type_generic.js:1:31
-   1| function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
-                                    ^^^^^^^^^^^^^^^^
-
-References:
    type_generic.js:1:37
    1| function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
                                           ^ [1]
+
+References:
    type_generic.js:1:44
    1| function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
                                                  ^ [2]
@@ -1509,35 +1470,29 @@ References:
                              ^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:24:11
+Error ---------------------------------------------------------------------------------------------- type_union.js:24:17
 
 Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
 
-   type_union.js:24:11
-   24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_union.js:24:17
    24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
                        ^^^^^^^^ [1]
+
+References:
    type_union.js:24:49
    24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
                                                        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:24:11
+Error ---------------------------------------------------------------------------------------------- type_union.js:24:28
 
 Cannot instantiate `$Rest` because undefined property `x` [1] is incompatible with `X` [2].
 
-   type_union.js:24:11
-   24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_union.js:24:28
    24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
                                   ^^^^^^^^ [1]
+
+References:
    type_union.js:24:43
    24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
                                                  ^ [2]
@@ -1635,18 +1590,15 @@ References:
                        ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:39:11
+Error ---------------------------------------------------------------------------------------------- type_union.js:39:17
 
 Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
 
-   type_union.js:39:11
-   39| type O6 = $Rest<{|x: X|}, {|x: X|} | {|y: Y|}>; // Error: void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_union.js:39:17
    39| type O6 = $Rest<{|x: X|}, {|x: X|} | {|y: Y|}>; // Error: void ~> Y
                        ^^^^^^^^ [1]
+
+References:
    type_union.js:39:43
    39| type O6 = $Rest<{|x: X|}, {|x: X|} | {|y: Y|}>; // Error: void ~> Y
                                                  ^ [2]
@@ -1680,35 +1632,29 @@ References:
                        ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:48:11
+Error ---------------------------------------------------------------------------------------------- type_union.js:48:17
 
 Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
 
-   type_union.js:48:11
-   48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_union.js:48:17
    48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
                        ^^^^^^^^ [1]
+
+References:
    type_union.js:48:54
    48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
                                                             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:48:11
+Error ---------------------------------------------------------------------------------------------- type_union.js:48:28
 
 Cannot instantiate `$Rest` because undefined property `x` [1] is incompatible with `X` [2].
 
-   type_union.js:48:11
-   48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    type_union.js:48:28
    48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
                                   ^^^^^^^^ [1]
+
+References:
    type_union.js:48:43
    48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
                                                  ^ [2]

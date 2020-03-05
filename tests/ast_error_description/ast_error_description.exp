@@ -201,18 +201,15 @@ References:
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:21:5
+Error ----------------------------------------------------------------------------------------------- expression.js:21:9
 
 Cannot cast `a = 42` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:21:5
-   21| ((((a = 42): empty): T).p: empty);
-           ^^^^^^
-
-References:
    expression.js:21:9
    21| ((((a = 42): empty): T).p: empty);
                ^^ [1]
+
+References:
    expression.js:21:14
    21| ((((a = 42): empty): T).p: empty);
                     ^^^^^ [2]
@@ -241,7 +238,7 @@ Cannot cast `a >>>= 42` to empty because number [1] is incompatible with empty [
 
    expression.js:22:5
    22| ((((a >>>= 42): empty): T).p: empty);
-           ^^^^^^^^^
+           ^
 
 References:
    expression.js:21:9
@@ -269,18 +266,15 @@ References:
                                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:23:5
+Error ---------------------------------------------------------------------------------------------- expression.js:23:11
 
 Cannot cast `{...} = {...}` to empty because object literal [1] is incompatible with empty [2].
 
-   expression.js:23:5
-   23| (((({a} = {a: 42}): empty): T).p: empty);
-           ^^^^^^^^^^^^^
-
-References:
    expression.js:23:11
    23| (((({a} = {a: 42}): empty): T).p: empty);
                  ^^^^^^^ [1]
+
+References:
    expression.js:23:21
    23| (((({a} = {a: 42}): empty): T).p: empty);
                            ^^^^^ [2]
@@ -303,18 +297,15 @@ References:
                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:24:5
+Error ---------------------------------------------------------------------------------------------- expression.js:24:11
 
 Cannot cast `[...] = [...]` to empty because array literal [1] is incompatible with empty [2].
 
-   expression.js:24:5
-   24| (((([a] = [42]): empty): T).p: empty);
-           ^^^^^^^^^^
-
-References:
    expression.js:24:11
    24| (((([a] = [42]): empty): T).p: empty);
                  ^^^^ [1]
+
+References:
    expression.js:24:18
    24| (((([a] = [42]): empty): T).p: empty);
                         ^^^^^ [2]
@@ -337,18 +328,15 @@ References:
                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:25:5
+Error ---------------------------------------------------------------------------------------------- expression.js:25:13
 
 Cannot cast `a = a = 42` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:25:5
-   25| ((((a = a = 42): empty): T).p: empty);
-           ^^^^^^^^^^
-
-References:
    expression.js:25:13
    25| ((((a = a = 42): empty): T).p: empty);
                    ^^ [1]
+
+References:
    expression.js:25:18
    25| ((((a = a = 42): empty): T).p: empty);
                         ^^^^^ [2]
@@ -625,35 +613,29 @@ References:
                                      ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:34:5
+Error ----------------------------------------------------------------------------------------------- expression.js:34:9
 
 Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:34:5
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-           ^^^^^^^^^
-
-References:
    expression.js:34:9
    34| ((((1 ? 2 : 3): empty): T).p: empty);
                ^ [1]
+
+References:
    expression.js:34:17
    34| ((((1 ? 2 : 3): empty): T).p: empty);
                        ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:34:5
+Error ---------------------------------------------------------------------------------------------- expression.js:34:13
 
 Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:34:5
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-           ^^^^^^^^^
-
-References:
    expression.js:34:13
    34| ((((1 ? 2 : 3): empty): T).p: empty);
                    ^ [1]
+
+References:
    expression.js:34:17
    34| ((((1 ? 2 : 3): empty): T).p: empty);
                        ^^^^^ [2]
@@ -676,35 +658,29 @@ References:
                                                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:35:5
+Error ---------------------------------------------------------------------------------------------- expression.js:35:19
 
 Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:35:5
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-           ^^^^^^^^^^^^^^^^^^^
-
-References:
    expression.js:35:19
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
                          ^ [1]
+
+References:
    expression.js:35:27
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
                                  ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:35:5
+Error ---------------------------------------------------------------------------------------------- expression.js:35:23
 
 Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:35:5
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-           ^^^^^^^^^^^^^^^^^^^
-
-References:
    expression.js:35:23
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
                              ^ [1]
+
+References:
    expression.js:35:27
    35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
                                  ^^^^^ [2]
@@ -733,12 +709,9 @@ Cannot cast function to empty because function [1] is incompatible with empty [2
 
    expression.js:36:4
    36| (((function() {}: empty): T).p: empty);
-          ^^^^^^^^^^^^^
+          ^^^^^^^^^^ [1]
 
 References:
-   expression.js:36:4
-   36| (((function() {}: empty): T).p: empty);
-          ^^^^^^^^^^ [1]
    expression.js:36:19
    36| (((function() {}: empty): T).p: empty);
                          ^^^^^ [2]
@@ -1251,18 +1224,15 @@ References:
                                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:51:5
+Error ---------------------------------------------------------------------------------------------- expression.js:51:11
 
 Cannot cast `3` to empty because number [1] is incompatible with empty [2].
 
-   expression.js:51:5
-   51| ((((1, 2, 3): empty): T).p: empty);
-           ^^^^^^^
-
-References:
    expression.js:51:11
    51| ((((1, 2, 3): empty): T).p: empty);
                  ^ [1]
+
+References:
    expression.js:51:15
    51| ((((1, 2, 3): empty): T).p: empty);
                      ^^^^^ [2]
@@ -1415,18 +1385,15 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:64:5
+Error ----------------------------------------------------------------------------------------------- expression.js:64:9
 
 Cannot cast `42` to empty because string [1] is incompatible with empty [2].
 
-   expression.js:64:5
-   64| ((((42: string): empty): T).p: empty);
-           ^^^^^^^^^^
-
-References:
    expression.js:64:9
    64| ((((42: string): empty): T).p: empty);
                ^^^^^^ [1]
+
+References:
    expression.js:64:18
    64| ((((42: string): empty): T).p: empty);
                         ^^^^^ [2]

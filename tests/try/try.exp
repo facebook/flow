@@ -204,7 +204,7 @@ Cannot call `x` because string [1] is not a function.
 
    test.js:18:5
    18|     x(); // string ~/> function call (no num or bool error)
-           ^^^
+           ^
 
 References:
    test.js:10:13
@@ -219,7 +219,7 @@ literal [1].
 
    test.js:19:5
    19|     y(); // object ~/> function call (no uninitialized error)
-           ^^^
+           ^
 
 References:
    test.js:15:13

@@ -1,34 +1,28 @@
-Error ----------------------------------------------------------------------------------------- cross_module/app.js:5:16
+Error ----------------------------------------------------------------------------------------- cross_module/app.js:5:24
 
 Cannot call `fn` with function bound to `arg` because number [1] is incompatible with string [2] in property `a` of the
 first argument.
 
-   cross_module/app.js:5:16
-   5| const app = fn((o: {a: number, b: number}) => {});
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    cross_module/app.js:5:24
    5| const app = fn((o: {a: number, b: number}) => {});
                              ^^^^^^ [1]
+
+References:
    cross_module/app.js:6:9
    6| app({a: 'foo', b: 2});
               ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ cross_module/use.js:5:5
+Error ------------------------------------------------------------------------------------------ cross_module/use.js:5:9
 
 Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
 property `a`.
 
-   cross_module/use.js:5:5
-   5| app({a: 'foo', b: 2});
-          ^^^^^^^^^^^^^^^^
-
-References:
    cross_module/use.js:5:9
    5| app({a: 'foo', b: 2});
               ^^^^^ [1]
+
+References:
    cross_module/app.js:8:60
    8| export default (fn((o: {a: number, b: number}) => {}): {|a:number, b:number|} => void);
                                                                  ^^^^^^ [2]
@@ -111,13 +105,13 @@ References:
                 ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:16:2
+Error ----------------------------------------------------------------------------------------------------- type.js:16:5
 
 Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type.js:16:2
+   type.js:16:5
    16| ({p:y}: O1); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -145,13 +139,13 @@ References:
                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:26:2
+Error ----------------------------------------------------------------------------------------------------- type.js:26:5
 
 Cannot cast object literal to `O2` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type.js:26:2
+   type.js:26:5
    26| ({p:y}: O2); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -193,30 +187,27 @@ References:
             ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:37:3
+Error ----------------------------------------------------------------------------------------------------- type.js:37:6
 
 Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in `O4` [2].
 
-   type.js:37:3
-   37| (({}:{}): O4); // error: property `p` not found
-         ^^^^^
-
-References:
    type.js:37:6
    37| (({}:{}): O4); // error: property `p` not found
             ^^ [1]
+
+References:
    type.js:37:11
    37| (({}:{}): O4); // error: property `p` not found
                  ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:39:2
+Error ----------------------------------------------------------------------------------------------------- type.js:39:5
 
 Cannot cast object literal to `O4` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type.js:39:2
+   type.js:39:5
    39| ({p:y}: O4); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -244,13 +235,13 @@ References:
              ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:49:2
+Error ----------------------------------------------------------------------------------------------------- type.js:49:5
 
 Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type.js:49:2
+   type.js:49:5
    49| ({p:y}: O5); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -275,30 +266,27 @@ References:
                    ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:56:3
+Error ----------------------------------------------------------------------------------------------------- type.js:56:6
 
 Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in `O6` [2].
 
-   type.js:56:3
-   56| (({}:{}): O6); // error: property `p` not found
-         ^^^^^
-
-References:
    type.js:56:6
    56| (({}:{}): O6); // error: property `p` not found
             ^^ [1]
+
+References:
    type.js:56:11
    56| (({}:{}): O6); // error: property `p` not found
                  ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:57:2
+Error ----------------------------------------------------------------------------------------------------- type.js:57:5
 
 Cannot cast object literal to `O6` because `T` [1] is incompatible with `U` [2] in property `p`.
 
-   type.js:57:2
+   type.js:57:5
    57| ({p:x}: O6); // error: x ~> U
-        ^^^^^
+           ^
 
 References:
    type.js:2:16
@@ -410,13 +398,13 @@ References:
                   ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:105:2
+Error ---------------------------------------------------------------------------------------------------- type.js:105:5
 
 Cannot cast object literal to `O14` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type.js:105:2
+   type.js:105:5
    105| ({p:y}: O14); // error: U ~> T
-         ^^^^^
+            ^
 
 References:
    type.js:5:16
@@ -597,35 +585,29 @@ References:
                                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_generic.js:3:2
+Error --------------------------------------------------------------------------------------------- type_generic.js:3:12
 
 Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `p`.
 
-   type_generic.js:3:2
-   3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
-       ^^^^^^^^^^^^^^^^^^^
-
-References:
    type_generic.js:3:12
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                  ^ [1]
+
+References:
    type_generic.js:3:28
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_generic.js:3:2
+Error --------------------------------------------------------------------------------------------- type_generic.js:3:18
 
 Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `q`.
 
-   type_generic.js:3:2
-   3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
-       ^^^^^^^^^^^^^^^^^^^
-
-References:
    type_generic.js:3:18
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                        ^ [1]
+
+References:
    type_generic.js:3:37
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                                           ^^^^^ [2]
@@ -738,18 +720,15 @@ References:
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- type_intersection.js:15:2
+Error ---------------------------------------------------------------------------------------- type_intersection.js:15:6
 
 Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`.
 
-   type_intersection.js:15:2
-   15| ({p: new A}: O2); // error: A ~> B
-        ^^^^^^^^^^
-
-References:
    type_intersection.js:15:6
    15| ({p: new A}: O2); // error: A ~> B
             ^^^^^ [1]
+
+References:
    type_intersection.js:11:24
    11| type O2 = {...{p:A}&{p:B}};
                               ^ [2]
@@ -942,13 +921,13 @@ References:
                      ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:2
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:5
 
 Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1].
 
-   type_mixed.js:5:2
+   type_mixed.js:5:5
    5| (o1.someProp: empty); // Error someProp does not exist
-       ^^^^^^^^^^^
+          ^^^^^^^^
 
 References:
    type_mixed.js:4:17
@@ -956,13 +935,13 @@ References:
                       ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:2
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:5
 
 Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1].
 
-   type_mixed.js:9:2
+   type_mixed.js:9:5
    9| (o2.someProp: empty); // Error someProp does not exist
-       ^^^^^^^^^^^
+          ^^^^^^^^
 
 References:
    type_mixed.js:8:17
@@ -1021,13 +1000,13 @@ References:
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:2
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:5
 
 Cannot get `o3.c` because property `c` is missing in `O3` [1].
 
-   type_mixed.js:15:2
+   type_mixed.js:15:5
    15| (o3.c: empty); // Error c does not exist
-        ^^^^
+           ^
 
 References:
    type_mixed.js:12:17
@@ -1035,13 +1014,13 @@ References:
                        ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:4
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:8
 
 Cannot get `obj.someProp` because property `someProp` is missing in object type [1].
 
-   type_mixed.js:18:4
+   type_mixed.js:18:8
    18|   (obj.someProp: empty); // Error someProp does not exist
-          ^^^^^^^^^^^^
+              ^^^^^^^^
 
 References:
    type_mixed.js:17:21
@@ -1355,13 +1334,13 @@ References:
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:47:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:47:5
 
 Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type_void.js:47:2
+   type_void.js:47:5
    47| ({p:y}: O5); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type_void.js:7:16
@@ -1389,13 +1368,13 @@ References:
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:56:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:56:5
 
 Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`.
 
-   type_void.js:56:2
+   type_void.js:56:5
    56| ({p:y}: O6); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type_void.js:7:16

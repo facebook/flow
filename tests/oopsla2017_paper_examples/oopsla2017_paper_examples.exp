@@ -4,7 +4,7 @@ Cannot call `f` because null [1] is not a function.
 
    example1.js:3:23
    3| function pipe(x, f) { f(x); }
-                            ^^^^
+                            ^
 
 References:
    example1.js:6:15
@@ -12,13 +12,13 @@ References:
                     ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ example5.js:12:10
+Error ------------------------------------------------------------------------------------------------ example5.js:12:12
 
 Cannot get `x.kind` because property `kind` is missing in null [1].
 
-   example5.js:12:10
+   example5.js:12:12
    12|   return x.kind; // error
-                ^^^^^^
+                  ^^^^
 
 References:
    example5.js:9:27
@@ -50,19 +50,16 @@ References:
                 ^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ example7.js:14:16
+Error ------------------------------------------------------------------------------------------------ example7.js:14:39
 
 Cannot call `stringIsString` with object literal bound to `x` because number [1] is incompatible with string [2] in
 property `val`.
 
-   example7.js:14:16
-   14| stringIsString({ type: "string", val: 0 }); // error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    example7.js:14:39
    14| stringIsString({ type: "string", val: 0 }); // error
                                              ^ [1]
+
+References:
    example7.js:6:28
     6|   | { type: "string", val: string }
                                   ^^^^^^ [2]

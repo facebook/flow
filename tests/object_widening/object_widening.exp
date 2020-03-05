@@ -170,13 +170,13 @@ References:
                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_widening.js:82:2
+Error -------------------------------------------------------------------------------------------- type_widening.js:82:4
 
 Cannot get `c.bar` because property `bar` is missing in object type [1].
 
-   type_widening.js:82:2
+   type_widening.js:82:4
    82| (c.bar: number); // Error, bar does not appear in all branches
-        ^^^^^
+          ^^^
 
 References:
    type_widening.js:3:27
@@ -202,13 +202,13 @@ References:
                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_widening.js:83:2
+Error -------------------------------------------------------------------------------------------- type_widening.js:83:4
 
 Cannot get `c.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
 
-   type_widening.js:83:2
+   type_widening.js:83:4
    83| (c.baz: number); // Error, baz does not appear in all branches
-        ^^^^^
+          ^^^
 
 References:
    type_widening.js:3:27
@@ -216,13 +216,13 @@ References:
                                  ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- type_widening.js:83:2
+Error -------------------------------------------------------------------------------------------- type_widening.js:83:4
 
 Cannot get `c.baz` because property `baz` is missing in object type [1].
 
-   type_widening.js:83:2
+   type_widening.js:83:4
    83| (c.baz: number); // Error, baz does not appear in all branches
-        ^^^^^
+          ^^^
 
 References:
    type_widening.js:3:27
@@ -248,13 +248,13 @@ References:
                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_widening.js:84:2
+Error -------------------------------------------------------------------------------------------- type_widening.js:84:4
 
 Cannot get `c.qux` because property `qux` is missing in object type [1].
 
-   type_widening.js:84:2
+   type_widening.js:84:4
    84| (c.qux: number); // Error, qux does not appear in all branches
-        ^^^^^
+          ^^^
 
 References:
    type_widening.js:3:27
@@ -296,13 +296,13 @@ References:
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:116:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:116:18
 
 Cannot get `optional_spread.bar` because property `bar` is missing in object type [1].
 
-   type_widening.js:116:2
+   type_widening.js:116:18
    116| (optional_spread.bar: number); // Error, bar does not appear in all branches, might be undefined
-         ^^^^^^^^^^^^^^^^^^^
+                         ^^^
 
 References:
    type_widening.js:3:27
@@ -327,13 +327,13 @@ References:
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:117:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:117:18
 
 Cannot get `optional_spread.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
 
-   type_widening.js:117:2
+   type_widening.js:117:18
    117| (optional_spread.baz: number); // Error, baz does not appear in all branches, might be undefined
-         ^^^^^^^^^^^^^^^^^^^
+                         ^^^
 
 References:
    type_widening.js:3:27
@@ -341,13 +341,13 @@ References:
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:117:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:117:18
 
 Cannot get `optional_spread.baz` because property `baz` is missing in object type [1].
 
-   type_widening.js:117:2
+   type_widening.js:117:18
    117| (optional_spread.baz: number); // Error, baz does not appear in all branches, might be undefined
-         ^^^^^^^^^^^^^^^^^^^
+                         ^^^
 
 References:
    type_widening.js:3:27
@@ -372,13 +372,13 @@ References:
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:118:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:118:18
 
 Cannot get `optional_spread.qux` because property `qux` is missing in object type [1].
 
-   type_widening.js:118:2
+   type_widening.js:118:18
    118| (optional_spread.qux: number); // Error, qux does not appear in all branches, might be undefined
-         ^^^^^^^^^^^^^^^^^^^
+                         ^^^
 
 References:
    type_widening.js:3:27
@@ -562,7 +562,7 @@ Cannot call `spread` because string [1] is incompatible with number [2].
 
    type_widening.js:183:28
    183| const indexer_err_spread = spread(indexer_err); // Error, string and number don't unify
-                                   ^^^^^^^^^^^^^^^^^^^
+                                   ^^^^^^
 
 References:
    type_widening.js:178:46
@@ -607,13 +607,13 @@ References:
                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:195:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:195:27
 
 Cannot get `indexer_on_second_spread.bar` because property `bar` is missing in object type [1].
 
-   type_widening.js:195:2
+   type_widening.js:195:27
    195| (indexer_on_second_spread.bar: number); // Error, no indexer if it's only in one branch
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                  ^^^
 
 References:
    type_widening.js:3:27
@@ -621,13 +621,13 @@ References:
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:196:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:196:27
 
 Cannot get `indexer_on_second_spread.baz` because property `baz` is missing in object type [1].
 
-   type_widening.js:196:2
+   type_widening.js:196:27
    196| (indexer_on_second_spread.baz: number); // Error, no indexer if it's only in one branch
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                  ^^^
 
 References:
    type_widening.js:3:27
@@ -635,13 +635,13 @@ References:
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- type_widening.js:197:2
+Error ------------------------------------------------------------------------------------------ type_widening.js:197:27
 
 Cannot get `indexer_on_second_spread.qux` because property `qux` is missing in object type [1].
 
-   type_widening.js:197:2
+   type_widening.js:197:27
    197| (indexer_on_second_spread.qux: number); // Error, no indexer if it's only in one branch
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                  ^^^
 
 References:
    type_widening.js:3:27

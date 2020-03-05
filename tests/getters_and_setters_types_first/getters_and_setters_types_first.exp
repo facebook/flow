@@ -54,13 +54,13 @@ References:
                                    ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- import-class.js:8:34
+Error --------------------------------------------------------------------------------------------- import-class.js:8:38
 
 Cannot get `foo.goodGetterNoAnnotation` because property `goodGetterNoAnnotation` is missing in `Foo` [1].
 
-   import-class.js:8:34
+   import-class.js:8:38
    8| var testGetterNoError1: number = foo.goodGetterNoAnnotation;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    import-class.js:5:11
@@ -68,13 +68,13 @@ References:
                 ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- import-class.js:11:36
+Error -------------------------------------------------------------------------------------------- import-class.js:11:40
 
 Cannot get `foo.goodGetterNoAnnotation` because property `goodGetterNoAnnotation` is missing in `Foo` [1].
 
-   import-class.js:11:36
+   import-class.js:11:40
    11| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    import-class.js:5:11
@@ -100,13 +100,13 @@ References:
                                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- import-class.js:15:1
+Error --------------------------------------------------------------------------------------------- import-class.js:15:5
 
 Cannot assign `123` to `foo.goodSetterNoAnnotation` because property `goodSetterNoAnnotation` is missing in `Foo` [1].
 
-   import-class.js:15:1
+   import-class.js:15:5
    15| foo.goodSetterNoAnnotation = 123;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    import-class.js:5:11
@@ -114,14 +114,14 @@ References:
                  ^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- import-class.js:19:1
+Error --------------------------------------------------------------------------------------------- import-class.js:19:5
 
 Cannot assign `"hello"` to `foo.goodSetterNoAnnotation` because property `goodSetterNoAnnotation` is missing in
 `Foo` [1].
 
-   import-class.js:19:1
+   import-class.js:19:5
    19| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    import-class.js:5:11

@@ -1,10 +1,10 @@
-Error ---------------------------------------------------------------------------------------------------- symbol.js:8:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:8:17
 
 Cannot call `Symbol` because no more than 1 argument is expected by function type [1].
 
-   symbol.js:8:3
+   symbol.js:8:17
      8|   Symbol('foo', 'bar'); // Error: unused argument
-          ^^^^^^^^^^^^^^^^^^^^
+                        ^^^^^
 
 References:
    <BUILTINS>/core.js:104:3

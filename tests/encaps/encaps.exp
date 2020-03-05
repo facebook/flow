@@ -1,10 +1,10 @@
-Error --------------------------------------------------------------------------------------------------- encaps.js:3:14
+Error --------------------------------------------------------------------------------------------------- encaps.js:3:16
 
 Cannot get `a.x` because property `x` is missing in `A` [1].
 
-   encaps.js:3:14
+   encaps.js:3:16
    3| var s1 = `l${a.x}r`; // error: no prop x in A
-                   ^^^
+                     ^
 
 References:
    encaps.js:2:9

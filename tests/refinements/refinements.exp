@@ -32,13 +32,13 @@ References:
                          ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- assignment.js:22:14
+Error ---------------------------------------------------------------------------------------------- assignment.js:22:16
 
 Cannot get `x.parent` because property `parent` is missing in null or undefined [1].
 
-   assignment.js:22:14
+   assignment.js:22:16
    22|   while (x = x.parent) { // x.parent might be null
-                    ^^^^^^^^
+                      ^^^^^^
 
 References:
    assignment.js:21:19
@@ -46,14 +46,14 @@ References:
                          ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- bool.js:12:3
+Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   bool.js:12:3
+   bool.js:12:5
    12|   x[0]; // error on null and undefined
-         ^^^^
+           ^
 
 References:
    bool.js:3:17
@@ -61,14 +61,14 @@ References:
                        ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- bool.js:18:7
+Error ----------------------------------------------------------------------------------------------------- bool.js:18:9
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   bool.js:18:7
+   bool.js:18:9
    18|       x[0]; // error on null and undefined
-             ^^^^
+               ^
 
 References:
    bool.js:15:17
@@ -92,13 +92,13 @@ Cannot perform arithmetic operation because boolean [1] is not a number.
              ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- bool.js:37:12
+Error ---------------------------------------------------------------------------------------------------- bool.js:37:14
 
 Cannot get `x.result` because property `result` is missing in object type [1].
 
-   bool.js:37:12
+   bool.js:37:14
    37|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    bool.js:33:48
@@ -106,13 +106,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- bool.js:44:12
+Error ---------------------------------------------------------------------------------------------------- bool.js:44:14
 
 Cannot get `x.result` because property `result` is missing in object type [1].
 
-   bool.js:44:12
+   bool.js:44:14
    44|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    bool.js:40:48
@@ -134,13 +134,13 @@ References:
               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- cond_expr.js:5:2
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:5:4
 
 Cannot get `a.q` because property `q` is missing in object literal [1].
 
-   cond_expr.js:5:2
+   cond_expr.js:5:4
    5| (a.q: mixed); // An error here
-       ^^^
+         ^
 
 References:
    cond_expr.js:3:9
@@ -162,13 +162,13 @@ References:
               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- cond_expr.js:9:2
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:9:4
 
 Cannot get `b.q` because property `q` is missing in object literal [1].
 
-   cond_expr.js:9:2
+   cond_expr.js:9:4
    9| (b.q: mixed); // is an error here
-       ^^^
+         ^
 
 References:
    cond_expr.js:7:9
@@ -194,13 +194,13 @@ References:
                                         ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:14
 
 Cannot get `x.result` because property `result` is missing in object type [1].
 
-   cond_prop.js:19:12
+   cond_prop.js:19:14
    19|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    cond_prop.js:15:48
@@ -208,13 +208,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:14
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:16
 
 Cannot get `x.result` because property `result` is missing in object type [1].
 
-   cond_prop.js:24:14
+   cond_prop.js:24:16
    24|       return x.result; // error, consider { foo: "herp", done: "derp" }
-                    ^^^^^^^^
+                      ^^^^^^
 
 References:
    cond_prop.js:22:48
@@ -222,13 +222,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:14
 
 Cannot get `x.result` because property `result` is missing in object type [1].
 
-   cond_prop.js:26:12
+   cond_prop.js:26:14
    26|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    cond_prop.js:22:48
@@ -236,13 +236,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:10
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:12
 
 Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in object type [1].
 
-   cond_prop.js:36:10
+   cond_prop.js:36:12
    36|         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
-                ^^^^^
+                  ^^^
 
 References:
    cond_prop.js:34:38
@@ -250,13 +250,13 @@ References:
                                             ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:10
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:12
 
 Cannot get `t.foo` because property `foo` is missing in object type [1].
 
-   cond_prop.js:46:10
+   cond_prop.js:46:12
    46|         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
-                ^^^^^
+                  ^^^
 
 References:
    cond_prop.js:44:41
@@ -264,13 +264,13 @@ References:
                                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:48:10
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:48:12
 
 Cannot get `t.quux` because property `quux` is missing in object type [1].
 
-   cond_prop.js:48:10
+   cond_prop.js:48:12
    48|         (t.quux: string); // error, consider { foo: {}, bar: "" }
-                ^^^^^^
+                  ^^^^
 
 References:
    cond_prop.js:44:41
@@ -505,7 +505,7 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
    fn.js:62:5
    62|     x(y); // error
-           ^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -519,7 +519,7 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
    fn.js:63:5
    63|     x(z);
-           ^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -533,7 +533,7 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
    fn.js:64:5
    64|     x(x); // error
-           ^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -547,7 +547,7 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
    fn.js:65:5
    65|     x(1,2,3,4,5); //error
-           ^^^^^^^^^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -561,7 +561,7 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
    fn.js:66:5
    66|     x(...[1,2]); //error
-           ^^^^^^^^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -575,7 +575,7 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
    fn.js:67:5
    67|     x();
-           ^^^
+           ^
 
 References:
    fn.js:60:18
@@ -583,13 +583,13 @@ References:
                         ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ fn.js:73:13
+Error ------------------------------------------------------------------------------------------------------ fn.js:73:17
 
 Cannot call `obj.field` because the parameter types of an unknown function [1] are unknown.
 
-   fn.js:73:13
+   fn.js:73:17
    73|   const f = obj.field(0); // error
-                   ^^^^^^^^^^^^
+                       ^^^^^
 
 References:
    fn.js:72:12
@@ -597,13 +597,13 @@ References:
                   ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- fn.js:81:5
+Error ------------------------------------------------------------------------------------------------------- fn.js:81:7
 
 Cannot get `x.foo` because property `foo` is missing in unknown function [1].
 
-   fn.js:81:5
+   fn.js:81:7
    81|     x.foo; // error
-           ^^^^^
+             ^^^
 
 References:
    fn.js:81:5
@@ -611,13 +611,13 @@ References:
            ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:3
+Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:5
 
 Cannot call `x.y` because undefined [1] is not a function.
 
-   hasOwnProperty.js:4:3
+   hasOwnProperty.js:4:5
    4|   x.y(); // error: could be undefined
-        ^^^^^
+          ^
 
 References:
    hasOwnProperty.js:3:20
@@ -625,13 +625,13 @@ References:
                          ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:6:5
+Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:6:7
 
 Cannot call `x.y` because undefined [1] is not a function.
 
-   hasOwnProperty.js:6:5
+   hasOwnProperty.js:6:7
    6|     x.y(); // error: still could be undefined
-          ^^^^^
+            ^
 
 References:
    hasOwnProperty.js:3:20
@@ -639,13 +639,13 @@ References:
                          ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:9:5
+Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:9:7
 
 Cannot call `x.z` because property `z` is missing in object type [1].
 
-   hasOwnProperty.js:9:5
+   hasOwnProperty.js:9:7
    9|     x.z(); // error: unreachable, but we don't help you here
-          ^^^^^
+            ^
 
 References:
    hasOwnProperty.js:3:16
@@ -834,13 +834,13 @@ References:
                         ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:11:5
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:11:10
 
 Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown type [1].
 
-   missing-property-cond.js:11:5
+   missing-property-cond.js:11:10
    11|     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
-           ^^^^^^
+                ^
 
 References:
    missing-property-cond.js:10:7
@@ -848,13 +848,13 @@ References:
              ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:16:3
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:16:5
 
 Cannot get `o.p3` because property `p3` is missing in object type [1].
 
-   missing-property-cond.js:16:3
+   missing-property-cond.js:16:5
    16|   o.p3.x; // usual error outside conditional
-         ^^^^
+           ^^
 
 References:
    missing-property-cond.js:15:18
@@ -876,13 +876,13 @@ References:
                                ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:23:5
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:23:10
 
 Cannot get `o.p4.x` because property `x` is missing in property `p4` does not exist [1].
 
-   missing-property-cond.js:23:5
+   missing-property-cond.js:23:10
    23|     o.p4.x; // error
-           ^^^^^^
+                ^
 
 References:
    missing-property-cond.js:20:7
@@ -1232,12 +1232,12 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- mixed_object.js:4:5
+Error ---------------------------------------------------------------------------------------------- mixed_object.js:4:7
 
 Cannot assign `3` to `x.a` because property `a` is not writable.
 
    4|     x.a = 3;
-          ^^^
+            ^
 
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
@@ -1310,14 +1310,14 @@ References:
                         ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ not.js:11:5
+Error ------------------------------------------------------------------------------------------------------ not.js:11:7
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
 undefined [1].
 
-   not.js:11:5
+   not.js:11:7
    11|     x[0]; // should error for null, void and number (0)
-           ^^^^
+             ^
 
 References:
    not.js:9:17
@@ -2358,13 +2358,13 @@ References:
                             ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:20:12
+Error -------------------------------------------------------------------------------------------- tagged_union.js:20:20
 
 Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined [1].
 
-   tagged_union.js:20:12
+   tagged_union.js:20:20
    20|     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
-                  ^^^^^^^^^^^^^^^^^
+                          ^^^^^^
 
 References:
    ast_node.js:3:11
@@ -2425,13 +2425,13 @@ References:
                    ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
+Error --------------------------------------------------------------------------------------------- tagged_union.js:40:8
 
 Cannot get `x.raw` because property `raw` is missing in `Orange` [1].
 
-   tagged_union.js:40:6
+   tagged_union.js:40:8
    40|     (x.raw: 'Yes' | 'No'); // 2 errors:
-            ^^^^^
+              ^^^
 
 References:
    tagged_union.js:38:17
@@ -2439,13 +2439,13 @@ References:
                        ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:72:19
+Error -------------------------------------------------------------------------------------------- tagged_union.js:72:21
 
 Cannot get `x.A` because property `A` is missing in `C` [1].
 
-   tagged_union.js:72:19
+   tagged_union.js:72:21
    72|   default: return x.A; // error, x: C and property A not found in type C
-                         ^^^
+                           ^
 
 References:
    tagged_union.js:68:26
@@ -2501,13 +2501,13 @@ References:
                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:96:9
+Error -------------------------------------------------------------------------------------------- tagged_union.js:96:11
 
 Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1].
 
-   tagged_union.js:96:9
+   tagged_union.js:96:11
    96|     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
-               ^^^^^^^^^
+                 ^^^^^^^
 
 References:
    tagged_union.js:94:21
@@ -2515,13 +2515,13 @@ References:
                            ^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:101:20
+Error ------------------------------------------------------------------------------------------- tagged_union.js:101:27
 
 Cannot call `null.toString` because property `toString` is missing in null [1].
 
-   tagged_union.js:101:20
+   tagged_union.js:101:27
    101|     if (x.kind === (null).toString()) {} // error, method on null
-                           ^^^^^^^^^^^^^^^^^
+                                  ^^^^^^^^
 
 References:
    tagged_union.js:101:21
@@ -2529,13 +2529,13 @@ References:
                             ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:102:28
+Error ------------------------------------------------------------------------------------------- tagged_union.js:102:35
 
 Cannot call `null.toString` because property `toString` is missing in null [1].
 
-   tagged_union.js:102:28
+   tagged_union.js:102:35
    102|     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
-                                   ^^^^^^^^^^^^^^^^^
+                                          ^^^^^^^^
 
 References:
    tagged_union.js:102:29
@@ -3111,13 +3111,13 @@ References:
                           ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:171:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:171:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:171:7
+   tagged_union.js:171:9
    171|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:15
@@ -3125,13 +3125,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:174:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:174:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:174:7
+   tagged_union.js:174:9
    174|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:41
@@ -3139,13 +3139,13 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:178:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:178:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:178:7
+   tagged_union.js:178:9
    178|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:41
@@ -3153,13 +3153,13 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:181:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:181:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:181:7
+   tagged_union.js:181:9
    181|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:15
@@ -3167,13 +3167,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:189:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:189:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:189:7
+   tagged_union.js:189:9
    189|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:15
@@ -3181,13 +3181,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:191:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:191:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:191:7
+   tagged_union.js:191:9
    191|       x.y; // error: x.foo could be a string
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:44
@@ -3195,13 +3195,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:192:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:192:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:192:7
+   tagged_union.js:192:9
    192|       x.z; // error: could still be either case (if foo was a different number)
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:15
@@ -3209,13 +3209,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:197:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:197:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:197:7
+   tagged_union.js:197:9
    197|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:44
@@ -3223,13 +3223,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:200:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:200:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:200:7
+   tagged_union.js:200:9
    200|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:15
@@ -3237,13 +3237,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:208:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:208:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:208:7
+   tagged_union.js:208:9
    208|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:15
@@ -3251,13 +3251,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:210:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:210:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:210:7
+   tagged_union.js:210:9
    210|       x.y; // error: x.foo could be a string
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:44
@@ -3265,13 +3265,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:211:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:211:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:211:7
+   tagged_union.js:211:9
    211|       x.z; // error: could still be either case (if foo was a different number)
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:15
@@ -3279,13 +3279,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:216:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:216:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:216:7
+   tagged_union.js:216:9
    216|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:44
@@ -3293,13 +3293,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:218:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:218:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:218:7
+   tagged_union.js:218:9
    218|       x.y; // error: x.foo could be a different string
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:44
@@ -3307,13 +3307,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:219:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:219:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:219:7
+   tagged_union.js:219:9
    219|       x.z; // error: x.foo could be a number
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:15
@@ -3321,13 +3321,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:229:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:229:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:229:7
+   tagged_union.js:229:9
    229|       x.y; // error: flow isn't smart enough to figure this out yet
-              ^^^
+                ^
 
 References:
    tagged_union.js:225:37
@@ -3335,13 +3335,13 @@ References:
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:230:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:230:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:230:7
+   tagged_union.js:230:9
    230|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:225:8
@@ -3349,13 +3349,13 @@ References:
                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:238:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:238:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:238:7
+   tagged_union.js:238:9
    238|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:15
@@ -3363,13 +3363,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:241:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:241:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:241:7
+   tagged_union.js:241:9
    241|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:42
@@ -3377,13 +3377,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:245:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:245:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:245:7
+   tagged_union.js:245:9
    245|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:42
@@ -3391,13 +3391,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:248:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:248:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:248:7
+   tagged_union.js:248:9
    248|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:15
@@ -3405,13 +3405,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:256:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:256:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:256:7
+   tagged_union.js:256:9
    256|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:15
@@ -3419,13 +3419,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:259:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:259:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:259:7
+   tagged_union.js:259:9
    259|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:42
@@ -3433,13 +3433,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:263:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:263:9
 
 Cannot get `x.y` because property `y` is missing in object type [1].
 
-   tagged_union.js:263:7
+   tagged_union.js:263:9
    263|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:42
@@ -3447,13 +3447,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:266:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:266:9
 
 Cannot get `x.z` because property `z` is missing in object type [1].
 
-   tagged_union.js:266:7
+   tagged_union.js:266:9
    266|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:15
@@ -3506,13 +3506,13 @@ References:
                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:23:3
+Error --------------------------------------------------------------------------------------------------- typeof.js:23:7
 
 Cannot call `BAZ.stuff` because undefined [1] is not a function.
 
-   typeof.js:23:3
+   typeof.js:23:7
    23|   BAZ.stuff(123); // error, refinement is gone
-         ^^^^^^^^^^^^^^
+             ^^^^^
 
 References:
    lib.js:3:27
@@ -3520,13 +3520,13 @@ References:
                                  ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:23:3
+Error --------------------------------------------------------------------------------------------------- typeof.js:23:7
 
 Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1].
 
-   typeof.js:23:3
+   typeof.js:23:7
    23|   BAZ.stuff(123); // error, refinement is gone
-         ^^^^^^^^^^^^^^
+             ^^^^^
 
 References:
    lib.js:3:50
@@ -3534,13 +3534,13 @@ References:
                                                         ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:26:3
+Error --------------------------------------------------------------------------------------------------- typeof.js:26:7
 
 Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1].
 
-   typeof.js:26:3
+   typeof.js:26:7
    26|   BAZ.stuff; // error, could be undefined
-         ^^^^^^^^^
+             ^^^^^
 
 References:
    lib.js:3:50
@@ -3548,13 +3548,13 @@ References:
                                                         ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:30:5
+Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
 
 Cannot call `BAZ.stuff` because undefined [1] is not a function.
 
-   typeof.js:30:5
+   typeof.js:30:9
    30|     BAZ.stuff(123); // error, refinement is gone
-           ^^^^^^^^^^^^^^
+               ^^^^^
 
 References:
    lib.js:3:27

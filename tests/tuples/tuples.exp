@@ -97,18 +97,15 @@ References:
              ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:6:27
+Error --------------------------------------------------------------------------------------------------- tuples.js:6:33
 
 Cannot assign array literal to `f` because number [1] is incompatible with string [2] in index 1.
 
-   tuples.js:6:27
-   6| var f: [number, string] = [123, 456];
-                                ^^^^^^^^^^
-
-References:
    tuples.js:6:33
    6| var f: [number, string] = [123, 456];
                                       ^^^ [1]
+
+References:
    tuples.js:6:17
    6| var f: [number, string] = [123, 456];
                       ^^^^^^ [2]
@@ -142,31 +139,19 @@ References:
                      ^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:15:5
+Error --------------------------------------------------------------------------------------------------- tuples.js:15:7
 
 Cannot get `t[0.5]` because the index into a tuple must be an integer, but `0.5` [1] is not an integer.
 
-   tuples.js:15:5
-   15|     t[0.5]; // error: index out of bounds
-           ^^^^^^
-
-References:
-   tuples.js:15:7
    15|     t[0.5]; // error: index out of bounds
              ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:16:5
+Error --------------------------------------------------------------------------------------------------- tuples.js:16:7
 
 Cannot get `t[0.0000000000000000000001]` because the index into a tuple must be an integer, but `1e-22` [1] is not an
 integer.
 
-   tuples.js:16:5
-   16|     t[0.0000000000000000000001]; // error: index ("1e-22") out of bounds
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   tuples.js:16:7
    16|     t[0.0000000000000000000001]; // error: index ("1e-22") out of bounds
              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
@@ -223,13 +208,13 @@ References:
                              ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:30:5
+Error --------------------------------------------------------------------------------------------------- tuples.js:30:7
 
 Cannot get `t[x]` because the index into a tuple must be an integer, but `0.5` [1] is not an integer.
 
-   tuples.js:30:5
+   tuples.js:30:7
    30|     t[x]; // error, not an integer
-           ^^^^
+             ^
 
 References:
    tuples.js:29:15

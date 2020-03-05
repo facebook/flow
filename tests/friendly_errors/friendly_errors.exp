@@ -1,328 +1,236 @@
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:14:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:15:6
 
 Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `p`.
 
-   class-extends-and-implements.js:14:1
-       v------------------
-   14| class C extends A {
+   class-extends-and-implements.js:15:6
    15|   p: string;
-   16| }
-       ^
+            ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:14:17
    14| class C extends A {
                        ^ [1]
-   class-extends-and-implements.js:15:6
-   15|   p: string;
-            ^^^^^^ [2]
    class-extends-and-implements.js:7:6
     7|   p: number;
             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:18:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:19:6
 
 Cannot extend `B` [1] with `D` because string [2] is incompatible with number [3] in property `p`.
 
-   class-extends-and-implements.js:18:1
-       v-------------------------
-   18| class D extends B<empty> {
+   class-extends-and-implements.js:19:6
    19|   p: string;
-   20| }
-       ^
+            ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:18:17
    18| class D extends B<empty> {
                        ^^^^^^^^ [1]
-   class-extends-and-implements.js:19:6
-   19|   p: string;
-            ^^^^^^ [2]
    class-extends-and-implements.js:11:6
    11|   p: number;
             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:30:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:31:6
 
 Cannot implement `E` [1] with `G` because string [2] is incompatible with number [3] in property `p`.
 
-   class-extends-and-implements.js:30:1
-       v---------------------
-   30| class G implements E {
+   class-extends-and-implements.js:31:6
    31|   p: string;
-   32| }
-       ^
+            ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:30:20
    30| class G implements E {
                           ^ [1]
-   class-extends-and-implements.js:31:6
-   31|   p: string;
-            ^^^^^^ [2]
    class-extends-and-implements.js:23:6
    23|   p: number;
             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:34:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:35:6
 
 Cannot implement `F` [1] with `H` because string [2] is incompatible with number [3] in property `p`.
 
-   class-extends-and-implements.js:34:1
-       v----------------------------
-   34| class H implements F<empty> {
+   class-extends-and-implements.js:35:6
    35|   p: string;
-   36| }
-       ^
+            ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:34:20
    34| class H implements F<empty> {
                           ^^^^^^^^ [1]
-   class-extends-and-implements.js:35:6
-   35|   p: string;
-            ^^^^^^ [2]
    class-extends-and-implements.js:27:6
    27|   p: number;
             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:46:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:47:6
 
 Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `p`.
 
-   class-extends-and-implements.js:46:1
-       v----------------------
-   46| interface K extends I {
+   class-extends-and-implements.js:47:6
    47|   p: string;
-   48| }
-       ^
+            ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:46:21
    46| interface K extends I {
                            ^ [1]
-   class-extends-and-implements.js:47:6
-   47|   p: string;
-            ^^^^^^ [2]
    class-extends-and-implements.js:39:6
    39|   p: number;
             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:50:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:51:6
 
 Cannot extend `J` [1] with `L` because string [2] is incompatible with number [3] in property `p`.
 
-   class-extends-and-implements.js:50:1
-       v-----------------------------
-   50| interface L extends J<empty> {
+   class-extends-and-implements.js:51:6
    51|   p: string;
-   52| }
-       ^
+            ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:50:21
    50| interface L extends J<empty> {
                            ^^^^^^^^ [1]
-   class-extends-and-implements.js:51:6
-   51|   p: string;
-            ^^^^^^ [2]
    class-extends-and-implements.js:43:6
    43|   p: number;
             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:70:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:71:7
 
 Cannot extend `M1` [1] with `O` because string [2] is incompatible with number [3] in property `p1`.
 
-   class-extends-and-implements.js:70:1
-       v---------------------------
-   70| interface O extends M1, M2 {
+   class-extends-and-implements.js:71:7
    71|   p1: string;
-   72|   p2: string;
-   73| }
-       ^
+             ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:70:21
    70| interface O extends M1, M2 {
                            ^^ [1]
-   class-extends-and-implements.js:71:7
-   71|   p1: string;
-             ^^^^^^ [2]
    class-extends-and-implements.js:55:7
    55|   p1: number;
              ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:70:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:72:7
 
 Cannot extend `M2` [1] with `O` because string [2] is incompatible with number [3] in property `p2`.
 
-   class-extends-and-implements.js:70:1
-       v---------------------------
-   70| interface O extends M1, M2 {
-   71|   p1: string;
+   class-extends-and-implements.js:72:7
    72|   p2: string;
-   73| }
-       ^
+             ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:70:25
    70| interface O extends M1, M2 {
                                ^^ [1]
-   class-extends-and-implements.js:72:7
-   72|   p2: string;
-             ^^^^^^ [2]
    class-extends-and-implements.js:59:7
    59|   p2: number;
              ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:75:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:76:7
 
 Cannot extend `N1` [1] with `P` because string [2] is incompatible with number [3] in property `p1`.
 
-   class-extends-and-implements.js:75:1
-       v-----------------------------------------
-   75| interface P extends N1<empty>, N2<empty> {
+   class-extends-and-implements.js:76:7
    76|   p1: string;
-   77|   p2: string;
-   78| }
-       ^
+             ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:75:21
    75| interface P extends N1<empty>, N2<empty> {
                            ^^^^^^^^^ [1]
-   class-extends-and-implements.js:76:7
-   76|   p1: string;
-             ^^^^^^ [2]
    class-extends-and-implements.js:63:7
    63|   p1: number;
              ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:75:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:77:7
 
 Cannot extend `N2` [1] with `P` because string [2] is incompatible with number [3] in property `p2`.
 
-   class-extends-and-implements.js:75:1
-       v-----------------------------------------
-   75| interface P extends N1<empty>, N2<empty> {
-   76|   p1: string;
+   class-extends-and-implements.js:77:7
    77|   p2: string;
-   78| }
-       ^
+             ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:75:32
    75| interface P extends N1<empty>, N2<empty> {
                                       ^^^^^^^^^ [1]
-   class-extends-and-implements.js:77:7
-   77|   p2: string;
-             ^^^^^^ [2]
    class-extends-and-implements.js:67:7
    67|   p2: number;
              ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:96:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:97:7
 
 Cannot implement `Q1` [1] with `S` because number [2] is incompatible with string [3] in property `p1`.
 
-   class-extends-and-implements.js:96:1
-       v--------------------------
-   96| class S implements Q1, Q2 {
+   class-extends-and-implements.js:97:7
    97|   p1: number;
-   98|   p2: number;
-   99| }
-       ^
+             ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:96:20
    96| class S implements Q1, Q2 {
                           ^^ [1]
-   class-extends-and-implements.js:97:7
-   97|   p1: number;
-             ^^^^^^ [2]
    class-extends-and-implements.js:81:7
    81|   p1: string;
              ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- class-extends-and-implements.js:96:1
+Error ----------------------------------------------------------------------------- class-extends-and-implements.js:98:7
 
 Cannot implement `Q2` [1] with `S` because number [2] is incompatible with string [3] in property `p2`.
 
-   class-extends-and-implements.js:96:1
-       v--------------------------
-   96| class S implements Q1, Q2 {
-   97|   p1: number;
+   class-extends-and-implements.js:98:7
    98|   p2: number;
-   99| }
-       ^
+             ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:96:24
    96| class S implements Q1, Q2 {
                               ^^ [1]
-   class-extends-and-implements.js:98:7
-   98|   p2: number;
-             ^^^^^^ [2]
    class-extends-and-implements.js:85:7
    85|   p2: string;
              ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------- class-extends-and-implements.js:101:1
+Error ---------------------------------------------------------------------------- class-extends-and-implements.js:102:7
 
 Cannot implement `R1` [1] with `T` because number [2] is incompatible with string [3] in property `p1`.
 
-   class-extends-and-implements.js:101:1
-        v----------------------------------------
-   101| class T implements R1<empty>, R2<empty> {
+   class-extends-and-implements.js:102:7
    102|   p1: number;
-   103|   p2: number;
-   104| }
-        ^
+              ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:101:20
    101| class T implements R1<empty>, R2<empty> {
                            ^^^^^^^^^ [1]
-   class-extends-and-implements.js:102:7
-   102|   p1: number;
-              ^^^^^^ [2]
    class-extends-and-implements.js:89:7
     89|   p1: string;
               ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------- class-extends-and-implements.js:101:1
+Error ---------------------------------------------------------------------------- class-extends-and-implements.js:103:7
 
 Cannot implement `R2` [1] with `T` because number [2] is incompatible with string [3] in property `p2`.
 
-   class-extends-and-implements.js:101:1
-        v----------------------------------------
-   101| class T implements R1<empty>, R2<empty> {
-   102|   p1: number;
+   class-extends-and-implements.js:103:7
    103|   p2: number;
-   104| }
-        ^
+              ^^^^^^ [2]
 
 References:
    class-extends-and-implements.js:101:31
    101| class T implements R1<empty>, R2<empty> {
                                       ^^^^^^^^^ [1]
-   class-extends-and-implements.js:103:7
-   103|   p2: number;
-              ^^^^^^ [2]
    class-extends-and-implements.js:93:7
     93|   p2: string;
               ^^^^^^ [3]
@@ -447,36 +355,30 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:8:3
+Error ---------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:8:16
 
 Cannot cast `any` to function type because number [1] is incompatible with string [2] in property `p` of the first
 argument.
 
-   loc-primary-for-covariant-ops.js:8:3
-   8| ((any: (x: {p: number}) => void): (x: {p: string}) => void);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    loc-primary-for-covariant-ops.js:8:16
    8| ((any: (x: {p: number}) => void): (x: {p: string}) => void);
                      ^^^^^^ [1]
+
+References:
    loc-primary-for-covariant-ops.js:8:43
    8| ((any: (x: {p: number}) => void): (x: {p: string}) => void);
                                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:11:3
+Error --------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:11:14
 
 Cannot cast `any` to `X` because number [1] is incompatible with string [2] in property `p` of type argument `T` [3].
 
-   loc-primary-for-covariant-ops.js:11:3
-   11| ((any: X<{p: number}>): X<{p: string}>);
-         ^^^^^^^^^^^^^^^^^^^
-
-References:
    loc-primary-for-covariant-ops.js:11:14
    11| ((any: X<{p: number}>): X<{p: string}>);
                     ^^^^^^ [1]
+
+References:
    loc-primary-for-covariant-ops.js:11:31
    11| ((any: X<{p: number}>): X<{p: string}>);
                                      ^^^^^^ [2]
@@ -502,13 +404,13 @@ References:
                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:10:2
+Error ---------------------------------------------------------------------------------------------- loc-primary.js:10:6
 
 Cannot cast object literal to `A` because number [1] is incompatible with string [2] in property `p`.
 
-   loc-primary.js:10:2
+   loc-primary.js:10:6
    10| ({p: a2}: A); // Error: string ~> number. We should point to a2.
-        ^^^^^^^
+            ^^
 
 References:
    loc-primary.js:9:17
@@ -519,18 +421,15 @@ References:
                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:11:2
+Error ---------------------------------------------------------------------------------------------- loc-primary.js:11:6
 
 Cannot cast object literal to `A` because number [1] is incompatible with string [2] in property `p`.
 
-   loc-primary.js:11:2
-   11| ({p: 42}: A); // Error: string ~> number. We should point to 42.
-        ^^^^^^^
-
-References:
    loc-primary.js:11:6
    11| ({p: 42}: A); // Error: string ~> number. We should point to 42.
             ^^ [1]
+
+References:
    loc-primary.js:6:14
     6| type A = {p: string};
                     ^^^^^^ [2]
@@ -553,13 +452,13 @@ References:
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:17:2
+Error ---------------------------------------------------------------------------------------------- loc-primary.js:17:6
 
 Cannot cast object literal to `B` because number [1] is incompatible with string [2] in property `a.b`.
 
-   loc-primary.js:17:2
+   loc-primary.js:17:6
    17| ({a: b2}: B); // Error: string ~> number. We should point to b2.
-        ^^^^^^^
+            ^^
 
 References:
    loc-primary.js:16:21
@@ -570,13 +469,13 @@ References:
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:19:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:19:10
 
 Cannot cast object literal to `B` because number [1] is incompatible with string [2] in property `a.b`.
 
-   loc-primary.js:19:2
+   loc-primary.js:19:10
    19| ({a: {b: b3}}: B); // Error: string ~> number. We should point to b3.
-        ^^^^^^^^^^^^
+                ^^
 
 References:
    loc-primary.js:18:17
@@ -587,18 +486,15 @@ References:
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:20:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:20:10
 
 Cannot cast object literal to `B` because number [1] is incompatible with string [2] in property `a.b`.
 
-   loc-primary.js:20:2
-   20| ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
-        ^^^^^^^^^^^^
-
-References:
    loc-primary.js:20:10
    20| ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
                 ^^ [1]
+
+References:
    loc-primary.js:13:18
    13| type B = {a: {b: string}};
                         ^^^^^^ [2]
@@ -621,13 +517,13 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:26:2
+Error ---------------------------------------------------------------------------------------------- loc-primary.js:26:6
 
 Cannot cast object literal to `C` because number [1] is incompatible with string [2] in property `a.b.c`.
 
-   loc-primary.js:26:2
+   loc-primary.js:26:6
    26| ({a: c2}: C); // Error: string ~> number. We should point to c2.
-        ^^^^^^^
+            ^^
 
 References:
    loc-primary.js:25:25
@@ -638,13 +534,13 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:28:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:28:10
 
 Cannot cast object literal to `C` because number [1] is incompatible with string [2] in property `a.b.c`.
 
-   loc-primary.js:28:2
+   loc-primary.js:28:10
    28| ({a: {b: c3}}: C); // Error: string ~> number. We should point to c3.
-        ^^^^^^^^^^^^
+                ^^
 
 References:
    loc-primary.js:27:21
@@ -655,13 +551,13 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:30:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:30:14
 
 Cannot cast object literal to `C` because number [1] is incompatible with string [2] in property `a.b.c`.
 
-   loc-primary.js:30:2
+   loc-primary.js:30:14
    30| ({a: {b: {c: c4}}}: C); // Error: string ~> number. We should point to c4.
-        ^^^^^^^^^^^^^^^^^
+                    ^^
 
 References:
    loc-primary.js:29:17
@@ -672,18 +568,15 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:31:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:31:14
 
 Cannot cast object literal to `C` because number [1] is incompatible with string [2] in property `a.b.c`.
 
-   loc-primary.js:31:2
-   31| ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
-        ^^^^^^^^^^^^^^^^^
-
-References:
    loc-primary.js:31:14
    31| ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
                     ^^ [1]
+
+References:
    loc-primary.js:22:22
    22| type C = {a: {b: {c: string}}};
                             ^^^^^^ [2]
@@ -706,13 +599,13 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:37:2
+Error ---------------------------------------------------------------------------------------------- loc-primary.js:37:6
 
 Cannot cast object literal to `D` because number [1] is incompatible with string [2] in property `a.b.c.d`.
 
-   loc-primary.js:37:2
+   loc-primary.js:37:6
    37| ({a: d2}: D); // Error: string ~> number. We should point to d2.
-        ^^^^^^^
+            ^^
 
 References:
    loc-primary.js:36:29
@@ -723,13 +616,13 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:39:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:39:10
 
 Cannot cast object literal to `D` because number [1] is incompatible with string [2] in property `a.b.c.d`.
 
-   loc-primary.js:39:2
+   loc-primary.js:39:10
    39| ({a: {b: d3}}: D); // Error: string ~> number. We should point to d3.
-        ^^^^^^^^^^^^
+                ^^
 
 References:
    loc-primary.js:38:25
@@ -740,13 +633,13 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:41:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:41:14
 
 Cannot cast object literal to `D` because number [1] is incompatible with string [2] in property `a.b.c.d`.
 
-   loc-primary.js:41:2
+   loc-primary.js:41:14
    41| ({a: {b: {c: d4}}}: D); // Error: string ~> number. We should point to d4.
-        ^^^^^^^^^^^^^^^^^
+                    ^^
 
 References:
    loc-primary.js:40:21
@@ -757,13 +650,13 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:43:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:43:18
 
 Cannot cast object literal to `D` because number [1] is incompatible with string [2] in property `a.b.c.d`.
 
-   loc-primary.js:43:2
+   loc-primary.js:43:18
    43| ({a: {b: {c: {d: d5}}}}: D); // Error: string ~> number. We should point to d5.
-        ^^^^^^^^^^^^^^^^^^^^^^
+                        ^^
 
 References:
    loc-primary.js:42:17
@@ -774,18 +667,15 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- loc-primary.js:44:2
+Error --------------------------------------------------------------------------------------------- loc-primary.js:44:18
 
 Cannot cast object literal to `D` because number [1] is incompatible with string [2] in property `a.b.c.d`.
 
-   loc-primary.js:44:2
-   44| ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
-        ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    loc-primary.js:44:18
    44| ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
                         ^^ [1]
+
+References:
    loc-primary.js:33:26
    33| type D = {a: {b: {c: {d: string}}}};
                                 ^^^^^^ [2]
@@ -1043,13 +933,13 @@ References:
                 ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- misc-incompatibles.js:11:1
+Error -------------------------------------------------------------------------------------- misc-incompatibles.js:11:11
 
 Cannot extend `A` [1] with `B` because number [1] is not inheritable.
 
-   misc-incompatibles.js:11:1
+   misc-incompatibles.js:11:11
    11| interface B extends A {}
-       ^^^^^^^^^^^^^^^^^^^^^^^^
+                 ^
 
 References:
    misc-incompatibles.js:11:21
@@ -1081,45 +971,29 @@ Invalid left-hand side in assignment expression.
        ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- order.js:8:2
+Error ----------------------------------------------------------------------------------------------------- order.js:9:6
 
 Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `a`.
 
-   order.js:8:2
-        v
-    8| ({
-    9|   a: 42,
-   10|   b: ('foo': empty),
-   11|   c: true,
-   12| }: {
-       ^
-
-References:
    order.js:9:6
     9|   a: 42,
             ^^ [1]
+
+References:
    order.js:13:6
    13|   a: boolean,
             ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- order.js:8:2
+Error ---------------------------------------------------------------------------------------------------- order.js:11:6
 
 Cannot cast object literal to object type because boolean [1] is incompatible with number [2] in property `c`.
 
-   order.js:8:2
-        v
-    8| ({
-    9|   a: 42,
-   10|   b: ('foo': empty),
-   11|   c: true,
-   12| }: {
-       ^
-
-References:
    order.js:11:6
    11|   c: true,
             ^^^^ [1]
+
+References:
    order.js:14:6
    14|   c: number,
             ^^^^^^ [2]
@@ -1139,69 +1013,57 @@ References:
                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- prop-variance.js:12:3
+Error -------------------------------------------------------------------------------------------- prop-variance.js:12:8
 
 Cannot cast `any` to object type because property `p` is read-only in object type [1] but writable in object type [2].
 
-   prop-variance.js:12:3
-   12| ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
-         ^^^^^^^^^^^^
-
-References:
    prop-variance.js:12:8
    12| ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
               ^^^^^^^ [1]
+
+References:
    prop-variance.js:12:18
    12| ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- prop-variance.js:14:3
+Error -------------------------------------------------------------------------------------------- prop-variance.js:14:8
 
 Cannot cast `any` to object type because property `p` is read-only in object type [1] but write-only in object type [2].
 
-   prop-variance.js:14:3
-   14| ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
-         ^^^^^^^^^^^^
-
-References:
    prop-variance.js:14:8
    14| ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
               ^^^^^^^ [1]
+
+References:
    prop-variance.js:14:18
    14| ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
                         ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- prop-variance.js:15:3
+Error -------------------------------------------------------------------------------------------- prop-variance.js:15:8
 
 Cannot cast `any` to object type because property `p` is write-only in object type [1] but readable in object type [2].
 
-   prop-variance.js:15:3
-   15| ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
-         ^^^^^^^^^^^^
-
-References:
    prop-variance.js:15:8
    15| ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
               ^^^^^^^ [1]
+
+References:
    prop-variance.js:15:18
    15| ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- prop-variance.js:16:3
+Error -------------------------------------------------------------------------------------------- prop-variance.js:16:8
 
 Cannot cast `any` to object type because property `p` is write-only in object type [1] but read-only in object type [2].
 
-   prop-variance.js:16:3
-   16| ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
-         ^^^^^^^^^^^^
-
-References:
    prop-variance.js:16:8
    16| ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
               ^^^^^^^ [1]
+
+References:
    prop-variance.js:16:18
    16| ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
                         ^^^^^^^ [2]

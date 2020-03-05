@@ -272,11 +272,8 @@ Error --------------------------------------------------------------------------
 Cannot call `compose` because property `p` is missing in `Number` [1].
 
    spread.js:21:2
-        v-------
    21| (compose(
-   22|   ...fns3, // Error: Cannot get p on number
-   23| )(x1): empty); // Error: number ~> empty and object ~> empty
-       ^
+        ^^^^^^^
 
 References:
    spread.js:20:32

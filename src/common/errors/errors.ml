@@ -2446,27 +2446,14 @@ module Cli_output = struct
       (id_to_loc, root_id, colors, tags, message_group))
 
   let get_pretty_printed_friendly_error_group
-      ~stdin_file ~strip_root ~flags ~severity ~trace ~root_loc ~primary_locs ~message_group =
+      ~stdin_file ~strip_root ~flags ~severity ~trace ~primary_locs ~message_group =
     Friendly.(
-      (* Get the primary and root locations. *)
-      let primary_loc =
-        if LocSet.cardinal primary_locs = 1 then
-          LocSet.min_elt primary_locs
-        else
-          root_loc
-      in
-      (* The header location is the primary location when we have color and the
-       * root location when we don't have color. *)
-      let header =
-        print_header_friendly
-          ~strip_root
-          ~flags
-          ~severity
-          ( if Tty.should_color flags.color then
-            primary_loc
-          else
-            root_loc )
-      in
+      (* Get the primary location. *)
+      let primary_loc = LocSet.min_elt primary_locs in
+
+      (* The header location is the primary location *)
+      let header = print_header_friendly ~strip_root ~flags ~severity primary_loc in
+      let root_loc = primary_loc in
       (* Layout our entire friendly error group. This returns a bunch of data we
        * will need to print our friendly error group. *)
       let (references, root_reference_id, colors, tags, message_group) =
@@ -2564,10 +2551,6 @@ module Cli_output = struct
         ~flags
         ~severity
         ~trace
-        ~root_loc:
-          (match error.root with
-          | Some { root_loc; _ } -> root_loc
-          | None -> error.loc)
         ~primary_locs:(LocSet.singleton primary_loc)
         ~message_group:{ group_message = capitalize group_message; group_message_list })
 

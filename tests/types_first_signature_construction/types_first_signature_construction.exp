@@ -1,32 +1,26 @@
-Error ----------------------------------------------------------------------------------------------------- file1.js:4:1
+Error ---------------------------------------------------------------------------------------------------- file1.js:4:17
 
 Cannot assign function to `bar` because string [1] is incompatible with number [2] in the first argument.
 
-   file1.js:4:1
-   4| function bar(x: string): string { return ""; }
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    file1.js:4:17
    4| function bar(x: string): string { return ""; }
                       ^^^^^^ [1]
+
+References:
    file1.js:5:25
    5| declare function bar(x: number): number; // error: cannot declare
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- file1.js:4:1
+Error ---------------------------------------------------------------------------------------------------- file1.js:4:26
 
 Cannot assign function to `bar` because string [1] is incompatible with number [2] in the return value.
 
-   file1.js:4:1
-   4| function bar(x: string): string { return ""; }
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    file1.js:4:26
    4| function bar(x: string): string { return ""; }
                                ^^^^^^ [1]
+
+References:
    file1.js:5:34
    5| declare function bar(x: number): number; // error: cannot declare
                                        ^^^^^^ [2]
@@ -130,7 +124,7 @@ Cannot call `f3` because:
 
    test.js:12:2
    12| (f3(""): string);
-        ^^^^^^
+        ^^
 
 References:
    test.js:12:5
@@ -167,7 +161,7 @@ Cannot call `f5` because number [1] is not a function.
 
    test.js:22:2
    22| (f5(): number);
-        ^^^^
+        ^^
 
 References:
    file5.js:3:8
@@ -178,7 +172,7 @@ References:
 
 Found 11 errors
 ==== DIFF BETWEEN CLASSIC AND TYPES-FIRST =====
-173,175c173,175
+167,169c167,169
 <    file5.js:3:8
 <     3| var f: number = 1;
 <               ^^^^^^ [1]

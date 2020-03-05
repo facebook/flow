@@ -15,13 +15,13 @@ References:
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- b.js:9:2
+Error --------------------------------------------------------------------------------------------------------- b.js:9:6
 
 Cannot get `foo.other` because property `other` is missing in statics of function type [1].
 
-   b.js:9:2
+   b.js:9:6
     9| (foo.other: number);
-        ^^^^^^^^^
+            ^^^^^
 
 References:
    a.js:25:20
@@ -46,13 +46,13 @@ References:
                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:14:2
+Error -------------------------------------------------------------------------------------------------------- b.js:14:6
 
 Cannot get `bar.other` because property `other` is missing in statics of function type [1].
 
-   b.js:14:2
+   b.js:14:6
    14| (bar.other: number);
-        ^^^^^^^^^
+            ^^^^^
 
 References:
    a.js:25:25
@@ -60,32 +60,38 @@ References:
                                ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:17:1
+Error -------------------------------------------------------------------------------------------------------- b.js:17:2
 
 Cannot create `FooComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
 
-   b.js:17:1
+   b.js:17:2
    17| <FooComponent other={1}/>;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^
 
 References:
    a.js:19:30
    19| function FooComponent(props: Props) { return <div />; }
                                     ^^^^^ [1]
+   b.js:17:1
+   17| <FooComponent other={1}/>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:20:1
+Error -------------------------------------------------------------------------------------------------------- b.js:20:2
 
 Cannot create `BarComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
 
-   b.js:20:1
+   b.js:20:2
    20| <BarComponent other={1}/>;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^
 
 References:
    a.js:22:30
    22| const BarComponent = (props: Props) => <div />;
                                     ^^^^^ [1]
+   b.js:20:1
+   20| <BarComponent other={1}/>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:32:2
@@ -105,13 +111,13 @@ References:
                     ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:33:2
+Error ------------------------------------------------------------------------------------------------------- b.js:33:11
 
 Cannot get `poly_foo.other` because property `other` is missing in statics of function type [1].
 
-   b.js:33:2
+   b.js:33:11
    33| (poly_foo.other: number);
-        ^^^^^^^^^^^^^^
+                 ^^^^^
 
 References:
    poly_a.js:3:1
@@ -136,13 +142,13 @@ References:
                     ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:39:2
+Error ------------------------------------------------------------------------------------------------------- b.js:39:11
 
 Cannot get `poly_bar.other` because property `other` is missing in statics of function type [1].
 
-   b.js:39:2
+   b.js:39:11
    39| (poly_bar.other: number);
-        ^^^^^^^^^^^^^^
+                 ^^^^^
 
 References:
    poly_a.js:6:1
@@ -150,32 +156,38 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:42:1
+Error -------------------------------------------------------------------------------------------------------- b.js:42:2
 
 Cannot create `PolyFooComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
 
-   b.js:42:1
+   b.js:42:2
    42| <PolyFooComponent t={0} other={1}/>;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^^^^^
 
 References:
    poly_a.js:20:33
    20| function FooComponent<T>(props: Props<T>) { return <div />; }
                                        ^^^^^^^^ [1]
+   b.js:42:1
+   42| <PolyFooComponent t={0} other={1}/>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:45:1
+Error -------------------------------------------------------------------------------------------------------- b.js:45:2
 
 Cannot create `PolyBarComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
 
-   b.js:45:1
+   b.js:45:2
    45| <PolyBarComponent t={0} other={1}/>;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^^^^^
 
 References:
    poly_a.js:23:33
    23| const BarComponent = <T>(props: Props<T>) => <div />;
                                        ^^^^^^^^ [1]
+   b.js:45:1
+   45| <PolyBarComponent t={0} other={1}/>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 

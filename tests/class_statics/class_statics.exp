@@ -30,13 +30,13 @@ Classes may not have static fields named `prototype`.
                ^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
 Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1].
 
-   test.js:7:1
+   test.js:7:3
    7| A.qux = function(x: string) { } // error?
-      ^^^^^
+        ^^^
 
 References:
    test.js:1:7
@@ -44,82 +44,36 @@ References:
             ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+Error ---------------------------------------------------------------------------------------------------- test.js:10:13
 
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `x`.
 
-   test.js:9:1
-       v------------------
-    9| class B extends A {
+   test.js:10:13
    10|   static x: string; // error?
-   11|   static foo(x: string) { } // error?
-   12|   static main() {
-   13|     B.x = 0; // error
-   14|     B.x = "";
-   15|     B.foo(0); // error
-   16|     B.foo("");
-   17|     B.y = 0; // error
-   18|     B.bar(0); // error
-   19|     B.qux(0); // error
-   20|   }
-   21|   static create(): A {
-   22|     return new this();
-   23|   }
-   24|
-   25|   static badCreate(): number {
-   26|     return new this(); // error B ~> number
-   27|   }
-   28| }
-       ^
+                   ^^^^^^ [2]
 
 References:
    test.js:9:17
     9| class B extends A {
                        ^ [1]
-   test.js:10:13
-   10|   static x: string; // error?
-                   ^^^^^^ [2]
    test.js:2:13
     2|   static x: number;
                    ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+Error ---------------------------------------------------------------------------------------------------- test.js:11:17
 
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the first argument of property
 `foo`.
 
-   test.js:9:1
-       v------------------
-    9| class B extends A {
-   10|   static x: string; // error?
+   test.js:11:17
    11|   static foo(x: string) { } // error?
-   12|   static main() {
-   13|     B.x = 0; // error
-   14|     B.x = "";
-   15|     B.foo(0); // error
-   16|     B.foo("");
-   17|     B.y = 0; // error
-   18|     B.bar(0); // error
-   19|     B.qux(0); // error
-   20|   }
-   21|   static create(): A {
-   22|     return new this();
-   23|   }
-   24|
-   25|   static badCreate(): number {
-   26|     return new this(); // error B ~> number
-   27|   }
-   28| }
-       ^
+                       ^^^^^^ [2]
 
 References:
    test.js:9:17
     9| class B extends A {
                        ^ [1]
-   test.js:11:17
-   11|   static foo(x: string) { } // error?
-                       ^^^^^^ [2]
    test.js:4:17
     4|   static foo(x: number) { }
                        ^^^^^^ [3]
@@ -181,13 +135,13 @@ References:
                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:5
+Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
 Cannot call `B.qux` because property `qux` is missing in statics of `B` [1].
 
-   test.js:19:5
+   test.js:19:7
    19|     B.qux(0); // error
-           ^^^^^^^^
+             ^^^
 
 References:
    test.js:9:7
@@ -209,13 +163,13 @@ References:
                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:40:5
+Error ----------------------------------------------------------------------------------------------------- test.js:40:7
 
 Cannot call `D.foo` because property `foo` is missing in statics of `D` [1].
 
-   test.js:40:5
+   test.js:40:7
    40|     D.foo(0); // error?
-           ^^^^^^^^
+             ^^^
 
 References:
    test.js:38:7
@@ -251,13 +205,13 @@ References:
                ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:53:5
+Error ---------------------------------------------------------------------------------------------------- test.js:53:10
 
 Cannot call `this.bar` because property `bar` is missing in statics of `E` [1].
 
-   test.js:53:5
+   test.js:53:10
    53|     this.bar(); // error
-           ^^^^^^^^^^
+                ^^^
 
 References:
    test.js:50:7

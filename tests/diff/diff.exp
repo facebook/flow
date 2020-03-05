@@ -20,47 +20,41 @@ References:
                       ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- intersection.js:12:3
+Error --------------------------------------------------------------------------------------------- intersection.js:12:8
 
 Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
 
-   intersection.js:12:3
-   12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
-         ^^^^^^^^^^^
-
-References:
    intersection.js:12:8
    12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
               ^^^^^^ [1]
+
+References:
    intersection.js:12:23
    12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
                              ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- intersection.js:14:3
+Error --------------------------------------------------------------------------------------------- intersection.js:14:8
 
 Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
 
-   intersection.js:14:3
-   14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
-         ^^^^^^^^^^^
-
-References:
    intersection.js:14:8
    14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
               ^^^^^^ [1]
+
+References:
    intersection.js:14:23
    14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lower.js:21:2
+Error ---------------------------------------------------------------------------------------------------- lower.js:21:4
 
 Cannot get `y.age` because property `age` is missing in `Person` [1].
 
-   lower.js:21:2
+   lower.js:21:4
    21| (y.age: number); // Error -- could be void
-        ^^^^^
+          ^^^
 
 References:
    lower.js:18:16
@@ -85,13 +79,13 @@ References:
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lower.js:23:1
+Error ---------------------------------------------------------------------------------------------------- lower.js:23:3
 
 Cannot get `y.bla` because property `bla` is missing in `Person` [1].
 
-   lower.js:23:1
+   lower.js:23:3
    23| y.bla; // Error -- key not found.
-       ^^^^^
+         ^^^
 
 References:
    lower.js:18:16
@@ -99,52 +93,43 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- undefined.js:8:3
+Error ------------------------------------------------------------------------------------------------- undefined.js:8:8
 
 Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
 
-   undefined.js:8:3
-   8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-        ^^^^^^^^^^^
-
-References:
    undefined.js:8:8
    8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
              ^^^^^^ [1]
+
+References:
    undefined.js:8:23
    8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                             ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ undefined.js:10:3
+Error ----------------------------------------------------------------------------------------------- undefined.js:10:12
 
 Cannot cast `any` to `$Diff` because undefined [1] is incompatible with `A` [2] in property `a`.
 
-   undefined.js:10:3
-   10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-         ^^^^^^^^^^^^^^^^^^^^
-
-References:
    undefined.js:10:12
    10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                   ^^^^ [1]
+
+References:
    undefined.js:10:36
    10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                                           ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:6:19
+Error ---------------------------------------------------------------------------------------------------- union.js:6:25
 
 Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2].
 
-   union.js:6:19
-   6| declare var one : $Diff<{a: A} | {b: B}, {b: B}>;
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:6:25
    6| declare var one : $Diff<{a: A} | {b: B}, {b: B}>;
                               ^^^^^^ [1]
+
+References:
    union.js:6:46
    6| declare var one : $Diff<{a: A} | {b: B}, {b: B}>;
                                                    ^ [2]
@@ -235,35 +220,29 @@ References:
                            ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- union.js:24:20
+Error --------------------------------------------------------------------------------------------------- union.js:24:26
 
 Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2].
 
-   union.js:24:20
-   24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:24:26
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
                                 ^^^^^^^^^^^^^ [1]
+
+References:
    union.js:24:71
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
                                                                              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- union.js:24:20
+Error --------------------------------------------------------------------------------------------------- union.js:24:42
 
 Cannot instantiate `$Diff` because undefined property `a` [1] is incompatible with `A` [2].
 
-   union.js:24:20
-   24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:24:42
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
                                                 ^^^^^^^^^^^^^ [1]
+
+References:
    union.js:24:62
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
                                                                     ^ [2]

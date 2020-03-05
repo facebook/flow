@@ -1,10 +1,10 @@
-Error ------------------------------------------------------------------------------------------------- profiler.js:5:20
+Error ------------------------------------------------------------------------------------------------- profiler.js:5:26
 
 Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnType` is missing in module `react` [1].
 
-   profiler.js:5:20
+   profiler.js:5:26
    5| const onRenderBad: React.ProfilerOnRenderFnType = ( // Error, the type isnt exported
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                               ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    profiler.js:3:1
@@ -12,15 +12,18 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ profiler.js:17:12
+Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
 Cannot create `React.Profiler` element because property `id` is missing in props [1] but exists in object type [2].
 
+   profiler.js:17:13
+    17| const _b = <React.Profiler />; // Error, id and onRender are required
+                    ^^^^^^^^^^^^^^
+
+References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/react.js:402:56
                                                                v-
    402|   declare export var Profiler: React$AbstractComponent<{|
@@ -31,16 +34,19 @@ References:
           -^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ profiler.js:17:12
+Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
 Cannot create `React.Profiler` element because property `onRender` is missing in props [1] but exists in object
 type [2].
 
+   profiler.js:17:13
+    17| const _b = <React.Profiler />; // Error, id and onRender are required
+                    ^^^^^^^^^^^^^^
+
+References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/react.js:402:56
                                                                v-
    402|   declare export var Profiler: React$AbstractComponent<{|

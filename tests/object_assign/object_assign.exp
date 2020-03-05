@@ -83,19 +83,16 @@ References:
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- apply.js:4:2
+Error ---------------------------------------------------------------------------------------------------- apply.js:4:45
 
 Cannot cast `Object.assign.apply(...)` to object type because number [1] is incompatible with string [2] in property
 `b`.
 
-   apply.js:4:2
-   4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    apply.js:4:45
    4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
                                                   ^ [1]
+
+References:
    apply.js:4:66
    4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
                                                                        ^^^^^^ [2]
@@ -107,7 +104,7 @@ Cannot call `Object.assign.apply` because no more than 2 arguments are expected 
 
    apply.js:5:2
      5| (Object.assign.apply({}, {a: 1}, {b: 'foo'}): {a: number, b: string}); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:127:18
@@ -129,18 +126,15 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- apply.js:9:2
+Error ---------------------------------------------------------------------------------------------------- apply.js:9:37
 
 Cannot cast `Object.assign.call(...)` to object type because number [1] is incompatible with string [2] in property `b`.
 
-   apply.js:9:2
-   9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    apply.js:9:37
    9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
                                           ^ [1]
+
+References:
    apply.js:9:57
    9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
                                                               ^^^^^^ [2]
@@ -290,24 +284,16 @@ References:
                                                       ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:11:2
+Error -------------------------------------------------------------------------------------------------- spread.js:13:19
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with boolean literal `true` [2] in
 property `b`.
 
-   spread.js:11:2
-        v-------------
-   11| (Object.assign(
-   12|   {},
-   13|   ...[{a: 1}, {b: 'foo'}],
-   14|   ...[{c: true}],
-   15| ): {a: number, b: true, c: boolean}); // Error: 'foo' => true
-       ^
-
-References:
    spread.js:13:19
    13|   ...[{a: 1}, {b: 'foo'}],
                          ^^^^^ [1]
+
+References:
    spread.js:15:19
    15| ): {a: number, b: true, c: boolean}); // Error: 'foo' => true
                          ^^^^ [2]

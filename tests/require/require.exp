@@ -56,13 +56,13 @@ Cannot resolve module `./D`.
                ^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- require.js:25:1
+Error -------------------------------------------------------------------------------------------------- require.js:25:3
 
 Cannot get `E.stringValue` because property `stringValue` is missing in object literal [1].
 
-   require.js:25:1
+   require.js:25:3
    25| E.stringValue; // Error: The E exports obj has no 'stringValue' property
-       ^^^^^^^^^^^^^
+         ^^^^^^^^^^^
 
 References:
    E.js:6:18

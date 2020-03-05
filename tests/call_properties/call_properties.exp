@@ -35,7 +35,7 @@ Cannot call `f` because function [1] requires another argument.
 
    A.js:18:10
    18|   return f();
-                ^^^
+                ^
 
 References:
    A.js:17:17
@@ -49,7 +49,7 @@ Cannot call `f` because a call signature declaring the expected parameter / retu
 
    A.js:23:10
    23|   return f();
-                ^^^
+                ^
 
 References:
    A.js:22:15
@@ -64,7 +64,7 @@ literal [1].
 
    A.js:29:10
    29|   return x();
-                ^^^
+                ^
 
 References:
    A.js:28:11
@@ -72,35 +72,29 @@ References:
                  ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- B.js:5:34
+Error -------------------------------------------------------------------------------------------------------- B.js:5:56
 
 Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
 
-   B.js:5:34
-   5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    B.js:5:56
    5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
                                                              ^^^^^^ [1]
+
+References:
    B.js:5:23
    5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
                             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- B.js:8:34
+Error -------------------------------------------------------------------------------------------------------- B.js:8:47
 
 Cannot assign function to `c` because number [1] is incompatible with string [2] in the first argument.
 
-   B.js:8:34
-   8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    B.js:8:47
    8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
                                                     ^^^^^^ [1]
+
+References:
    B.js:8:14
    8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
                    ^^^^^^ [2]
@@ -112,12 +106,9 @@ Cannot assign function to `d` because function [1] requires another argument fro
 
    B.js:11:25
    11| var d: { (): string } = function (x: number): string { return "hi"; };
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   B.js:11:25
-   11| var d: { (): string } = function (x: number): string { return "hi"; };
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    B.js:11:10
    11| var d: { (): string } = function (x: number): string { return "hi"; };
                 ^^^^^^^^^^ [2]
@@ -198,12 +189,9 @@ Cannot assign function to `c` because function [1] requires another argument fro
 
    D.js:12:3
    12|   function (x: number): string { return "hi"; };
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   D.js:12:3
-   12|   function (x: number): string { return "hi"; };
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    D.js:11:10
    11| var c: { (): string; (x: number): string } =
                 ^^^^^^^^^^ [2]
@@ -232,41 +220,35 @@ Cannot assign function to `a` because property `someProp` is missing in function
 
    E.js:2:32
    2| var a : { someProp: number } = function () {};
-                                     ^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^ [1]
 
 References:
-   E.js:2:32
-   2| var a : { someProp: number } = function () {};
-                                     ^^^^^^^^^^^ [1]
    E.js:2:9
    2| var a : { someProp: number } = function () {};
               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- F.js:6:34
+Error -------------------------------------------------------------------------------------------------------- F.js:6:41
 
 Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
 
-   F.js:6:34
-   6| var b: { (x: number): number } = (x) => "hi"
-                                       ^^^^^^^^^^^
-
-References:
    F.js:6:41
    6| var b: { (x: number): number } = (x) => "hi"
                                               ^^^^ [1]
+
+References:
    F.js:6:23
    6| var b: { (x: number): number } = (x) => "hi"
                             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- F.js:9:41
+Error -------------------------------------------------------------------------------------------------------- F.js:9:43
 
 Cannot call `x.toFixed` because property `toFixed` is missing in `String` [1].
 
-   F.js:9:41
+   F.js:9:43
    9| var c: { (x: string): string } = (x) => x.toFixed()
-                                              ^^^^^^^^^^^
+                                                ^^^^^^^
 
 References:
    F.js:9:14
@@ -281,7 +263,7 @@ Cannot call `o` because a call signature declaring the expected parameter / retu
 
    G.js:5:1
    5| o(); // error: o is not callable
-      ^^^
+      ^
 
 References:
    G.js:4:9
@@ -324,7 +306,7 @@ Cannot cast function to `O` because number [1] is incompatible with undefined [2
 
    internal_slot.js:6:2
    6| (function() { return 0 }: O); // err: number ~> void
-       ^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^
 
 References:
    internal_slot.js:6:22
@@ -356,7 +338,7 @@ Cannot cast function to `I` because number [1] is incompatible with undefined [2
 
    internal_slot.js:14:2
    14| (function() { return 0 }: I); // err: number ~> void
-        ^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^
 
 References:
    internal_slot.js:14:22
@@ -390,7 +372,7 @@ Cannot call `mixed_callable` because mixed [1] is not a function.
 
    internal_slot.js:23:1
    23| mixed_callable();
-       ^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^
 
 References:
    internal_slot.js:22:41

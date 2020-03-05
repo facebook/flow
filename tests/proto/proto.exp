@@ -32,35 +32,29 @@ References:
             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- annot.js:8:2
+Error ---------------------------------------------------------------------------------------------------- annot.js:8:12
 
 Cannot cast object literal to `O` because number [1] is incompatible with string [2] in property `q`.
 
-   annot.js:8:2
-   8| ({p: 0, q: 0}: O); // error: number ~> string
-       ^^^^^^^^^^^^
-
-References:
    annot.js:8:12
    8| ({p: 0, q: 0}: O); // error: number ~> string
                  ^ [1]
+
+References:
    annot.js:1:37
    1| type O = {p: number, __proto__: {q: string}};
                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- annot.js:9:2
+Error ---------------------------------------------------------------------------------------------------- annot.js:9:24
 
 Cannot cast object literal to `O` because number [1] is incompatible with string [2] in property `q`.
 
-   annot.js:9:2
-   9| ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    annot.js:9:24
    9| ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
                              ^ [1]
+
+References:
    annot.js:1:37
    1| type O = {p: number, __proto__: {q: string}};
                                           ^^^^^^ [2]
@@ -80,13 +74,13 @@ References:
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- annot.js:15:2
+Error --------------------------------------------------------------------------------------------------- annot.js:15:13
 
 Cannot get `o_optional.q` because property `q` is missing in `O_optional` [1].
 
-   annot.js:15:2
+   annot.js:15:13
    15| (o_optional.q: empty); // error: property `q` not found
-        ^^^^^^^^^^^^
+                   ^
 
 References:
    annot.js:14:25
@@ -128,13 +122,13 @@ References:
                               ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- annot.js:21:2
+Error --------------------------------------------------------------------------------------------------- annot.js:21:13
 
 Cannot get `o_variance.q` because property `q` is missing in `O_variance` [1].
 
-   annot.js:21:2
+   annot.js:21:13
    21| (o_variance.q: empty); // error: property `q` not found
-        ^^^^^^^^^^^^
+                   ^
 
 References:
    annot.js:20:25
@@ -167,13 +161,13 @@ Unexpected prototype after call property.
                                      ^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- annot.js:27:2
+Error --------------------------------------------------------------------------------------------------- annot.js:27:13
 
 Cannot get `o_callable.q` because property `q` is missing in `O_callable` [1].
 
-   annot.js:27:2
+   annot.js:27:13
    27| (o_callable.q: empty); // error: property `q` not found
-        ^^^^^^^^^^^^
+                   ^
 
 References:
    annot.js:26:25
@@ -279,13 +273,13 @@ References:
             ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- literal.js:6:2
+Error --------------------------------------------------------------------------------------------------- literal.js:6:8
 
 Cannot get `o_get.q` because property `q` is missing in object literal [1].
 
-   literal.js:6:2
+   literal.js:6:8
    6| (o_get.q: empty); // error: property `q` not found
-       ^^^^^^^
+             ^
 
 References:
    literal.js:5:13
@@ -293,12 +287,12 @@ References:
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- literal.js:10:2
+Error -------------------------------------------------------------------------------------------------- literal.js:10:8
 
 Cannot get `o_set.__proto__` because property `__proto__` is not readable.
 
    10| (o_set.__proto__: empty); // error: read from contravariant prop
-        ^^^^^^^^^^^^^^^
+              ^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------- literal.js:13:2
@@ -318,13 +312,13 @@ References:
                             ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- literal.js:17:2
+Error ------------------------------------------------------------------------------------------------- literal.js:17:14
 
 Cannot get `o_shorthand.q` because property `q` is missing in object literal [1].
 
-   literal.js:17:2
+   literal.js:17:14
    17| (o_shorthand.q: empty); // error: property `q` not found
-        ^^^^^^^^^^^^^
+                    ^
 
 References:
    literal.js:16:19
@@ -385,13 +379,13 @@ References:
                   ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- literal.js:25:2
+Error -------------------------------------------------------------------------------------------------- literal.js:25:9
 
 Cannot get `o_loop.q` because property `q` is missing in object literal [1].
 
-   literal.js:25:2
+   literal.js:25:9
    25| (o_loop.q: empty); // error: property `q` not found
-        ^^^^^^^^
+               ^
 
 References:
    literal.js:23:14
@@ -407,13 +401,13 @@ Cannot use number [1] as a prototype. Expected an object or null.
                                     ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ null.js:5:1
+Error ------------------------------------------------------------------------------------------------------ null.js:5:8
 
 Cannot call `o_null.toString` because property `toString` is missing in object literal [1].
 
-   null.js:5:1
+   null.js:5:8
    5| o_null.toString(); // property `toString` not found
-      ^^^^^^^^^^^^^^^^^
+             ^^^^^^^^
 
 References:
    null.js:4:14

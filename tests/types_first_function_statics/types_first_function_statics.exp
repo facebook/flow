@@ -15,13 +15,13 @@ References:
             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- b.js:8:2
+Error --------------------------------------------------------------------------------------------------------- b.js:8:4
 
 Cannot get `a.other` because property `other` is missing in statics of function type [1].
 
-   b.js:8:2
+   b.js:8:4
    8| (a.other: number);
-       ^^^^^^^
+         ^^^^^
 
 References:
    a.js:5:18
@@ -46,13 +46,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:16:2
+Error -------------------------------------------------------------------------------------------------------- b.js:16:9
 
 Cannot get `poly_a.other` because property `other` is missing in statics of function type [1].
 
-   b.js:16:2
+   b.js:16:9
    16| (poly_a.other: number);
-        ^^^^^^^^^^^^
+               ^^^^^
 
 References:
    poly_a.js:3:1

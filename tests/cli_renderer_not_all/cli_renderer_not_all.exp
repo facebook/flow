@@ -670,45 +670,29 @@ References:
             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:55:2
+Error ----------------------------------------------------------------------------------------------------- test.js:56:6
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `a`.
 
-   test.js:55:2
-        v
-   55| ({
-   56|   a: 1, // Error: number ~> empty
-   57|   b: 2, // Error: number ~> empty
-   58|   c: 3, // Error: number ~> empty
-   59| }: {
-       ^
-
-References:
    test.js:56:6
    56|   a: 1, // Error: number ~> empty
             ^ [1]
+
+References:
    test.js:60:6
    60|   a: empty,
             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:55:2
+Error ----------------------------------------------------------------------------------------------------- test.js:57:6
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `b`.
 
-   test.js:55:2
-        v
-   55| ({
-   56|   a: 1, // Error: number ~> empty
-   57|   b: 2, // Error: number ~> empty
-   58|   c: 3, // Error: number ~> empty
-   59| }: {
-       ^
-
-References:
    test.js:57:6
    57|   b: 2, // Error: number ~> empty
             ^ [1]
+
+References:
    test.js:61:6
    61|   b: empty,
             ^^^^^ [2]
