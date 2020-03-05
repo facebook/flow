@@ -23,6 +23,28 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":39}},
+                "range":[83,106],
+                "value":" 1.1. leading comment"
+              },
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":35}},
+                "range":[111,142],
+                "value":" 1.2. another leading comment"
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":39}},
+                "range":[31,66],
+                "value":" 1.0. unreachable leading comment"
+              }
+            ],
             "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":14}},
             "range":[71,81],
             "declarations":[
@@ -152,6 +174,14 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":27}},
+                "range":[243,266],
+                "value":" 2.1. leading comment"
+              }
+            ],
             "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":14}},
             "range":[228,238],
             "declarations":[

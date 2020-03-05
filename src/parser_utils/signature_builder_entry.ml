@@ -56,7 +56,7 @@ let rec pattern loc ?annot_path ?init_path (p : (Loc.t, Loc.t) Ast.Pattern.t) =
 
 let variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
   let open Ast.Statement.VariableDeclaration in
-  let { declarations; kind } = decl in
+  let { declarations; kind; comments = _ } = decl in
   List.fold_left
     (fun acc (_, { Declarator.id; init }) ->
       let init =

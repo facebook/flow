@@ -23,6 +23,14 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":27}},
+                "range":[41,64],
+                "value":" Leading on update "
+              }
+            ],
             "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":14}},
             "range":[25,35],
             "declarations":[
@@ -123,6 +131,14 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":10,"column":4},"end":{"line":10,"column":24}},
+                "range":[159,179],
+                "value":" Leading on arg "
+              }
+            ],
             "loc":{"source":null,"start":{"line":8,"column":4},"end":{"line":8,"column":14}},
             "range":[143,153],
             "declarations":[

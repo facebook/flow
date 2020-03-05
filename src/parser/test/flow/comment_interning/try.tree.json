@@ -23,6 +23,28 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":18}},
+                "range":[62,78],
+                "value":" 1.1 Leading A"
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":21}},
+                "range":[81,100],
+                "value":" 1.2 Leading B "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":19}},
+                "range":[27,44],
+                "value":" Not leading "
+              }
+            ],
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":14}},
             "range":[47,59],
             "declarations":[
@@ -221,6 +243,14 @@
               "body":[
                 {
                   "type":"VariableDeclaration",
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":14,"column":4},"end":{"line":14,"column":26}},
+                      "range":[225,247],
+                      "value":" 2.2 Not trailing "
+                    }
+                  ],
                   "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":16}},
                   "range":[252,264],
                   "declarations":[
@@ -384,6 +414,14 @@
               "body":[
                 {
                   "type":"VariableDeclaration",
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":25,"column":4},"end":{"line":25,"column":26}},
+                      "range":[420,442],
+                      "value":" 3.3 Not trailing "
+                    }
+                  ],
                   "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":16}},
                   "range":[447,459],
                   "declarations":[

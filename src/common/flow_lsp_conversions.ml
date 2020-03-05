@@ -377,7 +377,7 @@ module DocumentSymbols = struct
       ast_type ~uri ~containerName:(Some (name_of_id id)) ~acc ~type_
     | (loc, OpaqueType { OpaqueType.id; _ }) ->
       ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Class
-    | (_, VariableDeclaration { VariableDeclaration.declarations; kind }) ->
+    | (_, VariableDeclaration { VariableDeclaration.declarations; kind; comments = _ }) ->
       let kind =
         match kind with
         | VariableDeclaration.Var -> Lsp.SymbolInformation.Variable

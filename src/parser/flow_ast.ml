@@ -476,6 +476,7 @@ and Statement : sig
     type ('M, 'T) t = {
       declarations: ('M, 'T) Declarator.t list;
       kind: kind;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and kind =

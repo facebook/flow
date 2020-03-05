@@ -261,14 +261,38 @@ module Statement
           match Peek.token env with
           | T_SEMICOLON -> (None, [])
           | T_LET ->
-            let (loc, (decl, errs)) = with_loc Declaration.let_ env in
-            (Some (For_declaration (loc, decl)), errs)
+            let (loc, (declarations, leading, errs)) = with_loc Declaration.let_ env in
+            ( Some
+                (For_declaration
+                   ( loc,
+                     {
+                       Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Let;
+                       declarations;
+                       comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                     } )),
+              errs )
           | T_CONST ->
-            let (loc, (decl, errs)) = with_loc Declaration.const env in
-            (Some (For_declaration (loc, decl)), errs)
+            let (loc, (declarations, leading, errs)) = with_loc Declaration.const env in
+            ( Some
+                (For_declaration
+                   ( loc,
+                     {
+                       Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Const;
+                       declarations;
+                       comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                     } )),
+              errs )
           | T_VAR ->
-            let (loc, (decl, errs)) = with_loc Declaration.var env in
-            (Some (For_declaration (loc, decl)), errs)
+            let (loc, (declarations, leading, errs)) = with_loc Declaration.var env in
+            ( Some
+                (For_declaration
+                   ( loc,
+                     {
+                       Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Var;
+                       declarations;
+                       comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                     } )),
+              errs )
           | _ ->
             let expr = Parse.expression_or_pattern (env |> with_no_let true) in
             (Some (For_expression expr), [])
@@ -527,24 +551,42 @@ module Statement
 
   and var =
     with_loc (fun env ->
-        let (declaration, errs) = Declaration.var env in
+        let (declarations, leading, errs) = Declaration.var env in
         Eat.semicolon env;
+        let trailing = Peek.comments env in
         errs |> List.iter (error_at env);
-        Statement.VariableDeclaration declaration)
+        Statement.VariableDeclaration
+          {
+            Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Var;
+            declarations;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   and const =
     with_loc (fun env ->
-        let (declaration, errs) = Declaration.const env in
+        let (declarations, leading, errs) = Declaration.const env in
         Eat.semicolon env;
+        let trailing = Peek.comments env in
         errs |> List.iter (error_at env);
-        Statement.VariableDeclaration declaration)
+        Statement.VariableDeclaration
+          {
+            Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Const;
+            declarations;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   and let_ =
     with_loc (fun env ->
-        let (declaration, errs) = Declaration.let_ env in
+        let (declarations, leading, errs) = Declaration.let_ env in
         Eat.semicolon env;
+        let trailing = Peek.comments env in
         errs |> List.iter (error_at env);
-        Statement.VariableDeclaration declaration)
+        Statement.VariableDeclaration
+          {
+            Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Let;
+            declarations;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   and while_ =
     with_loc (fun env ->

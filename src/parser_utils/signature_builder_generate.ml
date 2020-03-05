@@ -505,8 +505,11 @@ module T = struct
         in
         ( decl_loc,
           Ast.Statement.VariableDeclaration
-            { Ast.Statement.VariableDeclaration.kind; declarations = [(decl_loc, declaration)] } )
-      )
+            {
+              Ast.Statement.VariableDeclaration.kind;
+              declarations = [(decl_loc, declaration)];
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } ) )
 
   and type_of_array_element outlined = function
     | AInit expr_type -> type_of_expr_type outlined expr_type
@@ -821,7 +824,11 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.VariableDeclaration
-          { Ast.Statement.VariableDeclaration.kind; declarations = [(decl_loc, declaration)] } )
+          {
+            Ast.Statement.VariableDeclaration.kind;
+            declarations = [(decl_loc, declaration)];
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
 
   and object_type_property_of_class_element outlined = function
     | (loc, CMethod (object_key, kind, static, f)) ->

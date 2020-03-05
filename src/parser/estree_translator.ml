@@ -1152,7 +1152,7 @@ with type t = Impl.t = struct
         "TaggedTemplateExpression"
         loc
         [("tag", expression tag); ("quasi", template_literal quasi)]
-    and variable_declaration (loc, { Statement.VariableDeclaration.kind; declarations }) =
+    and variable_declaration (loc, { Statement.VariableDeclaration.kind; declarations; comments }) =
       let kind =
         match kind with
         | Statement.VariableDeclaration.Var -> "var"
@@ -1160,6 +1160,7 @@ with type t = Impl.t = struct
         | Statement.VariableDeclaration.Const -> "const"
       in
       node
+        ?comments
         "VariableDeclaration"
         loc
         [("declarations", array_of_list variable_declarator declarations); ("kind", string kind)]

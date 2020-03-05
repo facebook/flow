@@ -229,15 +229,15 @@ module Statements = struct
 
   let for_in ?(each = false) left right body = (Loc.none, ForIn { ForIn.left; right; body; each })
 
-  let for_in_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) declarations =
-    ForIn.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind })
+  let for_in_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) ?comments declarations =
+    ForIn.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind; comments })
 
   let for_in_pattern patt = ForIn.LeftPattern patt
 
   let for_of ?(async = false) left right body = (Loc.none, ForOf { ForOf.left; right; body; async })
 
-  let for_of_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) declarations =
-    ForOf.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind })
+  let for_of_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) ?comments declarations =
+    ForOf.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind; comments })
 
   let for_of_pattern patt = ForOf.LeftPattern patt
 
@@ -252,8 +252,8 @@ module Statements = struct
     (loc, { VariableDeclaration.Declarator.id = Patterns.identifier ~loc str; init })
 
   let variable_declaration
-      ?(kind = Ast.Statement.VariableDeclaration.Var) ?(loc = Loc.none) declarations =
-    (loc, VariableDeclaration { VariableDeclaration.kind; declarations })
+      ?(kind = Ast.Statement.VariableDeclaration.Var) ?(loc = Loc.none) ?comments declarations =
+    (loc, VariableDeclaration { VariableDeclaration.kind; declarations; comments })
 
   let let_declaration declarations =
     variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let declarations

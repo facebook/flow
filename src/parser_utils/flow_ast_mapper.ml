@@ -1798,12 +1798,13 @@ class ['loc] mapper =
 
     method variable_declaration _loc (decl : ('loc, 'loc) Ast.Statement.VariableDeclaration.t) =
       let open Ast.Statement.VariableDeclaration in
-      let { declarations; kind } = decl in
+      let { declarations; kind; comments } = decl in
       let decls' = ListUtils.ident_map (this#variable_declarator ~kind) declarations in
-      if declarations == decls' then
+      let comments' = this#syntax_opt comments in
+      if declarations == decls' && comments = comments' then
         decl
       else
-        { declarations = decls'; kind }
+        { declarations = decls'; kind; comments = comments' }
 
     method variable_declarator
         ~kind (decl : ('loc, 'loc) Ast.Statement.VariableDeclaration.Declarator.t) =

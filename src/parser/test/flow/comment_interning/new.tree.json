@@ -23,6 +23,28 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":41}},
+                "range":[77,94],
+                "value":" 1.1 leading "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":19}},
+                "range":[97,114],
+                "value":" 1.2 leading "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":31}},
+                "range":[23,52],
+                "value":" 1.0 unreachable leading "
+              }
+            ],
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":23}},
             "range":[55,76],
             "declarations":[
@@ -221,6 +243,28 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":17,"column":24},"end":{"line":17,"column":41}},
+                "range":[332,349],
+                "value":" 3.1 leading "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":19}},
+                "range":[352,369],
+                "value":" 3.2 leading "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":16,"column":2},"end":{"line":16,"column":31}},
+                "range":[278,307],
+                "value":" 3.0 unreachable leading "
+              }
+            ],
             "loc":{"source":null,"start":{"line":17,"column":2},"end":{"line":17,"column":23}},
             "range":[310,331],
             "declarations":[

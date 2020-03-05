@@ -23,6 +23,14 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":21}},
+                "range":[27,46],
+                "value":" Not leading 1 "
+              }
+            ],
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":14}},
             "range":[49,61],
             "declarations":[
@@ -74,6 +82,14 @@
               "body":[
                 {
                   "type":"VariableDeclaration",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":6,"column":4},"end":{"line":6,"column":23}},
+                      "range":[91,110],
+                      "value":" Not leading 2 "
+                    }
+                  ],
                   "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":16}},
                   "range":[74,86],
                   "declarations":[

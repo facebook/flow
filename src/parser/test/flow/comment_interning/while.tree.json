@@ -69,6 +69,22 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":8}},
+                "range":[87,95],
+                "value":"mid6"
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":1,"column":63},"end":{"line":1,"column":71}},
+                "range":[63,71],
+                "value":"mid5"
+              }
+            ],
             "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":14}},
             "range":[76,86],
             "declarations":[

@@ -425,7 +425,7 @@ module Class_stmt_sig = Class_sig.Make (Func_stmt_sig)
  * in prep for main pass
  ********************************************************************)
 
-let rec variable_decl cx { Ast.Statement.VariableDeclaration.kind; declarations } =
+let rec variable_decl cx { Ast.Statement.VariableDeclaration.kind; declarations; comments = _ } =
   let bind =
     match kind with
     | Ast.Statement.VariableDeclaration.Const -> Env.bind_const
@@ -702,7 +702,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   let open Ast.Statement in
   let variables cx decls =
     VariableDeclaration.(
-      let { declarations; kind } = decls in
+      let { declarations; kind; comments } = decls in
       let declarations =
         Base.List.map
           ~f:(fun (loc, { Declarator.id; init }) ->
@@ -710,7 +710,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             (loc, { Declarator.id; init }))
           declarations
       in
-      { declarations; kind })
+      { declarations; kind; comments })
   in
   let interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
@@ -1772,6 +1772,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 ( {
                     VariableDeclaration.kind;
                     declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                    comments;
                   } as decl ) ) ->
             variable_decl cx decl;
             let right_ast = eval_right () in
@@ -1784,6 +1785,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                     VariableDeclaration.kind;
                     declarations =
                       [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
+                    comments;
                   } ),
               right_ast )
           | ForIn.LeftPattern
@@ -1916,6 +1918,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 ( {
                     VariableDeclaration.kind;
                     declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                    comments;
                   } as decl ) ) ->
             variable_decl cx decl;
             let (elem_t, right_ast) = eval_right () in
@@ -1926,6 +1929,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                     VariableDeclaration.kind;
                     declarations =
                       [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
+                    comments;
                   } ),
               right_ast )
           | ForOf.LeftPattern

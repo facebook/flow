@@ -1262,7 +1262,8 @@ and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions } =
   fuse [Atom "`"; fuse (List.mapi template_element quasis); Atom "`"]
 
 and variable_declaration
-    ?(ctxt = normal_context) (loc, { Ast.Statement.VariableDeclaration.declarations; kind }) =
+    ?(ctxt = normal_context)
+    (loc, { Ast.Statement.VariableDeclaration.declarations; kind; comments }) =
   let kind_layout =
     match kind with
     | Ast.Statement.VariableDeclaration.Var -> Atom "var"
@@ -1293,7 +1294,7 @@ and variable_declaration
       let tl = Base.List.map ~f:(variable_declarator ~ctxt) tl in
       group [hd; Atom ","; Indent (fuse [sep; join (fuse [Atom ","; sep]) tl])]
   in
-  source_location_with_comments (loc, fuse_with_space [kind_layout; decls_layout])
+  source_location_with_comments ?comments (loc, fuse_with_space [kind_layout; decls_layout])
 
 and variable_declarator ~ctxt (loc, { Ast.Statement.VariableDeclaration.Declarator.id; init }) =
   source_location_with_comments

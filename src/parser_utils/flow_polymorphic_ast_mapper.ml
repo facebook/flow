@@ -1487,9 +1487,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method variable_declaration (decl : ('M, 'T) Ast.Statement.VariableDeclaration.t)
         : ('N, 'U) Ast.Statement.VariableDeclaration.t =
       let open Ast.Statement.VariableDeclaration in
-      let { declarations; kind } = decl in
+      let { declarations; kind; comments } = decl in
       let decls' = Base.List.map ~f:(this#variable_declarator ~kind) declarations in
-      { declarations = decls'; kind }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { declarations = decls'; kind; comments = comments' }
 
     method variable_declarator
         ~kind (decl : ('M, 'T) Ast.Statement.VariableDeclaration.Declarator.t)

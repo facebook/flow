@@ -23,6 +23,20 @@
         "body":[
           {
             "type":"VariableDeclaration",
+            "trailingComments":[
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":27}},
+                "range":[37,60],
+                "value":" 1.1 Leading on label"
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":30}},
+                "range":[65,91],
+                "value":" 1.2 Leading on label "
+              }
+            ],
             "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":14}},
             "range":[22,32],
             "declarations":[

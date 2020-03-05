@@ -33,11 +33,23 @@ module type DECLARATION = sig
     (Loc.t, Loc.t) Ast.Function.Params.t ->
     unit
 
-  val let_ : env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Parse_error.t) list
+  val let_ :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
+    * Loc.t Ast.Comment.t list
+    * (Loc.t * Parse_error.t) list
 
-  val const : env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Parse_error.t) list
+  val const :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
+    * Loc.t Ast.Comment.t list
+    * (Loc.t * Parse_error.t) list
 
-  val var : env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Parse_error.t) list
+  val var :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
+    * Loc.t Ast.Comment.t list
+    * (Loc.t * Parse_error.t) list
 
   val _function : env -> (Loc.t, Loc.t) Statement.t
 
@@ -283,16 +295,17 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     in
     (fun env -> helper env [] [])
 
-  let declarations token kind env =
+  let declarations token env =
+    let leading = Peek.comments env in
     Expect.token env token;
     let (declarations, errs) = variable_declaration_list env in
-    (Statement.VariableDeclaration.{ kind; declarations }, errs)
+    (declarations, leading, errs)
 
-  let var = declarations T_VAR Statement.VariableDeclaration.Var
+  let var = declarations T_VAR
 
   let const env =
     let env = env |> with_no_let true in
-    let (variable, errs) = declarations T_CONST Statement.VariableDeclaration.Const env in
+    let (declarations, leading_comments, errs) = declarations T_CONST env in
     (* Make sure all consts defined are initialized *)
     let errs =
       List.fold_left
@@ -302,13 +315,13 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             (loc, Parse_error.NoUninitializedConst) :: errs
           | _ -> errs)
         errs
-        variable.Statement.VariableDeclaration.declarations
+        declarations
     in
-    (variable, List.rev errs)
+    (declarations, leading_comments, List.rev errs)
 
   let let_ env =
     let env = env |> with_no_let true in
-    declarations T_LET Statement.VariableDeclaration.Let env
+    declarations T_LET env
 
   let enum_declaration = Enum.declaration
 end

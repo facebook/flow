@@ -506,8 +506,8 @@ let program
     let open Ast.Statement in
     let changes =
       match (stmt1, stmt2) with
-      | ((_, VariableDeclaration var1), (_, VariableDeclaration var2)) ->
-        variable_declaration var1 var2
+      | ((loc, VariableDeclaration var1), (_, VariableDeclaration var2)) ->
+        variable_declaration loc var1 var2
       | ((_, FunctionDeclaration func1), (_, FunctionDeclaration func2)) ->
         function_declaration func1 func2
       | ((_, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ class1 class2
@@ -736,17 +736,23 @@ let program
     let expr_diff = diff_if_changed_nonopt_fn expression init1 init2 in
     join_diff_list [id_diff; expr_diff]
   and variable_declaration
+      (loc : Loc.t)
       (var1 : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
       (var2 : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) : node change list option =
     let open Ast.Statement.VariableDeclaration in
-    let { declarations = declarations1; kind = kind1 } = var1 in
-    let { declarations = declarations2; kind = kind2 } = var2 in
+    let { declarations = declarations1; kind = kind1; comments = comments1 } = var1 in
+    let { declarations = declarations2; kind = kind2; comments = comments2 } = var2 in
     if kind1 != kind2 then
       None
-    else if declarations1 != declarations2 then
-      diff_and_recurse_no_trivial variable_declarator declarations1 declarations2
     else
-      Some []
+      let declarations_diff =
+        if declarations1 != declarations2 then
+          diff_and_recurse_no_trivial variable_declarator declarations1 declarations2
+        else
+          Some []
+      in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [declarations_diff; comments_diff]
   and if_statement
       loc (if1 : (Loc.t, Loc.t) Ast.Statement.If.t) (if2 : (Loc.t, Loc.t) Ast.Statement.If.t) :
       node change list option =
@@ -1428,7 +1434,8 @@ let program
       (init2 : (Loc.t, Loc.t) Ast.Statement.For.init) : node change list option =
     let open Ast.Statement.For in
     match (init1, init2) with
-    | (InitDeclaration (_, decl1), InitDeclaration (_, decl2)) -> variable_declaration decl1 decl2
+    | (InitDeclaration (loc, decl1), InitDeclaration (_, decl2)) ->
+      variable_declaration loc decl1 decl2
     | (InitExpression expr1, InitExpression expr2) -> Some (diff_if_changed expression expr1 expr2)
     | (InitDeclaration _, InitExpression _)
     | (InitExpression _, InitDeclaration _) ->
@@ -1459,7 +1466,8 @@ let program
       (left2 : (Loc.t, Loc.t) Ast.Statement.ForIn.left) : node change list option =
     let open Ast.Statement.ForIn in
     match (left1, left2) with
-    | (LeftDeclaration (_, decl1), LeftDeclaration (_, decl2)) -> variable_declaration decl1 decl2
+    | (LeftDeclaration (loc, decl1), LeftDeclaration (_, decl2)) ->
+      variable_declaration loc decl1 decl2
     | (LeftPattern p1, LeftPattern p2) -> Some (pattern p1 p2)
     | (LeftDeclaration _, LeftPattern _)
     | (LeftPattern _, LeftDeclaration _) ->
@@ -1501,7 +1509,8 @@ let program
       (left2 : (Loc.t, Loc.t) Ast.Statement.ForOf.left) : node change list option =
     let open Ast.Statement.ForOf in
     match (left1, left2) with
-    | (LeftDeclaration (_, decl1), LeftDeclaration (_, decl2)) -> variable_declaration decl1 decl2
+    | (LeftDeclaration (loc, decl1), LeftDeclaration (_, decl2)) ->
+      variable_declaration loc decl1 decl2
     | (LeftPattern p1, LeftPattern p2) -> Some (pattern p1 p2)
     | (LeftDeclaration _, LeftPattern _)
     | (LeftPattern _, LeftDeclaration _) ->
