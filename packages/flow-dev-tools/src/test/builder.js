@@ -524,22 +524,20 @@ export class TestBuilder {
   // them with something fixed.
   sanitizeIncomingLSPMessage(params: any): any {
     // LSP sends back document URLs, to files within the test project
-    const replaceDirs = (dirs: Array<string>, str: string): string => {
+    const dirUrl = this.getDirUrl();
+    const replaceDir = (str: string): string => {
       let out = str;
-      for (let dir of dirs) {
-        let index;
-        while ((index = out.indexOf(dir)) >= 0) {
-          out =
-            out.substr(0, index) +
-            '<PLACEHOLDER_PROJECT_URL>' +
-            out.substr(index + dir.length);
-        }
+      let index;
+      while ((index = out.indexOf(dirUrl)) >= 0) {
+        out =
+          out.substr(0, index) +
+          '<PLACEHOLDER_PROJECT_URL>' +
+          out.substr(index + dirUrl.length);
       }
       return out;
     };
-    const params2 = JSON.parse(
-      replaceDirs([this.getDirUrl(), this.dir], JSON.stringify(params)),
-    );
+
+    const params2 = JSON.parse(replaceDir(JSON.stringify(params)));
 
     // Legacy IDE sends back an array of objects where those objects have
     // a '.flowVersion' field
