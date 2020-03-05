@@ -1,3 +1,26 @@
+### 0.120.0
+
+Likely to cause new Flow errors:
+
+* `$Shape` types now carry more information about the locations of errors that involve them, which may invalidate old suppressions.
+* `any`-typed values are now refined by primitive `typeof` checks ([example](https://flow.org/try/#0PTAEAEDMBsHsHcBQjoFMAuoCGA7AnqALygAUOArtNKAFzb4CUA3MgJaSnp4AOqsHuAoWGgARAGd0AJ1Y4A5qIagA3olClBtUBQC2AI1RTmoEPQKtxOAOSYs28vsNqN+LZJnzjp2AGtEAX1BUaHFUFWcSTTpdAyMmEzBJViozAOQgA)).
+
+New Features:
+
+* "Did You Mean?" IDE feature that suggests corrections to your code as you type. For example, if you write foo.bar on an object foo that doesn’t have a field named bar but does have a field named baz, the quick fix will apply that suggestion.
+
+* `declare` can now be used on class fields. When Flow implemented the class fields proposal, uninitialized class fields (e.g. `class C { foo }`) were not allowed, so we used that syntax for type-only declarations (`class C { foo: string }`). Since then, they now are initialized to `undefined` and Babel 8 will start to leave them. To maintain existing behavior, change uninitialized fields to use the `declare` keyword, signalling to Babel that they should be stripped (`class C { declare foo: string }`).
+
+Notable bug fixes:
+
+* Fixed possible stack overflow from overly long traces.
+* Fixed infinite recursion case involving polymorphic types.
+* Various improvements to the output of `type-at-pos` and `signatureHelp`
+
+Misc:
+
+* Fixed libdefs of `Notification` to have read-only fields
+
 ### 0.119.1
 
 Notable bug fixes:
