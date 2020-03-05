@@ -188,6 +188,11 @@ let get_root (state : state) : Path.t option =
   | Disconnected denv -> Some denv.d_ienv.i_root
   | _ -> None
 
+let command_key_of_path (path : Path.t) : string = File_url.create (Path.to_string path)
+
+let command_key_of_state (state : state) : string =
+  Base.Option.value_map ~f:command_key_of_path ~default:"" (get_root state)
+
 let get_open_files (state : state) : open_file_info SMap.t option =
   match state with
   | Connected cenv -> Some cenv.c_ienv.i_open_files
@@ -398,7 +403,7 @@ let show_status
             let id = Base.Option.value_exn id in
             let notification = CancelRequestNotification { CancelRequest.id } in
             let json =
-              let key = ienv.i_root |> Path.to_string in
+              let key = command_key_of_path ienv.i_root in
               Lsp_fmt.print_lsp ~key (NotificationMessage notification)
             in
             to_stdout json;
@@ -417,7 +422,7 @@ let show_status
               ShowMessageRequestRequest params.request
           in
           let json =
-            let key = ienv.i_root |> Path.to_string in
+            let key = command_key_of_path ienv.i_root in
             Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
           in
           to_stdout json;
@@ -777,7 +782,7 @@ let dismiss_tracks (state : state) : state =
     let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "Connection to server has been lost") in
     let stack = Exception.get_current_callstack_string 100 in
     let json =
-      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      let key = command_key_of_state state in
       Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack))
     in
     to_stdout json
@@ -964,7 +969,7 @@ let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : Do
   in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json =
-    let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+    let key = command_key_of_state state in
     Lsp_fmt.print_lsp ~key (ResponseMessage (id, DocumentSymbolResult result))
   in
   to_stdout json;
@@ -1671,7 +1676,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
     let json =
-      let key = Path.to_string i_root in
+      let key = command_key_of_path i_root in
       Lsp_fmt.print_lsp ~key response
     in
     to_stdout json;
@@ -1691,7 +1696,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     end;
     let response = ResponseMessage (id, ShutdownResult) in
     let json =
-      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      let key = command_key_of_state state in
       Lsp_fmt.print_lsp ~key response
     in
     to_stdout json;
@@ -1781,7 +1786,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let result = do_rage flowconfig_name state in
     let response = ResponseMessage (id, RageResult result) in
     let json =
-      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      let key = command_key_of_state state in
       Lsp_fmt.print_lsp ~key response
     in
     to_stdout json;
@@ -1829,7 +1834,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     | RequestMessage (id, _request) ->
       let e = Lsp_fmt.error_of_exn exn in
       let outgoing = ResponseMessage (id, ErrorResult (e, "")) in
-      let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+      let key = command_key_of_state state in
       to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false ~key outgoing);
       let metadata =
         let error_info = Some (LspProt.ExpectedError, e.Error.message, Utils.Callstack "") in
@@ -1872,7 +1877,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           | _ -> (outgoing, metadata, LspInteraction.Responded)
         in
         let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
-        let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+        let key = command_key_of_state state in
         to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false ~key outgoing);
         (state, metadata, ux)
     in
@@ -1922,7 +1927,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
            * need to notify the client *)
           None)
     in
-    let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+    let key = command_key_of_state state in
     Base.Option.iter outgoing ~f:(fun outgoing ->
         let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
         to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false ~key outgoing));
@@ -2265,7 +2270,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
       let () =
         match event with
         | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
-          let key = Base.Option.value ~default:Path.dummy_path (get_root state) |> Path.to_string in
+          let key = command_key_of_state state in
           let json = Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack)) in
           to_stdout json
         | _ -> Lsp_helpers.telemetry_error to_stdout text
