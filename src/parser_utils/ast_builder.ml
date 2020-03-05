@@ -135,7 +135,8 @@ module Functions = struct
 
   let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
 
-  let body ?(loc = Loc.none) stmts = BodyBlock (loc, { Ast.Statement.Block.body = stmts })
+  let body ?(loc = Loc.none) ?comments stmts =
+    BodyBlock (loc, { Ast.Statement.Block.body = stmts; comments })
 
   let body_expression expr = BodyExpression expr
 
@@ -217,7 +218,7 @@ module Statements = struct
 
   let empty () = (Loc.none, Empty)
 
-  let block children = (Loc.none, Block { Block.body = children })
+  let block ?comments children = (Loc.none, Block { Block.body = children; comments })
 
   let while_ test ?comments body = (Loc.none, While { While.test; body; comments })
 

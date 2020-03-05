@@ -153,9 +153,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method block (stmt : ('M, 'T) Ast.Statement.Block.t) : ('N, 'U) Ast.Statement.Block.t =
       let open Ast.Statement.Block in
-      let { body } = stmt in
+      let { body; comments } = stmt in
       let body' = this#statement_list body in
-      { body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { body = body'; comments = comments' }
 
     method break (break : 'M Ast.Statement.Break.t) : 'N Ast.Statement.Break.t =
       let open Ast.Statement.Break in

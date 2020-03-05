@@ -208,6 +208,14 @@
             "range":[196,305],
             "block":{
               "type":"BlockStatement",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":13,"column":6},"end":{"line":13,"column":24}},
+                  "range":[200,218],
+                  "value":" 2.1 Trailing "
+                }
+              ],
               "loc":{"source":null,"start":{"line":13,"column":25},"end":{"line":16,"column":3}},
               "range":[219,268],
               "body":[
@@ -255,6 +263,14 @@
               },
               "body":{
                 "type":"BlockStatement",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":19,"column":2},"end":{"line":19,"column":30}},
+                    "range":[308,336],
+                    "value":" 2.3 Not try Trailing B "
+                  }
+                ],
                 "loc":{"source":null,"start":{"line":16,"column":15},"end":{"line":18,"column":3}},
                 "range":[280,305],
                 "body":[
@@ -355,6 +371,14 @@
             "range":[391,497],
             "block":{
               "type":"BlockStatement",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":24}},
+                  "range":[395,413],
+                  "value":" 3.2 Trailing "
+                }
+              ],
               "loc":{"source":null,"start":{"line":24,"column":25},"end":{"line":27,"column":3}},
               "range":[414,463],
               "body":[
@@ -391,6 +415,14 @@
             "handler":null,
             "finalizer":{
               "type":"BlockStatement",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":30,"column":2},"end":{"line":30,"column":24}},
+                  "range":[500,522],
+                  "value":" 3.4 Not Trailing "
+                }
+              ],
               "loc":{"source":null,"start":{"line":27,"column":12},"end":{"line":29,"column":3}},
               "range":[472,497],
               "body":[

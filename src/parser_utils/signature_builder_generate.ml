@@ -1342,6 +1342,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
               {
                 Ast.Statement.Block.body =
                   [(_, Ast.Statement.Return { Ast.Statement.Return.argument = Some e; _ })];
+                comments = _;
               } )
         | Ast.Function.BodyExpression e ) ) ->
       Some (loc, Ast.Type.Predicate.Declared e)

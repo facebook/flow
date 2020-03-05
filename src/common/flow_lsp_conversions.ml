@@ -401,7 +401,7 @@ module DocumentSymbols = struct
       ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Function
     | ( loc,
         DeclareModule
-          { DeclareModule.id = DeclareModule.Identifier id; body = (_, { Block.body }); _ } ) ->
+          { DeclareModule.id = DeclareModule.Identifier id; body = (_, { Block.body; _ }); _ } ) ->
       let acc = ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Module in
       let containerName = Some (name_of_id id) in
       Base.List.fold body ~init:acc ~f:(ast_statement ~uri ~containerName)

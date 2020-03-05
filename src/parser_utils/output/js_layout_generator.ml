@@ -1463,9 +1463,10 @@ and function_return return predicate =
     fuse [type_annotation ret; pretty_space; type_predicate pred]
   | (Ast.Type.Available ret, None) -> type_annotation ret
 
-and block (loc, { Ast.Statement.Block.body }) =
+and block (loc, { Ast.Statement.Block.body; comments }) =
   let statements = statement_list ~pretty_semicolon:true body in
   source_location_with_comments
+    ?comments
     ( loc,
       if statements <> [] then
         group

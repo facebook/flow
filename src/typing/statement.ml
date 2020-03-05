@@ -445,7 +445,9 @@ and toplevel_decls cx = List.iter (statement_decl cx)
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx =
   let open Ast.Statement in
-  let block_body cx { Block.body } = Env.in_lex_scope cx (fun () -> toplevel_decls cx body) in
+  let block_body cx { Block.body; comments = _ } =
+    Env.in_lex_scope cx (fun () -> toplevel_decls cx body)
+  in
   let catch_clause cx { Try.CatchClause.body = (_, b); _ } = block_body cx b in
   function
   | (_, Empty) -> ()
@@ -778,7 +780,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                       annot = Ast.Type.Missing (mloc, t);
                       optional;
                     } );
-            body = (b_loc, { Block.body = stmts });
+            body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
             comments;
           },
           abnormal_opt )
@@ -790,19 +792,23 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         (Tast_utils.error_mapper#catch_clause catch_clause, None))
     | None ->
       let (stmts, abnormal_opt) = Env.in_lex_scope cx (fun () -> check cx b) in
-      ( { Try.CatchClause.param = None; body = (b_loc, { Block.body = stmts }); comments },
+      ( {
+          Try.CatchClause.param = None;
+          body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
+          comments;
+        },
         abnormal_opt )
   in
   function
   | (_, Empty) as stmt -> stmt
-  | (loc, Block { Block.body }) ->
+  | (loc, Block { Block.body; comments }) ->
     let (body, abnormal_opt) =
       Abnormal.catch_stmts_control_flow_exception (fun () ->
           Env.in_lex_scope cx (fun () ->
               toplevel_decls cx body;
               toplevels cx body))
     in
-    Abnormal.check_stmt_control_flow_exception ((loc, Block { Block.body }), abnormal_opt)
+    Abnormal.check_stmt_control_flow_exception ((loc, Block { Block.body; comments }), abnormal_opt)
   | (loc, Expression { Expression.expression = e; directive }) ->
     (loc, Expression { Expression.expression = expression cx e; directive })
   (* Refinements for `if` are derived by the following Hoare logic rule:
@@ -1513,7 +1519,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | None ->
         Env.update_env cx loc nonthrow_finally_env;
         (None, None)
-      | Some (f_loc, { Block.body }) ->
+      | Some (f_loc, { Block.body; comments }) ->
         (* analyze twice, with different start states *)
 
         (* 1. throwing-finally case. *)
@@ -1539,7 +1545,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                   toplevel_decls cx body;
                   toplevels cx body))
         in
-        (Some (f_loc, { Block.body = finally_block_ast }), finally_abnormal)
+        (Some (f_loc, { Block.body = finally_block_ast; comments }), finally_abnormal)
     in
     let newset = Changeset.Global.merge oldset in
     ignore newset;
@@ -1548,7 +1554,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       ( loc,
         Try
           {
-            Try.block = (b_loc, { Block.body = try_block_ast });
+            Try.block = (b_loc, { Block.body = try_block_ast; comments = b.Block.comments });
             handler = catch_ast;
             finalizer = finally_ast;
             comments;
@@ -2061,7 +2067,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
         (id_loc, value)
     in
-    let (body_loc, { Ast.Statement.Block.body = elements }) = body in
+    let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) = body in
     let module_ref = Reason.internal_module_name name in
     let module_scope = Scope.fresh () in
     Scope.add_entry
@@ -2133,7 +2139,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 | DeclareModule.Literal (id_loc, lit) ->
                   DeclareModule.Literal ((id_loc, module_t), lit)
               end;
-            body = (body_loc, { Block.body = elements_ast });
+            body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
             kind;
           } )
     in
@@ -7810,6 +7816,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                           comments = Flow_ast_utils.mk_comments_opt ();
                         } );
                   ];
+                comments = Flow_ast_utils.mk_comments_opt ();
               } )
         in
         let return = Ast.Type.Available (loc, return) in
@@ -7844,6 +7851,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                                   Ast.Statement.Return
                                     { Ast.Statement.Return.argument = Some e; comments = _ } );
                               ];
+                            comments = _;
                           } );
                     _;
                   } ) ->

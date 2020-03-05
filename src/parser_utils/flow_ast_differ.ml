@@ -515,7 +515,7 @@ let program
       | ((loc, If if1), (_, If if2)) -> if_statement loc if1 if2
       | ((_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2)) ->
         expression_statement expr1 expr2
-      | ((_, Block block1), (_, Block block2)) -> block block1 block2
+      | ((loc, Block block1), (_, Block block2)) -> block loc block1 block2
       | ((_, For for1), (_, For for2)) -> for_statement for1 for2
       | ((_, ForIn for_in1), (_, ForIn for_in2)) -> for_in_statement for_in1 for_in2
       | ((loc, While while1), (_, While while2)) -> Some (while_statement loc while1 while2)
@@ -723,7 +723,7 @@ let program
     let open Ast.Function in
     match (body1, body2) with
     | (BodyExpression e1, BodyExpression e2) -> expression e1 e2 |> Base.Option.return
-    | (BodyBlock (_, block1), BodyBlock (_, block2)) -> block block1 block2
+    | (BodyBlock (loc, block1), BodyBlock (_, block2)) -> block loc block1 block2
     | _ -> None
   and variable_declarator
       (decl1 : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t)
@@ -783,19 +783,25 @@ let program
   and try_
       loc (try1 : (Loc.t, Loc.t) Ast.Statement.Try.t) (try2 : (Loc.t, Loc.t) Ast.Statement.Try.t) =
     let open Ast.Statement.Try in
-    let { block = (_, block1); handler = handler1; finalizer = finalizer1; comments = comments1 } =
+    let {
+      block = (block_loc, block1);
+      handler = handler1;
+      finalizer = finalizer1;
+      comments = comments1;
+    } =
       try1
     in
     let { block = (_, block2); handler = handler2; finalizer = finalizer2; comments = comments2 } =
       try2
     in
     let comments = syntax_opt loc comments1 comments2 in
-    let block_diff = diff_if_changed_ret_opt block block1 block2 in
+    let block_diff = diff_if_changed_ret_opt (block block_loc) block1 block2 in
     let finalizer_diff =
-      diff_if_changed_opt
-        block
-        (Base.Option.map ~f:snd finalizer1)
-        (Base.Option.map ~f:snd finalizer2)
+      match (finalizer1, finalizer2) with
+      | (Some (loc, finalizer1), Some (_, finalizer2)) ->
+        diff_if_changed_ret_opt (block loc) finalizer1 finalizer2
+      | (None, None) -> Some []
+      | _ -> None
     in
     let handler_diff = diff_if_changed_opt handler handler1 handler2 in
     join_diff_list [comments; block_diff; finalizer_diff; handler_diff]
@@ -803,10 +809,10 @@ let program
       (hand1 : (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t)
       (hand2 : (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t) =
     let open Ast.Statement.Try.CatchClause in
-    let (old_loc, { body = (_, block1); param = param1; comments = comments1 }) = hand1 in
+    let (old_loc, { body = (block_loc, block1); param = param1; comments = comments1 }) = hand1 in
     let (_new_loc, { body = (_, block2); param = param2; comments = comments2 }) = hand2 in
     let comments = syntax_opt old_loc comments1 comments2 in
-    let body_diff = diff_if_changed_ret_opt block block1 block2 in
+    let body_diff = diff_if_changed_ret_opt (block block_loc) block1 block2 in
     let param_diff = diff_if_changed_nonopt_fn pattern param1 param2 in
     join_diff_list [comments; body_diff; param_diff]
   and class_ (class1 : (Loc.t, Loc.t) Ast.Class.t) (class2 : (Loc.t, Loc.t) Ast.Class.t) =
@@ -936,12 +942,15 @@ let program
     else
       function_ value1 value2
   and block
+      (loc : Loc.t)
       (block1 : (Loc.t, Loc.t) Ast.Statement.Block.t)
       (block2 : (Loc.t, Loc.t) Ast.Statement.Block.t) : node change list option =
     let open Ast.Statement.Block in
-    let { body = body1 } = block1 in
-    let { body = body2 } = block2 in
-    statement_list body1 body2
+    let { body = body1; comments = comments1 } = block1 in
+    let { body = body2; comments = comments2 } = block2 in
+    let body_diff = statement_list body1 body2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [body_diff; comments_diff]
   and expression_statement
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Expression.t)
       (stmt2 : (Loc.t, Loc.t) Ast.Statement.Expression.t) : node change list option =

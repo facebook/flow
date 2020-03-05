@@ -48,6 +48,22 @@
       },
       "body":{
         "type":"BlockStatement",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":18}},
+            "range":[98,105],
+            "value":"end"
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":52},"end":{"line":1,"column":60}},
+            "range":[52,60],
+            "value":"mid4"
+          }
+        ],
         "loc":{"source":null,"start":{"line":1,"column":61},"end":{"line":3,"column":10}},
         "range":[61,97],
         "body":[

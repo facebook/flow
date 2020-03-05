@@ -890,16 +890,18 @@ module Statement
           Statement.DeclareModule.Literal (loc, { StringLiteral.value; raw })
         | _ -> Statement.DeclareModule.Identifier (Parse.identifier env)
       in
-      let (body_loc, (module_kind, body)) =
+      let (body_loc, ((module_kind, body), comments)) =
         with_loc
           (fun env ->
+            let leading = Peek.comments env in
             Expect.token env T_LCURLY;
             let res = module_items env ~module_kind:None [] in
             Expect.token env T_RCURLY;
-            res)
+            let trailing = Peek.comments env in
+            (res, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
           env
       in
-      let body = (body_loc, { Statement.Block.body }) in
+      let body = (body_loc, { Statement.Block.body; comments }) in
       let loc = Loc.btwn start_loc body_loc in
       let kind =
         match module_kind with

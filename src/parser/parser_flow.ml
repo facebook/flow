@@ -304,21 +304,29 @@ module rec Parse : PARSER = struct
 
   and block_body env =
     let start_loc = Peek.loc env in
+    let leading = Peek.comments env in
     Expect.token env T_LCURLY;
     let term_fn t = t = T_RCURLY in
     let body = statement_list ~term_fn env in
     let end_loc = Peek.loc env in
     Expect.token env T_RCURLY;
-    (Loc.btwn start_loc end_loc, { Ast.Statement.Block.body })
+    let trailing = Peek.comments env in
+    ( Loc.btwn start_loc end_loc,
+      { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    )
 
   and function_block_body env =
     let start_loc = Peek.loc env in
+    let leading = Peek.comments env in
     Expect.token env T_LCURLY;
     let term_fn t = t = T_RCURLY in
     let (body, strict) = statement_list_with_directives ~term_fn env in
     let end_loc = Peek.loc env in
     Expect.token env T_RCURLY;
-    (Loc.btwn start_loc end_loc, { Ast.Statement.Block.body }, strict)
+    let trailing = Peek.comments env in
+    ( Loc.btwn start_loc end_loc,
+      { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () },
+      strict )
 
   and jsx_element_or_fragment = JSX.element_or_fragment
 

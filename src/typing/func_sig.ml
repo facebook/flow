@@ -234,8 +234,8 @@ module Make (F : Func_params.S) = struct
       let open Ast.Statement in
       match body with
       | None -> ([], Fn.const None)
-      | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
-        (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body }))))
+      | Some (Ast.Function.BodyBlock (loc, { Block.body; comments })) ->
+        (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body; comments }))))
       | Some (Ast.Function.BodyExpression expr) ->
         ( [
             ( fst expr,

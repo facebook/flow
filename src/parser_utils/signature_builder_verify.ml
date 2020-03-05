@@ -600,6 +600,7 @@ module Eval (Env : EvalEnv) = struct
               {
                 Ast.Statement.Block.body =
                   [(_, Ast.Statement.Return { Ast.Statement.Return.argument = Some e; _ })];
+                comments = _;
               } )
         | Ast.Function.BodyExpression e ) ) ->
       let (_, { Ast.Function.Params.params; _ }) = params in

@@ -220,12 +220,13 @@ class ['loc] mapper =
 
     method block _loc (stmt : ('loc, 'loc) Ast.Statement.Block.t) =
       let open Ast.Statement.Block in
-      let { body } = stmt in
+      let { body; comments } = stmt in
       let body' = this#statement_list body in
-      if body == body' then
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
         stmt
       else
-        { body = body' }
+        { body = body'; comments = comments' }
 
     method break _loc (break : 'loc Ast.Statement.Break.t) =
       let open Ast.Statement.Break in

@@ -201,6 +201,22 @@
             },
             "consequent":{
               "type":"BlockStatement",
+              "trailingComments":[
+                {
+                  "type":"Line",
+                  "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":21}},
+                  "range":[299,316],
+                  "value":" not trailing 1"
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
+                  "range":[249,265],
+                  "value":" trailing 1 "
+                }
+              ],
               "loc":{"source":null,"start":{"line":12,"column":32},"end":{"line":14,"column":5}},
               "range":[266,294],
               "body":[
@@ -332,6 +348,22 @@
             },
             "consequent":{
               "type":"BlockStatement",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":26}},
+                  "range":[533,553],
+                  "value":" not trailing 2 "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
+                  "range":[486,502],
+                  "value":" trailing 2 "
+                }
+              ],
               "loc":{"source":null,"start":{"line":22,"column":56},"end":{"line":24,"column":5}},
               "range":[503,532],
               "body":[
@@ -400,6 +432,22 @@
               },
               "consequent":{
                 "type":"BlockStatement",
+                "trailingComments":[
+                  {
+                    "type":"Line",
+                    "loc":{"source":null,"start":{"line":27,"column":4},"end":{"line":27,"column":21}},
+                    "range":[667,684],
+                    "value":" not trailing 3"
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
+                    "range":[617,633],
+                    "value":" trailing 3 "
+                  }
+                ],
                 "loc":{"source":null,"start":{"line":24,"column":107},"end":{"line":26,"column":5}},
                 "range":[634,662],
                 "body":[

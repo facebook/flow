@@ -335,6 +335,14 @@
             "range":[432,587],
             "body":{
               "type":"BlockStatement",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
+                  "range":[459,498],
+                  "value":" 3.0. pre-keyword trailing comment "
+                }
+              ],
               "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":24,"column":5}},
               "range":[435,458],
               "body":[
