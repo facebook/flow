@@ -5,7 +5,7 @@
 
 import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
-import {createWriteStream} from 'fs';
+import {createWriteStream, realpathSync} from 'fs';
 import {platform, tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
@@ -966,7 +966,9 @@ export default class Builder {
   static builders: Array<TestBuilder> = [];
 
   static getDirForRun(runID: string): string {
-    return VscodeURI.file(join(tmpdir(), 'flow', 'tests', runID)).fsPath;
+    // tmpdir() is a symlink on macOS, canonicalize it
+    const tmp = realpathSync(tmpdir());
+    return VscodeURI.file(join(tmp, 'flow', 'tests', runID)).fsPath;
   }
 
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
