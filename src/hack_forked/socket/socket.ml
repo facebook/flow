@@ -69,6 +69,8 @@ let get_path path =
       let digest = OpaqueDigest.to_hex (OpaqueDigest.string root_part) in
       (* 5 char prefix + 5 char suffix + 2 periods *)
       let max_digest_length = max_root_part_length - 12 in
+      if max_digest_length < 0 then
+        failwith (Printf.sprintf "Can't create socket path %S: %S is too long" path dir);
       let digest_part =
         if String.length digest > max_digest_length then
           String.sub digest 0 max_digest_length
