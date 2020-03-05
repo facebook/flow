@@ -12,7 +12,7 @@ type 'loc ident = 'loc * string
 type 'loc source = 'loc * string
 
 val fold_bindings_of_pattern :
-  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) -> 'a -> ('loc, 'loc) Flow_ast.Pattern.t' -> 'a
+  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) -> 'a -> ('loc, 'loc) Flow_ast.Pattern.t -> 'a
 
 val fold_bindings_of_variable_declarations :
   ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) ->

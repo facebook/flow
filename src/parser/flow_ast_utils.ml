@@ -18,29 +18,30 @@ let rec fold_bindings_of_pattern =
     let property f acc =
       Object.(
         function
-        | Property (_, { Property.pattern = (_, p); _ })
-        | RestProperty (_, { RestProperty.argument = (_, p) }) ->
+        | Property (_, { Property.pattern = p; _ })
+        | RestProperty (_, { RestProperty.argument = p }) ->
           fold_bindings_of_pattern f acc p)
     in
     let element f acc =
       Array.(
         function
         | None -> acc
-        | Some (Element (_, { Element.argument = (_, p); default = _ }))
-        | Some (RestElement (_, { RestElement.argument = (_, p) })) ->
+        | Some (Element (_, { Element.argument = p; default = _ }))
+        | Some (RestElement (_, { RestElement.argument = p })) ->
           fold_bindings_of_pattern f acc p)
     in
     fun f acc -> function
-      | Identifier { Identifier.name; _ } -> f acc name
-      | Object { Object.properties; _ } -> List.fold_left (property f) acc properties
-      | Array { Array.elements; _ } -> List.fold_left (element f) acc elements
-      | Expression _ -> failwith "expression pattern")
+      | (_, Identifier { Identifier.name; _ }) -> f acc name
+      | (_, Object { Object.properties; _ }) -> List.fold_left (property f) acc properties
+      | (_, Array { Array.elements; _ }) -> List.fold_left (element f) acc elements
+      (* This is for assignment and default param destructuring `[a.b=1]=c`, ignore these for now. *)
+      | (_, Expression _) -> acc)
 
 let fold_bindings_of_variable_declarations f acc declarations =
   let open Flow_ast.Statement.VariableDeclaration in
   List.fold_left
     (fun acc -> function
-      | (_, { Declarator.id = (_, pattern); _ }) -> fold_bindings_of_pattern f acc pattern)
+      | (_, { Declarator.id = pattern; _ }) -> fold_bindings_of_pattern f acc pattern)
     acc
     declarations
 
