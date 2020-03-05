@@ -1,0 +1,75 @@
+Error ---------------------------------------------------------------------------------------------- positining.js:23:18
+
+number literal `3` [1] is incompatible with empty [2] in the first argument.
+
+   positining.js:23:18
+   23|   selectedValue: X,
+                        ^
+
+References:
+   positining.js:12:14
+   12|   +$refType: 3,
+                    ^ [1]
+   positining.js:17:20
+   17|   (<T: {+$refType: empty, ...}>(T) => T) &
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- positining.js:23:18
+
+number literal `3` [1] is incompatible with empty [2] in type argument `T` of the first argument.
+
+   positining.js:23:18
+   23|   selectedValue: X,
+                        ^
+
+References:
+   positining.js:12:14
+   12|   +$refType: 3,
+                    ^ [1]
+   positining.js:18:22
+   18|     (<T: {+$refType: empty, ...}>(?T) => ?T) &
+                            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- positining.js:28:2
+
+Cannot cast `x` to `$RelayProps` because property `$fragmentRefs` is missing in object type [1] but exists in
+`$FragmentRef` [2] in property `selectedValue`.
+
+   positining.js:28:2
+   28| (x: $RelayProps<Props>);
+        ^
+
+References:
+   positining.js:23:18
+   23|   selectedValue: X,
+                        ^ [1]
+   positining.js:19:49
+   19|     (<TRef: 3, T: {+$refType: TRef, ...}>(T) => $FragmentRef<T>),
+                                                       ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- positining.js:28:2
+
+Cannot cast `x` to `$RelayProps` because property `$refType` is missing in `$FragmentRef` [1] but exists in object
+type [2] in property `selectedValue`.
+
+   positining.js:28:2
+   28| (x: $RelayProps<Props>);
+        ^
+
+References:
+   positining.js:19:49
+   19|     (<TRef: 3, T: {+$refType: TRef, ...}>(T) => $FragmentRef<T>),
+                                                       ^^^^^^^^^^^^^^^ [1]
+   positining.js:23:18
+   23|   selectedValue: X,
+                        ^ [2]
+
+
+
+Found 4 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

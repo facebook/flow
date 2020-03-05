@@ -373,17 +373,7 @@ module Friendly = struct
         (* Finish our error message with a period. But only if frames
          * is empty! *)
         let message = message @ [text "."] in
-        (* Get the primary location. It is the root location if error.loc is
-         * outside of the root location. *)
-        let primary_loc =
-          match error.root with
-          | None -> error.loc
-          | Some { root_loc; _ } ->
-            if Loc.contains root_loc error.loc then
-              error.loc
-            else
-              root_loc
-        in
+        let primary_loc = error.loc in
         (hidden_branches, primary_loc, { group_message = message; group_message_list = [] })
       (* If there are no frames then we only want to add the root message (if we
        * have one) and return. We can safely ignore acc_frames. If a message has
@@ -424,7 +414,7 @@ module Friendly = struct
             ~show_all_branches
             ~hidden_branches
             (frames :: (acc_frames' @ acc_frames))
-            { speculation_error with root = error.root }
+            { speculation_error with root = error.root; loc = error.loc }
         (* If there were more then one branches with high scores add them all
          * together in an error message group. *)
         | _ ->
