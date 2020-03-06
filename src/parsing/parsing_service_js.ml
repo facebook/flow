@@ -404,81 +404,72 @@ let do_parse ~parse_options ~info content file =
     | _ ->
       (* either all=true or @flow pragma exists *)
       let types_checked = types_checked types_mode info in
-      (* always parse types for .flow files -- NB: will _not_ be inferred *)
-      let types = types_checked || Docblock.isDeclarationFile info in
-      if not types then
+      if not types_checked then
         Parse_skip Skip_non_flow_file
       else
-        let (ast, parse_errors) = parse_source_file ~fail ~types ~use_strict content file in
-
         (* NOTE: if ~fail:true, we'll never get parse errors here *)
+        let (ast, parse_errors) = parse_source_file ~fail ~types:true ~use_strict content file in
 
-        (* Only calculate file sigs for files which will actually be inferred.
-         * The only files which are parsed but not inferred are .flow files with
-         * no @flow pragma. *)
-        if types_checked then
-          let prevent_munge = Docblock.preventMunge info || prevent_munge in
-          (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-             property named `propTypes` in any class. It should be killed with fire or replaced with
-             something that only works for React classes, in which case we must make a corresponding
-             change in the type system that enforces that any such property is private. *)
-          let ignore_static_propTypes = true in
-          (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
-             recognize and process a custom `keyMirror` function that makes an enum out of the keys
-             of an object. *)
-          let facebook_keyMirror = true in
-          let { File_sig.With_Loc.toplevel_names; exports_info } =
-            File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix
+        let prevent_munge = Docblock.preventMunge info || prevent_munge in
+        (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
+            property named `propTypes` in any class. It should be killed with fire or replaced with
+            something that only works for React classes, in which case we must make a corresponding
+            change in the type system that enforces that any such property is private. *)
+        let ignore_static_propTypes = true in
+        (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
+            recognize and process a custom `keyMirror` function that makes an enum out of the keys
+            of an object. *)
+        let facebook_keyMirror = true in
+        let { File_sig.With_Loc.toplevel_names; exports_info } =
+          File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix
+        in
+        (match exports_info with
+        | Ok exports_info ->
+          let signature = Signature_builder.program ast ~exports_info ~toplevel_names in
+          let (errors, env, sig_ast) =
+            Signature_builder.Signature.verify_and_generate
+              ~prevent_munge
+              ~facebook_fbt
+              ~ignore_static_propTypes
+              ~facebook_keyMirror
+              signature
+              ast
           in
-          match exports_info with
-          | Ok exports_info ->
-            let signature = Signature_builder.program ast ~exports_info ~toplevel_names in
-            let (errors, env, sig_ast) =
-              Signature_builder.Signature.verify_and_generate
-                ~prevent_munge
-                ~facebook_fbt
-                ~ignore_static_propTypes
-                ~facebook_keyMirror
-                signature
-                ast
-            in
-            let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
-            let (aloc_table, sig_ast) =
-              if abstract_locations then
-                let (aloc_table, sig_ast) = Ast_loc_utils.keyify_alocs file sig_ast in
-                (Some aloc_table, sig_ast)
-              else
-                (None, sig_ast)
-            in
-            let env =
-              match arch with
-              | Options.Classic -> None
-              | Options.TypesFirst ->
-                Some
-                  (SMap.map
-                     (fun lmap ->
-                       Loc_collections.LocMap.fold
-                         (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
-                         lmap
-                         Loc_collections.LocSet.empty)
-                     env)
-            in
-            let file_sig = File_sig.With_Loc.verified errors env (snd signature) in
-            let sig_file_sig =
-              match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
-              | Ok fs -> fs
-              | Error _ -> assert false
-            in
-            begin
-              match arch with
-              | Options.Classic -> Parse_ok (Classic (ast, file_sig), parse_errors)
-              | Options.TypesFirst ->
-                Parse_ok
-                  (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)), parse_errors)
-            end
-          | Error e -> Parse_fail (File_sig_error e)
-        else
-          Parse_ok (Classic (ast, File_sig.With_Loc.init), parse_errors)
+          let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
+          let (aloc_table, sig_ast) =
+            if abstract_locations then
+              let (aloc_table, sig_ast) = Ast_loc_utils.keyify_alocs file sig_ast in
+              (Some aloc_table, sig_ast)
+            else
+              (None, sig_ast)
+          in
+          let env =
+            match arch with
+            | Options.Classic -> None
+            | Options.TypesFirst ->
+              Some
+                (SMap.map
+                   (fun lmap ->
+                     Loc_collections.LocMap.fold
+                       (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
+                       lmap
+                       Loc_collections.LocSet.empty)
+                   env)
+          in
+          let file_sig = File_sig.With_Loc.verified errors env (snd signature) in
+          let sig_file_sig =
+            match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
+            | Ok fs -> fs
+            | Error _ -> assert false
+          in
+          begin
+            match arch with
+            | Options.Classic -> Parse_ok (Classic (ast, file_sig), parse_errors)
+            | Options.TypesFirst ->
+              Parse_ok
+                (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)), parse_errors)
+          end
+        | Error e -> Parse_fail (File_sig_error e))
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
