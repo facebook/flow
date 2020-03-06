@@ -285,11 +285,9 @@ export default suite(
               items: [
                 {
                   label: 'React',
-                  kind: 6,
-                  detail:
-                    '{|+AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React...',
-                  inlineDetail:
-                    '{|+AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React...',
+                  kind: 9,
+                  detail: 'module React',
+                  inlineDetail: 'module React',
                   insertTextFormat: 1,
                 },
                 {
@@ -739,12 +737,100 @@ export default suite(
       }).verifyAllLSPMessagesInStep(
         [
           (() => {
-            const expectedSubstrings = [
-              '"newText":"Typologies."',
-              '"newText":"Types."',
-            ];
-
-            return `textDocument/completion{${expectedSubstrings.join(',')}}`;
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'Typologies',
+                  kind: 9,
+                  detail: 'module Typologies',
+                  inlineDetail: 'module Typologies',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typography',
+                  kind: 7,
+                  detail: 'class Typewriter',
+                  inlineDetail: 'class Typewriter',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typewriter',
+                  kind: 7,
+                  detail: 'class Typewriter',
+                  inlineDetail: 'class Typewriter',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Types',
+                  kind: 9,
+                  detail: 'module Types',
+                  inlineDetail: 'module Types',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typesafe',
+                  kind: 8,
+                  detail: 'interface Typesafety',
+                  inlineDetail: 'interface Typesafety',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typhoon',
+                  kind: 13,
+                  detail: 'type Typhoon = string',
+                  inlineDetail: 'type Typhoon = string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typnotism',
+                  kind: 13,
+                  detail: 'type Typnotism = number',
+                  inlineDetail: 'type Typnotism = number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Tyrant',
+                  kind: 13,
+                  detail: 'type Tyrant = string',
+                  inlineDetail: 'type Tyrant = string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Tympanic',
+                  kind: 13,
+                  detail: 'type Tympanic = number',
+                  inlineDetail: 'type Tympanic = number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typeset',
+                  kind: 8,
+                  detail: 'interface Typeset',
+                  inlineDetail: 'interface Typeset',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typaram',
+                  kind: 25,
+                  detail: 'Typaram',
+                  inlineDetail: 'Typaram',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],

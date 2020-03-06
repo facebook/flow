@@ -8,61 +8,53 @@
 module FilenameMap = Utils_js.FilenameMap
 
 let check_type_visitor wrap =
-  Ty.(
-    object (self)
-      inherit [_] iter_ty as super
+  let open Ty in
+  object (self)
+    inherit [_] iter_ty as super
 
-      method! private on_prop env =
-        function
-        | NamedProp { prop; _ } -> self#on_named_prop env prop
-        | IndexProp d -> self#on_dict env d
-        | CallProp _ -> wrap (Reason.RCustom "object Call Property")
-        | SpreadProp _ -> wrap (Reason.RCustom "object Spread Property")
+    method! private on_prop env =
+      function
+      | NamedProp { prop; _ } -> self#on_named_prop env prop
+      | IndexProp d -> self#on_dict env d
+      | CallProp _ -> wrap (Reason.RCustom "object Call Property")
+      | SpreadProp _ -> wrap (Reason.RCustom "object Spread Property")
 
-      method! private on_named_prop env =
-        function
-        | Field { t; _ } -> self#on_t env t
-        | Method _ -> wrap (Reason.RMethod None)
-        | Get _
-        | Set _ ->
-          wrap Reason.RGetterSetterProperty
+    method! private on_named_prop env =
+      function
+      | Field { t; _ } -> self#on_t env t
+      | Method _ -> wrap (Reason.RMethod None)
+      | Get _
+      | Set _ ->
+        wrap Reason.RGetterSetterProperty
 
-      method! on_t env =
-        function
-        | TVar _ -> wrap (Reason.RCustom "recursive type")
-        | Fun _ -> wrap Reason.RFunctionType
-        | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
-        | Mu _ -> wrap (Reason.RCustom "recursive type")
-        | Any Annotated -> Reason.RAnyExplicit |> wrap
-        | Any _ -> Reason.RAnyImplicit |> wrap
-        | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
-        | Top -> wrap Reason.RMixed
-        | Bot _ -> wrap Reason.REmpty
-        | Module (Some { Ty.sym_name; _ }, _) -> wrap (Reason.RModule sym_name)
-        | TypeAlias { ta_tparams = None; ta_type = Some t; _ } -> self#on_t env t
-        | TypeAlias { ta_name = { Ty.sym_name; _ }; _ } ->
-          wrap (Reason.RCustom ("type alias " ^ sym_name))
-        | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
-        | Void
-        | Null
-        | Symbol
-        | Num _
-        | Str _
-        | Bool _
-        | NumLit _
-        | StrLit _
-        | BoolLit _
-        | TypeOf _
-        | Generic _
-        | ClassDecl _
-        | InterfaceDecl _
-        | EnumDecl _
-        | Utility _
-        | Module _
-        | CharSet _
-        | InlineInterface _ ->
-          ()
-    end)
+    method! on_t env =
+      function
+      | TVar _ -> wrap (Reason.RCustom "recursive type")
+      | Fun _ -> wrap Reason.RFunctionType
+      | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
+      | Mu _ -> wrap (Reason.RCustom "recursive type")
+      | Any Annotated -> Reason.RAnyExplicit |> wrap
+      | Any _ -> Reason.RAnyImplicit |> wrap
+      | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
+      | Top -> wrap Reason.RMixed
+      | Bot _ -> wrap Reason.REmpty
+      | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
+      | Void
+      | Null
+      | Symbol
+      | Num _
+      | Str _
+      | Bool _
+      | NumLit _
+      | StrLit _
+      | BoolLit _
+      | TypeOf _
+      | Generic _
+      | Utility _
+      | CharSet _
+      | InlineInterface _ ->
+        ()
+  end
 
 let detect_invalid_calls ~full_cx file_sigs cxs tasts =
   let options = Ty_normalizer_env.default_options in
@@ -78,7 +70,8 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
             (Error_message.EInvalidTypeArgs (reason_main, Reason.mk_reason reason call_loc))
         in
         match Ty_normalizer.from_scheme ~options ~genv scheme with
-        | Ok ty -> (check_type_visitor wrap)#on_t () ty
+        | Ok (Ty.Type ty) -> (check_type_visitor wrap)#on_t () ty
+        | Ok _
         | Error _ ->
           let { Type.TypeScheme.type_ = t; _ } = scheme in
           wrap (Type.desc_of_t t))

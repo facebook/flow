@@ -17,7 +17,7 @@ val type_at_pos :
   File_key.t ->
   int ->
   int ->
-  (Loc.t * Ty.t option) * (string * Hh_json.json) list
+  (Loc.t * Ty.elt option) * (string * Hh_json.json) list
 
 val dump_types :
   expand_aliases:bool ->

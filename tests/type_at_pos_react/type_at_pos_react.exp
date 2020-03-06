@@ -39,12 +39,118 @@ lazy_ref.js:14:9 = {|default: React$AbstractComponent<empty, {|moo: (x: string) 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{|default: React$AbstractComponent<empty, void>|}>
 lazy_ref.js:19:9,19:9
-react_component.js:3:9 = {|
-  +AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React$AbstractComponent<
-    Config,
-    Instance,
-  >,
-  +Children: {
+react_component.js:3:9 = module "react" {
+  declare var version: string;
+  declare var useTransition: (config: ?TimeoutConfig) => [
+    (() => void) => void,
+    boolean
+  ];
+  declare var useState: <S>(initialState: ((() => S) | S)) => [
+    S,
+    ((((S) => S) | S)) => void
+  ];
+  declare var useRef: <T>(initialValue: T) => {|current: T|};
+  declare var useReducer: 
+    (<S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>])
+    &
+    (<S, A>(reducer: (S, A) => S, initialState: S, init: void) => [
+      S,
+      Dispatch<A>
+    ])
+    &
+    (<S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [
+      S,
+      Dispatch<A>
+    ]);
+  declare var useMemo: <T>(create: () => T, inputs: ?$ReadOnlyArray<mixed>) => T;
+  declare var useLayoutEffect: (
+    create: () => MaybeCleanUpFn,
+    inputs: ?$ReadOnlyArray<mixed>
+  ) => void;
+  declare var useImperativeHandle: <T>(
+    ref: ?({current: (T | null)} | ((inst: (T | null)) => mixed)),
+    create: () => T,
+    inputs: ?$ReadOnlyArray<mixed>
+  ) => void;
+  declare var useEffect: (
+    create: () => MaybeCleanUpFn,
+    inputs: ?$ReadOnlyArray<mixed>
+  ) => void;
+  declare var useDeferredValue: <T>(value: T, config: ?TimeoutConfig) => T;
+  declare var useDebugValue: (value: any) => void;
+  declare var useContext: <T>(
+    context: React$Context<T>,
+    observedBits: (void | number | boolean)
+  ) => T;
+  declare var useCallback: <T: (...args: $ReadOnlyArray<empty>) => mixed>(
+    callback: T,
+    inputs: ?$ReadOnlyArray<mixed>
+  ) => T;
+  declare var memo: <Config, Instance = mixed>(
+    component: React$AbstractComponent<Config, Instance>,
+    equal?: (Config, Config) => boolean
+  ) => React$AbstractComponent<Config, Instance>;
+  declare var lazy: <Config, Instance = mixed>(
+    component: () => Promise<
+      {default: React$AbstractComponent<Config, Instance>},
+    >
+  ) => React$AbstractComponent<Config, Instance>;
+  declare var isValidElement: (element: any) => boolean;
+  declare var forwardRef: <Config, Instance>(
+    render: (
+      props: Config,
+      ref: ({current: (null | Instance)} | (((null | Instance)) => mixed))
+    ) => React$Node
+  ) => React$AbstractComponent<Config, Instance>;
+  declare var createRef: <T>() => {|current: (null | T)|};
+  declare var createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<
+    ElementType,
+  >;
+  declare var createElement: React$CreateElement;
+  declare var createContext: <T>(
+    defaultValue: T,
+    calculateChangedBits: ?((a: T, b: T) => number)
+  ) => React$Context<T>;
+  declare var createClass: React$CreateClass;
+  declare var cloneElement: React$CloneElement;
+  declare var checkPropTypes: <V>(
+    propTypes: any,
+    values: V,
+    location: string,
+    componentName: string,
+    getStack: ?(() => ?string)
+  ) => void;
+  declare var Suspense: React$ComponentType<
+    {children?: React$Node, fallback?: React$Node},
+  >;
+  declare var StrictMode: ({children?: React$Node}) => React$Node;
+  type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>;
+  type Ref<C> = React$Ref<C>;
+  class React$PureComponent<Props, State = void>;
+  declare var PropTypes: ReactPropTypes;
+  declare var Profiler: React$AbstractComponent<
+    {|children?: React$Node, id: string, onRender: ProfilerOnRenderFnType|},
+    void,
+  >;
+  type Portal = React$Portal;
+  type Node = React$Node;
+  type MixedElement = React$MixedElement;
+  type Key = React$Key;
+  type Interaction = {name: string, timestamp: number};
+  declare var Fragment: ({children?: React$Node}) => React$Node;
+  type ElementType = React$ElementType;
+  type ElementRef<C> = React$ElementRef<C>;
+  type ElementProps<C> = React$ElementProps<C>;
+  type ElementConfig<C> = React$ElementConfig<C>;
+  type Element<+C> = React$Element<C>;
+  declare var DOM: any (explicit);
+  type Context<T> = React$Context<T>;
+  type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+  declare var ConcurrentMode: ({children?: React$Node}) => React$Node;
+  type ComponentType<-P> = React$ComponentType<P>;
+  class React$Component<Props, State = void>;
+  type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+  declare var Children: {
     +count: (children: ChildrenArray<any>) => number,
     +forEach: <T>(
       children: ChildrenArray<T>,
@@ -58,216 +164,13 @@ react_component.js:3:9 = {|
     ) => Array<$NonMaybeType<U>>,
     +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>,
     +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>
-  },
-  +ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T,
-  +Component: class React$Component<Props, State = void>,
-  +ComponentType: type ComponentType<-P> = React$ComponentType<P>,
-  +ConcurrentMode: ({children?: React$Node}) => React$Node,
-  +Config: type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>,
-  +Context: type Context<T> = React$Context<T>,
-  +DOM: any,
-  +Element: type Element<+C> = React$Element<C>,
-  +ElementConfig: type ElementConfig<C> = React$ElementConfig<C>,
-  +ElementProps: type ElementProps<C> = React$ElementProps<C>,
-  +ElementRef: type ElementRef<C> = React$ElementRef<C>,
-  +ElementType: type ElementType = React$ElementType,
-  +Fragment: ({children?: React$Node}) => React$Node,
-  +Interaction: type Interaction = {name: string, timestamp: number},
-  +Key: type Key = React$Key,
-  +MixedElement: type MixedElement = React$MixedElement,
-  +Node: type Node = React$Node,
-  +Portal: type Portal = React$Portal,
-  +Profiler: React$AbstractComponent<
-    {|children?: React$Node, id: string, onRender: ProfilerOnRenderFnType|},
-    void,
-  >,
-  +PropTypes: ReactPropTypes,
-  +PureComponent: class React$PureComponent<Props, State = void>,
-  +Ref: type Ref<C> = React$Ref<C>,
-  +StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<
-    P,
-  >,
-  +StrictMode: ({children?: React$Node}) => React$Node,
-  +Suspense: React$ComponentType<{children?: React$Node, fallback?: React$Node}>,
-  +checkPropTypes: <V>(
-    propTypes: any,
-    values: V,
-    location: string,
-    componentName: string,
-    getStack: ?(() => ?string)
-  ) => void,
-  +cloneElement: React$CloneElement,
-  +createClass: React$CreateClass,
-  +createContext: <T>(
-    defaultValue: T,
-    calculateChangedBits: ?((a: T, b: T) => number)
-  ) => React$Context<T>,
-  +createElement: React$CreateElement,
-  +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<
-    ElementType,
-  >,
-  +createRef: <T>() => {|current: (null | T)|},
-  +default: {|
-    +Children: {
-      +count: (children: ChildrenArray<any>) => number,
-      +forEach: <T>(
-        children: ChildrenArray<T>,
-        fn: (child: T, index: number) => mixed,
-        thisArg?: mixed
-      ) => void,
-      +map: <T, U>(
-        children: ChildrenArray<T>,
-        fn: (child: $NonMaybeType<T>, index: number) => U,
-        thisArg?: mixed
-      ) => Array<$NonMaybeType<U>>,
-      +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>,
-      +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>
-    },
-    +Component: typeof React$Component,
-    +ConcurrentMode: ({children?: React$Node}) => React$Node,
-    +DOM: any,
-    +Fragment: ({children?: React$Node}) => React$Node,
-    +Profiler: React$AbstractComponent<
-      {|children?: React$Node, id: string, onRender: ProfilerOnRenderFnType|},
-      void,
-    >,
-    +PropTypes: ReactPropTypes,
-    +PureComponent: typeof React$PureComponent,
-    +StrictMode: ({children?: React$Node}) => React$Node,
-    +Suspense: React$ComponentType<
-      {children?: React$Node, fallback?: React$Node},
-    >,
-    +checkPropTypes: <V>(
-      propTypes: any,
-      values: V,
-      location: string,
-      componentName: string,
-      getStack: ?(() => ?string)
-    ) => void,
-    +cloneElement: React$CloneElement,
-    +createClass: React$CreateClass,
-    +createContext: <T>(
-      defaultValue: T,
-      calculateChangedBits: ?((a: T, b: T) => number)
-    ) => React$Context<T>,
-    +createElement: React$CreateElement,
-    +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<
-      ElementType,
-    >,
-    +createRef: <T>() => {|current: (null | T)|},
-    +forwardRef: <Config, Instance>(
-      render: (
-        props: Config,
-        ref: ({current: (null | Instance)} | (((null | Instance)) => mixed))
-      ) => React$Node
-    ) => React$AbstractComponent<Config, Instance>,
-    +isValidElement: (element: any) => boolean,
-    +lazy: <Config, Instance = mixed>(
-      component: () => Promise<
-        {default: React$AbstractComponent<Config, Instance>},
-      >
-    ) => React$AbstractComponent<Config, Instance>,
-    +memo: <Config, Instance = mixed>(
-      component: React$AbstractComponent<Config, Instance>,
-      equal?: (Config, Config) => boolean
-    ) => React$AbstractComponent<Config, Instance>,
-    +useCallback: <T: (...args: $ReadOnlyArray<empty>) => mixed>(
-      callback: T,
-      inputs: ?$ReadOnlyArray<mixed>
-    ) => T,
-    +useContext: <T>(
-      context: React$Context<T>,
-      observedBits: (void | number | boolean)
-    ) => T,
-    +useDeferredValue: <T>(value: T, config: ?TimeoutConfig) => T,
-    +useEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void,
-    +useImperativeHandle: <T>(
-      ref: ?({current: (T | null)} | ((inst: (T | null)) => mixed)),
-      create: () => T,
-      inputs: ?$ReadOnlyArray<mixed>
-    ) => void,
-    +useLayoutEffect: (
-      create: () => MaybeCleanUpFn,
-      inputs: ?$ReadOnlyArray<mixed>
-    ) => void,
-    +useMemo: <T>(create: () => T, inputs: ?$ReadOnlyArray<mixed>) => T,
-    +useReducer: (
-      (<S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>])
-      &
-      (<S, A>(reducer: (S, A) => S, initialState: S, init: void) => [
-        S,
-        Dispatch<A>
-      ])
-      &
-      (<S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [
-        S,
-        Dispatch<A>
-      ])),
-    +useRef: <T>(initialValue: T) => {|current: T|},
-    +useState: <S>(initialState: ((() => S) | S)) => [
-      S,
-      ((((S) => S) | S)) => void
-    ],
-    +useTransition: (config: ?TimeoutConfig) => [(() => void) => void, boolean],
-    +version: string
-  |},
-  +forwardRef: <Config, Instance>(
-    render: (
-      props: Config,
-      ref: ({current: (null | Instance)} | (((null | Instance)) => mixed))
-    ) => React$Node
-  ) => React$AbstractComponent<Config, Instance>,
-  +isValidElement: (element: any) => boolean,
-  +lazy: <Config, Instance = mixed>(
-    component: () => Promise<
-      {default: React$AbstractComponent<Config, Instance>},
-    >
-  ) => React$AbstractComponent<Config, Instance>,
-  +memo: <Config, Instance = mixed>(
-    component: React$AbstractComponent<Config, Instance>,
-    equal?: (Config, Config) => boolean
-  ) => React$AbstractComponent<Config, Instance>,
-  +useCallback: <T: (...args: $ReadOnlyArray<empty>) => mixed>(
-    callback: T,
-    inputs: ?$ReadOnlyArray<mixed>
-  ) => T,
-  +useContext: <T>(
-    context: React$Context<T>,
-    observedBits: (void | number | boolean)
-  ) => T,
-  +useDebugValue: (value: any) => void,
-  +useDeferredValue: <T>(value: T, config: ?TimeoutConfig) => T,
-  +useEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void,
-  +useImperativeHandle: <T>(
-    ref: ?({current: (T | null)} | ((inst: (T | null)) => mixed)),
-    create: () => T,
-    inputs: ?$ReadOnlyArray<mixed>
-  ) => void,
-  +useLayoutEffect: (
-    create: () => MaybeCleanUpFn,
-    inputs: ?$ReadOnlyArray<mixed>
-  ) => void,
-  +useMemo: <T>(create: () => T, inputs: ?$ReadOnlyArray<mixed>) => T,
-  +useReducer: (
-    (<S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>])
-    &
-    (<S, A>(reducer: (S, A) => S, initialState: S, init: void) => [
-      S,
-      Dispatch<A>
-    ])
-    &
-    (<S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [
-      S,
-      Dispatch<A>
-    ])),
-  +useRef: <T>(initialValue: T) => {|current: T|},
-  +useState: <S>(initialState: ((() => S) | S)) => [
-    S,
-    ((((S) => S) | S)) => void
-  ],
-  +useTransition: (config: ?TimeoutConfig) => [(() => void) => void, boolean],
-  +version: string
-|}
+  };
+  type AbstractComponent<-Config, +Instance = mixed> = React$AbstractComponent<
+    Config,
+    Instance,
+  >;
+  ;
+}
 react_component.js:3:7,3:11
 react_component.js:13:33 = class React$Component<Props, State = void>
 react_component.js:13:29,13:37

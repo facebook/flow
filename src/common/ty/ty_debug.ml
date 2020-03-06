@@ -226,37 +226,49 @@ and dump_t ?(depth = 10) t =
     | Union (t1, t2, ts) ->
       spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1 :: t2 :: ts)))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
-    | TypeAlias { ta_import; ta_name; ta_tparams; ta_type } ->
-      spf
-        "TypeAlias (import:%b, %s, %s, %s)"
-        ta_import
-        (dump_symbol ta_name)
-        (dump_type_params ~depth ta_tparams)
-        (Base.Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
     | InlineInterface { if_extends; if_body } ->
       spf
         "InlineInterface (%s, %s)"
         (dump_list (dump_generic ~depth) if_extends)
         (dump_obj ~depth if_body)
     | TypeOf v -> spf "Typeof (%s)" (builtin_value v)
-    | Module (n, { exports; _ }) ->
-      let name =
-        match n with
-        | Some n -> dump_symbol n
-        | None -> "<no name>"
-      in
-      let exports =
-        dump_list (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name) ~sep:"," exports
-      in
-      spf "Module(%s, %s)" name exports
-    | ClassDecl (name, ps) ->
-      spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
-    | InterfaceDecl (name, ps) ->
-      spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
-    | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
     | Utility u -> dump_utility ~depth u
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
     | CharSet s -> spf "CharSet (%s)" s
+
+and dump_class_decl ~depth (name, ps) =
+  spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
+
+and dump_interface_decl ~depth (name, ps) =
+  spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
+
+and dump_module ~depth name exports _default =
+  let name =
+    match name with
+    | Some name -> dump_symbol name
+    | None -> "<no name>"
+  in
+  let exports = dump_list (dump_decl ~depth) ~sep:", " exports in
+  spf "Module(%s, %s)" name exports
+
+and dump_decl ~depth = function
+  | VariableDecl (name, t) -> spf "VariableDecl (%s, %s)" name (dump_t ~depth t)
+  | TypeAliasDecl { import; name; tparams; type_ } ->
+    spf
+      "TypeAlias (import=%b, %s, %s, %s)"
+      import
+      (dump_symbol name)
+      (dump_type_params ~depth tparams)
+      (Base.Option.value_map type_ ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
+  | ClassDecl (s, ps) -> spf "ClassDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
+  | InterfaceDecl (s, ps) ->
+    spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
+  | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
+  | ModuleDecl { name; exports; default } -> dump_module ~depth name exports default
+
+and dump_elt ~depth = function
+  | Type t -> spf "Type (%s)" (dump_t ~depth t)
+  | Decl d -> spf "Decl (%s)" (dump_decl ~depth d)
 
 let dump_binding (v, ty) = Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
 
@@ -267,7 +279,7 @@ let string_of_polarity = function
   | Neutral -> "Neutral"
   | Positive -> "Positive"
 
-let string_of_ctor = function
+let string_of_ctor_t = function
   | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
@@ -290,18 +302,21 @@ let string_of_ctor = function
   | Tup _ -> "Tup"
   | Union _ -> "Union"
   | Inter _ -> "Inter"
-  | TypeAlias _ -> "TypeAlias"
   | InlineInterface _ -> "InlineInterface"
   | TypeOf _ -> "Typeof"
-  | ClassDecl _ -> "ClassDecl"
-  | InterfaceDecl _ -> "InterfaceDecl"
-  | EnumDecl _ -> "EnumDecl"
   | Utility _ -> "Utility"
-  | Module _ -> "Module"
   | Mu _ -> "Mu"
   | CharSet _ -> "CharSet"
 
-let json_of_t ~strip_root =
+let string_of_ctor_decl = function
+  | TypeAliasDecl _ -> "TypeAlias"
+  | ClassDecl _ -> "ClassDecl"
+  | InterfaceDecl _ -> "InterfaceDecl"
+  | ModuleDecl _ -> "Module"
+  | VariableDecl _ -> "VariableDecl"
+  | EnumDecl _ -> "EnumDecl"
+
+let json_of_elt ~strip_root =
   let json_of_provenance loc p =
     Hh_json.(
       JSON_Object
@@ -329,63 +344,47 @@ let json_of_t ~strip_root =
       | TSymbol s -> json_of_symbol s)
   in
   let rec json_of_t t =
+    Hh_json.(JSON_Object (("kind", JSON_String (string_of_ctor_t t)) :: json_of_t_list t))
+  and json_of_t_list t =
     Hh_json.(
-      JSON_Object
-        ( [("kind", JSON_String (string_of_ctor t))]
-        @
-        match t with
-        | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
-        | Bound (_, name) -> [("bound", JSON_String name)]
-        | Generic g -> json_of_generic g
-        | Any Annotated -> [("any", JSON_String "explicit")]
-        | Any _ -> [("any", JSON_String "implicit")]
-        | Top
-        | Bot _
-        | Void
-        | Null
-        | Symbol
-        | Num _
-        | Str _
-        | Bool _ ->
-          []
-        | NumLit s
-        | StrLit s ->
-          [("literal", JSON_String s)]
-        | BoolLit b -> [("literal", JSON_Bool b)]
-        | Fun f -> json_of_fun_t f
-        | Obj o -> json_of_obj_t o
-        | Arr { arr_readonly; arr_literal; arr_elt_t } ->
-          [
-            ("readonly", JSON_Bool arr_readonly);
-            ("literal", JSON_Bool arr_literal);
-            ("type", json_of_t arr_elt_t);
-          ]
-        | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
-        | Union (t0, t1, ts) ->
-          [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
-        | Inter (t0, t1, ts) ->
-          [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
-        | TypeAlias { ta_name; ta_tparams; ta_type; _ } ->
-          [
-            ("name", json_of_symbol ta_name);
-            ("typeParams", json_of_type_params ta_tparams);
-            ("body", Base.Option.value_map ~f:json_of_t ~default:JSON_Null ta_type);
-          ]
-        | InlineInterface { if_extends; if_body } ->
-          Hh_json.(
-            let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
-            [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
-        | TypeOf b -> [("name", json_of_builtin_value b)]
-        | Module (name, _) ->
-          [("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
-        | ClassDecl (name, tparams) ->
-          [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
-        | InterfaceDecl (name, tparams) ->
-          [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
-        | EnumDecl name -> [("name", json_of_symbol name)]
-        | Utility u -> json_of_utility u
-        | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
-        | CharSet s -> [("literal", JSON_String s)] ))
+      match t with
+      | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
+      | Bound (_, name) -> [("bound", JSON_String name)]
+      | Generic g -> json_of_generic g
+      | Any Annotated -> [("any", JSON_String "explicit")]
+      | Any _ -> [("any", JSON_String "implicit")]
+      | Top
+      | Bot _
+      | Void
+      | Null
+      | Symbol
+      | Num _
+      | Str _
+      | Bool _ ->
+        []
+      | NumLit s
+      | StrLit s ->
+        [("literal", JSON_String s)]
+      | BoolLit b -> [("literal", JSON_Bool b)]
+      | Fun f -> json_of_fun_t f
+      | Obj o -> json_of_obj_t o
+      | Arr { arr_readonly; arr_literal; arr_elt_t } ->
+        [
+          ("readonly", JSON_Bool arr_readonly);
+          ("literal", JSON_Bool arr_literal);
+          ("type", json_of_t arr_elt_t);
+        ]
+      | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
+      | Union (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
+      | Inter (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
+      | InlineInterface { if_extends; if_body } ->
+        Hh_json.(
+          let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
+          [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
+      | TypeOf b -> [("name", json_of_builtin_value b)]
+      | Utility u -> json_of_utility u
+      | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
+      | CharSet s -> [("literal", JSON_String s)])
   and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt
@@ -393,32 +392,30 @@ let json_of_t ~strip_root =
         ("type", json_of_symbol s); ("kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
       ]
   and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static } =
-    Hh_json.(
-      [("typeParams", json_of_type_params fun_type_params)]
-      @ [("paramTypes", JSON_Array (Base.List.map ~f:(fun (_, t, _) -> json_of_t t) fun_params))]
-      @ [
-          ( "paramNames",
-            JSON_Array
-              (List.rev_map
-                 (function
-                   | (Some n, _, _) -> JSON_String n
-                   | (None, _, _) -> JSON_String "_")
-                 fun_params) );
-        ]
-      @ [
-          ( "restParam",
-            match fun_rest_param with
-            | None -> JSON_Null
-            | Some (name, t) ->
-              JSON_Object
-                ( [("restParamType", json_of_t t)]
-                @
-                match name with
-                | None -> []
-                | Some name -> [("restParamName", JSON_String name)] ) );
-          ("returnType", json_of_t fun_return);
-        ]
-      @ [("staticType", json_of_t fun_static)])
+    let open Hh_json in
+    [
+      ("typeParams", json_of_type_params fun_type_params);
+      ("paramTypes", JSON_Array (Base.List.map ~f:(fun (_, t, _) -> json_of_t t) fun_params));
+      ( "paramNames",
+        JSON_Array
+          (List.rev_map
+             (function
+               | (Some n, _, _) -> JSON_String n
+               | (None, _, _) -> JSON_String "_")
+             fun_params) );
+      ( "restParam",
+        match fun_rest_param with
+        | None -> JSON_Null
+        | Some (name, t) ->
+          JSON_Object
+            ( [("restParamType", json_of_t t)]
+            @
+            match name with
+            | None -> []
+            | Some name -> [("restParamName", JSON_String name)] ) );
+      ("returnType", json_of_t fun_return);
+      ("staticType", json_of_t fun_static);
+    ]
   and json_of_obj_t o =
     Hh_json.(
       let { obj_exact; obj_props; obj_literal; obj_frozen } = o in
@@ -497,4 +494,39 @@ let json_of_t ~strip_root =
       let ts = json_of_targs (Ty.types_of_utility u) in
       ("kind", JSON_String ctor) :: ts)
   in
-  (fun t -> json_of_t t)
+  let json_of_class_decl (name, tparams) =
+    [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
+  in
+  let json_of_interface_decl (name, tparams) =
+    [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
+  in
+  let json_of_module name _ _ =
+    Hh_json.[("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
+  in
+  let json_of_decl =
+    let open Hh_json in
+    function
+    | VariableDecl (name, t) -> [("name", JSON_String name); ("type_", json_of_t t)]
+    | TypeAliasDecl { name; tparams; type_; _ } ->
+      [
+        ("name", json_of_symbol name);
+        ("typeParams", json_of_type_params tparams);
+        ("body", Base.Option.value_map ~f:json_of_t ~default:JSON_Null type_);
+      ]
+    | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
+    | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
+    | EnumDecl name -> [("name", json_of_symbol name)]
+    | ModuleDecl { name; exports; default } -> json_of_module name exports default
+  in
+  fun elt ->
+    let payload =
+      match elt with
+      | Type t -> json_of_t_list t
+      | Decl d -> json_of_decl d
+    in
+    let kind =
+      match elt with
+      | Type t -> string_of_ctor_t t
+      | Decl d -> string_of_ctor_decl d
+    in
+    Hh_json.(JSON_Object (("kind", JSON_String kind) :: payload))

@@ -39,11 +39,16 @@ let property_key_quotes_needed x =
   let regexp = Str.regexp "^[a-zA-Z\\$_][a-zA-Z0-9\\$_]*$" in
   not (Str.string_match regexp x 0)
 
+let variance_ = function
+  | Positive -> Atom "+"
+  | Negative -> Atom "-"
+  | Neutral -> Empty
+
 (*************************)
 (* Main Transformation   *)
 (*************************)
 
-let type_ ?(size = 5000) ?(with_comments = true) t =
+let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
   let env_map : Layout.layout_node IMap.t ref = ref IMap.empty in
   let size = ref size in
   (* util to limit the number of calls to a (usually recursive) function *)
@@ -91,9 +96,6 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Generic g -> type_generic ~depth g
     | Union (t1, t2, ts) -> type_union ~depth (t1 :: t2 :: ts)
     | Inter (t1, t2, ts) -> type_intersection ~depth (t1 :: t2 :: ts)
-    | ClassDecl (n, ps) -> class_decl ~depth n ps
-    | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
-    | EnumDecl n -> enum_decl n
     | Utility s -> utility ~depth s
     | Tup ts ->
       list
@@ -109,34 +111,13 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
           "true"
         else
           "false" )
-    | TypeAlias ta -> type_alias ta
     | InlineInterface { if_extends; if_body } -> type_interface ~depth if_extends if_body
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
-    | Module (sym, { cjs_export; exports }) -> module_t ~depth sym exports cjs_export
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
       Atom (varname i)
     | CharSet s -> fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes s); Atom ">"]
-  and export ~depth (name, t) = fuse [identifier name; Atom ":"; space; type_ ~depth t]
-  and module_t ~depth sym exports cjs_export =
-    let name =
-      match sym with
-      | Some { sym_name = name; _ } -> fuse [space; identifier name]
-      | None -> Empty
-    in
-    let cjs_name = "exports" in
-    let exports =
-      Base.Option.value_map ~f:(fun cjs -> (cjs_name, cjs) :: exports) ~default:exports cjs_export
-    in
-    fuse
-      [
-        Atom "module";
-        name;
-        Atom ":";
-        space;
-        list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ",") (counted_map (export ~depth) exports);
-      ]
   and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
     let ({ sym_name = name; _ }, _, targs) = g in
@@ -162,11 +143,6 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
         else
           Empty );
       ]
-  and type_alias { ta_name = { sym_name = name; _ }; ta_tparams; ta_type; _ } =
-    fuse
-      ( [Atom "type"; space; identifier name; option (type_parameter ~depth:0) ta_tparams]
-      @ Base.Option.value_map ta_type ~default:[] ~f:(fun t ->
-            [pretty_space; Atom "="; pretty_space; type_ ~depth:0 t]) )
   and type_interface ~depth extends body =
     let extends =
       match extends with
@@ -346,10 +322,6 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Inter _ ->
       wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
-  and class_decl ~depth { sym_name = name; _ } typeParameters =
-    fuse [Atom "class"; space; identifier name; option (type_parameter ~depth) typeParameters]
-  and interface_decl ~depth { sym_name = name; _ } typeParameters =
-    fuse [Atom "interface"; space; identifier name; option (type_parameter ~depth) typeParameters]
   and enum_decl { sym_name = name; _ } = fuse [Atom "enum"; space; identifier name]
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
@@ -373,21 +345,64 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
           | None -> Empty
         end;
       ]
-  and type_annotation ~depth t = fuse [Atom ":"; pretty_space; type_ ~depth t]
-  and variance_ = function
-    | Positive -> Atom "+"
-    | Negative -> Atom "-"
-    | Neutral -> Empty
+  and type_annotation ~depth t = fuse [Atom ":"; pretty_space; type_ ~depth t] in
+
+  let class_decl ~depth { sym_name = name; _ } typeParameters =
+    fuse [Atom "class"; space; identifier name; option (type_parameter ~depth) typeParameters]
+  in
+  let interface_decl ~depth { sym_name = name; _ } typeParameters =
+    fuse [Atom "interface"; space; identifier name; option (type_parameter ~depth) typeParameters]
+  in
+  let type_alias ~depth name tparams t_opt =
+    let { sym_name = name; _ } = name in
+    let tparams = option (type_parameter ~depth) tparams in
+    let body =
+      match t_opt with
+      | Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]
+      | None -> Empty
+    in
+    fuse [Atom "type"; space; identifier name; tparams; body]
+  in
+
+  let variable_decl ~depth name t =
+    fuse
+      [Atom "declare"; space; Atom "var"; space; identifier name; Atom ":"; space; type_ ~depth t]
+  in
+  let rec module_ ~depth name exports default =
+    let exports = counted_map (decl ~depth) exports in
+    let default =
+      match default with
+      | Some t -> fuse [Atom "exports"; Atom ":"; space; type_ ~depth t]
+      | None -> Empty
+    in
+    let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") (exports @ [default]) in
+    let name =
+      match name with
+      | Some name -> fuse (in_quotes name.Ty.sym_name)
+      | None -> Empty
+    in
+    fuse [Atom "module"; space; name; space; body]
+  and decl ~depth = function
+    | VariableDecl (name, t) -> variable_decl ~depth name t
+    | TypeAliasDecl { name; tparams; type_; _ } -> type_alias ~depth name tparams type_
+    | ClassDecl (s, ps) -> class_decl ~depth s ps
+    | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
+    | EnumDecl n -> enum_decl n
+    | ModuleDecl { name; exports; default } -> module_ ~depth name exports default
+  in
+  let elt_ ~depth = function
+    | Type t -> type_ ~depth t
+    | Decl d -> decl ~depth d
   in
   let env_ (i, layout) =
     with_semicolon
       (fuse [Atom "type"; space; Atom (varname i); pretty_space; Atom "="; pretty_space; layout])
   in
   (* Main call *)
-  let type_layout = type_ ~depth:0 t in
+  let layout = elt_ ~depth:0 elt in
   (* Run type_ first so that env_map has been populated *)
   let env_layout = Base.List.map ~f:env_ (IMap.bindings !env_map) in
-  Layout.(join Newline (env_layout @ [type_layout]))
+  Layout.(join Newline (env_layout @ [layout]))
 
 (* Same as Compact_printer with the exception of locations *)
 let print_single_line ~source_maps node =
@@ -410,8 +425,17 @@ let print_single_line ~source_maps node =
 
 let print_pretty ~source_maps node = Pretty_printer.print ~source_maps ~skip_endline:true node
 
+let string_of_elt ?(with_comments = true) (elt : Ty.elt) : string =
+  layout_of_elt ~with_comments elt |> print_pretty ~source_maps:None |> Source.contents
+
+let string_of_elt_single_line ?(with_comments = true) (elt : Ty.elt) : string =
+  layout_of_elt ~with_comments elt |> print_single_line ~source_maps:None |> Source.contents
+
 let string_of_t ?(with_comments = true) (ty : Ty.t) : string =
-  type_ ~with_comments ty |> print_pretty ~source_maps:None |> Source.contents
+  string_of_elt ~with_comments (Ty.Type ty)
 
 let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) : string =
-  type_ ~with_comments ty |> print_single_line ~source_maps:None |> Source.contents
+  string_of_elt_single_line ~with_comments (Ty.Type ty)
+
+let string_of_decl_single_line ?(with_comments = true) (d : Ty.decl) : string =
+  string_of_elt_single_line ~with_comments (Ty.Decl d)

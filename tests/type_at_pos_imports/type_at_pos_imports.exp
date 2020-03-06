@@ -628,7 +628,7 @@ import-star.js:5:7 = {
   "end":23
 }
 import-star.js:5:31 = {
-  "type":"{|+MyPolyType: type MyPolyType<T> = {f: T}, +MyStringType: type MyStringType = \"A\", +MyUnionType: type MyUnionType = \"A\" | \"B\" | \"C\", +foo: () => MyUnionType|}",
+  "type":"module \"./exports-type\" {declare var foo: () => MyUnionType; type MyUnionType = \"A\" | \"B\" | \"C\"; type MyStringType = \"A\"; type MyPolyType<T> = {f: T}; }",
   "reasons":[],
   "loc":{
     "source":"import-star.js",
@@ -787,7 +787,7 @@ module-export-1.js:10:9 = {
   "end":15
 }
 module-import.js:3:7 = {
-  "type":"{|+m: {|+A: class A|}|}",
+  "type":"module \"./module-export-0\" {module \"a\" {class A; }; }",
   "reasons":[],
   "loc":{
     "source":"module-import.js",

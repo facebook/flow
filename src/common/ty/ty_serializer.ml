@@ -80,19 +80,16 @@ let rec type_ t =
   | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
   | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
   | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
-  | ClassDecl (s, _) -> class_decl s
-  | EnumDecl s -> enum_decl s
   | Utility s -> utility s
   | InlineInterface i -> inline_interface i
   | CharSet s ->
     let id = id_from_string "CharSet" in
     return (mk_generic_type id (Some (Loc.none, [(Loc.none, T.StringLiteral (str_lit s))])))
-  | InterfaceDecl _
+  | TypeOf (TSymbol name) ->
+    id_from_symbol name >>= fun id -> just (T.Typeof (mk_generic_type id None))
   | TypeOf _
-  | TypeAlias _
-  | Mu _
-  | Module _ ->
-    Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor t))
+  | Mu _ ->
+    Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
 
 and generic x targs =
   id_from_symbol x >>= fun id ->
@@ -270,10 +267,6 @@ and setter t =
       fun_type_params = None;
       fun_static = Ty.Top;
     }
-
-and class_decl name = generic_type name None >>| fun name -> (Loc.none, T.Typeof name)
-
-and enum_decl name = generic_type name None >>| fun name -> (Loc.none, T.Typeof name)
 
 and interface_extends e =
   let (x, _, ts) = e in

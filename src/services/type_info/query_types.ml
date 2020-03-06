@@ -37,7 +37,7 @@ open Typed_ast_utils
 type result =
   | FailureNoMatch
   | FailureUnparseable of Loc.t * Type.t * string
-  | Success of Loc.t * Ty.t
+  | Success of Loc.t * Ty.elt
 
 let concretize_loc_pairs pair_list =
   Base.List.map ~f:(fun (loc, x) -> (ALoc.to_loc_exn loc, x)) pair_list
@@ -47,7 +47,7 @@ let sort_loc_pairs pair_list = List.sort (fun (a, _) (b, _) -> Loc.compare a b) 
 let type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
   match Ty_normalizer.from_scheme ~options ~genv scheme with
-  | Ok ty -> Success (loc, ty)
+  | Ok elt -> Success (loc, elt)
   | Error err ->
     let msg = Ty_normalizer.error_to_string err in
     FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)

@@ -40,7 +40,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:20:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with `funtype` [1] argument
 
    20| TypeAssertIs<funtype>(8);
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -102,9 +102,17 @@ Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ type-args-tests.js:46:1
+
+Cannot use TypeAssert library function [1] with `A` [1] argument
+
+   46| TypeAssertThrows<A>(8);
+       ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:49:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with `invalidA` [1] argument
 
    49| TypeAssertThrows<invalidA>(8);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -162,4 +170,4 @@ References:
 
 
 
-Found 17 errors
+Found 18 errors

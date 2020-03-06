@@ -215,7 +215,7 @@ let infer_type
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_contents_cache
-    input : ((Loc.t * Ty.t option, string) result * Hh_json.json option) Lwt.t =
+    input : ((Loc.t * Ty.elt option, string) result * Hh_json.json option) Lwt.t =
   let {
     file_input;
     query_position = { Loc.line; column };
@@ -1483,7 +1483,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
       let contents =
         match content with
         | None -> [MarkedString "?"]
-        | Some content -> [MarkedCode ("flow", Ty_printer.string_of_t content)]
+        | Some content -> [MarkedCode ("flow", Ty_printer.string_of_elt content)]
       in
       let r =
         match (range, content) with

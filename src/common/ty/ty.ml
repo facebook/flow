@@ -33,14 +33,9 @@ type t =
   | Tup of t list
   | Union of t * t * t list
   | Inter of t * t * t list
-  | TypeAlias of type_alias
   | InlineInterface of interface_t
-  | TypeOf of builtin_value
-  | ClassDecl of symbol * type_param list option
-  | InterfaceDecl of symbol * type_param list option
-  | EnumDecl of symbol
+  | TypeOf of builtin_or_symbol
   | Utility of utility
-  | Module of symbol option * export_t
   | Mu of int * t
   | CharSet of string
 
@@ -103,11 +98,6 @@ and gen_kind =
   | TypeAliasKind
   | EnumKind
 
-and export_t = {
-  exports: (string * t) list;
-  cjs_export: t option;
-}
-
 and fun_t = {
   fun_params: (string option * t * fun_param) list;
   fun_rest_param: (string option * t) option;
@@ -127,13 +117,6 @@ and arr_t = {
   arr_readonly: bool;
   arr_literal: bool;
   arr_elt_t: t;
-}
-
-and type_alias = {
-  ta_import: bool;
-  ta_name: symbol;
-  ta_tparams: type_param list option;
-  ta_type: t option;
 }
 
 and interface_t = {
@@ -208,13 +191,34 @@ and polarity =
   | Negative
   | Neutral
 
-and builtin_value =
+and builtin_or_symbol =
   | FunProto
   | ObjProto
   | FunProtoApply
   | FunProtoBind
   | FunProtoCall
   | TSymbol of symbol
+
+and decl =
+  | VariableDecl of string * t
+  | TypeAliasDecl of {
+      import: bool;
+      name: symbol;
+      tparams: type_param list option;
+      type_: t option;
+    }
+  | ClassDecl of symbol * type_param list option
+  | InterfaceDecl of symbol * type_param list option
+  | EnumDecl of symbol
+  | ModuleDecl of {
+      name: symbol option;
+      exports: decl list;
+      default: t option;
+    }
+
+and elt =
+  | Type of t
+  | Decl of decl
 [@@deriving
   visitors
     {
@@ -380,22 +384,31 @@ class ['A] comparator_ty =
       | TVar _ -> 12
       | Bound _ -> 13
       | Generic _ -> 14
-      | TypeAlias _ -> 15
-      | TypeOf _ -> 16
-      | ClassDecl _ -> 17
-      | EnumDecl _ -> 18
-      | Utility _ -> 19
-      | Tup _ -> 20
-      | Arr _ -> 21
-      | Fun _ -> 22
-      | Obj _ -> 23
-      | Inter _ -> 24
-      | Union _ -> 25
-      | InterfaceDecl _ -> 26
-      | Module _ -> 27
-      | Mu _ -> 28
-      | InlineInterface _ -> 29
-      | CharSet _ -> 30
+      | TypeOf _ -> 15
+      | Utility _ -> 16
+      | Tup _ -> 17
+      | Arr _ -> 18
+      | Fun _ -> 19
+      | Obj _ -> 20
+      | Inter _ -> 21
+      | Union _ -> 22
+      | Mu _ -> 23
+      | InlineInterface _ -> 24
+      | CharSet _ -> 25
+
+    method tag_of_decl =
+      function
+      | VariableDecl _ -> 0
+      | TypeAliasDecl _ -> 1
+      | ClassDecl _ -> 2
+      | InterfaceDecl _ -> 3
+      | EnumDecl _ -> 4
+      | ModuleDecl _ -> 5
+
+    method tag_of_elt =
+      function
+      | Type _ -> 0
+      | Decl _ -> 1
 
     method tag_of_gen_kind _ =
       function
@@ -539,9 +552,6 @@ let mk_generic_talias symbol targs = Generic (symbol, TypeAliasKind, targs)
 let rec mk_exact ty =
   match ty with
   | Obj o -> Obj { o with obj_exact = true }
-  | TypeAlias a ->
-    let ta_type = Base.Option.map ~f:mk_exact a.ta_type in
-    TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
   | Any _
@@ -560,7 +570,6 @@ let rec mk_exact ty =
   | Arr _
   | Tup _
   | InlineInterface _
-  | EnumDecl _
   | CharSet _ ->
     ty
   (* Do not nest $Exact *)
@@ -572,17 +581,11 @@ let rec mk_exact ty =
   | Union _
   | Inter _
   | TypeOf _
-  | ClassDecl _
-  | InterfaceDecl _
-  | Utility _
-  | Module _ ->
+  | Utility _ ->
     Utility (Exact ty)
 
 let mk_array ~readonly ~literal t =
   Arr { arr_readonly = readonly; arr_literal = literal; arr_elt_t = t }
-
-let named_alias ?ta_tparams ?ta_type name =
-  TypeAlias { ta_import = false; ta_name = name; ta_tparams; ta_type }
 
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"

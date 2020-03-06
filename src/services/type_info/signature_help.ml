@@ -171,9 +171,10 @@ let find_signatures ~cx ~file_sig ~typed_ast loc =
         scheme
     in
     (match ty with
-    | Ok ty ->
+    | Ok (Ty.Type ty) ->
       (match collect_functions [] ty with
       | [] -> Ok None
       | funs -> Ok (Some (funs, active_parameter)))
+    | Ok _ -> Ok None
     | Error err -> Error err)
   | None -> Ok None

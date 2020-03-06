@@ -57,9 +57,9 @@ let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded 
     | None -> "(unknown)"
     | Some ty ->
       if json then
-        Ty_printer.string_of_t_single_line ty
+        Ty_printer.string_of_elt_single_line ty
       else
-        Ty_printer.string_of_t ty
+        Ty_printer.string_of_elt ty
   in
   if json then
     Hh_json.(
@@ -77,7 +77,7 @@ let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded 
           if expanded then
             ( "expanded_type",
               match t with
-              | Some ty -> Ty_debug.json_of_t ~strip_root ty
+              | Some ty -> Ty_debug.json_of_elt ~strip_root ty
               | None -> JSON_Null )
             :: json_assoc
           else

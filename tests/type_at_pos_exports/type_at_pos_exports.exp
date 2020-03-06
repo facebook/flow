@@ -1,5 +1,5 @@
 a.js:1:16 = {
-  "type":"module a: {exports: class A}",
+  "type":"module \"a\" {exports: typeof A}",
   "reasons":[],
   "loc":{
     "source":"a.js",
@@ -14,7 +14,7 @@ a.js:1:16 = {
   "end":16
 }
 b.js:3:16 = {
-  "type":"module b: {exports: number}",
+  "type":"module \"b\" {exports: number}",
   "reasons":[],
   "loc":{
     "source":"b.js",
@@ -29,7 +29,7 @@ b.js:3:16 = {
   "end":16
 }
 c.js:1:16 = {
-  "type":"module c: {exports: number, X: type X = number, Y: type Y = string}",
+  "type":"module \"c\" {type X = number; type Y = string; exports: number}",
   "reasons":[],
   "loc":{
     "source":"c.js",

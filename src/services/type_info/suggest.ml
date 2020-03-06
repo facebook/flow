@@ -13,6 +13,7 @@ type warning =
   | NonFunctionType of string
   | Serializer of string
   | SkipEmpty
+  | NonTypeAnnotation
 
 let warning_desc_to_string = function
   | MissingFromTypeTables -> Utils_js.spf "Location was not found in type tables."
@@ -20,6 +21,7 @@ let warning_desc_to_string = function
   | NonFunctionType ty_str -> Utils_js.spf "Expected function type but got: %s" ty_str
   | Serializer err_msg -> Utils_js.spf "Type serializer failed with:\n%s" err_msg
   | SkipEmpty -> Utils_js.spf "Inferred type is empty."
+  | NonTypeAnnotation -> Utils_js.spf "Not a type."
 
 class visitor ~ty_query =
   object (this)
@@ -37,23 +39,21 @@ class visitor ~ty_query =
     method warnings () = _warnings
 
     method private inferred_type ?blame_loc ?annotate_bottom:(ann_bot = false) loc =
-      let blame_loc =
-        match blame_loc with
-        | Some bloc -> bloc
-        | None -> loc
+      let open Ty in
+      let blame_loc = Base.Option.value ~default:loc blame_loc in
+      let serialize ty =
+        match Ty_serializer.type_ ty with
+        | Ok type_ast -> Some (Loc.none, type_ast)
+        | Error desc -> this#warn blame_loc (Serializer desc)
+      in
+      let add_ty = function
+        | Bot _ when not ann_bot -> this#warn blame_loc SkipEmpty
+        | ty -> serialize ty
       in
       match ty_query loc with
-      | Query_types.Success (_, ty) ->
-        begin
-          match ty with
-          | Ty.Bot _ when not ann_bot -> this#warn blame_loc SkipEmpty
-          | _ ->
-            begin
-              match Ty_serializer.type_ ty with
-              | Ok type_ast -> Some (Loc.none, type_ast)
-              | Error desc -> this#warn blame_loc (Serializer desc)
-            end
-        end
+      | Query_types.Success (_, Type ty) -> add_ty ty
+      | Query_types.Success (_, Decl (ClassDecl (s, _))) -> add_ty (TypeOf (TSymbol s))
+      | Query_types.Success (_, _) -> this#warn blame_loc NonTypeAnnotation
       | Query_types.FailureUnparseable (_, _, msg) -> this#warn blame_loc (NormalizerError msg)
       | Query_types.FailureNoMatch -> this#warn blame_loc MissingFromTypeTables
 

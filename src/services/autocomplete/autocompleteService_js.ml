@@ -75,43 +75,46 @@ let autocomplete_response_to_json ~strip_root response =
       JSON_Object [("result", JSON_Array results)])
 
 let lsp_completion_of_type =
-  Ty.(
-    function
-    | InterfaceDecl _
-    | InlineInterface _ ->
-      Some Lsp.Completion.Interface
-    | ClassDecl _ -> Some Lsp.Completion.Class
-    | StrLit _
-    | NumLit _
-    | BoolLit _ ->
-      Some Lsp.Completion.Value
-    | Fun _ -> Some Lsp.Completion.Function
-    | TypeAlias _
-    | EnumDecl _
-    | Union _ ->
-      Some Lsp.Completion.Enum
-    | Module _ -> Some Lsp.Completion.Module
-    | Tup _
-    | Bot _
-    | Null
-    | Obj _
-    | Inter _
-    | TVar _
-    | Bound _
-    | Generic _
-    | Any _
-    | Top
-    | Void
-    | Symbol
-    | Num _
-    | Str _
-    | Bool _
-    | Arr _
-    | TypeOf _
-    | Utility _
-    | Mu _
-    | CharSet _ ->
-      Some Lsp.Completion.Variable)
+  let open Ty in
+  function
+  | InlineInterface _ -> Some Lsp.Completion.Interface
+  | StrLit _
+  | NumLit _
+  | BoolLit _ ->
+    Some Lsp.Completion.Value
+  | Fun _ -> Some Lsp.Completion.Function
+  | Union _ -> Some Lsp.Completion.Enum
+  | Tup _
+  | Bot _
+  | Null
+  | Obj _
+  | Inter _
+  | TVar _
+  | Bound _
+  | Generic _
+  | Any _
+  | Top
+  | Void
+  | Symbol
+  | Num _
+  | Str _
+  | Bool _
+  | Arr _
+  | TypeOf _
+  | Utility _
+  | Mu _
+  | CharSet _ ->
+    Some Lsp.Completion.Variable
+
+let lsp_completion_of_decl =
+  let open Ty in
+  function
+  | VariableDecl _ -> Lsp.Completion.Variable
+  | TypeAliasDecl _ -> Lsp.Completion.Enum
+  | ClassDecl _ -> Lsp.Completion.Class
+  | InterfaceDecl _ -> Lsp.Completion.Interface
+  | EnumDecl _ -> Lsp.Completion.Enum
+  | ModuleDecl _ -> Lsp.Completion.Module
 
 let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
   let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty in
@@ -131,6 +134,46 @@ let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank =
     func_details;
     rank;
   }
+
+let autocomplete_create_result_decl ~show_func_details:_ ?insert_text:_ ~rank (name, loc) d =
+  let open Ty in
+  match d with
+  | ModuleDecl _ ->
+    {
+      res_loc = loc;
+      res_kind = Some Lsp.Completion.Module;
+      res_name = name;
+      res_insert_text = None;
+      res_ty = "module " ^ name;
+      func_details = None;
+      rank;
+    }
+  | Ty.VariableDecl (_, ty) ->
+    {
+      res_loc = loc;
+      res_kind = Some Lsp.Completion.Variable;
+      res_name = name;
+      res_insert_text = None;
+      res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty;
+      func_details = None;
+      rank;
+    }
+  | d ->
+    {
+      res_loc = loc;
+      res_kind = Some (lsp_completion_of_decl d);
+      res_name = name;
+      res_insert_text = None;
+      res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false d;
+      func_details = None;
+      rank;
+    }
+
+let autocomplete_create_result_elt
+    ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) elt =
+  match elt with
+  | Ty.Type t -> autocomplete_create_result ~show_func_details ?insert_text ~rank (name, loc) t
+  | Ty.Decl d -> autocomplete_create_result_decl ~show_func_details ?insert_text ~rank (name, loc) d
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -324,7 +367,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
   | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
   | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
-    | BoolLit _ | Arr _ | Tup _ | TypeAlias _ | EnumDecl _ ) as t ->
+    | BoolLit _ | Arr _ | Tup _ ) as t ->
     (SMap.empty, [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)])
   | Any _
   | Top
@@ -333,10 +376,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | Null
   | InlineInterface _
   | TypeOf _
-  | ClassDecl _
-  | InterfaceDecl _
   | Utility _
-  | Module _
   | Mu _
   | CharSet _ ->
     (SMap.empty, [])
@@ -373,14 +413,15 @@ let members_of_type
   in
   match this_ty_res with
   | Error error -> return ([], [Ty_normalizer.error_to_string error])
-  | Ok (Ty.Any _) -> fail "not enough type information to autocomplete"
-  | Ok this_ty ->
+  | Ok (Ty.Type (Ty.Any _)) -> fail "not enough type information to autocomplete"
+  | Ok (Ty.Type this_ty) ->
     let (mems, errs) = members_of_ty this_ty in
     return
       ( mems |> SMap.bindings |> List.filter is_valid_member,
         match errs with
         | [] -> []
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx this) :: errs )
+  | Ok _ -> return ([], ["Non type"])
 
 let autocomplete_member
     ~reader
@@ -537,11 +578,14 @@ let autocomplete_id
   let (results, errors_to_log) =
     local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     |> List.fold_left
-         (fun (results, errors_to_log) (name, ty_result) ->
-           match ty_result with
-           | Ok ty ->
+         (fun (results, errors_to_log) (name, elt_result) ->
+           match elt_result with
+           | Ok elt ->
              let result =
-               autocomplete_create_result ~show_func_details:(id_type <> JSXIdent) (name, ac_loc) ty
+               autocomplete_create_result_elt
+                 ~show_func_details:(id_type <> JSXIdent)
+                 (name, ac_loc)
+                 elt
              in
              (result :: results, errors_to_log)
            | Error err ->
@@ -684,31 +728,50 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
-let is_type_export =
-  let open Ty in
-  function
-  | InterfaceDecl _
-  | InlineInterface _
-  | ClassDecl _
-  | TypeAlias _ ->
-    true
-  | _ -> false
-
 let type_exports_of_module_ty ~ac_loc =
   let open Ty in
   function
-  | Module (_, { exports; _ }) ->
-    Base.List.filter_map exports ~f:(fun (name, ty) ->
-        if is_type_export ty then
-          Some (autocomplete_create_result (name, ac_loc) ty)
-        else
-          None)
-  (* workaround while the ty normalizer sometimes renders modules as objects *)
-  | Obj { obj_props; _ } ->
-    Base.List.filter_map obj_props ~f:(function
-        | NamedProp { name; prop = Field { t = ty; _ }; _ } when is_type_export ty ->
-          Some (autocomplete_create_result (name, ac_loc) ty)
+  | Decl (ModuleDecl { exports; _ }) ->
+    Base.List.filter_map
+      ~f:(function
+        | TypeAliasDecl { name; type_ = Some t; _ } as d ->
+          Some
+            {
+              res_loc = ac_loc;
+              res_kind = lsp_completion_of_type t;
+              res_name = name.Ty.sym_name;
+              res_insert_text = None;
+              res_ty = Ty_printer.string_of_decl_single_line d;
+              func_details = None;
+              rank = 0;
+            }
+        | InterfaceDecl (name, _) as d ->
+          Some
+            {
+              res_loc = ac_loc;
+              res_kind = Some Lsp.Completion.Interface;
+              res_name = name.Ty.sym_name;
+              res_insert_text = None;
+              res_ty = Ty_printer.string_of_decl_single_line d;
+              func_details = None;
+              rank = 0;
+            }
+        | ClassDecl (name, _) as d ->
+          Some
+            {
+              res_loc = ac_loc;
+              res_kind = Some Lsp.Completion.Class;
+              res_name = name.Ty.sym_name;
+              res_insert_text = None;
+              res_ty = Ty_printer.string_of_decl_single_line d;
+              func_details = None;
+              rank = 0;
+            }
         | _ -> None)
+      exports
+    |> Base.List.sort ~compare:(fun { res_name = a; _ } { res_name = b; _ } ->
+           Pervasives.compare a b)
+    |> Base.List.mapi ~f:(fun i r -> { r with rank = i })
   | _ -> []
 
 let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast =
@@ -732,8 +795,8 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
     |> List.fold_left
          (fun (results, errors_to_log) (name, ty_result) ->
            match ty_result with
-           | Ok ty ->
-             let result = autocomplete_create_result (name, ac_loc) ty in
+           | Ok elt ->
+             let result = autocomplete_create_result_elt (name, ac_loc) elt in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -751,11 +814,13 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (results, error_to_log :: errors_to_log)
-           | Ok (Ty.ClassDecl _ as ty) ->
-             let result = autocomplete_create_result (name, ac_loc) ty in
+           | Ok (Ty.Decl (Ty.ClassDecl _) as elt) ->
+             let result = autocomplete_create_result_elt (name, ac_loc) elt in
              (result :: results, errors_to_log)
-           | Ok ty when type_exports_of_module_ty ~ac_loc ty <> [] ->
-             let result = autocomplete_create_result (name, ac_loc) ty ~insert_text:(name ^ ".") in
+           | Ok elt when type_exports_of_module_ty ~ac_loc elt <> [] ->
+             let result =
+               autocomplete_create_result_elt (name, ac_loc) elt ~insert_text:(name ^ ".")
+             in
              (result :: results, errors_to_log)
            | Ok _ -> (results, errors_to_log))
          (tparam_and_tident_results, tparam_and_tident_errors_to_log)

@@ -65,10 +65,8 @@ class type_validator_visitor =
       | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
         env := ReactElementConfigFunArg :: !env;
         Ty.explicit_any
-      | Ty.Generic (symbol, _, _)
-      | Ty.ClassDecl (symbol, _)
-      | Ty.InterfaceDecl (symbol, _)
-      | Ty.Module (Some symbol, _) ->
+      | Ty.TypeOf (Ty.TSymbol symbol)
+      | Ty.Generic (symbol, _, _) ->
         let { Ty.sym_anonymous; sym_def_loc; _ } = symbol in
         if sym_anonymous then (
           env := Anonymous (ALoc.to_loc_exn sym_def_loc) :: !env;

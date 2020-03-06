@@ -53,7 +53,7 @@ let type_at_pos
       | Success (loc, ty) ->
         (* TODO use Ty_debug.json_of_t after making it faster using
              count_calls *)
-        let json = Hh_json.JSON_String (Ty_printer.string_of_t ty) in
+        let json = Hh_json.JSON_String (Ty_printer.string_of_elt ty) in
         (mk_data "SUCCESS" loc json, loc, Some ty))
   in
   ((loc, ty), json_data)
@@ -103,7 +103,7 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
 
 let dump_types ~expand_aliases ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
-  let printer = Ty_printer.string_of_t in
+  let printer = Ty_printer.string_of_elt_single_line in
   let abs_file_sig = File_sig.abstractify_locs file_sig in
   Query_types.dump_types
     ~printer

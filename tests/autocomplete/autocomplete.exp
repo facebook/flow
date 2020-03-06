@@ -2164,18 +2164,10 @@ normalize-2.js = {
 }
 unqualified-type-annotation.js = {
   "result":[
-    {
-      "name":"Typologies",
-      "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
-      "func_details":null
-    },
+    {"name":"Typologies","type":"module Typologies","func_details":null},
     {"name":"Typography","type":"class Typewriter","func_details":null},
     {"name":"Typewriter","type":"class Typewriter","func_details":null},
-    {
-      "name":"Types",
-      "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
-      "func_details":null
-    },
+    {"name":"Types","type":"module Types","func_details":null},
     {"name":"Typesafe","type":"interface Typesafety","func_details":null},
     {"name":"Typhoon","type":"type Typhoon = string","func_details":null},
     {"name":"Typnotism","type":"type Typnotism = number","func_details":null},

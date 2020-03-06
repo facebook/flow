@@ -274,17 +274,29 @@ class mapper ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_looku
 
     method private synth_type location =
       let scheme = ty_lookup location in
-      let ty = normalize location scheme in
-      begin
-        match Utils.validate_type ~size_limit ty with
-        | (_, error :: _) ->
-          (* TODO surface all errors *)
-          raise
-          @@ expected
-          @@ FailedToValidateType { error; error_message = Utils.serialize_validation_error error }
-        | (_, []) -> ()
-      end;
-      let ty = remove_ambiguous_types ~ambiguity_strategy ty location in
+      let process ty =
+        let () =
+          match Utils.validate_type ~size_limit ty with
+          | (_, error :: _) ->
+            (* TODO surface all errors *)
+            let err =
+              FailedToValidateType { error; error_message = Utils.serialize_validation_error error }
+            in
+            raise (expected err)
+          | (_, []) -> ()
+        in
+        remove_ambiguous_types ~ambiguity_strategy ty location
+      in
+      let ty =
+        match normalize location scheme with
+        | Ty.Type ty -> process ty
+        | Ty.Decl (Ty.ClassDecl (name, _)) ->
+          let ty = Ty.TypeOf (Ty.TSymbol name) in
+          process ty
+        | _ ->
+          let err = FailedToNormalize (location, "Non-type") in
+          raise (expected err)
+      in
       (location, serialize ~imports_react:true location ty)
 
     method private synth_type_annotation_hint loc = Flow_ast.Type.Available (this#synth_type loc)

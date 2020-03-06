@@ -394,7 +394,7 @@ let infer_type filename content line col =
       (match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
       | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_t_single_line t))))
+      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line t))))
 
 let types_to_json types ~strip_root =
   Hh_json.(
@@ -421,7 +421,7 @@ let dump_types js_file js_content =
   | Ok (ast, file_sig) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
-    let printer = Ty_printer.string_of_t in
+    let printer = Ty_printer.string_of_elt_single_line in
     let types =
       Query_types.dump_types
         ~printer
