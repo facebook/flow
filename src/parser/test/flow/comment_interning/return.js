@@ -1,9 +1,7 @@
-function t0() {
-        t1(); // a leading comment
-        // another leading comment
-        return 42; // should not be a trailing comment
+function withExpression() {
+  /* 1.1 Leading return */ return /* 1.2 Leading num */ 1 /* 1.3 Trailing num */; /* 1.4 Trailing return */
 }
 
-function t1() {
-	return /* trailing comment */;
+function withoutExpression() {
+  /* 2.1 Leading return */ return /* 2.2 inner, ignored */ ; /* 2.3 Trailing return */
 }

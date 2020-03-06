@@ -417,13 +417,14 @@ module Statement
         if not (in_function env) then error env Parse_error.IllegalReturn;
         let leading = Peek.comments env in
         Expect.token env T_RETURN;
-        let (argument, trailing) =
+        let argument =
           if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
-            (None, Peek.comments env)
+            None
           else
-            (Some (Parse.expression env), [])
+            Some (Parse.expression env)
         in
         Eat.semicolon env;
+        let trailing = Peek.comments env in
         Statement.Return
           {
             Statement.Return.argument;
