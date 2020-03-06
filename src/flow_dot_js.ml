@@ -153,7 +153,6 @@ let stub_docblock =
     typeAssert = false;
     preventMunge = false;
     providesModule = None;
-    isDeclarationFile = false;
     jsx = None;
   }
 

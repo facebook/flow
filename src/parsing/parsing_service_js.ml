@@ -345,17 +345,13 @@ let extract_docblock =
         else
           None
       in
-      let info =
-        let filename_str = File_key.to_string filename in
-        if Filename.check_suffix filename_str Files.flow_ext then
-          { default_info with isDeclarationFile = true }
-        else
-          default_info
-      in
       match get_first_comment_contents env with
       | Some comments ->
-        List.fold_left (fun acc (loc, s) -> parse_attributes acc (split loc s)) ([], info) comments
-      | None -> ([], info))
+        List.fold_left
+          (fun acc (loc, s) -> parse_attributes acc (split loc s))
+          ([], default_info)
+          comments
+      | None -> ([], default_info))
 
 let parse_docblock ~max_tokens file content : docblock_error list * Docblock.t =
   match file with

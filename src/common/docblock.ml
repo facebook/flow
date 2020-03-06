@@ -24,19 +24,11 @@ type t = {
   typeAssert: bool;
   preventMunge: bool;
   providesModule: string option;
-  isDeclarationFile: bool;
   jsx: jsx_pragma option;
 }
 
 let default_info =
-  {
-    flow = None;
-    typeAssert = false;
-    preventMunge = false;
-    providesModule = None;
-    isDeclarationFile = false;
-    jsx = None;
-  }
+  { flow = None; typeAssert = false; preventMunge = false; providesModule = None; jsx = None }
 
 (* accessors *)
 let flow info = info.flow
@@ -46,8 +38,6 @@ let typeAssert info = info.typeAssert
 let preventMunge info = info.preventMunge
 
 let providesModule info = info.providesModule
-
-let isDeclarationFile info = info.isDeclarationFile
 
 let jsx info = info.jsx
 
@@ -109,7 +99,6 @@ let json_of_docblock info =
       | Some str -> JSON_String str
       | None -> JSON_Null
     in
-    let isDeclarationFile = JSON_Bool (isDeclarationFile info) in
     let typeAssert = JSON_Bool (typeAssert info) in
     JSON_Object
       [
@@ -117,5 +106,4 @@ let json_of_docblock info =
         ("typeAssert", typeAssert);
         ("preventMunge", preventsMunge);
         ("providesModule", providesModule);
-        ("isDeclarationFile", isDeclarationFile);
       ])
