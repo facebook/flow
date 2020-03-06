@@ -40,7 +40,7 @@ include (
             if not input_file_exists then
               Hh_logger.error "File %S does not exist" changed_files_input_file;
 
-            Lwt.return Saved_state_fetcher.No_saved_state
+            Lwt.return Saved_state_fetcher.Saved_state_error
           ))
   end :
     Saved_state_fetcher.FETCHER )
