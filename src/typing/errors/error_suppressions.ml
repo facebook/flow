@@ -143,24 +143,15 @@ let remove_suppression_from_map loc (suppressions_map : t) =
 let remove_lint_suppression_from_map loc (suppressions_map : t) =
   update_file_suppressions (FileSuppressions.remove_lint_suppression loc) loc suppressions_map
 
-let check_loc suppressions (result, used, (unused : t)) loc =
+let check_loc suppressions (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   match suppression_at_loc loc suppressions with
   | Some locs ->
-    let used = LocSet.union locs used in
+    let used = locs in
     let unused = remove_suppression_from_map loc unused in
     (Off, used, unused)
-  | None -> (result, used, unused)
-
-(* Checks if any of the given locations should be suppressed. *)
-let check_locs locs (suppressions : t) (unused : t) =
-  (* We need to check every location in order to figure out which suppressions
-     are really unused...that's why we don't shortcircuit as soon as we find a
-     matching error suppression.
-     If the "primary" location has severity = Off, the error should be
-     suppressed even if it is not explicit. *)
-  List.fold_left (check_loc suppressions) (Err, LocSet.empty, unused) locs
+  | None -> (result, LocSet.empty, unused)
 
 let in_node_modules ~root ~file_options loc =
   match Base.Option.both (Loc.source loc) file_options with
@@ -173,13 +164,7 @@ let in_declarations ~file_options loc =
   | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
 
 let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t) =
-  let locs =
-    Errors.locs_of_printable_error err
-    (* It is possible for errors to contain locations without a source, but suppressions always
-     * exist in an actual file so there is no point checking if suppressions exist at locations
-     * without a source. *)
-    |> List.filter (fun loc -> Base.Option.is_some (Loc.source loc))
-  in
+  let loc = Errors.loc_of_printable_error err in
   (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
     match Errors.kind_of_printable_error err with
@@ -189,7 +174,7 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
   if ignore then
     None
   else
-    let (result, used, unused) = check_locs locs suppressions unused in
+    let (result, used, unused) = check_loc suppressions (Err, unused) loc in
     let result =
       match Errors.kind_of_printable_error err with
       | Errors.RecursionLimitError ->

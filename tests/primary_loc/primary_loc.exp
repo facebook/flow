@@ -1,0 +1,62 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:7:3
+
+Cannot call `f` with `"asdf"` bound to the first parameter because string [1] is incompatible with number [2].
+
+   test.js:7:3
+   7| f("asdf");
+        ^^^^^^ [1]
+
+References:
+   test.js:4:21
+   4| declare function f (number) : string;
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot cast `3` to `T` because number [1] is incompatible with string [2].
+
+   test.js:12:2
+   12| (3 : T);
+        ^ [1]
+
+References:
+   test.js:12:6
+   12| (3 : T);
+            ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:23
+
+Cannot resolve module `react`.
+
+   21| const React = require('react');
+                             ^^^^^^^
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:3:1
+
+Unused suppression comment.
+
+   3| //$FlowFixMe (unused)
+      ^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:9:1
+
+Unused suppression comment.
+
+   9| //$FlowFixMe (unused)
+      ^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:28:1
+
+Unused suppression comment.
+
+   28| // $FlowFixMe unused
+       ^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 errors and 3 warnings

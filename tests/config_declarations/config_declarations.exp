@@ -12,6 +12,42 @@ References:
                   ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------------- D.js:8:5
+
+Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
+`x`.
+
+   D.js:8:5
+   8| x = y;
+          ^
+
+References:
+   D.js:2:6
+   2|   x: { foo: string }
+           ^^^^^^^^^^^^^^^ [1]
+   D.js:6:6
+   6|   x: { bar: number }
+           ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- D.js:8:5
+
+Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
+`x`.
+
+   D.js:8:5
+   8| x = y;
+          ^
+
+References:
+   D.js:6:6
+   6|   x: { bar: number }
+           ^^^^^^^^^^^^^^^ [1]
+   D.js:2:6
+   2|   x: { foo: string }
+           ^^^^^^^^^^^^^^^ [2]
+
+
 Warning ------------------------------------------------------------------------------------------------------ A.js:14:1
 
 Unused suppression comment.
@@ -28,5 +64,13 @@ Unused suppression comment.
       ^^^^^^^^^^^^^
 
 
+Warning ------------------------------------------------------------------------------------------------------- D.js:5:3
 
-Found 1 error and 2 warnings
+Unused suppression comment.
+
+   5|   // $FlowFixMe - this location is only mentioned in the extra section
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 errors and 3 warnings
