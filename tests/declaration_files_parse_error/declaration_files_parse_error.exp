@@ -1,0 +1,18 @@
+Error -------------------------------------------------------------------------------------------- no_pragma.js.flow:1:6
+
+Unexpected identifier, expected the end of an expression statement (`;`)
+
+   1| this is a parse error
+           ^^
+
+
+Error ----------------------------------------------------------------------------------------------- pragma.js.flow:3:6
+
+Unexpected identifier, expected the end of an expression statement (`;`)
+
+   3| this is a parse error
+           ^^
+
+
+
+Found 2 errors
