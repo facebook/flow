@@ -980,12 +980,7 @@ end = struct
   let add_unparsed_info ~mutator ~options (file, docblock) =
     let force_check = Options.all options in
     let module_name = exported_module ~options file docblock in
-    let checked =
-      force_check
-      || File_key.is_lib_file file
-      || Docblock.is_flow docblock
-      || Docblock.isDeclarationFile docblock
-    in
+    let checked = force_check || File_key.is_lib_file file || Docblock.is_flow docblock in
     let info = { Module_heaps.module_name; checked; parsed = false } in
     Module_heaps.Introduce_files_mutator.add_info mutator file info;
     (file, module_name)
