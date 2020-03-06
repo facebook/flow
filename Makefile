@@ -131,6 +131,8 @@ MODULES=\
   src/services/refactor\
   src/services/references\
   src/services/saved_state\
+  src/services/saved_state/compression\
+  src/services/saved_state/fetcher\
   src/services/type_info\
   src/state/heaps/context\
   src/state/heaps/module\
@@ -181,7 +183,7 @@ NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
-  src/services/saved_state/saved_state_compression_stubs.c\
+  src/services/saved_state/compression/saved_state_compression_stubs.c\
   src/hack_forked/find/hh_readdir.c\
   src/heap/hh_assert.c\
   src/heap/hh_shared.c\
