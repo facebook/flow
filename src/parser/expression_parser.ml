@@ -1180,6 +1180,7 @@ module Expression
         (fst expr, List.rev (imaginary_quasi :: quasis), List.rev expressions)
     in
     fun env ((start_loc, { cooked; raw; _ }, is_tail) as part) ->
+      let leading = Peek.comments env in
       Expect.token env (T_TEMPLATE_PART part);
       let (end_loc, quasis, expressions) =
         let head =
@@ -1191,12 +1192,17 @@ module Expression
         else
           template_parts env [head] []
       in
+      let trailing = Peek.comments env in
       let loc = Loc.btwn start_loc end_loc in
-      (loc, Expression.TemplateLiteral.{ quasis; expressions })
+      ( loc,
+        Expression.TemplateLiteral.
+          { quasis; expressions; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+      )
 
   and tagged_template env start_loc tag part =
     let quasi = template_literal env part in
-    (Loc.btwn start_loc (fst quasi), Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi }))
+    ( Loc.btwn start_loc (fst quasi),
+      Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi; comments = None }) )
 
   and group env =
     let leading = Peek.comments env in
@@ -1250,6 +1256,10 @@ module Expression
       | Sequence ({ Sequence.comments; _ } as e) ->
         Sequence { e with Sequence.comments = merge_comments comments }
       | Super { Super.comments; _ } -> Super { Super.comments = merge_comments comments }
+      | TaggedTemplate ({ TaggedTemplate.comments; _ } as e) ->
+        TaggedTemplate { e with TaggedTemplate.comments = merge_comments comments }
+      | TemplateLiteral ({ TemplateLiteral.comments; _ } as e) ->
+        TemplateLiteral { e with TemplateLiteral.comments = merge_comments comments }
       | This { This.comments; _ } -> This { This.comments = merge_comments comments }
       | TypeCast ({ TypeCast.comments; _ } as e) ->
         TypeCast { e with TypeCast.comments = merge_comments comments }

@@ -989,8 +989,8 @@ let program
       | ((_, Class class1), (_, Class class2)) -> class_ class1 class2
       | ((loc, Assignment assn1), (_, Assignment assn2)) -> assignment loc assn1 assn2
       | ((loc, Object obj1), (_, Object obj2)) -> object_ loc obj1 obj2
-      | ((_, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2)) ->
-        Some (tagged_template t_tmpl1 t_tmpl2)
+      | ((loc, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2)) ->
+        Some (tagged_template loc t_tmpl1 t_tmpl2)
       | ((loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2))
         ->
         Some (template_literal loc t_lit1 t_lit2)
@@ -1023,25 +1023,28 @@ let program
     else
       Some [(loc, Replace (StringLiteral lit1, StringLiteral lit2))]
   and tagged_template
+      (loc : Loc.t)
       (t_tmpl1 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
       (t_tmpl2 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t) : node change list =
     let open Ast.Expression.TaggedTemplate in
-    let { tag = tag1; quasi = (loc, quasi1) } = t_tmpl1 in
-    let { tag = tag2; quasi = (_, quasi2) } = t_tmpl2 in
+    let { tag = tag1; quasi = (quasi_loc, quasi1); comments = comments1 } = t_tmpl1 in
+    let { tag = tag2; quasi = (_, quasi2); comments = comments2 } = t_tmpl2 in
     let tag_diff = diff_if_changed expression tag1 tag2 in
-    let quasi_diff = diff_if_changed (template_literal loc) quasi1 quasi2 in
-    tag_diff @ quasi_diff
+    let quasi_diff = diff_if_changed (template_literal quasi_loc) quasi1 quasi2 in
+    let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    Base.List.concat [tag_diff; quasi_diff; comments_diff]
   and template_literal
       (loc : Loc.t)
       (* Need to pass in loc because TemplateLiteral doesn't have a loc attached *)
         (t_lit1 : (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t)
       (t_lit2 : (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t) : node change list =
     let open Ast.Expression.TemplateLiteral in
-    let { quasis = quasis1; expressions = exprs1 } = t_lit1 in
-    let { quasis = quasis2; expressions = exprs2 } = t_lit2 in
+    let { quasis = quasis1; expressions = exprs1; comments = comments1 } = t_lit1 in
+    let { quasis = quasis2; expressions = exprs2; comments = comments2 } = t_lit2 in
     let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
     let exprs_diff = diff_and_recurse_nonopt_no_trivial expression exprs1 exprs2 in
-    let result = join_diff_list [quasis_diff; exprs_diff] in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    let result = join_diff_list [quasis_diff; exprs_diff; comments_diff] in
     Base.Option.value
       result
       ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))]

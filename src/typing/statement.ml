@@ -3315,7 +3315,8 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       {
         TaggedTemplate.tag;
         (* TODO: walk quasis? *)
-        quasi = (quasi_loc, { TemplateLiteral.quasis; expressions });
+        quasi = (quasi_loc, { TemplateLiteral.quasis; expressions; comments = quasi_comments });
+        comments = tagged_template_comments;
       } ->
     let expressions = Base.List.map ~f:(expression cx) expressions in
     let (((_, t), _) as tag_ast) = expression cx tag in
@@ -3353,9 +3354,10 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       TaggedTemplate
         {
           TaggedTemplate.tag = tag_ast;
-          quasi = (quasi_loc, { TemplateLiteral.quasis; expressions });
+          quasi = (quasi_loc, { TemplateLiteral.quasis; expressions; comments = quasi_comments });
+          comments = tagged_template_comments;
         } )
-  | TemplateLiteral { TemplateLiteral.quasis; expressions } ->
+  | TemplateLiteral { TemplateLiteral.quasis; expressions; comments } ->
     let (t, expressions) =
       match quasis with
       | [head] ->
@@ -3388,7 +3390,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         in
         (t_out, expressions)
     in
-    ((loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions })
+    ((loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions; comments })
   | JSXElement e ->
     let (t, e) = jsx cx loc e in
     ((loc, t), JSXElement e)
@@ -3510,6 +3512,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
                   } );
               ];
             expressions = [];
+            comments = _;
           } ) ->
       let comments =
         match arg with
@@ -3720,6 +3723,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                                 } );
                             ];
                           expressions = [];
+                          comments = _;
                         } ) as lit_exp );
               ] ) ) ->
           ( Import_export.require cx (source_loc, module_name) loc,
@@ -6578,6 +6582,7 @@ and predicates_of_condition cx ~cond e =
                       } );
                   ];
                 expressions = [];
+                comments = _;
               } as lit_exp ) ) ) ->
       typeof_test loc sense argument s str_loc (fun argument ->
           let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
@@ -6600,6 +6605,7 @@ and predicates_of_condition cx ~cond e =
                       } );
                   ];
                 expressions = [];
+                comments = _;
               } as lit_exp ) ),
         (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) ) ->
       typeof_test loc sense argument s str_loc (fun argument ->

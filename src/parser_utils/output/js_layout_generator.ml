@@ -985,14 +985,16 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
              ]
       | E.MetaProperty { E.MetaProperty.meta; property } ->
         fuse [identifier meta; Atom "."; identifier property]
-      | E.TaggedTemplate { E.TaggedTemplate.tag; quasi = (loc, template) } ->
+      | E.TaggedTemplate { E.TaggedTemplate.tag; quasi = (template_loc, template); comments } ->
         let ctxt = { normal_context with left = In_tagged_template } in
-        fuse
-          [
-            expression_with_parens ~precedence ~ctxt tag;
-            source_location_with_comments (loc, template_literal template);
-          ]
-      | E.TemplateLiteral template -> template_literal template
+        layout_node_with_comments_opt loc comments
+        @@ fuse
+             [
+               expression_with_parens ~precedence ~ctxt tag;
+               source_location_with_comments (template_loc, template_literal template);
+             ]
+      | E.TemplateLiteral ({ E.TemplateLiteral.comments; _ } as template) ->
+        layout_node_with_comments_opt loc comments (template_literal template)
       | E.JSXElement el -> jsx_element loc el
       | E.JSXFragment fr -> jsx_fragment loc fr
       | E.TypeCast { E.TypeCast.expression = expr; annot; comments } ->
@@ -1242,7 +1244,7 @@ and fuse_with_default ?(ctxt = normal_context) node expr =
         expr;
     ]
 
-and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions } =
+and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions; comments = _ } =
   let module T = Ast.Expression.TemplateLiteral in
   let template_element i (loc, { T.Element.value = { T.Element.raw; _ }; tail }) =
     fuse

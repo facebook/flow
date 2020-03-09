@@ -1443,18 +1443,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method tagged_template (expr : ('M, 'T) Ast.Expression.TaggedTemplate.t)
         : ('N, 'U) Ast.Expression.TaggedTemplate.t =
       let open Ast.Expression.TaggedTemplate in
-      let { tag; quasi } = expr in
+      let { tag; quasi; comments } = expr in
       let tag' = this#expression tag in
       let quasi' = (this#on_loc_annot * this#template_literal) quasi in
-      { tag = tag'; quasi = quasi' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { tag = tag'; quasi = quasi'; comments = comments' }
 
     method template_literal (expr : ('M, 'T) Ast.Expression.TemplateLiteral.t)
         : ('N, 'U) Ast.Expression.TemplateLiteral.t =
       let open Ast.Expression.TemplateLiteral in
-      let { quasis; expressions } = expr in
+      let { quasis; expressions; comments } = expr in
       let quasis' = Base.List.map ~f:this#template_literal_element quasis in
       let expressions' = Base.List.map ~f:this#expression expressions in
-      { quasis = quasis'; expressions = expressions' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { quasis = quasis'; expressions = expressions'; comments = comments' }
 
     method template_literal_element ((annot, elem) : 'M Ast.Expression.TemplateLiteral.Element.t)
         : 'N Ast.Expression.TemplateLiteral.Element.t =

@@ -869,6 +869,7 @@ and Expression : sig
     type ('M, 'T) t = {
       quasis: 'M Element.t list;
       expressions: ('M, 'T) Expression.t list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -877,6 +878,7 @@ and Expression : sig
     type ('M, 'T) t = {
       tag: ('M, 'T) Expression.t;
       quasi: 'M * ('M, 'T) TemplateLiteral.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

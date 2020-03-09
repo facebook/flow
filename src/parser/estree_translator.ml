@@ -1142,8 +1142,9 @@ with type t = Impl.t = struct
       node "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
     and string_literal (loc, { StringLiteral.value; raw }) =
       node "Literal" loc [("value", string value); ("raw", string raw)]
-    and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions }) =
+    and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
+        ?comments
         "TemplateLiteral"
         loc
         [
@@ -1159,8 +1160,9 @@ with type t = Impl.t = struct
           } ) =
       let value = obj [("raw", string raw); ("cooked", string cooked)] in
       node "TemplateElement" loc [("value", value); ("tail", bool tail)]
-    and tagged_template (loc, { Expression.TaggedTemplate.tag; quasi }) =
+    and tagged_template (loc, { Expression.TaggedTemplate.tag; quasi; comments }) =
       node
+        ?comments
         "TaggedTemplateExpression"
         loc
         [("tag", expression tag); ("quasi", template_literal quasi)]

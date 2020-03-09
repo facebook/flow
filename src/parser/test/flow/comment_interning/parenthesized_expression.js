@@ -24,6 +24,10 @@ function foo() {}
 
 /* Leading optional call */ (i?.isNaN()) /* Trailing optional call */;
 
+/* Leading template literal */ (`template`) /* Trailing template literal */;
+
+/* Leading tagged template */ (tag`template`) /* Trailing tagged template */;
+
 /* Leading this */ (this) /* Trailing this */;
 
 /* Leading unary */ (+1) /* Trailing unary */;

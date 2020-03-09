@@ -1731,23 +1731,25 @@ class ['loc] mapper =
 
     method tagged_template _loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
-      let { tag; quasi } = expr in
+      let { tag; quasi; comments } = expr in
       let tag' = this#expression tag in
       let quasi' = map_loc this#template_literal quasi in
-      if tag == tag' && quasi == quasi' then
+      let comments' = this#syntax_opt comments in
+      if tag == tag' && quasi == quasi' && comments == comments then
         expr
       else
-        { tag = tag'; quasi = quasi' }
+        { tag = tag'; quasi = quasi'; comments = comments' }
 
     method template_literal _loc (expr : ('loc, 'loc) Ast.Expression.TemplateLiteral.t) =
       let open Ast.Expression.TemplateLiteral in
-      let { quasis; expressions } = expr in
+      let { quasis; expressions; comments } = expr in
       let quasis' = ListUtils.ident_map this#template_literal_element quasis in
       let expressions' = ListUtils.ident_map this#expression expressions in
-      if quasis == quasis' && expressions == expressions' then
+      let comments' = this#syntax_opt comments in
+      if quasis == quasis' && expressions == expressions' && comments == comments' then
         expr
       else
-        { quasis = quasis'; expressions = expressions' }
+        { quasis = quasis'; expressions = expressions'; comments = comments' }
 
     (* TODO *)
     method template_literal_element (elem : 'loc Ast.Expression.TemplateLiteral.Element.t) = elem
