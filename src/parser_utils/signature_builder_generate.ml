@@ -1070,7 +1070,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       end
     | (loc, TypeCast stuff) ->
       let open Ast.Expression.TypeCast in
-      let { annot; expression = _ } = stuff in
+      let { annot; expression = _; comments = _ } = stuff in
       let (_, t) = annot in
       (loc, T.TypeCast (type_ t))
     | (loc, Member stuff) ->

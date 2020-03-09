@@ -1133,6 +1133,7 @@ and Expression : sig
     type ('M, 'T) t = {
       expression: ('M, 'T) Expression.t;
       annot: ('M, 'T) Type.annotation;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

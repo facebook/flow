@@ -993,8 +993,9 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.TemplateLiteral template -> template_literal template
       | E.JSXElement el -> jsx_element loc el
       | E.JSXFragment fr -> jsx_fragment loc fr
-      | E.TypeCast { E.TypeCast.expression = expr; annot } ->
-        wrap_in_parens (fuse [expression expr; type_annotation annot])
+      | E.TypeCast { E.TypeCast.expression = expr; annot; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ wrap_in_parens (fuse [expression expr; type_annotation annot])
       | E.Import expr -> fuse [Atom "import"; wrap_in_parens (expression expr)]
       (* Not supported *)
       | E.Comprehension _

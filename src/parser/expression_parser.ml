@@ -1181,7 +1181,8 @@ module Expression
       | T_COLON ->
         let annot = Type.annotation env in
         let open Expression in
-        (Loc.btwn (fst expression) (fst annot), TypeCast TypeCast.{ expression; annot })
+        ( Loc.btwn (fst expression) (fst annot),
+          TypeCast TypeCast.{ expression; annot; comments = None } )
       | _ -> expression
     in
     Expect.token env T_RPAREN;
@@ -1212,6 +1213,8 @@ module Expression
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }
+      | TypeCast ({ TypeCast.comments; _ } as e) ->
+        TypeCast { e with TypeCast.comments = merge_comments comments }
       | Unary ({ Unary.comments; _ } as e) ->
         Unary { e with Unary.comments = merge_comments comments }
       | Update ({ Update.comments; _ } as e) ->

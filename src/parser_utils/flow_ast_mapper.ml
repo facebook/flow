@@ -1770,13 +1770,14 @@ class ['loc] mapper =
 
     method type_cast _loc (expr : ('loc, 'loc) Ast.Expression.TypeCast.t) =
       let open Ast.Expression.TypeCast in
-      let { expression; annot } = expr in
+      let { expression; annot; comments } = expr in
       let expression' = this#expression expression in
       let annot' = this#type_annotation annot in
-      if expression' == expression && annot' == annot then
+      let comments' = this#syntax_opt comments in
+      if expression' == expression && annot' == annot && comments' == comments then
         expr
       else
-        { expression = expression'; annot = annot' }
+        { expression = expression'; annot = annot'; comments = comments' }
 
     method unary_expression _loc (expr : ('loc, 'loc) Flow_ast.Expression.Unary.t) =
       let open Flow_ast.Expression.Unary in

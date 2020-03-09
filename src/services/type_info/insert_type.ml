@@ -408,7 +408,14 @@ class mapper ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_looku
       let open Flow_ast.Expression in
       if this#target_contained_by l then
         if this#is_target l then
-          (l, TypeCast TypeCast.{ expression = e; annot = this#synth_type l })
+          ( l,
+            TypeCast
+              TypeCast.
+                {
+                  expression = e;
+                  annot = this#synth_type l;
+                  comments = Flow_ast_utils.mk_comments_opt ();
+                } )
         else
           super#expression e
       else

@@ -456,8 +456,8 @@ module Expressions = struct
 
   let logical_or (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
 
-  let typecast expression annotation =
-    (Loc.none, TypeCast { TypeCast.expression; annot = Types.annotation annotation })
+  let typecast ?comments expression annotation =
+    (Loc.none, TypeCast { TypeCast.expression; annot = Types.annotation annotation; comments })
 
   module Literals = struct
     let string ?loc value = literal ?loc (Literals.string value)

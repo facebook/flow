@@ -464,8 +464,9 @@ with type t = Impl.t = struct
             ("left", expression left);
             ("right", expression right);
           ]
-      | (loc, TypeCast { TypeCast.expression = expr; annot }) ->
+      | (loc, TypeCast { TypeCast.expression = expr; annot; comments }) ->
         node
+          ?comments
           "TypeCastExpression"
           loc
           [("expression", expression expr); ("typeAnnotation", type_annotation annot)]

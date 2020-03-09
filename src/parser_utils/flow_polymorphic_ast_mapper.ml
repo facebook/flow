@@ -1465,10 +1465,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method type_cast (expr : ('M, 'T) Ast.Expression.TypeCast.t)
         : ('N, 'U) Ast.Expression.TypeCast.t =
       let open Ast.Expression.TypeCast in
-      let { expression; annot } = expr in
+      let { expression; annot; comments } = expr in
       let expression' = this#expression expression in
       let annot' = this#type_annotation annot in
-      { expression = expression'; annot = annot' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { expression = expression'; annot = annot'; comments = comments' }
 
     method unary_expression (expr : ('M, 'T) Ast.Expression.Unary.t)
         : ('N, 'U) Ast.Expression.Unary.t =

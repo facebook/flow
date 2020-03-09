@@ -620,7 +620,11 @@ class insert_typecast_mapper =
       let (loc, _) = expression in
       ( loc,
         Ast.Expression.TypeCast
-          { Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any)); expression } )
+          {
+            Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any));
+            expression;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
   end
 
 class insert_call_type_args =

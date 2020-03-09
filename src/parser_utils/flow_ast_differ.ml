@@ -996,7 +996,7 @@ let program
         Some (template_literal loc t_lit1 t_lit2)
       | ((_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2)) -> jsx_element jsx_elem1 jsx_elem2
       | ((_, JSXFragment frag1), (_, JSXFragment frag2)) -> jsx_fragment frag1 frag2
-      | ((_, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast t1 t2)
+      | ((loc, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast loc t1 t2)
       | ((_, Logical l1), (_, Logical l2)) -> logical l1 l2
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
       | (expr, (loc, TypeCast t2)) -> Some (type_cast_added expr loc t2)
@@ -2006,21 +2006,23 @@ let program
       [(loc1, Replace (TypeAnnotation (loc1, typ1), FunctionTypeAnnotation (loc2, typ2)))]
     | (_, _) -> type_ typ1 typ2
   and type_cast
+      (loc : Loc.t)
       (type_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)
       (type_cast2 : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t) : node change list =
     let open Flow_ast.Expression.TypeCast in
-    let { expression = expr1; annot = annot1 } = type_cast1 in
-    let { expression = expr2; annot = annot2 } = type_cast2 in
+    let { expression = expr1; annot = annot1; comments = comments1 } = type_cast1 in
+    let { expression = expr2; annot = annot2; comments = comments2 } = type_cast2 in
     let expr = diff_if_changed expression expr1 expr2 in
     let annot = diff_if_changed type_annotation annot1 annot2 in
-    expr @ annot
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    Base.List.concat [expr; annot; comments]
   and type_cast_added
       (expr : (Loc.t, Loc.t) Flow_ast.Expression.t)
       (loc : Loc.t)
       (type_cast : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t) : node change list =
     let open Flow_ast.Expression.TypeCast in
     Loc.(
-      let { expression = expr2; annot = annot2 } = type_cast in
+      let { expression = expr2; annot = annot2; comments = _ } = type_cast in
       let expr_diff_rev = diff_if_changed expression expr expr2 |> List.rev in
       let append_annot_rev =
         ({ loc with start = loc._end }, Insert (Some "", [TypeAnnotation annot2; Raw ")"]))
