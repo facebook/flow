@@ -2802,6 +2802,10 @@ let init_from_scratch ~profiling ~workers options =
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
+let exit_if_no_fallback ?msg options =
+  if Options.saved_state_no_fallback options then
+    FlowExitStatus.exit ?msg FlowExitStatus.Invalid_saved_state
+
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
 let load_saved_state ~profiling ~workers options =
   let%lwt (fetch_profiling, fetch_result) =
@@ -2850,11 +2854,9 @@ let load_saved_state ~profiling ~workers options =
          ~saved_state_filename:(Path.to_string saved_state_filename)
          ~changed_files_count
          ~invalid_reason;
-       if Options.saved_state_no_fallback options then
-         let msg = spf "Failed to load saved state: %s" invalid_reason in
-         FlowExitStatus.exit ~msg FlowExitStatus.Invalid_saved_state
-       else
-         Lwt.return_none)
+       let msg = spf "Failed to load saved state: %s" invalid_reason in
+       exit_if_no_fallback ~msg options;
+       Lwt.return_none)
 
 exception Watchman_init_failed
 
