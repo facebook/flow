@@ -51,7 +51,7 @@ let wait_on_server_restart ic =
     ()
 
 module SockMap = WrappedMap.Make (struct
-  type t = Unix.sockaddr
+  type t = Socket.addr
 
   let compare = Pervasives.compare
 end)
@@ -69,7 +69,7 @@ let open_connection ~timeout ~client_handshake sockaddr =
   | Some conn -> conn
   | None ->
     let conn =
-      try Timeout.open_connection ~timeout sockaddr
+      try Socket.with_addr sockaddr @@ Timeout.open_connection ~timeout
       with Unix.Unix_error (Unix.ENOENT, "connect", _) -> raise (ConnectError Missing_socket)
     in
     connections := SockMap.add sockaddr conn !connections;
@@ -93,16 +93,7 @@ let close_connection sockaddr =
     Timeout.close_in_noerr ic
 
 let establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root =
-  let sock_name = Socket.get_path (Server_files.socket_file ~flowconfig_name ~tmp_dir root) in
-  let sockaddr =
-    if Sys.win32 then (
-      let ic = open_in_bin sock_name in
-      let port = input_binary_int ic in
-      close_in ic;
-      Unix.(ADDR_INET (inet_addr_loopback, port))
-    ) else
-      Unix.ADDR_UNIX sock_name
-  in
+  let sockaddr = Socket.addr_for_open (Server_files.socket_file ~flowconfig_name ~tmp_dir root) in
   Ok (sockaddr, open_connection ~timeout ~client_handshake sockaddr)
 
 let get_handshake ~timeout:_ sockaddr ic oc =
