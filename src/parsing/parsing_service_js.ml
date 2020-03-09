@@ -163,6 +163,7 @@ let parse_json_file ~fail content file =
                   Expression.Assignment.operator = None;
                   left = (loc_none, Pattern.Expression module_exports);
                   right = expr;
+                  comments = Flow_ast_utils.mk_comments_opt ();
                 } );
           directive = None;
         } )

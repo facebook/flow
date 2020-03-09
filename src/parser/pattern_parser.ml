@@ -37,7 +37,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             in
             let (pattern, default) =
               match value with
-              | (_loc, Assignment { Assignment.operator = None; left; right }) -> (left, Some right)
+              | (_loc, Assignment { Assignment.operator = None; left; right; comments = _ }) ->
+                (left, Some right)
               | _ -> (from_expr env value, None)
             in
             Pattern.Object.Property
@@ -97,8 +98,9 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       | Some (Spread (loc, _)) :: remaining ->
         error_at env (loc, Parse_error.ElementAfterRestElement);
         elements env acc remaining
-      | Some (Expression (loc, Assignment { Assignment.operator = None; left; right })) :: remaining
-        ->
+      | Some
+          (Expression (loc, Assignment { Assignment.operator = None; left; right; comments = _ }))
+        :: remaining ->
         (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
              #prod-AssignmentElement *)
         let acc =

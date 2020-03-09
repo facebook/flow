@@ -1166,7 +1166,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       end
     | (loc, Assignment stuff) ->
       let open Ast.Expression.Assignment in
-      let { operator; left = _; right } = stuff in
+      let { operator; left = _; right; comments = _ } = stuff in
       begin
         match operator with
         | None -> literal_expr right

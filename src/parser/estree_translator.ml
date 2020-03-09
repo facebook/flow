@@ -469,13 +469,14 @@ with type t = Impl.t = struct
           "TypeCastExpression"
           loc
           [("expression", expression expr); ("typeAnnotation", type_annotation annot)]
-      | (loc, Assignment { Assignment.left; operator; right }) ->
+      | (loc, Assignment { Assignment.left; operator; right; comments }) ->
         let operator =
           match operator with
           | None -> "="
           | Some op -> Flow_ast_utils.string_of_assignment_operator op
         in
         node
+          ?comments
           "AssignmentExpression"
           loc
           [("operator", string operator); ("left", pattern left); ("right", expression right)]

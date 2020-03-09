@@ -4,6 +4,8 @@ var i = 0;
 
 /* Leading array */ ([]) /* Trailing array */;
 
+/* Leading assign */ (i = 1) /* Trailing assign */;
+
 /* Leading binary */ (1 + 2) /* Trailing binary */;
 
 /* Leading class */ (class C {}) /* Trailing class */;

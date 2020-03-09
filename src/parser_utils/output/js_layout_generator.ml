@@ -811,22 +811,23 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.Literal lit -> literal lit
       | E.Function func -> function_ func
       | E.ArrowFunction func -> arrow_function ~ctxt ~precedence func
-      | E.Assignment { E.Assignment.operator; left; right } ->
-        fuse
-          [
-            pattern ~ctxt left;
-            pretty_space;
-            begin
-              match operator with
-              | None -> Atom "="
-              | Some op -> Atom (Flow_ast_utils.string_of_assignment_operator op)
-            end;
-            pretty_space;
-            begin
-              let ctxt = context_after_token ctxt in
-              expression_with_parens ~precedence ~ctxt right
-            end;
-          ]
+      | E.Assignment { E.Assignment.operator; left; right; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ fuse
+             [
+               pattern ~ctxt left;
+               pretty_space;
+               begin
+                 match operator with
+                 | None -> Atom "="
+                 | Some op -> Atom (Flow_ast_utils.string_of_assignment_operator op)
+               end;
+               pretty_space;
+               begin
+                 let ctxt = context_after_token ctxt in
+                 expression_with_parens ~precedence ~ctxt right
+               end;
+             ]
       | E.Binary { E.Binary.operator; left; right; comments } ->
         let module B = E.Binary in
         layout_node_with_comments_opt loc comments

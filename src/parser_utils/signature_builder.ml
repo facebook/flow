@@ -462,6 +462,7 @@ class type_hoister =
                                          property = Ast.Expression.Member.PropertyIdentifier id;
                                        } ) );
                              right = expr;
+                             comments = _;
                            } );
                      _;
                    } ) ->

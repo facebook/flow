@@ -827,7 +827,7 @@ struct
           ~(is_toplevel : bool) loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression in
         let open Ast.Expression.Assignment in
-        let { operator; left; right } = expr in
+        let { operator; left; right; comments = _ } = expr in
         (* Handle exports *)
         match (operator, left) with
         (* module.exports = ... *)

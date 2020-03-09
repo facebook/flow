@@ -244,10 +244,14 @@ module Object
             with_loc
               ~start_loc:(fst id)
               (fun env ->
+                let leading = Peek.comments env in
                 Expect.token env T_ASSIGN;
+                let trailing = Peek.comments env in
                 let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
                 let right = Parse.assignment env in
-                Ast.Expression.Assignment { Ast.Expression.Assignment.operator = None; left; right })
+                let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+                Ast.Expression.Assignment
+                  { Ast.Expression.Assignment.operator = None; left; right; comments })
               env
           in
           let errs =

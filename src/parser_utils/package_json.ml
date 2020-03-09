@@ -34,8 +34,8 @@ let object_of_statement statement =
         {
           Statement.Expression.expression =
             ( _,
-              Expression.Assignment { Expression.Assignment.operator = None; left = _; right = obj }
-            );
+              Expression.Assignment
+                { Expression.Assignment.operator = None; left = _; right = obj; comments = _ } );
           directive = _;
         } ) ->
     Ok obj

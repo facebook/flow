@@ -139,10 +139,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method assignment (expr : ('M, 'T) Ast.Expression.Assignment.t)
         : ('N, 'U) Ast.Expression.Assignment.t =
       let open Ast.Expression.Assignment in
-      let { operator; left; right } = expr in
+      let { operator; left; right; comments } = expr in
       let left' = this#assignment_pattern left in
       let right' = this#expression right in
-      { operator; left = left'; right = right' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { operator; left = left'; right = right'; comments = comments' }
 
     method binary (expr : ('M, 'T) Ast.Expression.Binary.t) : ('N, 'U) Ast.Expression.Binary.t =
       let open Ast.Expression.Binary in

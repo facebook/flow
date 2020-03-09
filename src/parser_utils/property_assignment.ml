@@ -118,7 +118,7 @@ class property_assignment (property_names : SSet.t) =
     (* EVALUATION ORDER *)
     method! assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
       let open Ast.Expression.Assignment in
-      let { operator; left; right } = expr in
+      let { operator; left; right; comments = _ } = expr in
       match left with
       | ( _,
           Ast.Pattern.Expression

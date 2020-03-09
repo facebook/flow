@@ -987,7 +987,7 @@ let program
       | ((_, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true f1 f2
       | ((_, Function f1), (_, Function f2)) -> function_ f1 f2
       | ((_, Class class1), (_, Class class2)) -> class_ class1 class2
-      | ((_, Assignment assn1), (_, Assignment assn2)) -> assignment assn1 assn2
+      | ((loc, Assignment assn1), (_, Assignment assn2)) -> assignment loc assn1 assn2
       | ((loc, Object obj1), (_, Object obj2)) -> object_ loc obj1 obj2
       | ((_, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2)) ->
         Some (tagged_template t_tmpl1 t_tmpl2)
@@ -1217,15 +1217,19 @@ let program
     | (ExpressionContainer.EmptyExpression, ExpressionContainer.EmptyExpression) -> Some []
     | _ -> None
   and assignment
+      (loc : Loc.t)
       (assn1 : (Loc.t, Loc.t) Ast.Expression.Assignment.t)
       (assn2 : (Loc.t, Loc.t) Ast.Expression.Assignment.t) : node change list option =
     let open Ast.Expression.Assignment in
-    let { operator = op1; left = pat1; right = exp1 } = assn1 in
-    let { operator = op2; left = pat2; right = exp2 } = assn2 in
+    let { operator = op1; left = pat1; right = exp1; comments = comments1 } = assn1 in
+    let { operator = op2; left = pat2; right = exp2; comments = comments2 } = assn2 in
     if op1 != op2 then
       None
     else
-      diff_if_changed pattern pat1 pat2 @ diff_if_changed expression exp1 exp2 |> Base.Option.return
+      let pat_diff = diff_if_changed pattern pat1 pat2 in
+      let exp_diff = diff_if_changed expression exp1 exp2 in
+      let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+      Some (List.concat [pat_diff; exp_diff; comments_diff])
   and object_spread_property prop1 prop2 =
     let open Ast.Expression.Object.SpreadProperty in
     let { argument = arg1 } = prop1 in

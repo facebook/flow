@@ -3289,9 +3289,9 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         Abnormal.throw_expr_control_flow_exception loc ast then_exn
       | _ -> ast
     end
-  | Assignment { Assignment.operator; left; right } ->
+  | Assignment { Assignment.operator; left; right; comments } ->
     let (t, left, right) = assignment cx loc (left, operator, right) in
-    ((loc, t), Assignment { Assignment.operator; left; right })
+    ((loc, t), Assignment { Assignment.operator; left; right; comments })
   | Sequence { Sequence.expressions } ->
     let expressions = Base.List.map ~f:(expression cx) expressions in
     (* t = last element of ts. The parser guarantees sequence expressions are nonempty. *)

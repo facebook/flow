@@ -351,7 +351,8 @@ module Expressions = struct
 
   let literal ?(loc = Loc.none) lit = (loc, Literal lit)
 
-  let assignment left ?operator right = (Loc.none, Assignment { Assignment.operator; left; right })
+  let assignment ?comments left ?operator right =
+    (Loc.none, Assignment { Assignment.operator; left; right; comments })
 
   let binary ?comments ~op left right =
     (Loc.none, Binary { Binary.operator = op; left; right; comments })

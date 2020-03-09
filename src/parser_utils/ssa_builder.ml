@@ -450,7 +450,7 @@ struct
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
-        let { operator; left; right } = expr in
+        let { operator; left; right; comments = _ } = expr in
         begin
           match operator with
           | None ->

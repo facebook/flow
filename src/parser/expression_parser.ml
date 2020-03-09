@@ -118,7 +118,8 @@ module Expression
         let left = as_pattern env expr_or_pattern in
         let right = assignment env in
         let loc = Loc.btwn (fst left) (fst right) in
-        Cover_expr (loc, Expression.(Assignment { Assignment.operator; left; right }))
+        Cover_expr
+          (loc, Expression.(Assignment { Assignment.operator; left; right; comments = None }))
       | _ -> expr_or_pattern
     in
     let error_callback _ = function
@@ -1198,6 +1199,8 @@ module Expression
       match expression with
       | Array ({ Array.comments; _ } as e) ->
         Array { e with Array.comments = merge_comments comments }
+      | Assignment ({ Assignment.comments; _ } as e) ->
+        Assignment { e with Assignment.comments = merge_comments comments }
       | Binary ({ Binary.comments; _ } as e) ->
         Binary { e with Binary.comments = merge_comments comments }
       | Class ({ Class.comments; _ } as e) ->
