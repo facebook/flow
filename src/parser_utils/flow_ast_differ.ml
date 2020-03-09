@@ -983,7 +983,7 @@ let program
       | ((_, Conditional c1), (_, Conditional c2)) -> conditional c1 c2 |> Base.Option.return
       | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
       | ((_, Member member1), (_, Member member2)) -> member member1 member2
-      | ((_, Call call1), (_, Call call2)) -> call call1 call2
+      | ((loc, Call call1), (_, Call call2)) -> call loc call1 call2
       | ((_, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true f1 f2
       | ((_, Function f1), (_, Function f2)) -> function_ f1 f2
       | ((_, Class class1), (_, Class class2)) -> class_ class1 class2
@@ -1359,22 +1359,31 @@ let program
       Some (diff_if_changed identifier id1 id2)
     | (_, _) -> None
   and call
-      (call1 : (Loc.t, Loc.t) Ast.Expression.Call.t) (call2 : (Loc.t, Loc.t) Ast.Expression.Call.t)
-      : node change list option =
+      (loc : Loc.t)
+      (call1 : (Loc.t, Loc.t) Ast.Expression.Call.t)
+      (call2 : (Loc.t, Loc.t) Ast.Expression.Call.t) : node change list option =
     let open Ast.Expression.Call in
-    let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
-    let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
+    let { callee = callee1; targs = targs1; arguments = arguments1; comments = comments1 } =
+      call1
+    in
+    let { callee = callee2; targs = targs2; arguments = arguments2; comments = comments2 } =
+      call2
+    in
     let targs = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
     let args = diff_if_changed_ret_opt call_args arguments1 arguments2 in
     let callee = Some (diff_if_changed expression callee1 callee2) in
-    join_diff_list [targs; args; callee]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [targs; args; callee; comments]
   and call_type_arg
       (t1 : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t)
       (t2 : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t) : node change list option =
     let open Ast.Expression.CallTypeArg in
     match (t1, t2) with
     | (Explicit type1, Explicit type2) -> Some (diff_if_changed type_ type1 type2)
-    | (Implicit _, Implicit _) -> Some []
+    | (Implicit (loc, type1), Implicit (_, type2)) ->
+      let { Implicit.comments = comments1 } = type1 in
+      let { Implicit.comments = comments2 } = type2 in
+      syntax_opt loc comments1 comments2
     | _ -> None
   and call_type_args
       (pi1 : (Loc.t, Loc.t) Ast.Expression.CallTypeArgs.t)

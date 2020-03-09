@@ -194,7 +194,7 @@ class useless_mapper =
       let f targ =
         match targ with
         | Explicit targ' -> Explicit (this#type_ targ')
-        | Implicit loc -> Explicit (loc, Ast.Type.Any)
+        | Implicit (loc, _) -> Explicit (loc, Ast.Type.Any)
       in
       (loc, Base.List.map ~f targs)
 
@@ -425,6 +425,7 @@ class insert_second_cjsimport_mapper =
                                       comments = Flow_ast_utils.mk_comments_opt ();
                                     } );
                             ] );
+                        comments = Flow_ast_utils.mk_comments_opt ();
                       } );
                 directive = None;
               } )
@@ -470,6 +471,7 @@ class add_body_mapper =
                                       comments = Flow_ast_utils.mk_comments_opt ();
                                     } );
                             ] );
+                        comments = Flow_ast_utils.mk_comments_opt ();
                       } );
                 directive = None;
               } )

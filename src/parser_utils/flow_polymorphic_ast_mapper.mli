@@ -243,7 +243,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method if_statement : ('M, 'T) Ast.Statement.If.t -> ('N, 'U) Ast.Statement.If.t
 
-    method implicit : 'T -> 'U
+    method implicit :
+      ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t ->
+      ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t
 
     method import : 'T -> ('M, 'T) Ast.Expression.t -> ('N, 'U) Ast.Expression.t
 

@@ -817,6 +817,7 @@ module T = struct
                             comments = Flow_ast_utils.mk_comments_opt ();
                           } );
                   ] );
+              comments = Flow_ast_utils.mk_comments_opt ();
             } )
       in
       let declaration =
@@ -1120,6 +1121,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                   } );
             targs = None;
             arguments = (_, [Expression (loc, Object stuff)]);
+            comments = _;
           } ) ->
       let open Ast.Expression.Object in
       let { properties; comments = _ } = stuff in
@@ -1135,6 +1137,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
               (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
             targs = None;
             arguments = (_, [Expression (loc, Object stuff)]);
+            comments = _;
           } ) ->
       let open Ast.Expression.Object in
       let { properties; comments = _ } = stuff in

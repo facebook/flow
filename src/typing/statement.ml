@@ -176,12 +176,12 @@ let convert_call_targs =
         | Explicit ast ->
           let (((_, t), _) as tast) = Anno.convert cx tparams_map ast in
           loop (ExplicitArg t :: ts) (Explicit tast :: tasts) cx tparams_map asts
-        | Implicit loc ->
+        | Implicit (loc, impl) ->
           let reason = mk_reason RImplicitInstantiation loc in
           let id = Tvar.mk_no_wrap cx reason in
           loop
             (ImplicitArg (reason, id) :: ts)
-            (Implicit (loc, OpenT (reason, id)) :: tasts)
+            (Implicit ((loc, OpenT (reason, id)), impl) :: tasts)
             cx
             tparams_map
             asts
@@ -3684,6 +3684,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             );
           targs;
           arguments;
+          comments;
         }
       when not (Env.local_scope_entry_exists n) ->
       let targs =
@@ -3751,6 +3752,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
                 targs;
                 arguments;
+                comments;
               } ),
           None,
           None )
@@ -3762,6 +3764,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 (id_loc, ({ Ast.Identifier.name = "requireLazy" as n; comments = _ } as name)) );
           targs;
           arguments;
+          comments;
         }
       when not (Env.local_scope_entry_exists n) ->
       let targs =
@@ -3843,6 +3846,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
                 targs;
                 arguments;
+                comments;
               } ),
           None,
           None )
@@ -3860,6 +3864,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 } ) as expr;
           targs;
           arguments;
+          comments;
         } ->
       let (((_, obj_t), _) as obj_ast) = expression cx obj in
       let (lhs_t, targs, arguments) =
@@ -3879,6 +3884,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                       } );
                 targs;
                 arguments;
+                comments;
               } ),
           None,
           None )
@@ -3894,6 +3900,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 } ) as callee;
           targs;
           arguments;
+          comments;
         } ->
       let reason = mk_reason (RMethodCall (Some name)) loc in
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
@@ -3941,10 +3948,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                       } );
                 targs;
                 arguments = arguments_ast;
+                comments;
               } ),
           None,
           None )
-    | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments } ->
+    | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments; comments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, arguments_ast) = arg_list cx arguments in
       let reason = mk_reason (RFunctionCall RSuper) loc in
@@ -3980,12 +3988,13 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 Call.callee = ((super_loc, super_t), Super super);
                 targs;
                 arguments = arguments_ast;
+                comments;
               } ),
           None,
           None )
     (******************************************)
     (* See ~/www/static_upstream/core/ *)
-    | Call { Call.callee; targs; arguments } when is_call_to_invariant callee ->
+    | Call { Call.callee; targs; arguments; comments } when is_call_to_invariant callee ->
       (* TODO: require *)
       let (((_, callee_t), _) as callee) = expression cx callee in
       let targs =
@@ -4007,7 +4016,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           Abnormal.throw_expr_control_flow_exception
             loc
             ( (loc, VoidT.at loc |> with_trust bogus_trust),
-              Ast.Expression.Call { Call.callee; targs; arguments = (args_loc, []) } )
+              Ast.Expression.Call { Call.callee; targs; arguments = (args_loc, []); comments } )
             Abnormal.Throw
         | ( None,
             ( args_loc,
@@ -4024,7 +4033,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             loc
             ( (loc, VoidT.at loc |> with_trust bogus_trust),
               Ast.Expression.Call
-                { Call.callee; targs; arguments = (args_loc, Expression lit_exp :: arguments) } )
+                {
+                  Call.callee;
+                  targs;
+                  arguments = (args_loc, Expression lit_exp :: arguments);
+                  comments;
+                } )
             Abnormal.Throw
         | (None, (args_loc, Expression cond :: arguments)) ->
           let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
@@ -4054,7 +4068,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           Tast_utils.error_mapper#arg_list arguments
       in
       let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-      Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments }), None, None)
+      Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments }), None, None)
     | Member
         {
           Member._object =
@@ -4392,6 +4406,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
                 targs = _;
                 arguments = _;
+                comments = _;
               } as call ),
           (NewChain | ContinueChain) ) ->
         warn_or_ignore_optional_chaining optional cx loc;
@@ -4424,7 +4439,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         in
         ( Call { call with Call.callee = (callee_loc, Member member) },
           Some (member_opt, member, receiver_ast) )
-      | (Call { Call.callee = (_, Member member); targs = _; arguments = _ }, _) ->
+      | (Call { Call.callee = (_, Member member); targs = _; arguments = _; comments = _ }, _) ->
         (e', Some (NonOptional, member, (fun member -> Member member)))
       | _ -> (e', None)
     in
@@ -4561,7 +4576,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         preds,
         None )
     (* Method calls: e.l(), e.#l(), and e1[e2]() *)
-    | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments },
+    | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
         Some (member_opt, ({ Member._object; property } as receiver), receiver_ast) ) ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let expr_reason = mk_expression_reason ex in
@@ -4741,11 +4756,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 ((lookup_loc, prop_t), receiver_ast { Member._object = object_ast; property });
               targs;
               arguments = argument_asts;
+              comments;
             } ),
         None,
         None )
     (* e1(e2...) *)
-    | (Call { Call.callee; targs; arguments }, None) ->
+    | (Call { Call.callee; targs; arguments; comments }, None) ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let use_op =
         Op
@@ -4778,7 +4794,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           ~get_opt_use
           ~get_reason
       in
-      let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
+      let exp callee = call_ast { Call.callee; targs; arguments = argument_asts; comments } in
       (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
     | (This _, _)
     | (Identifier _, _)
@@ -4818,7 +4834,7 @@ and predicated_call_expression cx loc call =
    - the arguments types
    - the returned type
 *)
-and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; arguments } =
+and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; arguments; comments } =
   let (targts, targ_asts) = convert_call_targs_opt cx targs in
   let args =
     snd arguments
@@ -4849,7 +4865,12 @@ and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; argu
     argks,
     argts,
     t,
-    { Ast.Expression.Call.callee = callee_ast; targs = targ_asts; arguments = arguments_ast } )
+    {
+      Ast.Expression.Call.callee = callee_ast;
+      targs = targ_asts;
+      arguments = arguments_ast;
+      comments;
+    } )
 
 (* We assume that constructor functions return void
    and constructions return objects.
@@ -6782,6 +6803,7 @@ and predicates_of_condition cx ~cond e =
                 } );
           targs;
           arguments = (args_loc, [Expression arg]);
+          comments;
         } ) ->
     Base.Option.iter targs ~f:(fun _ ->
         Flow.add_output
@@ -6816,6 +6838,7 @@ and predicates_of_condition cx ~cond e =
               Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
               targs = None;
               arguments = (args_loc, [Expression arg]);
+              comments;
             } ),
         ArrP )
     in

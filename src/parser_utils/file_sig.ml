@@ -553,7 +553,7 @@ struct
 
       method! call call_loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
         let open Ast.Expression in
-        let { Call.callee; targs = _; arguments } = expr in
+        let { Call.callee; targs = _; arguments; comments = _ } = expr in
         this#handle_call call_loc callee arguments None;
         super#call call_loc expr
 
@@ -958,7 +958,7 @@ struct
         let open Ast.Expression in
         let bindings = this#require_pattern left in
         match right with
-        | (call_loc, Call { Call.callee; targs = _; arguments }) ->
+        | (call_loc, Call { Call.callee; targs = _; arguments; comments = _ }) ->
           this#handle_call call_loc callee arguments bindings
         | _ -> ()
 

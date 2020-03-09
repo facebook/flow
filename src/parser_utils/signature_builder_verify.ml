@@ -418,6 +418,7 @@ module Eval (Env : EvalEnv) = struct
                   } );
             targs = None;
             arguments = (_, [Expression ((_, Object _) as expr)]);
+            comments = _;
           } ) ->
       literal_expr tps expr
     | ( _,
@@ -427,6 +428,7 @@ module Eval (Env : EvalEnv) = struct
               (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
             targs = None;
             arguments = (_, [Expression ((_, Object _) as expr)]);
+            comments = _;
           } )
       when Env.facebook_keyMirror ->
       literal_expr tps expr

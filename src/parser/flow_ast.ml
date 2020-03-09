@@ -813,9 +813,15 @@ end =
 
 and Expression : sig
   module CallTypeArg : sig
+    module Implicit : sig
+      type ('M, 'T) t = 'T * 'M t'
+
+      and 'M t' = { comments: ('M, unit) Syntax.t option } [@@deriving show]
+    end
+
     type ('M, 'T) t =
       | Explicit of ('M, 'T) Type.t
-      | Implicit of 'T
+      | Implicit of ('M, 'T) Implicit.t
     [@@deriving show]
   end
 
@@ -1060,6 +1066,7 @@ and Expression : sig
       callee: ('M, 'T) Expression.t;
       targs: ('M, 'T) Expression.CallTypeArgs.t option;
       arguments: ('M, 'T) ArgList.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

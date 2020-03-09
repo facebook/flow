@@ -863,8 +863,9 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                    expression_with_parens ~precedence ~ctxt right
                end;
              ]
-      | E.Call c -> call ~precedence ~ctxt c
-      | E.OptionalCall { E.OptionalCall.call = c; optional } -> call ~optional ~precedence ~ctxt c
+      | E.Call c -> call ~precedence ~ctxt c loc
+      | E.OptionalCall { E.OptionalCall.call = c; optional } ->
+        call ~optional ~precedence ~ctxt c loc
       | E.Conditional { E.Conditional.test; consequent; alternate } ->
         let test_layout =
           (* increase precedence since conditionals are right-associative *)
@@ -1002,8 +1003,8 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.Generator _ ->
         not_supported loc "Comprehension not supported" )
 
-and call ?(optional = false) ~precedence ~ctxt call_node =
-  let { Ast.Expression.Call.callee; targs; arguments } = call_node in
+and call ?(optional = false) ~precedence ~ctxt call_node loc =
+  let { Ast.Expression.Call.callee; targs; arguments; comments } = call_node in
   let (targs, lparen) =
     match targs with
     | None ->
@@ -1032,7 +1033,10 @@ and call ?(optional = false) ~precedence ~ctxt call_node =
               ] ),
         "(" )
   in
-  fuse [expression_with_parens ~precedence ~ctxt callee; targs; call_args ~lparen arguments]
+  layout_node_with_comments_opt
+    loc
+    comments
+    (fuse [expression_with_parens ~precedence ~ctxt callee; targs; call_args ~lparen arguments])
 
 and expression_with_parens ~precedence ~(ctxt : expression_context) expr =
   if definitely_needs_parens ~precedence ctxt expr then
@@ -2331,7 +2335,7 @@ and call_type_args (loc, args) =
 and call_type_arg (x : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t) =
   let open Ast.Expression.CallTypeArg in
   match x with
-  | Implicit _ -> Atom "_"
+  | Implicit (loc, { Implicit.comments }) -> layout_node_with_comments_opt loc comments (Atom "_")
   | Explicit t -> type_ t
 
 and type_args (loc, args) =

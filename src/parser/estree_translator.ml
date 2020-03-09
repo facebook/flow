@@ -529,9 +529,14 @@ with type t = Impl.t = struct
             ("typeArguments", option call_type_args targs);
             ("arguments", arguments);
           ]
-      | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
-      | (loc, OptionalCall { OptionalCall.call; optional }) ->
-        node "OptionalCallExpression" loc (call_node_properties call @ [("optional", bool optional)])
+      | (loc, Call ({ Call.comments; _ } as call)) ->
+        node ?comments "CallExpression" loc (call_node_properties call)
+      | (loc, OptionalCall { OptionalCall.call = { Call.comments; _ } as call; optional }) ->
+        node
+          ?comments
+          "OptionalCallExpression"
+          loc
+          (call_node_properties call @ [("optional", bool optional)])
       | (loc, Member member) -> node "MemberExpression" loc (member_node_properties member)
       | (loc, OptionalMember { OptionalMember.member; optional }) ->
         node
@@ -1368,13 +1373,17 @@ with type t = Impl.t = struct
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
       node "QualifiedTypeIdentifier" loc [("qualification", qualification); ("id", identifier id)]
-    and generic_type (loc, { Type.Generic.id; targs }) =
+    and generic_type ?comments (loc, { Type.Generic.id; targs }) =
       let id =
         match id with
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
-      node "GenericTypeAnnotation" loc [("id", id); ("typeParameters", option type_args targs)]
+      node
+        ?comments
+        "GenericTypeAnnotation"
+        loc
+        [("id", id); ("typeParameters", option type_args targs)]
     and union_type (loc, ts) = node "UnionTypeAnnotation" loc [("types", array_of_list _type ts)]
     and intersection_type (loc, ts) =
       node "IntersectionTypeAnnotation" loc [("types", array_of_list _type ts)]
@@ -1430,8 +1439,9 @@ with type t = Impl.t = struct
     and call_type_arg x =
       match x with
       | Expression.CallTypeArg.Explicit t -> _type t
-      | Expression.CallTypeArg.Implicit loc ->
+      | Expression.CallTypeArg.Implicit (loc, { Expression.CallTypeArg.Implicit.comments }) ->
         generic_type
+          ?comments
           ( loc,
             {
               Type.Generic.id =
@@ -1591,7 +1601,7 @@ with type t = Impl.t = struct
         | Inferred -> ("InferredPredicate", [])
       in
       node _type loc value
-    and call_node_properties { Expression.Call.callee; targs; arguments } =
+    and call_node_properties { Expression.Call.callee; targs; arguments; comments = _ } =
       [
         ("callee", expression callee);
         ("typeArguments", option call_type_args targs);

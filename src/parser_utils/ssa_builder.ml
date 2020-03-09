@@ -1035,7 +1035,7 @@ struct
 
       method! call _loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
         let open Ast.Expression.Call in
-        let { callee; targs = _; arguments } = expr in
+        let { callee; targs = _; arguments; comments = _ } = expr in
         ignore @@ this#expression callee;
         ignore @@ this#call_arguments arguments;
         this#havoc_current_ssa_env;

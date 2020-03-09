@@ -169,11 +169,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method call _annot (expr : ('M, 'T) Ast.Expression.Call.t) : ('N, 'U) Ast.Expression.Call.t =
       let open Ast.Expression.Call in
-      let { callee; targs; arguments } = expr in
+      let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = Base.Option.map ~f:this#call_type_args targs in
       let arguments' = this#arg_list arguments in
-      { callee = callee'; targs = targs'; arguments = arguments' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 
     method optional_call annot (expr : ('M, 'T) Ast.Expression.OptionalCall.t)
         : ('N, 'U) Ast.Expression.OptionalCall.t =
@@ -804,7 +805,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             let ts' = Base.List.map ~f:this#type_ ts in
             Tuple ts' )
 
-    method implicit (t : 'T) : 'U = this#on_type_annot t
+    method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)
+        : ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t =
+      let open Ast.Expression.CallTypeArg.Implicit in
+      let (annot, { comments }) = t in
+      let annot' = this#on_type_annot annot in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { comments = comments' })
 
     method type_annotation ((annot, t_annot) : ('M, 'T) Ast.Type.annotation) =
       (this#on_loc_annot annot, this#type_ t_annot)

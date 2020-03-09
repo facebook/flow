@@ -967,7 +967,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
     do_wrap (left ^ " " ^ operator ^ " " ^ right)
   | Binary { Binary.operator; left; right; comments = _ } ->
     do_wrap (code_desc_of_operation left (`Binary operator) right)
-  | Call { Call.callee; targs; arguments } ->
+  | Call { Call.callee; targs; arguments; comments = _ } ->
     let targs =
       match targs with
       | None -> ""
@@ -1026,7 +1026,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
     in
     do_wrap ("new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args)
   | Object _ -> "{...}"
-  | OptionalCall { OptionalCall.call = { Call.callee; targs; arguments }; optional } ->
+  | OptionalCall { OptionalCall.call = { Call.callee; targs; arguments; comments = _ }; optional }
+    ->
     let targ_string =
       match targs with
       | None -> ""

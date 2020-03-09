@@ -157,11 +157,11 @@ module Type_at_pos = struct
           self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
         | _ -> super#expression expr
 
-      method! implicit (loc, t) =
+      method! implicit (((loc, t), _) as impl) =
         if self#covers_target loc then
           self#annot_with_tparams (self#find_loc loc t)
         else
-          super#implicit (loc, t)
+          super#implicit impl
     end
 
   let find typed_ast loc =

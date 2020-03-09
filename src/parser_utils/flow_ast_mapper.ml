@@ -242,14 +242,16 @@ class ['loc] mapper =
 
     method call _loc (expr : ('loc, 'loc) Ast.Expression.Call.t) =
       let open Ast.Expression.Call in
-      let { callee; targs; arguments } = expr in
+      let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = map_opt this#call_type_args targs in
       let arguments' = this#call_arguments arguments in
-      if callee == callee' && targs == targs' && arguments == arguments' then
+      let comments' = this#syntax_opt comments in
+      if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
+      then
         expr
       else
-        { callee = callee'; targs = targs'; arguments = arguments' }
+        { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 
     method call_arguments (arg_list : ('loc, 'loc) Ast.Expression.ArgList.t) =
       let (loc, arguments) = arg_list in
@@ -285,7 +287,12 @@ class ['loc] mapper =
           t
         else
           Explicit x'
-      | Implicit _ -> t
+      | Implicit (loc, { Implicit.comments }) ->
+        let comments' = this#syntax_opt comments in
+        if comments == comments' then
+          t
+        else
+          Implicit (loc, { Implicit.comments = comments' })
 
     method catch_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) = map_loc this#block body
 

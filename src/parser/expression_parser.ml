@@ -659,9 +659,16 @@ module Expression
     let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
     let optional = last_token env = Some T_PLING_PERIOD in
     let arguments ?targs env =
-      let (args_loc, arguments) = with_loc arguments env in
+      let (args_loc, (arguments, trailing)) = arguments env in
       let loc = Loc.btwn start_loc args_loc in
-      let call = { Expression.Call.callee = as_expression env left; targs; arguments } in
+      let call =
+        {
+          Expression.Call.callee = as_expression env left;
+          targs;
+          arguments = (args_loc, arguments);
+          comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+        }
+      in
       let call =
         if optional || in_optional_chain then
           let open Expression in
@@ -747,7 +754,9 @@ module Expression
           in
           let arguments =
             match Peek.token env with
-            | T_LPAREN -> Some (arguments env)
+            | T_LPAREN ->
+              let (arguments_loc, (arguments, _)) = arguments env in
+              Some (arguments_loc, arguments)
             | _ -> None
           in
           let trailing = Peek.comments env in
@@ -767,8 +776,15 @@ module Expression
             match Peek.token env with
             | T_IDENTIFIER { value = "_"; _ } ->
               let loc = Peek.loc env in
+              let leading = Peek.comments env in
               Expect.identifier env "_";
-              Expression.CallTypeArg.Implicit loc
+              let trailing = Peek.comments env in
+              Expression.CallTypeArg.Implicit
+                ( loc,
+                  {
+                    Expression.CallTypeArg.Implicit.comments =
+                      Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                  } )
             | _ -> Expression.CallTypeArg.Explicit (Type._type env)
           in
           let acc = t :: acc in
@@ -814,7 +830,8 @@ module Expression
           Expect.token env T_LPAREN;
           let args = arguments' env [] in
           Expect.token env T_RPAREN;
-          args)
+          let trailing = Peek.comments env in
+          (args, trailing))
         env
 
   and member_cover =
@@ -1214,6 +1231,7 @@ module Expression
         Assignment { e with Assignment.comments = merge_comments comments }
       | Binary ({ Binary.comments; _ } as e) ->
         Binary { e with Binary.comments = merge_comments comments }
+      | Call ({ Call.comments; _ } as e) -> Call { e with Call.comments = merge_comments comments }
       | Class ({ Class.comments; _ } as e) ->
         Class { e with Class.comments = merge_comments comments }
       | Identifier (loc, ({ Identifier.comments; _ } as e)) ->
@@ -1223,6 +1241,12 @@ module Expression
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }
+      | OptionalCall ({ OptionalCall.call = { Call.comments; _ } as call; _ } as optional_call) ->
+        OptionalCall
+          {
+            optional_call with
+            OptionalCall.call = { call with Call.comments = merge_comments comments };
+          }
       | Super { Super.comments; _ } -> Super { Super.comments = merge_comments comments }
       | This { This.comments; _ } -> This { This.comments = merge_comments comments }
       | TypeCast ({ TypeCast.comments; _ } as e) ->

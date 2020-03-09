@@ -326,13 +326,13 @@ module Expressions = struct
 
   let arg_list ?(loc = Loc.none) args : (Loc.t, 'a) ArgList.t = (loc, args)
 
-  let call_node ?targs ?args callee =
+  let call_node ?targs ?args ?comments callee =
     let arguments =
       match args with
       | Some args -> args
       | None -> arg_list []
     in
-    { Call.callee; targs; arguments }
+    { Call.callee; targs; arguments; comments }
 
   let call ?args callee = (Loc.none, Call (call_node ?args callee))
 

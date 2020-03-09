@@ -1,5 +1,7 @@
 var i = 0;
 
+function foo() {}
+
 /* Nested leading 1 */ ( /* Nested leading 2 */ i /* Nested trailing 1 */ ) /* Nested trailing 2 */;
 
 /* Leading array */ ([]) /* Trailing array */;
@@ -7,6 +9,8 @@ var i = 0;
 /* Leading assign */ (i = 1) /* Trailing assign */;
 
 /* Leading binary */ (1 + 2) /* Trailing binary */;
+
+/* Leading call */ (foo()) /* Trailing call */
 
 /* Leading class */ (class C {}) /* Trailing class */;
 
@@ -17,6 +21,8 @@ var i = 0;
 /* Leading new */ (new C()) /* Trailing new */;
 
 /* Leading object */ ({}) /* Trailing object */;
+
+/* Leading optional call */ (i?.isNaN()) /* Trailing optional call */;
 
 /* Leading this */ (this) /* Trailing this */;
 
