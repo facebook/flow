@@ -353,7 +353,8 @@ module Expressions = struct
 
   let assignment left ?operator right = (Loc.none, Assignment { Assignment.operator; left; right })
 
-  let binary ~op left right = (Loc.none, Binary { Binary.operator = op; left; right })
+  let binary ?comments ~op left right =
+    (Loc.none, Binary { Binary.operator = op; left; right; comments })
 
   let plus left right = binary ~op:Binary.Plus left right
 

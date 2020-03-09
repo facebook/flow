@@ -1154,7 +1154,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       arith_unary operator loc argument
     | (loc, Binary stuff) ->
       let open Ast.Expression.Binary in
-      let { operator; left; right } = stuff in
+      let { operator; left; right; comments = _ } = stuff in
       arith_binary operator loc left right
     | (loc, Sequence stuff) ->
       let open Ast.Expression.Sequence in

@@ -146,10 +146,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method binary (expr : ('M, 'T) Ast.Expression.Binary.t) : ('N, 'U) Ast.Expression.Binary.t =
       let open Ast.Expression.Binary in
-      let { operator; left; right } = expr in
+      let { operator; left; right; comments } = expr in
       let left' = this#expression left in
       let right' = this#expression right in
-      { operator; left = left'; right = right' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { operator; left = left'; right = right'; comments = comments' }
 
     method block (stmt : ('M, 'T) Ast.Statement.Block.t) : ('N, 'U) Ast.Statement.Block.t =
       let open Ast.Statement.Block in

@@ -965,7 +965,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
       | Some op -> Flow_ast_utils.string_of_assignment_operator op
     in
     do_wrap (left ^ " " ^ operator ^ " " ^ right)
-  | Binary { Binary.operator; left; right } ->
+  | Binary { Binary.operator; left; right; comments = _ } ->
     do_wrap (code_desc_of_operation left (`Binary operator) right)
   | Call { Call.callee; targs; arguments } ->
     let targs =

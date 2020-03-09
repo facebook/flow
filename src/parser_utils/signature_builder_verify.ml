@@ -436,7 +436,7 @@ module Eval (Env : EvalEnv) = struct
       arith_unary tps operator loc argument
     | (loc, Binary stuff) ->
       let open Ast.Expression.Binary in
-      let { operator; left; right } = stuff in
+      let { operator; left; right; comments = _ } = stuff in
       arith_binary tps operator loc left right
     | (loc, Sequence stuff) ->
       let open Ast.Expression.Sequence in

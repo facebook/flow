@@ -210,13 +210,14 @@ class ['loc] mapper =
 
     method binary _loc (expr : ('loc, 'loc) Ast.Expression.Binary.t) =
       let open Ast.Expression.Binary in
-      let { operator = _; left; right } = expr in
+      let { operator = _; left; right; comments } = expr in
       let left' = this#expression left in
       let right' = this#expression right in
-      if left == left' && right == right' then
+      let comments' = this#syntax_opt comments in
+      if left == left' && right == right' && comments == comments' then
         expr
       else
-        { expr with left = left'; right = right' }
+        { expr with left = left'; right = right'; comments = comments' }
 
     method block _loc (stmt : ('loc, 'loc) Ast.Statement.Block.t) =
       let open Ast.Statement.Block in

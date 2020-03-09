@@ -454,8 +454,9 @@ with type t = Impl.t = struct
                 ("prefix", bool true);
                 ("argument", expression argument);
               ]))
-      | (loc, Binary { Binary.left; operator; right }) ->
+      | (loc, Binary { Binary.left; operator; right; comments }) ->
         node
+          ?comments
           "BinaryExpression"
           loc
           [

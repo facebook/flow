@@ -503,7 +503,7 @@ struct
         let identify_or_recurse subexpr =
           if not (is_module_or_exports subexpr) then ignore (this#expression subexpr)
         in
-        let { operator; left; right } = expr in
+        let { operator; left; right; comments = _ } = expr in
         (* Whitelist e.g. `require.main === module` by avoiding the recursive calls (where the errors
          * are generated) if the AST matches specific patterns. *)
         if is_legal_operator operator then (

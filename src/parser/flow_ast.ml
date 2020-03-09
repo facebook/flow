@@ -975,6 +975,7 @@ and Expression : sig
       operator: operator;
       left: ('M, 'T) Expression.t;
       right: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

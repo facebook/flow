@@ -976,7 +976,7 @@ let program
       match (expr1, expr2) with
       | ((loc, Ast.Expression.Literal lit1), (_, Ast.Expression.Literal lit2)) ->
         Some (literal loc lit1 lit2)
-      | ((_, Binary b1), (_, Binary b2)) -> binary b1 b2
+      | ((loc, Binary b1), (_, Binary b2)) -> binary loc b1 b2
       | ((loc, Unary u1), (_, Unary u2)) -> unary loc u1 u2
       | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
         identifier id1 id2 |> Base.Option.return
@@ -1275,15 +1275,19 @@ let program
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [comments; diff_and_recurse_no_trivial object_property properties1 properties2]
   and binary
-      (b1 : (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2 : (Loc.t, Loc.t) Ast.Expression.Binary.t) :
-      node change list option =
+      (loc : Loc.t)
+      (b1 : (Loc.t, Loc.t) Ast.Expression.Binary.t)
+      (b2 : (Loc.t, Loc.t) Ast.Expression.Binary.t) : node change list option =
     let open Ast.Expression.Binary in
-    let { operator = op1; left = left1; right = right1 } = b1 in
-    let { operator = op2; left = left2; right = right2 } = b2 in
+    let { operator = op1; left = left1; right = right1; comments = comments1 } = b1 in
+    let { operator = op2; left = left2; right = right2; comments = comments2 } = b2 in
     if op1 != op2 then
       None
     else
-      Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
+      let left_diff = diff_if_changed expression left1 left2 in
+      let right_diff = diff_if_changed expression right1 right2 in
+      let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+      Some (List.concat [left_diff; right_diff; comments_diff])
   and unary
       loc (u1 : (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2 : (Loc.t, Loc.t) Ast.Expression.Unary.t)
       : node change list option =

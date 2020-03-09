@@ -1141,6 +1141,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                              Binary.operator = Binary.StrictEqual;
                              left = discriminant;
                              right = expr;
+                             comments = Flow_ast_utils.mk_comments_opt ();
                            } )
                      in
                      let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
@@ -5126,7 +5127,7 @@ and update cx loc expr =
       { expr with argument = arg_ast } )
 
 (* traverse a binary expression, return result type *)
-and binary cx loc { Ast.Expression.Binary.operator; left; right } =
+and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
   let open Ast.Expression.Binary in
   match operator with
   | Equal
@@ -5144,7 +5145,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
     in
     let reason = mk_reason desc loc in
     Flow.flow cx (t1, EqT (reason, false, t2));
-    (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
+    (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | In ->
     let (loc1, _) = left in
     let (loc2, _) = right in
@@ -5154,7 +5155,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
     let reason_rhs = mk_reason (RCustom "RHS of `in` operator") loc2 in
     Flow.flow cx (t1, AssertBinaryInLHST reason_lhs);
     Flow.flow cx (t2, AssertBinaryInRHST reason_rhs);
-    (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
+    (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | StrictEqual
   | StrictNotEqual ->
     let (((_, t1), _) as left) = expression cx left in
@@ -5170,11 +5171,11 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
     in
     let reason = mk_reason desc loc in
     Flow.flow cx (t1, StrictEqT { reason; cond_context = None; flip = false; arg = t2 });
-    (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
+    (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | Instanceof ->
     let left = expression cx left in
     let right = expression cx right in
-    (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
+    (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | LessThan
   | LessThanEqual
   | GreaterThan
@@ -5194,7 +5195,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
     in
     let reason = mk_reason desc loc in
     Flow.flow cx (t1, ComparatorT (reason, false, t2));
-    (BoolT.at loc |> with_trust literal_trust, { operator; left; right })
+    (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | LShift
   | RShift
   | RShift3
@@ -5211,7 +5212,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
     let (((_, t2), _) as right) = expression cx right in
     Flow.flow cx (t1, AssertArithmeticOperandT reason);
     Flow.flow cx (t2, AssertArithmeticOperandT reason);
-    (NumT.at loc |> with_trust literal_trust, { operator; left; right })
+    (NumT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | Plus ->
     let (((_, t1), _) as left_ast) = expression cx left in
     let (((_, t2), _) as right_ast) = expression cx right in
@@ -5230,7 +5231,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
                  })
           in
           Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t))),
-      { operator; left = left_ast; right = right_ast } )
+      { operator; left = left_ast; right = right_ast; comments } )
 
 and logical cx loc { Ast.Expression.Logical.operator; left; right } =
   let open Ast.Expression.Logical in
@@ -6737,27 +6738,28 @@ and predicates_of_condition cx ~cond e =
     | (Some name, _) -> result tast name expr (ExistsP (Some loc)) true
     | (None, _) -> empty_result tast)
   (* expr instanceof t *)
-  | (loc, Binary { Binary.operator = Binary.Instanceof; left; right }) ->
+  | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
     let make_ast_and_pred left_ast bool =
       let (((_, right_t), _) as right_ast) = expression cx right in
       ( ( (loc, bool),
-          Binary { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast } ),
+          Binary
+            { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast; comments } ),
         LeftP (InstanceofTest, right_t) )
     in
     instance_test loc left make_ast_and_pred true true
   (* expr op expr *)
-  | (loc, Binary { Binary.operator = Binary.Equal; left; right }) ->
+  | (loc, Binary { Binary.operator = Binary.Equal; left; right; comments }) ->
     eq_test loc ~sense:true ~strict:false left right (fun left right ->
-        Binary { Binary.operator = Binary.Equal; left; right })
-  | (loc, Binary { Binary.operator = Binary.StrictEqual; left; right }) ->
+        Binary { Binary.operator = Binary.Equal; left; right; comments })
+  | (loc, Binary { Binary.operator = Binary.StrictEqual; left; right; comments }) ->
     eq_test loc ~sense:true ~strict:true left right (fun left right ->
-        Binary { Binary.operator = Binary.StrictEqual; left; right })
-  | (loc, Binary { Binary.operator = Binary.NotEqual; left; right }) ->
+        Binary { Binary.operator = Binary.StrictEqual; left; right; comments })
+  | (loc, Binary { Binary.operator = Binary.NotEqual; left; right; comments }) ->
     eq_test loc ~sense:false ~strict:false left right (fun left right ->
-        Binary { Binary.operator = Binary.NotEqual; left; right })
-  | (loc, Binary { Binary.operator = Binary.StrictNotEqual; left; right }) ->
+        Binary { Binary.operator = Binary.NotEqual; left; right; comments })
+  | (loc, Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }) ->
     eq_test loc ~sense:false ~strict:true left right (fun left right ->
-        Binary { Binary.operator = Binary.StrictNotEqual; left; right })
+        Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments })
   (* Array.isArray(expr) *)
   | ( loc,
       Call

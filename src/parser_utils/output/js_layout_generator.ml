@@ -827,40 +827,41 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
               expression_with_parens ~precedence ~ctxt right
             end;
           ]
-      | E.Binary { E.Binary.operator; left; right } ->
+      | E.Binary { E.Binary.operator; left; right; comments } ->
         let module B = E.Binary in
-        fuse_with_space
-          [
-            expression_with_parens ~precedence ~ctxt left;
-            Atom (Flow_ast_utils.string_of_binary_operator operator);
-            begin
-              match (operator, right) with
-              | (E.Binary.Plus, (_, E.Unary { E.Unary.operator = E.Unary.Plus; _ }))
-              | (E.Binary.Minus, (_, E.Unary { E.Unary.operator = E.Unary.Minus; _ }))
-              | ( E.Binary.Plus,
-                  (_, E.Update { E.Update.prefix = true; operator = E.Update.Increment; _ }) )
-              | ( E.Binary.Minus,
-                  (_, E.Update { E.Update.prefix = true; operator = E.Update.Decrement; _ }) ) ->
-                let ctxt = context_after_token ctxt in
-                fuse [ugly_space; expression ~ctxt right]
-              | _ ->
-                (* to get an AST like `x + (y - z)`, then there must've been parens
+        layout_node_with_comments_opt loc comments
+        @@ fuse_with_space
+             [
+               expression_with_parens ~precedence ~ctxt left;
+               Atom (Flow_ast_utils.string_of_binary_operator operator);
+               begin
+                 match (operator, right) with
+                 | (E.Binary.Plus, (_, E.Unary { E.Unary.operator = E.Unary.Plus; _ }))
+                 | (E.Binary.Minus, (_, E.Unary { E.Unary.operator = E.Unary.Minus; _ }))
+                 | ( E.Binary.Plus,
+                     (_, E.Update { E.Update.prefix = true; operator = E.Update.Increment; _ }) )
+                 | ( E.Binary.Minus,
+                     (_, E.Update { E.Update.prefix = true; operator = E.Update.Decrement; _ }) ) ->
+                   let ctxt = context_after_token ctxt in
+                   fuse [ugly_space; expression ~ctxt right]
+                 | _ ->
+                   (* to get an AST like `x + (y - z)`, then there must've been parens
              around the right side. we can force that by bumping the minimum
              precedence to not have parens. *)
-                let precedence = precedence + 1 in
-                let ctxt =
-                  {
-                    ctxt with
-                    left =
-                      (match operator with
-                      | E.Binary.Minus -> In_minus_op
-                      | E.Binary.Plus -> In_plus_op
-                      | _ -> Normal_left);
-                  }
-                in
-                expression_with_parens ~precedence ~ctxt right
-            end;
-          ]
+                   let precedence = precedence + 1 in
+                   let ctxt =
+                     {
+                       ctxt with
+                       left =
+                         (match operator with
+                         | E.Binary.Minus -> In_minus_op
+                         | E.Binary.Plus -> In_plus_op
+                         | _ -> Normal_left);
+                     }
+                   in
+                   expression_with_parens ~precedence ~ctxt right
+               end;
+             ]
       | E.Call c -> call ~precedence ~ctxt c
       | E.OptionalCall { E.OptionalCall.call = c; optional } -> call ~optional ~precedence ~ctxt c
       | E.Conditional { E.Conditional.test; consequent; alternate } ->

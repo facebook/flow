@@ -430,7 +430,7 @@ module Expression
       ret
     in
     let make_binary left right operator loc =
-      (loc, Expression.(Binary Binary.{ operator; left; right }))
+      (loc, Expression.(Binary Binary.{ operator; left; right; comments = None }))
     in
     let rec add_to_stack right (rop, rpri) rloc = function
       | (left, (lop, lpri), lloc) :: rest when is_tighter lpri rpri ->
@@ -1198,6 +1198,8 @@ module Expression
       match expression with
       | Array ({ Array.comments; _ } as e) ->
         Array { e with Array.comments = merge_comments comments }
+      | Binary ({ Binary.comments; _ } as e) ->
+        Binary { e with Binary.comments = merge_comments comments }
       | Class ({ Class.comments; _ } as e) ->
         Class { e with Class.comments = merge_comments comments }
       | Identifier (loc, ({ Identifier.comments; _ } as e)) ->
