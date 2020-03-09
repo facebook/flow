@@ -1003,6 +1003,7 @@ let program
       | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
       | ((_, Sequence seq1), (_, Sequence seq2)) -> sequence seq1 seq2
       | ((loc, This t1), (_, This t2)) -> this_expression loc t1 t2
+      | ((loc, Super s1), (_, Super s2)) -> super_expression loc s1 s2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
@@ -2049,6 +2050,13 @@ let program
     let open Ast.Expression.This in
     let { comments = comments1 } = this1 in
     let { comments = comments2 } = this2 in
+    syntax_opt loc comments1 comments2
+  and super_expression
+      (loc : Loc.t) (super1 : Loc.t Ast.Expression.Super.t) (super2 : Loc.t Ast.Expression.Super.t)
+      : node change list option =
+    let open Ast.Expression.Super in
+    let { comments = comments1 } = super1 in
+    let { comments = comments2 } = super2 in
     syntax_opt loc comments1 comments2
   in
   program' program1 program2 |> List.sort change_compare

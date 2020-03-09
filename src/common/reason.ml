@@ -1051,7 +1051,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
     o ^ p
   | Sequence { Sequence.expressions } ->
     code_desc_of_expression ~wrap (List.hd (List.rev expressions))
-  | Super -> "super"
+  | Super _ -> "super"
   | TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"
   | TemplateLiteral _ -> "`...`"
   | This _ -> "this"

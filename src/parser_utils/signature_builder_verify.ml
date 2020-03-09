@@ -121,7 +121,7 @@ module Eval (Env : EvalEnv) = struct
             this#update_acc (fun deps -> Deps.join (deps, Deps.value name));
           expr
         | Ast.Expression.Literal _
-        | Ast.Expression.Super
+        | Ast.Expression.Super _
         | Ast.Expression.This _ ->
           expr
     end
@@ -486,7 +486,7 @@ module Eval (Env : EvalEnv) = struct
       Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.OptionalCall))
     | (loc, OptionalMember _) ->
       Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.OptionalMember))
-    | (loc, Super) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Super))
+    | (loc, Super _) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Super))
     | (loc, TaggedTemplate _) ->
       Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TaggedTemplate))
     | (loc, This _) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))

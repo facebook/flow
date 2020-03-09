@@ -91,7 +91,7 @@ let precedence_of_expression expr =
   | (_, E.JSXFragment _)
   | (_, E.Literal _)
   | (_, E.Object _)
-  | (_, E.Super)
+  | (_, E.Super _)
   | (_, E.TemplateLiteral _)
   | (_, E.This _) ->
     max_precedence
@@ -765,7 +765,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
     ( loc,
       match expr with
       | E.This { E.This.comments } -> layout_node_with_comments_opt loc comments (Atom "this")
-      | E.Super -> Atom "super"
+      | E.Super { E.Super.comments } -> layout_node_with_comments_opt loc comments (Atom "super")
       | E.Array { E.Array.elements; comments } ->
         let rev_elements =
           List.rev_map

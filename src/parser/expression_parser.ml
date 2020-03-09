@@ -86,7 +86,7 @@ module Expression
     | (_, OptionalCall _)
     | (_, OptionalMember _)
     | (_, Sequence _)
-    | (_, Super)
+    | (_, Super _)
     | (_, TaggedTemplate _)
     | (_, TemplateLiteral _)
     | (_, This _)
@@ -256,7 +256,7 @@ module Expression
     | (_, OptionalCall _)
     | (_, OptionalMember _)
     | (_, Sequence _)
-    | (_, Super)
+    | (_, Super _)
     | (_, TaggedTemplate _)
     | (_, TemplateLiteral _)
     | (_, This _)
@@ -610,8 +610,14 @@ module Expression
       | Super_prop_or_call -> (true, true)
     in
     let loc = Peek.loc env in
+    let leading = Peek.comments env in
     Expect.token env T_SUPER;
-    let super = (loc, Expression.Super) in
+    let trailing = Peek.comments env in
+    let super =
+      ( loc,
+        Expression.Super
+          { Expression.Super.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
+    in
     match Peek.token env with
     | T_PERIOD
     | T_LBRACKET ->
@@ -855,7 +861,7 @@ module Expression
       (* super.PrivateName is a syntax error *)
       begin
         match left with
-        | Cover_expr (_, Ast.Expression.Super) when is_private ->
+        | Cover_expr (_, Ast.Expression.Super _) when is_private ->
           error_at env (loc, Parse_error.SuperPrivate)
         | _ -> ()
       end;
@@ -1217,6 +1223,7 @@ module Expression
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }
+      | Super { Super.comments; _ } -> Super { Super.comments = merge_comments comments }
       | This { This.comments; _ } -> This { This.comments = merge_comments comments }
       | TypeCast ({ TypeCast.comments; _ } as e) ->
         TypeCast { e with TypeCast.comments = merge_comments comments }

@@ -3013,7 +3013,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | This this ->
     let t = this_ cx loc this in
     ((loc, t), This this)
-  | Super -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super)
+  | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
   | Unary u ->
     let (t, u) = unary cx loc u in
     ((loc, t), Unary u)
@@ -3888,7 +3888,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             ( callee_loc,
               Member
                 {
-                  Member._object = (super_loc, Super);
+                  Member._object = (super_loc, Super super);
                   property =
                     Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
                 } ) as callee;
@@ -3898,14 +3898,14 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let reason = mk_reason (RMethodCall (Some name)) loc in
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
-      let super = super_ cx super_loc in
+      let super_t = super_ cx super_loc in
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, arguments_ast) = arg_list cx arguments in
-      Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
+      Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
         Tvar.mk_where cx reason (fun t ->
-            let funtype = mk_methodcalltype super targts argts t in
+            let funtype = mk_methodcalltype super_t targts argts t in
             let use_op =
               Op
                 (FunCallMethod
@@ -3919,7 +3919,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             in
             Flow.flow
               cx
-              ( super,
+              ( super_t,
                 MethodT
                   ( use_op,
                     reason,
@@ -3936,7 +3936,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   ( (callee_loc, prop_t),
                     Member
                       {
-                        Member._object = ((super_loc, super), Super);
+                        Member._object = ((super_loc, super_t), Super super);
                         property = Member.PropertyIdentifier ((ploc, prop_t), id);
                       } );
                 targs;
@@ -3944,7 +3944,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
               } ),
           None,
           None )
-    | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
+    | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, arguments_ast) = arg_list cx arguments in
       let reason = mk_reason (RFunctionCall RSuper) loc in
@@ -3953,8 +3953,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       define_internal cx reason "super";
 
       let this = this_ cx loc { This.comments = None } in
-      let super = super_ cx super_loc in
-      let super_reason = reason_of_t super in
+      let super_t = super_ cx super_loc in
+      let super_reason = reason_of_t super_t in
       let lhs_t =
         Tvar.mk_where cx reason (fun t ->
             let funtype = mk_methodcalltype this targts argts t in
@@ -3971,12 +3971,16 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             in
             Flow.flow
               cx
-              (super, MethodT (use_op, reason, super_reason, propref, CallM funtype, None)))
+              (super_t, MethodT (use_op, reason, super_reason, propref, CallM funtype, None)))
       in
       Some
         ( ( (loc, lhs_t),
-            call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = arguments_ast }
-          ),
+            call_ast
+              {
+                Call.callee = ((super_loc, super_t), Super super);
+                targs;
+                arguments = arguments_ast;
+              } ),
           None,
           None )
     (******************************************)
@@ -4098,25 +4102,25 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           None )
     | Member
         {
-          Member._object = (super_loc, Super);
+          Member._object = (super_loc, Super super);
           property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
         } ->
-      let super = super_ cx super_loc in
+      let super_t = super_ cx super_loc in
       let expr_reason = mk_reason (RProperty (Some name)) loc in
       let prop_reason = mk_reason (RProperty (Some name)) ploc in
       let lhs_t =
         match Refinement.get ~allow_optional:true cx (loc, e) loc with
         | Some t -> t
         | None ->
-          if Type_inference_hooks_js.dispatch_member_hook cx name ploc super then
+          if Type_inference_hooks_js.dispatch_member_hook cx name ploc super_t then
             Unsoundness.at InferenceHooks ploc
           else
             let use_op = Op (GetProperty (mk_expression_reason ex)) in
-            get_prop ~use_op ~cond cx expr_reason super (prop_reason, name)
+            get_prop ~use_op ~cond cx expr_reason super_t (prop_reason, name)
       in
-      let property = Member.PropertyIdentifier ((ploc, super), id) in
+      let property = Member.PropertyIdentifier ((ploc, super_t), id) in
       let ast =
-        ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property })
+        ((loc, lhs_t), member_ast { Member._object = ((super_loc, super_t), Super super); property })
       in
       (* Even though there's no optional chaining for Super member accesses, we
          can still get predicates *)
@@ -4124,7 +4128,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         Base.Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
       in
       let preds =
-        exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super prop_reason
+        exists_pred (loc, e) lhs_t
+        @ prop_exists_pred (super_loc, Super super) name super_t prop_reason
       in
       Some (ast, mk_preds preds, sentinel_refinement)
     | _ -> None
@@ -5364,19 +5369,20 @@ and assign_member
     ((lhs_loc, t), reconstruct_ast { Member._object; property })
   (* super.name = e *)
   | {
-   Member._object = (super_loc, Super);
+   Member._object = (super_loc, Super super);
    property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
   } ->
     let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
     let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
-    let super = super_ cx lhs_loc in
+    let super_t = super_ cx lhs_loc in
     let prop_t = Tvar.mk cx prop_reason in
     let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc) in
     Flow.flow
       cx
-      (super, SetPropT (use_op, reason, Named (prop_reason, name), mode, Normal, t, Some prop_t));
+      (super_t, SetPropT (use_op, reason, Named (prop_reason, name), mode, Normal, t, Some prop_t));
     let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
-    ((lhs_loc, prop_t), reconstruct_ast { Member._object = ((super_loc, super), Super); property })
+    ( (lhs_loc, prop_t),
+      reconstruct_ast { Member._object = ((super_loc, super_t), Super super); property } )
   (* _object.#name = e *)
   | {
    Member._object;

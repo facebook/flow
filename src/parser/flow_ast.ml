@@ -1150,6 +1150,10 @@ and Expression : sig
     type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
   end
 
+  module Super : sig
+    type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -1176,7 +1180,7 @@ and Expression : sig
     | OptionalCall of ('M, 'T) OptionalCall.t
     | OptionalMember of ('M, 'T) OptionalMember.t
     | Sequence of ('M, 'T) Sequence.t
-    | Super
+    | Super of 'M Super.t
     | TaggedTemplate of ('M, 'T) TaggedTemplate.t
     | TemplateLiteral of ('M, 'T) TemplateLiteral.t
     | This of 'M This.t

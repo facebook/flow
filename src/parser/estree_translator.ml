@@ -365,7 +365,7 @@ with type t = Impl.t = struct
       let open Expression in
       function
       | (loc, This { This.comments }) -> node ?comments "ThisExpression" loc []
-      | (loc, Super) -> node "Super" loc []
+      | (loc, Super { Super.comments }) -> node ?comments "Super" loc []
       | (loc, Array { Array.elements; comments }) ->
         node
           ?comments

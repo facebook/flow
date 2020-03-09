@@ -477,6 +477,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method statement_list : ('M, 'T) Flow_ast.Statement.t list -> ('N, 'U) Ast.Statement.t list
 
+    method super_expression : 'M Ast.Expression.Super.t -> 'N Ast.Expression.Super.t
+
     method switch : ('M, 'T) Ast.Statement.Switch.t -> ('N, 'U) Ast.Statement.Switch.t
 
     method switch_case :

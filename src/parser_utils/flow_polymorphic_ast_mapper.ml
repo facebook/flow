@@ -90,7 +90,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Expression.
         ( this#on_type_annot annot,
           match expr' with
-          | Super -> Super
           | Array x -> Array (this#array x)
           | ArrowFunction x -> ArrowFunction (this#arrow_function x)
           | Assignment x -> Assignment (this#assignment x)
@@ -114,6 +113,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | OptionalCall x -> OptionalCall (this#optional_call annot x)
           | OptionalMember x -> OptionalMember (this#optional_member x)
           | Sequence x -> Sequence (this#sequence x)
+          | Super x -> Super (this#super_expression x)
           | TaggedTemplate x -> TaggedTemplate (this#tagged_template x)
           | TemplateLiteral x -> TemplateLiteral (this#template_literal x)
           | This x -> This (this#this_expression x)
@@ -1410,6 +1410,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Object.SpreadProperty in
       let (annot, { argument }) = expr in
       (this#on_loc_annot annot, { argument = this#expression argument })
+
+    method super_expression (expr : 'M Ast.Expression.Super.t) : 'N Ast.Expression.Super.t =
+      let open Ast.Expression.Super in
+      let { comments } = expr in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { comments = comments' }
 
     method switch (switch : ('M, 'T) Ast.Statement.Switch.t) : ('N, 'U) Ast.Statement.Switch.t =
       let open Ast.Statement.Switch in

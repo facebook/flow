@@ -1202,7 +1202,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | (loc, New _)
     | (loc, OptionalCall _)
     | (loc, OptionalMember _)
-    | (loc, Super)
+    | (loc, Super _)
     | (loc, TaggedTemplate _)
     | (loc, This _)
     | (loc, Yield _) ->

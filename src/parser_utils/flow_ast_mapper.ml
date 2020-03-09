@@ -148,7 +148,6 @@ class ['loc] mapper =
     method expression (expr : ('loc, 'loc) Ast.Expression.t) =
       let open Ast.Expression in
       match expr with
-      | (_, Super) -> expr
       | (loc, Array x) -> id_loc this#array loc x expr (fun x -> (loc, Array x))
       | (loc, ArrowFunction x) ->
         id_loc this#arrow_function loc x expr (fun x -> (loc, ArrowFunction x))
@@ -176,6 +175,7 @@ class ['loc] mapper =
       | (loc, OptionalMember x) ->
         id_loc this#optional_member loc x expr (fun x -> (loc, OptionalMember x))
       | (loc, Sequence x) -> id_loc this#sequence loc x expr (fun x -> (loc, Sequence x))
+      | (loc, Super x) -> id_loc this#super_expression loc x expr (fun x -> (loc, Super x))
       | (loc, TaggedTemplate x) ->
         id_loc this#tagged_template loc x expr (fun x -> (loc, TaggedTemplate x))
       | (loc, TemplateLiteral x) ->
@@ -1690,6 +1690,15 @@ class ['loc] mapper =
       let open Ast.Expression.Object.SpreadProperty in
       let (loc, { argument }) = expr in
       id this#expression argument expr (fun argument -> (loc, { argument }))
+
+    method super_expression _loc (expr : 'loc Ast.Expression.Super.t) =
+      let open Ast.Expression.Super in
+      let { comments } = expr in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        expr
+      else
+        { comments = comments' }
 
     method switch _loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
       let open Ast.Statement.Switch in

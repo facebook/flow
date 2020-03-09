@@ -22,7 +22,7 @@ let rec key ~allow_optional =
   | (_, This _) ->
     (* treat this as a property chain, in terms of refinement lifetime *)
     Some (Reason.internal_name "this", [])
-  | (_, Super) ->
+  | (_, Super _) ->
     (* treat this as a property chain, in terms of refinement lifetime *)
     Some (Reason.internal_name "super", [])
   | (_, Identifier id) -> key_of_identifier id
