@@ -92,16 +92,21 @@ commands:
   restore-opam-cache:
     steps:
       - run:
-          name: Calculate opam version
-          command: opam --version > .circleci/opamversion
+          name: Create cache breaker
+          command: |
+            echo "ocaml-4.07.1" > .circleci/opamcachebreaker
+            opam --version >> .circleci/opamcachebreaker
+            cat flowtype.opam >> .circleci/opamcachebreaker
+            cat flow_parser.opam >> .circleci/opamcachebreaker
+            cat .circleci/config.yml >> .circleci/opamcachebreaker
       - restore_cache:
           keys:
-          - v1-opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          - v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
 
   save-opam-cache:
     steps:
       - save_cache:
-          key: v1-opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          key: v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
           paths:
             - ~/.opam
             - _opam
@@ -261,19 +266,24 @@ jobs:
           command: |
             New-Item -ItemType Directory $Env:FLOW_TMP_DIR
       - opam_windows/install
-      - run:
-          name: Calculate opam version
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
-          command: /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamversion
       - attach_workspace:
           at: .
+      - run:
+          name: Create cache breaker
+          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          command: |
+            /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
+            echo "ocaml-4.07.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
+            /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
+            /usr/bin/cat flow_parser.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
+            /usr/bin/cat .circleci/config.yml >> /cygdrive/c/tmp/flow/opamcachebreaker
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}-circle_{{ checksum ".circleci/config.yml" }}
+          - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
       - opam_windows/init
       - opam_windows/create_switch
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum "C:/tmp/flow/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}-circle_{{ checksum ".circleci/config.yml" }}
+          key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
           paths:
             - C:/tools/cygwin/home/circleci/.opam
             - _opam
