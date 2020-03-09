@@ -52,6 +52,11 @@ val mk_comments_opt :
   unit ->
   ('loc, unit) Flow_ast.Syntax.t option
 
+val merge_comments :
+  inner:('M, unit) Flow_ast.Syntax.t option ->
+  outer:('M, unit) Flow_ast.Syntax.t option ->
+  ('M, unit) Flow_ast.Syntax.t option
+
 module ExpressionSort : sig
   type t =
     | Array

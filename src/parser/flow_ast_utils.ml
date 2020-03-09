@@ -85,6 +85,18 @@ let mk_comments_opt ?(leading = []) ?(trailing = []) () =
   | ([], []) -> None
   | (_, _) -> Some (mk_comments ~leading ~trailing ())
 
+let merge_comments ~inner ~outer =
+  let open Syntax in
+  match (inner, outer) with
+  | (None, c)
+  | (c, None) ->
+    c
+  | (Some inner, Some outer) ->
+    mk_comments_opt
+      ~leading:(outer.leading @ inner.leading)
+      ~trailing:(inner.trailing @ outer.trailing)
+      ()
+
 let string_of_assignment_operator op =
   let open Flow_ast.Expression.Assignment in
   match op with

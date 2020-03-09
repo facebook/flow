@@ -1171,6 +1171,7 @@ module Expression
     (Loc.btwn start_loc (fst quasi), Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi }))
 
   and group env =
+    let leading = Peek.comments env in
     Expect.token env T_LPAREN;
     let expression = assignment env in
     let ret =
@@ -1183,7 +1184,37 @@ module Expression
       | _ -> expression
     in
     Expect.token env T_RPAREN;
-    ret
+    let trailing = Peek.comments env in
+    add_comments ret leading trailing
+
+  and add_comments (loc, expression) leading trailing =
+    let merge_comments inner =
+      Flow_ast_utils.merge_comments
+        ~inner
+        ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
+    in
+    let open Expression in
+    ( loc,
+      match expression with
+      | Array ({ Array.comments; _ } as e) ->
+        Array { e with Array.comments = merge_comments comments }
+      | Class ({ Class.comments; _ } as e) ->
+        Class { e with Class.comments = merge_comments comments }
+      | Identifier (loc, ({ Identifier.comments; _ } as e)) ->
+        Identifier (loc, { e with Identifier.comments = merge_comments comments })
+      | Literal ({ Literal.comments; _ } as e) ->
+        Literal { e with Literal.comments = merge_comments comments }
+      | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
+      | Object ({ Object.comments; _ } as e) ->
+        Object { e with Object.comments = merge_comments comments }
+      | Unary ({ Unary.comments; _ } as e) ->
+        Unary { e with Unary.comments = merge_comments comments }
+      | Update ({ Update.comments; _ } as e) ->
+        Update { e with Update.comments = merge_comments comments }
+      | Yield ({ Yield.comments; _ } as e) ->
+        Yield { e with Yield.comments = merge_comments comments }
+      (* TODO: Delete once all expressions support comment attachment *)
+      | _ -> expression )
 
   and array_initializer =
     let rec elements env (acc, errs) =
