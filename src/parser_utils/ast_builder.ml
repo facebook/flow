@@ -440,7 +440,7 @@ module Expressions = struct
   let new_ ?comments ?targs ?args callee =
     (Loc.none, New { New.callee; targs; arguments = args; comments })
 
-  let sequence exprs = (Loc.none, Sequence { Sequence.expressions = exprs })
+  let sequence ?comments exprs = (Loc.none, Sequence { Sequence.expressions = exprs; comments })
 
   let expression expr = Expression expr
 

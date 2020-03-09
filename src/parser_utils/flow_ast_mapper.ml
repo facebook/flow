@@ -1673,12 +1673,13 @@ class ['loc] mapper =
 
     method sequence _loc (expr : ('loc, 'loc) Ast.Expression.Sequence.t) =
       let open Ast.Expression.Sequence in
-      let { expressions } = expr in
+      let { expressions; comments } = expr in
       let expressions' = ListUtils.ident_map this#expression expressions in
-      if expressions == expressions' then
+      let comments' = this#syntax_opt comments in
+      if expressions == expressions' && comments == comments' then
         expr
       else
-        { expressions = expressions' }
+        { expressions = expressions'; comments = comments' }
 
     method toplevel_statement_list (stmts : ('loc, 'loc) Ast.Statement.t list) =
       this#statement_list stmts

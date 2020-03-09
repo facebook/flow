@@ -417,8 +417,12 @@ with type t = Impl.t = struct
             ("returnType", option type_annotation return);
             ("typeParameters", option type_parameter_declaration tparams);
           ]
-      | (loc, Sequence { Sequence.expressions }) ->
-        node "SequenceExpression" loc [("expressions", array_of_list expression expressions)]
+      | (loc, Sequence { Sequence.expressions; comments }) ->
+        node
+          ?comments
+          "SequenceExpression"
+          loc
+          [("expressions", array_of_list expression expressions)]
       | (loc, Unary { Unary.operator; argument; comments }) ->
         Unary.(
           (match operator with

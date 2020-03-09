@@ -3292,11 +3292,11 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | Assignment { Assignment.operator; left; right; comments } ->
     let (t, left, right) = assignment cx loc (left, operator, right) in
     ((loc, t), Assignment { Assignment.operator; left; right; comments })
-  | Sequence { Sequence.expressions } ->
+  | Sequence { Sequence.expressions; comments } ->
     let expressions = Base.List.map ~f:(expression cx) expressions in
     (* t = last element of ts. The parser guarantees sequence expressions are nonempty. *)
     let t = List.(expressions |> map snd_fst |> rev |> hd) in
-    ((loc, t), Sequence { Sequence.expressions })
+    ((loc, t), Sequence { Sequence.expressions; comments })
   | Function func ->
     let { Ast.Function.id; predicate; sig_loc; _ } = func in
     (match predicate with

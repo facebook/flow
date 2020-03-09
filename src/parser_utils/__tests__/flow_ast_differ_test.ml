@@ -693,8 +693,8 @@ class double_sequence_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! sequence _loc { Ast.Expression.Sequence.expressions } =
-      { Ast.Expression.Sequence.expressions = expressions @ expressions }
+    method! sequence _loc { Ast.Expression.Sequence.expressions; comments } =
+      { Ast.Expression.Sequence.expressions = expressions @ expressions; comments }
   end
 
 let edits_of_source algo source mapper =

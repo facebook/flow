@@ -1050,7 +1050,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
     let o = code_desc_of_expression ~wrap:true _object in
     let p = code_desc_of_property ~optional property in
     o ^ p
-  | Sequence { Sequence.expressions } ->
+  | Sequence { Sequence.expressions; comments = _ } ->
     code_desc_of_expression ~wrap (List.hd (List.rev expressions))
   | Super _ -> "super"
   | TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"

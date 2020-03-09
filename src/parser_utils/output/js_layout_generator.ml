@@ -800,13 +800,14 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                  ~wrap_spaces:true
                  (object_properties_with_newlines properties);
              ]
-      | E.Sequence { E.Sequence.expressions } ->
+      | E.Sequence { E.Sequence.expressions; comments } ->
         (* to get an AST like `x, (y, z)`, then there must've been parens
          around the right side. we can force that by bumping the minimum
          precedence. *)
         let precedence = precedence + 1 in
         let layouts = Base.List.map ~f:(expression_with_parens ~precedence ~ctxt) expressions in
-        group [join (fuse [Atom ","; pretty_line]) layouts]
+        layout_node_with_comments_opt loc comments
+        @@ group [join (fuse [Atom ","; pretty_line]) layouts]
       | E.Identifier ident -> identifier ident
       | E.Literal lit -> literal lit
       | E.Function func -> function_ func

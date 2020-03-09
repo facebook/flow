@@ -930,7 +930,11 @@ and Expression : sig
   end
 
   module Sequence : sig
-    type ('M, 'T) t = { expressions: ('M, 'T) Expression.t list } [@@deriving show]
+    type ('M, 'T) t = {
+      expressions: ('M, 'T) Expression.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module Unary : sig

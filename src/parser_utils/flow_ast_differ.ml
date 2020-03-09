@@ -1001,7 +1001,7 @@ let program
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
       | (expr, (loc, TypeCast t2)) -> Some (type_cast_added expr loc t2)
       | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
-      | ((_, Sequence seq1), (_, Sequence seq2)) -> sequence seq1 seq2
+      | ((loc, Sequence seq1), (_, Sequence seq2)) -> sequence loc seq1 seq2
       | ((loc, This t1), (_, This t2)) -> this_expression loc t1 t2
       | ((loc, Super s1), (_, Super s2)) -> super_expression loc s1 s2
       | (_, _) -> None
@@ -1432,11 +1432,13 @@ let program
       diff_and_recurse_no_trivial (diff_if_changed_opt expression_or_spread) elems1 elems2
     in
     join_diff_list [comments; elements]
-  and sequence seq1 seq2 : node change list option =
+  and sequence loc seq1 seq2 : node change list option =
     let open Ast.Expression.Sequence in
-    let { expressions = exps1 } = seq1 in
-    let { expressions = exps2 } = seq2 in
-    diff_and_recurse_nonopt_no_trivial expression exps1 exps2
+    let { expressions = exps1; comments = comments1 } = seq1 in
+    let { expressions = exps2; comments = comments2 } = seq2 in
+    let expressions_diff = diff_and_recurse_nonopt_no_trivial expression exps1 exps2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [expressions_diff; comments_diff]
   and for_statement
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.For.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.For.t) :
       node change list option =

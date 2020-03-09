@@ -442,7 +442,7 @@ module Eval (Env : EvalEnv) = struct
       arith_binary tps operator loc left right
     | (loc, Sequence stuff) ->
       let open Ast.Expression.Sequence in
-      let { expressions } = stuff in
+      let { expressions; comments = _ } = stuff in
       begin
         match List.rev expressions with
         | expr :: _ -> literal_expr tps expr

@@ -1247,6 +1247,8 @@ module Expression
             optional_call with
             OptionalCall.call = { call with Call.comments = merge_comments comments };
           }
+      | Sequence ({ Sequence.comments; _ } as e) ->
+        Sequence { e with Sequence.comments = merge_comments comments }
       | Super { Super.comments; _ } -> Super { Super.comments = merge_comments comments }
       | This { This.comments; _ } -> This { This.comments = merge_comments comments }
       | TypeCast ({ TypeCast.comments; _ } as e) ->
@@ -1473,7 +1475,7 @@ module Expression
       let (last_loc, _) = List.hd acc in
       let expressions = List.rev acc in
       let (first_loc, _) = List.hd expressions in
-      (Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.{ expressions }))
+      (Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.{ expressions; comments = None }))
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in

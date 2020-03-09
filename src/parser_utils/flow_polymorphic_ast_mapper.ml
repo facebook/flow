@@ -1395,9 +1395,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method sequence (expr : ('M, 'T) Ast.Expression.Sequence.t) : ('N, 'U) Ast.Expression.Sequence.t
         =
       let open Ast.Expression.Sequence in
-      let { expressions } = expr in
+      let { expressions; comments } = expr in
       let expressions' = Base.List.map ~f:this#expression expressions in
-      { expressions = expressions' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { expressions = expressions'; comments = comments' }
 
     method toplevel_statement_list (stmts : ('M, 'T) Ast.Statement.t list)
         : ('N, 'U) Ast.Statement.t list =
