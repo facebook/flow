@@ -2986,9 +2986,9 @@ and expression_or_spread_list cx undef_loc =
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and expression ?cond cx (loc, e) = expression_ ~cond cx loc e
 
-and this_ cx loc =
+and this_ cx loc this =
   let open Ast.Expression in
-  match Refinement.get ~allow_optional:true cx (loc, This) loc with
+  match Refinement.get ~allow_optional:true cx (loc, This this) loc with
   | Some t -> t
   | None -> Env.var_ref cx (internal_name "this") loc
 
@@ -3010,9 +3010,9 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | Identifier (id_loc, name) ->
     let t = identifier cx name loc in
     ((loc, t), Identifier ((id_loc, t), name))
-  | This ->
-    let t = this_ cx loc in
-    ((loc, t), This)
+  | This this ->
+    let t = this_ cx loc this in
+    ((loc, t), This this)
   | Super -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super)
   | Unary u ->
     let (t, u) = unary cx loc u in
@@ -3952,7 +3952,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       define_internal cx reason "this";
       define_internal cx reason "super";
 
-      let this = this_ cx loc in
+      let this = this_ cx loc { This.comments = None } in
       let super = super_ cx super_loc in
       let super_reason = reason_of_t super in
       let lhs_t =
@@ -4775,7 +4775,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       in
       let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
       (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
-    | (This, _)
+    | (This _, _)
     | (Identifier _, _)
       when is_existence_check ->
       (* if optional_chain is called from a conditional position and we're generating
@@ -5415,7 +5415,7 @@ and assign_member
   } ->
     let wr_ctx =
       match (_object, Env.var_scope_kind ()) with
-      | ((_, This), Scope.Ctor) -> ThisInCtor
+      | ((_, This _), Scope.Ctor) -> ThisInCtor
       | _ -> Normal
     in
     let lhs_reason = mk_expression_reason _object in
@@ -6851,7 +6851,7 @@ and predicates_of_condition cx ~cond e =
     let ast = ((loc, t_out), ast') in
     (ast, not_map, map, xts)
   (* ids *)
-  | (loc, This)
+  | (loc, This _)
   | (loc, Identifier _) ->
     (match refinable_lvalue ~allow_optional:true e with
     | (Some name, (((_, t), _) as e)) -> result e name t (ExistsP (Some loc)) true

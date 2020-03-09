@@ -89,7 +89,7 @@ module Expression
     | (_, Super)
     | (_, TaggedTemplate _)
     | (_, TemplateLiteral _)
-    | (_, This)
+    | (_, This _)
     | (_, TypeCast _)
     | (_, Unary _)
     | (_, Update _)
@@ -259,7 +259,7 @@ module Expression
     | (_, Super)
     | (_, TaggedTemplate _)
     | (_, TemplateLiteral _)
-    | (_, This)
+    | (_, This _)
     | (_, TypeCast _)
     | (_, Unary _)
     | (_, Update _)
@@ -1015,7 +1015,11 @@ module Expression
     match Peek.token env with
     | T_THIS ->
       Eat.token env;
-      Cover_expr (loc, Expression.This)
+      let trailing = Peek.comments env in
+      Cover_expr
+        ( loc,
+          Expression.This
+            { Expression.This.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
     | T_NUMBER { kind; raw } ->
       let value = Literal.Number (number env kind raw) in
       let trailing = Peek.comments env in
@@ -1213,6 +1217,7 @@ module Expression
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }
+      | This { This.comments; _ } -> This { This.comments = merge_comments comments }
       | TypeCast ({ TypeCast.comments; _ } as e) ->
         TypeCast { e with TypeCast.comments = merge_comments comments }
       | Unary ({ Unary.comments; _ } as e) ->

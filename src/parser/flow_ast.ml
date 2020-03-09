@@ -1146,6 +1146,10 @@ and Expression : sig
     [@@deriving show]
   end
 
+  module This : sig
+    type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -1175,7 +1179,7 @@ and Expression : sig
     | Super
     | TaggedTemplate of ('M, 'T) TaggedTemplate.t
     | TemplateLiteral of ('M, 'T) TemplateLiteral.t
-    | This
+    | This of 'M This.t
     | TypeCast of ('M, 'T) TypeCast.t
     | Unary of ('M, 'T) Unary.t
     | Update of ('M, 'T) Update.t

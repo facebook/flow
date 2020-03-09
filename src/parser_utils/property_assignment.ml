@@ -97,7 +97,7 @@ class property_assignment (property_names : SSet.t) =
     method! member loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Member.t) =
       match expr with
       | {
-       Ast.Expression.Member._object = (_, Ast.Expression.This);
+       Ast.Expression.Member._object = (_, Ast.Expression.This _);
        property =
          (Ast.Expression.Member.PropertyIdentifier _ | Ast.Expression.Member.PropertyPrivateName _)
          as property;
@@ -125,7 +125,7 @@ class property_assignment (property_names : SSet.t) =
             ( member_loc,
               Ast.Expression.Member
                 ( {
-                    Ast.Expression.Member._object = (_, Ast.Expression.This);
+                    Ast.Expression.Member._object = (_, Ast.Expression.This _);
                     property =
                       ( Ast.Expression.Member.PropertyIdentifier _
                       | Ast.Expression.Member.PropertyPrivateName _ ) as property;
@@ -165,7 +165,7 @@ class property_assignment (property_names : SSet.t) =
 
     method! expression expr =
       (match expr with
-      | (loc, Ast.Expression.This) ->
+      | (loc, Ast.Expression.This _) ->
         this#add_this_escape_error (loc, Lints.ThisBeforeEverythingInitialized, this#ssa_env)
       | _ -> ());
       super#expression expr
@@ -176,7 +176,7 @@ class property_assignment (property_names : SSet.t) =
       | ( member_loc,
           Ast.Expression.Member
             {
-              Ast.Expression.Member._object = (_, Ast.Expression.This);
+              Ast.Expression.Member._object = (_, Ast.Expression.This _);
               property =
                 ( Ast.Expression.Member.PropertyIdentifier _
                 | Ast.Expression.Member.PropertyPrivateName _ ) as property;

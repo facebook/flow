@@ -93,7 +93,7 @@ let precedence_of_expression expr =
   | (_, E.Object _)
   | (_, E.Super)
   | (_, E.TemplateLiteral _)
-  | (_, E.This) ->
+  | (_, E.This _) ->
     max_precedence
   (* Expressions involving operators *)
   | (_, E.Member _)
@@ -764,7 +764,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
   source_location_with_comments
     ( loc,
       match expr with
-      | E.This -> Atom "this"
+      | E.This { E.This.comments } -> layout_node_with_comments_opt loc comments (Atom "this")
       | E.Super -> Atom "super"
       | E.Array { E.Array.elements; comments } ->
         let rev_elements =

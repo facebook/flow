@@ -122,7 +122,7 @@ module Eval (Env : EvalEnv) = struct
           expr
         | Ast.Expression.Literal _
         | Ast.Expression.Super
-        | Ast.Expression.This ->
+        | Ast.Expression.This _ ->
           expr
     end
 
@@ -489,7 +489,7 @@ module Eval (Env : EvalEnv) = struct
     | (loc, Super) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Super))
     | (loc, TaggedTemplate _) ->
       Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TaggedTemplate))
-    | (loc, This) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))
+    | (loc, This _) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))
     | (loc, Yield _) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Yield))
 
   and identifier stuff =

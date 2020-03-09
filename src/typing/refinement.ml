@@ -19,7 +19,7 @@ module Ast = Flow_ast
 let rec key ~allow_optional =
   let open Ast.Expression in
   function
-  | (_, This) ->
+  | (_, This _) ->
     (* treat this as a property chain, in terms of refinement lifetime *)
     Some (Reason.internal_name "this", [])
   | (_, Super) ->

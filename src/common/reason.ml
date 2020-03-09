@@ -1054,7 +1054,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | Super -> "super"
   | TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"
   | TemplateLiteral _ -> "`...`"
-  | This -> "this"
+  | This _ -> "this"
   | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
   | Unary { Unary.operator; argument; comments = _ } ->
     let x = code_desc_of_expression ~wrap:true argument in

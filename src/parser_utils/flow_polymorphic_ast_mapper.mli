@@ -500,6 +500,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method template_literal_element :
       'M Ast.Expression.TemplateLiteral.Element.t -> 'N Ast.Expression.TemplateLiteral.Element.t
 
+    method this_expression : 'M Ast.Expression.This.t -> 'N Ast.Expression.This.t
+
     method throw : ('M, 'T) Ast.Statement.Throw.t -> ('N, 'U) Ast.Statement.Throw.t
 
     method toplevel_statement_list : ('M, 'T) Ast.Statement.t list -> ('N, 'U) Ast.Statement.t list

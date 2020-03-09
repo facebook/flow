@@ -1204,7 +1204,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | (loc, OptionalMember _)
     | (loc, Super)
     | (loc, TaggedTemplate _)
-    | (loc, This)
+    | (loc, This _)
     | (loc, Yield _) ->
       T.FixMe.mk_expr_type loc
 

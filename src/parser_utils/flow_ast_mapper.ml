@@ -148,7 +148,6 @@ class ['loc] mapper =
     method expression (expr : ('loc, 'loc) Ast.Expression.t) =
       let open Ast.Expression in
       match expr with
-      | (_, This) -> expr
       | (_, Super) -> expr
       | (loc, Array x) -> id_loc this#array loc x expr (fun x -> (loc, Array x))
       | (loc, ArrowFunction x) ->
@@ -181,6 +180,7 @@ class ['loc] mapper =
         id_loc this#tagged_template loc x expr (fun x -> (loc, TaggedTemplate x))
       | (loc, TemplateLiteral x) ->
         id_loc this#template_literal loc x expr (fun x -> (loc, TemplateLiteral x))
+      | (loc, This x) -> id_loc this#this_expression loc x expr (fun x -> (loc, This x))
       | (loc, TypeCast x) -> id_loc this#type_cast loc x expr (fun x -> (loc, TypeCast x))
       | (loc, Unary x) -> id_loc this#unary_expression loc x expr (fun x -> (loc, Unary x))
       | (loc, Update x) -> id_loc this#update_expression loc x expr (fun x -> (loc, Update x))
@@ -1734,6 +1734,15 @@ class ['loc] mapper =
 
     (* TODO *)
     method template_literal_element (elem : 'loc Ast.Expression.TemplateLiteral.Element.t) = elem
+
+    method this_expression _loc (expr : 'loc Ast.Expression.This.t) =
+      let open Ast.Expression.This in
+      let { comments } = expr in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        expr
+      else
+        { comments = comments' }
 
     method throw _loc (stmt : ('loc, 'loc) Ast.Statement.Throw.t) =
       let open Ast.Statement.Throw in

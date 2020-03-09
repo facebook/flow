@@ -90,7 +90,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Expression.
         ( this#on_type_annot annot,
           match expr' with
-          | This -> This
           | Super -> Super
           | Array x -> Array (this#array x)
           | ArrowFunction x -> ArrowFunction (this#arrow_function x)
@@ -117,6 +116,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Sequence x -> Sequence (this#sequence x)
           | TaggedTemplate x -> TaggedTemplate (this#tagged_template x)
           | TemplateLiteral x -> TemplateLiteral (this#template_literal x)
+          | This x -> This (this#this_expression x)
           | TypeCast x -> TypeCast (this#type_cast x)
           | Unary x -> Unary (this#unary_expression x)
           | Update x -> Update (this#update_expression x)
@@ -1445,6 +1445,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method template_literal_element ((annot, elem) : 'M Ast.Expression.TemplateLiteral.Element.t)
         : 'N Ast.Expression.TemplateLiteral.Element.t =
       (this#on_loc_annot annot, elem)
+
+    method this_expression (expr : 'M Ast.Expression.This.t) : 'N Ast.Expression.This.t =
+      let open Ast.Expression.This in
+      let { comments } = expr in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { comments = comments' }
 
     method throw (stmt : ('M, 'T) Ast.Statement.Throw.t) : ('N, 'U) Ast.Statement.Throw.t =
       let open Ast.Statement.Throw in

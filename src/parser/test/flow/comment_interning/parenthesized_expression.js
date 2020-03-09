@@ -18,6 +18,8 @@ var i = 0;
 
 /* Leading object */ ({}) /* Trailing object */;
 
+/* Leading this */ (this) /* Trailing this */;
+
 /* Leading unary */ (+1) /* Trailing unary */;
 
 /* Leading update */ (i++) /* Trailing update */;

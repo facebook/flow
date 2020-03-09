@@ -145,7 +145,7 @@ module Type_at_pos = struct
       method! expression expr =
         let open Ast.Expression in
         match expr with
-        | ((loc, t), (This | Super))
+        | ((loc, t), (This _ | Super))
         | ((_, t), Member { Member.property = Member.PropertyPrivateName (loc, _); _ })
         | ( (_, t),
             OptionalMember
