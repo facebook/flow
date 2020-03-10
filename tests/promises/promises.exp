@@ -132,6 +132,84 @@ References:
                           ^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ allSettled.js:4:9
+
+Cannot call `Promise.allSettled` because property `@@iterator` is missing in undefined [1] but exists in
+`$Iterable` [2].
+
+   allSettled.js:4:9
+     4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
+                ^^^^^^^^^^
+
+References:
+   allSettled.js:4:1
+     4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
+        ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:692:26
+   692|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+                                 ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- allSettled.js:7:20
+
+Cannot call `Promise.allSettled` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but
+exists in `$Iterable` [2].
+
+   allSettled.js:7:20
+     7| Promise.allSettled(0); // Error: expected $Iterable instead of number
+                           ^ [1]
+
+References:
+   <BUILTINS>/core.js:692:26
+   692|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+                                 ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- allSettled.js:36:8
+
+Cannot cast `first.status` to empty because string literal `rejected` [1] is incompatible with empty [2].
+
+   allSettled.js:36:8
+    36|       (first.status: empty) // Error: 'rejected' case was not covered
+               ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:700:12
+   700|   +status: 'rejected',
+                   ^^^^^^^^^^ [1]
+   allSettled.js:36:22
+    36|       (first.status: empty) // Error: 'rejected' case was not covered
+                             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- allSettled.js:42:30
+
+Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1].
+
+   allSettled.js:42:30
+   42|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
+                                    ^^^
+
+References:
+   allSettled.js:24:84
+   24| async function test1(): Promise<[$SettledPromiseResult<Foo>, $SettledPromiseResult<Bar>]> {
+                                                                                          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- allSettled.js:42:30
+
+Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1].
+
+   allSettled.js:42:30
+   42|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
+                                    ^^^
+
+References:
+   allSettled.js:26:31
+   26|   const bar = Promise.resolve(new Bar());
+                                     ^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
 
 Cannot assign `num` to `b` because number [1] is incompatible with string [2].
@@ -469,4 +547,4 @@ References:
 
 
 
-Found 28 errors
+Found 33 errors
