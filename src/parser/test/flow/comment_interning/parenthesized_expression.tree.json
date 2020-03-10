@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":39,"column":1}},
-  "range":[0,1054],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":41,"column":1}},
+  "range":[0,1117],
   "body":[
     {
       "type":"VariableDeclaration",
@@ -364,32 +364,74 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":21,"column":18},"end":{"line":21,"column":47}},
-      "range":[517,546],
+      "loc":{"source":null,"start":{"line":21,"column":22},"end":{"line":21,"column":61}},
+      "range":[521,560],
+      "expression":{
+        "type":"LogicalExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":21,"column":38},"end":{"line":21,"column":60}},
+            "range":[537,559],
+            "value":" Trailing logical "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":21}},
+            "range":[499,520],
+            "value":" Leading logical "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":21,"column":23},"end":{"line":21,"column":36}},
+        "range":[522,535],
+        "operator":"||",
+        "left":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":21,"column":23},"end":{"line":21,"column":28}},
+          "range":[522,527],
+          "value":false,
+          "raw":"false"
+        },
+        "right":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":21,"column":32},"end":{"line":21,"column":36}},
+          "range":[531,535],
+          "value":true,
+          "raw":"true"
+        }
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":23,"column":18},"end":{"line":23,"column":47}},
+      "range":[580,609],
       "expression":{
         "type":"NewExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":21,"column":28},"end":{"line":21,"column":46}},
-            "range":[527,545],
+            "loc":{"source":null,"start":{"line":23,"column":28},"end":{"line":23,"column":46}},
+            "range":[590,608],
             "value":" Trailing new "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":17}},
-            "range":[499,516],
+            "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":17}},
+            "range":[562,579],
             "value":" Leading new "
           }
         ],
-        "loc":{"source":null,"start":{"line":21,"column":19},"end":{"line":21,"column":26}},
-        "range":[518,525],
+        "loc":{"source":null,"start":{"line":23,"column":19},"end":{"line":23,"column":26}},
+        "range":[581,588],
         "callee":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":21,"column":23},"end":{"line":21,"column":24}},
-          "range":[522,523],
+          "loc":{"source":null,"start":{"line":23,"column":23},"end":{"line":23,"column":24}},
+          "range":[585,586],
           "name":"C",
           "typeAnnotation":null,
           "optional":false
@@ -401,72 +443,72 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":23,"column":21},"end":{"line":23,"column":48}},
-      "range":[569,596],
+      "loc":{"source":null,"start":{"line":25,"column":21},"end":{"line":25,"column":48}},
+      "range":[632,659],
       "expression":{
         "type":"ObjectExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":23,"column":26},"end":{"line":23,"column":47}},
-            "range":[574,595],
+            "loc":{"source":null,"start":{"line":25,"column":26},"end":{"line":25,"column":47}},
+            "range":[637,658],
             "value":" Trailing object "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":20}},
-            "range":[548,568],
+            "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":20}},
+            "range":[611,631],
             "value":" Leading object "
           }
         ],
-        "loc":{"source":null,"start":{"line":23,"column":22},"end":{"line":23,"column":24}},
-        "range":[570,572],
+        "loc":{"source":null,"start":{"line":25,"column":22},"end":{"line":25,"column":24}},
+        "range":[633,635],
         "properties":[]
       },
       "directive":null
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":25,"column":28},"end":{"line":25,"column":70}},
-      "range":[626,668],
+      "loc":{"source":null,"start":{"line":27,"column":28},"end":{"line":27,"column":70}},
+      "range":[689,731],
       "expression":{
         "type":"OptionalCallExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":25,"column":41},"end":{"line":25,"column":69}},
-            "range":[639,667],
+            "loc":{"source":null,"start":{"line":27,"column":41},"end":{"line":27,"column":69}},
+            "range":[702,730],
             "value":" Trailing optional call "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":27}},
-            "range":[598,625],
+            "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":27}},
+            "range":[661,688],
             "value":" Leading optional call "
           }
         ],
-        "loc":{"source":null,"start":{"line":25,"column":29},"end":{"line":25,"column":39}},
-        "range":[627,637],
+        "loc":{"source":null,"start":{"line":27,"column":29},"end":{"line":27,"column":39}},
+        "range":[690,700],
         "callee":{
           "type":"OptionalMemberExpression",
-          "loc":{"source":null,"start":{"line":25,"column":29},"end":{"line":25,"column":37}},
-          "range":[627,635],
+          "loc":{"source":null,"start":{"line":27,"column":29},"end":{"line":27,"column":37}},
+          "range":[690,698],
           "object":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":25,"column":29},"end":{"line":25,"column":30}},
-            "range":[627,628],
+            "loc":{"source":null,"start":{"line":27,"column":29},"end":{"line":27,"column":30}},
+            "range":[690,691],
             "name":"i",
             "typeAnnotation":null,
             "optional":false
           },
           "property":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":25,"column":32},"end":{"line":25,"column":37}},
-            "range":[630,635],
+            "loc":{"source":null,"start":{"line":27,"column":32},"end":{"line":27,"column":37}},
+            "range":[693,698],
             "name":"isNaN",
             "typeAnnotation":null,
             "optional":false
@@ -482,33 +524,33 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":27,"column":31},"end":{"line":27,"column":76}},
-      "range":[701,746],
+      "loc":{"source":null,"start":{"line":29,"column":31},"end":{"line":29,"column":76}},
+      "range":[764,809],
       "expression":{
         "type":"TemplateLiteral",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":27,"column":44},"end":{"line":27,"column":75}},
-            "range":[714,745],
+            "loc":{"source":null,"start":{"line":29,"column":44},"end":{"line":29,"column":75}},
+            "range":[777,808],
             "value":" Trailing template literal "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":30}},
-            "range":[670,700],
+            "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":30}},
+            "range":[733,763],
             "value":" Leading template literal "
           }
         ],
-        "loc":{"source":null,"start":{"line":27,"column":32},"end":{"line":27,"column":42}},
-        "range":[702,712],
+        "loc":{"source":null,"start":{"line":29,"column":32},"end":{"line":29,"column":42}},
+        "range":[765,775],
         "quasis":[
           {
             "type":"TemplateElement",
-            "loc":{"source":null,"start":{"line":27,"column":32},"end":{"line":27,"column":42}},
-            "range":[702,712],
+            "loc":{"source":null,"start":{"line":29,"column":32},"end":{"line":29,"column":42}},
+            "range":[765,775],
             "value":{"raw":"template","cooked":"template"},
             "tail":true
           }
@@ -519,45 +561,45 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":29,"column":30},"end":{"line":29,"column":77}},
-      "range":[778,825],
+      "loc":{"source":null,"start":{"line":31,"column":30},"end":{"line":31,"column":77}},
+      "range":[841,888],
       "expression":{
         "type":"TaggedTemplateExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":29,"column":46},"end":{"line":29,"column":76}},
-            "range":[794,824],
+            "loc":{"source":null,"start":{"line":31,"column":46},"end":{"line":31,"column":76}},
+            "range":[857,887],
             "value":" Trailing tagged template "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":29}},
-            "range":[748,777],
+            "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":29}},
+            "range":[811,840],
             "value":" Leading tagged template "
           }
         ],
-        "loc":{"source":null,"start":{"line":29,"column":31},"end":{"line":29,"column":44}},
-        "range":[779,792],
+        "loc":{"source":null,"start":{"line":31,"column":31},"end":{"line":31,"column":44}},
+        "range":[842,855],
         "tag":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":29,"column":31},"end":{"line":29,"column":34}},
-          "range":[779,782],
+          "loc":{"source":null,"start":{"line":31,"column":31},"end":{"line":31,"column":34}},
+          "range":[842,845],
           "name":"tag",
           "typeAnnotation":null,
           "optional":false
         },
         "quasi":{
           "type":"TemplateLiteral",
-          "loc":{"source":null,"start":{"line":29,"column":34},"end":{"line":29,"column":44}},
-          "range":[782,792],
+          "loc":{"source":null,"start":{"line":31,"column":34},"end":{"line":31,"column":44}},
+          "range":[845,855],
           "quasis":[
             {
               "type":"TemplateElement",
-              "loc":{"source":null,"start":{"line":29,"column":34},"end":{"line":29,"column":44}},
-              "range":[782,792],
+              "loc":{"source":null,"start":{"line":31,"column":34},"end":{"line":31,"column":44}},
+              "range":[845,855],
               "value":{"raw":"template","cooked":"template"},
               "tail":true
             }
@@ -569,61 +611,61 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":31,"column":19},"end":{"line":31,"column":46}},
-      "range":[846,873],
+      "loc":{"source":null,"start":{"line":33,"column":19},"end":{"line":33,"column":46}},
+      "range":[909,936],
       "expression":{
         "type":"ThisExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":31,"column":26},"end":{"line":31,"column":45}},
-            "range":[853,872],
+            "loc":{"source":null,"start":{"line":33,"column":26},"end":{"line":33,"column":45}},
+            "range":[916,935],
             "value":" Trailing this "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":18}},
-            "range":[827,845],
+            "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":18}},
+            "range":[890,908],
             "value":" Leading this "
           }
         ],
-        "loc":{"source":null,"start":{"line":31,"column":20},"end":{"line":31,"column":24}},
-        "range":[847,851]
+        "loc":{"source":null,"start":{"line":33,"column":20},"end":{"line":33,"column":24}},
+        "range":[910,914]
       },
       "directive":null
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":33,"column":20},"end":{"line":33,"column":46}},
-      "range":[895,921],
+      "loc":{"source":null,"start":{"line":35,"column":20},"end":{"line":35,"column":46}},
+      "range":[958,984],
       "expression":{
         "type":"UnaryExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":33,"column":25},"end":{"line":33,"column":45}},
-            "range":[900,920],
+            "loc":{"source":null,"start":{"line":35,"column":25},"end":{"line":35,"column":45}},
+            "range":[963,983],
             "value":" Trailing unary "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":19}},
-            "range":[875,894],
+            "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":19}},
+            "range":[938,957],
             "value":" Leading unary "
           }
         ],
-        "loc":{"source":null,"start":{"line":33,"column":21},"end":{"line":33,"column":23}},
-        "range":[896,898],
+        "loc":{"source":null,"start":{"line":35,"column":21},"end":{"line":35,"column":23}},
+        "range":[959,961],
         "operator":"+",
         "prefix":true,
         "argument":{
           "type":"Literal",
-          "loc":{"source":null,"start":{"line":33,"column":22},"end":{"line":33,"column":23}},
-          "range":[897,898],
+          "loc":{"source":null,"start":{"line":35,"column":22},"end":{"line":35,"column":23}},
+          "range":[960,961],
           "value":1,
           "raw":"1"
         }
@@ -632,33 +674,33 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":35,"column":21},"end":{"line":35,"column":49}},
-      "range":[944,972],
+      "loc":{"source":null,"start":{"line":37,"column":21},"end":{"line":37,"column":49}},
+      "range":[1007,1035],
       "expression":{
         "type":"UpdateExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":35,"column":27},"end":{"line":35,"column":48}},
-            "range":[950,971],
+            "loc":{"source":null,"start":{"line":37,"column":27},"end":{"line":37,"column":48}},
+            "range":[1013,1034],
             "value":" Trailing update "
           }
         ],
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":20}},
-            "range":[923,943],
+            "loc":{"source":null,"start":{"line":37,"column":0},"end":{"line":37,"column":20}},
+            "range":[986,1006],
             "value":" Leading update "
           }
         ],
-        "loc":{"source":null,"start":{"line":35,"column":22},"end":{"line":35,"column":25}},
-        "range":[945,948],
+        "loc":{"source":null,"start":{"line":37,"column":22},"end":{"line":37,"column":25}},
+        "range":[1008,1011],
         "operator":"++",
         "argument":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":35,"column":22},"end":{"line":35,"column":23}},
-          "range":[945,946],
+          "loc":{"source":null,"start":{"line":37,"column":22},"end":{"line":37,"column":23}},
+          "range":[1008,1009],
           "name":"i",
           "typeAnnotation":null,
           "optional":false
@@ -669,12 +711,12 @@
     },
     {
       "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":37,"column":0},"end":{"line":39,"column":1}},
-      "range":[974,1054],
+      "loc":{"source":null,"start":{"line":39,"column":0},"end":{"line":41,"column":1}},
+      "range":[1037,1117],
       "id":{
         "type":"Identifier",
-        "loc":{"source":null,"start":{"line":37,"column":10},"end":{"line":37,"column":19}},
-        "range":[984,993],
+        "loc":{"source":null,"start":{"line":39,"column":10},"end":{"line":39,"column":19}},
+        "range":[1047,1056],
         "name":"generator",
         "typeAnnotation":null,
         "optional":false
@@ -682,37 +724,37 @@
       "params":[],
       "body":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":37,"column":22},"end":{"line":39,"column":1}},
-        "range":[996,1054],
+        "loc":{"source":null,"start":{"line":39,"column":22},"end":{"line":41,"column":1}},
+        "range":[1059,1117],
         "body":[
           {
             "type":"ExpressionStatement",
-            "loc":{"source":null,"start":{"line":38,"column":24},"end":{"line":38,"column":33}},
-            "range":[1022,1031],
+            "loc":{"source":null,"start":{"line":40,"column":24},"end":{"line":40,"column":33}},
+            "range":[1085,1094],
             "expression":{
               "type":"YieldExpression",
               "trailingComments":[
                 {
                   "type":"Block",
-                  "loc":{"source":null,"start":{"line":38,"column":34},"end":{"line":38,"column":54}},
-                  "range":[1032,1052],
+                  "loc":{"source":null,"start":{"line":40,"column":34},"end":{"line":40,"column":54}},
+                  "range":[1095,1115],
                   "value":" Trailing yield "
                 }
               ],
               "leadingComments":[
                 {
                   "type":"Block",
-                  "loc":{"source":null,"start":{"line":38,"column":4},"end":{"line":38,"column":23}},
-                  "range":[1002,1021],
+                  "loc":{"source":null,"start":{"line":40,"column":4},"end":{"line":40,"column":23}},
+                  "range":[1065,1084],
                   "value":" Leading yield "
                 }
               ],
-              "loc":{"source":null,"start":{"line":38,"column":25},"end":{"line":38,"column":32}},
-              "range":[1023,1030],
+              "loc":{"source":null,"start":{"line":40,"column":25},"end":{"line":40,"column":32}},
+              "range":[1086,1093],
               "argument":{
                 "type":"Literal",
-                "loc":{"source":null,"start":{"line":38,"column":31},"end":{"line":38,"column":32}},
-                "range":[1029,1030],
+                "loc":{"source":null,"start":{"line":40,"column":31},"end":{"line":40,"column":32}},
+                "range":[1092,1093],
                 "value":1,
                 "raw":"1"
               },
@@ -841,110 +883,122 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":17}},
-      "range":[499,516],
+      "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":21}},
+      "range":[499,520],
+      "value":" Leading logical "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":38},"end":{"line":21,"column":60}},
+      "range":[537,559],
+      "value":" Trailing logical "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":17}},
+      "range":[562,579],
       "value":" Leading new "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":21,"column":28},"end":{"line":21,"column":46}},
-      "range":[527,545],
+      "loc":{"source":null,"start":{"line":23,"column":28},"end":{"line":23,"column":46}},
+      "range":[590,608],
       "value":" Trailing new "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":20}},
-      "range":[548,568],
+      "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":20}},
+      "range":[611,631],
       "value":" Leading object "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":23,"column":26},"end":{"line":23,"column":47}},
-      "range":[574,595],
+      "loc":{"source":null,"start":{"line":25,"column":26},"end":{"line":25,"column":47}},
+      "range":[637,658],
       "value":" Trailing object "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":27}},
-      "range":[598,625],
+      "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":27}},
+      "range":[661,688],
       "value":" Leading optional call "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":25,"column":41},"end":{"line":25,"column":69}},
-      "range":[639,667],
+      "loc":{"source":null,"start":{"line":27,"column":41},"end":{"line":27,"column":69}},
+      "range":[702,730],
       "value":" Trailing optional call "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":30}},
-      "range":[670,700],
+      "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":30}},
+      "range":[733,763],
       "value":" Leading template literal "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":27,"column":44},"end":{"line":27,"column":75}},
-      "range":[714,745],
+      "loc":{"source":null,"start":{"line":29,"column":44},"end":{"line":29,"column":75}},
+      "range":[777,808],
       "value":" Trailing template literal "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":29}},
-      "range":[748,777],
+      "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":29}},
+      "range":[811,840],
       "value":" Leading tagged template "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":29,"column":46},"end":{"line":29,"column":76}},
-      "range":[794,824],
+      "loc":{"source":null,"start":{"line":31,"column":46},"end":{"line":31,"column":76}},
+      "range":[857,887],
       "value":" Trailing tagged template "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":18}},
-      "range":[827,845],
+      "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":18}},
+      "range":[890,908],
       "value":" Leading this "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":31,"column":26},"end":{"line":31,"column":45}},
-      "range":[853,872],
+      "loc":{"source":null,"start":{"line":33,"column":26},"end":{"line":33,"column":45}},
+      "range":[916,935],
       "value":" Trailing this "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":19}},
-      "range":[875,894],
+      "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":19}},
+      "range":[938,957],
       "value":" Leading unary "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":33,"column":25},"end":{"line":33,"column":45}},
-      "range":[900,920],
+      "loc":{"source":null,"start":{"line":35,"column":25},"end":{"line":35,"column":45}},
+      "range":[963,983],
       "value":" Trailing unary "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":20}},
-      "range":[923,943],
+      "loc":{"source":null,"start":{"line":37,"column":0},"end":{"line":37,"column":20}},
+      "range":[986,1006],
       "value":" Leading update "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":35,"column":27},"end":{"line":35,"column":48}},
-      "range":[950,971],
+      "loc":{"source":null,"start":{"line":37,"column":27},"end":{"line":37,"column":48}},
+      "range":[1013,1034],
       "value":" Trailing update "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":38,"column":4},"end":{"line":38,"column":23}},
-      "range":[1002,1021],
+      "loc":{"source":null,"start":{"line":40,"column":4},"end":{"line":40,"column":23}},
+      "range":[1065,1084],
       "value":" Leading yield "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":38,"column":34},"end":{"line":38,"column":54}},
-      "range":[1032,1052],
+      "loc":{"source":null,"start":{"line":40,"column":34},"end":{"line":40,"column":54}},
+      "range":[1095,1115],
       "value":" Trailing yield "
     }
   ]

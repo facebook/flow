@@ -498,7 +498,7 @@ with type t = Impl.t = struct
           [
             ("operator", string operator); ("argument", expression argument); ("prefix", bool prefix);
           ]
-      | (loc, Logical { Logical.left; operator; right }) ->
+      | (loc, Logical { Logical.left; operator; right; comments }) ->
         let operator =
           match operator with
           | Logical.Or -> "||"
@@ -506,6 +506,7 @@ with type t = Impl.t = struct
           | Logical.NullishCoalesce -> "??"
         in
         node
+          ?comments
           "LogicalExpression"
           loc
           [("operator", string operator); ("left", expression left); ("right", expression right)]

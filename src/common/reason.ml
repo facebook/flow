@@ -999,7 +999,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | JSXElement x -> code_desc_of_jsx_element x
   | JSXFragment _ -> "<>...</>"
   | Ast.Expression.Literal x -> code_desc_of_literal x
-  | Logical { Logical.operator; left; right } ->
+  | Logical { Logical.operator; left; right; comments = _ } ->
     do_wrap (code_desc_of_operation left (`Logical operator) right)
   | Member { Member._object; property } ->
     let o = code_desc_of_expression ~wrap:true _object in

@@ -18,6 +18,8 @@ function foo() {}
 
 /* Leading literal */ (1) /* Trailing literal */;
 
+/* Leading logical */ (false || true) /* Trailing logical */;
+
 /* Leading new */ (new C()) /* Trailing new */;
 
 /* Leading object */ ({}) /* Trailing object */;

@@ -1116,10 +1116,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method logical (expr : ('M, 'T) Ast.Expression.Logical.t) : ('N, 'U) Ast.Expression.Logical.t =
       let open Ast.Expression.Logical in
-      let { operator; left; right } = expr in
+      let { operator; left; right; comments } = expr in
       let left' = this#expression left in
       let right' = this#expression right in
-      { operator; left = left'; right = right' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { operator; left = left'; right = right'; comments = comments' }
 
     method member (expr : ('M, 'T) Ast.Expression.Member.t) : ('N, 'U) Ast.Expression.Member.t =
       let open Ast.Expression.Member in

@@ -999,7 +999,7 @@ struct
       (* branching expressions *)
       method! logical _loc (expr : (L.t, L.t) Ast.Expression.Logical.t) =
         let open Ast.Expression.Logical in
-        let { operator = _; left; right } = expr in
+        let { operator = _; left; right; comments = _ } = expr in
         ignore @@ this#expression left;
         let env1 = this#ssa_env in
         ignore @@ this#expression right;

@@ -1346,13 +1346,14 @@ class ['loc] mapper =
 
     method logical _loc (expr : ('loc, 'loc) Ast.Expression.Logical.t) =
       let open Ast.Expression.Logical in
-      let { operator = _; left; right } = expr in
+      let { operator = _; left; right; comments } = expr in
       let left' = this#expression left in
       let right' = this#expression right in
-      if left == left' && right == right' then
+      let comments' = this#syntax_opt comments in
+      if left == left' && right == right' && comments == comments' then
         expr
       else
-        { expr with left = left'; right = right' }
+        { expr with left = left'; right = right'; comments = comments' }
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in

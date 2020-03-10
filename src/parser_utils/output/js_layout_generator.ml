@@ -888,7 +888,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                    expression_with_parens ~precedence:min_precedence ~ctxt alternate;
                  ]);
           ]
-      | E.Logical { E.Logical.operator; left; right } ->
+      | E.Logical { E.Logical.operator; left; right; comments } ->
         let left = expression_with_parens ~precedence ~ctxt left in
         let operator =
           match operator with
@@ -899,7 +899,8 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
         let right = expression_with_parens ~precedence:(precedence + 1) ~ctxt right in
         (* if we need to wrap, the op stays on the first line, with the RHS on a
          new line and indented by 2 spaces *)
-        Group [left; pretty_space; operator; Indent (fuse [pretty_line; right])]
+        layout_node_with_comments_opt loc comments
+        @@ Group [left; pretty_space; operator; Indent (fuse [pretty_line; right])]
       | E.Member m -> member ~precedence ~ctxt m
       | E.OptionalMember { E.OptionalMember.member = m; optional } ->
         member ~optional ~precedence ~ctxt m

@@ -372,7 +372,8 @@ module Expressions = struct
   let conditional test consequent alternate =
     (Loc.none, Conditional { Conditional.test; consequent; alternate })
 
-  let logical ~op left right = (Loc.none, Logical { Logical.operator = op; left; right })
+  let logical ?comments ~op left right =
+    (Loc.none, Logical { Logical.operator = op; left; right; comments })
 
   let unary ?(comments = None) ~op argument =
     (Loc.none, Unary { Unary.operator = op; argument; comments })

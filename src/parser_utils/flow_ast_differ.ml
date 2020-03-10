@@ -997,7 +997,7 @@ let program
       | ((_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2)) -> jsx_element jsx_elem1 jsx_elem2
       | ((_, JSXFragment frag1), (_, JSXFragment frag2)) -> jsx_fragment frag1 frag2
       | ((loc, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast loc t1 t2)
-      | ((_, Logical l1), (_, Logical l2)) -> logical l1 l2
+      | ((loc, Logical l1), (_, Logical l2)) -> logical loc l1 l2
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
       | (expr, (loc, TypeCast t2)) -> Some (type_cast_added expr loc t2)
       | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
@@ -1416,14 +1416,15 @@ let program
     let (_, { argument = arg1 }) = spread1 in
     let (_, { argument = arg2 }) = spread2 in
     diff_if_changed expression arg1 arg2
-  and logical expr1 expr2 =
+  and logical loc expr1 expr2 =
     let open Ast.Expression.Logical in
-    let { left = left1; right = right1; operator = operator1 } = expr1 in
-    let { left = left2; right = right2; operator = operator2 } = expr2 in
+    let { left = left1; right = right1; operator = operator1; comments = comments1 } = expr1 in
+    let { left = left2; right = right2; operator = operator2; comments = comments2 } = expr2 in
     if operator1 == operator2 then
       let left = diff_if_changed expression left1 left2 in
       let right = diff_if_changed expression right1 right2 in
-      Some (Base.List.concat [left; right])
+      let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+      Some (Base.List.concat [left; right; comments])
     else
       None
   and array loc arr1 arr2 : node change list option =

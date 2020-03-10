@@ -331,7 +331,7 @@ module Expression
     let make_logical env left right operator loc =
       let left = as_expression env left in
       let right = as_expression env right in
-      Cover_expr (loc, Logical { Logical.operator; left; right })
+      Cover_expr (loc, Logical { Logical.operator; left; right; comments = None })
     in
     let rec logical_and env left lloc =
       match Peek.token env with
@@ -1244,6 +1244,8 @@ module Expression
         Identifier (loc, { e with Identifier.comments = merge_comments comments })
       | Literal ({ Literal.comments; _ } as e) ->
         Literal { e with Literal.comments = merge_comments comments }
+      | Logical ({ Logical.comments; _ } as e) ->
+        Logical { e with Logical.comments = merge_comments comments }
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }

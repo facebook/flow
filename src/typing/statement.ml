@@ -5263,7 +5263,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
           Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t))),
       { operator; left = left_ast; right = right_ast; comments } )
 
-and logical cx loc { Ast.Expression.Logical.operator; left; right } =
+and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
   let open Ast.Expression.Logical in
   match operator with
   | Or ->
@@ -5276,7 +5276,7 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
     in
     let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
     ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
-      { operator = Or; left; right } )
+      { operator = Or; left; right; comments } )
   | And ->
     let ((((_, t1), _) as left), map, _, xtypes) =
       predicates_of_condition ~cond:OtherTest cx left
@@ -5286,13 +5286,13 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
     in
     let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
     ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))),
-      { operator = And; left; right } )
+      { operator = And; left; right; comments } )
   | NullishCoalesce ->
     let (((_, t1), _) as left) = expression cx left in
     let (((_, t2), _) as right) = expression cx right in
     let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
     ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))),
-      { operator = NullishCoalesce; left; right } )
+      { operator = NullishCoalesce; left; right; comments } )
 
 and assignment_lhs cx patt =
   match patt with
@@ -6850,7 +6850,7 @@ and predicates_of_condition cx ~cond e =
     in
     instance_test loc arg make_ast_and_pred true true
   (* test1 && test2 *)
-  | (loc, Logical { Logical.operator = Logical.And; left; right }) ->
+  | (loc, Logical { Logical.operator = Logical.And; left; right; comments }) ->
     let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
       predicates_of_condition cx ~cond left
     in
@@ -6859,12 +6859,13 @@ and predicates_of_condition cx ~cond e =
     in
     let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
     let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))) in
-    ( ((loc, t_out), Logical { Logical.operator = Logical.And; left = left_ast; right = right_ast }),
+    ( ( (loc, t_out),
+        Logical { Logical.operator = Logical.And; left = left_ast; right = right_ast; comments } ),
       mk_and map1 map2,
       mk_or not_map1 not_map2,
       Key_map.union xts1 xts2 )
   (* test1 || test2 *)
-  | (loc, Logical { Logical.operator = Logical.Or; left; right }) ->
+  | (loc, Logical { Logical.operator = Logical.Or; left; right; comments }) ->
     let () = check_default_pattern cx left right in
     let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
       predicates_of_condition cx ~cond left
@@ -6874,7 +6875,8 @@ and predicates_of_condition cx ~cond e =
     in
     let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
     let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))) in
-    ( ((loc, t_out), Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast }),
+    ( ( (loc, t_out),
+        Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments } ),
       mk_or map1 map2,
       mk_and not_map1 not_map2,
       Key_map.union xts1 xts2 )
