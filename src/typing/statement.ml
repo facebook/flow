@@ -5994,10 +5994,10 @@ and jsx_mk_props cx reason c name attributes children =
           (* TODO: attributes with namespaced names *)
           (acc, atts)
         (* <element {...spread} /> *)
-        | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) ->
+        | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
           let (((_, spread), _) as argument) = expression cx argument in
           let acc = ObjectExpressionAcc.add_spread spread acc in
-          let att = Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) in
+          let att = Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) in
           (acc, att :: atts))
       (ObjectExpressionAcc.empty ~allow_sealed:true, [])
       attributes

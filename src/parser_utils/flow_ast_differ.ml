@@ -1189,16 +1189,19 @@ let program
     let open Ast.JSX.Opening in
     match (jsx_attr1, jsx_attr2) with
     | (Attribute attr1, Attribute attr2) -> diff_if_changed_ret_opt jsx_attribute attr1 attr2
-    | (SpreadAttribute attr1, SpreadAttribute attr2) ->
-      diff_if_changed jsx_spread_attribute attr1 attr2 |> Base.Option.return
+    | (SpreadAttribute ((loc, _) as attr1), SpreadAttribute attr2) ->
+      diff_if_changed_ret_opt (jsx_spread_attribute loc) attr1 attr2
     | _ -> None
   and jsx_spread_attribute
+      (loc : Loc.t)
       (attr1 : (Loc.t, Loc.t) Ast.JSX.SpreadAttribute.t)
-      (attr2 : (Loc.t, Loc.t) Ast.JSX.SpreadAttribute.t) : node change list =
+      (attr2 : (Loc.t, Loc.t) Ast.JSX.SpreadAttribute.t) : node change list option =
     let open Flow_ast.JSX.SpreadAttribute in
-    let (_, { argument = arg1 }) = attr1 in
-    let (_, { argument = arg2 }) = attr2 in
-    diff_if_changed expression arg1 arg2
+    let (_, { argument = arg1; comments = comments1 }) = attr1 in
+    let (_, { argument = arg2; comments = comments2 }) = attr2 in
+    let argument_diff = Some (diff_if_changed expression arg1 arg2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
   and jsx_attribute
       (attr1 : (Loc.t, Loc.t) Ast.JSX.Attribute.t) (attr2 : (Loc.t, Loc.t) Ast.JSX.Attribute.t) :
       node change list option =

@@ -2032,8 +2032,9 @@ and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
           end;
         ] )
 
-and jsx_spread_attribute (loc, { Ast.JSX.SpreadAttribute.argument }) =
-  source_location_with_comments (loc, fuse [Atom "{"; Atom "..."; expression argument; Atom "}"])
+and jsx_spread_attribute (loc, { Ast.JSX.SpreadAttribute.argument; comments }) =
+  layout_node_with_comments_opt loc comments
+  @@ fuse [Atom "{"; Atom "..."; expression argument; Atom "}"]
 
 and jsx_element_name = function
   | Ast.JSX.Identifier ident -> jsx_identifier ident

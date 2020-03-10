@@ -17,11 +17,16 @@ module JSX (Parse : Parser_common.PARSER) = struct
     let attr =
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_LCURLY;
           Expect.token env T_ELLIPSIS;
           let argument = Parse.assignment env in
           Expect.token env T_RCURLY;
-          { JSX.SpreadAttribute.argument })
+          let trailing = Peek.comments env in
+          {
+            JSX.SpreadAttribute.argument;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
         env
     in
     Eat.pop_lex_mode env;

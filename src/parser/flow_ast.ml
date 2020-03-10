@@ -1279,7 +1279,11 @@ and JSX : sig
   module SpreadAttribute : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = { argument: ('M, 'T) Expression.t } [@@deriving show]
+    and ('M, 'T) t' = {
+      argument: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module MemberExpression : sig

@@ -13,3 +13,5 @@
 <div name=/* 7.1 L JSX expr */ {/* 7.2 L num */ 1 /* 7.3 T num */} /* 7.4 T JSX expr */ />;
 
 <div>{/* 8.1 L JSX spread */ ... /* 8.2 L obj */ {} /* 8.3 T obj */}</div>;
+
+<div /* 9.1 L JSX spread */{... /* 9.2 L obj */ {} /* 9.3 T obj */} /* 9.4 T JSX spread */ />;

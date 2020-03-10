@@ -1031,8 +1031,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method jsx_spread_attribute (attr : ('M, 'T) Ast.JSX.SpreadAttribute.t')
         : ('N, 'U) Ast.JSX.SpreadAttribute.t' =
       let open Ast.JSX.SpreadAttribute in
-      let { argument } = attr in
-      { argument = this#expression argument }
+      let { argument; comments } = attr in
+      let argument' = this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
 
     method jsx_attribute (attr : ('M, 'T) Ast.JSX.Attribute.t) : ('N, 'U) Ast.JSX.Attribute.t =
       let open Ast.JSX.Attribute in

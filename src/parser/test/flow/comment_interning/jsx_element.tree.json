@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":15,"column":75}},
-  "range":[24,629],
+  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":17,"column":94}},
+  "range":[24,725],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -562,6 +562,84 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":94}},
+      "range":[631,725],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":93}},
+        "range":[631,724],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":93}},
+          "range":[631,724],
+          "name":{
+            "type":"JSXIdentifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":17,"column":5},"end":{"line":17,"column":27}},
+                "range":[636,658],
+                "value":" 9.1 L JSX spread "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":17,"column":1},"end":{"line":17,"column":4}},
+            "range":[632,635],
+            "name":"div"
+          },
+          "attributes":[
+            {
+              "type":"JSXSpreadAttribute",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":17,"column":68},"end":{"line":17,"column":90}},
+                  "range":[699,721],
+                  "value":" 9.4 T JSX spread "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":17,"column":5},"end":{"line":17,"column":27}},
+                  "range":[636,658],
+                  "value":" 9.1 L JSX spread "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":17,"column":27},"end":{"line":17,"column":67}},
+              "range":[658,698],
+              "argument":{
+                "type":"ObjectExpression",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":17,"column":51},"end":{"line":17,"column":66}},
+                    "range":[682,697],
+                    "value":" 9.3 T obj "
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":17,"column":32},"end":{"line":17,"column":47}},
+                    "range":[663,678],
+                    "value":" 9.2 L obj "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":17,"column":48},"end":{"line":17,"column":50}},
+                "range":[679,681],
+                "properties":[]
+              }
+            }
+          ],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -714,6 +792,30 @@
       "loc":{"source":null,"start":{"line":15,"column":52},"end":{"line":15,"column":67}},
       "range":[606,621],
       "value":" 8.3 T obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":5},"end":{"line":17,"column":27}},
+      "range":[636,658],
+      "value":" 9.1 L JSX spread "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":32},"end":{"line":17,"column":47}},
+      "range":[663,678],
+      "value":" 9.2 L obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":51},"end":{"line":17,"column":66}},
+      "range":[682,697],
+      "value":" 9.3 T obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":68},"end":{"line":17,"column":90}},
+      "range":[699,721],
+      "value":" 9.4 T JSX spread "
     }
   ]
 }

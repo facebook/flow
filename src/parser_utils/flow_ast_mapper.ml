@@ -1253,8 +1253,13 @@ class ['loc] mapper =
 
     method jsx_spread_attribute _loc (attr : ('loc, 'loc) Ast.JSX.SpreadAttribute.t') =
       let open Ast.JSX.SpreadAttribute in
-      let { argument } = attr in
-      id this#expression argument attr (fun argument -> { argument })
+      let { argument; comments } = attr in
+      let argument' = this#expression argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        attr
+      else
+        { argument = argument'; comments = comments' }
 
     method jsx_attribute (attr : ('loc, 'loc) Ast.JSX.Attribute.t) =
       let open Ast.JSX.Attribute in

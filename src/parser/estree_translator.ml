@@ -1536,8 +1536,8 @@ with type t = Impl.t = struct
         function
         | Literal (loc, value) -> literal (loc, value)
         | ExpressionContainer (loc, expr) -> jsx_expression_container (loc, expr))
-    and jsx_spread_attribute (loc, { JSX.SpreadAttribute.argument }) =
-      node "JSXSpreadAttribute" loc [("argument", expression argument)]
+    and jsx_spread_attribute (loc, { JSX.SpreadAttribute.argument; comments }) =
+      node ?comments "JSXSpreadAttribute" loc [("argument", expression argument)]
     and jsx_expression_container (loc, { JSX.ExpressionContainer.expression = expr; comments }) =
       let expression =
         match expr with
