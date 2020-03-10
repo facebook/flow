@@ -145,7 +145,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
       if this#covers_target loc then this#chain (Get_def_request.Identifier { name; loc; type_ });
       super#t_identifier id
 
-    method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name }) as id) =
+    method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
       if this#covers_target loc then this#chain (Get_def_request.Identifier { name; loc; type_ });
       super#jsx_identifier id
 

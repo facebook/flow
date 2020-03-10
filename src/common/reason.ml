@@ -1176,26 +1176,27 @@ and code_desc_of_operation =
 and code_desc_of_jsx_element x =
   let open Ast.JSX in
   match (snd x.openingElement).Opening.name with
-  | Identifier (_, { Identifier.name }) -> "<" ^ name ^ " />"
+  | Identifier (_, { Identifier.name; comments = _ }) -> "<" ^ name ^ " />"
   | NamespacedName
       ( _,
         {
-          NamespacedName.namespace = (_, { Identifier.name = a });
-          name = (_, { Identifier.name = b });
+          NamespacedName.namespace = (_, { Identifier.name = a; comments = __POS_OF__ });
+          name = (_, { Identifier.name = b; comments = _ });
         } ) ->
     "<" ^ a ^ ":" ^ b ^ " />"
   | MemberExpression x ->
     let rec loop = function
       | ( _,
           {
-            MemberExpression._object = MemberExpression.Identifier (_, { Identifier.name = a });
-            property = (_, { Identifier.name = b });
+            MemberExpression._object =
+              MemberExpression.Identifier (_, { Identifier.name = a; comments = _ });
+            property = (_, { Identifier.name = b; comments = _ });
           } ) ->
         a ^ "." ^ b
       | ( _,
           {
             MemberExpression._object = MemberExpression.MemberExpression a;
-            property = (_, { Identifier.name = b });
+            property = (_, { Identifier.name = b; comments = _ });
           } ) ->
         loop a ^ "." ^ b
     in

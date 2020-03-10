@@ -289,7 +289,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method jsx_fragment : ('M, 'T) Ast.JSX.fragment -> ('N, 'U) Ast.JSX.fragment
 
-    method jsx_identifier : 'T Flow_ast.JSX.Identifier.t -> 'U Ast.JSX.Identifier.t
+    method jsx_identifier : ('M, 'T) Flow_ast.JSX.Identifier.t -> ('N, 'U) Ast.JSX.Identifier.t
 
     method jsx_member_expression :
       ('M, 'T) Ast.JSX.MemberExpression.t -> ('N, 'U) Ast.JSX.MemberExpression.t

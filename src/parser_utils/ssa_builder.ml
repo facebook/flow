@@ -442,8 +442,8 @@ struct
         this#any_identifier loc x;
         super#identifier ident
 
-      method! jsx_identifier (ident : L.t Ast.JSX.Identifier.t) =
-        let (loc, { Ast.JSX.Identifier.name }) = ident in
+      method! jsx_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
+        let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
         this#any_identifier loc name;
         super#jsx_identifier ident
 

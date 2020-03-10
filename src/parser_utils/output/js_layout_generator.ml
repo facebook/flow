@@ -410,7 +410,7 @@ let source_location_with_comments ?comments (current_loc, layout_node) =
   | Some comments -> layout_node_with_comments current_loc comments layout
   | None -> layout
 
-let identifier_with_comments (current_loc, { Ast.Identifier.name; comments }) =
+let identifier_with_comments current_loc name comments =
   let node = Identifier (current_loc, name) in
   match comments with
   | Some comments -> layout_node_with_comments current_loc comments node
@@ -1064,7 +1064,7 @@ and expression_or_spread ?(ctxt = normal_context) expr_or_spread =
     source_location_with_comments
       (loc, fuse [Atom "..."; expression_with_parens ~precedence ~ctxt argument])
 
-and identifier (loc, name) = identifier_with_comments (loc, name)
+and identifier (loc, { Ast.Identifier.name; comments }) = identifier_with_comments loc name comments
 
 and number_literal_type { Ast.NumberLiteral.raw; _ } = Atom raw
 
@@ -1967,8 +1967,8 @@ and jsx_fragment
          jsx_closing_fragment frag_closingElement;
        ]
 
-and jsx_identifier (loc, { Ast.JSX.Identifier.name }) =
-  identifier_with_comments @@ Flow_ast_utils.ident_of_source (loc, name)
+and jsx_identifier (loc, { Ast.JSX.Identifier.name; comments }) =
+  identifier_with_comments loc name comments
 
 and jsx_namespaced_name (loc, { Ast.JSX.NamespacedName.namespace; name }) =
   source_location_with_comments (loc, fuse [jsx_identifier namespace; Atom ":"; jsx_identifier name])

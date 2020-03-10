@@ -39,7 +39,7 @@ type node =
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
   | TemplateLiteral of (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child
-  | JSXIdentifier of Loc.t Flow_ast.JSX.Identifier.t
+  | JSXIdentifier of (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it

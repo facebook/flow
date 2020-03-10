@@ -82,8 +82,10 @@ module JSX (Parse : Parser_common.PARSER) = struct
         error_unexpected ~expected:"an identifier" env;
         ""
     in
+    let leading = Peek.comments env in
     Eat.token env;
-    (loc, JSX.Identifier.{ name })
+    let trailing = Peek.comments env in
+    (loc, JSX.Identifier.{ name; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
 
   let name =
     let rec member_expression env member =
@@ -306,7 +308,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
     let rec normalize name =
       JSX.(
         match name with
-        | Identifier (_, { Identifier.name }) -> name
+        | Identifier (_, { Identifier.name; comments = _ }) -> name
         | NamespacedName (_, { NamespacedName.namespace; name }) ->
           (snd namespace).Identifier.name ^ ":" ^ (snd name).Identifier.name
         | MemberExpression (_, { MemberExpression._object; property }) ->

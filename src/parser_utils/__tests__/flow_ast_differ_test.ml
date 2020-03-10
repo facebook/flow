@@ -142,7 +142,7 @@ class useless_mapper =
       let name' = this#jsx_name name in
       let selfClosing' =
         match name' with
-        | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name = id_name }) ->
+        | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name = id_name; comments = _ }) ->
           if id_name = "selfClosing" then
             true
           else if id_name = "notSelfClosing" then
@@ -157,13 +157,13 @@ class useless_mapper =
       else
         (loc, { name = name'; selfClosing = selfClosing'; attributes = attributes' })
 
-    method! jsx_identifier (id : Loc.t Ast.JSX.Identifier.t) =
+    method! jsx_identifier (id : (Loc.t, Loc.t) Ast.JSX.Identifier.t) =
       let open Ast.JSX.Identifier in
-      let (loc, { name }) = id in
+      let (loc, { name; comments }) = id in
       match name with
-      | "rename" -> (loc, { name = "gotRenamed" })
-      | "Rename" -> (loc, { name = "GotRenamed" })
-      | "RENAME" -> (loc, { name = "GOT_RENAMED" })
+      | "rename" -> (loc, { name = "gotRenamed"; comments })
+      | "Rename" -> (loc, { name = "GotRenamed"; comments })
+      | "RENAME" -> (loc, { name = "GOT_RENAMED"; comments })
       | _ -> id
 
     method! jsx_attribute (attr : (Loc.t, Loc.t) Ast.JSX.Attribute.t) =

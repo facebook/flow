@@ -1115,8 +1115,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let nested_exp' = this#jsx_member_expression nested_exp in
         MemberExpression nested_exp'
 
-    method jsx_identifier ((annot, name) : 'T Ast.JSX.Identifier.t) : 'U Ast.JSX.Identifier.t =
-      (this#on_type_annot annot, name)
+    method jsx_identifier ((annot, id) : ('M, 'T) Ast.JSX.Identifier.t)
+        : ('N, 'U) Ast.JSX.Identifier.t =
+      let open Ast.JSX.Identifier in
+      let { name; comments } = id in
+      let annot' = this#on_type_annot annot in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { name; comments = comments' })
 
     method labeled_statement (stmt : ('M, 'T) Ast.Statement.Labeled.t)
         : ('N, 'U) Ast.Statement.Labeled.t =

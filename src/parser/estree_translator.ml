@@ -1568,8 +1568,8 @@ with type t = Impl.t = struct
         "JSXNamespacedName"
         loc
         [("namespace", jsx_identifier namespace); ("name", jsx_identifier name)]
-    and jsx_identifier (loc, { JSX.Identifier.name }) =
-      node "JSXIdentifier" loc [("name", string name)]
+    and jsx_identifier (loc, { JSX.Identifier.name; comments }) =
+      node ?comments "JSXIdentifier" loc [("name", string name)]
     and export_specifier (loc, { Statement.ExportNamedDeclaration.ExportSpecifier.exported; local })
         =
       let exported =

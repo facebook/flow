@@ -1219,17 +1219,21 @@ end =
 
 and JSX : sig
   module Identifier : sig
-    type 'T t = 'T * t'
+    type ('M, 'T) t = 'T * 'M t'
 
-    and t' = { name: string } [@@deriving show]
+    and 'M t' = {
+      name: string;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module NamespacedName : sig
-    type ('M, 'T) t = 'M * 'T t'
+    type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and 'T t' = {
-      namespace: 'T Identifier.t;
-      name: 'T Identifier.t;
+    and ('M, 'T) t' = {
+      namespace: ('M, 'T) Identifier.t;
+      name: ('M, 'T) Identifier.t;
     }
     [@@deriving show]
   end
@@ -1255,7 +1259,7 @@ and JSX : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) name =
-      | Identifier of 'T Identifier.t
+      | Identifier of ('M, 'T) Identifier.t
       | NamespacedName of ('M, 'T) NamespacedName.t
 
     and ('M, 'T) value =
@@ -1279,18 +1283,18 @@ and JSX : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) _object =
-      | Identifier of 'T Identifier.t
+      | Identifier of ('M, 'T) Identifier.t
       | MemberExpression of ('M, 'T) t
 
     and ('M, 'T) t' = {
       _object: ('M, 'T) _object;
-      property: 'T Identifier.t;
+      property: ('M, 'T) Identifier.t;
     }
     [@@deriving show]
   end
 
   type ('M, 'T) name =
-    | Identifier of 'T Identifier.t
+    | Identifier of ('M, 'T) Identifier.t
     | NamespacedName of ('M, 'T) NamespacedName.t
     | MemberExpression of ('M, 'T) MemberExpression.t
   [@@deriving show]

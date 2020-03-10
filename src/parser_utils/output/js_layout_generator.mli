@@ -67,7 +67,7 @@ val comment : Loc.t Flow_ast.Comment.t -> Layout.layout_node
 
 val template_literal : (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t -> Layout.layout_node
 
-val jsx_identifier : Loc.t Flow_ast.JSX.Identifier.t -> Layout.layout_node
+val jsx_identifier : (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t -> Layout.layout_node
 
 val jsx_child : (Loc.t, Loc.t) Flow_ast.JSX.child -> (Loc.t * Layout.layout_node) option
 

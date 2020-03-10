@@ -5784,18 +5784,22 @@ and jsx_title cx openingElement children closingElement locs =
   let jsx_mode = Context.jsx cx in
   let (t, name, attributes, children) =
     match (name, jsx_mode, (facebook_fbs, facebook_fbt)) with
-    | (Identifier (loc_id, ({ Identifier.name = "fbs" } as id)), _, (Some custom_jsx_type, _))
-    | (Identifier (loc_id, ({ Identifier.name = "fbt" } as id)), _, (_, Some custom_jsx_type)) ->
+    | ( Identifier (loc_id, ({ Identifier.name = "fbs"; comments = _ } as id)),
+        _,
+        (Some custom_jsx_type, _) )
+    | ( Identifier (loc_id, ({ Identifier.name = "fbt"; comments = _ } as id)),
+        _,
+        (_, Some custom_jsx_type) ) ->
       let fbt_reason = mk_reason RFbt loc_element in
       let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
       let name = Identifier ((loc_id, t), id) in
       let attributes = Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes in
       let (_, children) = collapse_children cx children in
       (t, name, attributes, children)
-    | (Identifier (loc, { Identifier.name }), _, _) ->
+    | (Identifier (loc, { Identifier.name; comments }), _, _) ->
       if Type_inference_hooks_js.dispatch_id_hook cx name loc then
         let t = Unsoundness.at InferenceHooks loc_element in
-        let name = Identifier ((loc, t), { Identifier.name }) in
+        let name = Identifier ((loc, t), { Identifier.name; comments }) in
         let attributes =
           Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes
         in
@@ -5823,7 +5827,7 @@ and jsx_title cx openingElement children closingElement locs =
           jsx_mk_props cx reason c name attributes children
         in
         let t = jsx_desugar cx name c o attributes unresolved_params locs in
-        let name = Identifier ((loc, c), { Identifier.name }) in
+        let name = Identifier ((loc, c), { Identifier.name; comments }) in
         (t, name, attributes', children)
     | (MemberExpression member, Options.Jsx_react, _) ->
       let name = jsx_title_member_to_string member in
@@ -5930,8 +5934,11 @@ and jsx_mk_props cx reason c name attributes children =
          * attribute. *)
         | Opening.Attribute
             ( attr_loc,
-              { Attribute.name = Attribute.Identifier (id_loc, { Identifier.name = aname }); value }
-            ) ->
+              {
+                Attribute.name =
+                  Attribute.Identifier (id_loc, { Identifier.name = aname; comments = acomments });
+                value;
+              } ) ->
           (* Get the type for the attribute's value. *)
           let (atype, value) =
             if Type_inference_hooks_js.dispatch_jsx_hook cx aname attr_loc c then
@@ -5971,7 +5978,8 @@ and jsx_mk_props cx reason c name attributes children =
               ( attr_loc,
                 {
                   Attribute.name =
-                    Attribute.Identifier ((id_loc, atype), { Identifier.name = aname });
+                    Attribute.Identifier
+                      ((id_loc, atype), { Identifier.name = aname; comments = acomments });
                   value;
                 } )
           in
@@ -6177,10 +6185,10 @@ and jsx_trim_text make_trust loc value =
 
 and jsx_title_member_to_string (_, member) =
   let open Ast.JSX.MemberExpression in
-  let (_, { Ast.JSX.Identifier.name }) = member.property in
+  let (_, { Ast.JSX.Identifier.name; comments = _ }) = member.property in
   match member._object with
   | MemberExpression member -> jsx_title_member_to_string member ^ "." ^ name
-  | Identifier (_, { Ast.JSX.Identifier.name = obj }) -> obj ^ "." ^ name
+  | Identifier (_, { Ast.JSX.Identifier.name = obj; comments = _ }) -> obj ^ "." ^ name
 
 and jsx_title_namespaced_name_to_string namespaced_name =
   let (_, { Ast.JSX.NamespacedName.namespace = (_, namespace); name = (_, name) }) =
@@ -6194,13 +6202,13 @@ and jsx_title_member_to_expression member =
     let open Ast.JSX.MemberExpression in
     match member._object with
     | MemberExpression member -> jsx_title_member_to_expression member
-    | Identifier (loc, { Ast.JSX.Identifier.name }) ->
-      (loc, Ast.Expression.Identifier (loc, mk_ident ~comments:None name))
+    | Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
+      (loc, Ast.Expression.Identifier (loc, mk_ident ~comments name))
   in
   let property =
     let open Ast.JSX.MemberExpression in
-    let (loc, { Ast.JSX.Identifier.name }) = member.property in
-    (loc, mk_ident ~comments:None name)
+    let (loc, { Ast.JSX.Identifier.name; comments }) = member.property in
+    (loc, mk_ident ~comments name)
   in
   Ast.Expression.Member.
     ( mloc,
@@ -6218,18 +6226,19 @@ and expression_to_jsx_title_member loc member =
       Ast.Expression.Member
         {
           _object = ((mloc, _), obj_expr);
-          property = PropertyIdentifier (pannot, { Ast.Identifier.name; comments = _ });
+          property = PropertyIdentifier (pannot, { Ast.Identifier.name; comments });
           comments = _;
         }) ->
     let _object =
       match obj_expr with
-      | Ast.Expression.Identifier ((id_loc, t), { Ast.Identifier.name; comments = _ }) ->
-        Some (Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name }))
+      | Ast.Expression.Identifier ((id_loc, t), { Ast.Identifier.name; comments }) ->
+        Some
+          (Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name; comments }))
       | _ ->
         expression_to_jsx_title_member mloc obj_expr
         |> Base.Option.map ~f:(fun e -> Ast.JSX.MemberExpression.MemberExpression e)
     in
-    let property = (pannot, { Ast.JSX.Identifier.name }) in
+    let property = (pannot, { Ast.JSX.Identifier.name; comments }) in
     Base.Option.map _object ~f:(fun _object ->
         (loc, Ast.JSX.MemberExpression.{ _object; property }))
   | _ -> None

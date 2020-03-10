@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":64}},
-  "range":[24,64],
+  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":11,"column":58}},
+  "range":[24,459],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -62,6 +62,352 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":93}},
+      "range":[66,159],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":92}},
+        "range":[66,158],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":43}},
+          "range":[66,109],
+          "name":{
+            "type":"JSXIdentifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":42}},
+                "range":[90,108],
+                "value":" 2.2 T JSX id "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":1},"end":{"line":3,"column":19}},
+                "range":[67,85],
+                "value":" 2.1 L JSX id "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":3,"column":20},"end":{"line":3,"column":23}},
+            "range":[86,89],
+            "name":"div"
+          },
+          "attributes":[],
+          "selfClosing":false
+        },
+        "closingElement":{
+          "type":"JSXClosingElement",
+          "loc":{"source":null,"start":{"line":3,"column":47},"end":{"line":3,"column":92}},
+          "range":[113,158],
+          "name":{
+            "type":"JSXIdentifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":73},"end":{"line":3,"column":91}},
+                "range":[139,157],
+                "value":" 2.4 T JSX id "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":50},"end":{"line":3,"column":68}},
+                "range":[116,134],
+                "value":" 2.3 L JSX id "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":3,"column":69},"end":{"line":3,"column":72}},
+            "range":[135,138],
+            "name":"div"
+          }
+        },
+        "children":[
+          {
+            "type":"JSXText",
+            "loc":{"source":null,"start":{"line":3,"column":43},"end":{"line":3,"column":47}},
+            "range":[109,113],
+            "value":"test",
+            "raw":"test"
+          }
+        ]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":91}},
+      "range":[161,252],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":90}},
+        "range":[161,251],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":90}},
+          "range":[161,251],
+          "name":{
+            "type":"JSXMemberExpression",
+            "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":70}},
+            "range":[181,231],
+            "object":{
+              "type":"JSXIdentifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":27},"end":{"line":5,"column":45}},
+                  "range":[188,206],
+                  "value":" 3.2 T JSX id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":1},"end":{"line":5,"column":19}},
+                  "range":[162,180],
+                  "value":" 3.1 L JSX id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":26}},
+              "range":[181,187],
+              "name":"Member"
+            },
+            "property":{
+              "type":"JSXIdentifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":71},"end":{"line":5,"column":87}},
+                  "range":[232,248],
+                  "value":" 3.4 JSX id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":48},"end":{"line":5,"column":66}},
+                  "range":[209,227],
+                  "value":" 3.3 L JSX id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":5,"column":67},"end":{"line":5,"column":70}},
+              "range":[228,231],
+              "name":"div"
+            }
+          },
+          "attributes":[],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":94}},
+      "range":[254,348],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":93}},
+        "range":[254,347],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":93}},
+          "range":[254,347],
+          "name":{
+            "type":"JSXNamespacedName",
+            "loc":{"source":null,"start":{"line":7,"column":20},"end":{"line":7,"column":73}},
+            "range":[274,327],
+            "namespace":{
+              "type":"JSXIdentifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":7,"column":30},"end":{"line":7,"column":48}},
+                  "range":[284,302],
+                  "value":" 4.2 T JSX id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":7,"column":1},"end":{"line":7,"column":19}},
+                  "range":[255,273],
+                  "value":" 4.1 L JSX id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":7,"column":20},"end":{"line":7,"column":29}},
+              "range":[274,283],
+              "name":"Namespace"
+            },
+            "name":{
+              "type":"JSXIdentifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":7,"column":74},"end":{"line":7,"column":90}},
+                  "range":[328,344],
+                  "value":" 4.4 JSX id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":7,"column":51},"end":{"line":7,"column":69}},
+                  "range":[305,323],
+                  "value":" 4.3 L JSX id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":7,"column":70},"end":{"line":7,"column":73}},
+              "range":[324,327],
+              "name":"div"
+            }
+          },
+          "attributes":[],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":49}},
+      "range":[350,399],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":48}},
+        "range":[350,398],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":48}},
+          "range":[350,398],
+          "name":{
+            "type":"JSXIdentifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":9,"column":5},"end":{"line":9,"column":23}},
+                "range":[355,373],
+                "value":" 5.1 L JSX id "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":9,"column":1},"end":{"line":9,"column":4}},
+            "range":[351,354],
+            "name":"div"
+          },
+          "attributes":[
+            {
+              "type":"JSXAttribute",
+              "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":28}},
+              "range":[374,378],
+              "name":{
+                "type":"JSXIdentifier",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":9,"column":29},"end":{"line":9,"column":45}},
+                    "range":[379,395],
+                    "value":" 5.2 JSX id "
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":9,"column":5},"end":{"line":9,"column":23}},
+                    "range":[355,373],
+                    "value":" 5.1 L JSX id "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":28}},
+                "range":[374,378],
+                "name":"name"
+              },
+              "value":null
+            }
+          ],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":58}},
+      "range":[401,459],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":57}},
+        "range":[401,458],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":57}},
+          "range":[401,458],
+          "name":{
+            "type":"JSXIdentifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":11,"column":5},"end":{"line":11,"column":23}},
+                "range":[406,424],
+                "value":" 6.1 L JSX id "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":11,"column":1},"end":{"line":11,"column":4}},
+            "range":[402,405],
+            "name":"div"
+          },
+          "attributes":[
+            {
+              "type":"JSXAttribute",
+              "loc":{"source":null,"start":{"line":11,"column":24},"end":{"line":11,"column":54}},
+              "range":[425,455],
+              "name":{
+                "type":"JSXIdentifier",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":11,"column":29},"end":{"line":11,"column":47}},
+                    "range":[430,448],
+                    "value":" 6.2 T JSX id "
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":11,"column":5},"end":{"line":11,"column":23}},
+                    "range":[406,424],
+                    "value":" 6.1 L JSX id "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":11,"column":24},"end":{"line":11,"column":28}},
+                "range":[425,429],
+                "name":"name"
+              },
+              "value":{
+                "type":"Literal",
+                "loc":{"source":null,"start":{"line":11,"column":48},"end":{"line":11,"column":54}},
+                "range":[449,455],
+                "value":"test",
+                "raw":"\"test\""
+              }
+            }
+          ],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -76,6 +422,102 @@
       "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":63}},
       "range":[40,63],
       "value":" 1.2 T JSX element "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":1},"end":{"line":3,"column":19}},
+      "range":[67,85],
+      "value":" 2.1 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":42}},
+      "range":[90,108],
+      "value":" 2.2 T JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":50},"end":{"line":3,"column":68}},
+      "range":[116,134],
+      "value":" 2.3 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":73},"end":{"line":3,"column":91}},
+      "range":[139,157],
+      "value":" 2.4 T JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":1},"end":{"line":5,"column":19}},
+      "range":[162,180],
+      "value":" 3.1 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":27},"end":{"line":5,"column":45}},
+      "range":[188,206],
+      "value":" 3.2 T JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":48},"end":{"line":5,"column":66}},
+      "range":[209,227],
+      "value":" 3.3 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":71},"end":{"line":5,"column":87}},
+      "range":[232,248],
+      "value":" 3.4 JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":1},"end":{"line":7,"column":19}},
+      "range":[255,273],
+      "value":" 4.1 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":30},"end":{"line":7,"column":48}},
+      "range":[284,302],
+      "value":" 4.2 T JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":51},"end":{"line":7,"column":69}},
+      "range":[305,323],
+      "value":" 4.3 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":74},"end":{"line":7,"column":90}},
+      "range":[328,344],
+      "value":" 4.4 JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":9,"column":5},"end":{"line":9,"column":23}},
+      "range":[355,373],
+      "value":" 5.1 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":9,"column":29},"end":{"line":9,"column":45}},
+      "range":[379,395],
+      "value":" 5.2 JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":5},"end":{"line":11,"column":23}},
+      "range":[406,424],
+      "value":" 6.1 L JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":29},"end":{"line":11,"column":47}},
+      "range":[430,448],
+      "value":" 6.2 T JSX id "
     }
   ]
 }

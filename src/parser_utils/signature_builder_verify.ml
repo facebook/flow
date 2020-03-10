@@ -468,7 +468,8 @@ module Eval (Env : EvalEnv) = struct
       let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
       begin
         match (name, Env.facebook_fbt) with
-        | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some _) -> Deps.bot
+        | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"; comments = _ }), Some _) ->
+          Deps.bot
         | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))
       end
     | (loc, Call _) -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))

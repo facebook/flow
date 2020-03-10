@@ -185,7 +185,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                 ( _,
                   {
                     Attribute.name =
-                      Attribute.Identifier ((loc, _), { Identifier.name = attribute_name });
+                      Attribute.Identifier
+                        ((loc, _), { Identifier.name = attribute_name; comments = _ });
                     _;
                   } ) ->
               let found' =

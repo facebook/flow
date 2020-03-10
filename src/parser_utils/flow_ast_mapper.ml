@@ -1351,7 +1351,14 @@ class ['loc] mapper =
       else
         (loc, MemberExpression.{ _object = _object'; property = property' })
 
-    method jsx_identifier (id : 'loc Ast.JSX.Identifier.t) = id
+    method jsx_identifier (id : ('loc, 'loc) Ast.JSX.Identifier.t) =
+      let open Ast.JSX.Identifier in
+      let (loc, { name; comments }) = id in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        id
+      else
+        (loc, { name; comments = comments' })
 
     method labeled_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Labeled.t) =
       let open Ast.Statement.Labeled in

@@ -190,9 +190,10 @@ end
 module JSXs = struct
   open Ast.JSX
 
-  let identifier name = Identifier (Loc.none, { Identifier.name })
+  let identifier ?comments name = Identifier (Loc.none, { Identifier.name; comments })
 
-  let attr_identifier ?(loc = Loc.none) name = Attribute.Identifier (loc, { Identifier.name })
+  let attr_identifier ?(loc = Loc.none) ?comments name =
+    Attribute.Identifier (loc, { Identifier.name; comments })
 
   let attr_literal lit = Attribute.Literal (Loc.none, lit)
 

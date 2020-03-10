@@ -214,7 +214,7 @@ type node =
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
   | TemplateLiteral of (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
-  | JSXIdentifier of Loc.t Ast.JSX.Identifier.t
+  | JSXIdentifier of (Loc.t, Loc.t) Ast.JSX.Identifier.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -1137,15 +1137,20 @@ let program
     | (MemberExpression member_expr1, MemberExpression member_expr2) ->
       diff_if_changed_ret_opt jsx_member_expression member_expr1 member_expr2
     | _ -> None
-  and jsx_identifier (id1 : Loc.t Ast.JSX.Identifier.t) (id2 : Loc.t Ast.JSX.Identifier.t) :
+  and jsx_identifier
+      (id1 : (Loc.t, Loc.t) Ast.JSX.Identifier.t) (id2 : (Loc.t, Loc.t) Ast.JSX.Identifier.t) :
       node change list =
     let open Ast.JSX.Identifier in
-    let (old_loc, { name = name1 }) = id1 in
-    let (_, { name = name2 }) = id2 in
-    if name1 = name2 then
-      []
-    else
-      [(old_loc, Replace (JSXIdentifier id1, JSXIdentifier id2))]
+    let (old_loc, { name = name1; comments = comments1 }) = id1 in
+    let (_, { name = name2; comments = comments2 }) = id2 in
+    let name_diff =
+      if name1 = name2 then
+        []
+      else
+        [(old_loc, Replace (JSXIdentifier id1, JSXIdentifier id2))]
+    in
+    let comments_diff = syntax_opt old_loc comments1 comments2 |> Base.Option.value ~default:[] in
+    name_diff @ comments_diff
   and jsx_namespaced_name
       (namespaced_name1 : (Loc.t, Loc.t) Ast.JSX.NamespacedName.t)
       (namespaced_name2 : (Loc.t, Loc.t) Ast.JSX.NamespacedName.t) : node change list =

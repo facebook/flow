@@ -1187,7 +1187,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
       begin
         match (name, Env.facebook_fbt) with
-        | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some custom_jsx_type) ->
+        | ( Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"; comments = _ }),
+            Some custom_jsx_type ) ->
           ( loc,
             T.JSXLiteral
               ( loc,
