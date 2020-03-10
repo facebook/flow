@@ -1987,17 +1987,18 @@ and jsx_member_expression (loc, { Ast.JSX.MemberExpression._object; property }) 
           jsx_identifier property;
         ] )
 
-and jsx_expression_container { Ast.JSX.ExpressionContainer.expression = expr } =
-  fuse
-    [
-      Atom "{";
-      begin
-        match expr with
-        | Ast.JSX.ExpressionContainer.Expression expr -> expression expr
-        | Ast.JSX.ExpressionContainer.EmptyExpression -> Empty
-      end;
-      Atom "}";
-    ]
+and jsx_expression_container loc { Ast.JSX.ExpressionContainer.expression = expr; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         Atom "{";
+         begin
+           match expr with
+           | Ast.JSX.ExpressionContainer.Expression expr -> expression expr
+           | Ast.JSX.ExpressionContainer.EmptyExpression -> Empty
+         end;
+         Atom "}";
+       ]
 
 and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
   let module A = Ast.JSX.Attribute in
@@ -2020,7 +2021,7 @@ and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
                     match v with
                     | A.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
                     | A.ExpressionContainer (loc, express) ->
-                      source_location_with_comments (loc, jsx_expression_container express)
+                      source_location_with_comments (loc, jsx_expression_container loc express)
                   end;
                 ]
             | None -> flat_ugly_space (* TODO we shouldn't do this for the last attr *)
@@ -2119,7 +2120,7 @@ and jsx_child (loc, child) =
   match child with
   | Ast.JSX.Element elem -> Some (loc, jsx_element loc elem)
   | Ast.JSX.Fragment frag -> Some (loc, jsx_fragment loc frag)
-  | Ast.JSX.ExpressionContainer express -> Some (loc, jsx_expression_container express)
+  | Ast.JSX.ExpressionContainer express -> Some (loc, jsx_expression_container loc express)
   | Ast.JSX.SpreadChild expr -> Some (loc, fuse [Atom "{..."; expression expr; Atom "}"])
   | Ast.JSX.Text { Ast.JSX.Text.raw; _ } ->
     begin

@@ -27,24 +27,26 @@ module JSX (Parse : Parser_common.PARSER) = struct
     Eat.pop_lex_mode env;
     attr
 
-  let expression_container' env =
-    let expression =
-      if Peek.token env = T_RCURLY then
-        JSX.ExpressionContainer.EmptyExpression
-      else
-        JSX.ExpressionContainer.Expression (Parse.expression env)
-    in
-    { JSX.ExpressionContainer.expression }
+  let expression_container_contents env =
+    if Peek.token env = T_RCURLY then
+      JSX.ExpressionContainer.EmptyExpression
+    else
+      JSX.ExpressionContainer.Expression (Parse.expression env)
 
   let expression_container env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
     let container =
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_LCURLY;
-          let container = expression_container' env in
+          let expression = expression_container_contents env in
           Expect.token env T_RCURLY;
-          container)
+          let trailing = Peek.comments env in
+          {
+            JSX.ExpressionContainer.expression;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
         env
     in
     Eat.pop_lex_mode env;
@@ -63,8 +65,8 @@ module JSX (Parse : Parser_common.PARSER) = struct
               let expr = Parse.assignment env in
               JSX.SpreadChild expr
             | _ ->
-              let container = expression_container' env in
-              JSX.ExpressionContainer container
+              let expression = expression_container_contents env in
+              JSX.ExpressionContainer { JSX.ExpressionContainer.expression; comments = None }
           in
           Expect.token env T_RCURLY;
           result)

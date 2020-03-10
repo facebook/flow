@@ -1239,7 +1239,10 @@ and JSX : sig
   end
 
   module ExpressionContainer : sig
-    type ('M, 'T) t = { expression: ('M, 'T) expression }
+    type ('M, 'T) t = {
+      expression: ('M, 'T) expression;
+      comments: ('M, unit) Syntax.t option;
+    }
 
     and ('M, 'T) expression =
       | Expression of ('M, 'T) Expression.t

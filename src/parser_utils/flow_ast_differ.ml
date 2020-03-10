@@ -1218,8 +1218,8 @@ let program
       | (Some (Ast.JSX.Attribute.Literal (loc, lit1)), Some (Ast.JSX.Attribute.Literal (_, lit2)))
         ->
         diff_if_changed (literal loc) lit1 lit2 |> Base.Option.return
-      | (Some (ExpressionContainer (_, expr1)), Some (ExpressionContainer (_, expr2))) ->
-        diff_if_changed_ret_opt jsx_expression expr1 expr2
+      | (Some (ExpressionContainer (loc, expr1)), Some (ExpressionContainer (_, expr2))) ->
+        diff_if_changed_ret_opt (jsx_expression loc) expr1 expr2
       | _ -> None
     in
     join_diff_list [name_diff; value_diff]
@@ -1238,7 +1238,7 @@ let program
         | (Fragment frag1, Fragment frag2) ->
           diff_if_changed_ret_opt (jsx_fragment old_loc) frag1 frag2
         | (ExpressionContainer expr1, ExpressionContainer expr2) ->
-          diff_if_changed_ret_opt jsx_expression expr1 expr2
+          diff_if_changed_ret_opt (jsx_expression old_loc) expr1 expr2
         | (SpreadChild expr1, SpreadChild expr2) ->
           diff_if_changed expression expr1 expr2 |> Base.Option.return
         | (Text _, Text _) -> None
@@ -1246,16 +1246,21 @@ let program
       in
       Base.Option.value changes ~default:[(old_loc, Replace (JSXChild child1, JSXChild child2))]
   and jsx_expression
+      (loc : Loc.t)
       (jsx_expr1 : (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t)
       (jsx_expr2 : (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t) : node change list option =
     let open Ast.JSX in
-    let { ExpressionContainer.expression = expr1 } = jsx_expr1 in
-    let { ExpressionContainer.expression = expr2 } = jsx_expr2 in
-    match (expr1, expr2) with
-    | (ExpressionContainer.Expression expr1', ExpressionContainer.Expression expr2') ->
-      Some (diff_if_changed expression expr1' expr2')
-    | (ExpressionContainer.EmptyExpression, ExpressionContainer.EmptyExpression) -> Some []
-    | _ -> None
+    let { ExpressionContainer.expression = expr1; comments = comments1 } = jsx_expr1 in
+    let { ExpressionContainer.expression = expr2; comments = comments2 } = jsx_expr2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    let expression_diff =
+      match (expr1, expr2) with
+      | (ExpressionContainer.Expression expr1', ExpressionContainer.Expression expr2') ->
+        Some (diff_if_changed expression expr1' expr2')
+      | (ExpressionContainer.EmptyExpression, ExpressionContainer.EmptyExpression) -> Some []
+      | _ -> None
+    in
+    join_diff_list [expression_diff; comments_diff]
   and assignment
       (loc : Loc.t)
       (assn1 : (Loc.t, Loc.t) Ast.Expression.Assignment.t)

@@ -1294,11 +1294,20 @@ class ['loc] mapper =
 
     method jsx_expression _loc (jsx_expr : ('loc, 'loc) Ast.JSX.ExpressionContainer.t) =
       let open Ast.JSX.ExpressionContainer in
-      let { expression } = jsx_expr in
+      let { expression; comments } = jsx_expr in
+      let comments' = this#syntax_opt comments in
       match expression with
       | Expression expr ->
-        id this#expression expr jsx_expr (fun expr -> { expression = Expression expr })
-      | EmptyExpression -> jsx_expr
+        let expr' = this#expression expr in
+        if expr == expr' && comments == comments' then
+          jsx_expr
+        else
+          { expression = Expression expr'; comments = comments' }
+      | EmptyExpression ->
+        if comments == comments' then
+          jsx_expr
+        else
+          { expression = EmptyExpression; comments = comments' }
 
     method jsx_name (name : ('loc, 'loc) Ast.JSX.name) =
       let open Ast.JSX in

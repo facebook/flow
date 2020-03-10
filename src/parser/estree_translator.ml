@@ -1538,7 +1538,7 @@ with type t = Impl.t = struct
         | ExpressionContainer (loc, expr) -> jsx_expression_container (loc, expr))
     and jsx_spread_attribute (loc, { JSX.SpreadAttribute.argument }) =
       node "JSXSpreadAttribute" loc [("argument", expression argument)]
-    and jsx_expression_container (loc, { JSX.ExpressionContainer.expression = expr }) =
+    and jsx_expression_container (loc, { JSX.ExpressionContainer.expression = expr; comments }) =
       let expression =
         match expr with
         | JSX.ExpressionContainer.Expression expr -> expression expr
@@ -1551,9 +1551,9 @@ with type t = Impl.t = struct
                 _end = { loc._end with column = loc._end.column - 1 };
               }
           in
-          node "JSXEmptyExpression" empty_loc []
+          node ?comments "JSXEmptyExpression" empty_loc []
       in
-      node "JSXExpressionContainer" loc [("expression", expression)]
+      node ?comments "JSXExpressionContainer" loc [("expression", expression)]
     and jsx_text (loc, { JSX.Text.value; raw }) =
       node "JSXText" loc [("value", string value); ("raw", string raw)]
     and jsx_member_expression (loc, { JSX.MemberExpression._object; property }) =

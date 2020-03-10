@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":11,"column":58}},
-  "range":[24,459],
+  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":13,"column":91}},
+  "range":[24,552],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -408,6 +408,88 @@
         "children":[]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":91}},
+      "range":[461,552],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":90}},
+        "range":[461,551],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":90}},
+          "range":[461,551],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":13,"column":1},"end":{"line":13,"column":4}},
+            "range":[462,465],
+            "name":"div"
+          },
+          "attributes":[
+            {
+              "type":"JSXAttribute",
+              "loc":{"source":null,"start":{"line":13,"column":5},"end":{"line":13,"column":66}},
+              "range":[466,527],
+              "name":{
+                "type":"JSXIdentifier",
+                "loc":{"source":null,"start":{"line":13,"column":5},"end":{"line":13,"column":9}},
+                "range":[466,470],
+                "name":"name"
+              },
+              "value":{
+                "type":"JSXExpressionContainer",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":13,"column":67},"end":{"line":13,"column":87}},
+                    "range":[528,548],
+                    "value":" 7.4 T JSX expr "
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":13,"column":10},"end":{"line":13,"column":30}},
+                    "range":[471,491],
+                    "value":" 7.1 L JSX expr "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":13,"column":31},"end":{"line":13,"column":66}},
+                "range":[492,527],
+                "expression":{
+                  "type":"Literal",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":13,"column":50},"end":{"line":13,"column":65}},
+                      "range":[511,526],
+                      "value":" 7.3 T num "
+                    }
+                  ],
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":13,"column":32},"end":{"line":13,"column":47}},
+                      "range":[493,508],
+                      "value":" 7.2 L num "
+                    }
+                  ],
+                  "loc":{"source":null,"start":{"line":13,"column":48},"end":{"line":13,"column":49}},
+                  "range":[509,510],
+                  "value":1,
+                  "raw":"1"
+                }
+              }
+            }
+          ],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -518,6 +600,30 @@
       "loc":{"source":null,"start":{"line":11,"column":29},"end":{"line":11,"column":47}},
       "range":[430,448],
       "value":" 6.2 T JSX id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":10},"end":{"line":13,"column":30}},
+      "range":[471,491],
+      "value":" 7.1 L JSX expr "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":32},"end":{"line":13,"column":47}},
+      "range":[493,508],
+      "value":" 7.2 L num "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":50},"end":{"line":13,"column":65}},
+      "range":[511,526],
+      "value":" 7.3 T num "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":67},"end":{"line":13,"column":87}},
+      "range":[528,548],
+      "value":" 7.4 T JSX expr "
     }
   ]
 }

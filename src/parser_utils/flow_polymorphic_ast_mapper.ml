@@ -1072,13 +1072,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method jsx_expression (jsx_expr : ('M, 'T) Ast.JSX.ExpressionContainer.t)
         : ('N, 'U) Ast.JSX.ExpressionContainer.t =
       let open Ast.JSX.ExpressionContainer in
-      let { expression } = jsx_expr in
+      let { expression; comments } = jsx_expr in
       let expression' =
         match expression with
         | Expression expr -> Expression (this#expression expr)
         | EmptyExpression -> EmptyExpression
       in
-      { expression = expression' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { expression = expression'; comments = comments' }
 
     method jsx_name (name : ('M, 'T) Ast.JSX.name) : ('N, 'U) Ast.JSX.name =
       let open Ast.JSX in

@@ -5953,14 +5953,19 @@ and jsx_mk_props cx reason c name attributes children =
               | Some
                   (Attribute.ExpressionContainer
                     ( ec_loc,
-                      { ExpressionContainer.expression = ExpressionContainer.Expression (loc, e) }
-                    )) ->
+                      {
+                        ExpressionContainer.expression = ExpressionContainer.Expression (loc, e);
+                        comments;
+                      } )) ->
                 let (((_, t), _) as e) = expression cx (loc, e) in
                 ( t,
                   Some
                     (Attribute.ExpressionContainer
                        ( (ec_loc, t),
-                         { ExpressionContainer.expression = ExpressionContainer.Expression e } )) )
+                         {
+                           ExpressionContainer.expression = ExpressionContainer.Expression e;
+                           comments;
+                         } )) )
               (* <element name={} /> *)
               | Some (Attribute.ExpressionContainer _ as ec) ->
                 let t = EmptyT.at attr_loc |> with_trust bogus_trust in
@@ -6153,7 +6158,7 @@ and jsx_body cx (loc, child) =
     (Some (UnresolvedArg t), (loc, Fragment f))
   | ExpressionContainer ec ->
     ExpressionContainer.(
-      let { expression = ex } = ec in
+      let { expression = ex; ExpressionContainer.comments } = ec in
       let (unresolved_param, ex) =
         match ex with
         | Expression e ->
@@ -6161,7 +6166,8 @@ and jsx_body cx (loc, child) =
           (Some (UnresolvedArg t), Expression e)
         | EmptyExpression -> (None, EmptyExpression)
       in
-      (unresolved_param, (loc, ExpressionContainer { expression = ex })))
+      ( unresolved_param,
+        (loc, ExpressionContainer { expression = ex; ExpressionContainer.comments }) ))
   | SpreadChild expr ->
     let (((_, t), _) as e) = expression cx expr in
     (Some (UnresolvedSpreadArg t), (loc, SpreadChild e))

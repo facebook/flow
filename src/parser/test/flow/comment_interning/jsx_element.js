@@ -9,3 +9,5 @@
 <div /* 5.1 L JSX id */ name /* 5.2 JSX id */ />;
 
 <div /* 6.1 L JSX id */ name /* 6.2 T JSX id */="test" />;
+
+<div name=/* 7.1 L JSX expr */ {/* 7.2 L num */ 1 /* 7.3 T num */} /* 7.4 T JSX expr */ />;
