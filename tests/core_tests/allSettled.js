@@ -58,4 +58,14 @@ let tests = [
         let p2 = Promise.allSettled(1);
         let p3 = Promise.allSettled(Promise.resolve(1));
     },
+    // wrong result type
+    function() {
+        let p1 : Promise<void> = Promise.allSettled([]);
+        let p2 : Promise<[number, string, boolean]> = Promise.allSettled([1, '', false]);
+        let p3 : Promise<[number, string, boolean]> = Promise.allSettled([
+            Promise.resolve(1),
+            Promise.resolve(''),
+            Promise.resolve(false),
+        ]);
+    },
 ];
