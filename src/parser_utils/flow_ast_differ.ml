@@ -1300,7 +1300,7 @@ let program
       diff_if_changed (literal loc) l1 l2 |> Base.Option.return
     | (EOP.Identifier i1, EOP.Identifier i2) ->
       diff_if_changed identifier i1 i2 |> Base.Option.return
-    | (EOP.Computed e1, EOP.Computed e2) -> diff_if_changed expression e1 e2 |> Base.Option.return
+    | (EOP.Computed (loc, c1), EOP.Computed (_, c2)) -> computed_key loc c1 c2
     | (_, _) -> None
   and object_regular_property (_, prop1) (_, prop2) =
     let open Ast.Expression.Object.Property in
@@ -1734,7 +1734,8 @@ let program
       diff_if_changed (literal loc) l1 l2 |> Base.Option.return
     | (POP.Identifier i1, POP.Identifier i2) ->
       diff_if_changed identifier i1 i2 |> Base.Option.return
-    | (POP.Computed e1, POP.Computed e2) -> diff_if_changed expression e1 e2 |> Base.Option.return
+    | (POP.Computed (loc, c1), POP.Computed (_, c2)) ->
+      diff_if_changed_ret_opt (computed_key loc) c1 c2
     | (_, _) -> None
   and pattern_array
       loc (a1 : (Loc.t, Loc.t) Ast.Pattern.Array.t) (a2 : (Loc.t, Loc.t) Ast.Pattern.Array.t) :
@@ -2151,5 +2152,15 @@ let program
     let argument = Some (diff_if_changed expression argument1 argument2) in
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [argument; comments]
+  and computed_key
+      (loc : Loc.t)
+      (computed1 : (Loc.t, Loc.t) Ast.ComputedKey.t')
+      (computed2 : (Loc.t, Loc.t) Ast.ComputedKey.t') : node change list option =
+    let open Ast.ComputedKey in
+    let { expression = expression1; comments = comments1 } = computed1 in
+    let { expression = expression2; comments = comments2 } = computed2 in
+    let expression_diff = Some (diff_if_changed expression expression1 expression2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [expression_diff; comments_diff]
   in
   program' program1 program2 |> List.sort change_compare

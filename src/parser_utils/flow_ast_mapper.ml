@@ -1111,6 +1111,16 @@ class ['loc] mapper =
 
     method private_name (expr : 'loc Ast.PrivateName.t) = expr
 
+    method computed_key (key : ('loc, 'loc) Ast.ComputedKey.t) =
+      let open Ast.ComputedKey in
+      let (loc, { expression; comments }) = key in
+      let expression' = this#expression expression in
+      let comments' = this#syntax_opt comments in
+      if expression == expression' && comments == comments' then
+        key
+      else
+        (loc, { expression = expression'; comments = comments' })
+
     method import _loc (expr : ('loc, 'loc) Ast.Expression.Import.t) =
       let open Ast.Expression.Import in
       let { argument; comments } = expr in
@@ -1534,9 +1544,11 @@ class ['loc] mapper =
       | Literal (loc, lit) -> id_loc this#literal loc lit key (fun lit -> Literal (loc, lit))
       | Identifier ident -> id this#object_key_identifier ident key (fun ident -> Identifier ident)
       | PrivateName ident -> id this#private_name ident key (fun ident -> PrivateName ident)
-      | Computed expr -> id this#expression expr key (fun expr -> Computed expr)
+      | Computed computed -> id this#object_key_computed computed key (fun expr -> Computed expr)
 
     method object_key_identifier (ident : ('loc, 'loc) Ast.Identifier.t) = this#identifier ident
+
+    method object_key_computed (key : ('loc, 'loc) Ast.ComputedKey.t) = this#computed_key key
 
     method opaque_type _loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
@@ -1659,9 +1671,9 @@ class ['loc] mapper =
     method pattern_object_property_identifier_key ?kind (key : ('loc, 'loc) Ast.Identifier.t) =
       this#pattern_identifier ?kind key
 
-    method pattern_object_property_computed_key ?kind (key : ('loc, 'loc) Ast.Expression.t) =
+    method pattern_object_property_computed_key ?kind (key : ('loc, 'loc) Ast.ComputedKey.t) =
       ignore kind;
-      this#pattern_expression key
+      this#computed_key key
 
     method pattern_object_rest_property
         ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.RestProperty.t') =

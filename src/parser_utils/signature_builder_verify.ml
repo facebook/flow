@@ -702,7 +702,8 @@ module Eval (Env : EvalEnv) = struct
           | Literal (_, lit) -> EASort.Literal (Reason.code_desc_of_literal lit)
           | Identifier (_, { Ast.Identifier.name; _ }) -> EASort.Identifier name
           | PrivateName (_, (_, { Ast.Identifier.name; _ })) -> EASort.PrivateName name
-          | Computed e -> EASort.Computed (Reason.code_desc_of_expression ~wrap:false e)
+          | Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
+            EASort.Computed (Reason.code_desc_of_expression ~wrap:false expression)
         in
         annotated_type ~sort:(EASort.Property { name }) tps loc annot
       | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->

@@ -78,13 +78,21 @@ module Object
             { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
           ) )
     | T_LBRACKET ->
-      with_loc
-        (fun env ->
-          Expect.token env T_LBRACKET;
-          let expr = Parse.assignment (env |> with_no_in false) in
-          Expect.token env T_RBRACKET;
-          Ast.Expression.Object.Property.Computed expr)
-        env
+      let (loc, key) =
+        with_loc
+          (fun env ->
+            let leading = Peek.comments env in
+            Expect.token env T_LBRACKET;
+            let expr = Parse.assignment (env |> with_no_in false) in
+            Expect.token env T_RBRACKET;
+            let trailing = Peek.comments env in
+            {
+              ComputedKey.expression = expr;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
+          env
+      in
+      (loc, Ast.Expression.Object.Property.Computed (loc, key))
     | T_POUND when class_body ->
       let (loc, id, _is_private) = Expression.property_name_include_private env in
       add_declared_private env (Flow_ast_utils.name_of_ident id);
@@ -184,7 +192,7 @@ module Object
             strict_error_at env (loc, Parse_error.StrictReservedWord);
           (loc, Ast.Expression.Identifier id)
         | PrivateName _ -> failwith "Internal Error: private name found in object props"
-        | Computed expr ->
+        | Computed (_, { ComputedKey.expression = expr; comments = _ }) ->
           error_at env (fst expr, Parse_error.ComputedShorthandProperty);
           expr
       in

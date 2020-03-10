@@ -2801,15 +2801,34 @@ and object_ cx reason ?(allow_sealed = true) props =
           in
           ( ObjectExpressionAcc.set_seal ~allow_sealed not_empty_object_literal_argument acc,
             SpreadProperty (prop_loc, { SpreadProperty.argument }) :: rev_prop_asts )
-        | Property (prop_loc, Property.Init { key = Property.Computed k; value = v; shorthand }) ->
+        | Property
+            ( prop_loc,
+              Property.Init
+                {
+                  key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
+                  value = v;
+                  shorthand;
+                } ) ->
           let (((_, kt), _) as k) = expression cx k in
           let (((_, vt), _) as v) = expression cx v in
           let computed = mk_computed kt vt in
           ( ObjectExpressionAcc.add_spread computed acc,
-            Property (prop_loc, Property.Init { key = Property.Computed k; value = v; shorthand })
+            Property
+              ( prop_loc,
+                Property.Init
+                  {
+                    key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
+                    value = v;
+                    shorthand;
+                  } )
             :: rev_prop_asts )
-        | Property (prop_loc, Property.Method { key = Property.Computed k; value = (fn_loc, fn) })
-          ->
+        | Property
+            ( prop_loc,
+              Property.Method
+                {
+                  key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
+                  value = (fn_loc, fn);
+                } ) ->
           let (((_, kt), _) as k) = expression cx k in
           let ((_, vt), v) = expression cx (fn_loc, Ast.Expression.Function fn) in
           let fn =
@@ -2819,7 +2838,13 @@ and object_ cx reason ?(allow_sealed = true) props =
           in
           let computed = mk_computed kt vt in
           ( ObjectExpressionAcc.add_spread computed acc,
-            Property (prop_loc, Property.Method { key = Property.Computed k; value = (fn_loc, fn) })
+            Property
+              ( prop_loc,
+                Property.Method
+                  {
+                    key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
+                    value = (fn_loc, fn);
+                  } )
             :: rev_prop_asts )
         | Property
             ( prop_loc,

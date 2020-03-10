@@ -1163,8 +1163,9 @@ and pattern_object_property_key =
   function
   | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
   | Property.Identifier ident -> identifier ident
-  | Property.Computed expr ->
-    fuse [Atom "["; Sequence ({ seq with break = Break_if_needed }, [expression expr]); Atom "]"]
+  | Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments }) ->
+    layout_node_with_comments_opt loc comments
+    @@ fuse [Atom "["; Sequence ({ seq with break = Break_if_needed }, [expression expr]); Atom "]"]
 
 and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t) =
   let module P = Ast.Pattern in
@@ -1851,8 +1852,9 @@ and object_property_key key =
   match key with
   | O.Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
   | O.Property.Identifier ident -> identifier ident
-  | O.Property.Computed expr ->
-    fuse [Atom "["; Layout.Indent (fuse [pretty_line; expression expr]); pretty_line; Atom "]"]
+  | O.Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments }) ->
+    layout_node_with_comments_opt loc comments
+    @@ fuse [Atom "["; Layout.Indent (fuse [pretty_line; expression expr]); pretty_line; Atom "]"]
   | O.Property.PrivateName _ -> failwith "Internal Error: Found object prop with private name"
 
 and object_property property =

@@ -348,6 +348,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method object_key_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
+    method object_key_computed : ('M, 'T) Ast.ComputedKey.t -> ('N, 'U) Ast.ComputedKey.t
+
     method object_property :
       ('M, 'T) Ast.Expression.Object.Property.t -> ('N, 'U) Ast.Expression.Object.Property.t
 
@@ -429,8 +431,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method pattern_object_property_computed_key :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Flow_ast.Expression.t ->
-      ('N, 'U) Ast.Expression.t
+      ('M, 'T) Ast.ComputedKey.t ->
+      ('N, 'U) Ast.ComputedKey.t
 
     method pattern_object_property_identifier_key :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
@@ -463,6 +465,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method predicate_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
     method private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t
+
+    method computed_key : ('M, 'T) Ast.ComputedKey.t -> ('N, 'U) Ast.ComputedKey.t
 
     method program : ('M, 'T) Ast.program -> ('N, 'U) Ast.program
 

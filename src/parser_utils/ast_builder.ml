@@ -402,7 +402,8 @@ module Expressions = struct
   let object_property_key_literal_from_string ?(loc = Loc.none) (k : string) =
     Object.Property.Literal (loc, Literals.string k)
 
-  let object_property_computed_key k = Object.Property.Computed k
+  let object_property_computed_key ?comments ?(loc = Loc.none) expr =
+    Object.Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments })
 
   let object_method ?body ?params ?(generator = false) ?(async = false) key =
     let fn = Functions.make ~id:None ?params ~generator ~async ?body () in

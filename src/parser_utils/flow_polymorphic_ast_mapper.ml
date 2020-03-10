@@ -922,6 +922,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method private_name ((annot, ident) : 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
       (this#on_loc_annot annot, this#identifier ident)
 
+    method computed_key ((annot, key) : ('M, 'T) Ast.ComputedKey.t) : ('N, 'U) Ast.ComputedKey.t =
+      let open Ast.ComputedKey in
+      let { expression; comments } = key in
+      let annot' = this#on_loc_annot annot in
+      let expression' = this#expression expression in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { expression = expression'; comments = comments' })
+
     method import _annot (expr : ('M, 'T) Ast.Expression.Import.t)
         : ('N, 'U) Ast.Expression.Import.t =
       let open Ast.Expression.Import in
@@ -1253,10 +1261,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | Literal (annot, lit) -> Literal (this#on_type_annot annot, this#literal lit)
       | Identifier ident -> Identifier (this#object_key_identifier ident)
       | PrivateName ident -> PrivateName (this#private_name ident)
-      | Computed expr -> Computed (this#expression expr)
+      | Computed computed -> Computed (this#object_key_computed computed)
 
     method object_key_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_identifier ident
+
+    method object_key_computed (key : ('M, 'T) Ast.ComputedKey.t) : ('N, 'U) Ast.ComputedKey.t =
+      this#computed_key key
 
     method opaque_type (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
         : ('N, 'U) Ast.Statement.OpaqueType.t =
@@ -1364,10 +1375,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ?kind key
 
-    method pattern_object_property_computed_key ?kind (key : ('M, 'T) Ast.Expression.t)
-        : ('N, 'U) Ast.Expression.t =
+    method pattern_object_property_computed_key ?kind (key : ('M, 'T) Ast.ComputedKey.t)
+        : ('N, 'U) Ast.ComputedKey.t =
       ignore kind;
-      this#pattern_expression key
+      this#computed_key key
 
     method pattern_object_rest_property ?kind (prop : ('M, 'T) Ast.Pattern.Object.RestProperty.t')
         : ('N, 'U) Ast.Pattern.Object.RestProperty.t' =

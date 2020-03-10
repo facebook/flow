@@ -848,13 +848,14 @@ with type t = Impl.t = struct
         | PrivateField p -> class_private_field p
         | Property p -> class_property p)
     and class_method (loc, { Class.Method.key; value; kind; static; decorators }) =
-      let (key, computed) =
+      let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
-        | Literal lit -> (literal lit, false)
-        | Identifier id -> (identifier id, false)
-        | PrivateName name -> (private_name name, false)
-        | Computed expr -> (expression expr, true)
+        | Literal lit -> (literal lit, false, None)
+        | Identifier id -> (identifier id, false, None)
+        | PrivateName name -> (private_name name, false, None)
+        | Computed (_, { ComputedKey.expression = expr; comments }) ->
+          (expression expr, true, comments)
       in
       let kind =
         Class.Method.(
@@ -865,6 +866,7 @@ with type t = Impl.t = struct
           | Set -> "set")
       in
       node
+        ?comments
         "MethodDefinition"
         loc
         [
@@ -899,13 +901,14 @@ with type t = Impl.t = struct
       in
       node "ClassPrivateProperty" loc props
     and class_property (loc, { Class.Property.key; value; annot; static; variance = variance_ }) =
-      let (key, computed) =
+      let (key, computed, comments) =
         match key with
-        | Expression.Object.Property.Literal lit -> (literal lit, false)
-        | Expression.Object.Property.Identifier id -> (identifier id, false)
+        | Expression.Object.Property.Literal lit -> (literal lit, false, None)
+        | Expression.Object.Property.Identifier id -> (identifier id, false, None)
         | Expression.Object.Property.PrivateName _ ->
           failwith "Internal Error: Private name found in class prop"
-        | Expression.Object.Property.Computed expr -> (expression expr, true)
+        | Expression.Object.Property.Computed (_, { ComputedKey.expression = expr; comments }) ->
+          (expression expr, true, comments)
       in
       let (value, declare) =
         match value with
@@ -928,7 +931,7 @@ with type t = Impl.t = struct
         else
           []
       in
-      node "ClassProperty" loc props
+      node ?comments "ClassProperty" loc props
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body }) =
       let open Statement.EnumDeclaration in
       let enum_body =
@@ -1067,14 +1070,16 @@ with type t = Impl.t = struct
             | Set { key; value = (loc, func) } ->
               (key, function_expression (loc, func), "set", false, false)
           in
-          let (key, computed) =
+          let (key, computed, comments) =
             match key with
-            | Literal lit -> (literal lit, false)
-            | Identifier id -> (identifier id, false)
+            | Literal lit -> (literal lit, false, None)
+            | Identifier id -> (identifier id, false, None)
             | PrivateName _ -> failwith "Internal Error: Found private field in object props"
-            | Computed expr -> (expression expr, true)
+            | Computed (_, { ComputedKey.expression = expr; comments }) ->
+              (expression expr, true, comments)
           in
           node
+            ?comments
             "Property"
             loc
             [
@@ -1091,11 +1096,12 @@ with type t = Impl.t = struct
       Pattern.Object.(
         function
         | Property (loc, { Property.key; pattern = patt; default; shorthand }) ->
-          let (key, computed) =
+          let (key, computed, comments) =
             match key with
-            | Property.Literal lit -> (literal lit, false)
-            | Property.Identifier id -> (identifier id, false)
-            | Property.Computed expr -> (expression expr, true)
+            | Property.Literal lit -> (literal lit, false, None)
+            | Property.Identifier id -> (identifier id, false, None)
+            | Property.Computed (_, { ComputedKey.expression = expr; comments }) ->
+              (expression expr, true, comments)
           in
           let value =
             match default with
@@ -1105,6 +1111,7 @@ with type t = Impl.t = struct
             | None -> pattern patt
           in
           node
+            ?comments
             "Property"
             loc
             [

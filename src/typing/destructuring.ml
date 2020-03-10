@@ -195,9 +195,9 @@ let object_property
   | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
     let acc = object_named_property ~has_default cx acc loc x None in
     (acc, x :: xs, Property.Literal (loc, lit))
-  | Property.Computed e ->
-    let (acc, e) = object_computed_property cx ~expr acc e in
-    (acc, xs, Property.Computed e)
+  | Property.Computed (loc, { Ast.ComputedKey.expression; comments }) ->
+    let (acc, e) = object_computed_property cx ~expr acc expression in
+    (acc, xs, Property.Computed (loc, { Ast.ComputedKey.expression = e; comments }))
   | Property.Literal (loc, _) ->
     Flow_js.add_output
       cx

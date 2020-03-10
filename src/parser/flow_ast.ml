@@ -102,6 +102,17 @@ and Variance : sig
 end =
   Variance
 
+and ComputedKey : sig
+  type ('M, 'T) t = 'M * ('M, 'T) ComputedKey.t'
+
+  and ('M, 'T) t' = {
+    expression: ('M, 'T) Expression.t;
+    comments: ('M, unit) Syntax.t option;
+  }
+  [@@deriving show]
+end =
+  ComputedKey
+
 and Type : sig
   module Function : sig
     module Param : sig
@@ -889,7 +900,7 @@ and Expression : sig
         | Literal of ('T * 'M Literal.t)
         | Identifier of ('M, 'T) Identifier.t
         | PrivateName of 'M PrivateName.t
-        | Computed of ('M, 'T) Expression.t
+        | Computed of ('M, 'T) ComputedKey.t
 
       and ('M, 'T) t = 'M * ('M, 'T) t'
 
@@ -1367,7 +1378,7 @@ and Pattern : sig
       type ('M, 'T) key =
         | Literal of ('M * 'M Literal.t)
         | Identifier of ('M, 'T) Identifier.t
-        | Computed of ('M, 'T) Expression.t
+        | Computed of ('M, 'T) ComputedKey.t
 
       and ('M, 'T) t = 'M * ('M, 'T) t'
 

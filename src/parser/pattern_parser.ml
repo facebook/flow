@@ -33,7 +33,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
               | Property.Literal lit -> Pattern.Object.Property.Literal lit
               | Property.Identifier id -> Pattern.Object.Property.Identifier id
               | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
-              | Property.Computed expr -> Pattern.Object.Property.Computed expr
+              | Property.Computed key -> Pattern.Object.Property.Computed key
             in
             let (pattern, default) =
               match value with
@@ -201,7 +201,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             | (_, Literal lit) -> Pattern.Object.Property.Literal lit
             | (_, Identifier id) -> Pattern.Object.Property.Identifier id
             | (_, PrivateName _) -> failwith "Internal Error: Found object private prop"
-            | (_, Computed expr) -> Pattern.Object.Property.Computed expr
+            | (_, Computed key) -> Pattern.Object.Property.Computed key
           in
           Some
             Pattern.Object.(Property (loc, Property.{ key; pattern; default; shorthand = false }))
