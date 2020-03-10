@@ -14,6 +14,8 @@ function foo() {}
 
 /* Leading class */ (class C {}) /* Trailing class */;
 
+/* Leading conditional */ (true ? 1 : 2) /* Trailing conditional */;
+
 /* Leading identifier */ (i) /* Trailing identifier */;
 
 /* Leading literal */ (1) /* Trailing literal */;

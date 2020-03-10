@@ -309,7 +309,8 @@ module Expression
       Cover_expr
         ( loc,
           let open Expression in
-          Conditional { Conditional.test = as_expression env expr; consequent; alternate } )
+          Conditional
+            { Conditional.test = as_expression env expr; consequent; alternate; comments = None } )
     ) else
       expr
 
@@ -1255,6 +1256,8 @@ module Expression
       | Call ({ Call.comments; _ } as e) -> Call { e with Call.comments = merge_comments comments }
       | Class ({ Class.comments; _ } as e) ->
         Class { e with Class.comments = merge_comments comments }
+      | Conditional ({ Conditional.comments; _ } as e) ->
+        Conditional { e with Conditional.comments = merge_comments comments }
       | Identifier (loc, ({ Identifier.comments; _ } as e)) ->
         Identifier (loc, { e with Identifier.comments = merge_comments comments })
       | Literal ({ Literal.comments; _ } as e) ->

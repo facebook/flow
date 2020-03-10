@@ -400,14 +400,20 @@ class ['loc] mapper =
 
     method conditional _loc (expr : ('loc, 'loc) Ast.Expression.Conditional.t) =
       let open Ast.Expression.Conditional in
-      let { test; consequent; alternate } = expr in
+      let { test; consequent; alternate; comments } = expr in
       let test' = this#predicate_expression test in
       let consequent' = this#expression consequent in
       let alternate' = this#expression alternate in
-      if test == test' && consequent == consequent' && alternate == alternate' then
+      let comments' = this#syntax_opt comments in
+      if
+        test == test'
+        && consequent == consequent'
+        && alternate == alternate'
+        && comments = comments'
+      then
         expr
       else
-        { test = test'; consequent = consequent'; alternate = alternate' }
+        { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
     method continue _loc (cont : 'loc Ast.Statement.Continue.t) =
       let open Ast.Statement.Continue in

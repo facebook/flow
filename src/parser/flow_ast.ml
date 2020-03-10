@@ -1050,6 +1050,7 @@ and Expression : sig
       test: ('M, 'T) Expression.t;
       consequent: ('M, 'T) Expression.t;
       alternate: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

@@ -1008,7 +1008,7 @@ struct
 
       method! conditional _loc (expr : (L.t, L.t) Ast.Expression.Conditional.t) =
         let open Ast.Expression.Conditional in
-        let { test; consequent; alternate } = expr in
+        let { test; consequent; alternate; comments = _ } = expr in
         ignore @@ this#predicate_expression test;
         let env0 = this#ssa_env in
         ignore @@ this#expression consequent;

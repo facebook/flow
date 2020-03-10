@@ -980,7 +980,7 @@ let program
       | ((loc, Unary u1), (_, Unary u2)) -> unary loc u1 u2
       | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
         identifier id1 id2 |> Base.Option.return
-      | ((_, Conditional c1), (_, Conditional c2)) -> conditional c1 c2 |> Base.Option.return
+      | ((loc, Conditional c1), (_, Conditional c2)) -> conditional loc c1 c2 |> Base.Option.return
       | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
       | ((loc, Member member1), (_, Member member2)) -> member loc member1 member2
       | ((loc, Call call1), (_, Call call2)) -> call loc call1 call2
@@ -1322,15 +1322,17 @@ let program
     let comments = syntax_opt old_loc comments1 comments2 |> Base.Option.value ~default:[] in
     comments @ name
   and conditional
+      (loc : Loc.t)
       (c1 : (Loc.t, Loc.t) Ast.Expression.Conditional.t)
       (c2 : (Loc.t, Loc.t) Ast.Expression.Conditional.t) : node change list =
     let open Ast.Expression.Conditional in
-    let { test = test1; consequent = cons1; alternate = alt1 } = c1 in
-    let { test = test2; consequent = cons2; alternate = alt2 } = c2 in
+    let { test = test1; consequent = cons1; alternate = alt1; comments = comments1 } = c1 in
+    let { test = test2; consequent = cons2; alternate = alt2; comments = comments2 } = c2 in
     let test_diff = diff_if_changed expression test1 test2 in
     let cons_diff = diff_if_changed expression cons1 cons2 in
     let alt_diff = diff_if_changed expression alt1 alt2 in
-    Base.List.concat [test_diff; cons_diff; alt_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    Base.List.concat [test_diff; cons_diff; alt_diff; comments_diff]
   and new_
       loc (new1 : (Loc.t, Loc.t) Ast.Expression.New.t) (new2 : (Loc.t, Loc.t) Ast.Expression.New.t)
       : node change list option =

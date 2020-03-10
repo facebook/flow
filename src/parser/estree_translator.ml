@@ -510,8 +510,9 @@ with type t = Impl.t = struct
           "LogicalExpression"
           loc
           [("operator", string operator); ("left", expression left); ("right", expression right)]
-      | (loc, Conditional { Conditional.test; consequent; alternate }) ->
+      | (loc, Conditional { Conditional.test; consequent; alternate; comments }) ->
         node
+          ?comments
           "ConditionalExpression"
           loc
           [

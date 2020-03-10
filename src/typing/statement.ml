@@ -3221,7 +3221,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments } )
   | Call _ -> subscript ~cond cx ex
   | OptionalCall _ -> subscript ~cond cx ex
-  | Conditional { Conditional.test; consequent; alternate } ->
+  | Conditional { Conditional.test; consequent; alternate; comments } ->
     let reason = mk_reason RConditional loc in
     let (test, preds, not_preds, xtypes) = predicates_of_condition ~cond:OtherTest cx test in
     let env = Env.peek_env () in
@@ -3282,7 +3282,9 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 
     (* TODO call loc_of_predicate on some pred?
          t1 is wrong but hopefully close *)
-    let ast = ((loc, combined_type), Conditional { Conditional.test; consequent; alternate }) in
+    let ast =
+      ((loc, combined_type), Conditional { Conditional.test; consequent; alternate; comments })
+    in
     (* handle control flow in cases where we've thrown from both sides *)
     begin
       match (then_abnormal, else_abnormal) with

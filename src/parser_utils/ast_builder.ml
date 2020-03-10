@@ -369,8 +369,8 @@ module Expressions = struct
 
   let equal left right = binary ~op:Binary.Equal left right
 
-  let conditional test consequent alternate =
-    (Loc.none, Conditional { Conditional.test; consequent; alternate })
+  let conditional ?comments test consequent alternate =
+    (Loc.none, Conditional { Conditional.test; consequent; alternate; comments })
 
   let logical ?comments ~op left right =
     (Loc.none, Logical { Logical.operator = op; left; right; comments })

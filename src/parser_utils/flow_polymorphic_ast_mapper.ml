@@ -309,11 +309,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method conditional (expr : ('M, 'T) Ast.Expression.Conditional.t)
         : ('N, 'U) Ast.Expression.Conditional.t =
       let open Ast.Expression.Conditional in
-      let { test; consequent; alternate } = expr in
+      let { test; consequent; alternate; comments } = expr in
       let test' = this#predicate_expression test in
       let consequent' = this#expression consequent in
       let alternate' = this#expression alternate in
-      { test = test'; consequent = consequent'; alternate = alternate' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
     method continue (cont : 'M Ast.Statement.Continue.t) : 'N Ast.Statement.Continue.t =
       let open Ast.Statement.Continue in

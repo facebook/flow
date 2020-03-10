@@ -867,27 +867,28 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.Call c -> call ~precedence ~ctxt c loc
       | E.OptionalCall { E.OptionalCall.call = c; optional } ->
         call ~optional ~precedence ~ctxt c loc
-      | E.Conditional { E.Conditional.test; consequent; alternate } ->
+      | E.Conditional { E.Conditional.test; consequent; alternate; comments } ->
         let test_layout =
           (* increase precedence since conditionals are right-associative *)
           expression_with_parens ~precedence:(precedence + 1) ~ctxt test
         in
-        group
-          [
-            test_layout;
-            Indent
-              (fuse
-                 [
-                   pretty_line;
-                   Atom "?";
-                   pretty_space;
-                   expression_with_parens ~precedence:min_precedence ~ctxt consequent;
-                   pretty_line;
-                   Atom ":";
-                   pretty_space;
-                   expression_with_parens ~precedence:min_precedence ~ctxt alternate;
-                 ]);
-          ]
+        layout_node_with_comments_opt loc comments
+        @@ group
+             [
+               test_layout;
+               Indent
+                 (fuse
+                    [
+                      pretty_line;
+                      Atom "?";
+                      pretty_space;
+                      expression_with_parens ~precedence:min_precedence ~ctxt consequent;
+                      pretty_line;
+                      Atom ":";
+                      pretty_space;
+                      expression_with_parens ~precedence:min_precedence ~ctxt alternate;
+                    ]);
+             ]
       | E.Logical { E.Logical.operator; left; right; comments } ->
         let left = expression_with_parens ~precedence ~ctxt left in
         let operator =

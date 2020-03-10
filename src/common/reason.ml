@@ -981,7 +981,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
     in
     code_desc_of_expression ~wrap:true callee ^ targs ^ args
   | Class _ -> "class { ... }"
-  | Conditional { Conditional.test; consequent; alternate } ->
+  | Conditional { Conditional.test; consequent; alternate; comments = _ } ->
     let wrap_test =
       match test with
       | (_, Conditional _) -> true
