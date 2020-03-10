@@ -805,7 +805,7 @@ module ExecuteCommand : sig
   and result = unit
 
   and executeCommandParams = {
-    command: string;
+    command: Command.name;
     arguments: Hh_json.json list option;
   }
 end

@@ -396,7 +396,7 @@ let print_documentCodeLens ~key (r : DocumentCodeLens.result) : json =
 let parse_executeCommand (params : json option) : ExecuteCommand.params =
   ExecuteCommand.
     {
-      command = Jget.string_exn params "command";
+      command = Jget.string_exn params "command" |> parse_command_name;
       arguments =
         Jget.array_opt params "arguments"
         |> Base.Option.map ~f:(Base.List.map ~f:(fun j -> Base.Option.value_exn j));

@@ -14,7 +14,7 @@ export default suite(
     test('executeCommand log', [
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('workspace/executeCommand', {
-        command: 'log',
+        command: 'log:file://foo',
         arguments: ['test'],
       }).verifyAllLSPMessagesInStep(
         ['workspace/executeCommand'],
