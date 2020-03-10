@@ -1819,26 +1819,26 @@ References:
    process/emitWarning.js:10:1
      10| process.emitWarning(); // error
          ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2589:24
-   2589|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2597:24
+   2597|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2589:33
-   2589|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2597:33
+   2597|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2590:3
-   2590|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2598:3
+   2598|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2591:3
-   2591|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2599:3
+   2599|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2592:3
+   <BUILTINS>/node.js:2600:3
            v-----------
-   2592|   emitWarning(
-   2593|     warning: string,
-   2594|     type: string,
-   2595|     code: string,
-   2596|     ctor?: (...empty) => mixed
-   2597|   ): void;
+   2600|   emitWarning(
+   2601|     warning: string,
+   2602|     type: string,
+   2603|     code: string,
+   2604|     ctor?: (...empty) => mixed
+   2605|   ): void;
            ------^ [6]
 
 
@@ -1857,14 +1857,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2590:24
-   2590|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2598:24
+   2598|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2591:24
-   2591|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2599:24
+   2599|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2593:14
-   2593|     warning: string,
+   <BUILTINS>/node.js:2601:14
+   2601|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1882,11 +1882,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2591:38
-   2591|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2599:38
+   2599|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2594:11
-   2594|     type: string,
+   <BUILTINS>/node.js:2602:11
+   2602|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1902,8 +1902,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2595:11
-   2595|     code: string,
+   <BUILTINS>/node.js:2603:11
+   2603|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1916,8 +1916,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2589:41
-   2589|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2597:41
+   2597|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -1978,8 +1978,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2618:21
-   2618|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2626:21
+   2626|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1992,8 +1992,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2578:32
-   2578|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:2586:32
+   2586|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
@@ -2174,8 +2174,110 @@ References:
                  ^^^^^^^^^^^^^ [6]
 
 
+Error --------------------------------------------------------------------------------------------------- url/url.js:4:2
 
-Found 115 errors
+Cannot cast `url.parse(...).query` to empty because string [1] is incompatible with empty [2].
+
+   url/url.js:4:2
+      4| (url.parse('http://example.com/?foo=bar').query: empty); // error, string | null
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2165:12
+   2165|     query: string | null
+                    ^^^^^^ [1]
+   url/url.js:4:50
+      4| (url.parse('http://example.com/?foo=bar').query: empty); // error, string | null
+                                                          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- url/url.js:4:2
+
+Cannot cast `url.parse(...).query` to empty because null [1] is incompatible with empty [2].
+
+   url/url.js:4:2
+      4| (url.parse('http://example.com/?foo=bar').query: empty); // error, string | null
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2165:21
+   2165|     query: string | null
+                             ^^^^ [1]
+   url/url.js:4:50
+      4| (url.parse('http://example.com/?foo=bar').query: empty); // error, string | null
+                                                          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- url/url.js:5:2
+
+Cannot cast `url.parse(...).query` to empty because object type [1] is incompatible with empty [2].
+
+   url/url.js:5:2
+      5| (url.parse('http://example.com/?foo=bar', true).query: empty); // error, object
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2170:12
+   2170|     query: { [string]: string, ... }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   url/url.js:5:56
+      5| (url.parse('http://example.com/?foo=bar', true).query: empty); // error, object
+                                                                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- url/url.js:8:4
+
+Cannot cast `url.parse(...).query` to empty because string [1] is incompatible with empty [2].
+
+   url/url.js:8:4
+      8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2157:12
+   2157|     query: string | null | { [string]: string, ... },
+                    ^^^^^^ [1]
+   url/url.js:8:70
+      8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
+                                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- url/url.js:8:4
+
+Cannot cast `url.parse(...).query` to empty because null [1] is incompatible with empty [2].
+
+   url/url.js:8:4
+      8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2157:21
+   2157|     query: string | null | { [string]: string, ... },
+                             ^^^^ [1]
+   url/url.js:8:70
+      8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
+                                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- url/url.js:8:4
+
+Cannot cast `url.parse(...).query` to empty because object type [1] is incompatible with empty [2].
+
+   url/url.js:8:4
+      8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2157:28
+   2157|     query: string | null | { [string]: string, ... },
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   url/url.js:8:70
+      8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
+                                                                              ^^^^^ [2]
+
+
+
+Found 121 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
