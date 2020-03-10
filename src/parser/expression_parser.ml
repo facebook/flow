@@ -651,11 +651,18 @@ module Expression
   and import env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_IMPORT;
+        let leading_arg = Peek.comments env in
         Expect.token env T_LPAREN;
-        let arg = assignment (with_no_in false env) in
+        let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
         Expect.token env T_RPAREN;
-        Expression.Import arg)
+        let trailing = Peek.comments env in
+        Expression.Import
+          {
+            Expression.Import.argument;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
       env
 
   and call_cover ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left =
@@ -1236,9 +1243,9 @@ module Expression
     in
     Expect.token env T_RPAREN;
     let trailing = Peek.comments env in
-    add_comments ret leading trailing
+    add_comments ret ~leading ~trailing
 
-  and add_comments (loc, expression) leading trailing =
+  and add_comments ?(leading = []) ?(trailing = []) (loc, expression) =
     let merge_comments inner =
       Flow_ast_utils.merge_comments
         ~inner
@@ -1260,6 +1267,8 @@ module Expression
         Conditional { e with Conditional.comments = merge_comments comments }
       | Identifier (loc, ({ Identifier.comments; _ } as e)) ->
         Identifier (loc, { e with Identifier.comments = merge_comments comments })
+      | Import ({ Import.comments; _ } as e) ->
+        Import { e with Import.comments = merge_comments comments }
       | Literal ({ Literal.comments; _ } as e) ->
         Literal { e with Literal.comments = merge_comments comments }
       | Logical ({ Logical.comments; _ } as e) ->

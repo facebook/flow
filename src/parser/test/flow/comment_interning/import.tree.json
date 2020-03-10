@@ -1,0 +1,155 @@
+{
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":3,"column":111}},
+  "range":[19,165],
+  "body":[
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":52}},
+      "range":[19,52],
+      "expression":{
+        "type":"CallExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":51}},
+            "range":[34,51],
+            "value":" 1.2 T import"
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":18}},
+            "range":[0,18],
+            "value":" 1.1 L import "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":33}},
+        "range":[19,33],
+        "callee":{
+          "type":"Import",
+          "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":32}},
+          "range":[19,32]
+        },
+        "arguments":[
+          {
+            "type":"Literal",
+            "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":32}},
+            "range":[26,32],
+            "value":"test",
+            "raw":"'test'"
+          }
+        ]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":111}},
+      "range":[73,165],
+      "expression":{
+        "type":"CallExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":92},"end":{"line":3,"column":110}},
+            "range":[146,164],
+            "value":" 2.5 T import "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},
+            "range":[54,72],
+            "value":" 2.1 L import "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":91}},
+        "range":[73,145],
+        "callee":{
+          "type":"Import",
+          "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":71}},
+          "range":[73,125]
+        },
+        "arguments":[
+          {
+            "type":"Literal",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":72},"end":{"line":3,"column":90}},
+                "range":[126,144],
+                "value":" 2.4 T string "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":44}},
+                "range":[80,98],
+                "value":" 2.2 L string "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":46},"end":{"line":3,"column":64}},
+                "range":[100,118],
+                "value":" 2.3 L string "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":3,"column":65},"end":{"line":3,"column":71}},
+            "range":[119,125],
+            "value":"test",
+            "raw":"'test'"
+          }
+        ]
+      },
+      "directive":null
+    }
+  ],
+  "comments":[
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":18}},
+      "range":[0,18],
+      "value":" 1.1 L import "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":51}},
+      "range":[34,51],
+      "value":" 1.2 T import"
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},
+      "range":[54,72],
+      "value":" 2.1 L import "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":44}},
+      "range":[80,98],
+      "value":" 2.2 L string "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":46},"end":{"line":3,"column":64}},
+      "range":[100,118],
+      "value":" 2.3 L string "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":72},"end":{"line":3,"column":90}},
+      "range":[126,144],
+      "value":" 2.4 T string "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":92},"end":{"line":3,"column":110}},
+      "range":[146,164],
+      "value":" 2.5 T import "
+    }
+  ]
+}

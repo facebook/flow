@@ -1082,21 +1082,25 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       end
     | ( loc,
         Import
-          ( source_loc,
-            ( Literal { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }
-            | TemplateLiteral
-                {
-                  TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          TemplateLiteral.Element.value =
-                            { TemplateLiteral.Element.cooked = value; raw };
-                          _;
-                        } );
-                    ];
-                  _;
-                } ) ) ) ->
+          {
+            Import.argument =
+              ( source_loc,
+                ( Literal { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }
+                | TemplateLiteral
+                    {
+                      TemplateLiteral.quasis =
+                        [
+                          ( _,
+                            {
+                              TemplateLiteral.Element.value =
+                                { TemplateLiteral.Element.cooked = value; raw };
+                              _;
+                            } );
+                        ];
+                      _;
+                    } ) );
+            comments = _;
+          } ) ->
       (loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw })))
     | ( loc,
         Call

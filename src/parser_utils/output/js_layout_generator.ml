@@ -1003,7 +1003,9 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.TypeCast { E.TypeCast.expression = expr; annot; comments } ->
         layout_node_with_comments_opt loc comments
         @@ wrap_in_parens (fuse [expression expr; type_annotation annot])
-      | E.Import expr -> fuse [Atom "import"; wrap_in_parens (expression expr)]
+      | E.Import { E.Import.argument; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ fuse [Atom "import"; wrap_in_parens (expression argument)]
       (* Not supported *)
       | E.Comprehension _
       | E.Generator _ ->

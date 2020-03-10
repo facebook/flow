@@ -1005,6 +1005,7 @@ let program
       | ((loc, This t1), (_, This t2)) -> this_expression loc t1 t2
       | ((loc, Super s1), (_, Super s2)) -> super_expression loc s1 s2
       | ((loc, MetaProperty m1), (_, MetaProperty m2)) -> meta_property loc m1 m2
+      | ((loc, Import i1), (_, Import i2)) -> import_expression loc i1 i2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
@@ -2089,5 +2090,15 @@ let program
     let property = Some (diff_if_changed identifier property1 property2) in
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [meta; property; comments]
+  and import_expression
+      (loc : Loc.t)
+      (import1 : (Loc.t, Loc.t) Ast.Expression.Import.t)
+      (import2 : (Loc.t, Loc.t) Ast.Expression.Import.t) : node change list option =
+    let open Ast.Expression.Import in
+    let { argument = argument1; comments = comments1 } = import1 in
+    let { argument = argument2; comments = comments2 } = import2 in
+    let argument = Some (diff_if_changed expression argument1 argument2) in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument; comments]
   in
   program' program1 program2 |> List.sort change_compare

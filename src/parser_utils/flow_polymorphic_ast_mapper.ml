@@ -922,8 +922,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method private_name ((annot, ident) : 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
       (this#on_loc_annot annot, this#identifier ident)
 
-    method import _annot (expr : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
-      this#expression expr
+    method import _annot (expr : ('M, 'T) Ast.Expression.Import.t)
+        : ('N, 'U) Ast.Expression.Import.t =
+      let open Ast.Expression.Import in
+      let { argument; comments } = expr in
+      let argument' = this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
 
     method if_consequent_statement ~has_else (stmt : ('M, 'T) Ast.Statement.t)
         : ('N, 'U) Ast.Statement.t =

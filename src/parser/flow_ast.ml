@@ -1171,6 +1171,14 @@ and Expression : sig
     type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
   end
 
+  module Import : sig
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -1185,7 +1193,7 @@ and Expression : sig
     | Function of ('M, 'T) Function.t
     | Generator of ('M, 'T) Generator.t
     | Identifier of ('M, 'T) Identifier.t
-    | Import of ('M, 'T) t
+    | Import of ('M, 'T) Import.t
     | JSXElement of ('M, 'T) JSX.element
     | JSXFragment of ('M, 'T) JSX.fragment
     | Literal of 'M Literal.t

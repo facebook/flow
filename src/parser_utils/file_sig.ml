@@ -562,10 +562,11 @@ struct
         this#handle_literal loc expr.value;
         super#literal loc expr
 
-      method! import import_loc (expr : (L.t, L.t) Ast.Expression.t) =
+      method! import import_loc (expr : (L.t, L.t) Ast.Expression.Import.t) =
         let open Ast.Expression in
+        let { Import.argument; comments = _ } = expr in
         begin
-          match expr with
+          match argument with
           | ( loc,
               ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
               | TemplateLiteral
@@ -584,7 +585,7 @@ struct
             this#add_require (ImportDynamic { source = (loc, name); import_loc })
           | _ -> ()
         end;
-        super#expression expr
+        super#import import_loc expr
 
       method! import_declaration import_loc (decl : (L.t, L.t) Ast.Statement.ImportDeclaration.t) =
         let open Ast.Statement.ImportDeclaration in

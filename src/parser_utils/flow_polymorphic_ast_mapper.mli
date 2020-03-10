@@ -247,7 +247,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t ->
       ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t
 
-    method import : 'T -> ('M, 'T) Ast.Expression.t -> ('N, 'U) Ast.Expression.t
+    method import : 'T -> ('M, 'T) Ast.Expression.Import.t -> ('N, 'U) Ast.Expression.Import.t
 
     method import_declaration :
       'M -> ('M, 'T) Ast.Statement.ImportDeclaration.t -> ('N, 'U) Ast.Statement.ImportDeclaration.t

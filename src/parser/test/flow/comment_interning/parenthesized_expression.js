@@ -18,6 +18,8 @@ function foo() {}
 
 /* Leading identifier */ (i) /* Trailing identifier */;
 
+/* Leading import */ (import('test')) /* Trailing import */;
+
 /* Leading literal */ (1) /* Trailing literal */;
 
 /* Leading logical */ (false || true) /* Trailing logical */;

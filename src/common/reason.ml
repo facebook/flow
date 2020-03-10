@@ -995,7 +995,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
       ^ code_desc_of_expression ~wrap:false alternate )
   | Function _ -> "function () { ... }"
   | Identifier (_, { Ast.Identifier.name = x; comments = _ }) -> x
-  | Import x -> "import(" ^ code_desc_of_expression ~wrap:false x ^ ")"
+  | Import { Import.argument; comments = _ } ->
+    "import(" ^ code_desc_of_expression ~wrap:false argument ^ ")"
   | JSXElement x -> code_desc_of_jsx_element x
   | JSXFragment _ -> "<>...</>"
   | Ast.Expression.Literal x -> code_desc_of_literal x

@@ -3497,8 +3497,8 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | MetaProperty _ ->
     Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
     Tast_utils.error_mapper#expression ex
-  | Import arg ->
-    (match arg with
+  | Import { Import.argument; comments } ->
+    (match argument with
     | ( source_loc,
         Ast.Expression.Literal
           { Ast.Literal.value = Ast.Literal.String module_name; raw; comments = _ } )
@@ -3517,8 +3517,8 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
             expressions = [];
             comments = _;
           } ) ->
-      let comments =
-        match arg with
+      let literal_comments =
+        match argument with
         | (_, Ast.Expression.Literal { Ast.Literal.comments; _ }) -> comments
         | _ -> None
       in
@@ -3530,9 +3530,17 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let t = Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t] in
       ( (loc, t),
         Import
-          ( (source_loc, t),
-            Ast.Expression.Literal
-              { Ast.Literal.value = Ast.Literal.String module_name; raw; comments } ) )
+          {
+            Import.argument =
+              ( (source_loc, t),
+                Ast.Expression.Literal
+                  {
+                    Ast.Literal.value = Ast.Literal.String module_name;
+                    raw;
+                    comments = literal_comments;
+                  } );
+            comments;
+          } )
     | _ ->
       let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
       if not ignore_non_literals then (

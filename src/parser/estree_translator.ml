@@ -589,13 +589,14 @@ with type t = Impl.t = struct
           "MetaProperty"
           loc
           [("meta", identifier meta); ("property", identifier property)]
-      | (loc, Import arg) ->
+      | (loc, Import { Import.argument; comments }) ->
         node
+          ?comments
           "CallExpression"
           loc
           [
-            ("callee", node "Import" (Loc.btwn loc (fst arg)) []);
-            ("arguments", array_of_list expression [arg]);
+            ("callee", node "Import" (Loc.btwn loc (fst argument)) []);
+            ("arguments", array_of_list expression [argument]);
           ]
     and function_declaration
         ( loc,

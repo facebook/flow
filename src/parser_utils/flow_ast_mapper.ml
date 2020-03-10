@@ -1111,7 +1111,15 @@ class ['loc] mapper =
 
     method private_name (expr : 'loc Ast.PrivateName.t) = expr
 
-    method import _loc (expr : ('loc, 'loc) Ast.Expression.t) = expr
+    method import _loc (expr : ('loc, 'loc) Ast.Expression.Import.t) =
+      let open Ast.Expression.Import in
+      let { argument; comments } = expr in
+      let argument' = this#expression argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        expr
+      else
+        { argument = argument'; comments = comments' }
 
     method if_consequent_statement ~has_else (stmt : ('loc, 'loc) Ast.Statement.t) =
       ignore has_else;
