@@ -68,8 +68,6 @@ val parse_didSave : Hh_json.json option -> Lsp.DidSave.params
 
 val parse_didChange : Hh_json.json option -> Lsp.DidChange.params
 
-val parse_signatureHelp : Hh_json.json option -> Lsp.SignatureHelp.params
-
 val print_signatureHelp : Lsp.SignatureHelp.result -> Hh_json.json
 
 val parse_documentRename : Hh_json.json option -> Lsp.Rename.params

@@ -79,6 +79,12 @@ module DefinitionLocation = struct
   }
 end
 
+module MarkupKind = struct
+  type t =
+    | Markdown
+    | PlainText
+end
+
 (* markedString can be used to render human readable text. It is either a
  * markdown string or a code-block that provides a language and a code snippet.
  * Note that markdown strings will be sanitized by the client - including
@@ -314,6 +320,21 @@ module CancelRequest = struct
   and cancelParams = { id: lsp_id (* the request id to cancel *) }
 end
 
+module SignatureHelpClientCapabilities = struct
+  type t = {
+    dynamicRegistration: bool;
+    signatureInformation: signatureInformation;
+    contextSupport: bool;
+  }
+
+  and signatureInformation = {
+    documentationFormat: MarkupKind.t list;
+    parameterInformation: parameterInformation;
+  }
+
+  and parameterInformation = { labelOffsetSupport: bool }
+end
+
 (* Initialize request, method="initialize" *)
 module Initialize = struct
   type textDocumentSyncKind =
@@ -384,7 +405,9 @@ module Initialize = struct
     synchronization: synchronization;
     completion: completion;
     (* textDocument/completion *)
-    codeAction: codeAction; (* omitted: dynamic-registration fields *)
+    codeAction: codeAction;
+    (* omitted: dynamic-registration fields *)
+    signatureHelp: SignatureHelpClientCapabilities.t;
   }
 
   (* synchronization capabilities say what messages the client is capable
@@ -957,7 +980,25 @@ end
 
 (* Document Signature Help request, method="textDocument/signatureHelp" *)
 module SignatureHelp = struct
-  type params = TextDocumentPositionParams.t
+  module TriggerKind = struct
+    type t =
+      | Invoked [@value 1]
+      | TriggerCharacter [@value 2]
+      | ContentChange [@value 3]
+    [@@deriving enum]
+  end
+
+  type params = {
+    loc: TextDocumentPositionParams.t;
+    context: context option;
+  }
+
+  and context = {
+    triggerKind: TriggerKind.t;
+    triggerCharacter: string option;
+    isRetrigger: bool;
+    activeSignatureHelp: result;
+  }
 
   and result = t option
 

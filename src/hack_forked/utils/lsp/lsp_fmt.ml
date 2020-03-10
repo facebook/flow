@@ -206,6 +206,17 @@ let print_codeLens ~key (codeLens : CodeLens.t) : json =
           | Some json -> json );
       ])
 
+module MarkupKindFmt = struct
+  let of_string_opt = function
+    | "markdown" -> Some MarkupKind.Markdown
+    | "plaintext" -> Some MarkupKind.PlainText
+    | _ -> None
+
+  let of_json = function
+    | JSON_String str -> of_string_opt str
+    | _ -> None
+end
+
 (************************************************************************)
 (* shutdown request                                                     *)
 (************************************************************************)
@@ -292,9 +303,32 @@ let parse_didChange (params : json option) : DidChange.params =
 (* textDocument/signatureHelp notification                              *)
 (************************************************************************)
 
-let parse_signatureHelp (params : json option) : SignatureHelp.params =
-  parse_textDocumentPositionParams params
+module SignatureHelpFmt = struct
+  open SignatureHelp
 
+  let context_of_json json : SignatureHelp.context =
+    {
+      triggerKind =
+        Jget.int_opt json "triggerKind"
+        |> Base.Option.bind ~f:TriggerKind.of_enum
+        |> Base.Option.value ~default:TriggerKind.Invoked;
+      triggerCharacter = Jget.string_opt json "triggerCharacter";
+      isRetrigger = Jget.bool_d json "isRetrigger" ~default:false;
+      activeSignatureHelp = None (* TODO *);
+    }
+
+  let of_json json : SignatureHelp.params =
+    {
+      loc = parse_textDocumentPositionParams json;
+      context =
+        ( Jget.obj_opt json "context" |> fun json ->
+          match json with
+          | None -> None
+          | Some _ -> Some (context_of_json json) );
+    }
+end
+
+(* TODO: rename to SignatureHelpFmt.to_json *)
 let print_signatureHelp (r : SignatureHelp.result) : json =
   SignatureHelp.(
     let print_parInfo parInfo =
@@ -873,6 +907,32 @@ let print_documentOnTypeFormatting (r : DocumentOnTypeFormatting.result) : json 
 (* initialize request                                                   *)
 (************************************************************************)
 
+module SignatureHelpClientCapabilitiesFmt = struct
+  open SignatureHelpClientCapabilities
+
+  let documentationFormat_of_json json =
+    Base.Option.value_map json ~default:[] ~f:(fun formats ->
+        List.map formats ~f:(Base.Option.bind ~f:MarkupKindFmt.of_json) |> List.filter_opt)
+
+  let parameterInformation_of_json json =
+    { labelOffsetSupport = Jget.bool_d json "labelOffsetSupport" ~default:false }
+
+  let signatureInformation_of_json json =
+    {
+      documentationFormat = Jget.array_opt json "documentationFormat" |> documentationFormat_of_json;
+      parameterInformation =
+        Jget.obj_opt json "parameterInformation" |> parameterInformation_of_json;
+    }
+
+  let of_json json =
+    {
+      dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false;
+      signatureInformation =
+        Jget.obj_opt json "signatureInformation" |> signatureInformation_of_json;
+      contextSupport = Jget.bool_d json "contextSupport" ~default:false;
+    }
+end
+
 let parse_initialize (params : json option) : Initialize.params =
   Initialize.(
     let rec parse_initialize json =
@@ -920,6 +980,8 @@ let parse_initialize (params : json option) : Initialize.params =
         synchronization = Jget.obj_opt json "synchronization" |> parse_synchronization;
         completion = Jget.obj_opt json "completion" |> parse_completion;
         codeAction = Jget.obj_opt json "codeAction" |> parse_codeAction;
+        signatureHelp =
+          Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
       }
     and parse_synchronization json =
       {
@@ -1260,7 +1322,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/onTypeFormatting" ->
     DocumentOnTypeFormattingRequest (parse_documentOnTypeFormatting params)
   | "textDocument/codeLens" -> DocumentCodeLensRequest (parse_documentCodeLens params)
-  | "textDocument/signatureHelp" -> SignatureHelpRequest (parse_signatureHelp params)
+  | "textDocument/signatureHelp" -> SignatureHelpRequest (SignatureHelpFmt.of_json params)
   | "telemetry/rage" -> RageRequest
   | "workspace/executeCommand" -> ExecuteCommandRequest (parse_executeCommand params)
   | "completionItem/resolve"

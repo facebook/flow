@@ -40,6 +40,12 @@ module DefinitionLocation : sig
   }
 end
 
+module MarkupKind : sig
+  type t =
+    | Markdown
+    | PlainText
+end
+
 type markedString =
   | MarkedString of string
   | MarkedCode of string * string
@@ -192,6 +198,21 @@ module CodeActionKind : sig
   val source : t
 end
 
+module SignatureHelpClientCapabilities : sig
+  type t = {
+    dynamicRegistration: bool;
+    signatureInformation: signatureInformation;
+    contextSupport: bool;
+  }
+
+  and signatureInformation = {
+    documentationFormat: MarkupKind.t list;
+    parameterInformation: parameterInformation;
+  }
+
+  and parameterInformation = { labelOffsetSupport: bool }
+end
+
 module Initialize : sig
   type textDocumentSyncKind =
     | NoSync [@value 0]
@@ -245,6 +266,7 @@ module Initialize : sig
     synchronization: synchronization;
     completion: completion;
     codeAction: codeAction;
+    signatureHelp: SignatureHelpClientCapabilities.t;
   }
 
   and synchronization = {
@@ -717,7 +739,25 @@ module DocumentOnTypeFormatting : sig
 end
 
 module SignatureHelp : sig
-  type params = TextDocumentPositionParams.t
+  module TriggerKind : sig
+    type t =
+      | Invoked [@value 1]
+      | TriggerCharacter [@value 2]
+      | ContentChange [@value 3]
+    [@@deriving enum]
+  end
+
+  type params = {
+    loc: TextDocumentPositionParams.t;
+    context: context option;
+  }
+
+  and context = {
+    triggerKind: TriggerKind.t;
+    triggerCharacter: string option;
+    isRetrigger: bool;
+    activeSignatureHelp: result;
+  }
 
   and result = t option
 

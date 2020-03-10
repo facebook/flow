@@ -1577,7 +1577,7 @@ let handle_persistent_signaturehelp_lsp
     | None ->
       (* We must have failed to get the client when we first tried. We could throw here, but this is
         * a little more defensive. The only danger here is that the file contents may have changed *)
-      Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+      Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.SignatureHelp.loc client
   in
   let fn_content =
     match file with
@@ -2194,9 +2194,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
       (handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata)
   | LspToServer (RequestMessage (id, SignatureHelpRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
+    let loc = params.SignatureHelp.loc in
     let loc =
       Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-          Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
+          Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client)
     in
     mk_parallelizable_persistent
       ~options
