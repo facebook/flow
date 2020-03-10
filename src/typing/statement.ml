@@ -5736,7 +5736,7 @@ and collapse_children cx (children_loc, children) :
 
 and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
   let open Ast.JSX in
-  let { openingElement; children; closingElement } = e in
+  let { openingElement; children; closingElement; comments } = e in
   let (children_loc, _) = children in
   let locs =
     let (open_, _) = openingElement in
@@ -5747,11 +5747,11 @@ and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
   let (t, openingElement, children, closingElement) =
     jsx_title cx openingElement children closingElement locs
   in
-  (t, { openingElement; children; closingElement })
+  (t, { openingElement; children; closingElement; comments })
 
 and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
   let open Ast.JSX in
-  let { frag_openingElement; frag_children; frag_closingElement } = fragment in
+  let { frag_openingElement; frag_children; frag_closingElement; frag_comments } = fragment in
   let (children_loc, _) = frag_children in
   let loc_opening = frag_openingElement in
   let fragment_t =
@@ -5772,7 +5772,7 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
       unresolved_params
       locs
   in
-  (t, { frag_openingElement; frag_children; frag_closingElement })
+  (t, { frag_openingElement; frag_children; frag_closingElement; frag_comments })
 
 and jsx_title cx openingElement children closingElement locs =
   let open Ast.JSX in

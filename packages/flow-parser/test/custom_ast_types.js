@@ -285,6 +285,27 @@ def("BigIntLiteralTypeAnnotation")
 def("SymbolTypeAnnotation")
   .bases("Type");
 
+def("JSXFragment")
+  .bases("Expression")
+  .build("openingFragment", "closingFragment", "children")
+  .field("openingFragment", def("JSXOpeningFragment"))
+  .field("closingFragment", def("JSXClosingFragment"))
+  .field("children", [or(
+    def("JSXElement"),
+    def("JSXExpressionContainer"),
+    def("JSXFragment"),
+    def("JSXText"),
+    def("Literal")
+  )], defaults.emptyArray)
+
+def("JSXOpeningFragment")
+  .bases("Node")
+  .build();
+
+def("JSXClosingFragment")
+  .bases("Node")
+  .build();
+
 // Enums
 def("EnumDeclaration")
   .bases("Declaration")

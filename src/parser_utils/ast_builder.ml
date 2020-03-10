@@ -198,7 +198,8 @@ module JSXs = struct
 
   let attr ?(loc = Loc.none) name value = Opening.Attribute (loc, { Attribute.name; value })
 
-  let element ?selfclosing:(selfClosing = false) ?attrs:(attributes = []) ?(children = []) name =
+  let element
+      ?selfclosing:(selfClosing = false) ?attrs:(attributes = []) ?(children = []) ?comments name =
     {
       openingElement = (Loc.none, { Opening.name; selfClosing; attributes });
       closingElement =
@@ -207,6 +208,7 @@ module JSXs = struct
         else
           Some (Loc.none, { Closing.name }) );
       children = (Loc.none, children);
+      comments;
     }
 
   let child_element ?(loc = Loc.none) ?selfclosing ?attrs ?children name =

@@ -20,6 +20,10 @@ function foo() {}
 
 /* Leading import */ (import('test')) /* Trailing import */;
 
+/* Leading JSX element */ (<div>test</div>) /* Trailing JSX element */;
+
+/* Leading JSX fragment */ (<>test</>) /* Trailing JSX fragment */;
+
 /* Leading literal */ (1) /* Trailing literal */;
 
 /* Leading logical */ (false || true) /* Trailing logical */;

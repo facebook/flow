@@ -1464,8 +1464,10 @@ with type t = Impl.t = struct
                 Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
               targs = None;
             } )
-    and jsx_element (loc, { JSX.openingElement; closingElement; children = (_loc, children) }) =
+    and jsx_element
+        (loc, { JSX.openingElement; closingElement; children = (_loc, children); comments }) =
       node
+        ?comments
         "JSXElement"
         loc
         [
@@ -1475,9 +1477,14 @@ with type t = Impl.t = struct
         ]
     and jsx_fragment
         ( loc,
-          { JSX.frag_openingElement; frag_closingElement; frag_children = (_loc, frag_children) } )
-        =
+          {
+            JSX.frag_openingElement;
+            frag_closingElement;
+            frag_children = (_loc, frag_children);
+            frag_comments;
+          } ) =
       node
+        ?comments:frag_comments
         "JSXFragment"
         loc
         [

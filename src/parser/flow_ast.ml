@@ -1329,12 +1329,14 @@ and JSX : sig
     openingElement: ('M, 'T) Opening.t;
     closingElement: ('M, 'T) Closing.t option;
     children: 'M * ('M, 'T) child list;
+    comments: ('M, unit) Syntax.t option;
   }
 
   and ('M, 'T) fragment = {
     frag_openingElement: 'M;
     frag_closingElement: 'M;
     frag_children: 'M * ('M, 'T) child list;
+    frag_comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end =

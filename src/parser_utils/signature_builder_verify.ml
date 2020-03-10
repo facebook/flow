@@ -464,7 +464,7 @@ module Eval (Env : EvalEnv) = struct
       Deps.bot
     | (loc, JSXElement e) ->
       let open Ast.JSX in
-      let { openingElement; closingElement = _; children = _ } = e in
+      let { openingElement; closingElement = _; children = _; comments = _ } = e in
       let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
       begin
         match (name, Env.facebook_fbt) with

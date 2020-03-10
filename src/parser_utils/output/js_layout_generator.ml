@@ -1940,29 +1940,32 @@ and object_property property =
   | O.SpreadProperty (loc, { O.SpreadProperty.argument }) ->
     source_location_with_comments (loc, fuse [Atom "..."; expression argument])
 
-and jsx_element loc { Ast.JSX.openingElement; closingElement; children } =
-  fuse
-    [
-      begin
-        match openingElement with
-        | (_, { Ast.JSX.Opening.selfClosing = false; _ }) -> jsx_opening openingElement
-        | (_, { Ast.JSX.Opening.selfClosing = true; _ }) -> jsx_self_closing openingElement
-      end;
-      jsx_children loc children;
-      begin
-        match closingElement with
-        | Some closing -> jsx_closing closing
-        | _ -> Empty
-      end;
-    ]
+and jsx_element loc { Ast.JSX.openingElement; closingElement; children; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         begin
+           match openingElement with
+           | (_, { Ast.JSX.Opening.selfClosing = false; _ }) -> jsx_opening openingElement
+           | (_, { Ast.JSX.Opening.selfClosing = true; _ }) -> jsx_self_closing openingElement
+         end;
+         jsx_children loc children;
+         begin
+           match closingElement with
+           | Some closing -> jsx_closing closing
+           | _ -> Empty
+         end;
+       ]
 
-and jsx_fragment loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_children } =
-  fuse
-    [
-      jsx_fragment_opening frag_openingElement;
-      jsx_children loc frag_children;
-      jsx_closing_fragment frag_closingElement;
-    ]
+and jsx_fragment
+    loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_children; frag_comments } =
+  layout_node_with_comments_opt loc frag_comments
+  @@ fuse
+       [
+         jsx_fragment_opening frag_openingElement;
+         jsx_children loc frag_children;
+         jsx_closing_fragment frag_closingElement;
+       ]
 
 and jsx_identifier (loc, { Ast.JSX.Identifier.name }) =
   identifier_with_comments @@ Flow_ast_utils.ident_of_source (loc, name)

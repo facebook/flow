@@ -1195,27 +1195,35 @@ class ['loc] mapper =
 
     method jsx_element _loc (expr : ('loc, 'loc) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement; closingElement; children } = expr in
+      let { openingElement; closingElement; children; comments } = expr in
       let openingElement' = this#jsx_opening_element openingElement in
       let closingElement' = map_opt this#jsx_closing_element closingElement in
       let children' = this#jsx_children children in
+      let comments' = this#syntax_opt comments in
       if
         openingElement == openingElement'
         && closingElement == closingElement'
         && children == children'
+        && comments == comments'
       then
         expr
       else
-        { openingElement = openingElement'; closingElement = closingElement'; children = children' }
+        {
+          openingElement = openingElement';
+          closingElement = closingElement';
+          children = children';
+          comments = comments';
+        }
 
     method jsx_fragment _loc (expr : ('loc, 'loc) Ast.JSX.fragment) =
       let open Ast.JSX in
-      let { frag_children; _ } = expr in
+      let { frag_children; frag_comments; _ } = expr in
       let children' = this#jsx_children frag_children in
-      if frag_children == children' then
+      let frag_comments' = this#syntax_opt frag_comments in
+      if frag_children == children' && frag_comments == frag_comments' then
         expr
       else
-        { expr with frag_children = children' }
+        { expr with frag_children = children'; frag_comments = frag_comments' }
 
     method jsx_opening_element (elem : ('loc, 'loc) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in

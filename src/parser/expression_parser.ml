@@ -1269,6 +1269,10 @@ module Expression
         Identifier (loc, { e with Identifier.comments = merge_comments comments })
       | Import ({ Import.comments; _ } as e) ->
         Import { e with Import.comments = merge_comments comments }
+      | JSXElement ({ JSX.comments; _ } as e) ->
+        JSXElement { e with JSX.comments = merge_comments comments }
+      | JSXFragment ({ JSX.frag_comments; _ } as e) ->
+        JSXFragment { e with JSX.frag_comments = merge_comments frag_comments }
       | Literal ({ Literal.comments; _ } as e) ->
         Literal { e with Literal.comments = merge_comments comments }
       | Logical ({ Logical.comments; _ } as e) ->

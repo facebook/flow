@@ -994,8 +994,9 @@ let program
       | ((loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2))
         ->
         Some (template_literal loc t_lit1 t_lit2)
-      | ((_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2)) -> jsx_element jsx_elem1 jsx_elem2
-      | ((_, JSXFragment frag1), (_, JSXFragment frag2)) -> jsx_fragment frag1 frag2
+      | ((loc, JSXElement jsx_elem1), (_, JSXElement jsx_elem2)) ->
+        jsx_element loc jsx_elem1 jsx_elem2
+      | ((loc, JSXFragment frag1), (_, JSXFragment frag2)) -> jsx_fragment loc frag1 frag2
       | ((loc, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast loc t1 t2)
       | ((loc, Logical l1), (_, Logical l2)) -> logical loc l1 l2
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
@@ -1062,32 +1063,57 @@ let program
     else
       Some []
   and jsx_element
-      (jsx_elem1 : (Loc.t, Loc.t) Ast.JSX.element) (jsx_elem2 : (Loc.t, Loc.t) Ast.JSX.element) :
-      node change list option =
+      (loc : Loc.t)
+      (jsx_elem1 : (Loc.t, Loc.t) Ast.JSX.element)
+      (jsx_elem2 : (Loc.t, Loc.t) Ast.JSX.element) : node change list option =
     let open Ast.JSX in
-    let { openingElement = open_elem1; closingElement = close_elem1; children = (_, children1) } =
+    let {
+      openingElement = open_elem1;
+      closingElement = close_elem1;
+      children = (_, children1);
+      comments = comments1;
+    } =
       jsx_elem1
     in
-    let { openingElement = open_elem2; closingElement = close_elem2; children = (_, children2) } =
+    let {
+      openingElement = open_elem2;
+      closingElement = close_elem2;
+      children = (_, children2);
+      comments = comments2;
+    } =
       jsx_elem2
     in
     let opening_diff = diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
     let children_diff = diff_and_recurse_nonopt_no_trivial jsx_child children1 children2 in
     let closing_diff = diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
-    join_diff_list [opening_diff; children_diff; closing_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [opening_diff; children_diff; closing_diff; comments_diff]
   and jsx_fragment
-      (frag1 : (Loc.t, Loc.t) Ast.JSX.fragment) (frag2 : (Loc.t, Loc.t) Ast.JSX.fragment) :
-      node change list option =
+      (loc : Loc.t)
+      (frag1 : (Loc.t, Loc.t) Ast.JSX.fragment)
+      (frag2 : (Loc.t, Loc.t) Ast.JSX.fragment) : node change list option =
     let open Ast.JSX in
     (* Opening and closing elements contain no information besides loc, so we
      * ignore them for the diff *)
-    let { frag_openingElement = _; frag_children = (_, children1); frag_closingElement = _ } =
+    let {
+      frag_openingElement = _;
+      frag_children = (_, children1);
+      frag_closingElement = _;
+      frag_comments = frag_comments1;
+    } =
       frag1
     in
-    let { frag_openingElement = _; frag_children = (_, children2); frag_closingElement = _ } =
+    let {
+      frag_openingElement = _;
+      frag_children = (_, children2);
+      frag_closingElement = _;
+      frag_comments = frag_comments2;
+    } =
       frag2
     in
-    diff_and_recurse_nonopt_no_trivial jsx_child children1 children2
+    let children_diff = diff_and_recurse_nonopt_no_trivial jsx_child children1 children2 in
+    let frag_comments_diff = syntax_opt loc frag_comments1 frag_comments2 in
+    join_diff_list [children_diff; frag_comments_diff]
   and jsx_opening_element
       (elem1 : (Loc.t, Loc.t) Ast.JSX.Opening.t) (elem2 : (Loc.t, Loc.t) Ast.JSX.Opening.t) :
       node change list option =
@@ -1202,8 +1228,10 @@ let program
     else
       let changes =
         match (child1', child2') with
-        | (Element elem1, Element elem2) -> diff_if_changed_ret_opt jsx_element elem1 elem2
-        | (Fragment frag1, Fragment frag2) -> diff_if_changed_ret_opt jsx_fragment frag1 frag2
+        | (Element elem1, Element elem2) ->
+          diff_if_changed_ret_opt (jsx_element old_loc) elem1 elem2
+        | (Fragment frag1, Fragment frag2) ->
+          diff_if_changed_ret_opt (jsx_fragment old_loc) frag1 frag2
         | (ExpressionContainer expr1, ExpressionContainer expr2) ->
           diff_if_changed_ret_opt jsx_expression expr1 expr2
         | (SpreadChild expr1, SpreadChild expr2) ->

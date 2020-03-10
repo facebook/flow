@@ -981,19 +981,31 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement; closingElement; children } = expr in
+      let { openingElement; closingElement; children; comments } = expr in
       let openingElement' = this#jsx_opening_element openingElement in
       let closingElement' = Base.Option.map ~f:this#jsx_closing_element closingElement in
       let children' = this#jsx_children children in
-      { openingElement = openingElement'; closingElement = closingElement'; children = children' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      {
+        openingElement = openingElement';
+        closingElement = closingElement';
+        children = children';
+        comments = comments';
+      }
 
     method jsx_fragment (expr : ('M, 'T) Ast.JSX.fragment) : ('N, 'U) Ast.JSX.fragment =
       let open Ast.JSX in
-      let { frag_openingElement; frag_closingElement; frag_children } = expr in
+      let { frag_openingElement; frag_closingElement; frag_children; frag_comments } = expr in
       let opening' = this#on_loc_annot frag_openingElement in
       let closing' = this#on_loc_annot frag_closingElement in
       let children' = this#jsx_children frag_children in
-      { frag_openingElement = opening'; frag_closingElement = closing'; frag_children = children' }
+      let frag_comments' = Base.Option.map ~f:this#syntax frag_comments in
+      {
+        frag_openingElement = opening';
+        frag_closingElement = closing';
+        frag_children = children';
+        frag_comments = frag_comments';
+      }
 
     method jsx_opening_element (elem : ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
       let open Ast.JSX.Opening in

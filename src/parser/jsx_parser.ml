@@ -322,6 +322,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
       | (_, `Fragment) -> false
     in
     fun env ->
+      let leading = Peek.comments env in
       let openingElement = opening_element env in
       Eat.pop_lex_mode env;
       let (children, closingElement) =
@@ -332,6 +333,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
           children_and_closing env
         )
       in
+      let trailing = Peek.comments env in
       let end_loc =
         match closingElement with
         | `Element (loc, { JSX.Closing.name }) ->
@@ -362,6 +364,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
                   | `Element e -> Some e
                   | _ -> None);
                 children;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
         | (start_loc, `Fragment) ->
           `Fragment
@@ -375,6 +378,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
                   | `Element (loc, _) -> loc
                   | _ -> end_loc);
                 frag_children = children;
+                frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
       in
       (Loc.btwn (fst openingElement) end_loc, result)

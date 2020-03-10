@@ -106,7 +106,10 @@ class useless_mapper =
 
     method! jsx_element _loc (elem : (Loc.t, Loc.t) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement = (_, open_elem) as openingElement; closingElement; children } = elem in
+      let { openingElement = (_, open_elem) as openingElement; closingElement; children; comments }
+          =
+        elem
+      in
       let openingElement' = this#jsx_opening_element openingElement in
       let closingElement' =
         let (loc, open_elem') = openingElement' in
@@ -126,7 +129,12 @@ class useless_mapper =
       then
         elem
       else
-        { openingElement = openingElement'; closingElement = closingElement'; children = children' }
+        {
+          openingElement = openingElement';
+          closingElement = closingElement';
+          children = children';
+          comments;
+        }
 
     method! jsx_opening_element (elem : (Loc.t, Loc.t) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
