@@ -52,4 +52,10 @@ let tests = [
             });
         });
     },
+    // wrong arguments
+    function() {
+        let p1 = Promise.allSettled();
+        let p2 = Promise.allSettled(1);
+        let p3 = Promise.allSettled(Promise.resolve(1));
+    },
 ];
