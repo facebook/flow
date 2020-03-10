@@ -1288,8 +1288,8 @@ class ['loc] mapper =
         id_loc this#jsx_fragment loc frag child (fun frag -> (loc, Fragment frag))
       | (loc, ExpressionContainer expr) ->
         id_loc this#jsx_expression loc expr child (fun expr -> (loc, ExpressionContainer expr))
-      | (loc, SpreadChild expr) ->
-        id this#expression expr child (fun expr -> (loc, SpreadChild expr))
+      | (loc, SpreadChild spread) ->
+        id this#jsx_spread_child spread child (fun spread -> (loc, SpreadChild spread))
       | (_loc, Text _) -> child
 
     method jsx_expression _loc (jsx_expr : ('loc, 'loc) Ast.JSX.ExpressionContainer.t) =
@@ -1308,6 +1308,16 @@ class ['loc] mapper =
           jsx_expr
         else
           { expression = EmptyExpression; comments = comments' }
+
+    method jsx_spread_child (jsx_spread_child : ('loc, 'loc) Ast.JSX.SpreadChild.t) =
+      let open Ast.JSX.SpreadChild in
+      let { expression; comments } = jsx_spread_child in
+      let expression' = this#expression expression in
+      let comments' = this#syntax_opt comments in
+      if expression == expression' && comments == comments' then
+        jsx_spread_child
+      else
+        { expression = expression'; comments = comments' }
 
     method jsx_name (name : ('loc, 'loc) Ast.JSX.name) =
       let open Ast.JSX in

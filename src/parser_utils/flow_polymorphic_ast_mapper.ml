@@ -1066,7 +1066,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Element elem -> Element (this#jsx_element elem)
         | Fragment frag -> Fragment (this#jsx_fragment frag)
         | ExpressionContainer expr -> ExpressionContainer (this#jsx_expression expr)
-        | SpreadChild expr -> SpreadChild (this#expression expr)
+        | SpreadChild spread -> SpreadChild (this#jsx_spread_child spread)
         | Text _ as child' -> child' )
 
     method jsx_expression (jsx_expr : ('M, 'T) Ast.JSX.ExpressionContainer.t)
@@ -1078,6 +1078,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Expression expr -> Expression (this#expression expr)
         | EmptyExpression -> EmptyExpression
       in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { expression = expression'; comments = comments' }
+
+    method jsx_spread_child (jsx_spread_child : ('M, 'T) Ast.JSX.SpreadChild.t)
+        : ('N, 'U) Ast.JSX.SpreadChild.t =
+      let open Ast.JSX.SpreadChild in
+      let { expression; comments } = jsx_spread_child in
+      let expression' = this#expression expression in
       let comments' = Base.Option.map ~f:this#syntax comments in
       { expression = expression'; comments = comments' }
 

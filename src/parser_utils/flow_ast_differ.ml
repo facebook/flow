@@ -1239,8 +1239,8 @@ let program
           diff_if_changed_ret_opt (jsx_fragment old_loc) frag1 frag2
         | (ExpressionContainer expr1, ExpressionContainer expr2) ->
           diff_if_changed_ret_opt (jsx_expression old_loc) expr1 expr2
-        | (SpreadChild expr1, SpreadChild expr2) ->
-          diff_if_changed expression expr1 expr2 |> Base.Option.return
+        | (SpreadChild spread1, SpreadChild spread2) ->
+          diff_if_changed_ret_opt (jsx_spread_child old_loc) spread1 spread2
         | (Text _, Text _) -> None
         | _ -> None
       in
@@ -1260,6 +1260,16 @@ let program
       | (ExpressionContainer.EmptyExpression, ExpressionContainer.EmptyExpression) -> Some []
       | _ -> None
     in
+    join_diff_list [expression_diff; comments_diff]
+  and jsx_spread_child
+      (loc : Loc.t)
+      (jsx_spread_child1 : (Loc.t, Loc.t) Ast.JSX.SpreadChild.t)
+      (jsx_spread_child2 : (Loc.t, Loc.t) Ast.JSX.SpreadChild.t) : node change list option =
+    let open Ast.JSX.SpreadChild in
+    let { expression = expr1; comments = comments1 } = jsx_spread_child1 in
+    let { expression = expr2; comments = comments2 } = jsx_spread_child2 in
+    let expression_diff = Some (diff_if_changed expression expr1 expr2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [expression_diff; comments_diff]
   and assignment
       (loc : Loc.t)

@@ -6168,9 +6168,9 @@ and jsx_body cx (loc, child) =
       in
       ( unresolved_param,
         (loc, ExpressionContainer { expression = ex; ExpressionContainer.comments }) ))
-  | SpreadChild expr ->
+  | SpreadChild { SpreadChild.expression = expr; comments } ->
     let (((_, t), _) as e) = expression cx expr in
-    (Some (UnresolvedSpreadArg t), (loc, SpreadChild e))
+    (Some (UnresolvedSpreadArg t), (loc, SpreadChild { SpreadChild.expression = e; comments }))
   | Text { Text.value; raw } ->
     let unresolved_param_opt =
       match jsx_trim_text make_trust loc value with

@@ -287,6 +287,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method jsx_expression :
       ('M, 'T) Ast.JSX.ExpressionContainer.t -> ('N, 'U) Ast.JSX.ExpressionContainer.t
 
+    method jsx_spread_child : ('M, 'T) Ast.JSX.SpreadChild.t -> ('N, 'U) Ast.JSX.SpreadChild.t
+
     method jsx_fragment : ('M, 'T) Ast.JSX.fragment -> ('N, 'U) Ast.JSX.fragment
 
     method jsx_identifier : ('M, 'T) Flow_ast.JSX.Identifier.t -> ('N, 'U) Ast.JSX.Identifier.t

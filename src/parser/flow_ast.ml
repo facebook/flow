@@ -1323,13 +1323,21 @@ and JSX : sig
     and ('M, 'T) t' = { name: ('M, 'T) name } [@@deriving show]
   end
 
+  module SpreadChild : sig
+    type ('M, 'T) t = {
+      expression: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) child = 'M * ('M, 'T) child'
 
   and ('M, 'T) child' =
     | Element of ('M, 'T) element
     | Fragment of ('M, 'T) fragment
     | ExpressionContainer of ('M, 'T) ExpressionContainer.t
-    | SpreadChild of ('M, 'T) Expression.t
+    | SpreadChild of ('M, 'T) SpreadChild.t
     | Text of Text.t
 
   and ('M, 'T) element = {

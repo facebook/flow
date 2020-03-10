@@ -1516,7 +1516,7 @@ with type t = Impl.t = struct
         | (loc, Element element) -> jsx_element (loc, element)
         | (loc, Fragment fragment) -> jsx_fragment (loc, fragment)
         | (loc, ExpressionContainer expr) -> jsx_expression_container (loc, expr)
-        | (loc, SpreadChild expr) -> node "JSXSpreadChild" loc [("expression", expression expr)]
+        | (loc, SpreadChild spread) -> jsx_spread_child (loc, spread)
         | (loc, Text str) -> jsx_text (loc, str))
     and jsx_name =
       JSX.(
@@ -1554,6 +1554,8 @@ with type t = Impl.t = struct
           node ?comments "JSXEmptyExpression" empty_loc []
       in
       node ?comments "JSXExpressionContainer" loc [("expression", expression)]
+    and jsx_spread_child (loc, { JSX.SpreadChild.expression = expr; comments }) =
+      node ?comments "JSXSpreadChild" loc [("expression", expression expr)]
     and jsx_text (loc, { JSX.Text.value; raw }) =
       node "JSXText" loc [("value", string value); ("raw", string raw)]
     and jsx_member_expression (loc, { JSX.MemberExpression._object; property }) =

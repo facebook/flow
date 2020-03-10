@@ -2000,6 +2000,10 @@ and jsx_expression_container loc { Ast.JSX.ExpressionContainer.expression = expr
          Atom "}";
        ]
 
+and jsx_spread_child loc { Ast.JSX.SpreadChild.expression = expr; comments } =
+  fuse
+    [Atom "{"; layout_node_with_comments_opt loc comments (Atom "..."); expression expr; Atom "}"]
+
 and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
   let module A = Ast.JSX.Attribute in
   source_location_with_comments
@@ -2121,7 +2125,7 @@ and jsx_child (loc, child) =
   | Ast.JSX.Element elem -> Some (loc, jsx_element loc elem)
   | Ast.JSX.Fragment frag -> Some (loc, jsx_fragment loc frag)
   | Ast.JSX.ExpressionContainer express -> Some (loc, jsx_expression_container loc express)
-  | Ast.JSX.SpreadChild expr -> Some (loc, fuse [Atom "{..."; expression expr; Atom "}"])
+  | Ast.JSX.SpreadChild spread -> Some (loc, jsx_spread_child loc spread)
   | Ast.JSX.Text { Ast.JSX.Text.raw; _ } ->
     begin
       match Utils_jsx.trim_jsx_text loc raw with

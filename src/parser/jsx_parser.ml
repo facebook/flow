@@ -61,9 +61,14 @@ module JSX (Parse : Parser_common.PARSER) = struct
           let result =
             match Peek.token env with
             | T_ELLIPSIS ->
+              let leading = Peek.comments env in
               Expect.token env T_ELLIPSIS;
-              let expr = Parse.assignment env in
-              JSX.SpreadChild expr
+              let expression = Parse.assignment env in
+              JSX.SpreadChild
+                {
+                  JSX.SpreadChild.expression;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
             | _ ->
               let expression = expression_container_contents env in
               JSX.ExpressionContainer { JSX.ExpressionContainer.expression; comments = None }
