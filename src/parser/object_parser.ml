@@ -94,11 +94,13 @@ module Object
       in
       (loc, Ast.Expression.Object.Property.Computed (loc, key))
     | T_POUND when class_body ->
-      let (loc, id, _is_private) = Expression.property_name_include_private env in
+      let (loc, id, _is_private, leading) = Expression.property_name_include_private env in
       add_declared_private env (Flow_ast_utils.name_of_ident id);
-      (loc, PrivateName (loc, id))
+      ( loc,
+        PrivateName (loc, { PrivateName.id; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+      )
     | _ ->
-      let (loc, id, is_private) = Expression.property_name_include_private env in
+      let (loc, id, is_private, _) = Expression.property_name_include_private env in
       if is_private then error_at env (loc, Parse_error.PrivateNotInClass);
       (loc, Identifier id)
 
@@ -415,7 +417,9 @@ module Object
       error_at env (loc, Parse_error.InvalidFieldName { name; static; private_ = false })
 
   let check_private_names env seen_names private_name (kind : [ `Field | `Getter | `Setter ]) =
-    let (loc, (_, { Identifier.name; comments = _ })) = private_name in
+    let (loc, { PrivateName.id = (_, { Identifier.name; comments = _ }); comments = _ }) =
+      private_name
+    in
     if String.equal name "constructor" then
       let () =
         error_at env (loc, Parse_error.InvalidFieldName { name; static = false; private_ = true })
@@ -713,18 +717,18 @@ module Object
                   | _ -> private_names
                 end )
             | Get ->
+              let open Ast.Expression.Object.Property in
               let private_names =
                 match m.key with
-                | Ast.Expression.Object.Property.PrivateName name ->
-                  check_private_names env private_names name `Getter
+                | PrivateName name -> check_private_names env private_names name `Getter
                 | _ -> private_names
               in
               (seen_constructor, private_names)
             | Set ->
+              let open Ast.Expression.Object.Property in
               let private_names =
                 match m.key with
-                | Ast.Expression.Object.Property.PrivateName name ->
-                  check_private_names env private_names name `Setter
+                | PrivateName name -> check_private_names env private_names name `Setter
                 | _ -> private_names
               in
               (seen_constructor, private_names))

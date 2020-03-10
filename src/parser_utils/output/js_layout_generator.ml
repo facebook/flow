@@ -1147,8 +1147,10 @@ and member ?(optional = false) ~precedence ~ctxt member_node loc =
                (loc, { Ast.Identifier.name = id; comments = _ }) ->
              source_location_with_comments (loc, Atom id)
            | Ast.Expression.Member.PropertyPrivateName
-               (loc, (_, { Ast.Identifier.name = id; comments = _ })) ->
-             source_location_with_comments (loc, Atom ("#" ^ id))
+               ( loc,
+                 { Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = _ }); comments }
+               ) ->
+             source_location_with_comments ?comments (loc, Atom ("#" ^ id))
            | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt expr
          end;
          rdelim;
@@ -1614,19 +1616,20 @@ and class_property (loc, { Ast.Class.Property.key; value; static; annot; varianc
 and class_private_field
     ( loc,
       {
-        Ast.Class.PrivateField.key = (ident_loc, (_, { Ast.Identifier.name; comments = _ }));
+        Ast.Class.PrivateField.key =
+          (ident_loc, { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments });
         value;
         static;
         annot;
         variance;
       } ) =
-  class_property_helper
-    loc
-    (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
-    value
-    static
-    annot
-    variance
+  let key =
+    layout_node_with_comments_opt
+      ident_loc
+      comments
+      (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
+  in
+  class_property_helper loc key value static annot variance
 
 and class_body (loc, { Ast.Class.Body.body }) =
   if body <> [] then

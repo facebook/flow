@@ -920,7 +920,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#interface decl
 
     method private_name ((annot, ident) : 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
-      (this#on_loc_annot annot, this#identifier ident)
+      let open Ast.PrivateName in
+      let { id; comments } = ident in
+      let annot' = this#on_loc_annot annot in
+      let id' = this#identifier id in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { id = id'; comments = comments' })
 
     method computed_key ((annot, key) : ('M, 'T) Ast.ComputedKey.t) : ('N, 'U) Ast.ComputedKey.t =
       let open Ast.ComputedKey in

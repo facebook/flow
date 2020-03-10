@@ -681,7 +681,8 @@ with type t = Impl.t = struct
         ?comments
         loc
         [("name", string name); ("typeAnnotation", null); ("optional", bool false)]
-    and private_name (loc, name) = node "PrivateName" loc [("id", identifier name)]
+    and private_name (loc, { PrivateName.id; comments }) =
+      node ?comments "PrivateName" loc [("id", identifier id)]
     and pattern_identifier
         loc { Pattern.Identifier.name = (_, { Identifier.name; comments = _ }); annot; optional } =
       node
@@ -878,7 +879,14 @@ with type t = Impl.t = struct
           ("decorators", array_of_list class_decorator decorators);
         ]
     and class_private_field
-        (loc, { Class.PrivateField.key = (_, key); value; annot; static; variance = variance_ }) =
+        ( loc,
+          {
+            Class.PrivateField.key = (_, { PrivateName.id; comments });
+            value;
+            annot;
+            static;
+            variance = variance_;
+          } ) =
       let (value, declare) =
         match value with
         | Class.Property.Declared -> (None, true)
@@ -887,7 +895,7 @@ with type t = Impl.t = struct
       in
       let props =
         [
-          ("key", identifier key);
+          ("key", identifier id);
           ("value", option expression value);
           ("typeAnnotation", hint type_annotation annot);
           ("static", bool static);
@@ -899,7 +907,7 @@ with type t = Impl.t = struct
         else
           []
       in
-      node "ClassPrivateProperty" loc props
+      node ?comments "ClassPrivateProperty" loc props
     and class_property (loc, { Class.Property.key; value; annot; static; variance = variance_ }) =
       let (key, computed, comments) =
         match key with

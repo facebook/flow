@@ -203,7 +203,10 @@ module DocumentSymbols = struct
     match key with
     | Literal (_, { Ast.Literal.raw; _ }) -> Some raw
     | Identifier (_, { Ast.Identifier.name = id; comments = _ }) -> Some id
-    | PrivateName (_, (_, { Ast.Identifier.name = id; comments = _ })) -> Some id
+    | PrivateName
+        (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = _ }); comments = _ })
+      ->
+      Some id
     | Computed (_, _) -> None
 
   let name_of_id ((_, { Ast.Identifier.name; comments = _ }) : (Loc.t, Loc.t) Ast.Identifier.t) :
@@ -262,7 +265,12 @@ module DocumentSymbols = struct
     | Body.Property (loc, { Property.key; _ }) ->
       ast_key ~uri ~containerName ~acc ~loc ~key ~kind:Lsp.SymbolInformation.Property
     | Body.PrivateField
-        (loc, { PrivateField.key = (_, (_, { Ast.Identifier.name; comments = _ })); _ }) ->
+        ( loc,
+          {
+            PrivateField.key =
+              (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments = _ });
+            _;
+          } ) ->
       ast_name ~uri ~containerName ~acc ~loc ~name ~kind:Lsp.SymbolInformation.Field
 
   let ast_class

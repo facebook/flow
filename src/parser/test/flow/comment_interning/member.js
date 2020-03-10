@@ -11,3 +11,10 @@ function dynamicMemberExpression() {
 
   /* 4.1 L member */ (/* 4.2 L id */ x[y] /* 4.3 T member */) /* 4.4 T member */;
 }
+
+class PrivateMemberExpression {
+  /* 5.1 L private */ #z /* 5.2 T id */;
+  constructor() {
+    /* 6.1 L this */ this /* 6.2 T this */ . /* 6.3 L private */ #z /* 6.4 T id */;
+  }
+}

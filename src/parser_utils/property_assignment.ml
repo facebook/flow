@@ -22,7 +22,10 @@ let public_property loc ident =
   (loc, { r with Ast.Identifier.name = "this." ^ name })
 
 let private_property loc ident =
-  let (_, (_, ({ Ast.Identifier.name; comments = _ } as r))) = ident in
+  let (_, { Ast.PrivateName.id = (_, ({ Ast.Identifier.name; comments = _ } as r)); comments = _ })
+      =
+    ident
+  in
   (loc, { r with Ast.Identifier.name = "this.#" ^ name })
 
 let not_definitively_initialized (write_locs : Ssa_api.With_ALoc.write_locs) : bool =

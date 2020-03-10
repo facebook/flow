@@ -33,7 +33,13 @@ end =
   Identifier
 
 and PrivateName : sig
-  type 'M t = 'M * ('M, 'M) Identifier.t [@@deriving show]
+  type 'M t = 'M * 'M t'
+
+  and 'M t' = {
+    id: ('M, 'M) Identifier.t;
+    comments: ('M, unit) Syntax.t option;
+  }
+  [@@deriving show]
 end =
   PrivateName
 

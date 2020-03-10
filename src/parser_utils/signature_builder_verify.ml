@@ -701,13 +701,15 @@ module Eval (Env : EvalEnv) = struct
           match key with
           | Literal (_, lit) -> EASort.Literal (Reason.code_desc_of_literal lit)
           | Identifier (_, { Ast.Identifier.name; _ }) -> EASort.Identifier name
-          | PrivateName (_, (_, { Ast.Identifier.name; _ })) -> EASort.PrivateName name
+          | PrivateName (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; _ }); comments = _ })
+            ->
+            EASort.PrivateName name
           | Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
             EASort.Computed (Reason.code_desc_of_expression ~wrap:false expression)
         in
         annotated_type ~sort:(EASort.Property { name }) tps loc annot
       | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
-        let (_, (_, { Ast.Identifier.name; _ })) = key in
+        let (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; _ }); comments = _ }) = key in
         annotated_type ~sort:(EASort.PrivateField { name }) tps loc annot
     in
     fun tparams body super super_targs implements ->

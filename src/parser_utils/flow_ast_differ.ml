@@ -1414,9 +1414,9 @@ let program
     match (prop1, prop2) with
     | (PropertyExpression exp1, PropertyExpression exp2) ->
       Some (diff_if_changed expression exp1 exp2)
-    | (PropertyIdentifier id1, PropertyIdentifier id2)
-    | (PropertyPrivateName (_, id1), PropertyPrivateName (_, id2)) ->
-      Some (diff_if_changed identifier id1 id2)
+    | (PropertyIdentifier id1, PropertyIdentifier id2) -> Some (diff_if_changed identifier id1 id2)
+    | (PropertyPrivateName (loc, n1), PropertyPrivateName (_, n2)) ->
+      diff_if_changed_ret_opt (private_name loc) n1 n2
     | (_, _) -> None
   and call
       (loc : Loc.t)
@@ -2162,5 +2162,14 @@ let program
     let expression_diff = Some (diff_if_changed expression expression1 expression2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [expression_diff; comments_diff]
+  and private_name
+      (loc : Loc.t) (name1 : Loc.t Ast.PrivateName.t') (name2 : Loc.t Ast.PrivateName.t') :
+      node change list option =
+    let open Ast.PrivateName in
+    let { id = id1; comments = comments1 } = name1 in
+    let { id = id2; comments = comments2 } = name2 in
+    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [id_diff; comments_diff]
   in
   program' program1 program2 |> List.sort change_compare

@@ -18,7 +18,8 @@ module type EXPRESSION = sig
 
   val conditional : env -> (Loc.t, Loc.t) Expression.t
 
-  val property_name_include_private : env -> Loc.t * (Loc.t, Loc.t) Identifier.t * bool
+  val property_name_include_private :
+    env -> Loc.t * (Loc.t, Loc.t) Identifier.t * bool * Loc.t Comment.t list
 
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
 
@@ -886,13 +887,14 @@ module Expression
         env
         start_loc
         left =
-      let (id_loc, id, is_private) = property_name_include_private env in
+      let (id_loc, id, is_private, leading) = property_name_include_private env in
       if is_private then add_used_private env (Flow_ast_utils.name_of_ident id) id_loc;
       let loc = Loc.btwn start_loc id_loc in
       let open Expression.Member in
       let property =
         if is_private then
-          PropertyPrivateName (id_loc, id)
+          PropertyPrivateName
+            (id_loc, { PrivateName.id; comments = Flow_ast_utils.mk_comments_opt ~leading () })
         else
           PropertyIdentifier id
       in
@@ -1533,15 +1535,22 @@ module Expression
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in
-    let (loc, (is_private, id)) =
+    let (loc, (is_private, id, leading)) =
       with_loc
         (fun env ->
-          let is_private = Expect.maybe env T_POUND in
+          let (is_private, leading) =
+            match Peek.token env with
+            | T_POUND ->
+              let leading = Peek.comments env in
+              Eat.token env;
+              (true, leading)
+            | _ -> (false, [])
+          in
           let id = identifier_name env in
-          (is_private, id))
+          (is_private, id, leading))
         env
     in
     if is_private && start_loc.Loc._end <> (fst id).Loc.start then
       error_at env (loc, Parse_error.WhitespaceInPrivateName);
-    (loc, id, is_private)
+    (loc, id, is_private, leading)
 end

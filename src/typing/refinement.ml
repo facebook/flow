@@ -51,7 +51,8 @@ and key_of_member ~allow_optional { Ast.Expression.Member._object; property; _ }
     (match key ~allow_optional _object with
     | Some (base, chain) -> Some (base, Key.Prop name :: chain)
     | None -> None)
-  | PropertyPrivateName (_, (_, { Ast.Identifier.name; comments = _ })) ->
+  | PropertyPrivateName
+      (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments = _ }) ->
     (match key ~allow_optional _object with
     | Some (base, chain) -> Some (base, Key.PrivateField name :: chain)
     | None -> None)

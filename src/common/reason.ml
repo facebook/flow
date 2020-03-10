@@ -1216,7 +1216,8 @@ and code_desc_of_property ~optional property =
     else
       "." )
     ^ x
-  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name = x; comments = _ })) ->
+  | Ast.Expression.Member.PropertyPrivateName
+      (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name = x; comments = _ }); comments = _ }) ->
     ( if optional then
       "?.#"
     else

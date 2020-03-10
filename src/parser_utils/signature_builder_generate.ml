@@ -245,7 +245,7 @@ module T = struct
       match object_key with
       | Literal (_, x) -> `Literal x
       | Identifier (_, x) -> `Identifier x
-      | PrivateName (_, (_, x)) -> `PrivateName x
+      | PrivateName (_, x) -> `PrivateName x
       | _ -> assert false
     in
     let object_key loc abs_object_key =
@@ -253,7 +253,7 @@ module T = struct
       match abs_object_key with
       | `Literal x -> Literal (loc, x)
       | `Identifier x -> Identifier (loc, x)
-      | `PrivateName x -> PrivateName (loc, (loc, x))
+      | `PrivateName x -> PrivateName (loc, x)
     in
     let compare_object_property =
       let abs_object_key = function
@@ -1228,7 +1228,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     let name_opt =
       match property with
       | PropertyIdentifier (loc, x) -> Some (loc, x)
-      | PropertyPrivateName (_, (loc, x)) -> Some (loc, x)
+      | PropertyPrivateName (_, { Ast.PrivateName.id = (loc, x); comments = _ }) -> Some (loc, x)
       | PropertyExpression _ -> None
     in
     match (ref_expr_opt, name_opt) with
@@ -1434,7 +1434,12 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       | Body.PrivateField
           ( elem_loc,
             {
-              PrivateField.key = (_, (_, { Ast.Identifier.name = x; comments = _ }));
+              PrivateField.key =
+                ( _,
+                  {
+                    Ast.PrivateName.id = (_, { Ast.Identifier.name = x; comments = _ });
+                    comments = _;
+                  } );
               annot;
               static;
               variance;

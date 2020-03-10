@@ -4594,8 +4594,10 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           {
             Member._object;
             property =
-              Member.PropertyPrivateName (ploc, (_, { Ast.Identifier.name; comments = _ })) as
-              property;
+              Member.PropertyPrivateName
+                ( ploc,
+                  { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments = _ }
+                ) as property;
             comments;
           },
         _ ) ->
@@ -4650,7 +4652,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             property,
             argument_asts ) =
         match property with
-        | Member.PropertyPrivateName (prop_loc, (_, ({ Ast.Identifier.name; comments = _ } as id)))
+        | Member.PropertyPrivateName
+            ( prop_loc,
+              {
+                Ast.PrivateName.id = (_, ({ Ast.Identifier.name; comments = _ } as id));
+                comments = _;
+              } )
         | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
           let reason_call = mk_reason (RMethodCall (Some name)) loc in
           let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
@@ -4730,8 +4737,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let prop_ast =
             match property with
             | Member.PropertyExpression _ -> Utils_js.assert_false "unexpected property expression"
-            | Member.PropertyPrivateName (_, (name_loc, _)) ->
-              Member.PropertyPrivateName (prop_loc, (name_loc, id))
+            | Member.PropertyPrivateName (_, { Ast.PrivateName.id = (name_loc, _); comments }) ->
+              Member.PropertyPrivateName
+                (prop_loc, { Ast.PrivateName.id = (name_loc, id); comments })
             | Member.PropertyIdentifier _ -> Member.PropertyIdentifier ((prop_loc, prop_t), id)
           in
           ( filtered_out,
@@ -5474,7 +5482,9 @@ and assign_member
   | {
    Member._object;
    property =
-     Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
+     Member.PropertyPrivateName
+       (prop_loc, { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments = _ })
+     as property;
    comments;
   } ->
     let lhs_reason = mk_expression_reason _object in
@@ -7537,7 +7547,12 @@ and mk_class_sig =
             | Body.PrivateField
                 ( loc,
                   {
-                    PrivateField.key = (_, (id_loc, { Ast.Identifier.name; comments = _ })) as key;
+                    PrivateField.key =
+                      ( _,
+                        {
+                          Ast.PrivateName.id = (id_loc, { Ast.Identifier.name; comments = _ });
+                          comments = _;
+                        } ) as key;
                     annot;
                     value;
                     static;
