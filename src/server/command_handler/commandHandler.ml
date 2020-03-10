@@ -1860,22 +1860,23 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env
   Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_execute_command ~id ~params ~metadata ~client:_ ~profiling:_ =
-  match params with
-  | ExecuteCommand.{ command = "log"; arguments = Some [data] } ->
+  let ExecuteCommand.{ command = Command.Command command; arguments } = params in
+  let extra_data =
+    let open Hh_json in
+    let arguments_json =
+      match arguments with
+      | None -> JSON_Null
+      | Some jsons -> JSON_Array jsons
+    in
+    Some (JSON_Object [("command", JSON_String command); ("arguments", arguments_json)])
+  in
+  match command with
+  | "log" ->
     Lwt.return
       ( (),
         LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))),
-        with_data ~extra_data:(Some data) metadata )
-  | ExecuteCommand.{ command; arguments } ->
-    let extra_data =
-      let open Hh_json in
-      let arguments_json =
-        match arguments with
-        | None -> JSON_Null
-        | Some jsons -> JSON_Array jsons
-      in
-      Some (JSON_Object [("command", JSON_String command); ("arguments", arguments_json)])
-    in
+        with_data ~extra_data metadata )
+  | _ ->
     mk_lsp_error_response
       ~ret:()
       ~id:(Some id)
