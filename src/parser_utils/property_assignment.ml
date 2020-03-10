@@ -101,6 +101,7 @@ class property_assignment (property_names : SSet.t) =
        property =
          (Ast.Expression.Member.PropertyIdentifier _ | Ast.Expression.Member.PropertyPrivateName _)
          as property;
+       comments = _;
       } ->
         let property_name : string =
           Flow_ast_utils.name_of_ident
@@ -129,6 +130,7 @@ class property_assignment (property_names : SSet.t) =
                     property =
                       ( Ast.Expression.Member.PropertyIdentifier _
                       | Ast.Expression.Member.PropertyPrivateName _ ) as property;
+                    comments = _;
                   } as left_member ) ) ) ->
         (match operator with
         | None ->
@@ -180,6 +182,7 @@ class property_assignment (property_names : SSet.t) =
               property =
                 ( Ast.Expression.Member.PropertyIdentifier _
                 | Ast.Expression.Member.PropertyPrivateName _ ) as property;
+              comments = _;
             } ) ->
         let name =
           Flow_ast_utils.name_of_ident

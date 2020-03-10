@@ -415,6 +415,7 @@ module Eval (Env : EvalEnv) = struct
                     property =
                       Ast.Expression.Member.PropertyIdentifier
                         (_, { Ast.Identifier.name = "freeze"; comments = _ });
+                    comments = _;
                   } );
             targs = None;
             arguments = (_, [Expression ((_, Object _) as expr)]);

@@ -845,9 +845,15 @@ module Expression
       let expr = Parse.expression (env |> with_no_call false) in
       let last_loc = Peek.loc env in
       Expect.token env T_RBRACKET;
+      let trailing = Peek.comments env in
       let loc = Loc.btwn start_loc last_loc in
       let member =
-        Expression.Member.{ _object = as_expression env left; property = PropertyExpression expr }
+        Expression.Member.
+          {
+            _object = as_expression env left;
+            property = PropertyExpression expr;
+            comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+          }
       in
       let member =
         if in_optional_chain then
@@ -882,7 +888,9 @@ module Expression
           error_at env (loc, Parse_error.SuperPrivate)
         | _ -> ()
       end;
-      let member = Expression.Member.{ _object = as_expression env left; property } in
+      let member =
+        Expression.Member.{ _object = as_expression env left; property; comments = None }
+      in
       let member =
         if in_optional_chain then
           let open Expression in
@@ -1246,6 +1254,8 @@ module Expression
         Literal { e with Literal.comments = merge_comments comments }
       | Logical ({ Logical.comments; _ } as e) ->
         Logical { e with Logical.comments = merge_comments comments }
+      | Member ({ Member.comments; _ } as e) ->
+        Member { e with Member.comments = merge_comments comments }
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }
@@ -1254,6 +1264,13 @@ module Expression
           {
             optional_call with
             OptionalCall.call = { call with Call.comments = merge_comments comments };
+          }
+      | OptionalMember
+          ({ OptionalMember.member = { Member.comments; _ } as member; _ } as optional_member) ->
+        OptionalMember
+          {
+            optional_member with
+            OptionalMember.member = { member with Member.comments = merge_comments comments };
           }
       | Sequence ({ Sequence.comments; _ } as e) ->
         Sequence { e with Sequence.comments = merge_comments comments }

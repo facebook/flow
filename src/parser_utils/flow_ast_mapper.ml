@@ -1357,13 +1357,14 @@ class ['loc] mapper =
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in
-      let { _object; property } = expr in
+      let { _object; property; comments } = expr in
       let _object' = this#expression _object in
       let property' = this#member_property property in
-      if _object == _object' && property == property' then
+      let comments' = this#syntax_opt comments in
+      if _object == _object' && property == property' && comments == comments' then
         expr
       else
-        { _object = _object'; property = property' }
+        { _object = _object'; property = property'; comments = comments' }
 
     method optional_member loc (expr : ('loc, 'loc) Ast.Expression.OptionalMember.t) =
       let open Ast.Expression.OptionalMember in

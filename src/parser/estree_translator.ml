@@ -542,9 +542,12 @@ with type t = Impl.t = struct
           "OptionalCallExpression"
           loc
           (call_node_properties call @ [("optional", bool optional)])
-      | (loc, Member member) -> node "MemberExpression" loc (member_node_properties member)
-      | (loc, OptionalMember { OptionalMember.member; optional }) ->
+      | (loc, Member ({ Member.comments; _ } as member)) ->
+        node ?comments "MemberExpression" loc (member_node_properties member)
+      | (loc, OptionalMember { OptionalMember.member = { Member.comments; _ } as member; optional })
+        ->
         node
+          ?comments
           "OptionalMemberExpression"
           loc
           (member_node_properties member @ [("optional", bool optional)])
@@ -1614,7 +1617,7 @@ with type t = Impl.t = struct
         ("typeArguments", option call_type_args targs);
         ("arguments", arg_list arguments);
       ]
-    and member_node_properties { Expression.Member._object; property } =
+    and member_node_properties { Expression.Member._object; property; comments = _ } =
       let (property, computed) =
         match property with
         | Expression.Member.PropertyIdentifier id -> (identifier id, false)

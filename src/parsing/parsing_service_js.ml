@@ -149,6 +149,7 @@ let parse_json_file ~fail content file =
             (loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module")));
           property =
             Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
   in
   let loc = fst expr in

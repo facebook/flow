@@ -1282,6 +1282,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                               {
                                 _object;
                                 property = PropertyIdentifier (_, { Ast.Identifier.name; _ });
+                                comments = _;
                               } );
                     _;
                   } ) ->
@@ -3865,6 +3866,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   property =
                     Member.PropertyIdentifier
                       (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                  comments = member_comments;
                 } ) as expr;
           targs;
           arguments;
@@ -3885,6 +3887,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                       {
                         Member._object = obj_ast;
                         property = Member.PropertyIdentifier ((prop_loc, t), id);
+                        comments = member_comments;
                       } );
                 targs;
                 arguments;
@@ -3901,6 +3904,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   Member._object = (super_loc, Super super);
                   property =
                     Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+                  comments = member_comments;
                 } ) as callee;
           targs;
           arguments;
@@ -3949,6 +3953,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                       {
                         Member._object = ((super_loc, super_t), Super super);
                         property = Member.PropertyIdentifier ((ploc, prop_t), id);
+                        comments = member_comments;
                       } );
                 targs;
                 arguments = arguments_ast;
@@ -4081,6 +4086,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           property =
             Member.PropertyIdentifier
               (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
+          comments;
         }
       when not (Env.local_scope_entry_exists "module") ->
       let lhs_t = Import_export.get_module_exports cx loc in
@@ -4092,8 +4098,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       Some
         ( ( (loc, lhs_t),
             member_ast
-              { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
-          ),
+              {
+                Member._object;
+                property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
+                comments;
+              } ),
           None,
           None )
     | Member
@@ -4106,6 +4115,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           property =
             Member.PropertyIdentifier
               (ploc, ({ Ast.Identifier.name = "Mixin"; comments = _ } as name));
+          comments;
         } ->
       let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
       let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
@@ -4115,13 +4125,18 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             let t = AnyT.at Untyped object_loc in
             let property = Member.PropertyIdentifier ((ploc, t), name) in
             member_ast
-              { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } ),
+              {
+                Member._object = ((object_loc, t), Identifier ((id_loc, t), name));
+                property;
+                comments;
+              } ),
           None,
           None )
     | Member
         {
           Member._object = (super_loc, Super super);
           property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+          comments;
         } ->
       let super_t = super_ cx super_loc in
       let expr_reason = mk_reason (RProperty (Some name)) loc in
@@ -4138,7 +4153,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       in
       let property = Member.PropertyIdentifier ((ploc, super_t), id) in
       let ast =
-        ((loc, lhs_t), member_ast { Member._object = ((super_loc, super_t), Super super); property })
+        ( (loc, lhs_t),
+          member_ast { Member._object = ((super_loc, super_t), Super super); property; comments } )
       in
       (* Even though there's no optional chaining for Super member accesses, we
          can still get predicates *)
@@ -4449,7 +4465,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     in
     (match (e', method_receiver_and_state) with
     (* e1[e2] *)
-    | (Member { Member._object; property = Member.PropertyExpression index }, _) ->
+    | (Member { Member._object; property = Member.PropertyExpression index; comments }, _) ->
       let reason = mk_reason (RProperty None) loc in
       let use_op = Op (GetProperty (mk_expression_reason ex)) in
       let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
@@ -4484,7 +4500,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       ( filtered_out,
         voided_out,
         ( (loc, lhs_t),
-          member_ast { Member._object = object_ast; property = Member.PropertyExpression index } ),
+          member_ast
+            { Member._object = object_ast; property = Member.PropertyExpression index; comments } ),
         preds,
         sentinel_refinement )
     (* e.l *)
@@ -4493,6 +4510,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             Member._object;
             property =
               Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+            comments;
           },
         _ ) ->
       let expr_reason = mk_expression_reason ex in
@@ -4533,7 +4551,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
       ( filtered_out,
         voided_out,
-        ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
+        ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
         preds,
         sentinel_refinement )
     (* e.#l *)
@@ -4543,6 +4561,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             property =
               Member.PropertyPrivateName (ploc, (_, { Ast.Identifier.name; comments = _ })) as
               property;
+            comments;
           },
         _ ) ->
       let expr_reason = mk_reason (RPrivateProperty name) loc in
@@ -4576,12 +4595,15 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let preds = combine_preds preds new_pred_list in
       ( filtered_out,
         voided_out,
-        ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
+        ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
         preds,
         None )
     (* Method calls: e.l(), e.#l(), and e1[e2]() *)
     | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
-        Some (member_opt, ({ Member._object; property } as receiver), receiver_ast) ) ->
+        Some
+          ( member_opt,
+            ({ Member._object; property; comments = member_comments } as receiver),
+            receiver_ast ) ) ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let expr_reason = mk_expression_reason ex in
       let ( filtered_out,
@@ -4757,7 +4779,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           call_ast
             {
               Call.callee =
-                ((lookup_loc, prop_t), receiver_ast { Member._object = object_ast; property });
+                ( (lookup_loc, prop_t),
+                  receiver_ast { Member._object = object_ast; property; comments = member_comments }
+                );
               targs;
               arguments = argument_asts;
               comments;
@@ -5382,6 +5406,7 @@ and assign_member
          (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name)) );
    property =
      Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
+   comments;
   }
     when not (Env.local_scope_entry_exists "module") ->
     Import_export.cjs_clobber cx lhs_loc t;
@@ -5391,11 +5416,12 @@ and assign_member
       ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), mod_name))
     in
     let property = Member.PropertyIdentifier ((ploc, t), name) in
-    ((lhs_loc, t), reconstruct_ast { Member._object; property })
+    ((lhs_loc, t), reconstruct_ast { Member._object; property; comments })
   (* super.name = e *)
   | {
    Member._object = (super_loc, Super super);
    property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
+   comments;
   } ->
     let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
     let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
@@ -5407,12 +5433,14 @@ and assign_member
       (super_t, SetPropT (use_op, reason, Named (prop_reason, name), mode, Normal, t, Some prop_t));
     let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
     ( (lhs_loc, prop_t),
-      reconstruct_ast { Member._object = ((super_loc, super_t), Super super); property } )
+      reconstruct_ast { Member._object = ((super_loc, super_t), Super super); property; comments }
+    )
   (* _object.#name = e *)
   | {
    Member._object;
    property =
      Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
+   comments;
   } ->
     let lhs_reason = mk_expression_reason _object in
     let (o, _object, _) = typecheck_object _object in
@@ -5438,11 +5466,12 @@ and assign_member
         post_assignment_havoc ~private_:true name (lhs_loc, lhs_expr) prop_t t;
         prop_t
     in
-    ((lhs_loc, prop_t), reconstruct_ast { Member._object; property })
+    ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments })
   (* _object.name = e *)
   | {
    Member._object;
    property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
+   comments;
   } ->
     let wr_ctx =
       match (_object, Env.var_scope_kind ()) with
@@ -5473,9 +5502,9 @@ and assign_member
         prop_t
     in
     let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
-    ((lhs_loc, prop_t), reconstruct_ast { Member._object; property })
+    ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments })
   (* _object[index] = e *)
-  | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
+  | { Member._object; property = Member.PropertyExpression ((iloc, _) as index); comments } ->
     let reason = mk_reason (RPropertyAssignment None) lhs_loc in
     let lhs_reason = mk_expression_reason _object in
     let (o, _object, preds) = typecheck_object _object in
@@ -5493,7 +5522,8 @@ and assign_member
          in pre-havoc environment. it's the assignment itself
          which clears refis *)
     Env.havoc_heap_refinements ();
-    ((lhs_loc, t), reconstruct_ast { Member._object; property = Member.PropertyExpression index })
+    ( (lhs_loc, t),
+      reconstruct_ast { Member._object; property = Member.PropertyExpression index; comments } )
 
 (* traverse simple assignment expressions (`lhs = rhs`) *)
 and simple_assignment cx _loc lhs rhs =
@@ -6163,7 +6193,13 @@ and jsx_title_member_to_expression member =
     (loc, mk_ident ~comments:None name)
   in
   Ast.Expression.Member.
-    (mloc, Ast.Expression.Member { _object; property = PropertyIdentifier property })
+    ( mloc,
+      Ast.Expression.Member
+        {
+          _object;
+          property = PropertyIdentifier property;
+          comments = Flow_ast_utils.mk_comments_opt ();
+        } )
 
 (* reverses jsx_title_member_to_expression *)
 and expression_to_jsx_title_member loc member =
@@ -6173,6 +6209,7 @@ and expression_to_jsx_title_member loc member =
         {
           _object = ((mloc, _), obj_expr);
           property = PropertyIdentifier (pannot, { Ast.Identifier.name; comments = _ });
+          comments = _;
         }) ->
     let _object =
       match obj_expr with
@@ -6287,6 +6324,7 @@ and predicates_of_condition cx ~cond e =
                     ( _,
                       Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String prop_name; _ }
                     ) );
+              comments = _;
             } ) ) ->
       let sentinel_refine obj_t =
         (* Generate a refinement on the object that contains a sentinel property.
@@ -6806,6 +6844,7 @@ and predicates_of_condition cx ~cond e =
                   property =
                     Member.PropertyIdentifier
                       (prop_loc, ({ Ast.Identifier.name = "isArray"; comments = _ } as id));
+                  comments = member_comments;
                 } );
           targs;
           arguments = (args_loc, [Expression arg]);
@@ -6841,7 +6880,8 @@ and predicates_of_condition cx ~cond e =
       ( ( (loc, bool),
           Call
             {
-              Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
+              Call.callee =
+                ((callee_loc, fn_t), Member { Member._object; property; comments = member_comments });
               targs = None;
               arguments = (args_loc, [Expression arg]);
               comments;

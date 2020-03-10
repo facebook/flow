@@ -113,7 +113,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
 
     method! member expr =
       let open Flow_ast.Expression.Member in
-      let { _object; property } = expr in
+      let { _object; property; comments = _ } = expr in
       begin
         match property with
         | PropertyIdentifier ((loc, _), { Flow_ast.Identifier.name; _ }) when this#covers_target loc

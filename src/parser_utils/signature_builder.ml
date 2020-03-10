@@ -460,6 +460,7 @@ class type_hoister =
                                              Ast.Expression.Identifier
                                                (_, { Ast.Identifier.name = x; _ }) );
                                          property = Ast.Expression.Member.PropertyIdentifier id;
+                                         comments = _;
                                        } ) );
                              right = expr;
                              comments = _;

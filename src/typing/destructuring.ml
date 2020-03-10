@@ -80,6 +80,7 @@ let array_element cx acc i loc =
                           raw = string_of_int i;
                           comments = Flow_ast_utils.mk_comments_opt ();
                         } );
+                comments = Flow_ast_utils.mk_comments_opt ();
               } ))
   in
   let refinement =
@@ -112,6 +113,7 @@ let object_named_property ~has_default cx acc loc x comments =
               {
                 _object = init;
                 property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
+                comments = Flow_ast_utils.mk_comments_opt ();
               } ))
   in
   let refinement =
@@ -154,7 +156,15 @@ let object_computed_property cx ~expr acc e =
   let reason = mk_reason (RProperty None) loc in
   let init =
     Base.Option.map init (fun init ->
-        (loc, Ast.Expression.(Member Member.{ _object = init; property = PropertyExpression e })))
+        ( loc,
+          Ast.Expression.(
+            Member
+              Member.
+                {
+                  _object = init;
+                  property = PropertyExpression e;
+                  comments = Flow_ast_utils.mk_comments_opt ();
+                }) ))
   in
   let refinement =
     Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)

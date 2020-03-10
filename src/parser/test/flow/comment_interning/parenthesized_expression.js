@@ -20,11 +20,15 @@ function foo() {}
 
 /* Leading logical */ (false || true) /* Trailing logical */;
 
+/* Leading member */ (i.isNaN) /* Trailing member */;
+
 /* Leading new */ (new C()) /* Trailing new */;
 
 /* Leading object */ ({}) /* Trailing object */;
 
 /* Leading optional call */ (i?.isNaN()) /* Trailing optional call */;
+
+/* Leading optional member */ (i?.isNaN) /* Trailing optional member */;
 
 /* Leading template literal */ (`template`) /* Trailing template literal */;
 

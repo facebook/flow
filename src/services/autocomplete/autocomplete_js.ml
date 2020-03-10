@@ -113,7 +113,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! member expr =
       let open Flow_ast.Expression.Member in
-      let { _object = ((_, obj_type), _); property } = expr in
+      let { _object = ((_, obj_type), _); property; comments = _ } = expr in
       begin
         match property with
         | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
@@ -126,7 +126,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! optional_member expr =
       let open Flow_ast.Expression.OptionalMember in
       let open Flow_ast.Expression.Member in
-      let { member = { _object = ((_, obj_type), _) as obj; property }; optional } = expr in
+      let { member = { _object = ((_, obj_type), _) as obj; property; comments }; optional } =
+        expr
+      in
       begin
         match property with
         | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
@@ -136,7 +138,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       end;
       (* the reason we don't simply call `super#optional_member` is because that would
        * call `this#member`, which would be redundant *)
-      { member = { _object = this#expression obj; property }; optional }
+      { member = { _object = this#expression obj; property; comments }; optional }
 
     method! pattern ?kind pat =
       let open Flow_ast.Pattern in

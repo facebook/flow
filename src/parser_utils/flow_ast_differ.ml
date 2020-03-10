@@ -982,7 +982,7 @@ let program
         identifier id1 id2 |> Base.Option.return
       | ((_, Conditional c1), (_, Conditional c2)) -> conditional c1 c2 |> Base.Option.return
       | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
-      | ((_, Member member1), (_, Member member2)) -> member member1 member2
+      | ((loc, Member member1), (_, Member member2)) -> member loc member1 member2
       | ((loc, Call call1), (_, Call call2)) -> call loc call1 call2
       | ((_, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true f1 f2
       | ((_, Function f1), (_, Function f2)) -> function_ f1 f2
@@ -1342,14 +1342,16 @@ let program
     let callee = Some (diff_if_changed expression callee1 callee2) in
     join_diff_list [comments; targs; args; callee]
   and member
+      (loc : Loc.t)
       (member1 : (Loc.t, Loc.t) Ast.Expression.Member.t)
       (member2 : (Loc.t, Loc.t) Ast.Expression.Member.t) : node change list option =
     let open Ast.Expression.Member in
-    let { _object = obj1; property = prop1 } = member1 in
-    let { _object = obj2; property = prop2 } = member2 in
+    let { _object = obj1; property = prop1; comments = comments1 } = member1 in
+    let { _object = obj2; property = prop2; comments = comments2 } = member2 in
     let obj = Some (diff_if_changed expression obj1 obj2) in
     let prop = diff_if_changed_ret_opt member_property prop1 prop2 in
-    join_diff_list [obj; prop]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [obj; prop; comments]
   and member_property
       (prop1 : (Loc.t, Loc.t) Ast.Expression.Member.property)
       (prop2 : (Loc.t, Loc.t) Ast.Expression.Member.property) : node change list option =

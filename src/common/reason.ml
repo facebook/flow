@@ -1001,7 +1001,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | Ast.Expression.Literal x -> code_desc_of_literal x
   | Logical { Logical.operator; left; right; comments = _ } ->
     do_wrap (code_desc_of_operation left (`Logical operator) right)
-  | Member { Member._object; property } ->
+  | Member { Member._object; property; comments = _ } ->
     let o = code_desc_of_expression ~wrap:true _object in
     let p = code_desc_of_property ~optional:false property in
     o ^ p
@@ -1046,7 +1046,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
         "" )
     ^ targ_string
     ^ arg_string
-  | OptionalMember { OptionalMember.member = { Member._object; property }; optional } ->
+  | OptionalMember { OptionalMember.member = { Member._object; property; comments = _ }; optional }
+    ->
     let o = code_desc_of_expression ~wrap:true _object in
     let p = code_desc_of_property ~optional property in
     o ^ p
@@ -1238,7 +1239,7 @@ let rec mk_expression_reason =
     mk_reason (RStringLit "") loc
   | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
   | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
-  | (loc, Member { Member._object; property }) ->
+  | (loc, Member { Member._object; property; comments = _ }) ->
     mk_reason
       (RMember
          {

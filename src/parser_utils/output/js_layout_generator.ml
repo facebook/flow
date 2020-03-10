@@ -901,9 +901,9 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
          new line and indented by 2 spaces *)
         layout_node_with_comments_opt loc comments
         @@ Group [left; pretty_space; operator; Indent (fuse [pretty_line; right])]
-      | E.Member m -> member ~precedence ~ctxt m
+      | E.Member m -> member ~precedence ~ctxt m loc
       | E.OptionalMember { E.OptionalMember.member = m; optional } ->
-        member ~optional ~precedence ~ctxt m
+        member ~optional ~precedence ~ctxt m loc
       | E.New { E.New.callee; targs; arguments; comments } ->
         let callee_layout =
           if definitely_needs_parens ~precedence ctxt callee || contains_call_expression callee then
@@ -1104,8 +1104,8 @@ and literal { Ast.Literal.raw; value; comments = _ (* handled by caller *) } =
 
 and string_literal_type { Ast.StringLiteral.raw; _ } = Atom raw
 
-and member ?(optional = false) ~precedence ~ctxt member_node =
-  let { Ast.Expression.Member._object; property } = member_node in
+and member ?(optional = false) ~precedence ~ctxt member_node loc =
+  let { Ast.Expression.Member._object; property; comments } = member_node in
   let computed =
     match property with
     | Ast.Expression.Member.PropertyExpression _ -> true
@@ -1120,32 +1120,35 @@ and member ?(optional = false) ~precedence ~ctxt member_node =
     | (true, false) -> (Atom "[", Atom "]")
     | (true, true) -> (Atom "?.[", Atom "]")
   in
-  fuse
-    [
-      begin
-        match _object with
-        | (_, Ast.Expression.Call _) -> expression ~ctxt _object
-        | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments })
-          when not computed ->
-          (* 1.foo would be confused with a decimal point, so it needs parens *)
-          source_location_with_comments
-            ?comments
-            (loc, number_literal ~in_member_object:true raw num)
-        | _ -> expression_with_parens ~precedence ~ctxt _object
-      end;
-      ldelim;
-      begin
-        match property with
-        | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name = id; comments = _ })
-          ->
-          source_location_with_comments (loc, Atom id)
-        | Ast.Expression.Member.PropertyPrivateName
-            (loc, (_, { Ast.Identifier.name = id; comments = _ })) ->
-          source_location_with_comments (loc, Atom ("#" ^ id))
-        | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt expr
-      end;
-      rdelim;
-    ]
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         begin
+           match _object with
+           | (_, Ast.Expression.Call _) -> expression ~ctxt _object
+           | ( loc,
+               Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments }
+             )
+             when not computed ->
+             (* 1.foo would be confused with a decimal point, so it needs parens *)
+             source_location_with_comments
+               ?comments
+               (loc, number_literal ~in_member_object:true raw num)
+           | _ -> expression_with_parens ~precedence ~ctxt _object
+         end;
+         ldelim;
+         begin
+           match property with
+           | Ast.Expression.Member.PropertyIdentifier
+               (loc, { Ast.Identifier.name = id; comments = _ }) ->
+             source_location_with_comments (loc, Atom id)
+           | Ast.Expression.Member.PropertyPrivateName
+               (loc, (_, { Ast.Identifier.name = id; comments = _ })) ->
+             source_location_with_comments (loc, Atom ("#" ^ id))
+           | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt expr
+         end;
+         rdelim;
+       ]
 
 and string_literal (loc, { Ast.StringLiteral.value; _ }) =
   let quote = better_quote value in

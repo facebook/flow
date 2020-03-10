@@ -417,15 +417,16 @@ module Expressions = struct
   let object_ ?comments ?(loc = Loc.none) properties = (loc, Object { Object.properties; comments })
 
   (* _object.property *)
-  let member ~property _object =
+  let member ?comments ~property _object =
     {
       Member._object;
       property = Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (Loc.none, property));
+      comments;
     }
 
   (* _object[property] *)
-  let member_computed ~property _object =
-    { Member._object; property = Member.PropertyExpression property }
+  let member_computed ?comments ~property _object =
+    { Member._object; property = Member.PropertyExpression property; comments }
 
   let member_expression expr = (Loc.none, Ast.Expression.Member expr)
 

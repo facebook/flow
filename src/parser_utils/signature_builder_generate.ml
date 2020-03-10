@@ -1118,6 +1118,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                     property =
                       Ast.Expression.Member.PropertyIdentifier
                         (_, { Ast.Identifier.name = "freeze"; comments = _ });
+                    comments = _;
                   } );
             targs = None;
             arguments = (_, [Expression (loc, Object stuff)]);
@@ -1217,7 +1218,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and member stuff =
     let open Ast.Expression.Member in
-    let { _object; property } = stuff in
+    let { _object; property; comments = _ } = stuff in
     let ref_expr_opt = ref_expr _object in
     let name_opt =
       match property with
