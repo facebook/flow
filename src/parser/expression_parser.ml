@@ -59,6 +59,7 @@ module Expression
           {
             MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
             property = (_, { Identifier.name = "target"; comments = _ });
+            comments = _;
           } ) ->
       false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
@@ -229,6 +230,7 @@ module Expression
           {
             MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
             property = (_, { Identifier.name = "target"; comments = _ });
+            comments = _;
           } ) ->
       false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
@@ -707,12 +709,17 @@ module Expression
         Expect.token env T_NEW;
 
         if in_function env && Peek.token env = T_PERIOD then (
+          let trailing = Peek.comments env in
           Eat.token env;
-          let meta = Flow_ast_utils.ident_of_source (start_loc, "new") in
+          let meta =
+            Flow_ast_utils.ident_of_source
+              (start_loc, "new")
+              ?comments:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
+          in
           match Peek.token env with
           | T_IDENTIFIER { raw = "target"; _ } ->
             let property = Parse.identifier env in
-            Expression.(MetaProperty MetaProperty.{ meta; property })
+            Expression.(MetaProperty MetaProperty.{ meta; property; comments = None })
           | _ ->
             error_unexpected ~expected:"the identifier `target`" env;
             Eat.token env;
@@ -1256,6 +1263,8 @@ module Expression
         Logical { e with Logical.comments = merge_comments comments }
       | Member ({ Member.comments; _ } as e) ->
         Member { e with Member.comments = merge_comments comments }
+      | MetaProperty ({ MetaProperty.comments; _ } as e) ->
+        MetaProperty { e with MetaProperty.comments = merge_comments comments }
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
         Object { e with Object.comments = merge_comments comments }

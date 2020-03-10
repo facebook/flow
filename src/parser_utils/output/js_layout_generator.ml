@@ -984,8 +984,9 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                | Some arg -> fuse [space; expression ~ctxt arg]
                | None -> Empty);
              ]
-      | E.MetaProperty { E.MetaProperty.meta; property } ->
-        fuse [identifier meta; Atom "."; identifier property]
+      | E.MetaProperty { E.MetaProperty.meta; property; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ fuse [identifier meta; Atom "."; identifier property]
       | E.TaggedTemplate { E.TaggedTemplate.tag; quasi = (template_loc, template); comments } ->
         let ctxt = { normal_context with left = In_tagged_template } in
         layout_node_with_comments_opt loc comments

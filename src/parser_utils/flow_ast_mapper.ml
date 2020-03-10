@@ -1392,8 +1392,16 @@ class ['loc] mapper =
 
     method member_property_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
 
-    (* TODO *)
-    method meta_property _loc (expr : 'loc Ast.Expression.MetaProperty.t) = expr
+    method meta_property _loc (expr : 'loc Ast.Expression.MetaProperty.t) =
+      let open Ast.Expression.MetaProperty in
+      let { meta; property; comments } = expr in
+      let meta' = this#identifier meta in
+      let property' = this#identifier property in
+      let comments' = this#syntax_opt comments in
+      if meta == meta' && property == property' && comments == comments' then
+        expr
+      else
+        { meta = meta'; property = property'; comments = comments' }
 
     method new_ _loc (expr : ('loc, 'loc) Ast.Expression.New.t) =
       let open Ast.Expression.New in

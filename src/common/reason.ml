@@ -1009,6 +1009,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
       {
         MetaProperty.meta = (_, { Ast.Identifier.name = o; comments = _ });
         property = (_, { Ast.Identifier.name = p; comments = _ });
+        comments = _;
       } ->
     o ^ "." ^ p
   | New { New.callee; targs; arguments; comments = _ } ->

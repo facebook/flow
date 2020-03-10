@@ -40,6 +40,10 @@ function foo() {}
 
 /* Leading update */ (i++) /* Trailing update */;
 
+function metaProperty() {
+    /* Leading meta property */ (new.target) /* Trailing meta property */;
+}
+
 function* generator() {
     /* Leading yield */ (yield 1) /* Trailing yield */
 }

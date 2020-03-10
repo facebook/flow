@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":45,"column":1}},
-  "range":[0,1246],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":49,"column":1}},
+  "range":[0,1350],
   "body":[
     {
       "type":"VariableDeclaration",
@@ -801,11 +801,81 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":45,"column":1}},
-      "range":[1166,1246],
+      "range":[1166,1268],
       "id":{
         "type":"Identifier",
-        "loc":{"source":null,"start":{"line":43,"column":10},"end":{"line":43,"column":19}},
-        "range":[1176,1185],
+        "loc":{"source":null,"start":{"line":43,"column":9},"end":{"line":43,"column":21}},
+        "range":[1175,1187],
+        "name":"metaProperty",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":43,"column":24},"end":{"line":45,"column":1}},
+        "range":[1190,1268],
+        "body":[
+          {
+            "type":"ExpressionStatement",
+            "loc":{"source":null,"start":{"line":44,"column":32},"end":{"line":44,"column":74}},
+            "range":[1224,1266],
+            "expression":{
+              "type":"MetaProperty",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":44,"column":45},"end":{"line":44,"column":73}},
+                  "range":[1237,1265],
+                  "value":" Trailing meta property "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":44,"column":4},"end":{"line":44,"column":31}},
+                  "range":[1196,1223],
+                  "value":" Leading meta property "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":44,"column":33},"end":{"line":44,"column":43}},
+              "range":[1225,1235],
+              "meta":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":44,"column":33},"end":{"line":44,"column":36}},
+                "range":[1225,1228],
+                "name":"new",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "property":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":44,"column":37},"end":{"line":44,"column":43}},
+                "range":[1229,1235],
+                "name":"target",
+                "typeAnnotation":null,
+                "optional":false
+              }
+            },
+            "directive":null
+          }
+        ]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":47,"column":0},"end":{"line":49,"column":1}},
+      "range":[1270,1350],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":47,"column":10},"end":{"line":47,"column":19}},
+        "range":[1280,1289],
         "name":"generator",
         "typeAnnotation":null,
         "optional":false
@@ -813,37 +883,37 @@
       "params":[],
       "body":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":43,"column":22},"end":{"line":45,"column":1}},
-        "range":[1188,1246],
+        "loc":{"source":null,"start":{"line":47,"column":22},"end":{"line":49,"column":1}},
+        "range":[1292,1350],
         "body":[
           {
             "type":"ExpressionStatement",
-            "loc":{"source":null,"start":{"line":44,"column":24},"end":{"line":44,"column":33}},
-            "range":[1214,1223],
+            "loc":{"source":null,"start":{"line":48,"column":24},"end":{"line":48,"column":33}},
+            "range":[1318,1327],
             "expression":{
               "type":"YieldExpression",
               "trailingComments":[
                 {
                   "type":"Block",
-                  "loc":{"source":null,"start":{"line":44,"column":34},"end":{"line":44,"column":54}},
-                  "range":[1224,1244],
+                  "loc":{"source":null,"start":{"line":48,"column":34},"end":{"line":48,"column":54}},
+                  "range":[1328,1348],
                   "value":" Trailing yield "
                 }
               ],
               "leadingComments":[
                 {
                   "type":"Block",
-                  "loc":{"source":null,"start":{"line":44,"column":4},"end":{"line":44,"column":23}},
-                  "range":[1194,1213],
+                  "loc":{"source":null,"start":{"line":48,"column":4},"end":{"line":48,"column":23}},
+                  "range":[1298,1317],
                   "value":" Leading yield "
                 }
               ],
-              "loc":{"source":null,"start":{"line":44,"column":25},"end":{"line":44,"column":32}},
-              "range":[1215,1222],
+              "loc":{"source":null,"start":{"line":48,"column":25},"end":{"line":48,"column":32}},
+              "range":[1319,1326],
               "argument":{
                 "type":"Literal",
-                "loc":{"source":null,"start":{"line":44,"column":31},"end":{"line":44,"column":32}},
-                "range":[1221,1222],
+                "loc":{"source":null,"start":{"line":48,"column":31},"end":{"line":48,"column":32}},
+                "range":[1325,1326],
                 "value":1,
                 "raw":"1"
               },
@@ -1104,14 +1174,26 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":44,"column":4},"end":{"line":44,"column":23}},
-      "range":[1194,1213],
+      "loc":{"source":null,"start":{"line":44,"column":4},"end":{"line":44,"column":31}},
+      "range":[1196,1223],
+      "value":" Leading meta property "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":44,"column":45},"end":{"line":44,"column":73}},
+      "range":[1237,1265],
+      "value":" Trailing meta property "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":48,"column":4},"end":{"line":48,"column":23}},
+      "range":[1298,1317],
       "value":" Leading yield "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":44,"column":34},"end":{"line":44,"column":54}},
-      "range":[1224,1244],
+      "loc":{"source":null,"start":{"line":48,"column":34},"end":{"line":48,"column":54}},
+      "range":[1328,1348],
       "value":" Trailing yield "
     }
   ]

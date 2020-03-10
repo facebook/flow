@@ -38,7 +38,8 @@ val name_of_ident : ('loc, 'a) Flow_ast.Identifier.t -> string
 
 val source_of_ident : ('a, 'a) Flow_ast.Identifier.t -> 'a source
 
-val ident_of_source : 'a source -> ('a, 'a) Flow_ast.Identifier.t
+val ident_of_source :
+  ?comments:('a, unit) Flow_ast.Syntax.t -> 'a source -> ('a, 'a) Flow_ast.Identifier.t
 
 val mk_comments :
   ?leading:'loc Flow_ast.Comment.t list ->

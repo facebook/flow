@@ -582,8 +582,12 @@ with type t = Impl.t = struct
       | (loc, Class c) -> class_expression (loc, c)
       | (loc, JSXElement element) -> jsx_element (loc, element)
       | (loc, JSXFragment fragment) -> jsx_fragment (loc, fragment)
-      | (loc, MetaProperty { MetaProperty.meta; property }) ->
-        node "MetaProperty" loc [("meta", identifier meta); ("property", identifier property)]
+      | (loc, MetaProperty { MetaProperty.meta; property; comments }) ->
+        node
+          ?comments
+          "MetaProperty"
+          loc
+          [("meta", identifier meta); ("property", identifier property)]
       | (loc, Import arg) ->
         node
           "CallExpression"

@@ -1159,8 +1159,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method meta_property (expr : 'M Ast.Expression.MetaProperty.t)
         : 'N Ast.Expression.MetaProperty.t =
       let open Ast.Expression.MetaProperty in
-      let { meta; property } = expr in
-      { meta = this#identifier meta; property = this#identifier property }
+      let { meta; property; comments } = expr in
+      {
+        meta = this#identifier meta;
+        property = this#identifier property;
+        comments = Base.Option.map ~f:this#syntax comments;
+      }
 
     method new_ (expr : ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
       let open Ast.Expression.New in

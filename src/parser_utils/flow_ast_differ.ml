@@ -1004,6 +1004,7 @@ let program
       | ((loc, Sequence seq1), (_, Sequence seq2)) -> sequence loc seq1 seq2
       | ((loc, This t1), (_, This t2)) -> this_expression loc t1 t2
       | ((loc, Super s1), (_, Super s2)) -> super_expression loc s1 s2
+      | ((loc, MetaProperty m1), (_, MetaProperty m2)) -> meta_property loc m1 m2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
@@ -2075,5 +2076,16 @@ let program
     let { comments = comments1 } = super1 in
     let { comments = comments2 } = super2 in
     syntax_opt loc comments1 comments2
+  and meta_property
+      (loc : Loc.t)
+      (meta1 : Loc.t Ast.Expression.MetaProperty.t)
+      (meta2 : Loc.t Ast.Expression.MetaProperty.t) : node change list option =
+    let open Ast.Expression.MetaProperty in
+    let { meta = meta1; property = property1; comments = comments1 } = meta1 in
+    let { meta = meta2; property = property2; comments = comments2 } = meta2 in
+    let meta = Some (diff_if_changed identifier meta1 meta2) in
+    let property = Some (diff_if_changed identifier property1 property2) in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [meta; property; comments]
   in
   program' program1 program2 |> List.sort change_compare

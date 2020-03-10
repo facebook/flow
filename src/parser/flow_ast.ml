@@ -1157,6 +1157,7 @@ and Expression : sig
     type 'M t = {
       meta: ('M, 'M) Identifier.t;
       property: ('M, 'M) Identifier.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
