@@ -68,4 +68,16 @@ let tests = [
             Promise.resolve(false),
         ]);
     },
+    // wrong result handling
+    function() {
+        let p1 = Promise.allSettled(generator());
+
+        p1.then((results): Array<number> => {
+            return results.map(result => result);
+        });
+
+        p1.then((results): Array<number> => {
+            return results.map(result => result.value);
+        });
+    },
 ];
