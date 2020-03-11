@@ -1635,8 +1635,8 @@ References:
    <BUILTINS>/core.js:938:43
                                                   v-
    938| type $EnumProto<TEnum, TRepresentation> = {|
-   939|   cast(TRepresentation): void | TEnum,
-   940|   isValid(TRepresentation): boolean,
+   939|   cast(input: TRepresentation): void | TEnum,
+   940|   isValid(input: TRepresentation): boolean,
    941|   members(): Iterable<TEnum>,
    942|   __proto__: null,
    943| |}
@@ -1655,8 +1655,8 @@ References:
    <BUILTINS>/core.js:938:43
                                                   v-
    938| type $EnumProto<TEnum, TRepresentation> = {|
-   939|   cast(TRepresentation): void | TEnum,
-   940|   isValid(TRepresentation): boolean,
+   939|   cast(input: TRepresentation): void | TEnum,
+   940|   isValid(input: TRepresentation): boolean,
    941|   members(): Iterable<TEnum>,
    942|   __proto__: null,
    943| |}
@@ -1693,8 +1693,8 @@ References:
    <BUILTINS>/core.js:938:43
                                                   v-
    938| type $EnumProto<TEnum, TRepresentation> = {|
-   939|   cast(TRepresentation): void | TEnum,
-   940|   isValid(TRepresentation): boolean,
+   939|   cast(input: TRepresentation): void | TEnum,
+   940|   isValid(input: TRepresentation): boolean,
    941|   members(): Iterable<TEnum>,
    942|   __proto__: null,
    943| |}
@@ -1713,8 +1713,8 @@ References:
    <BUILTINS>/core.js:938:43
                                                   v-
    938| type $EnumProto<TEnum, TRepresentation> = {|
-   939|   cast(TRepresentation): void | TEnum,
-   940|   isValid(TRepresentation): boolean,
+   939|   cast(input: TRepresentation): void | TEnum,
+   940|   isValid(input: TRepresentation): boolean,
    941|   members(): Iterable<TEnum>,
    942|   __proto__: null,
    943| |}

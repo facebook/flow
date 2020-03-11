@@ -3032,27 +3032,27 @@ enums.js = {
 {
   "label":"cast",
   "kind":3,
-  "detail":"(string) => (void | E)",
-  "inlineDetail":"(_: string)",
+  "detail":"(input: string) => (void | E)",
+  "inlineDetail":"(input: string)",
   "itemType":"void | E",
   "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"cast(${1:_})"
+    "newText":"cast(${1:input})"
   }
 }
 {
   "label":"isValid",
   "kind":3,
-  "detail":"(string) => boolean",
-  "inlineDetail":"(_: string)",
+  "detail":"(input: string) => boolean",
+  "inlineDetail":"(input: string)",
   "itemType":"boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"isValid(${1:_})"
+    "newText":"isValid(${1:input})"
   }
 }
 {
