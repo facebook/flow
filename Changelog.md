@@ -1,3 +1,9 @@
+### 0.120.2
+
+Fixed a bug where, when accepting a "Did You Mean?" suggestion, the Facebook-internal-only logging command that we use to measure how often suggestions are accepted in our internal builds did not succeed.
+
+This version is not being released.
+
 ### 0.120.1
 
 Likely to cause new Flow errors:
