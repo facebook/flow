@@ -45,7 +45,7 @@ let exec cmd args =
     (cmd, Array.of_list (cmd :: args))
     (fun process ->
       (* Wait for it to finish *)
-      let%lwt status = process#status in
-      let%lwt stdout = Lwt_io.read process#stdout in
-      let%lwt stderr = Lwt_io.read process#stderr in
+      let%lwt status = process#status
+      and stdout = Lwt_io.read process#stdout
+      and stderr = Lwt_io.read process#stderr in
       Lwt.return { stdout; stderr; status })
