@@ -782,7 +782,7 @@ export async function addCommentsToCode(
   return [code, commentCount];
 }
 
-function addCommentToCode(
+export function addCommentToCode(
   comment: string,
   code: string,
   loc: FlowLoc,
