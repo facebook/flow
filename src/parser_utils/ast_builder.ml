@@ -354,8 +354,8 @@ module Expressions = struct
 
   let literal ?(loc = Loc.none) lit = (loc, Literal lit)
 
-  let assignment ?comments left ?operator right =
-    (Loc.none, Assignment { Assignment.operator; left; right; comments })
+  let assignment ?(loc = Loc.none) ?comments left ?operator right =
+    (loc, Assignment { Assignment.operator; left; right; comments })
 
   let binary ?comments ~op left right =
     (Loc.none, Binary { Binary.operator = op; left; right; comments })
@@ -446,7 +446,8 @@ module Expressions = struct
   let new_ ?comments ?targs ?args callee =
     (Loc.none, New { New.callee; targs; arguments = args; comments })
 
-  let sequence ?comments exprs = (Loc.none, Sequence { Sequence.expressions = exprs; comments })
+  let sequence ?(loc = Loc.none) ?comments exprs =
+    (loc, Sequence { Sequence.expressions = exprs; comments })
 
   let expression expr = Expression expr
 
