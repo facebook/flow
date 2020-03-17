@@ -777,8 +777,9 @@ with type t = Impl.t = struct
              ExportAllDeclaration, not a specifier. *)
         array []
       | None -> array []
-    and declare_type_alias (loc, { Statement.TypeAlias.id; tparams; right }) =
+    and declare_type_alias (loc, { Statement.TypeAlias.id; tparams; right; comments }) =
       node
+        ?comments
         "DeclareTypeAlias"
         loc
         [
@@ -786,8 +787,9 @@ with type t = Impl.t = struct
           ("typeParameters", option type_parameter_declaration tparams);
           ("right", _type right);
         ]
-    and type_alias (loc, { Statement.TypeAlias.id; tparams; right }) =
+    and type_alias (loc, { Statement.TypeAlias.id; tparams; right; comments }) =
       node
+        ?comments
         "TypeAlias"
         loc
         [
@@ -795,7 +797,8 @@ with type t = Impl.t = struct
           ("typeParameters", option type_parameter_declaration tparams);
           ("right", _type right);
         ]
-    and opaque_type ~declare (loc, { Statement.OpaqueType.id; tparams; impltype; supertype }) =
+    and opaque_type
+        ~declare (loc, { Statement.OpaqueType.id; tparams; impltype; supertype; comments }) =
       let name =
         if declare then
           "DeclareOpaqueType"
@@ -803,6 +806,7 @@ with type t = Impl.t = struct
           "OpaqueType"
       in
       node
+        ?comments
         name
         loc
         [

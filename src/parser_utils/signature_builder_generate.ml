@@ -666,10 +666,24 @@ module T = struct
     let id = Flow_ast_utils.ident_of_source id in
     match decl with
     | Type { tparams; right } ->
-      (decl_loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right })
+      ( decl_loc,
+        Ast.Statement.TypeAlias
+          {
+            Ast.Statement.TypeAlias.id;
+            tparams;
+            right;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | OpaqueType { tparams; impltype; supertype } ->
       ( decl_loc,
-        Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id; tparams; impltype; supertype } )
+        Ast.Statement.OpaqueType
+          {
+            Ast.Statement.OpaqueType.id;
+            tparams;
+            impltype;
+            supertype;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
         Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body } )

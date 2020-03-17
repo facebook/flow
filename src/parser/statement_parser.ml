@@ -683,6 +683,7 @@ module Statement
 
   and type_alias_helper env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAlias;
+    let leading = Peek.comments env in
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
@@ -690,8 +691,10 @@ module Statement
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.semicolon env;
+    let trailing = Peek.comments env in
     Eat.pop_lex_mode env;
-    Statement.TypeAlias.{ id; tparams; right }
+    Statement.TypeAlias.
+      { id; tparams; right; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
 
   and declare_type_alias env =
     with_loc
@@ -710,8 +713,11 @@ module Statement
 
   and opaque_type_helper ?(declare = false) env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedOpaqueTypeAlias;
+    let leading_opaque = Peek.comments env in
     Expect.token env T_OPAQUE;
+    let leading_type = Peek.comments env in
     Expect.token env T_TYPE;
+    let leading = leading_opaque @ leading_type in
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
     let tparams = Type.type_params env in
@@ -730,8 +736,16 @@ module Statement
         None
     in
     Eat.semicolon env;
+    let trailing = Peek.comments env in
     Eat.pop_lex_mode env;
-    Statement.OpaqueType.{ id; tparams; impltype; supertype }
+    Statement.OpaqueType.
+      {
+        id;
+        tparams;
+        impltype;
+        supertype;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+      }
 
   and declare_opaque_type env =
     with_loc

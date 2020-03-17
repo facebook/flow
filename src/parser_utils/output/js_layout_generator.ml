@@ -733,8 +733,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.ImportDeclaration import -> import_declaration import
       | S.ExportNamedDeclaration export -> export_declaration export
       | S.ExportDefaultDeclaration export -> export_default_declaration export
-      | S.TypeAlias typeAlias -> type_alias ~declare:false typeAlias
-      | S.OpaqueType opaqueType -> opaque_type ~declare:false opaqueType
+      | S.TypeAlias typeAlias -> type_alias ~declare:false loc typeAlias
+      | S.OpaqueType opaqueType -> opaque_type ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration interface
       | S.DeclareClass interface -> declare_class interface
       | S.DeclareFunction func -> declare_function func
@@ -742,8 +742,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.DeclareVariable var -> declare_variable var
       | S.DeclareModuleExports annot -> declare_module_exports annot
       | S.DeclareModule m -> declare_module m
-      | S.DeclareTypeAlias typeAlias -> type_alias ~declare:true typeAlias
-      | S.DeclareOpaqueType opaqueType -> opaque_type ~declare:true opaqueType
+      | S.DeclareTypeAlias typeAlias -> type_alias ~declare:true loc typeAlias
+      | S.DeclareOpaqueType opaqueType -> opaque_type ~declare:true loc opaqueType
       | S.DeclareExportDeclaration export -> declare_export_declaration export )
 
 (* The beginning of a statement that does a "test", like `if (test)` or `while (test)` *)
@@ -2374,44 +2374,47 @@ and type_args (loc, args) =
   source_location_with_comments
     (loc, group [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_ args)])
 
-and type_alias ~declare { Ast.Statement.TypeAlias.id; tparams; right } =
-  with_semicolon
-    (fuse
-       [
-         ( if declare then
-           fuse [Atom "declare"; space]
-         else
-           Empty );
-         Atom "type";
-         space;
-         identifier id;
-         option type_parameter tparams;
-         pretty_space;
-         Atom "=";
-         pretty_space;
-         type_ right;
-       ])
+and type_alias ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            ( if declare then
+              fuse [Atom "declare"; space]
+            else
+              Empty );
+            Atom "type";
+            space;
+            identifier id;
+            option type_parameter tparams;
+            pretty_space;
+            Atom "=";
+            pretty_space;
+            type_ right;
+          ])
 
-and opaque_type ~declare { Ast.Statement.OpaqueType.id; tparams; impltype; supertype } =
-  with_semicolon
-    (fuse
-       ( [
-           ( if declare then
-             fuse [Atom "declare"; space]
-           else
-             Empty );
-           Atom "opaque type";
-           space;
-           identifier id;
-           option type_parameter tparams;
-         ]
-       @ (match supertype with
-         | Some t -> [Atom ":"; pretty_space; type_ t]
-         | None -> [])
-       @
-       match impltype with
-       | Some impltype -> [pretty_space; Atom "="; pretty_space; type_ impltype]
-       | None -> [] ))
+and opaque_type ~declare loc { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments }
+    =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          ( [
+              ( if declare then
+                fuse [Atom "declare"; space]
+              else
+                Empty );
+              Atom "opaque type";
+              space;
+              identifier id;
+              option type_parameter tparams;
+            ]
+          @ (match supertype with
+            | Some t -> [Atom ":"; pretty_space; type_ t]
+            | None -> [])
+          @
+          match impltype with
+          | Some impltype -> [pretty_space; Atom "="; pretty_space; type_ impltype]
+          | None -> [] ))
 
 and type_annotation ?(parens = false) (loc, t) =
   source_location_with_comments
@@ -2870,11 +2873,11 @@ and declare_export_declaration
     (* declare export type *)
     | NamedType (loc, typeAlias) ->
       source_location_with_comments
-        (loc, fuse [Atom "declare"; space; s_export; type_alias ~declare:false typeAlias])
+        (loc, fuse [Atom "declare"; space; s_export; type_alias ~declare:false loc typeAlias])
     (* declare export opaque type *)
     | NamedOpaqueType (loc, opaqueType) ->
       source_location_with_comments
-        (loc, fuse [Atom "declare"; space; s_export; opaque_type ~declare:false opaqueType])
+        (loc, fuse [Atom "declare"; space; s_export; opaque_type ~declare:false loc opaqueType])
     (* declare export interface *)
     | Interface (loc, interface) ->
       source_location_with_comments

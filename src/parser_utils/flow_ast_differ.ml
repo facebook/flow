@@ -539,10 +539,10 @@ let program
         export_named_declaration export1 export2
       | ((loc, Try try1), (_, Try try2)) -> try_ loc try1 try2
       | ((loc, Throw throw1), (_, Throw throw2)) -> Some (throw_statement loc throw1 throw2)
-      | ((_, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2)) ->
-        type_alias d_t_alias1 d_t_alias2
-      | ((_, TypeAlias t_alias1), (_, TypeAlias t_alias2)) -> type_alias t_alias1 t_alias2
-      | ((_, OpaqueType o_type1), (_, OpaqueType o_type2)) -> opaque_type o_type1 o_type2
+      | ((loc, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2)) ->
+        type_alias loc d_t_alias1 d_t_alias2
+      | ((loc, TypeAlias t_alias1), (_, TypeAlias t_alias2)) -> type_alias loc t_alias1 t_alias2
+      | ((loc, OpaqueType o_type1), (_, OpaqueType o_type2)) -> opaque_type loc o_type1 o_type2
       | ((_, DeclareClass declare_class_t1), (_, DeclareClass declare_class_t2)) ->
         declare_class declare_class_t1 declare_class_t2
       | (_, _) -> None
@@ -1987,26 +1987,46 @@ let program
     let return_diff = diff_if_changed type_ return1 return2 |> Base.Option.return in
     join_diff_list [tparams_diff; params_diff; rest_diff; return_diff]
   and type_alias
+      (loc : Loc.t)
       (t_alias1 : (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
       (t_alias2 : (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) : node change list option =
     let open Ast.Statement.TypeAlias in
-    let { id = id1; tparams = t_params1; right = right1 } = t_alias1 in
-    let { id = id2; tparams = t_params2; right = right2 } = t_alias2 in
+    let { id = id1; tparams = t_params1; right = right1; comments = comments1 } = t_alias1 in
+    let { id = id2; tparams = t_params2; right = right2; comments = comments2 } = t_alias2 in
     let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
     let right_diff = diff_if_changed type_ right1 right2 |> Base.Option.return in
-    join_diff_list [id_diff; t_params_diff; right_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [id_diff; t_params_diff; right_diff; comments_diff]
   and opaque_type
+      (loc : Loc.t)
       (o_type1 : (Loc.t, Loc.t) Ast.Statement.OpaqueType.t)
       (o_type2 : (Loc.t, Loc.t) Ast.Statement.OpaqueType.t) : node change list option =
     let open Ast.Statement.OpaqueType in
-    let { id = id1; tparams = t_params1; impltype = impltype1; supertype = supertype1 } = o_type1 in
-    let { id = id2; tparams = t_params2; impltype = impltype2; supertype = supertype2 } = o_type2 in
+    let {
+      id = id1;
+      tparams = t_params1;
+      impltype = impltype1;
+      supertype = supertype1;
+      comments = comments1;
+    } =
+      o_type1
+    in
+    let {
+      id = id2;
+      tparams = t_params2;
+      impltype = impltype2;
+      supertype = supertype2;
+      comments = comments2;
+    } =
+      o_type2
+    in
     let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
     let supertype_diff = diff_if_changed_nonopt_fn type_ supertype1 supertype2 in
     let impltype_diff = diff_if_changed_nonopt_fn type_ impltype1 impltype2 in
-    join_diff_list [id_diff; t_params_diff; supertype_diff; impltype_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [id_diff; t_params_diff; supertype_diff; impltype_diff; comments_diff]
   and declare_class dclass1 dclass2 =
     let open Ast.Statement.DeclareClass in
     let {

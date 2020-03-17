@@ -1560,21 +1560,29 @@ class ['loc] mapper =
 
     method opaque_type _loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
-      let { id; tparams; impltype; supertype } = otype in
+      let { id; tparams; impltype; supertype; comments } = otype in
       let id' = this#identifier id in
       let tparams' = map_opt this#type_params tparams in
       let impltype' = map_opt this#type_ impltype in
       let supertype' = map_opt this#type_ supertype in
+      let comments' = this#syntax_opt comments in
       if
         id == id'
         && impltype == impltype'
         && tparams == tparams'
         && impltype == impltype'
         && supertype == supertype'
+        && comments == comments'
       then
         otype
       else
-        { id = id'; tparams = tparams'; impltype = impltype'; supertype = supertype' }
+        {
+          id = id';
+          tparams = tparams';
+          impltype = impltype';
+          supertype = supertype';
+          comments = comments';
+        }
 
     method function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) = this#binding_pattern expr
 
@@ -1967,14 +1975,15 @@ class ['loc] mapper =
 
     method type_alias _loc (stuff : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
-      let { id; tparams; right } = stuff in
+      let { id; tparams; right; comments } = stuff in
       let id' = this#identifier id in
       let tparams' = map_opt this#type_params tparams in
       let right' = this#type_ right in
-      if id == id' && right == right' && tparams == tparams' then
+      let comments' = this#syntax_opt comments in
+      if id == id' && right == right' && tparams == tparams' && comments == comments' then
         stuff
       else
-        { id = id'; tparams = tparams'; right = right' }
+        { id = id'; tparams = tparams'; right = right'; comments = comments' }
 
     method yield _loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
       let open Ast.Expression.Yield in

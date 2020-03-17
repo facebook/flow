@@ -977,6 +977,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             TypeAlias.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
             tparams;
             right;
+            comments;
           } )
     | ( loc,
         TypeAlias
@@ -984,6 +985,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             TypeAlias.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
             tparams;
             right;
+            comments;
           } ) ) as stmt ->
     let r = DescFormat.type_reason name name_loc in
     let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
@@ -1008,7 +1010,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
     Env.init_type cx name type_ name_loc;
     let type_alias_ast =
-      { TypeAlias.id = ((name_loc, type_), id); tparams = tparams_ast; right = right_ast }
+      { TypeAlias.id = ((name_loc, type_), id); tparams = tparams_ast; right = right_ast; comments }
     in
     (match stmt with
     | (_, DeclareTypeAlias _) -> (loc, DeclareTypeAlias type_alias_ast)
@@ -1021,6 +1023,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             tparams;
             impltype;
             supertype;
+            comments;
           } )
     | ( loc,
         OpaqueType
@@ -1029,6 +1032,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             tparams;
             impltype;
             supertype;
+            comments;
           } ) ) as stmt ->
     let r = DescFormat.type_reason name name_loc in
     let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
@@ -1075,6 +1079,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           tparams = tparams_ast;
           impltype = impltype_ast;
           supertype = supertype_ast;
+          comments;
         }
       in
       (match stmt with

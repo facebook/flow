@@ -409,6 +409,7 @@ and Statement : sig
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       right: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -419,6 +420,7 @@ and Statement : sig
       tparams: ('M, 'T) Type.TypeParams.t option;
       impltype: ('M, 'T) Type.t option;
       supertype: ('M, 'T) Type.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
