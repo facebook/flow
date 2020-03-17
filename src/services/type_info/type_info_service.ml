@@ -168,39 +168,45 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
     else
       []
   in
+  let create_suggestion loc suggestion =
+    let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
+    let relevant_diagnostics =
+      context.CodeActionRequest.diagnostics
+      |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
+    in
+    let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
+    CodeAction.Action
+      CodeAction.
+        {
+          title = "Apply suggestion";
+          kind = CodeActionKind.quickfix;
+          diagnostics = relevant_diagnostics;
+          action =
+            CodeAction.BothEditThenCommand
+              ( WorkspaceEdit.{ changes = SMap.singleton uri [textEdit] },
+                {
+                  (* https://github.com/microsoft/language-server-protocol/issues/933 *)
+                  Command.title = "";
+                  command = Command.Command "log";
+                  arguments = [Hh_json.JSON_String "Apply suggestion"];
+                } );
+        }
+  in
   let code_actions_of_errors errors =
     Flow_error.ErrorSet.fold
       (fun error actions ->
         match
           Flow_error.msg_of_error error
           |> Error_message.map_loc_of_error_message (Parsing_heaps_utils.loc_of_aloc ~reader)
-          |> Error_message.friendly_message_of_msg
         with
-        | Error_message.PropMissing { loc; suggestion = Some suggestion; _ } ->
-          let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
-          let relevant_diagnostics =
-            context.CodeActionRequest.diagnostics
-            |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
-          in
-          let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
-          CodeAction.Action
-            CodeAction.
-              {
-                title = "Apply suggestion";
-                kind = CodeActionKind.quickfix;
-                diagnostics = relevant_diagnostics;
-                action =
-                  CodeAction.BothEditThenCommand
-                    ( WorkspaceEdit.{ changes = SMap.singleton uri [textEdit] },
-                      {
-                        (* https://github.com/microsoft/language-server-protocol/issues/933 *)
-                        Command.title = "";
-                        command = Command.Command "log";
-                        arguments = [Hh_json.JSON_String "Apply suggestion"];
-                      } );
-              }
-          :: actions
-        | _ -> actions)
+        | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
+          let loc = Reason.loc_of_reason reason in
+          create_suggestion loc suggestion :: actions
+        | error_message ->
+          (match error_message |> Error_message.friendly_message_of_msg with
+          | Error_message.PropMissing { loc; suggestion = Some suggestion; _ } ->
+            create_suggestion loc suggestion :: actions
+          | _ -> actions))
       errors
       []
   in

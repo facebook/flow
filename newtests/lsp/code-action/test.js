@@ -134,5 +134,103 @@ export default suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for invalid enum member access errors', [
+      addFile(
+        'invalid-enum-member-access.js.ignored',
+        'invalid-enum-member-access.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-enum-member-access.js',
+        },
+        range: {
+          start: {
+            line: 6,
+            character: 2,
+          },
+          end: {
+            line: 6,
+            character: 8,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 6,
+                  character: 2,
+                },
+                end: {
+                  line: 6,
+                  character: 8,
+                },
+              },
+              message:
+                'Cannot access property `Foobat` because `Foobat` is not a member of `enum E`. Did you meanthe member `Foobar`?',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          `textDocument/codeAction{${JSON.stringify([
+            {
+              title: 'Apply suggestion',
+              kind: 'quickfix',
+              diagnostics: [
+                {
+                  range: {
+                    start: {
+                      line: 6,
+                      character: 2,
+                    },
+                    end: {
+                      line: 6,
+                      character: 8,
+                    },
+                  },
+                  severity: 1,
+                  code: 'InferError',
+                  source: 'Flow',
+                  message:
+                    'Cannot access property `Foobat` because `Foobat` is not a member of `enum E`. Did you meanthe member `Foobar`?',
+                  relatedInformation: [],
+                  relatedLocations: [],
+                },
+              ],
+              edit: {
+                changes: {
+                  '<PLACEHOLDER_PROJECT_URL>/invalid-enum-member-access.js': [
+                    {
+                      range: {
+                        start: {
+                          line: 6,
+                          character: 2,
+                        },
+                        end: {
+                          line: 6,
+                          character: 8,
+                        },
+                      },
+                      newText: 'Foobar',
+                    },
+                  ],
+                },
+              },
+              command: {
+                title: '',
+                command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                arguments: ['Apply suggestion'],
+              },
+            },
+          ])}}`,
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 );
