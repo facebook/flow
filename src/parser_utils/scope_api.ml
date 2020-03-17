@@ -20,6 +20,7 @@ module Make (L : Loc_sig.S) = struct
       name: int;
       actual_name: string;
     }
+    [@@deriving show]
 
     let compare =
       let rec iter locs1 locs2 =
@@ -41,7 +42,7 @@ module Make (L : Loc_sig.S) = struct
 
   module DefMap = WrappedMap.Make (Def)
 
-  type use_def_map = Def.t L.LMap.t
+  type use_def_map = Def.t L.LMap.t [@@deriving show]
 
   module Scope = struct
     type t = {
@@ -52,6 +53,7 @@ module Make (L : Loc_sig.S) = struct
       globals: SSet.t;
       loc: L.t;
     }
+    [@@deriving show]
   end
 
   type info = {
@@ -60,6 +62,7 @@ module Make (L : Loc_sig.S) = struct
     (* map of scope ids to local scopes *)
     scopes: Scope.t IMap.t;
   }
+  [@@deriving show]
 
   let all_uses { scopes; _ } =
     IMap.fold

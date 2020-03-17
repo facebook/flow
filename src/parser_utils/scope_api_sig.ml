@@ -20,13 +20,14 @@ module type S = sig
       name: int;
       actual_name: string;
     }
+    [@@deriving show]
 
     val compare : t -> t -> int
   end
 
   module DefMap : WrappedMap_sig.S with type key = Def.t
 
-  type use_def_map = Def.t L.LMap.t
+  type use_def_map = Def.t L.LMap.t [@@deriving show]
 
   module Scope : sig
     type t = {
@@ -37,12 +38,14 @@ module type S = sig
       globals: SSet.t;
       loc: L.t;
     }
+    [@@deriving show]
   end
 
   type info = {
     max_distinct: int;
     scopes: Scope.t IMap.t;
   }
+  [@@deriving show]
 
   val scope : info -> scope -> Scope.t
 

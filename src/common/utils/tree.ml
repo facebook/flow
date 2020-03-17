@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type 'a t = Node of 'a * 'a t list
+type 'a t = Node of 'a * 'a t list [@@deriving show]

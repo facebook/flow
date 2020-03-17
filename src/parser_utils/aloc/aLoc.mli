@@ -15,7 +15,7 @@ type reverse_table
 
 type key
 
-type t
+type t [@@deriving show]
 
 (* Creates an ALoc.t with a concrete underlying representation *)
 val of_loc : Loc.t -> t

@@ -132,6 +132,10 @@ end
 
 type t = Repr.t
 
+let pp fmt _ = Format.pp_print_string fmt "<opaque>"
+
+let show _ = "<opaque>"
+
 let of_loc = Repr.of_loc
 
 let keyify table rev_table loc =

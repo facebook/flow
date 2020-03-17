@@ -6,7 +6,7 @@
  *)
 
 module type S = sig
-  type t
+  type t [@@deriving show]
 
   val compare : t -> t -> int
 
@@ -16,7 +16,13 @@ module type S = sig
    * expose these results in user output or make typecheker behavior depend on it. *)
   val debug_to_string : ?include_source:bool -> t -> string
 
-  module LMap : WrappedMap.S with type key = t
+  module LMap : sig
+    include WrappedMap.S with type key = t
+
+    val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
+
+    val show : (Format.formatter -> 'a -> unit) -> 'a t -> string
+  end
 
   module LSet : Set.S with type elt = t
 
@@ -47,7 +53,7 @@ module LSetUtils (S : Set.S) = struct
 end
 
 module LocS : S with type t = Loc.t = struct
-  type t = Loc.t
+  type t = Loc.t [@@deriving show]
 
   let compare = Loc.compare
 
@@ -55,13 +61,21 @@ module LocS : S with type t = Loc.t = struct
 
   let debug_to_string = Loc.debug_to_string
 
-  module LMap = WrappedMap.Make (Loc)
+  module LMap = struct
+    include WrappedMap.Make (Loc)
+
+    let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
+     (fun pp_data -> make_pp Loc.pp pp_data)
+
+    let show pp_data x = Format.asprintf "%a" (pp pp_data) x
+  end
+
   module LSet = Set.Make (Loc)
   module LSetUtils = LSetUtils (LSet)
 end
 
 module ALocS : S with type t = ALoc.t = struct
-  type t = ALoc.t
+  type t = ALoc.t [@@deriving show]
 
   let compare = ALoc.compare
 
@@ -69,7 +83,15 @@ module ALocS : S with type t = ALoc.t = struct
 
   let debug_to_string = ALoc.debug_to_string
 
-  module LMap = WrappedMap.Make (ALoc)
+  module LMap = struct
+    include WrappedMap.Make (ALoc)
+
+    let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
+     (fun pp_data -> make_pp ALoc.pp pp_data)
+
+    let show pp_data x = Format.asprintf "%a" (pp pp_data) x
+  end
+
   module LSet = Set.Make (ALoc)
   module LSetUtils = LSetUtils (LSet)
 end
