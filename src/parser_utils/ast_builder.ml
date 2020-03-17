@@ -19,8 +19,8 @@ module Types = struct
   end
 
   module Objects = struct
-    let make ?(exact = true) ?(inexact = false) properties =
-      { Ast.Type.Object.exact; inexact; properties }
+    let make ?(exact = true) ?(inexact = false) ?comments properties =
+      { Ast.Type.Object.exact; inexact; properties; comments }
 
     let property
         ?(loc = Loc.none)

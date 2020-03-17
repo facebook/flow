@@ -2619,7 +2619,7 @@ and type_object_property =
             type_ value;
           ] )
 
-and type_object ?(sep = Atom ",") { Ast.Type.Object.exact; properties; inexact } =
+and type_object ?(sep = Atom ",") loc { Ast.Type.Object.exact; properties; inexact; comments } =
   let s_exact =
     if exact then
       Atom "|"
@@ -2633,7 +2633,8 @@ and type_object ?(sep = Atom ",") { Ast.Type.Object.exact; properties; inexact }
     else
       props
   in
-  group [new_list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep props]
+  layout_node_with_comments_opt loc comments
+  @@ group [new_list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep props]
 
 and type_interface { Ast.Type.Interface.extends; body = (loc, obj) } =
   fuse
@@ -2641,7 +2642,7 @@ and type_interface { Ast.Type.Interface.extends; body = (loc, obj) } =
       Atom "interface";
       interface_extends extends;
       pretty_space;
-      source_location_with_comments (loc, type_object ~sep:(Atom ",") obj);
+      source_location_with_comments (loc, type_object ~sep:(Atom ",") loc obj);
     ]
 
 and interface_extends = function
@@ -2696,7 +2697,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Boolean -> Atom "boolean"
       | T.Nullable t -> fuse [Atom "?"; type_with_parens t]
       | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) func
-      | T.Object obj -> type_object obj
+      | T.Object obj -> type_object loc obj
       | T.Interface i -> type_interface i
       | T.Array t -> fuse [Atom "Array<"; type_ t; Atom ">"]
       | T.Generic generic -> type_generic generic
@@ -2725,7 +2726,7 @@ and interface_declaration_base
       option type_parameter tparams;
       interface_extends extends;
       pretty_space;
-      source_location_with_comments (loc, type_object ~sep:(Atom ",") obj);
+      source_location_with_comments (loc, type_object ~sep:(Atom ",") loc obj);
     ]
 
 and interface_declaration interface =
@@ -2783,7 +2784,7 @@ and declare_class
     | [] -> Empty
     | items -> Layout.Indent (fuse [line; join line items])
   in
-  let body = source_location_with_comments (loc, type_object ~sep:(Atom ",") obj) in
+  let body = source_location_with_comments (loc, type_object ~sep:(Atom ",") loc obj) in
   let parts =
     []
     |> List.rev_append class_parts

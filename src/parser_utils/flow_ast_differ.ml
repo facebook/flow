@@ -872,12 +872,12 @@ let program
       (intf1 : (Loc.t, Loc.t) Ast.Statement.Interface.t)
       (intf2 : (Loc.t, Loc.t) Ast.Statement.Interface.t) : node change list option =
     let open Ast.Statement.Interface in
-    let { id = id1; tparams = tparams1; extends = extends1; body = (_loc1, body1) } = intf1 in
-    let { id = id2; tparams = tparams2; extends = extends2; body = (_loc2, body2) } = intf2 in
+    let { id = id1; tparams = tparams1; extends = extends1; body = (body_loc, body1) } = intf1 in
+    let { id = id2; tparams = tparams2; extends = extends2; body = (_, body2) } = intf2 in
     let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
     let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
-    let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
+    let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
     join_diff_list [id_diff; tparams_diff; extends_diff; body_diff]
   and class_body
       (class_body1 : (Loc.t, Loc.t) Ast.Class.Body.t)
@@ -1813,7 +1813,7 @@ let program
       | (Union (t0, t1, ts), Union (t0', t1', ts')) ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | (Nullable (t1_loc, t1), Nullable (t2_loc, t2)) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
-      | (Object obj1, Object obj2) -> diff_if_changed_ret_opt object_type obj1 obj2
+      | (Object obj1, Object obj2) -> diff_if_changed_ret_opt (object_type loc1) obj1 obj2
       | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) -> (string_literal loc1) s1 s2
       | (Typeof (t1_loc, t1), Typeof (t2_loc, t2)) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt tuple_type t1 t2
@@ -1825,10 +1825,10 @@ let program
       (it1 : (Loc.t, Loc.t) Ast.Type.Interface.t) (it2 : (Loc.t, Loc.t) Ast.Type.Interface.t) :
       node change list option =
     let open Ast.Type.Interface in
-    let { extends = extends1; body = (_loc1, body1) } = it1 in
-    let { extends = extends2; body = (_loc2, body2) } = it2 in
+    let { extends = extends1; body = (body_loc, body1) } = it1 in
+    let { extends = extends2; body = (_, body2) } = it2 in
     let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
-    let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
+    let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
     join_diff_list [extends_diff; body_diff]
   and generic_type
       (gt1 : (Loc.t, Loc.t) Ast.Type.Generic.t) (gt2 : (Loc.t, Loc.t) Ast.Type.Generic.t) :
@@ -1855,11 +1855,13 @@ let program
       let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
       join_diff_list [qualification_diff; id_diff]
     | _ -> None
-  and object_type (ot1 : (Loc.t, Loc.t) Ast.Type.Object.t) (ot2 : (Loc.t, Loc.t) Ast.Type.Object.t)
-      : node change list option =
+  and object_type
+      (loc : Loc.t)
+      (ot1 : (Loc.t, Loc.t) Ast.Type.Object.t)
+      (ot2 : (Loc.t, Loc.t) Ast.Type.Object.t) : node change list option =
     let open Ast.Type.Object in
-    let { properties = props1; exact = exact1; inexact = inexact1 } = ot1 in
-    let { properties = props2; exact = exact2; inexact = inexact2 } = ot2 in
+    let { properties = props1; exact = exact1; inexact = inexact1; comments = comments1 } = ot1 in
+    let { properties = props2; exact = exact2; inexact = inexact2; comments = comments2 } = ot2 in
     (* These are boolean literals, so structural equality is ok *)
     let exact_diff =
       if exact1 = exact2 then
@@ -1874,7 +1876,8 @@ let program
         None
     in
     let properties_diff = diff_and_recurse_no_trivial object_type_property props1 props2 in
-    join_diff_list [exact_diff; inexact_diff; properties_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [exact_diff; inexact_diff; properties_diff; comments_diff]
   and object_type_property
       (prop1 : (Loc.t, Loc.t) Ast.Type.Object.property)
       (prop2 : (Loc.t, Loc.t) Ast.Type.Object.property) : node change list option =
@@ -2043,7 +2046,7 @@ let program
     let {
       id = id1;
       tparams = tparams1;
-      body = (_, body1);
+      body = (body_loc, body1);
       extends = extends1;
       mixins = mixins1;
       implements = implements1;
@@ -2062,7 +2065,7 @@ let program
     in
     let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params tparams1 tparams2 in
-    let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
+    let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
     let extends_diff = diff_if_changed_opt generic_type_with_loc extends1 extends2 in
     if mixins1 != mixins2 || implements1 != implements2 then
       None

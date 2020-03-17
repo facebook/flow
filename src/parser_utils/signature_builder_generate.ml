@@ -366,6 +366,7 @@ module T = struct
              Ast.Type.Object.exact = true;
              inexact = false;
              properties = List.map (type_of_object_property outlined) (pt :: pts);
+             comments = Flow_ast_utils.mk_comments_opt ();
            })
     | (loc, ObjectLiteral { frozen = false; properties = (pt, pts) }) ->
       temporary_type
@@ -376,6 +377,7 @@ module T = struct
              Ast.Type.Object.exact = true;
              inexact = false;
              properties = Base.List.map ~f:(type_of_object_property outlined) (pt :: pts);
+             comments = Flow_ast_utils.mk_comments_opt ();
            })
     | (loc, ArrayLiteral ets) ->
       temporary_type
@@ -708,6 +710,7 @@ module T = struct
             inexact = false;
             properties =
               Base.List.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
+            comments = Flow_ast_utils.mk_comments_opt ();
           } )
       in
       let mixins = [] in
@@ -749,7 +752,14 @@ module T = struct
                 } ))
           statics
       in
-      let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
+      let ot =
+        {
+          Ast.Type.Object.exact = false;
+          inexact = true;
+          properties;
+          comments = Flow_ast_utils.mk_comments_opt ();
+        }
+      in
       let assign = (decl_loc, Ast.Type.Object ot) in
       let t =
         let name = "$TEMPORARY$function" in
@@ -1713,7 +1723,14 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot))
       else
         let properties = additional_properties_of_module_exports outlined add_module_exports_list in
-        let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
+        let ot =
+          {
+            Ast.Type.Object.exact = false;
+            inexact = true;
+            properties;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          }
+        in
         let assign = (mod_exp_loc, Ast.Type.Object ot) in
         let t =
           let name = "$TEMPORARY$module$exports$assign" in
@@ -1728,7 +1745,14 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     in
     let add_module_exports mod_exp_loc outlined add_module_exports_list =
       let properties = additional_properties_of_module_exports outlined add_module_exports_list in
-      let ot = { Ast.Type.Object.exact = true; inexact = false; properties } in
+      let ot =
+        {
+          Ast.Type.Object.exact = true;
+          inexact = false;
+          properties;
+          comments = Flow_ast_utils.mk_comments_opt ();
+        }
+      in
       let t = (mod_exp_loc, Ast.Type.Object ot) in
       [(mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t))]
     in

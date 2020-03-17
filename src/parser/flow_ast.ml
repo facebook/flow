@@ -260,6 +260,7 @@ and Type : sig
        * *)
       inexact: bool;
       properties: ('M, 'T) property list;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and ('M, 'T) property =

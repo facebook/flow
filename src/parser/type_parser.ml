@@ -801,6 +801,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       let allow_inexact = allow_exact && not exact in
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token
             env
             ( if exact then
@@ -817,9 +818,15 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               T_RCURLYBAR
             else
               T_RCURLY );
+          let trailing = Peek.comments env in
 
           (* inexact = true iff `...` was used to indicate inexactnes *)
-          { Type.Object.exact; properties; inexact })
+          {
+            Type.Object.exact;
+            properties;
+            inexact;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
         env
 
   and interface_helper =

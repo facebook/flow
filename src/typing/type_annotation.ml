@@ -957,7 +957,7 @@ let rec convert cx tparams_map =
           return = return_ast;
           tparams = tparams_ast;
         } )
-  | (loc, Object { Object.exact; properties; inexact }) ->
+  | (loc, Object { Object.exact; properties; inexact; comments }) ->
     let exact_by_default = Context.exact_by_default cx in
     let exact_type = exact || ((not inexact) && exact_by_default) in
     let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
@@ -965,9 +965,12 @@ let rec convert cx tparams_map =
       Flow.add_output cx Error_message.(EAmbiguousObjectType loc);
       if not exact_by_default then Flow.add_output cx Error_message.(EImplicitInexactObject loc)
     );
-    ((loc, t), Object { Object.exact; properties; inexact })
+    ((loc, t), Object { Object.exact; properties; inexact; comments })
   | (loc, Interface { Interface.extends; body }) ->
-    let (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact }) = body in
+    let ( body_loc,
+          { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } ) =
+      body
+    in
     let reason = mk_annot_reason RInterfaceType loc in
     let (iface_sig, extend_asts) =
       let id = ALoc.id_none in
@@ -998,7 +1001,14 @@ let rec convert cx tparams_map =
     ( (loc, Class_type_sig.thistype cx iface_sig),
       Interface
         {
-          Interface.body = (body_loc, { Object.exact; inexact = false; properties = property_asts });
+          Interface.body =
+            ( body_loc,
+              {
+                Object.exact;
+                inexact = false;
+                properties = property_asts;
+                comments = object_comments;
+              } );
           extends = extend_asts;
         } )
   | (loc, Exists) ->
@@ -1769,7 +1779,9 @@ let mk_interface_sig cx reason decl =
     let {
       Ast.Statement.Interface.id = (id_loc, id_name);
       tparams;
-      body = (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact });
+      body =
+        ( body_loc,
+          { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } );
       extends;
       _;
     } =
@@ -1804,7 +1816,9 @@ let mk_interface_sig cx reason decl =
         Ast.Statement.Interface.id = ((id_loc, self), id_name);
         tparams = tparams_ast;
         extends = extends_ast;
-        body = (body_loc, { Ast.Type.Object.exact; properties; inexact = false });
+        body =
+          ( body_loc,
+            { Ast.Type.Object.exact; properties; inexact = false; comments = object_comments } );
       } ))
 
 let mk_declare_class_sig =
@@ -1833,7 +1847,9 @@ let mk_declare_class_sig =
       let {
         Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
         tparams;
-        body = (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact });
+        body =
+          ( body_loc,
+            { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } );
         extends;
         mixins;
         implements;
@@ -1915,7 +1931,9 @@ let mk_declare_class_sig =
         {
           Ast.Statement.DeclareClass.id = ((id_loc, self), id_name);
           tparams = tparam_asts;
-          body = (body_loc, { Ast.Type.Object.properties; exact; inexact = false });
+          body =
+            ( body_loc,
+              { Ast.Type.Object.properties; exact; inexact = false; comments = object_comments } );
           extends = extends_ast;
           mixins = mixins_ast;
           implements = implements_ast;

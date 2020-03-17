@@ -1287,7 +1287,7 @@ with type t = Impl.t = struct
         "argument", function_type_param argument;
       ] *)
       function_type_param argument
-    and object_type ~include_inexact (loc, { Type.Object.properties; exact; inexact }) =
+    and object_type ~include_inexact (loc, { Type.Object.properties; exact; inexact; comments }) =
       Type.Object.(
         let (props, ixs, calls, slots) =
           List.fold_left
@@ -1325,7 +1325,7 @@ with type t = Impl.t = struct
           else
             fields
         in
-        node "ObjectTypeAnnotation" loc fields)
+        node ?comments "ObjectTypeAnnotation" loc fields)
     and object_type_property
         ( loc,
           {

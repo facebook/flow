@@ -866,7 +866,7 @@ class ['loc] mapper =
 
     method object_type _loc (ot : ('loc, 'loc) Ast.Type.Object.t) =
       let open Ast.Type.Object in
-      let { properties; exact; inexact } = ot in
+      let { properties; exact; inexact; comments } = ot in
       let properties' =
         ListUtils.ident_map
           (fun p ->
@@ -880,10 +880,11 @@ class ['loc] mapper =
               p) (* TODO *)
           properties
       in
-      if properties' == properties then
+      let comments' = this#syntax_opt comments in
+      if properties' == properties && comments == comments' then
         ot
       else
-        { properties = properties'; exact; inexact }
+        { properties = properties'; exact; inexact; comments = comments' }
 
     method interface_type _loc (i : ('loc, 'loc) Ast.Type.Interface.t) =
       let open Ast.Type.Interface in
