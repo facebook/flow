@@ -137,8 +137,8 @@ let add_deprecated_type_error_if_not_lib_file cx loc =
   | _ -> ()
 
 let polarity = function
-  | Some (_, Ast.Variance.Plus) -> Polarity.Positive
-  | Some (_, Ast.Variance.Minus) -> Polarity.Negative
+  | Some (_, { Ast.Variance.kind = Ast.Variance.Plus; comments = _ }) -> Polarity.Positive
+  | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative
   | None -> Polarity.Neutral
 
 (**********************************)

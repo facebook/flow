@@ -1210,14 +1210,14 @@ with type t = Impl.t = struct
         [("declarations", array_of_list variable_declarator declarations); ("kind", string kind)]
     and variable_declarator (loc, { Statement.VariableDeclaration.Declarator.id; init }) =
       node "VariableDeclarator" loc [("id", pattern id); ("init", option expression init)]
-    and variance (loc, sigil) =
+    and variance (loc, { Variance.kind; comments }) =
       let kind =
         Variance.(
-          match sigil with
+          match kind with
           | Plus -> string "plus"
           | Minus -> string "minus")
       in
-      node "Variance" loc [("kind", kind)]
+      node ?comments "Variance" loc [("kind", kind)]
     and _type (loc, t) =
       Type.(
         match t with

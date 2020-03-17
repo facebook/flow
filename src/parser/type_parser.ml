@@ -47,11 +47,19 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     let loc = Peek.loc env in
     match Peek.token env with
     | T_PLUS ->
+      let leading = Peek.comments env in
       Eat.token env;
-      Some (loc, Variance.Plus)
+      Some
+        ( loc,
+          { Variance.kind = Variance.Plus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+        )
     | T_MINUS ->
+      let leading = Peek.comments env in
       Eat.token env;
-      Some (loc, Variance.Minus)
+      Some
+        ( loc,
+          { Variance.kind = Variance.Minus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+        )
     | _ -> None
 
   let rec _type env = union env

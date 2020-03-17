@@ -38,8 +38,14 @@ let tvar (RVar _) = Error "Unsupported recursive variables."
 
 let variance_ = function
   | Neutral -> None
-  | Positive -> Some (Loc.none, Ast.Variance.Plus)
-  | Negative -> Some (Loc.none, Ast.Variance.Minus)
+  | Positive ->
+    Some
+      ( Loc.none,
+        { Ast.Variance.kind = Ast.Variance.Plus; comments = Flow_ast_utils.mk_comments_opt () } )
+  | Negative ->
+    Some
+      ( Loc.none,
+        { Ast.Variance.kind = Ast.Variance.Minus; comments = Flow_ast_utils.mk_comments_opt () } )
 
 let rec type_ t =
   let just t = return (Loc.none, t) in

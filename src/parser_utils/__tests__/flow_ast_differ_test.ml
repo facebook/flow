@@ -194,7 +194,7 @@ class useless_mapper =
     method! variance (variance : Loc.t Ast.Variance.t option) =
       let open Ast.Variance in
       match variance with
-      | Some (loc, Minus) -> Some (loc, Plus)
+      | Some (loc, { kind = Minus; comments }) -> Some (loc, { kind = Plus; comments })
       | _ -> variance
 
     method! call_type_args (loc, targs) =
@@ -277,7 +277,7 @@ class insert_variance_mapper =
     method variance_ (loc : Loc.t) (variance : Loc.t Ast.Variance.t option) =
       let open Ast.Variance in
       match variance with
-      | None -> Some (loc, Plus)
+      | None -> Some (loc, { kind = Plus; comments = None })
       | _ -> variance
   end
 
@@ -288,7 +288,7 @@ class delete_variance_mapper =
     method! variance (variance : Loc.t Ast.Variance.t option) =
       let open Ast.Variance in
       match variance with
-      | Some (_loc, Minus) -> None
+      | Some (_loc, { kind = Minus; comments = _ }) -> None
       | _ -> variance
   end
 

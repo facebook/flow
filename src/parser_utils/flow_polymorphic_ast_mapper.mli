@@ -557,6 +557,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Pattern.t ->
       ('N, 'U) Ast.Pattern.t
 
+    method variance : 'M Ast.Variance.t -> 'N Ast.Variance.t
+
     method while_ : ('M, 'T) Ast.Statement.While.t -> ('N, 'U) Ast.Statement.While.t
 
     method with_ : ('M, 'T) Ast.Statement.With.t -> ('N, 'U) Ast.Statement.With.t

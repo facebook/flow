@@ -270,7 +270,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#object_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
-      let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
+      let variance' = Base.Option.map ~f:this#variance variance in
       { key = key'; value = value'; annot = annot'; static; variance = variance' }
 
     method class_property_value (value : ('M, 'T) Ast.Class.Property.value)
@@ -287,7 +287,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
-      let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
+      let variance' = Base.Option.map ~f:this#variance variance in
       { key = key'; value = value'; annot = annot'; static; variance = variance' }
 
     method comprehension (expr : ('M, 'T) Ast.Expression.Comprehension.t)
@@ -669,7 +669,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { key; value; optional; static; proto; _method; variance }) = opt in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
-      let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
+      let variance' = Base.Option.map ~f:this#variance variance in
       ( this#on_loc_annot annot,
         { key = key'; value = value'; optional; static; proto; _method; variance = variance' } )
 
@@ -680,7 +680,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = Base.Option.map ~f:this#identifier id_ in
       let key' = this#type_ key in
       let value' = this#type_ value in
-      let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
+      let variance' = Base.Option.map ~f:this#variance variance in
       ( this#on_loc_annot annot,
         { id = id'; key = key'; value = value'; static; variance = variance' } )
 
@@ -754,7 +754,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { name; bound; variance; default }) = tparam in
       let name' = this#type_param_identifier name in
       let bound' = this#type_annotation_hint bound in
-      let variance' = Base.Option.map ~f:(this#on_loc_annot * id) variance in
+      let variance' = Base.Option.map ~f:this#variance variance in
       let default' = Base.Option.map ~f:this#type_ default in
       ( this#on_loc_annot annot,
         { name = name'; bound = bound'; variance = variance'; default = default' } )
@@ -1596,6 +1596,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = this#variable_declarator_pattern ~kind id in
       let init' = Base.Option.map ~f:this#expression init in
       (this#on_loc_annot annot, { id = id'; init = init' })
+
+    method variance (variance : 'M Ast.Variance.t) : 'N Ast.Variance.t =
+      let open Ast.Variance in
+      let (annot, { kind; comments }) = variance in
+      let annot' = this#on_loc_annot annot in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { kind; comments = comments' })
 
     method while_ (stuff : ('M, 'T) Ast.Statement.While.t) : ('N, 'U) Ast.Statement.While.t =
       let open Ast.Statement.While in

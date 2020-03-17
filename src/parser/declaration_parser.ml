@@ -195,11 +195,21 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     let variance =
       match Peek.token env with
       | T_PLUS ->
+        let leading = Peek.comments env in
         Eat.token env;
-        Some (loc, Variance.Plus)
+        Some
+          ( loc,
+            { Variance.kind = Variance.Plus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+          )
       | T_MINUS ->
+        let leading = Peek.comments env in
         Eat.token env;
-        Some (loc, Variance.Minus)
+        Some
+          ( loc,
+            {
+              Variance.kind = Variance.Minus;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            } )
       | _ -> None
     in
     match variance with

@@ -99,11 +99,16 @@ end =
   BigIntLiteral
 
 and Variance : sig
-  type 'M t = 'M * t'
+  type 'M t = 'M * 'M t'
 
-  and t' =
+  and kind =
     | Plus
     | Minus
+
+  and 'M t' = {
+    kind: kind;
+    comments: ('M, unit) Syntax.t option;
+  }
   [@@deriving show]
 end =
   Variance

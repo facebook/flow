@@ -2298,10 +2298,11 @@ and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.default 
       | Expression expr -> with_semicolon (expression expr));
     ]
 
-and variance (loc, var) =
+and variance (loc, { Ast.Variance.kind; comments }) =
   source_location_with_comments
+    ?comments
     ( loc,
-      match var with
+      match kind with
       | Ast.Variance.Plus -> Atom "+"
       | Ast.Variance.Minus -> Atom "-" )
 
