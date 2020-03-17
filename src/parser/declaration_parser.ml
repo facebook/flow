@@ -81,14 +81,15 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               | _ -> check_env
             in
             pattern check_env property.pattern)
-        | RestProperty (_, { RestProperty.argument }) -> pattern check_env argument)
+        | RestProperty (_, { RestProperty.argument; comments = _ }) -> pattern check_env argument)
     and _array check_env arr = List.fold_left array_element check_env arr.Pattern.Array.elements
     and array_element check_env =
       Pattern.Array.(
         function
         | None -> check_env
         | Some (Element (_, { Element.argument; default = _ })) -> pattern check_env argument
-        | Some (RestElement (_, { RestElement.argument })) -> pattern check_env argument)
+        | Some (RestElement (_, { RestElement.argument; comments = _ })) ->
+          pattern check_env argument)
     and identifier_pattern check_env { Pattern.Identifier.name = id; _ } = identifier check_env id
     and identifier (env, param_names) ((loc, { Identifier.name; comments = _ }) as id) =
       if SSet.mem name param_names then error_at env (loc, Parse_error.StrictParamDupe);

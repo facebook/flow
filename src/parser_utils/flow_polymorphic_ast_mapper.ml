@@ -1388,9 +1388,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method pattern_object_rest_property ?kind (prop : ('M, 'T) Ast.Pattern.Object.RestProperty.t')
         : ('N, 'U) Ast.Pattern.Object.RestProperty.t' =
       let open Ast.Pattern.Object.RestProperty in
-      let { argument } = prop in
+      let { argument; comments } = prop in
       let argument' = this#pattern_object_rest_property_pattern ?kind argument in
-      { argument = argument' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
 
     method pattern_object_property_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t)
         : ('N, 'U) Ast.Pattern.t =
@@ -1423,9 +1424,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method pattern_array_rest_element ?kind (elem : ('M, 'T) Ast.Pattern.Array.RestElement.t') =
       let open Ast.Pattern.Array.RestElement in
-      let { argument } = elem in
+      let { argument; comments } = elem in
       let argument' = this#pattern_array_rest_element_pattern ?kind argument in
-      { argument = argument' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
 
     method pattern_array_rest_element_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t)
         : ('N, 'U) Ast.Pattern.t =

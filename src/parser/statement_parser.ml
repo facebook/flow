@@ -1022,7 +1022,7 @@ module Statement
             (fun acc prop ->
               match prop with
               | Object.Property (_, { Object.Property.pattern; _ })
-              | Object.RestProperty (_, { Object.RestProperty.argument = pattern }) ->
+              | Object.RestProperty (_, { Object.RestProperty.argument = pattern; comments = _ }) ->
                 fold acc pattern)
             acc
             properties
@@ -1032,7 +1032,7 @@ module Statement
               fun acc elem ->
                 match elem with
                 | Some (Element (_, { Element.argument = pattern; default = _ }))
-                | Some (RestElement (_, { RestElement.argument = pattern })) ->
+                | Some (RestElement (_, { RestElement.argument = pattern; comments = _ })) ->
                   fold acc pattern
                 | None -> acc)
             acc

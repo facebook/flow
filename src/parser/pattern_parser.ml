@@ -54,9 +54,10 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             acc
         in
         properties env acc remaining
-      | [SpreadProperty (loc, { SpreadProperty.argument; comments = _ })] ->
+      | [SpreadProperty (loc, { SpreadProperty.argument; comments })] ->
         let acc =
-          Pattern.Object.(RestProperty (loc, { RestProperty.argument = from_expr env argument }))
+          Pattern.Object.(
+            RestProperty (loc, { RestProperty.argument = from_expr env argument; comments }))
           :: acc
         in
         properties env acc []
@@ -86,12 +87,13 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       let open Ast.Expression in
       function
       | [] -> List.rev acc
-      | [Some (Spread (loc, { SpreadElement.argument; comments = _ }))] ->
+      | [Some (Spread (loc, { SpreadElement.argument; comments }))] ->
         (* AssignmentRestElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentRestElement *)
         let acc =
           match assignment_target env argument with
-          | Some argument -> Some Pattern.Array.(RestElement (loc, { RestElement.argument })) :: acc
+          | Some argument ->
+            Some Pattern.Array.(RestElement (loc, { RestElement.argument; comments })) :: acc
           | None -> acc
         in
         elements env acc []
@@ -161,6 +163,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
   (* Parse object destructuring pattern *)
   let rec object_ restricted_error =
     let rest_property env =
+      let leading = Peek.comments env in
       let (loc, argument) =
         with_loc
           (fun env ->
@@ -168,7 +171,9 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             pattern env restricted_error)
           env
       in
-      Pattern.Object.(RestProperty (loc, { RestProperty.argument }))
+      Pattern.Object.(
+        RestProperty
+          (loc, { RestProperty.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }))
     in
     let property_default env =
       match Peek.token env with
@@ -303,6 +308,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         Expect.token env T_COMMA;
         elements env (None :: acc)
       | T_ELLIPSIS ->
+        let leading = Peek.comments env in
         let (loc, argument) =
           with_loc
             (fun env ->
@@ -310,7 +316,11 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
               pattern env restricted_error)
             env
         in
-        let element = Pattern.Array.(RestElement (loc, { RestElement.argument })) in
+        let element =
+          Pattern.Array.(
+            RestElement
+              (loc, { RestElement.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }))
+        in
         (* rest elements are always last, the closing ] should be next. but if not,
            error and keep going so we recover gracefully by parsing the rest of the
            elements. *)

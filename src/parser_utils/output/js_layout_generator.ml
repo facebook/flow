@@ -1201,36 +1201,42 @@ and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t)
                        | None -> prop
                      in
                      source_location_with_comments (loc, prop)
-                   | P.Object.RestProperty (loc, { P.Object.RestProperty.argument }) ->
-                     source_location_with_comments (loc, fuse [Atom "..."; pattern argument]))
+                   | P.Object.RestProperty (loc, { P.Object.RestProperty.argument; comments }) ->
+                     source_location_with_comments
+                       ?comments
+                       (loc, fuse [Atom "..."; pattern argument]))
                  properties);
             hint type_annotation annot;
           ]
       | P.Array { P.Array.elements; annot; comments } ->
-        group
-          [
-            new_list
-              ~wrap:(Atom "[", Atom "]")
-              ~sep:(Atom ",")
-              ~trailing_sep:false (* Array rest cannot have trailing *)
-              (List.map
-                 (function
-                   | None -> Empty
-                   | Some (P.Array.Element (loc, { P.Array.Element.argument; default })) ->
-                     let elem = pattern argument in
-                     let elem =
-                       match default with
-                       | Some expr -> fuse_with_default elem expr
-                       | None -> elem
-                     in
-                     source_location_with_comments (loc, elem)
-                   | Some (P.Array.RestElement (loc, { P.Array.RestElement.argument })) ->
-                     source_location_with_comments
-                       ?comments
-                       (loc, fuse [Atom "..."; pattern argument]))
-                 elements);
-            hint type_annotation annot;
-          ]
+        layout_node_with_comments_opt
+          loc
+          comments
+          (group
+             [
+               new_list
+                 ~wrap:(Atom "[", Atom "]")
+                 ~sep:(Atom ",")
+                 ~trailing_sep:false (* Array rest cannot have trailing *)
+                 (List.map
+                    (function
+                      | None -> Empty
+                      | Some (P.Array.Element (loc, { P.Array.Element.argument; default })) ->
+                        let elem = pattern argument in
+                        let elem =
+                          match default with
+                          | Some expr -> fuse_with_default elem expr
+                          | None -> elem
+                        in
+                        source_location_with_comments (loc, elem)
+                      | Some (P.Array.RestElement (loc, { P.Array.RestElement.argument; comments }))
+                        ->
+                        source_location_with_comments
+                          ?comments
+                          (loc, fuse [Atom "..."; pattern argument]))
+                    elements);
+               hint type_annotation annot;
+             ])
       | P.Identifier { P.Identifier.name; annot; optional } ->
         fuse
           [

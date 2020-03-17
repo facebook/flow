@@ -1722,11 +1722,13 @@ let program
       (match (shorthand1, shorthand2) with
       | (false, false) -> join_diff_list [keys; pats; defaults]
       | (_, _) -> None)
-    | (RestProperty (_, rp1), RestProperty (_, rp2)) ->
+    | (RestProperty (loc, rp1), RestProperty (_, rp2)) ->
       let open Ast.Pattern.Object.RestProperty in
-      let { argument = argument1 } = rp1 in
-      let { argument = argument2 } = rp2 in
-      Some (diff_if_changed pattern argument1 argument2)
+      let { argument = argument1; comments = comments1 } = rp1 in
+      let { argument = argument2; comments = comments2 } = rp2 in
+      let argument_diff = Some (diff_if_changed pattern argument1 argument2) in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [argument_diff; comments_diff]
     | (_, _) -> None
   and pattern_object_property_key
       (k1 : (Loc.t, Loc.t) Ast.Pattern.Object.Property.key)
@@ -1756,7 +1758,7 @@ let program
     let open Ast.Pattern.Array in
     match (eo1, eo2) with
     | (Some (Element p1), Some (Element p2)) -> pattern_array_element p1 p2
-    | (Some (RestElement re1), Some (RestElement re2)) -> Some (pattern_array_rest re1 re2)
+    | (Some (RestElement re1), Some (RestElement re2)) -> pattern_array_rest re1 re2
     | (None, None) -> Some [] (* Both elements elided *)
     | (_, _) -> None
   (* one element is elided and another is not *)
@@ -1770,12 +1772,14 @@ let program
     let defaults = diff_if_changed_nonopt_fn expression default1 default2 in
     join_diff_list [args; defaults]
   and pattern_array_rest
-      ((_, r1) : (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t)
-      ((_, r2) : (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t) : node change list =
+      ((loc, r1) : (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t)
+      ((_, r2) : (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t) : node change list option =
     let open Ast.Pattern.Array.RestElement in
-    let { argument = argument1 } = r1 in
-    let { argument = argument2 } = r2 in
-    pattern argument1 argument2
+    let { argument = argument1; comments = comments1 } = r1 in
+    let { argument = argument2; comments = comments2 } = r2 in
+    let argument_diff = Some (pattern argument1 argument2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
   and pattern_identifier
       (i1 : (Loc.t, Loc.t) Ast.Pattern.Identifier.t) (i2 : (Loc.t, Loc.t) Ast.Pattern.Identifier.t)
       : node change list option =

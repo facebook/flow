@@ -1408,7 +1408,11 @@ and Pattern : sig
     module RestProperty : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and ('M, 'T) t' = { argument: ('M, 'T) Pattern.t } [@@deriving show]
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Pattern.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
     end
 
     type ('M, 'T) property =
@@ -1436,7 +1440,11 @@ and Pattern : sig
     module RestElement : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and ('M, 'T) t' = { argument: ('M, 'T) Pattern.t } [@@deriving show]
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Pattern.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
     end
 
     type ('M, 'T) element =

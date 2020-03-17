@@ -1061,8 +1061,8 @@ with type t = Impl.t = struct
         | Element (loc, { Element.argument; default = Some default }) ->
           node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
         | Element (_loc, { Element.argument; default = None }) -> pattern argument
-        | RestElement (loc, { RestElement.argument }) ->
-          node "RestElement" loc [("argument", pattern argument)])
+        | RestElement (loc, { RestElement.argument; comments }) ->
+          node ?comments "RestElement" loc [("argument", pattern argument)])
     and object_property =
       let open Expression.Object in
       function
@@ -1130,8 +1130,8 @@ with type t = Impl.t = struct
               ("shorthand", bool shorthand);
               ("computed", bool computed);
             ]
-        | RestProperty (loc, { RestProperty.argument }) ->
-          node "RestProperty" loc [("argument", pattern argument)])
+        | RestProperty (loc, { RestProperty.argument; comments }) ->
+          node ?comments "RestProperty" loc [("argument", pattern argument)])
     and expression_or_spread =
       let open Expression in
       function

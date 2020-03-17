@@ -19,7 +19,7 @@ let rec fold_bindings_of_pattern =
       Object.(
         function
         | Property (_, { Property.pattern = p; _ })
-        | RestProperty (_, { RestProperty.argument = p }) ->
+        | RestProperty (_, { RestProperty.argument = p; comments = _ }) ->
           fold_bindings_of_pattern f acc p)
     in
     let element f acc =
@@ -27,7 +27,7 @@ let rec fold_bindings_of_pattern =
         function
         | None -> acc
         | Some (Element (_, { Element.argument = p; default = _ }))
-        | Some (RestElement (_, { RestElement.argument = p })) ->
+        | Some (RestElement (_, { RestElement.argument = p; comments = _ })) ->
           fold_bindings_of_pattern f acc p)
     in
     fun f acc -> function

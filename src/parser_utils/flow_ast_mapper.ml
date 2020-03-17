@@ -1686,12 +1686,13 @@ class ['loc] mapper =
     method pattern_object_rest_property
         ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.RestProperty.t') =
       let open Ast.Pattern.Object.RestProperty in
-      let { argument } = prop in
+      let { argument; comments } = prop in
       let argument' = this#pattern_object_rest_property_pattern ?kind argument in
-      if argument' == argument then
+      let comments' = this#syntax_opt comments in
+      if argument' == argument && comments == comments' then
         prop
       else
-        { argument = argument' }
+        { argument = argument'; comments = comments' }
 
     method pattern_object_property_pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ?kind expr
@@ -1722,12 +1723,13 @@ class ['loc] mapper =
 
     method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.RestElement.t') =
       let open Ast.Pattern.Array.RestElement in
-      let { argument } = elem in
+      let { argument; comments } = elem in
       let argument' = this#pattern_array_rest_element_pattern ?kind argument in
-      if argument' == argument then
+      let comments' = this#syntax_opt comments in
+      if argument' == argument && comments == comments' then
         elem
       else
-        { argument = argument' }
+        { argument = argument'; comments = comments' }
 
     method pattern_array_rest_element_pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ?kind expr
