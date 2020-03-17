@@ -684,8 +684,9 @@ with type t = Impl.t = struct
     and private_name (loc, { PrivateName.id; comments }) =
       node ?comments "PrivateName" loc [("id", identifier id)]
     and pattern_identifier
-        loc { Pattern.Identifier.name = (_, { Identifier.name; comments = _ }); annot; optional } =
+        loc { Pattern.Identifier.name = (_, { Identifier.name; comments }); annot; optional } =
       node
+        ?comments
         "Identifier"
         loc
         [

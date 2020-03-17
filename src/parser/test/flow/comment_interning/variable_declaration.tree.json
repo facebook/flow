@@ -255,6 +255,22 @@
                 "range":[282,318],
                 "id":{
                   "type":"Identifier",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":14,"column":42},"end":{"line":14,"column":56}},
+                      "range":[284,298],
+                      "value":" 4.3 T id "
+                    }
+                  ],
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":14,"column":25},"end":{"line":14,"column":39}},
+                      "range":[267,281],
+                      "value":" 4.2 L id "
+                    }
+                  ],
                   "loc":{"source":null,"start":{"line":14,"column":40},"end":{"line":14,"column":41}},
                   "range":[282,283],
                   "name":"x",
@@ -456,6 +472,14 @@
                   "range":[523,524],
                   "id":{
                     "type":"Identifier",
+                    "trailingComments":[
+                      {
+                        "type":"Block",
+                        "loc":{"source":null,"start":{"line":22,"column":33},"end":{"line":22,"column":55}},
+                        "range":[525,547],
+                        "value":" 6.2 Not trailing "
+                      }
+                    ],
                     "loc":{"source":null,"start":{"line":22,"column":31},"end":{"line":22,"column":32}},
                     "range":[523,524],
                     "name":"x",
@@ -530,6 +554,14 @@
                   "range":[619,620],
                   "id":{
                     "type":"Identifier",
+                    "trailingComments":[
+                      {
+                        "type":"Block",
+                        "loc":{"source":null,"start":{"line":26,"column":33},"end":{"line":26,"column":55}},
+                        "range":[621,643],
+                        "value":" 7.2 Not trailing "
+                      }
+                    ],
                     "loc":{"source":null,"start":{"line":26,"column":31},"end":{"line":26,"column":32}},
                     "range":[619,620],
                     "name":"x",

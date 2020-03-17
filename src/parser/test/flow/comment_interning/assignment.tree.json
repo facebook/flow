@@ -50,6 +50,22 @@
         "operator":"=",
         "left":{
           "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":3,"column":28},"end":{"line":3,"column":54}},
+              "range":[40,66],
+              "value":" 1.2 Trailing on left "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":25}},
+              "range":[12,37],
+              "value":" 1.1 Leading on left "
+            }
+          ],
           "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":27}},
           "range":[38,39],
           "name":"x",
@@ -109,6 +125,14 @@
         "operator":"=",
         "left":{
           "type":"Identifier",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":5,"column":29},"end":{"line":5,"column":54}},
+              "range":[157,182],
+              "value":" 2.2 Leading on left "
+            }
+          ],
           "loc":{"source":null,"start":{"line":5,"column":55},"end":{"line":5,"column":56}},
           "range":[183,184],
           "name":"x",
