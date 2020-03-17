@@ -318,7 +318,7 @@ and 'loc t' =
   | EEnumInvalidMemberAccess of {
       member_name: string option;
       suggestion: string option;
-      access_reason: 'loc virtual_reason;
+      reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
   | EEnumModification of {
@@ -803,14 +803,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         computed_property_reason = map_reason computed_property_reason;
         union_reason = map_reason union_reason;
       }
-  | EEnumInvalidMemberAccess { member_name; suggestion; access_reason; enum_reason } ->
+  | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
     EEnumInvalidMemberAccess
-      {
-        member_name;
-        suggestion;
-        access_reason = map_reason access_reason;
-        enum_reason = map_reason enum_reason;
-      }
+      { member_name; suggestion; reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumModification { loc; enum_reason } ->
     EEnumModification { loc = f loc; enum_reason = map_reason enum_reason }
   | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
@@ -1073,6 +1068,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumNotAllChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
+  | EEnumInvalidMemberAccess { reason; _ }
   | EEnumCheckedInIf reason ->
     Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
@@ -1190,7 +1186,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         Some loc))
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
-  | EEnumInvalidMemberAccess { access_reason; _ } -> Some (poly_loc_of_reason access_reason)
   | EEnumModification { loc; _ } -> Some loc
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
@@ -2886,9 +2881,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumInvalidMemberAccess { member_name; suggestion; access_reason; enum_reason } ->
+  | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
     let features =
-      [text "Cannot access "; desc access_reason]
+      [text "Cannot access "; desc reason]
       @
       match member_name with
       | Some name ->

@@ -736,13 +736,13 @@ References:
        ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- error-access.js:9:11
+Error --------------------------------------------------------------------------------------------- error-access.js:9:13
 
-Cannot access `E.C` because `C` is not a member of enum `E` [1].
+Cannot access `C` because `C` is not a member of enum `E` [1].
 
-   error-access.js:9:11
+   error-access.js:9:13
    9| const x = E.C;
-                ^^^
+                  ^
 
 References:
    error-access.js:3:1
@@ -754,13 +754,13 @@ References:
       ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- error-access.js:14:1
+Error --------------------------------------------------------------------------------------------- error-access.js:14:3
 
-Cannot access computed property on enum `E` [1] because computed access is not allowed on enums.
+Cannot access string on enum `E` [1] because computed access is not allowed on enums.
 
-   error-access.js:14:1
+   error-access.js:14:3
    14| E["A"];
-       ^^^^^^
+         ^^^
 
 References:
    error-access.js:3:1
@@ -772,13 +772,13 @@ References:
        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- error-access.js:22:1
+Error --------------------------------------------------------------------------------------------- error-access.js:22:3
 
-Cannot access `F.Car` because `Car` is not a member of enum `F` [1]. Did you mean the member `Cart`?
+Cannot access `Car` because `Car` is not a member of enum `F` [1]. Did you mean the member `Cart`?
 
-   error-access.js:22:1
+   error-access.js:22:3
    22| F.Car; // Error: suggest `Cart`
-       ^^^^^
+         ^^^
 
 References:
    error-access.js:16:1
@@ -791,13 +791,13 @@ References:
        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- error-access.js:23:1
+Error --------------------------------------------------------------------------------------------- error-access.js:23:3
 
-Cannot access `F.Foobr` because `Foobr` is not a member of enum `F` [1]. Did you mean the member `Foobar`?
+Cannot access `Foobr` because `Foobr` is not a member of enum `F` [1]. Did you mean the member `Foobar`?
 
-   error-access.js:23:1
+   error-access.js:23:3
    23| F.Foobr; // Error: suggest `Foobar`
-       ^^^^^^^
+         ^^^^^
 
 References:
    error-access.js:16:1
@@ -810,13 +810,13 @@ References:
        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- error-access.js:24:1
+Error --------------------------------------------------------------------------------------------- error-access.js:24:3
 
-Cannot access `F.Bar` because `Bar` is not a member of enum `F` [1]. Did you mean the member `Bart`?
+Cannot access `Bar` because `Bar` is not a member of enum `F` [1]. Did you mean the member `Bart`?
 
-   error-access.js:24:1
+   error-access.js:24:3
    24| F.Bar; // Error: suggest `Bart`
-       ^^^^^
+         ^^^
 
 References:
    error-access.js:16:1
@@ -829,13 +829,13 @@ References:
        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- error-access.js:25:1
+Error --------------------------------------------------------------------------------------------- error-access.js:25:3
 
-Cannot access `F.X` because `X` is not a member of enum `F` [1].
+Cannot access `X` because `X` is not a member of enum `F` [1].
 
-   error-access.js:25:1
+   error-access.js:25:3
    25| F.X; // Error: no suggestion
-       ^^^
+         ^
 
 References:
    error-access.js:16:1
@@ -2969,7 +2969,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
 
-Cannot access `$PropertyType` because `X` is not a member of enum `E` [1].
+Cannot access `X` because `X` is not a member of enum `E` [1].
 
    utility-types.js:12:11
    12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
@@ -2981,13 +2981,13 @@ References:
                                ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:15:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:15:34
 
-Cannot access `$ElementType` on enum `E` [1] because computed access is not allowed on enums.
+Cannot access string on enum `E` [1] because computed access is not allowed on enums.
 
-   utility-types.js:15:11
+   utility-types.js:15:34
    15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                        ^^^^^^
 
 References:
    utility-types.js:15:24

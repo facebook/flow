@@ -6407,7 +6407,7 @@ struct
           when ALoc.equal_id id1 id2 ->
           ()
         | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
-            GetPropT (_, access_reason, Named (_, member_name), tout) ) ->
+            GetPropT (_, access_reason, Named (prop_reason, member_name), tout) ) ->
           (* We guarantee in the parser that enum member names won't start with lowercase
            * "a" through "z", these are reserved for methods. *)
           if (not @@ Base.String.is_empty member_name) && Base.Char.is_lowercase member_name.[0]
@@ -6426,24 +6426,26 @@ struct
             in
             rec_flow_t cx trace ~use_op:unknown_use (enum_type, tout)
           else
+            let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
             let suggestion = typo_suggestion (SMap.keys members) member_name in
             add_output
               cx
               ~trace
               (Error_message.EEnumInvalidMemberAccess
-                 { member_name = Some member_name; suggestion; access_reason; enum_reason });
+                 { member_name = Some member_name; suggestion; reason = member_reason; enum_reason });
             rec_flow_t cx trace ~use_op:unknown_use (AnyT.error access_reason, tout)
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
         | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
           ->
           rec_flow cx trace (enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum), u)
-        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, access_reason, _, _)) ->
+        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, elem, _)) ->
+          let reason = reason_of_t elem in
           add_output
             cx
             ~trace
             (Error_message.EEnumInvalidMemberAccess
-               { member_name = None; suggestion = None; access_reason; enum_reason })
+               { member_name = None; suggestion = None; reason; enum_reason })
         | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, _))
         | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, _)) ->
           add_output
