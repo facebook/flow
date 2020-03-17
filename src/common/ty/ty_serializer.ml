@@ -215,7 +215,9 @@ and obj_index_prop d =
 and obj_call_prop f =
   function_ f >>| fun value -> { T.Object.CallProperty.value = (Loc.none, value); static = false }
 
-and obj_spread_prop t = type_ t >>| fun t -> (Loc.none, { T.Object.SpreadProperty.argument = t })
+and obj_spread_prop t =
+  type_ t >>| fun t ->
+  (Loc.none, { T.Object.SpreadProperty.argument = t; comments = Flow_ast_utils.mk_comments_opt () })
 
 and arr { arr_readonly; arr_elt_t; _ } =
   type_ arr_elt_t >>| fun t ->

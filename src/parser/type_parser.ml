@@ -554,9 +554,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Type.Object.InternalSlot islot
       (* Expects the T_ELLIPSIS has already been eaten *)
     in
-    let spread_property env start_loc =
+    let spread_property env start_loc leading =
       let spread =
-        with_loc ~start_loc (fun env -> { Type.Object.SpreadProperty.argument = _type env }) env
+        with_loc
+          ~start_loc
+          (fun env ->
+            {
+              Type.Object.SpreadProperty.argument = _type env;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
+          env
       in
       Type.Object.SpreadProperty spread
     in
@@ -602,6 +609,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | T_RCURLYBAR when exact -> (List.rev props, inexact)
       | T_RCURLY when not exact -> (List.rev props, inexact)
       | T_ELLIPSIS when allow_spread ->
+        let leading = Peek.comments env in
         Eat.token env;
         begin
           match Peek.token env with
@@ -621,7 +629,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 properties ~is_class ~allow_inexact ~allow_spread ~exact env acc
             end
           | _ ->
-            let prop = spread_property env start_loc in
+            let prop = spread_property env start_loc leading in
             semicolon exact env;
             properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop :: props, inexact)
         end

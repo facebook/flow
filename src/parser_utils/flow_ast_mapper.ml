@@ -846,12 +846,13 @@ class ['loc] mapper =
 
     method object_spread_property_type (opt : ('loc, 'loc) Ast.Type.Object.SpreadProperty.t) =
       let open Ast.Type.Object.SpreadProperty in
-      let (loc, { argument }) = opt in
+      let (loc, { argument; comments }) = opt in
       let argument' = this#type_ argument in
-      if argument' == argument then
+      let comments' = this#syntax_opt comments in
+      if argument' == argument && comments == comments' then
         opt
       else
-        (loc, { argument = argument' })
+        (loc, { argument = argument'; comments = comments' })
 
     method object_indexer_property_type (opt : ('loc, 'loc) Ast.Type.Object.Indexer.t) =
       let open Ast.Type.Object.Indexer in

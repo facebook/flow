@@ -223,7 +223,7 @@ def("ObjectTypeIndexer")
 def("ObjectTypeSpreadProperty")
   .bases("Node")
   .build("argument")
-  .field("argument", def("GenericTypeAnnotation"));
+  .field("argument", def("Type"));
 
 def("ObjectTypeInternalSlot")
   .bases("Node")

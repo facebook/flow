@@ -703,9 +703,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Object in
       match prop with
       | Property prop -> Property (this#object_property_type prop)
-      | SpreadProperty (annot, { SpreadProperty.argument }) ->
+      | SpreadProperty (annot, { SpreadProperty.argument; comments }) ->
+        let annot' = this#on_loc_annot annot in
         let argument' = this#type_ argument in
-        SpreadProperty (this#on_loc_annot annot, { SpreadProperty.argument = argument' })
+        let comments' = Base.Option.map ~f:this#syntax comments in
+        SpreadProperty (annot', { SpreadProperty.argument = argument'; comments = comments' })
       | Indexer indexer -> Indexer (this#object_indexer_type indexer)
       | CallProperty (annot, { CallProperty.value; static }) ->
         CallProperty.(

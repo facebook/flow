@@ -1331,9 +1331,10 @@ and convert_object =
               EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static = false }));
           (acc, Tast_utils.error_mapper#object_type_property prop)
         )
-      | SpreadProperty (loc, { Object.SpreadProperty.argument }) ->
+      | SpreadProperty (loc, { Object.SpreadProperty.argument; comments }) ->
         let (((_, t), _) as argument_ast) = convert cx tparams_map argument in
-        (Acc.add_spread t acc, SpreadProperty (loc, { SpreadProperty.argument = argument_ast })))
+        ( Acc.add_spread t acc,
+          SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments }) ))
   in
   fun cx tparams_map loc ~exact properties ->
     let (acc, rev_prop_asts) =

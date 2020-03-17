@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":55}},
-  "range":[0,130],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":73}},
+  "range":[0,205],
   "body":[
     {
       "type":"TypeAlias",
@@ -140,6 +140,56 @@
         "callProperties":[],
         "internalSlots":[]
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":73}},
+      "range":[132,205],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":5,"column":5},"end":{"line":5,"column":10}},
+        "range":[137,142],
+        "name":"Test3",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":72}},
+        "range":[145,204],
+        "inexact":false,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeSpreadProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":5,"column":14},"end":{"line":5,"column":32}},
+                "range":[146,164],
+                "value":" 3.1 L spread "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":5,"column":33},"end":{"line":5,"column":55}},
+            "range":[165,187],
+            "argument":{
+              "type":"ObjectTypeAnnotation",
+              "loc":{"source":null,"start":{"line":5,"column":53},"end":{"line":5,"column":55}},
+              "range":[185,187],
+              "inexact":false,
+              "exact":false,
+              "properties":[],
+              "indexers":[],
+              "callProperties":[],
+              "internalSlots":[]
+            }
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
+      }
     }
   ],
   "comments":[
@@ -166,6 +216,24 @@
       "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":34}},
       "range":[89,109],
       "value":" 2.1 L variance "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":14},"end":{"line":5,"column":32}},
+      "range":[146,164],
+      "value":" 3.1 L spread "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":37},"end":{"line":5,"column":52}},
+      "range":[169,184],
+      "value":" 3.2 L obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":56},"end":{"line":5,"column":71}},
+      "range":[188,203],
+      "value":" 3.3 T obj "
     }
   ]
 }

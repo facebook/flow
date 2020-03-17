@@ -1365,8 +1365,8 @@ with type t = Impl.t = struct
           ("variance", option variance variance_);
           ("kind", string kind);
         ]
-    and object_type_spread_property (loc, { Type.Object.SpreadProperty.argument }) =
-      node "ObjectTypeSpreadProperty" loc [("argument", _type argument)]
+    and object_type_spread_property (loc, { Type.Object.SpreadProperty.argument; comments }) =
+      node ?comments "ObjectTypeSpreadProperty" loc [("argument", _type argument)]
     and object_type_indexer
         (loc, { Type.Object.Indexer.id; key; value; static; variance = variance_ }) =
       node

@@ -202,7 +202,7 @@ module Eval (Env : EvalEnv) = struct
     in
     let object_type_spread_prop tps prop =
       let open Ast.Type.Object.SpreadProperty in
-      let (_, { argument }) = prop in
+      let (_, { argument; comments = _ }) = prop in
       type_ tps argument
     in
     let object_type_indexer tps prop =

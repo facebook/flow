@@ -1881,7 +1881,8 @@ let program
     let open Ast.Type.Object in
     match (prop1, prop2) with
     | (Property p1, Property p2) -> diff_if_changed_ret_opt object_property_type p1 p2
-    | (SpreadProperty _p1, SpreadProperty _p2) -> None (* TODO *)
+    | (SpreadProperty (loc, p1), SpreadProperty (_, p2)) ->
+      diff_if_changed_ret_opt (object_spread_property_type loc) p1 p2
     | (Indexer _p1, Indexer _p2) -> None (* TODO *)
     | (CallProperty _p1, CallProperty _p2) -> None (* TODO *)
     | (InternalSlot _s1, InternalSlot _s2) -> None (* TODO *)
@@ -1931,6 +1932,16 @@ let program
     | (Set (_loc1, ft1), Set (_loc2, ft2)) ->
       diff_if_changed_ret_opt function_type ft1 ft2
     | _ -> None
+  and object_spread_property_type
+      (loc : Loc.t)
+      (spread1 : (Loc.t, Loc.t) Ast.Type.Object.SpreadProperty.t')
+      (spread2 : (Loc.t, Loc.t) Ast.Type.Object.SpreadProperty.t') : node change list option =
+    let open Ast.Type.Object.SpreadProperty in
+    let { argument = argument1; comments = comments1 } = spread1 in
+    let { argument = argument2; comments = comments2 } = spread2 in
+    let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
   and tuple_type (tp1 : (Loc.t, Loc.t) Ast.Type.t list) (tp2 : (Loc.t, Loc.t) Ast.Type.t list) :
       node change list option =
     diff_and_recurse_nonopt_no_trivial type_ tp1 tp2

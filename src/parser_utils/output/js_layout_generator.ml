@@ -2563,8 +2563,8 @@ and type_object_property =
             ( loc,
               fuse [Atom "set"; space; object_property_key key; type_function ~sep:(Atom ":") func]
             ) )
-  | SpreadProperty (loc, { SpreadProperty.argument }) ->
-    source_location_with_comments (loc, fuse [Atom "..."; type_ argument])
+  | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
+    source_location_with_comments ?comments (loc, fuse [Atom "..."; type_ argument])
   | Indexer (loc, { Indexer.id; key; value; static; variance = variance_ }) ->
     source_location_with_comments
       ( loc,

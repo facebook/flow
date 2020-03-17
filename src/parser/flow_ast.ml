@@ -207,7 +207,11 @@ and Type : sig
     module SpreadProperty : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and ('M, 'T) t' = { argument: ('M, 'T) Type.t } [@@deriving show]
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Type.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
     end
 
     module Indexer : sig

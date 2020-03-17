@@ -565,7 +565,11 @@ module T = struct
           } )
     | (loc, OSpread expr_type) ->
       Ast.Type.Object.SpreadProperty
-        (loc, { Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type })
+        ( loc,
+          {
+            Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
 
   and type_of_function_t outlined = function
     | ( loc,
