@@ -1466,14 +1466,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method spread_element (expr : ('M, 'T) Ast.Expression.SpreadElement.t)
         : ('N, 'U) Ast.Expression.SpreadElement.t =
       let open Ast.Expression.SpreadElement in
-      let (annot, { argument }) = expr in
-      (this#on_loc_annot annot, { argument = this#expression argument })
+      let (annot, { argument; comments }) = expr in
+      let annot' = this#on_loc_annot annot in
+      let argument' = this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { argument = argument'; comments = comments' })
 
     method spread_property (expr : ('M, 'T) Ast.Expression.Object.SpreadProperty.t)
         : ('N, 'U) Ast.Expression.Object.SpreadProperty.t =
       let open Ast.Expression.Object.SpreadProperty in
-      let (annot, { argument }) = expr in
-      (this#on_loc_annot annot, { argument = this#expression argument })
+      let (annot, { argument; comments }) = expr in
+      let annot' = this#on_loc_annot annot in
+      let argument' = this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { argument = argument'; comments = comments' })
 
     method super_expression (expr : 'M Ast.Expression.Super.t) : 'N Ast.Expression.Super.t =
       let open Ast.Expression.Super in

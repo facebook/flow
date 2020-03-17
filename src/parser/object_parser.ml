@@ -311,6 +311,7 @@ module Object
       let open Ast.Expression.Object in
       if Peek.token env = T_ELLIPSIS then
         (* Spread property *)
+        let leading = Peek.comments env in
         let (loc, (argument, errs)) =
           with_loc
             (fun env ->
@@ -318,7 +319,9 @@ module Object
               parse_assignment_cover env)
             env
         in
-        (SpreadProperty (loc, { SpreadProperty.argument }), errs)
+        ( SpreadProperty
+            (loc, { SpreadProperty.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }),
+          errs )
       else
         let start_loc = Peek.loc env in
         let async =

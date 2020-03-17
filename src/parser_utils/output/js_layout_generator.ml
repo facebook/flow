@@ -1060,8 +1060,9 @@ and expression_or_spread ?(ctxt = normal_context) expr_or_spread =
   let precedence = min_precedence in
   match expr_or_spread with
   | Ast.Expression.Expression expr -> expression_with_parens ~precedence ~ctxt expr
-  | Ast.Expression.Spread (loc, { Ast.Expression.SpreadElement.argument }) ->
+  | Ast.Expression.Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
     source_location_with_comments
+      ?comments
       (loc, fuse [Atom "..."; expression_with_parens ~precedence ~ctxt argument])
 
 and identifier (loc, { Ast.Identifier.name; comments }) = identifier_with_comments loc name comments
@@ -1942,8 +1943,8 @@ and object_property property =
       ( loc,
         source_location_with_comments
           (fn_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams) )
-  | O.SpreadProperty (loc, { O.SpreadProperty.argument }) ->
-    source_location_with_comments (loc, fuse [Atom "..."; expression argument])
+  | O.SpreadProperty (loc, { O.SpreadProperty.argument; comments }) ->
+    source_location_with_comments ?comments (loc, fuse [Atom "..."; expression argument])
 
 and jsx_element loc { Ast.JSX.openingElement; closingElement; children; comments } =
   layout_node_with_comments_opt loc comments

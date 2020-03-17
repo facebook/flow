@@ -821,9 +821,10 @@ module Expression
 
   and arguments =
     let spread_element env =
+      let leading = Peek.comments env in
       Expect.token env T_ELLIPSIS;
       let argument = assignment env in
-      Expression.SpreadElement.{ argument }
+      Expression.SpreadElement.{ argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }
     in
     let argument env =
       match Peek.token env with
@@ -1328,6 +1329,7 @@ module Expression
         Eat.token env;
         elements env (None :: acc, errs)
       | T_ELLIPSIS ->
+        let leading = Peek.comments env in
         let (loc, (argument, new_errs)) =
           with_loc
             (fun env ->
@@ -1337,7 +1339,12 @@ module Expression
               | Cover_patt (argument, new_errs) -> (argument, new_errs))
             env
         in
-        let elem = Expression.(Spread (loc, SpreadElement.{ argument })) in
+        let elem =
+          Expression.(
+            Spread
+              ( loc,
+                SpreadElement.{ argument; comments = Flow_ast_utils.mk_comments_opt ~leading () } ))
+        in
         let is_last = Peek.token env = T_RBRACKET in
         (* if this array is interpreted as a pattern, the spread becomes an AssignmentRestElement
              which must be the last element. We can easily error about additional elements since

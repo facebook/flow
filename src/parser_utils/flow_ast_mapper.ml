@@ -1774,13 +1774,23 @@ class ['loc] mapper =
 
     method spread_element (expr : ('loc, 'loc) Ast.Expression.SpreadElement.t) =
       let open Ast.Expression.SpreadElement in
-      let (loc, { argument }) = expr in
-      id this#expression argument expr (fun argument -> (loc, { argument }))
+      let (loc, { argument; comments }) = expr in
+      let argument' = this#expression argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        expr
+      else
+        (loc, { argument = argument'; comments = comments' })
 
     method spread_property (expr : ('loc, 'loc) Ast.Expression.Object.SpreadProperty.t) =
       let open Ast.Expression.Object.SpreadProperty in
-      let (loc, { argument }) = expr in
-      id this#expression argument expr (fun argument -> (loc, { argument }))
+      let (loc, { argument; comments }) = expr in
+      let argument' = this#expression argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        expr
+      else
+        (loc, { argument = argument'; comments = comments' })
 
     method super_expression _loc (expr : 'loc Ast.Expression.Super.t) =
       let open Ast.Expression.Super in

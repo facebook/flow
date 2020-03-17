@@ -2786,7 +2786,7 @@ and object_ cx reason ?(allow_sealed = true) props =
        TODO: This treatment of spreads is oblivious to issues that arise when spreading expressions
        of union type.
     *)
-        | SpreadProperty (prop_loc, { SpreadProperty.argument }) ->
+        | SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) ->
           let (((_, spread), _) as argument) = expression cx argument in
           let not_empty_object_literal_argument =
             match spread with
@@ -2800,7 +2800,7 @@ and object_ cx reason ?(allow_sealed = true) props =
               acc
           in
           ( ObjectExpressionAcc.set_seal ~allow_sealed not_empty_object_literal_argument acc,
-            SpreadProperty (prop_loc, { SpreadProperty.argument }) :: rev_prop_asts )
+            SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) :: rev_prop_asts )
         | Property
             ( prop_loc,
               Property.Init
@@ -2992,9 +2992,9 @@ and expression_or_spread cx =
   | Expression e ->
     let (((_, t), _) as e') = expression cx e in
     (Arg t, Expression e')
-  | Spread (loc, { SpreadElement.argument }) ->
+  | Spread (loc, { SpreadElement.argument; comments }) ->
     let (((_, t), _) as e') = expression cx argument in
-    (SpreadArg t, Spread (loc, { SpreadElement.argument = e' }))
+    (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
 and expression_or_spread_list cx undef_loc =
   let open Ast.Expression in
@@ -3005,9 +3005,9 @@ and expression_or_spread_list cx undef_loc =
           let (((_, t), _) as e) = expression cx e in
           (UnresolvedArg t, Some (Expression e))
         | None -> (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust), None)
-        | Some (Spread (loc, { SpreadElement.argument })) ->
+        | Some (Spread (loc, { SpreadElement.argument; comments })) ->
           let (((_, t), _) as argument) = expression cx argument in
-          (UnresolvedSpreadArg t, Some (Spread (loc, { SpreadElement.argument })))))
+          (UnresolvedSpreadArg t, Some (Spread (loc, { SpreadElement.argument; comments })))))
 
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and expression ?cond cx (loc, e) = expression_ ~cond cx loc e

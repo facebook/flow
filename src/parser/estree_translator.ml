@@ -1098,8 +1098,8 @@ with type t = Impl.t = struct
               ("shorthand", bool shorthand);
               ("computed", bool computed);
             ])
-      | SpreadProperty (loc, prop) ->
-        SpreadProperty.(node "SpreadProperty" loc [("argument", expression prop.argument)])
+      | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
+        node ?comments "SpreadProperty" loc [("argument", expression argument)]
     and object_pattern_property =
       Pattern.Object.(
         function
@@ -1136,8 +1136,8 @@ with type t = Impl.t = struct
       let open Expression in
       function
       | Expression expr -> expression expr
-      | Spread (loc, { SpreadElement.argument }) ->
-        node "SpreadElement" loc [("argument", expression argument)]
+      | Spread (loc, { SpreadElement.argument; comments }) ->
+        node ?comments "SpreadElement" loc [("argument", expression argument)]
     and comprehension_block (loc, { Expression.Comprehension.Block.left; right; each }) =
       node
         "ComprehensionBlock"

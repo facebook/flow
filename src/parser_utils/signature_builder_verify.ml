@@ -773,7 +773,7 @@ module Eval (Env : EvalEnv) = struct
     in
     let object_spread_property tps prop =
       let open Ast.Expression.Object.SpreadProperty in
-      let (_, { argument }) = prop in
+      let (_, { argument; comments = _ }) = prop in
       literal_expr tps argument
     in
     fun tps loc properties ->

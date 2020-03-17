@@ -1288,11 +1288,13 @@ let program
       let exp_diff = diff_if_changed expression exp1 exp2 in
       let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
       Some (List.concat [pat_diff; exp_diff; comments_diff])
-  and object_spread_property prop1 prop2 =
+  and object_spread_property loc prop1 prop2 =
     let open Ast.Expression.Object.SpreadProperty in
-    let { argument = arg1 } = prop1 in
-    let { argument = arg2 } = prop2 in
-    expression arg1 arg2
+    let { argument = arg1; comments = comments1 } = prop1 in
+    let { argument = arg2; comments = comments2 } = prop2 in
+    let argument_diff = Some (diff_if_changed expression arg1 arg2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
   and object_key key1 key2 =
     let module EOP = Ast.Expression.Object.Property in
     match (key1, key2) with
@@ -1327,8 +1329,7 @@ let program
       object_regular_property (loc, p1) p2
       |> Base.Option.value ~default:[(loc, Replace (ObjectProperty prop1, ObjectProperty prop2))]
       |> Base.Option.return
-    | (SpreadProperty (_, p1), SpreadProperty (_, p2)) ->
-      object_spread_property p1 p2 |> Base.Option.return
+    | (SpreadProperty (loc, p1), SpreadProperty (_, p2)) -> object_spread_property loc p1 p2
     | _ -> None
   and object_ loc obj1 obj2 =
     let open Ast.Expression.Object in
@@ -1464,15 +1465,17 @@ let program
     | (Ast.Expression.Expression e1, Ast.Expression.Expression e2) ->
       Some (diff_if_changed expression e1 e2)
     | (Ast.Expression.Spread spread1, Ast.Expression.Spread spread2) ->
-      Some (diff_if_changed spread_element spread1 spread2)
+      diff_if_changed_ret_opt spread_element spread1 spread2
     | (_, _) -> None
   and spread_element
       (spread1 : (Loc.t, Loc.t) Ast.Expression.SpreadElement.t)
-      (spread2 : (Loc.t, Loc.t) Ast.Expression.SpreadElement.t) : node change list =
+      (spread2 : (Loc.t, Loc.t) Ast.Expression.SpreadElement.t) : node change list option =
     let open Ast.Expression.SpreadElement in
-    let (_, { argument = arg1 }) = spread1 in
-    let (_, { argument = arg2 }) = spread2 in
-    diff_if_changed expression arg1 arg2
+    let (loc, { argument = arg1; comments = comments1 }) = spread1 in
+    let (_, { argument = arg2; comments = comments2 }) = spread2 in
+    let argument_diff = Some (diff_if_changed expression arg1 arg2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
   and logical loc expr1 expr2 =
     let open Ast.Expression.Logical in
     let { left = left1; right = right1; operator = operator1; comments = comments1 } = expr1 in

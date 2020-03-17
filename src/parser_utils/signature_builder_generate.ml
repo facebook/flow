@@ -1544,7 +1544,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     in
     let object_spread_property =
       let open Ast.Expression.Object.SpreadProperty in
-      (fun (loc, { argument }) -> (loc, T.OSpread (literal_expr argument)))
+      (fun (loc, { argument; comments = _ }) -> (loc, T.OSpread (literal_expr argument)))
     in
     function
     | [] -> None

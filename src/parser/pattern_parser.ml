@@ -54,7 +54,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             acc
         in
         properties env acc remaining
-      | [SpreadProperty (loc, { SpreadProperty.argument })] ->
+      | [SpreadProperty (loc, { SpreadProperty.argument; comments = _ })] ->
         let acc =
           Pattern.Object.(RestProperty (loc, { RestProperty.argument = from_expr env argument }))
           :: acc
@@ -86,7 +86,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       let open Ast.Expression in
       function
       | [] -> List.rev acc
-      | [Some (Spread (loc, { SpreadElement.argument }))] ->
+      | [Some (Spread (loc, { SpreadElement.argument; comments = _ }))] ->
         (* AssignmentRestElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentRestElement *)
         let acc =

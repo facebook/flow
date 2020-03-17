@@ -451,7 +451,7 @@ module Expressions = struct
 
   let expression expr = Expression expr
 
-  let spread expr = Spread (Loc.none, { SpreadElement.argument = expr })
+  let spread ?comments expr = Spread (Loc.none, { SpreadElement.argument = expr; comments })
 
   let jsx_element ?(loc = Loc.none) elem = (loc, JSXElement elem)
 

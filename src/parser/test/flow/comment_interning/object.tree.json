@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":90}},
-  "range":[0,209],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":64}},
+  "range":[0,275],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -192,6 +192,54 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":64}},
+      "range":[211,275],
+      "expression":{
+        "type":"ObjectExpression",
+        "loc":{"source":null,"start":{"line":7,"column":1},"end":{"line":7,"column":62}},
+        "range":[212,273],
+        "properties":[
+          {
+            "type":"SpreadProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":21}},
+                "range":[214,232],
+                "value":" 4.1 L spread "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":7,"column":22},"end":{"line":7,"column":44}},
+            "range":[233,255],
+            "argument":{
+              "type":"ObjectExpression",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":7,"column":45},"end":{"line":7,"column":60}},
+                  "range":[256,271],
+                  "value":" 4.3 T obj "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":7,"column":26},"end":{"line":7,"column":41}},
+                  "range":[237,252],
+                  "value":" 4.2 L obj "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":7,"column":42},"end":{"line":7,"column":44}},
+              "range":[253,255],
+              "properties":[]
+            }
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -254,6 +302,24 @@
       "loc":{"source":null,"start":{"line":5,"column":62},"end":{"line":5,"column":82}},
       "range":[181,201],
       "value":" 3.4 T computed "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":21}},
+      "range":[214,232],
+      "value":" 4.1 L spread "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":26},"end":{"line":7,"column":41}},
+      "range":[237,252],
+      "value":" 4.2 L obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":45},"end":{"line":7,"column":60}},
+      "range":[256,271],
+      "value":" 4.3 T obj "
     }
   ]
 }
