@@ -1090,7 +1090,7 @@ module Verifier (Env : EvalEnv) = struct
           (function
             | ImportDynamic { source; import_loc } ->
               dynamic_imports := LocMap.add import_loc source !dynamic_imports
-            | Require { source; require_loc; bindings = None } ->
+            | Require { source; require_loc; bindings = _ } ->
               dynamic_requires := LocMap.add require_loc source !dynamic_requires
             | _ -> ())
           requires;

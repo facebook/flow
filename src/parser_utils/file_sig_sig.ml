@@ -196,15 +196,10 @@ module type S = sig
 
   type error = IndeterminateModuleType of L.t
 
-  type toplevel_names_and_exports_info = {
-    toplevel_names: SSet.t;
-    exports_info: (exports_info t', error) result;
-  }
-
-  val program_with_toplevel_names_and_exports_info :
+  val program_with_exports_info :
     ast:(L.t, L.t) Flow_ast.program ->
     module_ref_prefix:string option ->
-    toplevel_names_and_exports_info
+    (exports_info t', error) result
 
   (* Use for debugging; not for exposing info the the end user *)
   val exports_info_to_string : exports_info -> string

@@ -30,12 +30,10 @@ let verify_and_generate
     ?prevent_munge ?facebook_fbt ?ignore_static_propTypes ?facebook_keyMirror contents =
   let contents = String.concat "\n" contents in
   let ast = Signature_verifier_test.parse contents in
-  let { File_sig.With_Loc.toplevel_names; exports_info } =
-    File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix:None
-  in
+  let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix:None in
   let signature =
     match exports_info with
-    | Ok exports_info -> Signature_builder.program ast ~exports_info ~toplevel_names
+    | Ok exports_info -> Signature_builder.program ast ~exports_info
     | Error _ -> failwith "Signature builder failure!"
   in
   Signature_builder.Signature.verify_and_generate
@@ -163,8 +161,8 @@ let generated_signature_file_sig_tests =
             "{";
             "  module_sig: {";
             "    requires: [";
-            "      Require (./something, Some (BindNamed: bar));";
-            "      Require (./something, Some (BindNamed: foo));";
+            "      Require (./something, Some (BindIdent: $4));";
+            "      Require (./something, Some (BindIdent: $1));";
             "    ];";
             "    module_kind: CommonJS;";
             "    type_exports_named: {";
@@ -425,15 +423,29 @@ let tests =
          "require"
          >:: mk_signature_generator_test
                ["const Foo = require('./foo')"; "declare module.exports: Foo.C"]
-               ["const Foo = require(\"./foo\");"; "declare module.exports: Foo.C;"];
+               [
+                 "declare var Foo: typeof $1;";
+                 "const $1 = require(\"./foo\");";
+                 "declare module.exports: Foo.C;";
+               ];
          "require_destructured"
          >:: mk_signature_generator_test
                ["const { C } = require('./foo')"; "declare module.exports: C"]
-               ["const {C} = require(\"./foo\");"; "declare module.exports: C;"];
+               [
+                 "declare var C: typeof $2.C;";
+                 "declare var $2: typeof $1;";
+                 "const $1 = require(\"./foo\");";
+                 "declare module.exports: C;";
+               ];
          "require_destructured_local"
          >:: mk_signature_generator_test
                ["const { C: C2 } = require('./foo')"; "declare module.exports: C2"]
-               ["const {C: C2} = require(\"./foo\");"; "declare module.exports: C2;"];
+               [
+                 "declare var C2: typeof $2.C;";
+                 "declare var $2: typeof $1;";
+                 "const $1 = require(\"./foo\");";
+                 "declare module.exports: C2;";
+               ];
          "require_destructured_deep"
          >:: mk_signature_generator_test
                [
@@ -441,8 +453,13 @@ let tests =
                  "declare module.exports: [ C2, E2 ]";
                ]
                [
-                 "const {C: C2} = require(\"./foo\");";
-                 "const {D: {E: E2}} = require(\"./foo\");";
+                 "declare var C2: typeof $2.C;";
+                 "declare var E2: typeof $5.E;";
+                 "declare var $5: typeof $4.D;";
+                 "declare var $2: typeof $1;";
+                 "declare var $4: typeof $3;";
+                 "const $1 = require(\"./foo\");";
+                 "const $3 = require(\"./foo\");";
                  "declare module.exports: [C2, E2];";
                ];
          "require_destructured_local_dead"

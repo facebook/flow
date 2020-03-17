@@ -210,33 +210,12 @@ module Signature = struct
       named_imports
       env
 
-  let rec add_require_bindings toplevel_names require_loc source ?name require_bindings env =
-    let filter (_, x) = SSet.mem x toplevel_names in
-    File_sig.(
-      match require_bindings with
-      | BindIdent id ->
-        if filter id then
-          add_env env (Entry.require require_loc (Flow_ast_utils.ident_of_source id) ?name source)
-        else
-          env
-      | BindNamed named_requires ->
-        List.fold_left
-          (fun env (remote, require_bindings) ->
-            let name =
-              match name with
-              | None -> Nel.one remote
-              | Some name -> Nel.cons remote name
-            in
-            add_require_bindings toplevel_names require_loc source ~name require_bindings env)
-          env
-          named_requires)
-
   let add_ns_imports import_loc source kind ns_imports env =
     match ns_imports with
     | None -> env
     | Some id -> add_env env (Entry.import_star import_loc id kind source)
 
-  let mk env toplevel_names file_sig =
+  let mk env file_sig =
     File_sig.(
       let module_sig = file_sig.module_sig in
       let { requires = imports_info; info = exports_info; module_kind; type_exports_named; _ } =
@@ -255,8 +234,7 @@ module Signature = struct
       let env =
         List.fold_left
           (fun env -> function
-            | Require { source; bindings = Some require_bindings; require_loc } ->
-              add_require_bindings toplevel_names require_loc source require_bindings env
+            | Require _ -> env
             | Import { import_loc; source; named; ns; types; typesof; typesof_ns } ->
               let open Ast.Statement.ImportDeclaration in
               let env = add_named_imports import_loc source ImportValue named env in
@@ -588,9 +566,9 @@ class type_hoister =
     method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) = expr
   end
 
-let program ast ~exports_info ~toplevel_names =
+let program ast ~exports_info =
   let env =
     let hoist = new type_hoister in
     hoist#eval hoist#program ast
   in
-  Signature.mk env toplevel_names exports_info
+  Signature.mk env exports_info

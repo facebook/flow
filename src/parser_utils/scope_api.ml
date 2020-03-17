@@ -218,18 +218,6 @@ module Make (L : Loc_sig.S) = struct
       in
       let bound = SMap.fold (fun name _def acc -> SSet.add name acc) def_locals bound_children in
       Tree.Node ((def_locals, free, bound), children')
-
-  let toplevel_names info =
-    let scopes = info.scopes in
-    Scope.(
-      let toplevel_scope = IMap.find 0 scopes in
-      assert (toplevel_scope.parent = None);
-      let toplevel_lexical_scope = IMap.find 1 scopes in
-      assert (toplevel_lexical_scope.parent = Some 0);
-      SMap.fold
-        (fun x _def acc -> SSet.add x acc)
-        (SMap.union toplevel_scope.defs toplevel_lexical_scope.defs)
-        SSet.empty)
 end
 
 module With_Loc = Make (Loc_sig.LocS)

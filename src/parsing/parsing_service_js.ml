@@ -407,7 +407,6 @@ let do_parse ~parse_options ~info content file =
       else
         (* NOTE: if ~fail:true, we'll never get parse errors here *)
         let (ast, parse_errors) = parse_source_file ~fail ~types:true ~use_strict content file in
-
         let prevent_munge = Docblock.preventMunge info || prevent_munge in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
             property named `propTypes` in any class. It should be killed with fire or replaced with
@@ -418,12 +417,10 @@ let do_parse ~parse_options ~info content file =
             recognize and process a custom `keyMirror` function that makes an enum out of the keys
             of an object. *)
         let facebook_keyMirror = true in
-        let { File_sig.With_Loc.toplevel_names; exports_info } =
-          File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix
-        in
+        let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
         | Ok exports_info ->
-          let signature = Signature_builder.program ast ~exports_info ~toplevel_names in
+          let signature = Signature_builder.program ast ~exports_info in
           let (errors, env, sig_ast) =
             Signature_builder.Signature.verify_and_generate
               ~prevent_munge

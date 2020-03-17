@@ -420,8 +420,6 @@ struct
 
       val scope_info = Scope_builder.program ast
 
-      method toplevel_names = Scope_api.toplevel_names scope_info
-
       val mutable curr_declare_module : exports_info module_sig' option = None
 
       (* This ensures that we do not add a `require` with no bindings to `module_sig.requires` (when
@@ -1117,14 +1115,9 @@ struct
         ListUtils.ident_map map_statement stmts
     end
 
-  type toplevel_names_and_exports_info = {
-    toplevel_names: SSet.t;
-    exports_info: (exports_info t', error) result;
-  }
-
-  let program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix =
+  let program_with_exports_info ~ast ~module_ref_prefix =
     let walk = new requires_exports_calculator ~ast ~module_ref_prefix in
-    { toplevel_names = walk#toplevel_names; exports_info = walk#eval walk#program ast }
+    walk#eval walk#program ast
 
   let map_unit_file_sig =
     let map_unit_module_sig module_sig = { module_sig with info = () } in
@@ -1141,9 +1134,9 @@ struct
       { file_sig with module_sig = module_sig'; declare_modules = declare_modules' }
 
   let program ~ast ~module_ref_prefix =
-    match program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix with
-    | { exports_info = Ok file_sig; _ } -> Ok (map_unit_file_sig file_sig)
-    | { exports_info = Error e; _ } -> Error e
+    match program_with_exports_info ~ast ~module_ref_prefix with
+    | Ok file_sig -> Ok (map_unit_file_sig file_sig)
+    | Error e -> Error e
 
   let verified errors env file_sig =
     let file_sig = map_unit_file_sig file_sig in
