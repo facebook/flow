@@ -164,10 +164,10 @@ let rec convert cx tparams_map =
     ((loc, AnyT.why AnyError reason), t_ast)
   | (loc, (String as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Boolean as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, Nullable t) ->
+  | (loc, Nullable { Nullable.argument = t; comments }) ->
     let (((_, t), _) as t_ast) = convert cx tparams_map t in
     let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
-    ((loc, MaybeT (reason, t)), Nullable t_ast)
+    ((loc, MaybeT (reason, t)), Nullable { Nullable.argument = t_ast; comments })
   | (loc, Union (t0, t1, ts)) ->
     let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
     let (((_, t1), _) as t1_ast) = convert cx tparams_map t1 in

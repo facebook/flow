@@ -1256,7 +1256,8 @@ with type t = Impl.t = struct
     and bigint_type loc = node "BigIntTypeAnnotation" loc []
     and string_type loc = node "StringTypeAnnotation" loc []
     and boolean_type loc = node "BooleanTypeAnnotation" loc []
-    and nullable_type loc t = node "NullableTypeAnnotation" loc [("typeAnnotation", _type t)]
+    and nullable_type loc { Type.Nullable.argument; comments } =
+      node ?comments "NullableTypeAnnotation" loc [("typeAnnotation", _type argument)]
     and function_type
         (loc, { Type.Function.params = (_, { Type.Function.Params.params; rest }); return; tparams })
         =

@@ -2673,6 +2673,9 @@ and type_generic { Ast.Type.Generic.id; targs } =
   in
   fuse [generic_identifier id; option type_args targs]
 
+and type_nullable loc { Ast.Type.Nullable.argument; comments } =
+  layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens argument])
+
 and type_with_parens t =
   let module T = Ast.Type in
   match t with
@@ -2697,7 +2700,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.BigInt -> Atom "bigint"
       | T.String -> Atom "string"
       | T.Boolean -> Atom "boolean"
-      | T.Nullable t -> fuse [Atom "?"; type_with_parens t]
+      | T.Nullable t -> type_nullable loc t
       | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) func
       | T.Object obj -> type_object loc obj
       | T.Interface i -> type_interface i

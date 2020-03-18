@@ -963,6 +963,16 @@ class ['loc] mapper =
 
     method string_literal_type _loc (lit : Ast.StringLiteral.t) = lit
 
+    method nullable_type (t : ('loc, 'loc) Ast.Type.Nullable.t) =
+      let open Ast.Type.Nullable in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        t
+      else
+        { argument = argument'; comments = comments' }
+
     method type_ (t : ('loc, 'loc) Ast.Type.t) =
       let open Ast.Type in
       match t with
@@ -981,7 +991,7 @@ class ['loc] mapper =
       | (_, BooleanLiteral _)
       | (_, Exists) ->
         t
-      | (loc, Nullable t') -> id this#type_ t' t (fun t' -> (loc, Nullable t'))
+      | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
       | (loc, Array t') -> id this#type_ t' t (fun t' -> (loc, Array t'))
       | (loc, Typeof t') -> id this#type_ t' t (fun t' -> (loc, Typeof t'))
       | (loc, Function ft) -> id_loc this#function_type loc ft t (fun ft -> (loc, Function ft))

@@ -784,6 +784,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Declared e -> Declared (this#expression e)
           | Inferred -> Inferred )
 
+    method nullable_type (t : ('M, 'T) Ast.Type.Nullable.t) : ('N, 'U) Ast.Type.Nullable.t =
+      let open Ast.Type.Nullable in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
+
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       Ast.Type.
         ( this#on_type_annot annot,
@@ -792,7 +799,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             | StringLiteral _ | NumberLiteral _ | BigIntLiteral _ | BooleanLiteral _ | Exists ) as t
             ->
             t
-          | Nullable t' -> Nullable (this#type_ t')
+          | Nullable t' -> Nullable (this#nullable_type t')
           | Array t' -> Array (this#type_ t')
           | Typeof t' -> Typeof (this#type_ t')
           | Function ft -> Function (this#function_type ft)

@@ -135,8 +135,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_PLING ->
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_PLING;
-          Type.Nullable (prefix env))
+          Type.Nullable
+            {
+              Type.Nullable.argument = prefix env;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
         env
     | _ -> postfix env
 

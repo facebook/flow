@@ -335,6 +335,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method new_ : ('M, 'T) Ast.Expression.New.t -> ('N, 'U) Ast.Expression.New.t
 
+    method nullable_type : ('M, 'T) Ast.Type.Nullable.t -> ('N, 'U) Ast.Type.Nullable.t
+
     method object_ : ('M, 'T) Ast.Expression.Object.t -> ('N, 'U) Ast.Expression.Object.t
 
     method object_indexer_type :

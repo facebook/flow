@@ -110,7 +110,10 @@ and union t (t0, t1, rest) =
   if List.mem Null ts && List.mem Void ts then
     match List.filter (fun t -> not (t = Null || t = Void)) ts with
     | [] -> return (Loc.none, T.Union ((Loc.none, T.Null), (Loc.none, T.Void), []))
-    | hd :: tl -> type_ (mk_union (hd, tl)) >>| fun ts -> (Loc.none, T.Nullable ts)
+    | hd :: tl ->
+      type_ (mk_union (hd, tl)) >>| fun ts ->
+      ( Loc.none,
+        T.Nullable { T.Nullable.argument = ts; comments = Flow_ast_utils.mk_comments_opt () } )
   else
     type_ t0 >>= fun t0 ->
     type_ t1 >>= fun t1 ->

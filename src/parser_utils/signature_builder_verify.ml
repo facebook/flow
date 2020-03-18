@@ -148,7 +148,7 @@ module Eval (Env : EvalEnv) = struct
     | (_, BigIntLiteral _)
     | (_, BooleanLiteral _) ->
       Deps.bot
-    | (_, Nullable t) -> type_ tps t
+    | (_, Nullable { Nullable.argument; comments = _ }) -> type_ tps argument
     | (_, Function ft) -> function_type tps ft
     | (_, Object ot) -> object_type tps ot
     | (loc, Generic tr) -> type_ref tps (loc, tr)

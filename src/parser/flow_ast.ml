@@ -282,6 +282,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Nullable : sig
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   (* Yes, we could add a little complexity here to show that Any and Void
@@ -297,7 +305,7 @@ and Type : sig
     | String
     | Boolean
     | Symbol
-    | Nullable of ('M, 'T) t
+    | Nullable of ('M, 'T) Nullable.t
     | Function of ('M, 'T) Function.t
     | Object of ('M, 'T) Object.t
     | Interface of ('M, 'T) Interface.t
