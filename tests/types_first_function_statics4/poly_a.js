@@ -17,10 +17,10 @@ const defaultProps = {
   f: 1
 };
 
-function FooComponent<T>(props: Props<T>) { return <div />; }
+function FooComponent<T>(props: Props<T>): React.Node { return <div />; }
 FooComponent.defaultProps = defaultProps;
 
-const BarComponent = <T>(props: Props<T>) => <div />;
+const BarComponent = <T>(props: Props<T>): React.Node => <div />;
 BarComponent.defaultProps = defaultProps;
 
 module.exports = { foo, bar, FooComponent, BarComponent };

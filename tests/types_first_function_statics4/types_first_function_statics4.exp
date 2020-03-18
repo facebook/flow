@@ -70,7 +70,7 @@ Cannot create `FooComponent` element because property `other` is missing in `Pro
 
 References:
    a.js:19:30
-   19| function FooComponent(props: Props) { return <div />; }
+   19| function FooComponent(props: Props): React.Node { return <div />; }
                                     ^^^^^ [1]
    b.js:17:1
    17| <FooComponent other={1}/>;
@@ -87,7 +87,7 @@ Cannot create `BarComponent` element because property `other` is missing in `Pro
 
 References:
    a.js:22:30
-   22| const BarComponent = (props: Props) => <div />;
+   22| const BarComponent = (props: Props): React.Node => <div />;
                                     ^^^^^ [1]
    b.js:20:1
    20| <BarComponent other={1}/>;
@@ -166,7 +166,7 @@ Cannot create `PolyFooComponent` element because property `other` is missing in 
 
 References:
    poly_a.js:20:33
-   20| function FooComponent<T>(props: Props<T>) { return <div />; }
+   20| function FooComponent<T>(props: Props<T>): React.Node { return <div />; }
                                        ^^^^^^^^ [1]
    b.js:42:1
    42| <PolyFooComponent t={0} other={1}/>;
@@ -183,7 +183,7 @@ Cannot create `PolyBarComponent` element because property `other` is missing in 
 
 References:
    poly_a.js:23:33
-   23| const BarComponent = <T>(props: Props<T>) => <div />;
+   23| const BarComponent = <T>(props: Props<T>): React.Node => <div />;
                                        ^^^^^^^^ [1]
    b.js:45:1
    45| <PolyBarComponent t={0} other={1}/>;

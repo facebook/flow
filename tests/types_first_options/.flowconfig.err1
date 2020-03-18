@@ -1,0 +1,3 @@
+[options]
+experimental.types_first=true
+experimental.well_formed_exports=false

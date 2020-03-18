@@ -1224,7 +1224,19 @@ let make_options
       opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
       opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
       opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
-      opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;
+      opt_enforce_well_formed_exports =
+        ( if
+          options_flags.types_first
+          && FlowConfig.well_formed_exports_set_explicitly flowconfig
+          && not (FlowConfig.enforce_well_formed_exports flowconfig)
+        then
+          FlowExitStatus.(
+            exit
+              ~msg:
+                "Cannot start in types-first mode when \"experimental.well_formed_exports\" is set to false."
+              Commandline_usage_error)
+        else
+          options_flags.types_first || FlowConfig.enforce_well_formed_exports flowconfig );
       opt_enforce_well_formed_exports_whitelist =
         FlowConfig.enforce_well_formed_exports_whitelist flowconfig;
       opt_enums = FlowConfig.enums flowconfig;

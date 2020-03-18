@@ -6,7 +6,7 @@ type Props = {|
   f: number
 |};
 
-const Component = (props: Props) => <div />;
+const Component = (props: Props): React.Node => <div />;
 
 const defaultProps = {
   f: 1

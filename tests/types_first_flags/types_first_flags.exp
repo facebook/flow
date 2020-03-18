@@ -1,0 +1,11 @@
+Error -------------------------------------------------------------------------------------------------------- a.js:3:22
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: (`signature-verification-failure`)
+
+   3| export function foo() { return 1; } // missing annotation
+                           
+
+
+
+Found 1 error

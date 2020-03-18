@@ -68,6 +68,8 @@ val enforce_strict_call_arity : config -> bool
 
 val enforce_well_formed_exports : config -> bool
 
+val well_formed_exports_set_explicitly : config -> bool
+
 val enforce_well_formed_exports_whitelist : config -> string list
 
 val enums : config -> bool

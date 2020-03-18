@@ -76,6 +76,15 @@ References:
                            ^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- file.js:24:3
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+toplevel definition that needs hoisting: (`signature-verification-failure`)
+
+   24|   function d() {} // additional entry in the exported locals map
+         ^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- file.js:26:1
 
 Cannot reassign exported function binding `d` [1].
@@ -119,4 +128,4 @@ References:
 
 
 
-Found 7 errors
+Found 8 errors
