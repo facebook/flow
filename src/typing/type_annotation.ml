@@ -1270,7 +1270,7 @@ and convert_object =
     (t, { Object.CallProperty.value = (fn_loc, fn); static })
   in
   let make_dict cx tparams_map indexer =
-    let { Object.Indexer.id; key; value; static; variance } = indexer in
+    let { Object.Indexer.id; key; value; static; variance; comments } = indexer in
     let (((_, key), _) as key_ast) = convert cx tparams_map key in
     let (((_, value), _) as value_ast) = convert cx tparams_map value in
     ( {
@@ -1279,7 +1279,7 @@ and convert_object =
         value;
         dict_polarity = polarity variance;
       },
-      { Object.Indexer.id; key = key_ast; value = value_ast; static; variance } )
+      { Object.Indexer.id; key = key_ast; value = value_ast; static; variance; comments } )
   in
   let property cx tparams_map acc =
     Object.(

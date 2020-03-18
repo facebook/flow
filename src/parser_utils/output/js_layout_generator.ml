@@ -2565,8 +2565,9 @@ and type_object_property =
             ) )
   | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
     source_location_with_comments ?comments (loc, fuse [Atom "..."; type_ argument])
-  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_ }) ->
+  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_; comments }) ->
     source_location_with_comments
+      ?comments
       ( loc,
         fuse
           [

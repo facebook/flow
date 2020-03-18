@@ -217,7 +217,14 @@ and obj_index_prop d =
   let id = Base.Option.map ~f:id_from_string d.dict_name in
   type_ d.dict_key >>= fun key ->
   type_ d.dict_value >>| fun value ->
-  { T.Object.Indexer.id; key; value; static = false; variance = variance_ d.dict_polarity }
+  {
+    T.Object.Indexer.id;
+    key;
+    value;
+    static = false;
+    variance = variance_ d.dict_polarity;
+    comments = Flow_ast_utils.mk_comments_opt ();
+  }
 
 and obj_call_prop f =
   function_ f >>| fun value -> { T.Object.CallProperty.value = (Loc.none, value); static = false }

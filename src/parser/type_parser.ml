@@ -504,6 +504,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
+            let leading = Peek.comments env in
             Expect.token env T_LBRACKET;
             let id =
               if Peek.ith_token ~i:1 env = T_COLON then (
@@ -515,9 +516,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             in
             let key = _type env in
             Expect.token env T_RBRACKET;
+            let trailing = Peek.comments env in
             Expect.token env T_COLON;
             let value = _type env in
-            { Type.Object.Indexer.id; key; value; static = static <> None; variance })
+            {
+              Type.Object.Indexer.id;
+              key;
+              value;
+              static = static <> None;
+              variance;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
           env
       in
       Type.Object.Indexer indexer

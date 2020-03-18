@@ -221,6 +221,7 @@ and Type : sig
         value: ('M, 'T) Type.t;
         static: bool;
         variance: 'M Variance.t option;
+        comments: ('M, unit) Syntax.t option;
       }
 
       and ('M, 'T) t = 'M * ('M, 'T) t' [@@deriving show]

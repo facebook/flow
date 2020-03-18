@@ -856,13 +856,15 @@ class ['loc] mapper =
 
     method object_indexer_property_type (opt : ('loc, 'loc) Ast.Type.Object.Indexer.t) =
       let open Ast.Type.Object.Indexer in
-      let (loc, { id; key; value; static; variance }) = opt in
+      let (loc, { id; key; value; static; variance; comments }) = opt in
       let key' = this#type_ key in
       let value' = this#type_ value in
-      if key' == key && value' == value then
+      let variance' = this#variance variance in
+      let comments' = this#syntax_opt comments in
+      if key' == key && value' == value && variance' == variance && comments' == comments then
         opt
       else
-        (loc, { id; key = key'; value = value'; static; variance })
+        (loc, { id; key = key'; value = value'; static; variance = variance'; comments = comments' })
 
     method object_type _loc (ot : ('loc, 'loc) Ast.Type.Object.t) =
       let open Ast.Type.Object in

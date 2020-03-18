@@ -1886,7 +1886,8 @@ let program
     | (Property p1, Property p2) -> diff_if_changed_ret_opt object_property_type p1 p2
     | (SpreadProperty (loc, p1), SpreadProperty (_, p2)) ->
       diff_if_changed_ret_opt (object_spread_property_type loc) p1 p2
-    | (Indexer _p1, Indexer _p2) -> None (* TODO *)
+    | (Indexer (loc, p1), Indexer (_, p2)) ->
+      diff_if_changed_ret_opt (object_indexer_type loc) p1 p2
     | (CallProperty _p1, CallProperty _p2) -> None (* TODO *)
     | (InternalSlot _s1, InternalSlot _s2) -> None (* TODO *)
     | _ -> None
@@ -1945,6 +1946,40 @@ let program
     let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [argument_diff; comments_diff]
+  and object_indexer_type
+      (loc : Loc.t)
+      (indexer1 : (Loc.t, Loc.t) Ast.Type.Object.Indexer.t')
+      (indexer2 : (Loc.t, Loc.t) Ast.Type.Object.Indexer.t') : node change list option =
+    let open Ast.Type.Object.Indexer in
+    let {
+      id = id1;
+      key = key1;
+      value = value1;
+      static = static1;
+      variance = variance1;
+      comments = comments1;
+    } =
+      indexer1
+    in
+    let {
+      id = id2;
+      key = key2;
+      value = value2;
+      static = static2;
+      variance = variance2;
+      comments = comments2;
+    } =
+      indexer2
+    in
+    if static1 != static2 then
+      None
+    else
+      let id_diff = diff_if_changed_nonopt_fn identifier id1 id2 in
+      let key_diff = Some (diff_if_changed type_ key1 key2) in
+      let value_diff = Some (diff_if_changed type_ value1 value2) in
+      let variance_diff = diff_if_changed_ret_opt variance variance1 variance2 in
+      let comments = syntax_opt loc comments1 comments2 in
+      join_diff_list [id_diff; key_diff; value_diff; variance_diff; comments]
   and tuple_type (tp1 : (Loc.t, Loc.t) Ast.Type.t list) (tp2 : (Loc.t, Loc.t) Ast.Type.t list) :
       node change list option =
     diff_and_recurse_nonopt_no_trivial type_ tp1 tp2

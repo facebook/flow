@@ -676,13 +676,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_indexer_type (oit : ('M, 'T) Ast.Type.Object.Indexer.t)
         : ('N, 'U) Ast.Type.Object.Indexer.t =
       let open Ast.Type.Object.Indexer in
-      let (annot, { id = id_; key; value; static; variance }) = oit in
+      let (annot, { id = id_; key; value; static; variance; comments }) = oit in
       let id' = Base.Option.map ~f:this#identifier id_ in
       let key' = this#type_ key in
       let value' = this#type_ value in
       let variance' = Base.Option.map ~f:this#variance variance in
+      let comments' = Base.Option.map ~f:this#syntax comments in
       ( this#on_loc_annot annot,
-        { id = id'; key = key'; value = value'; static; variance = variance' } )
+        { id = id'; key = key'; value = value'; static; variance = variance'; comments = comments' }
+      )
 
     method object_internal_slot_type (islot : ('M, 'T) Ast.Type.Object.InternalSlot.t)
         : ('N, 'U) Ast.Type.Object.InternalSlot.t =
