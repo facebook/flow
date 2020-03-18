@@ -372,4 +372,5 @@ end
 
 module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc)
 module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc)
+module With_ILoc = Make (Loc_sig.ILocS) (Scope_api.With_ILoc)
 include With_Loc

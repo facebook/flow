@@ -225,3 +225,4 @@ end
 
 module With_Loc = Make (Loc_sig.LocS)
 module With_ALoc = Make (Loc_sig.ALocS)
+module With_ILoc = Make (Loc_sig.ILocS)

@@ -8,3 +8,5 @@
 module With_Loc : Scope_api_sig.S with module L = Loc_sig.LocS
 
 module With_ALoc : Scope_api_sig.S with module L = Loc_sig.ALocS
+
+module With_ILoc : Scope_api_sig.S with module L = Loc_sig.ILocS

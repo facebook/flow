@@ -95,3 +95,25 @@ module ALocS : S with type t = ALoc.t = struct
   module LSet = Set.Make (ALoc)
   module LSetUtils = LSetUtils (LSet)
 end
+
+module ILocS : S with type t = ILoc.t = struct
+  type t = ILoc.t [@@deriving show]
+
+  let compare = ILoc.compare
+
+  let equal = ILoc.equal
+
+  let debug_to_string = ILoc.debug_to_string
+
+  module LMap = struct
+    include WrappedMap.Make (ILoc)
+
+    let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
+     (fun pp_data -> make_pp ILoc.pp pp_data)
+
+    let show pp_data x = Format.asprintf "%a" (pp pp_data) x
+  end
+
+  module LSet = Set.Make (ILoc)
+  module LSetUtils = LSetUtils (LSet)
+end
