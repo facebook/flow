@@ -199,7 +199,7 @@ let rec convert cx tparams_map =
             } )
       | (q_loc, _) -> error_type cx loc (Error_message.EUnexpectedTypeof q_loc) t_ast
     end
-  | (loc, Tuple ts) ->
+  | (loc, Tuple { Tuple.types = ts; comments }) ->
     let (tuple_types, ts_ast) = convert_list cx tparams_map ts in
     let reason = mk_annot_reason RTupleType loc in
     let element_reason = mk_annot_reason RTupleElement loc in
@@ -224,7 +224,8 @@ let rec convert cx tparams_map =
     *)
         UnionT (element_reason, UnionRep.make t0 t1 ts)
     in
-    ((loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast)
+    ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))),
+      Tuple { Tuple.types = ts_ast; comments } )
   | (loc, Array t) ->
     let r = mk_annot_reason RArrayType loc in
     let (((_, elemt), _) as t_ast) = convert cx tparams_map t in

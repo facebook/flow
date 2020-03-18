@@ -798,6 +798,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { argument = argument'; comments = comments' }
 
+    method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
+      let open Ast.Type.Tuple in
+      let { types; comments } = t in
+      let types' = Base.List.map ~f:this#type_ types in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { types = types'; comments = comments' }
+
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       Ast.Type.
         ( this#on_type_annot annot,
@@ -823,9 +830,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             let t1' = this#type_ t1 in
             let ts' = Base.List.map ~f:this#type_ ts in
             Intersection (t0', t1', ts')
-          | Tuple ts ->
-            let ts' = Base.List.map ~f:this#type_ ts in
-            Tuple ts' )
+          | Tuple t' -> Tuple (this#tuple_type t') )
 
     method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)
         : ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t =

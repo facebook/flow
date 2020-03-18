@@ -520,6 +520,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method try_catch : ('M, 'T) Ast.Statement.Try.t -> ('N, 'U) Ast.Statement.Try.t
 
+    method tuple_type : ('M, 'T) Ast.Type.Tuple.t -> ('N, 'U) Ast.Type.Tuple.t
+
     method type_ : ('M, 'T) Flow_ast.Type.t -> ('N, 'U) Ast.Type.t
 
     method type_alias : ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t

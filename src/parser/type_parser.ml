@@ -250,10 +250,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     fun env ->
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_LBRACKET;
           let tl = types (with_no_anon_function_type false env) [] in
           Expect.token env T_RBRACKET;
-          Type.Tuple tl)
+          let trailing = Peek.comments env in
+          Type.Tuple
+            {
+              Type.Tuple.types = tl;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
         env
 
   and anonymous_function_param _env annot =

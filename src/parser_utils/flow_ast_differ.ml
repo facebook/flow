@@ -1816,7 +1816,7 @@ let program
       | (Object obj1, Object obj2) -> diff_if_changed_ret_opt (object_type loc1) obj1 obj2
       | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) -> (string_literal loc1) s1 s2
       | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
-      | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt tuple_type t1 t2
+      | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt (tuple_type loc1) t1 t2
       | (Array t1, Array t2) -> Some (type_ t1 t2)
       | _ -> None
     in
@@ -2013,9 +2013,15 @@ let program
       let value_diff = Some (diff_if_changed type_ value1 value2) in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [id_diff; value_diff; comments_diff]
-  and tuple_type (tp1 : (Loc.t, Loc.t) Ast.Type.t list) (tp2 : (Loc.t, Loc.t) Ast.Type.t list) :
+  and tuple_type
+      (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.t) :
       node change list option =
-    diff_and_recurse_nonopt_no_trivial type_ tp1 tp2
+    let open Ast.Type.Tuple in
+    let { types = types1; comments = comments1 } = t1 in
+    let { types = types2; comments = comments2 } = t2 in
+    let types_diff = diff_and_recurse_nonopt_no_trivial type_ types1 types2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [types_diff; comments_diff]
   and type_args
       (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) :
       node change list option =

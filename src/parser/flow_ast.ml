@@ -298,6 +298,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Tuple : sig
+    type ('M, 'T) t = {
+      types: ('M, 'T) Type.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   (* Yes, we could add a little complexity here to show that Any and Void
@@ -322,7 +330,7 @@ and Type : sig
     | Union of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Intersection of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Typeof of ('M, 'T) Typeof.t
-    | Tuple of ('M, 'T) t list
+    | Tuple of ('M, 'T) Tuple.t
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
     | BigIntLiteral of BigIntLiteral.t

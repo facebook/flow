@@ -983,6 +983,16 @@ class ['loc] mapper =
       else
         { argument = argument'; comments = comments' }
 
+    method tuple_type (t : ('loc, 'loc) Ast.Type.Tuple.t) =
+      let open Ast.Type.Tuple in
+      let { types; comments } = t in
+      let types' = ListUtils.ident_map this#type_ types in
+      let comments' = this#syntax_opt comments in
+      if types == types' && comments == comments' then
+        t
+      else
+        { types = types'; comments = comments' }
+
     method type_ (t : ('loc, 'loc) Ast.Type.t) =
       let open Ast.Type in
       match t with
@@ -1026,12 +1036,7 @@ class ['loc] mapper =
           t
         else
           (loc, Intersection (t0', t1', ts'))
-      | (loc, Tuple ts) ->
-        let ts' = ListUtils.ident_map this#type_ ts in
-        if ts' == ts then
-          t
-        else
-          (loc, Tuple ts')
+      | (loc, Tuple t') -> id this#tuple_type t' t (fun t' -> (loc, Tuple t'))
 
     method type_annotation (annot : ('loc, 'loc) Ast.Type.annotation) =
       let (loc, a) = annot in

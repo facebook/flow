@@ -1428,7 +1428,8 @@ with type t = Impl.t = struct
       node "IntersectionTypeAnnotation" loc [("types", array_of_list _type ts)]
     and typeof_type (loc, { Type.Typeof.argument; comments }) =
       node ?comments "TypeofTypeAnnotation" loc [("argument", _type argument)]
-    and tuple_type (loc, tl) = node "TupleTypeAnnotation" loc [("types", array_of_list _type tl)]
+    and tuple_type (loc, { Type.Tuple.types; comments }) =
+      node ?comments "TupleTypeAnnotation" loc [("types", array_of_list _type types)]
     and string_literal_type (loc, { Ast.StringLiteral.value; raw }) =
       node "StringLiteralTypeAnnotation" loc [("value", string value); ("raw", string raw)]
     and number_literal_type (loc, { Ast.NumberLiteral.value; raw }) =

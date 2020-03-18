@@ -83,7 +83,9 @@ let rec type_ t =
   | Fun f -> function_ f >>| fun f -> (Loc.none, T.Function f)
   | Obj o -> obj_ o
   | Arr a -> arr a
-  | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
+  | Tup ts ->
+    mapM type_ ts >>| fun ts ->
+    (Loc.none, T.Tuple { T.Tuple.types = ts; comments = Flow_ast_utils.mk_comments_opt () })
   | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
   | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
   | Utility s -> utility s
