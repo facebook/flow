@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- B.js:6:2
 
-Cannot cast `b.foo` to number because function [1] is incompatible with number [2].
+Cannot cast `b.foo` to number because function type [1] is incompatible with number [2].
 
    B.js:6:2
    6| (b.foo: number); // error, number !~> function

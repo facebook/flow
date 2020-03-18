@@ -1,2 +1,3 @@
 shell: test.sh
 auto_start: false
+classic_only: true

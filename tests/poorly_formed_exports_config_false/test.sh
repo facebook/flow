@@ -6,8 +6,8 @@
 
 echo "FLOW STATUS:"
 
-assert_ok $FLOW status
+assert_errors $FLOW status
 
 echo "FLOW CHECK-CONTENTS:"
 
-assert_ok $FLOW check-contents bad-default-export.js < bad-default-export.js
+assert_errors $FLOW check-contents bad-default-export.js < bad-default-export.js

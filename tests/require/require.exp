@@ -1,3 +1,11 @@
+Error -------------------------------------------------------------------------------------------------------- E.js:10:1
+
+`exports` may only be used as part of a legal top level export statement
+
+   10| exports = {stringValue: ''};
+       ^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- require-type-error.js:4:8
 
 Cannot import the type `MyType` as a value. Use `import type` instead.
@@ -90,4 +98,4 @@ The parameter passed to `require` must be a string literal.
 
 
 
-Found 8 errors
+Found 9 errors

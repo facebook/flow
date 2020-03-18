@@ -138,6 +138,15 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- types_only.js:10:6
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types.
+`standaloneType2` is not a value. (`signature-verification-failure`)
+
+   10| type standaloneType2 = number;
+            ^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------- types_only.js:11:9
 
 Cannot reference type `standaloneType2` [1] from a value position.
@@ -160,6 +169,15 @@ Cannot export the value `num` as a type.
                    ^^^
 
 
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:6:10
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. `fun` is not
+a type. (`signature-verification-failure`)
+
+   6| function fun(): void {}
+               ^^^
+
+
 Error ----------------------------------------------------------------------------------- values_as_type_exports.js:7:14
 
 Cannot export the value `fun` as a type.
@@ -169,4 +187,4 @@ Cannot export the value `fun` as a type.
 
 
 
-Found 13 errors
+Found 15 errors

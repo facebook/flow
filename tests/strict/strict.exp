@@ -14,6 +14,15 @@ Missing type annotation for `x`.
             ^
 
 
+Error ----------------------------------------------------------------------------------------------------- annot.js:5:7
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: (`signature-verification-failure`)
+
+   5|   bar(x): void { }
+            ^
+
+
 Error ----------------------------------------------------------------------------------------------------- fun.js:11:16
 
 Cannot assign `f(...)` to `x` because number [1] is incompatible with string [2].
@@ -49,4 +58,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors
