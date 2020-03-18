@@ -393,8 +393,12 @@ module T = struct
     | (loc, ValueRef reference) ->
       ( loc,
         Ast.Type.Typeof
-          (type_of_generic
-             (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None })) )
+          {
+            Ast.Type.Typeof.argument =
+              type_of_generic
+                (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None });
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
     | (loc, StringLiteral st) -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
     | (loc, BooleanLiteral b) -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
@@ -419,13 +423,17 @@ module T = struct
       let id = Outlined.next outlined loc f in
       ( loc,
         Ast.Type.Typeof
-          (type_of_generic
-             ( loc,
-               {
-                 Ast.Type.Generic.id =
-                   Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
-                 targs = None;
-               } )) )
+          {
+            Ast.Type.Typeof.argument =
+              type_of_generic
+                ( loc,
+                  {
+                    Ast.Type.Generic.id =
+                      Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
+                    targs = None;
+                  } );
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | (loc, ObjectDestruct (annot_or_init, prop)) ->
       let t = type_of_little_annotation outlined annot_or_init in
       let f id =
@@ -440,20 +448,24 @@ module T = struct
       let id = Outlined.next outlined loc f in
       ( loc,
         Ast.Type.Typeof
-          (type_of_generic
-             ( loc,
-               {
-                 Ast.Type.Generic.id =
-                   Ast.Type.Generic.Identifier.Qualified
-                     ( loc,
-                       {
-                         Ast.Type.Generic.Identifier.qualification =
-                           Ast.Type.Generic.Identifier.Unqualified
-                             (Flow_ast_utils.ident_of_source id);
-                         id = Flow_ast_utils.ident_of_source prop;
-                       } );
-                 targs = None;
-               } )) )
+          {
+            Ast.Type.Typeof.argument =
+              type_of_generic
+                ( loc,
+                  {
+                    Ast.Type.Generic.id =
+                      Ast.Type.Generic.Identifier.Qualified
+                        ( loc,
+                          {
+                            Ast.Type.Generic.Identifier.qualification =
+                              Ast.Type.Generic.Identifier.Unqualified
+                                (Flow_ast_utils.ident_of_source id);
+                            id = Flow_ast_utils.ident_of_source prop;
+                          } );
+                    targs = None;
+                  } );
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | (loc, FixMe) -> FixMe.mk_type loc
 
   and generic_id_of_reference = function

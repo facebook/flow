@@ -184,8 +184,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_TYPEOF ->
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_TYPEOF;
-          Type.Typeof (primary env))
+          Type.Typeof
+            {
+              Type.Typeof.argument = primary env;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
         env
     | T_LBRACKET -> tuple env
     | T_IDENTIFIER _

@@ -542,6 +542,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_predicate : ('M, 'T) Flow_ast.Type.Predicate.t -> ('N, 'U) Ast.Type.Predicate.t
 
+    method typeof_type : ('M, 'T) Ast.Type.Typeof.t -> ('N, 'U) Ast.Type.Typeof.t
+
     method unary_expression : ('M, 'T) Ast.Expression.Unary.t -> ('N, 'U) Ast.Expression.Unary.t
 
     method update_expression : ('M, 'T) Ast.Expression.Update.t -> ('N, 'U) Ast.Expression.Update.t

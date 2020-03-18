@@ -2676,6 +2676,9 @@ and type_generic { Ast.Type.Generic.id; targs } =
 and type_nullable loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens argument])
 
+and type_typeof loc { Ast.Type.Typeof.argument; comments } =
+  layout_node_with_comments_opt loc comments (fuse [Atom "typeof"; space; type_ argument])
+
 and type_with_parens t =
   let module T = Ast.Type in
   match t with
@@ -2708,7 +2711,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Generic generic -> type_generic generic
       | T.Union (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "|") (t1 :: t2 :: ts)
       | T.Intersection (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "&") (t1 :: t2 :: ts)
-      | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
+      | T.Typeof t -> type_typeof loc t
       | T.Tuple ts ->
         group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Base.List.map ~f:type_ ts)]
       | T.StringLiteral lit -> string_literal_type lit

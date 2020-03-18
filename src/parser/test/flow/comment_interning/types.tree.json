@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":78}},
-  "range":[0,224],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":81}},
+  "range":[0,307],
   "body":[
     {
       "type":"TypeAlias",
@@ -188,6 +188,63 @@
           "typeParameters":null
         }
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":81}},
+      "range":[226,307],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":7,"column":5},"end":{"line":7,"column":10}},
+        "range":[231,236],
+        "name":"Test4",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"TypeofTypeAnnotation",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":31}},
+            "range":[239,257],
+            "value":" 4.1 L typeof "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":7,"column":32},"end":{"line":7,"column":60}},
+        "range":[258,286],
+        "argument":{
+          "type":"GenericTypeAnnotation",
+          "loc":{"source":null,"start":{"line":7,"column":59},"end":{"line":7,"column":60}},
+          "range":[285,286],
+          "id":{
+            "type":"Identifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":7,"column":61},"end":{"line":7,"column":80}},
+                "range":[287,306],
+                "value":" 4.3 T generic "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":7,"column":39},"end":{"line":7,"column":58}},
+                "range":[265,284],
+                "value":" 4.2 L generic "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":7,"column":59},"end":{"line":7,"column":60}},
+            "range":[285,286],
+            "name":"T",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeParameters":null
+        }
+      }
     }
   ],
   "comments":[
@@ -238,6 +295,24 @@
       "loc":{"source":null,"start":{"line":5,"column":58},"end":{"line":5,"column":77}},
       "range":[204,223],
       "value":" 3.3 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":31}},
+      "range":[239,257],
+      "value":" 4.1 L typeof "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":39},"end":{"line":7,"column":58}},
+      "range":[265,284],
+      "value":" 4.2 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":61},"end":{"line":7,"column":80}},
+      "range":[287,306],
+      "value":" 4.3 T generic "
     }
   ]
 }

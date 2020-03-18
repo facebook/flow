@@ -1815,7 +1815,7 @@ let program
       | (Nullable t1, Nullable t2) -> diff_if_changed_ret_opt (nullable_type loc1) t1 t2
       | (Object obj1, Object obj2) -> diff_if_changed_ret_opt (object_type loc1) obj1 obj2
       | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) -> (string_literal loc1) s1 s2
-      | (Typeof (t1_loc, t1), Typeof (t2_loc, t2)) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
+      | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt tuple_type t1 t2
       | (Array t1, Array t2) -> Some (type_ t1 t2)
       | _ -> None
@@ -2073,6 +2073,15 @@ let program
       (t1 : (Loc.t, Loc.t) Ast.Type.Nullable.t)
       (t2 : (Loc.t, Loc.t) Ast.Type.Nullable.t) : node change list option =
     let open Ast.Type.Nullable in
+    let { argument = argument1; comments = comments1 } = t1 in
+    let { argument = argument2; comments = comments2 } = t2 in
+    let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
+  and typeof_type
+      (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Typeof.t) (t2 : (Loc.t, Loc.t) Ast.Type.Typeof.t)
+      : node change list option =
+    let open Ast.Type.Typeof in
     let { argument = argument1; comments = comments1 } = t1 in
     let { argument = argument2; comments = comments2 } = t2 in
     let argument_diff = Some (diff_if_changed type_ argument1 argument2) in

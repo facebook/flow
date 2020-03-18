@@ -92,7 +92,13 @@ let rec type_ t =
     let id = id_from_string "CharSet" in
     return (mk_generic_type id (Some (Loc.none, [(Loc.none, T.StringLiteral (str_lit s))])))
   | TypeOf (TSymbol name) ->
-    id_from_symbol name >>= fun id -> just (T.Typeof (mk_generic_type id None))
+    id_from_symbol name >>= fun id ->
+    just
+      (T.Typeof
+         {
+           T.Typeof.argument = mk_generic_type id None;
+           comments = Flow_ast_utils.mk_comments_opt ();
+         })
   | TypeOf _
   | Mu _ ->
     Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))

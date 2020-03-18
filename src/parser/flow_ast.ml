@@ -290,6 +290,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Typeof : sig
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   (* Yes, we could add a little complexity here to show that Any and Void
@@ -313,7 +321,7 @@ and Type : sig
     | Generic of ('M, 'T) Generic.t
     | Union of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Intersection of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
-    | Typeof of ('M, 'T) t
+    | Typeof of ('M, 'T) Typeof.t
     | Tuple of ('M, 'T) t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
