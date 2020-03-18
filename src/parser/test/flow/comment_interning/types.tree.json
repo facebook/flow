@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":95}},
-  "range":[0,404],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":76}},
+  "range":[0,482],
   "body":[
     {
       "type":"TypeAlias",
@@ -312,6 +312,63 @@
           }
         ]
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":76}},
+      "range":[406,482],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":11,"column":5},"end":{"line":11,"column":10}},
+        "range":[411,416],
+        "name":"Test6",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ArrayTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":11,"column":58},"end":{"line":11,"column":75}},
+            "range":[464,481],
+            "value":" 6.3 T array "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":11,"column":33},"end":{"line":11,"column":57}},
+        "range":[439,463],
+        "elementType":{
+          "type":"GenericTypeAnnotation",
+          "loc":{"source":null,"start":{"line":11,"column":33},"end":{"line":11,"column":34}},
+          "range":[439,440],
+          "id":{
+            "type":"Identifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":11,"column":35},"end":{"line":11,"column":54}},
+                "range":[441,460],
+                "value":" 6.2 T generic "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":32}},
+                "range":[419,438],
+                "value":" 6.1 L generic "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":11,"column":33},"end":{"line":11,"column":34}},
+            "range":[439,440],
+            "name":"T",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeParameters":null
+        }
+      }
     }
   ],
   "comments":[
@@ -404,6 +461,24 @@
       "loc":{"source":null,"start":{"line":9,"column":77},"end":{"line":9,"column":94}},
       "range":[386,403],
       "value":" 5.4 T tuple "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":32}},
+      "range":[419,438],
+      "value":" 6.1 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":35},"end":{"line":11,"column":54}},
+      "range":[441,460],
+      "value":" 6.2 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":58},"end":{"line":11,"column":75}},
+      "range":[464,481],
+      "value":" 6.3 T array "
     }
   ]
 }

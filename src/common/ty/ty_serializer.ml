@@ -249,7 +249,7 @@ and arr { arr_readonly; arr_elt_t; _ } =
   if arr_readonly then
     builtin_from_string "$ReadOnlyArray" ~targs:(Loc.none, [t])
   else
-    (Loc.none, T.Array t)
+    builtin_from_string "Array" ~targs:(Loc.none, [t])
 
 and type_params ts = mapM type_param ts >>| fun ts -> (Loc.none, ts)
 

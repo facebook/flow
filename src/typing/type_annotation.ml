@@ -226,10 +226,11 @@ let rec convert cx tparams_map =
     in
     ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))),
       Tuple { Tuple.types = ts_ast; comments } )
-  | (loc, Array t) ->
+  | (loc, Array { Array.argument = t; comments }) ->
     let r = mk_annot_reason RArrayType loc in
     let (((_, elemt), _) as t_ast) = convert cx tparams_map t in
-    ((loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))), Array t_ast)
+    ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
+      Array { Array.argument = t_ast; comments } )
   | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_string cx loc value), t_ast)
   | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw } as t_ast)) ->

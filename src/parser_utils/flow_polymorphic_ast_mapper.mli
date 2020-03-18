@@ -15,6 +15,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method arrow_function : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
+    method array_type : ('M, 'T) Ast.Type.Array.t -> ('N, 'U) Ast.Type.Array.t
+
     method assignment : ('M, 'T) Ast.Expression.Assignment.t -> ('N, 'U) Ast.Expression.Assignment.t
 
     method assignment_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t

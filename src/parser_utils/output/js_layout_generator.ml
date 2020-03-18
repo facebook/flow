@@ -2685,6 +2685,9 @@ and type_tuple loc { Ast.Type.Tuple.types; comments } =
     comments
     (group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Base.List.map ~f:type_ types)])
 
+and type_array loc { Ast.Type.Array.argument; comments } =
+  layout_node_with_comments_opt loc comments (fuse [Atom "Array<"; type_ argument; Atom ">"])
+
 and type_with_parens t =
   let module T = Ast.Type in
   match t with
@@ -2713,7 +2716,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) func
       | T.Object obj -> type_object loc obj
       | T.Interface i -> type_interface i
-      | T.Array t -> fuse [Atom "Array<"; type_ t; Atom ">"]
+      | T.Array t -> type_array loc t
       | T.Generic generic -> type_generic generic
       | T.Union (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "|") (t1 :: t2 :: ts)
       | T.Intersection (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "&") (t1 :: t2 :: ts)

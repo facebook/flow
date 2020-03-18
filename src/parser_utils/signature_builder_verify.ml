@@ -234,7 +234,7 @@ module Eval (Env : EvalEnv) = struct
     let { body = (_, ot); _ } = it in
     object_type tps ot
 
-  and array_type tps at = type_ tps at
+  and array_type tps { Ast.Type.Array.argument; comments = _ } = type_ tps argument
 
   and type_ref =
     let open Ast.Type.Generic in

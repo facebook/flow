@@ -1404,7 +1404,8 @@ with type t = Impl.t = struct
           ("extends", array_of_list interface_extends extends);
           ("body", object_type ~include_inexact:false body);
         ]
-    and array_type loc t = node "ArrayTypeAnnotation" loc [("elementType", _type t)]
+    and array_type loc { Type.Array.argument; comments } =
+      node ?comments "ArrayTypeAnnotation" loc [("elementType", _type argument)]
     and generic_type_qualified_identifier (loc, { Type.Generic.Identifier.id; qualification }) =
       let qualification =
         match qualification with

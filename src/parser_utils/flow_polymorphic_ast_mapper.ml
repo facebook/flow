@@ -805,6 +805,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { types = types'; comments = comments' }
 
+    method array_type (t : ('M, 'T) Ast.Type.Array.t) : ('N, 'U) Ast.Type.Array.t =
+      let open Ast.Type.Array in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
+
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       Ast.Type.
         ( this#on_type_annot annot,
@@ -814,7 +821,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             ->
             t
           | Nullable t' -> Nullable (this#nullable_type t')
-          | Array t' -> Array (this#type_ t')
+          | Array t' -> Array (this#array_type t')
           | Typeof t' -> Typeof (this#typeof_type t')
           | Function ft -> Function (this#function_type ft)
           | Object ot -> Object (this#object_type ot)

@@ -306,6 +306,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Array : sig
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   (* Yes, we could add a little complexity here to show that Any and Void
@@ -325,7 +333,7 @@ and Type : sig
     | Function of ('M, 'T) Function.t
     | Object of ('M, 'T) Object.t
     | Interface of ('M, 'T) Interface.t
-    | Array of ('M, 'T) t
+    | Array of ('M, 'T) Array.t
     | Generic of ('M, 'T) Generic.t
     | Union of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Intersection of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list

@@ -1817,7 +1817,7 @@ let program
       | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) -> (string_literal loc1) s1 s2
       | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt (tuple_type loc1) t1 t2
-      | (Array t1, Array t2) -> Some (type_ t1 t2)
+      | (Array t1, Array t2) -> diff_if_changed_ret_opt (array_type loc1) t1 t2
       | _ -> None
     in
     Base.Option.value type_diff ~default:[(loc1, Replace (Type (loc1, type1), Type (loc1, type2)))]
@@ -2088,6 +2088,15 @@ let program
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Typeof.t) (t2 : (Loc.t, Loc.t) Ast.Type.Typeof.t)
       : node change list option =
     let open Ast.Type.Typeof in
+    let { argument = argument1; comments = comments1 } = t1 in
+    let { argument = argument2; comments = comments2 } = t2 in
+    let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument_diff; comments_diff]
+  and array_type
+      (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Array.t) (t2 : (Loc.t, Loc.t) Ast.Type.Array.t) :
+      node change list option =
+    let open Ast.Type.Array in
     let { argument = argument1; comments = comments1 } = t1 in
     let { argument = argument2; comments = comments2 } = t2 in
     let argument_diff = Some (diff_if_changed type_ argument1 argument2) in

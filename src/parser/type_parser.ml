@@ -156,7 +156,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~start_loc:(fst t)
           (fun env ->
             Expect.token env T_RBRACKET;
-            Type.Array t)
+            let trailing = Peek.comments env in
+            Type.Array
+              { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
           env
       in
       postfix_with env t
