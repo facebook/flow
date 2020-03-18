@@ -116,11 +116,11 @@ type Action =
   | BarAction;
 
 function foo(value: number): FooAction {
-  return { type: "FOO", foo: value };
+  return { type: FooAction.type, foo: value };
 }
 
 function bar(value: boolean): BarAction {
-  return { type: "BAR", bar: value };
+  return { type: BarAction.type, bar: value };
 }
 ```
 
@@ -152,10 +152,10 @@ type Dispatch = (action: Action | ThunkAction | PromiseAction | Array<Action>) =
 function foo(): ThunkAction {
   return (dispatch, getState) => {
     const baz = getState().baz
-    dispatch({ type: "BAR", bar: true })
+    dispatch({ type: BarAction.type, bar: true })
     doSomethingAsync(baz)
       .then(value => {
-        dispatch({ type: "FOO", foo: value })
+        dispatch({ type: FooAction.type, foo: value })
       })
     }
 }
@@ -186,8 +186,8 @@ type Action = FooAction | BarAction;
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "FOO": return { ...state, value: action.foo };
-    case "BAR": return { ...state, value: action.bar };
+    case FooAction.type: return { ...state, value: action.foo };
+    case BarAction.type: return { ...state, value: action.bar };
     default:
       (action: empty);
       return state;
