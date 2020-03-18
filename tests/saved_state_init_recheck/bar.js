@@ -1,3 +1,3 @@
 // @flow
 
-export var x = "hello"
+export const x = "hello"

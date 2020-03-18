@@ -1,3 +1,3 @@
 /* @ flow */
 
-export var numValue = 42;
+export const numValue = 42;

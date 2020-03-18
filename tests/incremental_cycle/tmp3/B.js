@@ -1,5 +1,5 @@
 // @flow
-var A = require ('./A');
+const A = require ('./A');
 import type C from './C';
 
 

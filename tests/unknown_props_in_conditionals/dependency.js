@@ -1,3 +1,3 @@
 // @flow
 
-export var o = { p: 0 };
+export const o = { p: 0 };

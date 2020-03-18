@@ -11,9 +11,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2].
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]
@@ -38,9 +38,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2].
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]
@@ -62,9 +62,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2].
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]
@@ -88,9 +88,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2].
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]

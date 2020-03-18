@@ -1,3 +1,3 @@
 // @flow
 
-export let test = 42;
+export const test = 42;

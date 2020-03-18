@@ -7,7 +7,7 @@
 assert_ok "$FLOW" stop
 
 printf "\\nStart server in classic mode\\n"
-start_flow .
+assert_ok "$FLOW" start .
 
 printf "\\nValue dep-graph should include both edges\\n"
 assert_ok "$FLOW" graph dep-graph --strip-root --out classic-values.log

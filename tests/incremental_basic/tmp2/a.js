@@ -1,3 +1,3 @@
 // @flow
-var a = 0;
+const a = 0;
 module.exports = a;

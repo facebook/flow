@@ -7,9 +7,20 @@
 
 'use strict';
 
-var UFILikeCount = require('UFILikeCount.react');
 var React = require('react');
 import type {Node} from 'react';
+
+
+var UFILikeCount = React.createClass({
+  propTypes: {
+    permalink: React.PropTypes.string,
+    feedback: React.PropTypes.object.isRequired
+  },
+
+  render: function(): Node {
+    return <div/>;
+  }
+});
 
 var FeedUFI = React.createClass({
   _renderLikeCount: function(
@@ -39,5 +50,3 @@ var FeedUFI = React.createClass({
   }
 
 });
-
-module.exports = FeedUFI;

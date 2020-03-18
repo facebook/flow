@@ -1,6 +1,6 @@
 // @flow
 
-let A = require('./A');
+const A = require('./A');
 
 class B extends A<string> {
   constructor() {
@@ -8,4 +8,4 @@ class B extends A<string> {
   }
 }
 
-module.exports = new B();
+module.exports = (new B(): B);

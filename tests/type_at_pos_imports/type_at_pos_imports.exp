@@ -697,7 +697,7 @@ import-typeof-class.js:7:16 {
   "end":16
 }
 module-export-0.js:7:13 = {
-  "type":"{|+A: typeof A|}",
+  "type":"module \"a\" {class A; }",
   "reasons":[],
   "loc":{
     "source":"module-export-0.js",

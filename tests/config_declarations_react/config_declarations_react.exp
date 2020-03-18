@@ -7,9 +7,9 @@ Cannot assign `str2str(...)` to `fooNum` because string [1] is incompatible with
                               ^^^^^^^^^^^
 
 References:
-   node_modules/react-native/str2str.js:7:40
-    7| module.exports = function str2str(foo: string) {
-                                              ^^^^^^ [1]
+   node_modules/react-native/str2str.js:7:49
+    7| module.exports = function str2str(foo: string): string {
+                                                       ^^^^^^ [1]
    A.js:11:15
    11| const fooNum: number = str2str(39); // Would not error if using [untyped]!
                      ^^^^^^ [2]
@@ -25,7 +25,7 @@ Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatibl
 
 References:
    node_modules/react-native/str2str.js:7:40
-    7| module.exports = function str2str(foo: string) {
+    7| module.exports = function str2str(foo: string): string {
                                               ^^^^^^ [2]
 
 
@@ -39,7 +39,7 @@ Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatibl
 
 References:
    node_modules/react-native/str2str.js:7:40
-    7| module.exports = function str2str(foo: string) {
+    7| module.exports = function str2str(foo: string): string {
                                               ^^^^^^ [2]
 
 

@@ -5,7 +5,7 @@
  * in https://github.com/facebook/flow/issues/4152
  */
 
-export function wrapAndFlatten<T>(arr: Array<T>) {
+export function wrapAndFlatten<T>(arr: Array<T>): mixed {
   const mapped = arr.map((n: T) => {
     return [n];
   });

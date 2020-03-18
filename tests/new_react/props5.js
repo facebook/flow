@@ -5,5 +5,3 @@ var C = React.createClass({
     return { x: 0 };
   }
 });
-
-module.exports = C;

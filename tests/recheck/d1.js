@@ -2,4 +2,4 @@
 
 export class A {}
 export class B {}
-export var x = new A;
+export var x: A = new A;

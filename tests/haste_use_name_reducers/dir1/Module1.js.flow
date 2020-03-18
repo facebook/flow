@@ -4,4 +4,4 @@ require('test');
 
 class Decl {}
 
-module.exports = new Decl(); 
+module.exports = (new Decl(): Decl);

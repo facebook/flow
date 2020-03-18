@@ -3,10 +3,10 @@
  * @flow
  */
 
-var specifierNumber4 = 1;
-var specifierNumber5 = 2;
-var groupedSpecifierNumber3 = 1;
-var groupedSpecifierNumber4 = 2;
+const specifierNumber4 = 1;
+const specifierNumber5 = 2;
+const groupedSpecifierNumber3 = 1;
+const groupedSpecifierNumber4 = 2;
 
 declare export {specifierNumber4};
 declare export {specifierNumber5 as specifierNumber5Renamed};

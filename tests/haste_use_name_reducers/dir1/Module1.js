@@ -4,4 +4,4 @@ require('test');
 
 class Impl {}
 
-module.exports = new Impl();
+module.exports = (new Impl(): Impl);

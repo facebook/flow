@@ -212,9 +212,9 @@ Cannot assign object literal to `j2` because number [1] is incompatible with str
                                               ^^ [1]
 
 References:
-   ExportNamed_Multi.js:4:18
-     4| export var str = 'asdf';
-                         ^^^^^^ [2]
+   ExportNamed_Multi.js:4:20
+     4| export const str = 'asdf';
+                           ^^^^^^ [2]
 
 
 

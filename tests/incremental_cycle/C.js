@@ -1,5 +1,5 @@
 // @flow
-var A = require ('./A');
+const A = require ('./A');
 import type B from './B';
 
 class C extends A {

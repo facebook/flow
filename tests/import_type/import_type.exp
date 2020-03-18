@@ -7,9 +7,9 @@ Cannot assign `foo1Inst` to `a2` because `ClassFoo1` [1] is incompatible with nu
                         ^^^^^^^^
 
 References:
-   ExportDefault_Class.js:10:23
-   10| export var foo1Inst = new ClassFoo1();
-                             ^^^^^^^^^^^^^^^ [1]
+   ExportDefault_Class.js:10:22
+   10| export var foo1Inst: ClassFoo1 = new ClassFoo1();
+                            ^^^^^^^^^ [1]
    import_type.js:13:9
    13| var a2: number = foo1Inst; // Error: ClassFoo1 ~> number
                ^^^^^^ [2]
@@ -38,9 +38,9 @@ Cannot assign `foo2Inst` to `b2` because `ClassFoo2` [1] is incompatible with nu
                         ^^^^^^^^
 
 References:
-   ExportNamed_Class.js:10:23
-   10| export var foo2Inst = new ClassFoo2();
-                             ^^^^^^^^^^^^^^^ [1]
+   ExportNamed_Class.js:10:22
+   10| export var foo2Inst: ClassFoo2 = new ClassFoo2();
+                            ^^^^^^^^^ [1]
    import_type.js:24:9
    24| var b2: number = foo2Inst; // Error: ClassFoo2 ~> number
                ^^^^^^ [2]
@@ -83,9 +83,9 @@ Cannot assign `foo4Inst` to `d2` because `ClassFoo4` [1] is incompatible with nu
                         ^^^^^^^^
 
 References:
-   ExportCJSNamed_Class.js:21:20
-   21| exports.foo4Inst = new ClassFoo4();
-                          ^^^^^^^^^^^^^^^ [1]
+   ExportCJSNamed_Class.js:21:38
+   21| exports.foo4Inst = (new ClassFoo4(): ClassFoo4);
+                                            ^^^^^^^^^ [1]
    import_type.js:44:9
    44| var d2: number = foo4Inst; // Error: ClassFoo4 ~> number
                ^^^^^^ [2]

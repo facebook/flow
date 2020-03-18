@@ -1,4 +1,4 @@
 // @flow
 
 export class C { }
-export var extra = null;
+export var extra: null = null;

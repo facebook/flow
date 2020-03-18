@@ -1,4 +1,4 @@
-var A = require('./A');
+const A = require('./A');
 
 class B extends A { }
 

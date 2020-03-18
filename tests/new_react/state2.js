@@ -13,5 +13,3 @@ var Comp = React.createClass({
         };
     }
 });
-
-module.exports = Comp;

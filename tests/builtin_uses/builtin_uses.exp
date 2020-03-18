@@ -7,9 +7,9 @@ Cannot cast `o.foo` to string because number [1] is incompatible with string [2]
        ^^^^^
 
 References:
-   test.js:1:30
-   1| var o = Object.freeze({ foo: 0 });
-                                   ^ [1]
+   test.js:1:32
+   1| const o = Object.freeze({ foo: 0 });
+                                     ^ [1]
    test.js:2:9
    2| (o.foo: string);
               ^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `o.foo` to string because number [1] is incompatible with string [2]
        ^^^^^
 
 References:
-   test.js:1:30
-   1| var o = Object.freeze({ foo: 0 });
-                                   ^ [1]
+   test.js:1:32
+   1| const o = Object.freeze({ foo: 0 });
+                                     ^ [1]
    test2.js:2:9
    2| (o.foo: string);
               ^^^^^^ [2]

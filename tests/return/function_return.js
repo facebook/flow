@@ -1,7 +1,7 @@
 class C {
     foo() { }
     bar() { return; }
-    fn(x:number) { return x; }
+    fn(x:number): number { return x; }
 }
 
 function f(x): number {

@@ -7,7 +7,7 @@
 assert_ok "$FLOW" stop
 
 printf "\\nStart server in classic mode\\n"
-start_flow .
+assert_ok "$FLOW" start .
 
 printf "\\nValue cycle should include both files\\n"
 assert_ok "$FLOW" cycle --strip-root fileA.js

@@ -4,4 +4,4 @@ class C {
   _p: string;
 }
 
-module.exports = new C;
+module.exports = (new C: C);

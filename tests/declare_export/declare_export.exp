@@ -498,9 +498,9 @@ Cannot assign `specifierNumber1_1` to `r2` because number [1] is incompatible wi
                          ^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:6:24
-     6| var specifierNumber1 = 1;
-                               ^ [1]
+   ES6_Named1.js:6:26
+     6| const specifierNumber1 = 1;
+                                 ^ [1]
    es6modules.js:129:9
    129| var r2: string = specifierNumber1_1; // Error: number ~> string
                 ^^^^^^ [2]
@@ -515,9 +515,9 @@ Cannot assign `specifierNumber2Renamed` to `s2` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:7:24
-     7| var specifierNumber2 = 2;
-                               ^ [1]
+   ES6_Named1.js:7:26
+     7| const specifierNumber2 = 2;
+                                 ^ [1]
    es6modules.js:133:9
    133| var s2: string = specifierNumber2Renamed; // Error: number ~> string
                 ^^^^^^ [2]
@@ -532,9 +532,9 @@ Cannot assign `specifierNumber3Renamed` to `t2` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:8:24
-     8| var specifierNumber3 = 3;
-                               ^ [1]
+   ES6_Named1.js:8:26
+     8| const specifierNumber3 = 3;
+                                 ^ [1]
    es6modules.js:137:9
    137| var t2: string = specifierNumber3Renamed; // Error: number ~> string
                 ^^^^^^ [2]
@@ -549,9 +549,9 @@ Cannot assign `groupedSpecifierNumber1` to `u3` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:9:31
-     9| var groupedSpecifierNumber1 = 1;
-                                      ^ [1]
+   ES6_Named1.js:9:33
+     9| const groupedSpecifierNumber1 = 1;
+                                        ^ [1]
    es6modules.js:142:9
    142| var u3: string = groupedSpecifierNumber1; // Error: number ~> string
                 ^^^^^^ [2]
@@ -566,9 +566,9 @@ Cannot assign `groupedSpecifierNumber2` to `u4` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:10:31
-    10| var groupedSpecifierNumber2 = 2;
-                                      ^ [1]
+   ES6_Named1.js:10:33
+    10| const groupedSpecifierNumber2 = 2;
+                                        ^ [1]
    es6modules.js:143:9
    143| var u4: string = groupedSpecifierNumber2; // Error: number ~> string
                 ^^^^^^ [2]
@@ -768,9 +768,9 @@ Cannot assign `specifierNumber4` to `ah2` because number [1] is incompatible wit
                           ^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:6:24
-     6| var specifierNumber4 = 1;
-                               ^ [1]
+   ES6_Named2.js:6:26
+     6| const specifierNumber4 = 1;
+                                 ^ [1]
    es6modules.js:207:10
    207| var ah2: string = specifierNumber4; // Error: number ~> string
                  ^^^^^^ [2]
@@ -785,9 +785,9 @@ Cannot assign `specifierNumber5Renamed` to `ai2` because number [1] is incompati
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:7:24
-     7| var specifierNumber5 = 2;
-                               ^ [1]
+   ES6_Named2.js:7:26
+     7| const specifierNumber5 = 2;
+                                 ^ [1]
    es6modules.js:211:10
    211| var ai2: string = specifierNumber5Renamed; // Error: number ~> string
                  ^^^^^^ [2]
@@ -802,9 +802,9 @@ Cannot assign `groupedSpecifierNumber3` to `aj3` because number [1] is incompati
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:8:31
-     8| var groupedSpecifierNumber3 = 1;
-                                      ^ [1]
+   ES6_Named2.js:8:33
+     8| const groupedSpecifierNumber3 = 1;
+                                        ^ [1]
    es6modules.js:217:10
    217| var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
                  ^^^^^^ [2]
@@ -819,9 +819,9 @@ Cannot assign `groupedSpecifierNumber4` to `aj4` because number [1] is incompati
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:9:31
-     9| var groupedSpecifierNumber4 = 2;
-                                      ^ [1]
+   ES6_Named2.js:9:33
+     9| const groupedSpecifierNumber4 = 2;
+                                        ^ [1]
    es6modules.js:218:10
    218| var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
                  ^^^^^^ [2]

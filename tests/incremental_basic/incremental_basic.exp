@@ -73,9 +73,9 @@ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
                       ^
 
 References:
-   a.js:2:9
-   2| var a = 0;
-              ^ [1]
+   a.js:2:11
+   2| const a = 0;
+                ^ [1]
    c.js:3:8
    3| var c: string = b;
              ^^^^^^ [2]

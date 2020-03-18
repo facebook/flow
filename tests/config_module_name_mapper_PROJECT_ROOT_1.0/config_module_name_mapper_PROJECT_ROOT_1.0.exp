@@ -7,9 +7,9 @@ Cannot assign `test` to `b` because number [1] is incompatible with string [2].
                       ^^^^
 
 References:
-   src/testmodule.js:3:19
-   3| export let test = 42;
-                        ^^ [1]
+   src/testmodule.js:3:21
+   3| export const test = 42;
+                          ^^ [1]
    main.js:6:8
    6| var b: string = test; // Error: number ~> string
              ^^^^^^ [2]

@@ -33,35 +33,35 @@ References:
                ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- annot2.js:3:2
+Error ---------------------------------------------------------------------------------------------------- annot2.js:4:2
 
 Cannot cast `f(...)(...)` to number because `T` [1] is incompatible with number [2].
 
-   annot2.js:3:2
-   3| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
+   annot2.js:4:2
+   4| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
        ^^^^^^^
 
 References:
-   annot1.js:1:35
-   1| export const f = <T>(x: T) => (y: T) => y;
-                                        ^ [1]
-   annot2.js:3:11
-   3| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
+   annot2.js:1:28
+   1| const f = <T>(x: T) => (y: T) => y;
+                                 ^ [1]
+   annot2.js:4:11
+   4| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- annot2.js:3:7
+Error ---------------------------------------------------------------------------------------------------- annot2.js:4:7
 
 Cannot call `f(...)` with `1` bound to `y` because number [1] is incompatible with `T` [2].
 
-   annot2.js:3:7
-   3| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
+   annot2.js:4:7
+   4| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
             ^ [1]
 
 References:
-   annot1.js:1:35
-   1| export const f = <T>(x: T) => (y: T) => y;
-                                        ^ [2]
+   annot2.js:1:28
+   1| const f = <T>(x: T) => (y: T) => y;
+                                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- error.js:8:8
