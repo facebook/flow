@@ -1,3 +1,24 @@
+### 0.121.0
+
+Highlights:
+* Made several improvements to errors:
+  * Restricted errors to only be suppressible at the error's primary location (see [blog post](https://medium.com/flow-type/making-flow-error-suppressions-more-specific-280aa4e3c95c))
+  * Fixed the error grouping logic to no longer group unrelated errors that happen to share a location
+  * Changed the order of locations printed in error messages so that the primary location is always printed first (which is the one you need to suppress if you want to do that)
+
+Misc:
+* Fixed the `add-comments` script to add comments on `JSXText`
+* Fixed a crash when TMPDIR exceeded 83 characters
+* Stopped parsing `.flow` files without `@flow`
+
+Lib defs:
+* Improved definitions for Node's `url.parse` function (thanks @chicoxyzzy)
+* Added missing `console` methods (thanks @goodmind)
+* Added `Element.hasAttributes()`
+* Added `string` index to `NamedNodeMap`
+* Fixed `Element.querySelector()` and `Element.querySelectorAll()` overloads
+* Added type definition for `Promise.allSettled()`
+
 ### 0.120.1
 
 Likely to cause new Flow errors:
