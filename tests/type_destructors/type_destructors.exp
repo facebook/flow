@@ -272,21 +272,6 @@ References:
                       ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- merged/test.js:9:4
-
-Cannot call `fn` with object literal bound to the first parameter because property `foo` is missing in object type [1]
-but exists in object literal [2].
-
-   merged/test.js:9:4
-    9| fn({foo: 42}); // Error: `foo` is not in `{||}`
-          ^^^^^^^^^ [2]
-
-References:
-   merged/merged.js:10:23
-   10| export default fn((t: {|p: number|}) => {});
-                             ^^^^^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:4:15
 
 Cannot return `0` because number [1] is incompatible with string [2].
@@ -803,7 +788,7 @@ References:
 
 
 
-Found 54 errors
+Found 53 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
