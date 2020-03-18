@@ -95,8 +95,11 @@ you'll want to split up your `Action` disjoint union into separate action
 types.
 
 ```js
-type FooAction = { type: "FOO", foo: number };
-type BarAction = { type: "BAR", bar: boolean };
+const FOO: 'FOO' = 'FOO';
+const BAR: 'BAR' = 'BAR';
+
+type FooAction = { type: typeof FOO, foo: number };
+type BarAction = { type: typeof BAR, bar: boolean };
 
 type Action =
   | FooAction
@@ -108,19 +111,22 @@ action.
 
 ```js
 // @flow
-type FooAction = { type: "FOO", foo: number };
-type BarAction = { type: "BAR", bar: boolean };
+const FOO: 'FOO' = 'FOO';
+const BAR: 'BAR' = 'BAR';
+
+type FooAction = { type: typeof FOO, foo: number };
+type BarAction = { type: typeof BAR, bar: boolean };
 
 type Action =
   | FooAction
   | BarAction;
 
 function foo(value: number): FooAction {
-  return { type: FooAction.type, foo: value };
+  return { type: FOO, foo: value };
 }
 
 function bar(value: boolean): BarAction {
-  return { type: BarAction.type, bar: value };
+  return { type: BAR, bar: value };
 }
 ```
 
@@ -152,10 +158,10 @@ type Dispatch = (action: Action | ThunkAction | PromiseAction | Array<Action>) =
 function foo(): ThunkAction {
   return (dispatch, getState) => {
     const baz = getState().baz
-    dispatch({ type: BarAction.type, bar: true })
+    dispatch({ type: "FOO", bar: true })
     doSomethingAsync(baz)
       .then(value => {
-        dispatch({ type: FooAction.type, foo: value })
+        dispatch({ type: "FOO", foo: value })
       })
     }
 }
@@ -179,15 +185,18 @@ using the `empty` type in your `default` case.
 // @flow
 type State = { +value: boolean };
 
-type FooAction = { type: "FOO", foo: boolean };
-type BarAction = { type: "BAR", bar: boolean };
+const FOO: 'FOO' = 'FOO';
+const BAR: 'BAR' = 'BAR';
+
+type FooAction = { type: typeof FOO, foo: boolean };
+type BarAction = { type: typeof BAR, bar: boolean };
 
 type Action = FooAction | BarAction;
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case FooAction.type: return { ...state, value: action.foo };
-    case BarAction.type: return { ...state, value: action.bar };
+    case FOO: return { ...state, value: action.foo };
+    case BAR: return { ...state, value: action.bar };
     default:
       (action: empty);
       return state;
