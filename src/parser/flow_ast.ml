@@ -246,6 +246,7 @@ and Type : sig
         optional: bool;
         static: bool;
         _method: bool;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end

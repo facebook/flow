@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":73}},
-  "range":[0,420],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":133}},
+  "range":[0,555],
   "body":[
     {
       "type":"TypeAlias",
@@ -315,6 +315,85 @@
         "callProperties":[],
         "internalSlots":[]
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":133}},
+      "range":[422,555],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":11,"column":5},"end":{"line":11,"column":10}},
+        "range":[427,432],
+        "name":"Test6",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":132}},
+        "range":[435,554],
+        "inexact":false,
+        "exact":false,
+        "properties":[],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[
+          {
+            "type":"ObjectTypeInternalSlot",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":11,"column":71},"end":{"line":11,"column":88}},
+                "range":[493,510],
+                "value":" 6.4 T islot "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":11,"column":14},"end":{"line":11,"column":31}},
+                "range":[436,453],
+                "value":" 6.1 L islot "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":11,"column":32},"end":{"line":11,"column":114}},
+            "range":[454,536],
+            "id":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":11,"column":54},"end":{"line":11,"column":68}},
+                  "range":[476,490],
+                  "value":" 6.3 T id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":11,"column":35},"end":{"line":11,"column":49}},
+                  "range":[457,471],
+                  "value":" 6.2 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":11,"column":50},"end":{"line":11,"column":53}},
+              "range":[472,475],
+              "name":"foo",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "optional":false,
+            "static":false,
+            "method":false,
+            "value":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":11,"column":108},"end":{"line":11,"column":114}},
+              "range":[530,536]
+            }
+          }
+        ]
+      }
     }
   ],
   "comments":[
@@ -413,6 +492,42 @@
       "loc":{"source":null,"start":{"line":9,"column":56},"end":{"line":9,"column":71}},
       "range":[403,418],
       "value":" 5.3 T obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":14},"end":{"line":11,"column":31}},
+      "range":[436,453],
+      "value":" 6.1 L islot "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":35},"end":{"line":11,"column":49}},
+      "range":[457,471],
+      "value":" 6.2 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":54},"end":{"line":11,"column":68}},
+      "range":[476,490],
+      "value":" 6.3 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":71},"end":{"line":11,"column":88}},
+      "range":[493,510],
+      "value":" 6.4 T islot "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":91},"end":{"line":11,"column":107}},
+      "range":[513,529],
+      "value":" 6.5 L type "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":115},"end":{"line":11,"column":131}},
+      "range":[537,553],
+      "value":" 6.6 T type "
     }
   ]
 }

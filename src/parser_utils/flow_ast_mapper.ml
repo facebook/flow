@@ -866,6 +866,17 @@ class ['loc] mapper =
       else
         (loc, { id; key = key'; value = value'; static; variance = variance'; comments = comments' })
 
+    method object_internal_slot_property_type (slot : ('loc, 'loc) Ast.Type.Object.InternalSlot.t) =
+      let open Ast.Type.Object.InternalSlot in
+      let (loc, { id; value; optional; static; _method; comments }) = slot in
+      let id' = this#identifier id in
+      let value' = this#type_ value in
+      let comments' = this#syntax_opt comments in
+      if id == id' && value == value' && comments == comments' then
+        slot
+      else
+        (loc, { id = id'; value = value'; optional; static; _method; comments = comments' })
+
     method object_type _loc (ot : ('loc, 'loc) Ast.Type.Object.t) =
       let open Ast.Type.Object in
       let { properties; exact; inexact; comments } = ot in
@@ -877,9 +888,9 @@ class ['loc] mapper =
             | SpreadProperty p' ->
               id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
             | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
-            | CallProperty _
-            | InternalSlot _ ->
-              p) (* TODO *)
+            | InternalSlot p' ->
+              id this#object_internal_slot_property_type p' p (fun p' -> InternalSlot p')
+            | CallProperty _ -> p) (* TODO *)
           properties
       in
       let comments' = this#syntax_opt comments in

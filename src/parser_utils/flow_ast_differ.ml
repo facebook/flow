@@ -1888,8 +1888,9 @@ let program
       diff_if_changed_ret_opt (object_spread_property_type loc) p1 p2
     | (Indexer (loc, p1), Indexer (_, p2)) ->
       diff_if_changed_ret_opt (object_indexer_type loc) p1 p2
+    | (InternalSlot (loc, s1), InternalSlot (_, s2)) ->
+      diff_if_changed_ret_opt (object_internal_slot_type loc) s1 s2
     | (CallProperty _p1, CallProperty _p2) -> None (* TODO *)
-    | (InternalSlot _s1, InternalSlot _s2) -> None (* TODO *)
     | _ -> None
   and object_property_type
       (optype1 : (Loc.t, Loc.t) Ast.Type.Object.Property.t)
@@ -1980,6 +1981,38 @@ let program
       let variance_diff = diff_if_changed_ret_opt variance variance1 variance2 in
       let comments = syntax_opt loc comments1 comments2 in
       join_diff_list [id_diff; key_diff; value_diff; variance_diff; comments]
+  and object_internal_slot_type
+      (loc : Loc.t)
+      (slot1 : (Loc.t, Loc.t) Ast.Type.Object.InternalSlot.t')
+      (slot2 : (Loc.t, Loc.t) Ast.Type.Object.InternalSlot.t') : node change list option =
+    let open Ast.Type.Object.InternalSlot in
+    let {
+      id = id1;
+      value = value1;
+      optional = optional1;
+      static = static1;
+      _method = method1;
+      comments = comments1;
+    } =
+      slot1
+    in
+    let {
+      id = id2;
+      value = value2;
+      optional = optional2;
+      static = static2;
+      _method = method2;
+      comments = comments2;
+    } =
+      slot2
+    in
+    if optional1 != optional2 || static1 != static2 || method1 != method2 then
+      None
+    else
+      let id_diff = Some (diff_if_changed identifier id1 id2) in
+      let value_diff = Some (diff_if_changed type_ value1 value2) in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [id_diff; value_diff; comments_diff]
   and tuple_type (tp1 : (Loc.t, Loc.t) Ast.Type.t list) (tp2 : (Loc.t, Loc.t) Ast.Type.t list) :
       node change list option =
     diff_and_recurse_nonopt_no_trivial type_ tp1 tp2

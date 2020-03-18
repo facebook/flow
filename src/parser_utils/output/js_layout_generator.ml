@@ -2599,8 +2599,9 @@ and type_object_property =
               Empty );
             source_location_with_comments (call_loc, type_function ~sep:(Atom ":") func);
           ] )
-  | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method = _ }) ->
+  | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method = _; comments }) ->
     source_location_with_comments
+      ?comments
       ( loc,
         fuse
           [

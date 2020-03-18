@@ -1383,8 +1383,9 @@ with type t = Impl.t = struct
     and object_type_call_property (loc, { Type.Object.CallProperty.value; static }) =
       node "ObjectTypeCallProperty" loc [("value", function_type value); ("static", bool static)]
     and object_type_internal_slot
-        (loc, { Type.Object.InternalSlot.id; optional; static; _method; value }) =
+        (loc, { Type.Object.InternalSlot.id; optional; static; _method; value; comments }) =
       node
+        ?comments
         "ObjectTypeInternalSlot"
         loc
         [

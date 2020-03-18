@@ -536,12 +536,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
+            let leading = Peek.comments env in
             Expect.token env T_LBRACKET;
             Expect.token env T_LBRACKET;
             let id = identifier_name env in
             Expect.token env T_RBRACKET;
             Expect.token env T_RBRACKET;
-            let (optional, _method, value) =
+            let (optional, _method, value, trailing) =
               match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
@@ -550,14 +551,22 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                   let (fn_loc, fn) = methodish env start_loc tparams in
                   (fn_loc, Type.Function fn)
                 in
-                (false, true, value)
+                (false, true, value, [])
               | _ ->
                 let optional = Expect.maybe env T_PLING in
+                let trailing = Peek.comments env in
                 Expect.token env T_COLON;
                 let value = _type env in
-                (optional, false, value)
+                (optional, false, value, trailing)
             in
-            { Type.Object.InternalSlot.id; value; optional; static = static <> None; _method })
+            {
+              Type.Object.InternalSlot.id;
+              value;
+              optional;
+              static = static <> None;
+              _method;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
           env
       in
       Type.Object.InternalSlot islot

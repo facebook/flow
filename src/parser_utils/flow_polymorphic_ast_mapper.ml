@@ -689,10 +689,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_internal_slot_type (islot : ('M, 'T) Ast.Type.Object.InternalSlot.t)
         : ('N, 'U) Ast.Type.Object.InternalSlot.t =
       let open Ast.Type.Object.InternalSlot in
-      let (annot, { id = id_; value; optional; static; _method }) = islot in
+      let (annot, { id = id_; value; optional; static; _method; comments }) = islot in
       let id' = this#identifier id_ in
       let value' = this#type_ value in
-      (this#on_loc_annot annot, { id = id'; value = value'; optional; static; _method })
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      ( this#on_loc_annot annot,
+        { id = id'; value = value'; optional; static; _method; comments = comments' } )
 
     method object_type (ot : ('M, 'T) Ast.Type.Object.t) : ('N, 'U) Ast.Type.Object.t =
       let open Ast.Type.Object in

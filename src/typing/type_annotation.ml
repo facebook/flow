@@ -1315,6 +1315,7 @@ and convert_object =
           (* object props are never static *)
           optional;
           _method = _;
+          comments = _;
         } =
           slot
         in
@@ -1740,6 +1741,7 @@ and add_interface_properties cx tparams_map properties s =
                 optional;
                 static;
                 _method;
+                comments = _;
               } =
                 slot
               in
