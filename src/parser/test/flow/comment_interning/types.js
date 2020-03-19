@@ -17,3 +17,5 @@ type Test8 = /* 8.1 L num lit */ 1 /* 8.2 T num lit */;
 type Test9 = /* 9.1 L bigint lit */ 1n /* 9.2 T bigint lit */;
 
 type Test10 = /* 10.1 L bool lit */ true /* 10.2 T bool lit */;
+
+type Test11 = /* 11.1 L interface */ interface /* 11.2 L obj */ {} /* 11.3 T obj */;

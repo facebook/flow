@@ -292,6 +292,7 @@ and Type : sig
     type ('M, 'T) t = {
       body: 'M * ('M, 'T) Object.t;
       extends: ('M * ('M, 'T) Generic.t) list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

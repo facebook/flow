@@ -2662,14 +2662,15 @@ and type_object ?(sep = Atom ",") loc { Ast.Type.Object.exact; properties; inexa
   layout_node_with_comments_opt loc comments
   @@ group [new_list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep props]
 
-and type_interface { Ast.Type.Interface.extends; body = (loc, obj) } =
-  fuse
-    [
-      Atom "interface";
-      interface_extends extends;
-      pretty_space;
-      source_location_with_comments (loc, type_object ~sep:(Atom ",") loc obj);
-    ]
+and type_interface loc { Ast.Type.Interface.extends; body = (obj_loc, obj); comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         Atom "interface";
+         interface_extends extends;
+         pretty_space;
+         source_location_with_comments (obj_loc, type_object ~sep:(Atom ",") obj_loc obj);
+       ]
 
 and interface_extends = function
   | [] -> Empty
@@ -2739,7 +2740,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Nullable t -> type_nullable loc t
       | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) loc func
       | T.Object obj -> type_object loc obj
-      | T.Interface i -> type_interface i
+      | T.Interface i -> type_interface loc i
       | T.Array t -> type_array loc t
       | T.Generic generic -> type_generic generic
       | T.Union (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "|") (t1 :: t2 :: ts)

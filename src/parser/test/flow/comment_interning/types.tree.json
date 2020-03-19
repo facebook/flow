@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":19,"column":63}},
-  "range":[0,870],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":21,"column":84}},
+  "range":[0,956],
   "body":[
     {
       "type":"TypeAlias",
@@ -596,6 +596,60 @@
         "value":true,
         "raw":"true"
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":84}},
+      "range":[872,956],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":21,"column":5},"end":{"line":21,"column":11}},
+        "range":[877,883],
+        "name":"Test11",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"InterfaceTypeAnnotation",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":21,"column":14},"end":{"line":21,"column":36}},
+            "range":[886,908],
+            "value":" 11.1 L interface "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":21,"column":37},"end":{"line":21,"column":66}},
+        "range":[909,938],
+        "extends":[],
+        "body":{
+          "type":"ObjectTypeAnnotation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":21,"column":67},"end":{"line":21,"column":83}},
+              "range":[939,955],
+              "value":" 11.3 T obj "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":21,"column":47},"end":{"line":21,"column":63}},
+              "range":[919,935],
+              "value":" 11.2 L obj "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":21,"column":64},"end":{"line":21,"column":66}},
+          "range":[936,938],
+          "exact":false,
+          "properties":[],
+          "indexers":[],
+          "callProperties":[],
+          "internalSlots":[]
+        }
+      }
     }
   ],
   "comments":[
@@ -790,6 +844,24 @@
       "loc":{"source":null,"start":{"line":19,"column":41},"end":{"line":19,"column":62}},
       "range":[848,869],
       "value":" 10.2 T bool lit "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":14},"end":{"line":21,"column":36}},
+      "range":[886,908],
+      "value":" 11.1 L interface "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":47},"end":{"line":21,"column":63}},
+      "range":[919,935],
+      "value":" 11.2 L obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":67},"end":{"line":21,"column":83}},
+      "range":[939,955],
+      "value":" 11.3 T obj "
     }
   ]
 }

@@ -993,7 +993,7 @@ let rec convert cx tparams_map =
       if not exact_by_default then Flow.add_output cx Error_message.(EImplicitInexactObject loc)
     );
     ((loc, t), Object { Object.exact; properties; inexact; comments })
-  | (loc, Interface { Interface.extends; body }) ->
+  | (loc, Interface { Interface.extends; body; comments }) ->
     let ( body_loc,
           { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } ) =
       body
@@ -1037,6 +1037,7 @@ let rec convert cx tparams_map =
                 comments = object_comments;
               } );
           extends = extend_asts;
+          comments;
         } )
   | (loc, Exists) ->
     add_deprecated_type_error_if_not_lib_file cx loc;

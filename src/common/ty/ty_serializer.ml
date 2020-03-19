@@ -324,7 +324,7 @@ and inline_interface i =
         comments = Flow_ast_utils.mk_comments_opt ();
       } )
   in
-  (Loc.none, T.Interface { T.Interface.body; extends })
+  (Loc.none, T.Interface { T.Interface.body; extends; comments = Flow_ast_utils.mk_comments_opt () })
 
 and utility u =
   let ctor = Ty.string_of_utility_ctor u in

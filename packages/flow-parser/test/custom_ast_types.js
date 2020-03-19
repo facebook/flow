@@ -185,6 +185,12 @@ def("ObjectTypeAnnotation")
       def("ObjectTypeSpreadProperty"))])
     .field("internalSlots", [def("ObjectTypeInternalSlot")]);
 
+def("InterfaceTypeAnnotation")
+    .bases("Type")
+    .build("body", "extends")
+    .field("body", def("ObjectTypeAnnotation"))
+    .field("extends", or([def("InterfaceExtends")], null), defaults["null"]);
+
 def("MetaProperty")
     .bases("Expression")
     .build("meta", "property")

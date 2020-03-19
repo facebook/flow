@@ -732,10 +732,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method interface_type (i : ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
       let open Ast.Type.Interface in
-      let { extends; body } = i in
+      let { extends; body; comments } = i in
       let extends' = Base.List.map ~f:(this#on_loc_annot * this#generic_type) extends in
       let body' = (this#on_loc_annot * this#object_type) body in
-      { extends = extends'; body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { extends = extends'; body = body'; comments = comments' }
 
     method generic_identifier_type (git : ('M, 'T) Ast.Type.Generic.Identifier.t)
         : ('N, 'U) Ast.Type.Generic.Identifier.t =

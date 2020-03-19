@@ -1408,8 +1408,9 @@ with type t = Impl.t = struct
           ("method", bool _method);
           ("value", _type value);
         ]
-    and interface_type (loc, { Type.Interface.extends; body }) =
+    and interface_type (loc, { Type.Interface.extends; body; comments }) =
       node
+        ?comments
         "InterfaceTypeAnnotation"
         loc
         [

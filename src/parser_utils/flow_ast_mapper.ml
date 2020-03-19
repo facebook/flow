@@ -921,13 +921,14 @@ class ['loc] mapper =
 
     method interface_type _loc (i : ('loc, 'loc) Ast.Type.Interface.t) =
       let open Ast.Type.Interface in
-      let { extends; body } = i in
+      let { extends; body; comments } = i in
       let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
       let body' = map_loc this#object_type body in
-      if extends' == extends && body' == body then
+      let comments' = this#syntax_opt comments in
+      if extends' == extends && body' == body && comments == comments' then
         i
       else
-        { extends = extends'; body = body' }
+        { extends = extends'; body = body'; comments = comments' }
 
     method generic_identifier_type (git : ('loc, 'loc) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in

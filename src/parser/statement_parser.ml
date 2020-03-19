@@ -776,7 +776,7 @@ module Statement
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
     let tparams = Type.type_params env in
-    let { Ast.Type.Interface.extends; body } = Type.interface_helper env in
+    let (extends, body) = Type.interface_helper env in
     Statement.Interface.{ id; tparams; body; extends }
 
   and declare_interface env =

@@ -24,7 +24,9 @@ module type TYPE = sig
 
   val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
 
-  val interface_helper : env -> (Loc.t, Loc.t) Type.Interface.t
+  val interface_helper :
+    env ->
+    (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list * (Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t)
 
   val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
 
@@ -187,8 +189,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_INTERFACE ->
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_INTERFACE;
-          Type.Interface (interface_helper env))
+          let (extends, body) = interface_helper env in
+          Type.Interface
+            { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
         env
     | T_TYPEOF ->
       with_loc
@@ -937,7 +942,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           []
       in
       let body = _object env ~allow_exact:false ~allow_spread:false ~is_class:false in
-      { Type.Interface.extends; body }
+      (extends, body)
 
   and type_identifier env =
     let (loc, { Identifier.name; comments }) = identifier_name env in
