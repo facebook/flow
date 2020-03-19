@@ -22,9 +22,9 @@ with `HTMLFormElement` [2].
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:773:36
-   773|   createElement(tagName: 'input'): HTMLInputElement;
-                                           ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/dom.js:775:70
+   775|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
+                                                                             ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:528:24
    528|     constructor(form?: HTMLFormElement): void;
                                ^^^^^^^^^^^^^^^ [2]
