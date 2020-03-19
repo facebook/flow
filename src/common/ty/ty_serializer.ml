@@ -75,11 +75,11 @@ let rec type_ t =
     return
       (builtin_from_string
          "$TEMPORARY$boolean"
-         ~targs:(Loc.none, [(Loc.none, T.BooleanLiteral lit)]))
+         ~targs:(Loc.none, [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
   | Bool None -> just T.Boolean
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
-  | BoolLit lit -> just (T.BooleanLiteral lit)
+  | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
   | Fun f -> function_ f >>| fun f -> (Loc.none, T.Function f)
   | Obj o -> obj_ o
   | Arr a -> arr a
@@ -283,6 +283,8 @@ and num_lit lit =
     raw = lit;
     comments = Flow_ast_utils.mk_comments_opt ();
   }
+
+and bool_lit lit = { Ast.BooleanLiteral.value = lit; comments = Flow_ast_utils.mk_comments_opt () }
 
 and getter t =
   function_

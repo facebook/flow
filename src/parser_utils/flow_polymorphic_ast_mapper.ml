@@ -492,11 +492,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       (this#on_loc_annot annot, { id = this#identifier id })
 
     method enum_boolean_member
-        (member : (bool, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
-        : (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+        (member : ('M Ast.BooleanLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        : ('N Ast.BooleanLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
-      let init' = (this#on_loc_annot init_annot, init_val) in
+      let init' = (this#on_loc_annot init_annot, this#boolean_literal init_val) in
       (this#on_loc_annot annot, { id = this#identifier id; init = init' })
 
     method enum_number_member
@@ -840,12 +840,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { approx_value; bigint; comments = comments' }
 
+    method boolean_literal (t : 'M Ast.BooleanLiteral.t) : 'N Ast.BooleanLiteral.t =
+      let open Ast.BooleanLiteral in
+      let { value; comments } = t in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { value; comments = comments' }
+
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       Ast.Type.
         ( this#on_type_annot annot,
           match t with
           | ( Any | Mixed | Empty | Void | Null | Symbol | Number | BigInt | String | Boolean
-            | BooleanLiteral _ | Exists ) as t ->
+            | Exists ) as t ->
             t
           | Nullable t' -> Nullable (this#nullable_type t')
           | Array t' -> Array (this#array_type t')
@@ -867,7 +873,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Tuple t' -> Tuple (this#tuple_type t')
           | StringLiteral t' -> StringLiteral (this#string_literal t')
           | NumberLiteral t' -> NumberLiteral (this#number_literal t')
-          | BigIntLiteral t' -> BigIntLiteral (this#bigint_literal t') )
+          | BigIntLiteral t' -> BigIntLiteral (this#bigint_literal t')
+          | BooleanLiteral t' -> BooleanLiteral (this#boolean_literal t') )
 
     method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)
         : ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t =

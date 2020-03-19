@@ -86,7 +86,7 @@ module T = struct
     | ValueRef of reference (* typeof `x` *)
     | NumberLiteral of Loc.t Ast.NumberLiteral.t
     | StringLiteral of Loc.t Ast.StringLiteral.t
-    | BooleanLiteral of bool
+    | BooleanLiteral of Loc.t Ast.BooleanLiteral.t
     | Number
     | String
     | Boolean
@@ -1050,7 +1050,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
           (loc, T.StringLiteral { Ast.StringLiteral.value; raw; comments })
         | Ast.Literal.Number value ->
           (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw; comments })
-        | Ast.Literal.Boolean b -> (loc, T.BooleanLiteral b)
+        | Ast.Literal.Boolean value -> (loc, T.BooleanLiteral { Ast.BooleanLiteral.value; comments })
         | Ast.Literal.Null -> (loc, T.Null)
         | _ -> T.FixMe.mk_expr_type loc
       end
@@ -1320,17 +1320,20 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Not ->
       begin
         match literal_expr argument with
-        | (_, T.BooleanLiteral b) -> (loc, T.BooleanLiteral (not b))
+        | (_, T.BooleanLiteral { Ast.BooleanLiteral.value; comments }) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = not value; comments })
         | (_, T.Function _)
         | (_, T.ObjectLiteral _)
         | (_, T.ArrayLiteral _)
         | (_, T.JSXLiteral _) ->
-          (loc, T.BooleanLiteral false)
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = false; comments = None })
         | (_, T.Void)
         | (_, T.Null) ->
-          (loc, T.BooleanLiteral true)
-        | (_, T.NumberLiteral { Ast.NumberLiteral.value; _ }) -> (loc, T.BooleanLiteral (value = 0.))
-        | (_, T.StringLiteral { Ast.StringLiteral.value; _ }) -> (loc, T.BooleanLiteral (value = ""))
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = true; comments = None })
+        | (_, T.NumberLiteral { Ast.NumberLiteral.value; comments; _ }) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = value = 0.; comments })
+        | (_, T.StringLiteral { Ast.StringLiteral.value; comments; _ }) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = value = ""; comments })
         | _ -> (loc, T.Boolean)
       end
     | Await ->

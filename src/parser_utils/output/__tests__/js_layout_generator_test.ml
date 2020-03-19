@@ -2134,8 +2134,8 @@ let tests =
                     (boolean_body
                        ~explicit_type
                        [
-                         initialized_member (I.identifier "A") true;
-                         initialized_member (I.identifier "B") false;
+                         initialized_member (I.identifier "A") (boolean_literal true);
+                         initialized_member (I.identifier "B") (boolean_literal false);
                        ])
              in
              assert_output ~ctxt "enum E{A=true,B=false,}" (layout ~explicit_type:false);

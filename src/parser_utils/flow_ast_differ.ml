@@ -201,6 +201,7 @@ type node =
   | StringLiteral of Loc.t * Loc.t Ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Ast.BigIntLiteral.t
+  | BooleanLiteral of Loc.t * Loc.t Ast.BooleanLiteral.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
@@ -1057,6 +1058,20 @@ let program
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
+  and boolean_literal
+      ((loc1, lit1) : Loc.t * Loc.t Ast.BooleanLiteral.t)
+      ((loc2, lit2) : Loc.t * Loc.t Ast.BooleanLiteral.t) : node change list option =
+    let open Ast.BooleanLiteral in
+    let { value = value1; comments = comments1 } = lit1 in
+    let { value = value2; comments = comments2 } = lit2 in
+    let value_diff =
+      if value1 = value2 then
+        Some []
+      else
+        Some [(loc1, Replace (BooleanLiteral (loc1, lit1), BooleanLiteral (loc2, lit2)))]
+    in
+    let comments_diff = syntax_opt loc1 comments1 comments2 in
+    join_diff_list [value_diff; comments_diff]
   and tagged_template
       (loc : Loc.t)
       (t_tmpl1 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -1850,6 +1865,8 @@ let program
         diff_if_changed_ret_opt number_literal (loc1, n1) (loc2, n2)
       | (Ast.Type.BigIntLiteral b1, Ast.Type.BigIntLiteral b2) ->
         diff_if_changed_ret_opt bigint_literal (loc1, b1) (loc2, b2)
+      | (Ast.Type.BooleanLiteral b1, Ast.Type.BooleanLiteral b2) ->
+        diff_if_changed_ret_opt boolean_literal (loc1, b1) (loc2, b2)
       | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt (tuple_type loc1) t1 t2
       | (Array t1, Array t2) -> diff_if_changed_ret_opt (array_type loc1) t1 t2

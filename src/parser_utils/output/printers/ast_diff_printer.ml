@@ -15,6 +15,7 @@ let layout_of_node = function
   | StringLiteral (loc, lit) -> Js_layout_generator.string_literal_type loc lit
   | NumberLiteral (loc, lit) -> Js_layout_generator.number_literal_type loc lit
   | BigIntLiteral (loc, lit) -> Js_layout_generator.bigint_literal_type loc lit
+  | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal_type loc lit
   | Statement stmt -> Js_layout_generator.statement stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
   | Expression expr ->

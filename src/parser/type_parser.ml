@@ -243,9 +243,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           } )
     | (T_TRUE | T_FALSE) as token ->
+      let leading = Peek.comments env in
       Expect.token env token;
+      let trailing = Peek.comments env in
       let value = token = T_TRUE in
-      (loc, Type.BooleanLiteral value)
+      ( loc,
+        Type.BooleanLiteral
+          { BooleanLiteral.value; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+      )
     | token ->
       (match primitive token with
       | Some t ->

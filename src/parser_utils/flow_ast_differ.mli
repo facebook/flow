@@ -26,6 +26,7 @@ type node =
   | StringLiteral of Loc.t * Loc.t Flow_ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Flow_ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Flow_ast.BigIntLiteral.t
+  | BooleanLiteral of Loc.t * Loc.t Flow_ast.BooleanLiteral.t
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
   | Program of (Loc.t, Loc.t) Flow_ast.program
   | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t

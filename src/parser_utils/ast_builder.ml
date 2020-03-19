@@ -59,6 +59,8 @@ let string_literal ?comments value =
 
 let number_literal ?comments value raw = { Ast.NumberLiteral.value; raw; comments }
 
+let boolean_literal ?comments value = { Ast.BooleanLiteral.value; comments }
+
 module Literals = struct
   open Ast.Literal
 

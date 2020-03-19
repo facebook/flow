@@ -101,6 +101,15 @@ and BigIntLiteral : sig
 end =
   BigIntLiteral
 
+and BooleanLiteral : sig
+  type 'M t = {
+    value: bool;
+    comments: ('M, unit) Syntax.t option;
+  }
+  [@@deriving show]
+end =
+  BooleanLiteral
+
 and Variance : sig
   type 'M t = 'M * 'M t'
 
@@ -347,7 +356,7 @@ and Type : sig
     | StringLiteral of 'M StringLiteral.t
     | NumberLiteral of 'M NumberLiteral.t
     | BigIntLiteral of 'M BigIntLiteral.t
-    | BooleanLiteral of bool
+    | BooleanLiteral of 'M BooleanLiteral.t
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
@@ -633,7 +642,7 @@ and Statement : sig
 
     module BooleanBody : sig
       type 'M t = {
-        members: (bool, 'M) InitializedMember.t list;
+        members: ('M BooleanLiteral.t, 'M) InitializedMember.t list;
         explicitType: bool;
       }
       [@@deriving show]

@@ -956,8 +956,12 @@ with type t = Impl.t = struct
             [
               ( "members",
                 array_of_list
-                  (fun (loc, { InitializedMember.id; init = (_, bool_val) }) ->
-                    node "EnumBooleanMember" loc [("id", identifier id); ("init", bool bool_val)])
+                  (fun ( loc,
+                         {
+                           InitializedMember.id;
+                           init = (_, { BooleanLiteral.value; comments = _ });
+                         } ) ->
+                    node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
                   members );
               ("explicitType", bool explicitType);
             ]
@@ -1454,8 +1458,9 @@ with type t = Impl.t = struct
     and bigint_literal_type (loc, { Ast.BigIntLiteral.bigint; comments; _ }) =
       let raw = bigint in
       node ?comments "BigIntLiteralTypeAnnotation" loc [("value", null); ("raw", string raw)]
-    and boolean_literal_type (loc, value) =
+    and boolean_literal_type (loc, { Ast.BooleanLiteral.value; comments }) =
       node
+        ?comments
         "BooleanLiteralTypeAnnotation"
         loc
         [

@@ -17,7 +17,7 @@ end = struct
   open Flow_ast.Statement.EnumDeclaration
 
   type members = {
-    boolean_members: (bool, Loc.t) InitializedMember.t list;
+    boolean_members: (Loc.t BooleanLiteral.t, Loc.t) InitializedMember.t list;
     number_members: (Loc.t NumberLiteral.t, Loc.t) InitializedMember.t list;
     string_members: (Loc.t StringLiteral.t, Loc.t) InitializedMember.t list;
     defaulted_members: Loc.t DefaultedMember.t list;
@@ -31,7 +31,7 @@ end = struct
   type init =
     | NoInit
     | InvalidInit of Loc.t
-    | BooleanInit of Loc.t * bool
+    | BooleanInit of Loc.t * Loc.t BooleanLiteral.t
     | NumberInit of Loc.t * Loc.t NumberLiteral.t
     | StringInit of Loc.t * Loc.t StringLiteral.t
 
@@ -80,8 +80,14 @@ end = struct
         InvalidInit loc
     | (T_TRUE | T_FALSE) as token ->
       Eat.token env;
+      let trailing = Peek.comments env in
       if end_of_member_init env then
-        BooleanInit (loc, token = T_TRUE)
+        BooleanInit
+          ( loc,
+            {
+              BooleanLiteral.value = token = T_TRUE;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            } )
       else
         InvalidInit loc
     | _ ->

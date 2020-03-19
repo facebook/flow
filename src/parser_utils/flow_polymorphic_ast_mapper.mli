@@ -32,6 +32,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method block : ('M, 'T) Ast.Statement.Block.t -> ('N, 'U) Ast.Statement.Block.t
 
+    method boolean_literal : 'M Ast.BooleanLiteral.t -> 'N Ast.BooleanLiteral.t
+
     method break : 'M Ast.Statement.Break.t -> 'N Ast.Statement.Break.t
 
     method call : 'T -> ('M, 'T) Ast.Expression.Call.t -> ('N, 'U) Ast.Expression.Call.t
@@ -149,8 +151,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'N Ast.Statement.EnumDeclaration.DefaultedMember.t
 
     method enum_boolean_member :
-      (bool, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
-      (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+      ('M Ast.BooleanLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      ('N Ast.BooleanLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
 
     method enum_number_member :
       ('M Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->

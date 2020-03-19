@@ -8151,7 +8151,7 @@ and mk_enum cx ~enum_reason enum =
           ~f:
             (fun (members_map, bool_type, seen_values)
                  (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-            let (init_loc, init_value) = init in
+            let (init_loc, { Ast.BooleanLiteral.value = init_value; _ }) = init in
             let bool_type =
               match bool_type with
               (* we have seen one value *)

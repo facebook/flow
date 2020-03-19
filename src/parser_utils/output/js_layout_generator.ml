@@ -1114,6 +1114,16 @@ and string_literal_type loc { Ast.StringLiteral.value = _; raw; comments } =
 and bigint_literal_type loc { Ast.BigIntLiteral.approx_value = _; bigint; comments } =
   layout_node_with_comments_opt loc comments (Atom bigint)
 
+and boolean_literal_type loc { Ast.BooleanLiteral.value; comments } =
+  layout_node_with_comments_opt
+    loc
+    comments
+    (Atom
+       ( if value then
+         "true"
+       else
+         "false" ))
+
 and member ?(optional = false) ~precedence ~ctxt member_node loc =
   let { Ast.Expression.Member._object; property; comments } = member_node in
   let computed =
@@ -1744,7 +1754,8 @@ and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
   let initialized_member id value_str =
     fuse [identifier id; pretty_space; Atom "="; pretty_space; Atom value_str; Atom ","]
   in
-  let boolean_member (_, { InitializedMember.id; init = (_, init_value) }) =
+  let boolean_member
+      (_, { InitializedMember.id; init = (_, { Ast.BooleanLiteral.value = init_value; _ }) }) =
     initialized_member
       id
       ( if init_value then
@@ -2738,12 +2749,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.StringLiteral lit -> string_literal_type loc lit
       | T.NumberLiteral lit -> number_literal_type loc lit
       | T.BigIntLiteral lit -> bigint_literal_type loc lit
-      | T.BooleanLiteral value ->
-        Atom
-          ( if value then
-            "true"
-          else
-            "false" )
+      | T.BooleanLiteral lit -> boolean_literal_type loc lit
       | T.Exists -> Atom "*" )
 
 and interface_declaration_base

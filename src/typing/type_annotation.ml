@@ -239,7 +239,8 @@ let rec convert cx tparams_map =
     let reason = mk_annot_reason (RBigIntLit bigint) loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
     ((loc, AnyT.why AnyError reason), t_ast)
-  | (loc, (BooleanLiteral value as t_ast)) -> ((loc, mk_singleton_boolean cx loc value), t_ast)
+  | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
+    ((loc, mk_singleton_boolean cx loc value), t_ast)
   (* TODO *)
   | ( loc,
       Generic

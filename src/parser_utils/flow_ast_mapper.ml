@@ -640,7 +640,8 @@ class ['loc] mapper =
         (loc, { id = id' })
 
     method enum_boolean_member
-        (member : (bool, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+        (member :
+          ('loc Ast.BooleanLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#identifier ident in
@@ -1007,6 +1008,15 @@ class ['loc] mapper =
       else
         { approx_value; bigint; comments = comments' }
 
+    method boolean_literal_type _loc (lit : 'loc Ast.BooleanLiteral.t) =
+      let open Ast.BooleanLiteral in
+      let { value; comments } = lit in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        lit
+      else
+        { value; comments = comments' }
+
     method nullable_type (t : ('loc, 'loc) Ast.Type.Nullable.t) =
       let open Ast.Type.Nullable in
       let { argument; comments } = t in
@@ -1060,7 +1070,6 @@ class ['loc] mapper =
       | (_, BigInt)
       | (_, String)
       | (_, Boolean)
-      | (_, BooleanLiteral _)
       | (_, Exists) ->
         t
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
@@ -1076,6 +1085,8 @@ class ['loc] mapper =
         id_loc this#number_literal_type loc lit t (fun lit -> (loc, NumberLiteral lit))
       | (loc, BigIntLiteral lit) ->
         id_loc this#bigint_literal_type loc lit t (fun lit -> (loc, BigIntLiteral lit))
+      | (loc, BooleanLiteral lit) ->
+        id_loc this#boolean_literal_type loc lit t (fun lit -> (loc, BooleanLiteral lit))
       | (loc, Union (t0, t1, ts)) ->
         let t0' = this#type_ t0 in
         let t1' = this#type_ t1 in

@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":17,"column":62}},
-  "range":[0,805],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":19,"column":63}},
+  "range":[0,870],
   "body":[
     {
       "type":"TypeAlias",
@@ -559,6 +559,43 @@
         "value":null,
         "raw":"1n"
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":63}},
+      "range":[807,870],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":19,"column":5},"end":{"line":19,"column":11}},
+        "range":[812,818],
+        "name":"Test10",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"BooleanLiteralTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":19,"column":41},"end":{"line":19,"column":62}},
+            "range":[848,869],
+            "value":" 10.2 T bool lit "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":19,"column":14},"end":{"line":19,"column":35}},
+            "range":[821,842],
+            "value":" 10.1 L bool lit "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":19,"column":36},"end":{"line":19,"column":40}},
+        "range":[843,847],
+        "value":true,
+        "raw":"true"
+      }
     }
   ],
   "comments":[
@@ -741,6 +778,18 @@
       "loc":{"source":null,"start":{"line":17,"column":39},"end":{"line":17,"column":61}},
       "range":[782,804],
       "value":" 9.2 T bigint lit "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":14},"end":{"line":19,"column":35}},
+      "range":[821,842],
+      "value":" 10.1 L bool lit "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":41},"end":{"line":19,"column":62}},
+      "range":[848,869],
+      "value":" 10.2 T bool lit "
     }
   ]
 }

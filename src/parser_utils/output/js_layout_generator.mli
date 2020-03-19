@@ -40,6 +40,8 @@ val string_literal_type : Loc.t -> Loc.t Flow_ast.StringLiteral.t -> Layout.layo
 
 val bigint_literal_type : Loc.t -> Loc.t Flow_ast.BigIntLiteral.t -> Layout.layout_node
 
+val boolean_literal_type : Loc.t -> Loc.t Flow_ast.BooleanLiteral.t -> Layout.layout_node
+
 val expression :
   ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Expression.t -> Layout.layout_node
 

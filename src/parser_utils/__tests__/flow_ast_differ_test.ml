@@ -683,7 +683,8 @@ class true_to_false_mapper =
       let (t1, a) = annot in
       let (t2, right_var) = a in
       match right_var with
-      | BooleanLiteral true -> (t1, (t2, BooleanLiteral false))
+      | BooleanLiteral { Ast.BooleanLiteral.value = true; comments } ->
+        (t1, (t2, BooleanLiteral { Ast.BooleanLiteral.value = false; comments }))
       | _ -> annot
   end
 
