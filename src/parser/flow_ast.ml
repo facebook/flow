@@ -329,6 +329,22 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Union : sig
+    type ('M, 'T) t = {
+      types: ('M, 'T) Type.t * ('M, 'T) Type.t * ('M, 'T) Type.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
+  module Intersection : sig
+    type ('M, 'T) t = {
+      types: ('M, 'T) Type.t * ('M, 'T) Type.t * ('M, 'T) Type.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   (* Yes, we could add a little complexity here to show that Any and Void
@@ -350,8 +366,8 @@ and Type : sig
     | Interface of ('M, 'T) Interface.t
     | Array of ('M, 'T) Array.t
     | Generic of ('M, 'T) Generic.t
-    | Union of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
-    | Intersection of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
+    | Union of ('M, 'T) Union.t
+    | Intersection of ('M, 'T) Intersection.t
     | Typeof of ('M, 'T) Typeof.t
     | Tuple of ('M, 'T) Tuple.t
     | StringLiteral of 'M StringLiteral.t

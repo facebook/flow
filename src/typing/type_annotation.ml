@@ -168,19 +168,20 @@ let rec convert cx tparams_map =
     let (((_, t), _) as t_ast) = convert cx tparams_map t in
     let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
     ((loc, MaybeT (reason, t)), Nullable { Nullable.argument = t_ast; comments })
-  | (loc, Union (t0, t1, ts)) ->
+  | (loc, Union { Union.types = (t0, t1, ts); comments }) ->
     let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
     let (((_, t1), _) as t1_ast) = convert cx tparams_map t1 in
     let (ts, ts_ast) = convert_list cx tparams_map ts in
     let rep = UnionRep.make t0 t1 ts in
-    ((loc, UnionT (mk_annot_reason RUnionType loc, rep)), Union (t0_ast, t1_ast, ts_ast))
-  | (loc, Intersection (t0, t1, ts)) ->
+    ( (loc, UnionT (mk_annot_reason RUnionType loc, rep)),
+      Union { Union.types = (t0_ast, t1_ast, ts_ast); comments } )
+  | (loc, Intersection { Intersection.types = (t0, t1, ts); comments }) ->
     let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
     let (((_, t1), _) as t1_ast) = convert cx tparams_map t1 in
     let (ts, ts_ast) = convert_list cx tparams_map ts in
     let rep = InterRep.make t0 t1 ts in
     ( (loc, IntersectionT (mk_annot_reason RIntersectionType loc, rep)),
-      Intersection (t0_ast, t1_ast, ts_ast) )
+      Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments } )
   | (loc, Typeof { Typeof.argument = x; comments }) as t_ast ->
     begin
       match x with

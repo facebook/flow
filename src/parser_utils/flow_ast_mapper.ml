@@ -1058,6 +1058,30 @@ class ['loc] mapper =
       else
         { argument = argument'; comments = comments' }
 
+    method union_type _loc (t : ('loc, 'loc) Ast.Type.Union.t) =
+      let open Ast.Type.Union in
+      let { types = (t0, t1, ts); comments } = t in
+      let t0' = this#type_ t0 in
+      let t1' = this#type_ t1 in
+      let ts' = ListUtils.ident_map this#type_ ts in
+      let comments' = this#syntax_opt comments in
+      if t0' == t0 && t1' == t1 && ts' == ts && comments' == comments then
+        t
+      else
+        { types = (t0', t1', ts'); comments = comments' }
+
+    method intersection_type _loc (t : ('loc, 'loc) Ast.Type.Intersection.t) =
+      let open Ast.Type.Intersection in
+      let { types = (t0, t1, ts); comments } = t in
+      let t0' = this#type_ t0 in
+      let t1' = this#type_ t1 in
+      let ts' = ListUtils.ident_map this#type_ ts in
+      let comments' = this#syntax_opt comments in
+      if t0' == t0 && t1' == t1 && ts' == ts && comments' == comments then
+        t
+      else
+        { types = (t0', t1', ts'); comments = comments' }
+
     method type_ (t : ('loc, 'loc) Ast.Type.t) =
       let open Ast.Type in
       match t with
@@ -1088,22 +1112,9 @@ class ['loc] mapper =
         id_loc this#bigint_literal_type loc lit t (fun lit -> (loc, BigIntLiteral lit))
       | (loc, BooleanLiteral lit) ->
         id_loc this#boolean_literal_type loc lit t (fun lit -> (loc, BooleanLiteral lit))
-      | (loc, Union (t0, t1, ts)) ->
-        let t0' = this#type_ t0 in
-        let t1' = this#type_ t1 in
-        let ts' = ListUtils.ident_map this#type_ ts in
-        if t0' == t0 && t1' == t1 && ts' == ts then
-          t
-        else
-          (loc, Union (t0', t1', ts'))
-      | (loc, Intersection (t0, t1, ts)) ->
-        let t0' = this#type_ t0 in
-        let t1' = this#type_ t1 in
-        let ts' = ListUtils.ident_map this#type_ ts in
-        if t0' == t0 && t1' == t1 && ts' == ts then
-          t
-        else
-          (loc, Intersection (t0', t1', ts'))
+      | (loc, Union t') -> id_loc this#union_type loc t' t (fun t' -> (loc, Union t'))
+      | (loc, Intersection t') ->
+        id_loc this#intersection_type loc t' t (fun t' -> (loc, Intersection t'))
       | (loc, Tuple t') -> id this#tuple_type t' t (fun t' -> (loc, Tuple t'))
 
     method type_annotation (annot : ('loc, 'loc) Ast.Type.annotation) =

@@ -75,46 +75,70 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       env
 
   and union env =
-    let _ = Expect.maybe env T_BIT_OR in
+    let leading =
+      if Peek.token env = T_BIT_OR then (
+        let leading = Peek.comments env in
+        Eat.token env;
+        leading
+      ) else
+        []
+    in
     let left = intersection env in
-    union_with env left
+    union_with env ~leading left
 
   and union_with =
-    let rec unions acc env =
+    let rec unions leading acc env =
       match Peek.token env with
       | T_BIT_OR ->
         Expect.token env T_BIT_OR;
-        unions (intersection env :: acc) env
+        unions leading (intersection env :: acc) env
       | _ ->
         (match List.rev acc with
-        | t0 :: t1 :: ts -> Type.Union (t0, t1, ts)
+        | t0 :: t1 :: ts ->
+          Type.Union
+            {
+              Type.Union.types = (t0, t1, ts);
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
         | _ -> assert false)
     in
-    fun env left ->
+    fun env ?(leading = []) left ->
       if Peek.token env = T_BIT_OR then
-        with_loc ~start_loc:(fst left) (unions [left]) env
+        with_loc ~start_loc:(fst left) (unions leading [left]) env
       else
         left
 
   and intersection env =
-    let _ = Expect.maybe env T_BIT_AND in
+    let leading =
+      if Peek.token env = T_BIT_AND then (
+        let leading = Peek.comments env in
+        Eat.token env;
+        leading
+      ) else
+        []
+    in
     let left = anon_function_without_parens env in
-    intersection_with env left
+    intersection_with env ~leading left
 
   and intersection_with =
-    let rec intersections acc env =
+    let rec intersections leading acc env =
       match Peek.token env with
       | T_BIT_AND ->
         Expect.token env T_BIT_AND;
-        intersections (anon_function_without_parens env :: acc) env
+        intersections leading (anon_function_without_parens env :: acc) env
       | _ ->
         (match List.rev acc with
-        | t0 :: t1 :: ts -> Type.Intersection (t0, t1, ts)
+        | t0 :: t1 :: ts ->
+          Type.Intersection
+            {
+              Type.Intersection.types = (t0, t1, ts);
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
         | _ -> assert false)
     in
-    fun env left ->
+    fun env ?(leading = []) left ->
       if Peek.token env = T_BIT_AND then
-        with_loc ~start_loc:(fst left) (intersections [left]) env
+        with_loc ~start_loc:(fst left) (intersections leading [left]) env
       else
         left
 

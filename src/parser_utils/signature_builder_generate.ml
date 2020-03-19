@@ -388,9 +388,13 @@ module T = struct
         | (et, []) -> snd (type_of_array_element outlined et)
         | (et1, et2 :: ets) ->
           Ast.Type.Union
-            ( type_of_array_element outlined et1,
-              type_of_array_element outlined et2,
-              Base.List.map ~f:(type_of_array_element outlined) ets ))
+            {
+              Ast.Type.Union.types =
+                ( type_of_array_element outlined et1,
+                  type_of_array_element outlined et2,
+                  Base.List.map ~f:(type_of_array_element outlined) ets );
+              comments = Flow_ast_utils.mk_comments_opt ();
+            })
     | (loc, ValueRef reference) ->
       ( loc,
         Ast.Type.Typeof

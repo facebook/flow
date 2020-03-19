@@ -1854,9 +1854,8 @@ let program
       | (Function fn1, Function fn2) -> diff_if_changed_ret_opt (function_type loc1) fn1 fn2
       | (Interface i1, Interface i2) -> diff_if_changed_ret_opt (interface_type loc1) i1 i2
       | (Generic g1, Generic g2) -> generic_type g1 g2
-      | (Intersection (t0, t1, ts), Intersection (t0', t1', ts'))
-      | (Union (t0, t1, ts), Union (t0', t1', ts')) ->
-        diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
+      | (Intersection t1, Intersection t2) -> diff_if_changed_ret_opt (intersection_type loc1) t1 t2
+      | (Union t1, Union t2) -> diff_if_changed_ret_opt (union_type loc1) t1 t2
       | (Nullable t1, Nullable t2) -> diff_if_changed_ret_opt (nullable_type loc1) t1 t2
       | (Object obj1, Object obj2) -> diff_if_changed_ret_opt (object_type loc1) obj1 obj2
       | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) ->
@@ -2162,6 +2161,41 @@ let program
     let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [argument_diff; comments_diff]
+  and union_type
+      (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Union.t) (t2 : (Loc.t, Loc.t) Ast.Type.Union.t) :
+      node change list option =
+    let open Ast.Type.Union in
+    let { types = types1; comments = comments1 } = t1 in
+    let { types = types2; comments = comments2 } = t2 in
+    let types1 =
+      let (t0, t1, ts) = types1 in
+      t0 :: t1 :: ts
+    in
+    let types2 =
+      let (t0, t1, ts) = types2 in
+      t0 :: t1 :: ts
+    in
+    let types_diff = diff_and_recurse_nonopt_no_trivial type_ types1 types2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [types_diff; comments_diff]
+  and intersection_type
+      (loc : Loc.t)
+      (t1 : (Loc.t, Loc.t) Ast.Type.Intersection.t)
+      (t2 : (Loc.t, Loc.t) Ast.Type.Intersection.t) : node change list option =
+    let open Ast.Type.Intersection in
+    let { types = types1; comments = comments1 } = t1 in
+    let { types = types2; comments = comments2 } = t2 in
+    let types1 =
+      let (t0, t1, ts) = types1 in
+      t0 :: t1 :: ts
+    in
+    let types2 =
+      let (t0, t1, ts) = types2 in
+      t0 :: t1 :: ts
+    in
+    let types_diff = diff_and_recurse_nonopt_no_trivial type_ types1 types2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [types_diff; comments_diff]
   and type_alias
       (loc : Loc.t)
       (t_alias1 : (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)

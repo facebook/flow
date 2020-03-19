@@ -117,7 +117,14 @@ and union t (t0, t1, rest) =
   let ts = bk_union t |> Nel.to_list in
   if List.mem Null ts && List.mem Void ts then
     match List.filter (fun t -> not (t = Null || t = Void)) ts with
-    | [] -> return (Loc.none, T.Union ((Loc.none, T.Null), (Loc.none, T.Void), []))
+    | [] ->
+      return
+        ( Loc.none,
+          T.Union
+            {
+              T.Union.types = ((Loc.none, T.Null), (Loc.none, T.Void), []);
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } )
     | hd :: tl ->
       type_ (mk_union (hd, tl)) >>| fun ts ->
       ( Loc.none,
@@ -125,12 +132,17 @@ and union t (t0, t1, rest) =
   else
     type_ t0 >>= fun t0 ->
     type_ t1 >>= fun t1 ->
-    mapM type_ rest >>| fun rest -> (Loc.none, T.Union (t0, t1, rest))
+    mapM type_ rest >>| fun rest ->
+    ( Loc.none,
+      T.Union { T.Union.types = (t0, t1, rest); comments = Flow_ast_utils.mk_comments_opt () } )
 
 and intersection (t0, t1, rest) =
   type_ t0 >>= fun t0 ->
   type_ t1 >>= fun t1 ->
-  mapM type_ rest >>| fun rest -> (Loc.none, T.Intersection (t0, t1, rest))
+  mapM type_ rest >>| fun rest ->
+  ( Loc.none,
+    T.Intersection
+      { T.Intersection.types = (t0, t1, rest); comments = Flow_ast_utils.mk_comments_opt () } )
 
 and function_ f =
   type_ f.fun_return >>= fun return ->

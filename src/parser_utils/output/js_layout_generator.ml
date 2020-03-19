@@ -2713,6 +2713,18 @@ and type_tuple loc { Ast.Type.Tuple.types; comments } =
 and type_array loc { Ast.Type.Array.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "Array<"; type_ argument; Atom ">"])
 
+and type_union loc { Ast.Type.Union.types = (t0, t1, ts); comments } =
+  layout_node_with_comments_opt
+    loc
+    comments
+    (type_union_or_intersection ~sep:(Atom "|") (t0 :: t1 :: ts))
+
+and type_intersection loc { Ast.Type.Intersection.types = (t0, t1, ts); comments } =
+  layout_node_with_comments_opt
+    loc
+    comments
+    (type_union_or_intersection ~sep:(Atom "&") (t0 :: t1 :: ts))
+
 and type_with_parens t =
   let module T = Ast.Type in
   match t with
@@ -2743,8 +2755,8 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Interface i -> type_interface loc i
       | T.Array t -> type_array loc t
       | T.Generic generic -> type_generic generic
-      | T.Union (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "|") (t1 :: t2 :: ts)
-      | T.Intersection (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "&") (t1 :: t2 :: ts)
+      | T.Union t -> type_union loc t
+      | T.Intersection t -> type_intersection loc t
       | T.Typeof t -> type_typeof loc t
       | T.Tuple t -> type_tuple loc t
       | T.StringLiteral lit -> string_literal_type loc lit

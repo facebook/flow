@@ -823,6 +823,25 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { argument = argument'; comments = comments' }
 
+    method union_type (t : ('M, 'T) Ast.Type.Union.t) : ('N, 'U) Ast.Type.Union.t =
+      let open Ast.Type.Union in
+      let { types = (t0, t1, ts); comments } = t in
+      let t0' = this#type_ t0 in
+      let t1' = this#type_ t1 in
+      let ts' = Base.List.map ~f:this#type_ ts in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { types = (t0', t1', ts'); comments = comments' }
+
+    method intersection_type (t : ('M, 'T) Ast.Type.Intersection.t)
+        : ('N, 'U) Ast.Type.Intersection.t =
+      let open Ast.Type.Intersection in
+      let { types = (t0, t1, ts); comments } = t in
+      let t0' = this#type_ t0 in
+      let t1' = this#type_ t1 in
+      let ts' = Base.List.map ~f:this#type_ ts in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { types = (t0', t1', ts'); comments = comments' }
+
     method string_literal (t : 'M Ast.StringLiteral.t) : 'N Ast.StringLiteral.t =
       let open Ast.StringLiteral in
       let { value; raw; comments } = t in
@@ -861,16 +880,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Object ot -> Object (this#object_type ot)
           | Interface i -> Interface (this#interface_type i)
           | Generic gt -> Generic (this#generic_type gt)
-          | Union (t0, t1, ts) ->
-            let t0' = this#type_ t0 in
-            let t1' = this#type_ t1 in
-            let ts' = Base.List.map ~f:this#type_ ts in
-            Union (t0', t1', ts')
-          | Intersection (t0, t1, ts) ->
-            let t0' = this#type_ t0 in
-            let t1' = this#type_ t1 in
-            let ts' = Base.List.map ~f:this#type_ ts in
-            Intersection (t0', t1', ts')
+          | Union t' -> Union (this#union_type t')
+          | Intersection t' -> Intersection (this#intersection_type t')
           | Tuple t' -> Tuple (this#tuple_type t')
           | StringLiteral t' -> StringLiteral (this#string_literal t')
           | NumberLiteral t' -> NumberLiteral (this#number_literal t')

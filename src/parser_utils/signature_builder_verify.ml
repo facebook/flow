@@ -160,11 +160,11 @@ module Eval (Env : EvalEnv) = struct
       end
     | (_, Interface it) -> interface_type tps it
     | (_, Array at) -> array_type tps at
-    | (_, Union (t1, t2, ts)) ->
+    | (_, Union { Union.types = (t1, t2, ts); comments = _ }) ->
       let deps = type_ tps t1 in
       let deps = Deps.join (deps, type_ tps t2) in
       List.fold_left (Deps.reduce_join (type_ tps)) deps ts
-    | (_, Intersection (t1, t2, ts)) ->
+    | (_, Intersection { Intersection.types = (t1, t2, ts); comments = _ }) ->
       let deps = type_ tps t1 in
       let deps = Deps.join (deps, type_ tps t2) in
       List.fold_left (Deps.reduce_join (type_ tps)) deps ts

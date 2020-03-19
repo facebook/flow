@@ -1241,8 +1241,8 @@ with type t = Impl.t = struct
         | Interface i -> interface_type (loc, i)
         | Array t -> array_type loc t
         | Generic g -> generic_type (loc, g)
-        | Union (t0, t1, ts) -> union_type (loc, t0 :: t1 :: ts)
-        | Intersection (t0, t1, ts) -> intersection_type (loc, t0 :: t1 :: ts)
+        | Union t -> union_type (loc, t)
+        | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
         | Tuple t -> tuple_type (loc, t)
         | StringLiteral s -> string_literal_type (loc, s)
@@ -1437,9 +1437,14 @@ with type t = Impl.t = struct
         "GenericTypeAnnotation"
         loc
         [("id", id); ("typeParameters", option type_args targs)]
-    and union_type (loc, ts) = node "UnionTypeAnnotation" loc [("types", array_of_list _type ts)]
-    and intersection_type (loc, ts) =
-      node "IntersectionTypeAnnotation" loc [("types", array_of_list _type ts)]
+    and union_type (loc, { Type.Union.types = (t0, t1, ts); comments }) =
+      node ?comments "UnionTypeAnnotation" loc [("types", array_of_list _type (t0 :: t1 :: ts))]
+    and intersection_type (loc, { Type.Intersection.types = (t0, t1, ts); comments }) =
+      node
+        ?comments
+        "IntersectionTypeAnnotation"
+        loc
+        [("types", array_of_list _type (t0 :: t1 :: ts))]
     and typeof_type (loc, { Type.Typeof.argument; comments }) =
       node ?comments "TypeofTypeAnnotation" loc [("argument", _type argument)]
     and tuple_type (loc, { Type.Tuple.types; comments }) =

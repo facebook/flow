@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":21,"column":84}},
-  "range":[0,956],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":31,"column":48}},
+  "range":[0,1229],
   "body":[
     {
       "type":"TypeAlias",
@@ -650,6 +650,184 @@
           "internalSlots":[]
         }
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":26,"column":48}},
+      "range":[958,1089],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":23,"column":5},"end":{"line":23,"column":11}},
+        "range":[963,969],
+        "name":"Test12",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"UnionTypeAnnotation",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":24,"column":2},"end":{"line":24,"column":20}},
+            "range":[974,992],
+            "value":" 12.1 L union "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":25,"column":25},"end":{"line":26,"column":26}},
+        "range":[1018,1067],
+        "types":[
+          {
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":25,"column":25},"end":{"line":25,"column":26}},
+            "range":[1018,1019],
+            "id":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":25,"column":27},"end":{"line":25,"column":47}},
+                  "range":[1020,1040],
+                  "value":" 12.3 T generic "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":25,"column":4},"end":{"line":25,"column":24}},
+                  "range":[997,1017],
+                  "value":" 12.2 L generic "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":25,"column":25},"end":{"line":25,"column":26}},
+              "range":[1018,1019],
+              "name":"A",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          },
+          {
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":26,"column":25},"end":{"line":26,"column":26}},
+            "range":[1066,1067],
+            "id":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":26,"column":27},"end":{"line":26,"column":47}},
+                  "range":[1068,1088],
+                  "value":" 12.5 T generic "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":24}},
+                  "range":[1045,1065],
+                  "value":" 12.4 L generic "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":26,"column":25},"end":{"line":26,"column":26}},
+              "range":[1066,1067],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          }
+        ]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":28,"column":0},"end":{"line":31,"column":48}},
+      "range":[1091,1229],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":28,"column":5},"end":{"line":28,"column":11}},
+        "range":[1096,1102],
+        "name":"Test13",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"IntersectionTypeAnnotation",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":29,"column":2},"end":{"line":29,"column":27}},
+            "range":[1107,1132],
+            "value":" 13.1 L intersection "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":30,"column":25},"end":{"line":31,"column":26}},
+        "range":[1158,1207],
+        "types":[
+          {
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":30,"column":25},"end":{"line":30,"column":26}},
+            "range":[1158,1159],
+            "id":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":30,"column":27},"end":{"line":30,"column":47}},
+                  "range":[1160,1180],
+                  "value":" 13.3 T generic "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":30,"column":4},"end":{"line":30,"column":24}},
+                  "range":[1137,1157],
+                  "value":" 13.2 L generic "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":30,"column":25},"end":{"line":30,"column":26}},
+              "range":[1158,1159],
+              "name":"A",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          },
+          {
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":31,"column":25},"end":{"line":31,"column":26}},
+            "range":[1206,1207],
+            "id":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":31,"column":27},"end":{"line":31,"column":47}},
+                  "range":[1208,1228],
+                  "value":" 13.5 T generic "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":31,"column":4},"end":{"line":31,"column":24}},
+                  "range":[1185,1205],
+                  "value":" 13.4 L generic "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":31,"column":25},"end":{"line":31,"column":26}},
+              "range":[1206,1207],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          }
+        ]
+      }
     }
   ],
   "comments":[
@@ -862,6 +1040,66 @@
       "loc":{"source":null,"start":{"line":21,"column":67},"end":{"line":21,"column":83}},
       "range":[939,955],
       "value":" 11.3 T obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":2},"end":{"line":24,"column":20}},
+      "range":[974,992],
+      "value":" 12.1 L union "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":25,"column":4},"end":{"line":25,"column":24}},
+      "range":[997,1017],
+      "value":" 12.2 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":25,"column":27},"end":{"line":25,"column":47}},
+      "range":[1020,1040],
+      "value":" 12.3 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":24}},
+      "range":[1045,1065],
+      "value":" 12.4 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":26,"column":27},"end":{"line":26,"column":47}},
+      "range":[1068,1088],
+      "value":" 12.5 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":29,"column":2},"end":{"line":29,"column":27}},
+      "range":[1107,1132],
+      "value":" 13.1 L intersection "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":30,"column":4},"end":{"line":30,"column":24}},
+      "range":[1137,1157],
+      "value":" 13.2 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":30,"column":27},"end":{"line":30,"column":47}},
+      "range":[1160,1180],
+      "value":" 13.3 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":31,"column":4},"end":{"line":31,"column":24}},
+      "range":[1185,1205],
+      "value":" 13.4 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":31,"column":27},"end":{"line":31,"column":47}},
+      "range":[1208,1228],
+      "value":" 13.5 T generic "
     }
   ]
 }

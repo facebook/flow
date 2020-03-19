@@ -696,8 +696,10 @@ class remove_annotation_rest_mapper =
       let annot = super#type_ annot in
       let (loc, typ) = annot in
       match typ with
-      | Type.Intersection (t, t', _) -> (loc, Type.Intersection (t, t', []))
-      | Type.Union (t, t', _) -> (loc, Type.Union (t, t', []))
+      | Type.Intersection { Type.Intersection.types = (t, t', _); comments } ->
+        (loc, Type.Intersection { Type.Intersection.types = (t, t', []); comments })
+      | Type.Union { Type.Union.types = (t, t', _); comments } ->
+        (loc, Type.Union { Type.Union.types = (t, t', []); comments })
       | _ -> annot
   end
 

@@ -19,3 +19,13 @@ type Test9 = /* 9.1 L bigint lit */ 1n /* 9.2 T bigint lit */;
 type Test10 = /* 10.1 L bool lit */ true /* 10.2 T bool lit */;
 
 type Test11 = /* 11.1 L interface */ interface /* 11.2 L obj */ {} /* 11.3 T obj */;
+
+type Test12 =
+  /* 12.1 L union */
+  | /* 12.2 L generic */ A /* 12.3 T generic */
+  | /* 12.4 L generic */ B /* 12.5 T generic */;
+
+type Test13 =
+  /* 13.1 L intersection */
+  & /* 13.2 L generic */ A /* 13.3 T generic */
+  & /* 13.4 L generic */ B /* 13.5 T generic */;
