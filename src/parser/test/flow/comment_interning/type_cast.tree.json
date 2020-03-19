@@ -271,6 +271,22 @@
                 "range":[293,318],
                 "typeAnnotation":{
                   "type":"NumberTypeAnnotation",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":14,"column":82},"end":{"line":14,"column":98}},
+                      "range":[319,335],
+                      "value":" 4.5 T type "
+                    }
+                  ],
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":14,"column":58},"end":{"line":14,"column":74}},
+                      "range":[295,311],
+                      "value":" 4.4 L type "
+                    }
+                  ],
                   "loc":{"source":null,"start":{"line":14,"column":75},"end":{"line":14,"column":81}},
                   "range":[312,318]
                 }

@@ -407,10 +407,10 @@ module T = struct
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
     | (loc, StringLiteral st) -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
     | (loc, BooleanLiteral b) -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
-    | (loc, Number) -> (loc, Ast.Type.Number)
-    | (loc, String) -> (loc, Ast.Type.String)
-    | (loc, Boolean) -> (loc, Ast.Type.Boolean)
-    | (loc, Void) -> (loc, Ast.Type.Void)
+    | (loc, Number) -> (loc, Ast.Type.Number (Flow_ast_utils.mk_comments_opt ()))
+    | (loc, String) -> (loc, Ast.Type.String (Flow_ast_utils.mk_comments_opt ()))
+    | (loc, Boolean) -> (loc, Ast.Type.Boolean (Flow_ast_utils.mk_comments_opt ()))
+    | (loc, Void) -> (loc, Ast.Type.Void (Flow_ast_utils.mk_comments_opt ()))
     | (loc, Promise t) ->
       ( loc,
         Ast.Type.Generic
@@ -420,7 +420,7 @@ module T = struct
                 (Flow_ast_utils.ident_of_source (loc, "Promise"));
             targs = Some (loc, [type_of_expr_type outlined t]);
           } )
-    | (loc, Null) -> (loc, Ast.Type.Null)
+    | (loc, Null) -> (loc, Ast.Type.Null (Flow_ast_utils.mk_comments_opt ()))
     | (_loc, JSXLiteral g) -> type_of_generic g
     | (_loc, TypeCast t) -> t
     | (loc, Outline ht) ->

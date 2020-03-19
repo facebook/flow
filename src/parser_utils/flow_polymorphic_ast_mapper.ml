@@ -870,9 +870,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Type.
         ( this#on_type_annot annot,
           match t with
-          | ( Any | Mixed | Empty | Void | Null | Symbol | Number | BigInt | String | Boolean
-            | Exists ) as t ->
-            t
+          | Any comments -> Any (Base.Option.map ~f:this#syntax comments)
+          | Mixed comments -> Mixed (Base.Option.map ~f:this#syntax comments)
+          | Empty comments -> Empty (Base.Option.map ~f:this#syntax comments)
+          | Void comments -> Void (Base.Option.map ~f:this#syntax comments)
+          | Null comments -> Null (Base.Option.map ~f:this#syntax comments)
+          | Symbol comments -> Symbol (Base.Option.map ~f:this#syntax comments)
+          | Number comments -> Number (Base.Option.map ~f:this#syntax comments)
+          | BigInt comments -> BigInt (Base.Option.map ~f:this#syntax comments)
+          | String comments -> String (Base.Option.map ~f:this#syntax comments)
+          | Boolean comments -> Boolean (Base.Option.map ~f:this#syntax comments)
+          | Exists comments -> Exists (Base.Option.map ~f:this#syntax comments)
           | Nullable t' -> Nullable (this#nullable_type t')
           | Array t' -> Array (this#array_type t')
           | Typeof t' -> Typeof (this#typeof_type t')

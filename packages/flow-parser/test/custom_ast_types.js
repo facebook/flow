@@ -291,6 +291,14 @@ def("BigIntLiteralTypeAnnotation")
 def("SymbolTypeAnnotation")
   .bases("Type");
 
+def("EmptyTypeAnnotation")
+  .bases("Type")
+  .build();
+
+def("BigIntTypeAnnotation")
+  .bases("Type")
+  .build();
+
 def("JSXElement")
   .field("children", [or(
     def("JSXElement"),

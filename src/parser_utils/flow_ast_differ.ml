@@ -1851,6 +1851,18 @@ let program
     let open Ast.Type in
     let type_diff =
       match (type1, type2) with
+      | (Any c1, Any c2)
+      | (Mixed c1, Mixed c2)
+      | (Empty c1, Empty c2)
+      | (Void c1, Void c2)
+      | (Null c1, Null c2)
+      | (Symbol c1, Symbol c2)
+      | (Number c1, Number c2)
+      | (BigInt c1, BigInt c2)
+      | (String c1, String c2)
+      | (Boolean c1, Boolean c2)
+      | (Exists c1, Exists c2) ->
+        diff_if_changed_ret_opt (syntax_opt loc1) c1 c2
       | (Function fn1, Function fn2) -> diff_if_changed_ret_opt (function_type loc1) fn1 fn2
       | (Interface i1, Interface i2) -> diff_if_changed_ret_opt (interface_type loc1) i1 i2
       | (Generic g1, Generic g2) -> generic_type g1 g2

@@ -161,11 +161,43 @@
             "id":null,
             "key":{
               "type":"StringTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":60},"end":{"line":5,"column":76}},
+                  "range":[185,201],
+                  "value":" 3.3 T type "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":36},"end":{"line":5,"column":52}},
+                  "range":[161,177],
+                  "value":" 3.2 L type "
+                }
+              ],
               "loc":{"source":null,"start":{"line":5,"column":53},"end":{"line":5,"column":59}},
               "range":[178,184]
             },
             "value":{
               "type":"StringTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":103},"end":{"line":5,"column":119}},
+                  "range":[228,244],
+                  "value":" 3.5 T type "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":5,"column":79},"end":{"line":5,"column":95}},
+                  "range":[204,220],
+                  "value":" 3.4 L type "
+                }
+              ],
               "loc":{"source":null,"start":{"line":5,"column":96},"end":{"line":5,"column":102}},
               "range":[221,227]
             },
@@ -388,6 +420,22 @@
             "method":false,
             "value":{
               "type":"StringTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":11,"column":115},"end":{"line":11,"column":131}},
+                  "range":[537,553],
+                  "value":" 6.6 T type "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":11,"column":91},"end":{"line":11,"column":107}},
+                  "range":[513,529],
+                  "value":" 6.5 L type "
+                }
+              ],
               "loc":{"source":null,"start":{"line":11,"column":108},"end":{"line":11,"column":114}},
               "range":[530,536]
             }

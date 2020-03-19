@@ -149,21 +149,21 @@ let polarity = function
 let rec convert cx tparams_map =
   let open Ast.Type in
   function
-  | (loc, (Any as t_ast)) ->
+  | (loc, (Any _ as t_ast)) ->
     add_unclear_type_error_if_not_lib_file cx loc;
     ((loc, AnyT.at Annotated loc), t_ast)
-  | (loc, (Mixed as t_ast)) -> ((loc, MixedT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (Empty as t_ast)) -> ((loc, EmptyT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (Void as t_ast)) -> ((loc, VoidT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (Null as t_ast)) -> ((loc, NullT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (Symbol as t_ast)) -> ((loc, SymbolT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (Number as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (BigInt as t_ast)) ->
+  | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (BigInt _ as t_ast)) ->
     let reason = mk_annot_reason RBigInt loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
     ((loc, AnyT.why AnyError reason), t_ast)
-  | (loc, (String as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
-  | (loc, (Boolean as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
+  | (loc, (Boolean _ as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
   | (loc, Nullable { Nullable.argument = t; comments }) ->
     let (((_, t), _) as t_ast) = convert cx tparams_map t in
     let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
@@ -1040,7 +1040,7 @@ let rec convert cx tparams_map =
           extends = extend_asts;
           comments;
         } )
-  | (loc, Exists) ->
+  | (loc, (Exists _ as t_ast)) ->
     add_deprecated_type_error_if_not_lib_file cx loc;
 
     (* Do not evaluate existential type variables when map is non-empty. This
@@ -1050,9 +1050,9 @@ let rec convert cx tparams_map =
     let reason = derivable_reason (mk_annot_reason RExistential loc) in
     if force then
       let tvar = Tvar.mk cx reason in
-      ((loc, tvar), Exists)
+      ((loc, tvar), t_ast)
     else
-      ((loc, ExistsT reason), Exists)
+      ((loc, ExistsT reason), t_ast)
 
 and convert_list =
   let rec loop (ts, tasts) cx tparams_map = function

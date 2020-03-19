@@ -350,16 +350,17 @@ and Type : sig
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
   and ('M, 'T) t' =
-    | Any
-    | Mixed
-    | Empty
-    | Void
-    | Null
-    | Number
-    | BigInt
-    | String
-    | Boolean
-    | Symbol
+    | Any of ('M, unit) Syntax.t option
+    | Mixed of ('M, unit) Syntax.t option
+    | Empty of ('M, unit) Syntax.t option
+    | Void of ('M, unit) Syntax.t option
+    | Null of ('M, unit) Syntax.t option
+    | Number of ('M, unit) Syntax.t option
+    | BigInt of ('M, unit) Syntax.t option
+    | String of ('M, unit) Syntax.t option
+    | Boolean of ('M, unit) Syntax.t option
+    | Symbol of ('M, unit) Syntax.t option
+    | Exists of ('M, unit) Syntax.t option
     | Nullable of ('M, 'T) Nullable.t
     | Function of ('M, 'T) Function.t
     | Object of ('M, 'T) Object.t
@@ -374,7 +375,6 @@ and Type : sig
     | NumberLiteral of 'M NumberLiteral.t
     | BigIntLiteral of 'M BigIntLiteral.t
     | BooleanLiteral of 'M BooleanLiteral.t
-    | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the

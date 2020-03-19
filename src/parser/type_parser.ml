@@ -202,8 +202,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     let loc = Peek.loc env in
     match Peek.token env with
     | T_MULT ->
+      let leading = Peek.comments env in
       Expect.token env T_MULT;
-      (loc, Type.Exists)
+      let trailing = Peek.comments env in
+      (loc, Type.Exists (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_LESS_THAN -> _function env
     | T_LPAREN -> function_or_group env
     | T_LCURLY
@@ -280,26 +282,71 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Type.BooleanLiteral
           { BooleanLiteral.value; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
       )
-    | token ->
-      (match primitive token with
-      | Some t ->
-        Expect.token env token;
-        (loc, t)
+    | _ ->
+      (match primitive env with
+      | Some t -> (loc, t)
       | None ->
         error_unexpected env;
-        (loc, Type.Any))
+        (loc, Type.Any (Flow_ast_utils.mk_comments_opt ())))
 
-  and primitive = function
-    | T_ANY_TYPE -> Some Type.Any
-    | T_MIXED_TYPE -> Some Type.Mixed
-    | T_EMPTY_TYPE -> Some Type.Empty
-    | T_BOOLEAN_TYPE _ -> Some Type.Boolean
-    | T_NUMBER_TYPE -> Some Type.Number
-    | T_BIGINT_TYPE -> Some Type.BigInt
-    | T_STRING_TYPE -> Some Type.String
-    | T_SYMBOL_TYPE -> Some Type.Symbol
-    | T_VOID_TYPE -> Some Type.Void
-    | T_NULL -> Some Type.Null
+  and is_primitive = function
+    | T_ANY_TYPE
+    | T_MIXED_TYPE
+    | T_EMPTY_TYPE
+    | T_BOOLEAN_TYPE _
+    | T_NUMBER_TYPE
+    | T_BIGINT_TYPE
+    | T_STRING_TYPE
+    | T_SYMBOL_TYPE
+    | T_VOID_TYPE
+    | T_NULL ->
+      true
+    | _ -> false
+
+  and primitive env =
+    let leading = Peek.comments env in
+    let token = Peek.token env in
+    match token with
+    | T_ANY_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Any (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_MIXED_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Mixed (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_EMPTY_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Empty (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_BOOLEAN_TYPE _ ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Boolean (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_NUMBER_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Number (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_BIGINT_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.BigInt (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_STRING_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.String (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_SYMBOL_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Symbol (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_VOID_TYPE ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Void (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_NULL ->
+      Eat.token env;
+      let trailing = Peek.comments env in
+      Some (Type.Null (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | _ -> None
 
   and tuple =
@@ -410,20 +457,18 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         (* This could be a function parameter or a generic type *)
         function_param_or_generic_type env
-      | token ->
-        (match primitive token with
-        | None ->
-          (* All params start with an identifier or `...` *)
-          Type (_type env)
-        | Some _ ->
-          (* Don't know if this is (number) or (number: number). The first
-           * is a type, the second is a param. *)
-          (match Peek.ith_token ~i:1 env with
-          | T_PLING
-          | T_COLON ->
-            (* Ok this is definitely a parameter *)
-            ParamList (function_param_list_without_parens env [])
-          | _ -> Type (_type env)))
+      | token when is_primitive token ->
+        (* Don't know if this is (number) or (number: number). The first
+         * is a type, the second is a param. *)
+        (match Peek.ith_token ~i:1 env with
+        | T_PLING
+        | T_COLON ->
+          (* Ok this is definitely a parameter *)
+          ParamList (function_param_list_without_parens env [])
+        | _ -> Type (_type env))
+      | _ ->
+        (* All params start with an identifier or `...` *)
+        Type (_type env)
     in
     (* Now that we allow anonymous parameters in function types, we need to
      * disambiguate a little bit more *)

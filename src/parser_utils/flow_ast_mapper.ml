@@ -1085,18 +1085,25 @@ class ['loc] mapper =
     method type_ (t : ('loc, 'loc) Ast.Type.t) =
       let open Ast.Type in
       match t with
-      | (_, Any)
-      | (_, Mixed)
-      | (_, Empty)
-      | (_, Void)
-      | (_, Null)
-      | (_, Symbol)
-      | (_, Number)
-      | (_, BigInt)
-      | (_, String)
-      | (_, Boolean)
-      | (_, Exists) ->
-        t
+      | (loc, Any comments) -> id this#syntax_opt comments t (fun comments -> (loc, Any comments))
+      | (loc, Mixed comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Mixed comments))
+      | (loc, Empty comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Empty comments))
+      | (loc, Void comments) -> id this#syntax_opt comments t (fun comments -> (loc, Void comments))
+      | (loc, Null comments) -> id this#syntax_opt comments t (fun comments -> (loc, Null comments))
+      | (loc, Symbol comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Symbol comments))
+      | (loc, Number comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Number comments))
+      | (loc, BigInt comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, BigInt comments))
+      | (loc, String comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, String comments))
+      | (loc, Boolean comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Boolean comments))
+      | (loc, Exists comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Exists comments))
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
       | (loc, Array t') -> id this#array_type t' t (fun t' -> (loc, Array t'))
       | (loc, Typeof t') -> id this#typeof_type t' t (fun t' -> (loc, Typeof t'))

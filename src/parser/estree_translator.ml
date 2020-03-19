@@ -1225,16 +1225,16 @@ with type t = Impl.t = struct
     and _type (loc, t) =
       Type.(
         match t with
-        | Any -> any_type loc
-        | Mixed -> mixed_type loc
-        | Empty -> empty_type loc
-        | Void -> void_type loc
-        | Null -> null_type loc
-        | Symbol -> symbol_type loc
-        | Number -> number_type loc
-        | BigInt -> bigint_type loc
-        | String -> string_type loc
-        | Boolean -> boolean_type loc
+        | Any comments -> any_type loc comments
+        | Mixed comments -> mixed_type loc comments
+        | Empty comments -> empty_type loc comments
+        | Void comments -> void_type loc comments
+        | Null comments -> null_type loc comments
+        | Symbol comments -> symbol_type loc comments
+        | Number comments -> number_type loc comments
+        | BigInt comments -> bigint_type loc comments
+        | String comments -> string_type loc comments
+        | Boolean comments -> boolean_type loc comments
         | Nullable t -> nullable_type loc t
         | Function fn -> function_type (loc, fn)
         | Object o -> object_type ~include_inexact:true (loc, o)
@@ -1249,17 +1249,17 @@ with type t = Impl.t = struct
         | NumberLiteral n -> number_literal_type (loc, n)
         | BigIntLiteral n -> bigint_literal_type (loc, n)
         | BooleanLiteral b -> boolean_literal_type (loc, b)
-        | Exists -> exists_type loc)
-    and any_type loc = node "AnyTypeAnnotation" loc []
-    and mixed_type loc = node "MixedTypeAnnotation" loc []
-    and empty_type loc = node "EmptyTypeAnnotation" loc []
-    and void_type loc = node "VoidTypeAnnotation" loc []
-    and null_type loc = node "NullLiteralTypeAnnotation" loc []
-    and symbol_type loc = node "SymbolTypeAnnotation" loc []
-    and number_type loc = node "NumberTypeAnnotation" loc []
-    and bigint_type loc = node "BigIntTypeAnnotation" loc []
-    and string_type loc = node "StringTypeAnnotation" loc []
-    and boolean_type loc = node "BooleanTypeAnnotation" loc []
+        | Exists comments -> exists_type loc comments)
+    and any_type loc comments = node ?comments "AnyTypeAnnotation" loc []
+    and mixed_type loc comments = node ?comments "MixedTypeAnnotation" loc []
+    and empty_type loc comments = node ?comments "EmptyTypeAnnotation" loc []
+    and void_type loc comments = node ?comments "VoidTypeAnnotation" loc []
+    and null_type loc comments = node ?comments "NullLiteralTypeAnnotation" loc []
+    and symbol_type loc comments = node ?comments "SymbolTypeAnnotation" loc []
+    and number_type loc comments = node ?comments "NumberTypeAnnotation" loc []
+    and bigint_type loc comments = node ?comments "BigIntTypeAnnotation" loc []
+    and string_type loc comments = node ?comments "StringTypeAnnotation" loc []
+    and boolean_type loc comments = node ?comments "BooleanTypeAnnotation" loc []
     and nullable_type loc { Type.Nullable.argument; comments } =
       node ?comments "NullableTypeAnnotation" loc [("typeAnnotation", _type argument)]
     and function_type
@@ -1478,7 +1478,7 @@ with type t = Impl.t = struct
               else
                 "false" ) );
         ]
-    and exists_type loc = node "ExistsTypeAnnotation" loc []
+    and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
     and type_parameter_declaration (loc, params) =
       node "TypeParameterDeclaration" loc [("params", array_of_list type_param params)]

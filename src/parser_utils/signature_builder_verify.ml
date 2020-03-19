@@ -133,16 +133,16 @@ module Eval (Env : EvalEnv) = struct
   let rec type_ tps t =
     let open Ast.Type in
     match t with
-    | (_, Any)
-    | (_, Mixed)
-    | (_, Empty)
-    | (_, Void)
-    | (_, Null)
-    | (_, Symbol)
-    | (_, Number)
-    | (_, BigInt)
-    | (_, String)
-    | (_, Boolean)
+    | (_, Any _)
+    | (_, Mixed _)
+    | (_, Empty _)
+    | (_, Void _)
+    | (_, Null _)
+    | (_, Symbol _)
+    | (_, Number _)
+    | (_, BigInt _)
+    | (_, String _)
+    | (_, Boolean _)
     | (_, StringLiteral _)
     | (_, NumberLiteral _)
     | (_, BigIntLiteral _)
@@ -170,7 +170,7 @@ module Eval (Env : EvalEnv) = struct
       List.fold_left (Deps.reduce_join (type_ tps)) deps ts
     | (_, Tuple { Tuple.types; comments = _ }) ->
       List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot types
-    | (_, Exists) -> Deps.unreachable
+    | (_, Exists _) -> Deps.unreachable
 
   and function_type =
     let function_type_param tps param =

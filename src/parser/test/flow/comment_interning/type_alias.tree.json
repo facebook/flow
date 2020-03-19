@@ -56,6 +56,22 @@
       "typeParameters":null,
       "right":{
         "type":"BooleanTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":85},"end":{"line":1,"column":101}},
+            "range":[85,101],
+            "value":" 1.5 T type "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":60},"end":{"line":1,"column":76}},
+            "range":[60,76],
+            "value":" 1.4 L type "
+          }
+        ],
         "loc":{"source":null,"start":{"line":1,"column":77},"end":{"line":1,"column":84}},
         "range":[77,84]
       }
@@ -119,6 +135,22 @@
       "typeParameters":null,
       "impltype":{
         "type":"BooleanTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":112},"end":{"line":3,"column":128}},
+            "range":[234,250],
+            "value":" 2.6 T type "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":87},"end":{"line":3,"column":103}},
+            "range":[209,225],
+            "value":" 2.5 L type "
+          }
+        ],
         "loc":{"source":null,"start":{"line":3,"column":104},"end":{"line":3,"column":111}},
         "range":[226,233]
       },

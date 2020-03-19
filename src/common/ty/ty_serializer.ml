@@ -53,30 +53,30 @@ let rec type_ t =
   | TVar (v, _) -> tvar v
   | Bound (_, name) -> Ok (builtin_from_string name)
   | Generic (x, _, ts) -> generic_type x ts
-  | Any _ -> just T.Any
-  | Top -> just T.Mixed
-  | Bot _ -> just T.Empty
-  | Void -> just T.Void
-  | Null -> just T.Null
-  | Symbol -> just T.Symbol
+  | Any _ -> just (T.Any (Flow_ast_utils.mk_comments_opt ()))
+  | Top -> just (T.Mixed (Flow_ast_utils.mk_comments_opt ()))
+  | Bot _ -> just (T.Empty (Flow_ast_utils.mk_comments_opt ()))
+  | Void -> just (T.Void (Flow_ast_utils.mk_comments_opt ()))
+  | Null -> just (T.Null (Flow_ast_utils.mk_comments_opt ()))
+  | Symbol -> just (T.Symbol (Flow_ast_utils.mk_comments_opt ()))
   | Num (Some lit) ->
     return
       (builtin_from_string
          "$TEMPORARY$number"
          ~targs:(Loc.none, [(Loc.none, T.NumberLiteral (num_lit lit))]))
-  | Num None -> just T.Number
+  | Num None -> just (T.Number (Flow_ast_utils.mk_comments_opt ()))
   | Str (Some lit) ->
     return
       (builtin_from_string
          "$TEMPORARY$string"
          ~targs:(Loc.none, [(Loc.none, T.StringLiteral (str_lit lit))]))
-  | Str None -> just T.String
+  | Str None -> just (T.String (Flow_ast_utils.mk_comments_opt ()))
   | Bool (Some lit) ->
     return
       (builtin_from_string
          "$TEMPORARY$boolean"
          ~targs:(Loc.none, [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
-  | Bool None -> just T.Boolean
+  | Bool None -> just (T.Boolean (Flow_ast_utils.mk_comments_opt ()))
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
   | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
@@ -122,7 +122,10 @@ and union t (t0, t1, rest) =
         ( Loc.none,
           T.Union
             {
-              T.Union.types = ((Loc.none, T.Null), (Loc.none, T.Void), []);
+              T.Union.types =
+                ( (Loc.none, T.Null (Flow_ast_utils.mk_comments_opt ())),
+                  (Loc.none, T.Void (Flow_ast_utils.mk_comments_opt ())),
+                  [] );
               comments = Flow_ast_utils.mk_comments_opt ();
             } )
     | hd :: tl ->

@@ -1415,7 +1415,7 @@ and arrow_function
        space e.g. `():* =>{}`. *)
       begin
         match return with
-        | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
+        | Ast.Type.Available (_, (_, Ast.Type.Exists _)) -> space
         | _ -> pretty_space
       end;
       Atom "=>";
@@ -2739,16 +2739,16 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
   source_location_with_comments
     ( loc,
       match t with
-      | T.Any -> Atom "any"
-      | T.Mixed -> Atom "mixed"
-      | T.Empty -> Atom "empty"
-      | T.Void -> Atom "void"
-      | T.Null -> Atom "null"
-      | T.Symbol -> Atom "symbol"
-      | T.Number -> Atom "number"
-      | T.BigInt -> Atom "bigint"
-      | T.String -> Atom "string"
-      | T.Boolean -> Atom "boolean"
+      | T.Any comments -> layout_node_with_comments_opt loc comments (Atom "any")
+      | T.Mixed comments -> layout_node_with_comments_opt loc comments (Atom "mixed")
+      | T.Empty comments -> layout_node_with_comments_opt loc comments (Atom "empty")
+      | T.Void comments -> layout_node_with_comments_opt loc comments (Atom "void")
+      | T.Null comments -> layout_node_with_comments_opt loc comments (Atom "null")
+      | T.Symbol comments -> layout_node_with_comments_opt loc comments (Atom "symbol")
+      | T.Number comments -> layout_node_with_comments_opt loc comments (Atom "number")
+      | T.BigInt comments -> layout_node_with_comments_opt loc comments (Atom "bigint")
+      | T.String comments -> layout_node_with_comments_opt loc comments (Atom "string")
+      | T.Boolean comments -> layout_node_with_comments_opt loc comments (Atom "boolean")
       | T.Nullable t -> type_nullable loc t
       | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) loc func
       | T.Object obj -> type_object loc obj
@@ -2763,7 +2763,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.NumberLiteral lit -> number_literal_type loc lit
       | T.BigIntLiteral lit -> bigint_literal_type loc lit
       | T.BooleanLiteral lit -> boolean_literal_type loc lit
-      | T.Exists -> Atom "*" )
+      | T.Exists comments -> layout_node_with_comments_opt loc comments (Atom "*") )
 
 and interface_declaration_base
     ~def { Ast.Statement.Interface.id; tparams; body = (loc, obj); extends } =

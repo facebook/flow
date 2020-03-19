@@ -46,7 +46,7 @@ module Types = struct
       Ast.Type.Object.Property prop
   end
 
-  let mixed = (Loc.none, Ast.Type.Mixed)
+  let mixed = (Loc.none, Ast.Type.Mixed None)
 
   let annotation t = (Loc.none, t)
 

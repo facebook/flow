@@ -100,7 +100,7 @@ class useless_mapper =
       let annot = super#type_ annot in
       let (loc, typ) = annot in
       match typ with
-      | Type.Number -> (loc, Type.String)
+      | Type.Number comments -> (loc, Type.String comments)
       | Type.NumberLiteral _ ->
         (loc, Type.NumberLiteral { value = 4.0; raw = "4.0"; comments = None })
       | _ -> annot
@@ -203,7 +203,7 @@ class useless_mapper =
       let f targ =
         match targ with
         | Explicit targ' -> Explicit (this#type_ targ')
-        | Implicit (loc, _) -> Explicit (loc, Ast.Type.Any)
+        | Implicit (loc, _) -> Explicit (loc, Ast.Type.Any None)
       in
       (loc, Base.List.map ~f targs)
 
@@ -534,13 +534,13 @@ class insert_annot_mapper =
       let (loc, patt) = expr in
       match patt with
       | Identifier id ->
-        (loc, Identifier { id with annot = Type.Available (loc, (loc, Type.Number)) })
+        (loc, Identifier { id with annot = Type.Available (loc, (loc, Type.Number None)) })
       | _ -> expr
 
     method! type_annotation_hint return =
       match super#type_annotation_hint return with
       | Type.Available _ -> return
-      | Type.Missing _loc -> Type.Available (_loc, (_loc, Type.Number))
+      | Type.Missing _loc -> Type.Available (_loc, (_loc, Type.Number None))
   end
 
 class insert_function_annot_mapper =
@@ -558,7 +558,7 @@ class insert_function_annot_mapper =
                 {
                   Type.Function.tparams = None;
                   params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
-                  return = (loc, Type.Number);
+                  return = (loc, Type.Number None);
                   comments = None;
                 } ) )
   end
@@ -578,7 +578,7 @@ class insert_import_and_annot_mapper =
                 {
                   Type.Function.tparams = None;
                   params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
-                  return = (loc, Type.Number);
+                  return = (loc, Type.Number None);
                   comments = None;
                 } ) )
 
@@ -620,7 +620,7 @@ class prop_annot_mapper =
       let annot' =
         match annot with
         | Type.Available _ -> annot
-        | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number))
+        | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number None))
       in
       { prop with annot = annot' }
   end
@@ -634,7 +634,7 @@ class insert_typecast_mapper =
       ( loc,
         Ast.Expression.TypeCast
           {
-            Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any));
+            Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any None));
             expression;
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
@@ -645,7 +645,7 @@ class insert_call_type_args =
     inherit [Loc.t] Flow_ast_mapper.mapper
 
     method! call_type_args (loc, targs) =
-      (loc, Ast.Expression.CallTypeArg.Explicit (loc, Ast.Type.Any) :: targs)
+      (loc, Ast.Expression.CallTypeArg.Explicit (loc, Ast.Type.Any None) :: targs)
   end
 
 class add_comment_mapper =

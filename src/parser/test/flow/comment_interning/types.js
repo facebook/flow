@@ -29,3 +29,16 @@ type Test13 =
   /* 13.1 L intersection */
   & /* 13.2 L generic */ A /* 13.3 T generic */
   & /* 13.4 L generic */ B /* 13.5 T generic */;
+
+type Test14 =
+  /* 14.1 L any */ any /* 14.2 T any */
+  | /* 14.3 L mixed */ mixed /* 14.4 T mixed */
+  | /* 14.5 L empty */ empty /* 14.6 T empty */
+  | /* 14.7 L void */ void /* 14.8 T void */
+  | /* 14.9 L null */ null /* 14.10 T null */
+  | /* 14.11 L number */ number /* 14.12 T number */
+  | /* 14.13 L bigint */ bigint /* 14.14 T bigint */
+  | /* 14.15 L string */ string /* 14.16 T string */
+  | /* 14.17 L boolean */ boolean /* 14.18 T boolean */
+  | /* 14.19 L symbol */ symbol /* 14.20 T symbol */
+  | /* 14.21 L exists */ * /* 14.22 T exists */;
