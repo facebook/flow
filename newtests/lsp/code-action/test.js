@@ -21,7 +21,12 @@ export default suite(
         'initialize',
         lspInitializeParams,
       ).verifyAllLSPMessagesInStep(
-        ['initialize{"codeActionProvider":{"codeActionKinds":["quickfix"]}}'],
+        [
+          [
+            'initialize',
+            '{"codeActionProvider":{"codeActionKinds":["quickfix"]}}',
+          ],
+        ],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -37,7 +42,7 @@ export default suite(
           },
         },
       }).verifyAllLSPMessagesInStep(
-        ['initialize{"codeActionProvider":false}'],
+        [['initialize', '{"codeActionProvider":false}']],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -79,57 +84,60 @@ export default suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          `textDocument/codeAction{${JSON.stringify([
-            {
-              title: 'Apply suggestion',
-              kind: 'quickfix',
-              diagnostics: [
-                {
-                  range: {
-                    start: {
-                      line: 3,
-                      character: 2,
-                    },
-                    end: {
-                      line: 3,
-                      character: 9,
-                    },
-                  },
-                  severity: 1,
-                  code: 'InferError',
-                  source: 'Flow',
-                  message:
-                    'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
-                  relatedInformation: [],
-                  relatedLocations: [],
-                },
-              ],
-              edit: {
-                changes: {
-                  '<PLACEHOLDER_PROJECT_URL>/prop-missing.js': [
-                    {
-                      range: {
-                        start: {
-                          line: 3,
-                          character: 2,
-                        },
-                        end: {
-                          line: 3,
-                          character: 9,
-                        },
+          [
+            'textDocument/codeAction',
+            JSON.stringify([
+              {
+                title: 'Apply suggestion',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 3,
+                        character: 2,
                       },
-                      newText: 'facebook',
+                      end: {
+                        line: 3,
+                        character: 9,
+                      },
                     },
-                  ],
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/prop-missing.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 2,
+                          },
+                          end: {
+                            line: 3,
+                            character: 9,
+                          },
+                        },
+                        newText: 'facebook',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['Apply suggestion'],
                 },
               },
-              command: {
-                title: '',
-                command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                arguments: ['Apply suggestion'],
-              },
-            },
-          ])}}`,
+            ]),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -177,57 +185,60 @@ export default suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          `textDocument/codeAction{${JSON.stringify([
-            {
-              title: 'Apply suggestion',
-              kind: 'quickfix',
-              diagnostics: [
-                {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 2,
-                    },
-                    end: {
-                      line: 6,
-                      character: 8,
-                    },
-                  },
-                  severity: 1,
-                  code: 'InferError',
-                  source: 'Flow',
-                  message:
-                    'Cannot access property `Foobat` because `Foobat` is not a member of `enum E`. Did you meanthe member `Foobar`?',
-                  relatedInformation: [],
-                  relatedLocations: [],
-                },
-              ],
-              edit: {
-                changes: {
-                  '<PLACEHOLDER_PROJECT_URL>/invalid-enum-member-access.js': [
-                    {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 2,
-                        },
-                        end: {
-                          line: 6,
-                          character: 8,
-                        },
+          [
+            'textDocument/codeAction',
+            JSON.stringify([
+              {
+                title: 'Apply suggestion',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
                       },
-                      newText: 'Foobar',
+                      end: {
+                        line: 6,
+                        character: 8,
+                      },
                     },
-                  ],
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot access property `Foobat` because `Foobat` is not a member of `enum E`. Did you meanthe member `Foobar`?',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-enum-member-access.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 6,
+                            character: 2,
+                          },
+                          end: {
+                            line: 6,
+                            character: 8,
+                          },
+                        },
+                        newText: 'Foobar',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['Apply suggestion'],
                 },
               },
-              command: {
-                title: '',
-                command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                arguments: ['Apply suggestion'],
-              },
-            },
-          ])}}`,
+            ]),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

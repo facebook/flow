@@ -671,7 +671,11 @@ export class TestBuilder {
     lsp.messageEmitter.emit('message');
   }
 
-  waitUntilLSPMessage(timeoutMs: number, expected: string): Promise<void> {
+  waitUntilLSPMessage(
+    timeoutMs: number,
+    expectedMethod: string,
+    expectedContents?: string,
+  ): Promise<void> {
     const lsp = this.lsp;
     const lspMessages = this.lspMessages;
 
@@ -695,7 +699,7 @@ export class TestBuilder {
         const duration = new Date().getTime() - startTime;
         emitter && emitter.removeListener('message', checkMessages);
         timeout && clearTimeout(timeout);
-        await this.log('%s message %s in %dms', verb, expected, duration);
+        await this.log('%s message %s in %dms', verb, expectedMethod, duration);
         resolve();
       };
 
@@ -703,7 +707,9 @@ export class TestBuilder {
       const checkMessages = () => {
         for (; nextMessageIndex < lspMessages.length; nextMessageIndex++) {
           const message = lspMessages[nextMessageIndex];
-          if (Builder.doesMessageMatch(message, expected)) {
+          if (
+            Builder.doesMessageMatch(message, expectedMethod, expectedContents)
+          ) {
             doneWithVerb('Got');
           }
         }
@@ -711,7 +717,7 @@ export class TestBuilder {
 
       // It's unavoidably racey whether the log message gets printed
       // before or after we get the right message
-      this.log('Starting to wait %dms for %s', timeoutMs, expected);
+      this.log('Starting to wait %dms for %s', timeoutMs, expectedMethod);
 
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
@@ -972,29 +978,35 @@ export default class Builder {
   }
 
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
-  // message was M. And doesMethodMatch(actual, 'M{C1,C2,...}') judges also
+  // message was M. And doesMethodMatch(actual, 'M', '{C1,C2,...}') judges also
   // whether the strings C1, C2, ... were all found in the JSON representation
   // of the actual message.
-  static doesMessageMatch(actual: LSPMessage, expected: string): boolean {
-    const iOpenBrace = expected.indexOf('{');
-    const iCloseBrace = expected.lastIndexOf('}');
-    if (iOpenBrace == -1 || iCloseBrace == -1) {
-      return actual.method === expected;
-    } else {
-      if (actual.method !== expected.substring(0, iOpenBrace)) {
-        return false;
-      }
-      const expectedContents = expected
-        .substring(iOpenBrace + 1, iCloseBrace)
-        .split(',');
-      const json = JSON.stringify(actual);
-      for (const expectedContent of expectedContents) {
-        if (!json.includes(expectedContent)) {
-          return false;
-        }
-      }
+  static doesMessageMatch(
+    actual: LSPMessage,
+    expectedMethod: string,
+    expectedContents?: string,
+  ): boolean {
+    if (actual.method !== expectedMethod) {
+      return false;
+    }
+    if (expectedContents === undefined) {
       return true;
     }
+    if (expectedContents === 'null') {
+      return actual.result !== undefined && actual.result === 'null';
+    }
+    const iOpenBrace = expectedContents.indexOf('{');
+    const iCloseBrace = expectedContents.lastIndexOf('}');
+    const parts = expectedContents
+      .substring(iOpenBrace + 1, iCloseBrace)
+      .split(',');
+    const json = JSON.stringify(actual);
+    for (const part of parts) {
+      if (!json.includes(part)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   constructor(errorCheckCommand: CheckCommand) {

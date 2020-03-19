@@ -22,7 +22,7 @@ export default suite(
         textDocument: {uri: uri},
         position: position,
       }).verifyAllLSPMessagesInStep(
-        [`textDocument/signatureHelp${response}`],
+        [['textDocument/signatureHelp', response]],
         lspIgnoreStatusAndCancellation,
       );
     };

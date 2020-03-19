@@ -31,7 +31,7 @@ jones();
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,line":2}'],
+        [['textDocument/definition', '{open.js,line":2}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('textDocument/didChange', {
@@ -53,7 +53,7 @@ wilbur();
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,"line":1}'],
+        [['textDocument/definition', '{open.js,"line":1}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('textDocument/didClose', {
@@ -63,7 +63,7 @@ wilbur();
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{unexpected error}'],
+        [['textDocument/definition', '{unexpected error}']],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),

@@ -23,8 +23,9 @@ export default suite(
         position: {line: 10, character: 15}, // statement position
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -64,9 +65,8 @@ export default suite(
                   insertTextFormat: 1,
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -80,8 +80,9 @@ export default suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -129,9 +130,8 @@ export default suite(
                   insertTextFormat: 1,
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -159,8 +159,9 @@ export default suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -208,9 +209,8 @@ export default suite(
                   },
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -224,8 +224,9 @@ export default suite(
         context: {triggerKind: 2, triggerCharacter: ' '},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -243,9 +244,8 @@ export default suite(
                   },
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -259,13 +259,13 @@ export default suite(
         context: {triggerKind: 2, triggerCharacter: ' '},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -279,8 +279,9 @@ export default suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -306,9 +307,8 @@ export default suite(
                   insertTextFormat: 1,
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -322,8 +322,9 @@ export default suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -341,9 +342,8 @@ export default suite(
                   },
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -359,8 +359,9 @@ export default suite(
           context: {triggerKind: 2, triggerCharacter: ' '},
         }).verifyAllLSPMessagesInStep(
           [
-            (() => {
-              const expectedResponse = {
+            [
+              'textDocument/completion',
+              JSON.stringify({
                 isIncomplete: false,
                 items: [
                   {
@@ -378,11 +379,8 @@ export default suite(
                     },
                   },
                 ],
-              };
-              return `textDocument/completion${JSON.stringify(
-                expectedResponse,
-              )}`;
-            })(),
+              }),
+            ],
           ],
           [
             'textDocument/publishDiagnostics',
@@ -400,8 +398,9 @@ export default suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -419,9 +418,8 @@ export default suite(
                   },
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -435,8 +433,9 @@ export default suite(
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -568,9 +567,8 @@ export default suite(
                   insertTextFormat: 1,
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -584,8 +582,9 @@ export default suite(
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -717,9 +716,8 @@ export default suite(
                   insertTextFormat: 1,
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -736,8 +734,9 @@ export default suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          (() => {
-            const expectedResponse = {
+          [
+            'textDocument/completion',
+            JSON.stringify({
               isIncomplete: false,
               items: [
                 {
@@ -829,9 +828,8 @@ export default suite(
                   insertTextFormat: 1,
                 },
               ],
-            };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
-          })(),
+            }),
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

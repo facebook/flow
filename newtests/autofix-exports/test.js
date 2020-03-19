@@ -36,7 +36,7 @@ export default suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-        [`textDocument/codeAction{[]}`],
+        [['textDocument/codeAction', '{[]}']],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -79,39 +79,42 @@ export default suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          `textDocument/codeAction{${JSON.stringify([
-            {
-              title: 'insert type annotation',
-              kind: 'quickfix',
-              diagnostics: [
-                {
-                  range: {
-                    start: {line: 1, character: 21},
-                    end: {line: 1, character: 22},
-                  },
-                  severity: 1,
-                  code: 'InferError',
-                  source: 'Flow',
-                  message: 'Missing type annotation for `a`.',
-                  relatedInformation: [],
-                  relatedLocations: [],
-                },
-              ],
-              edit: {
-                changes: {
-                  '<PLACEHOLDER_PROJECT_URL>/error1.js': [
-                    {
-                      range: {
-                        start: {line: 1, character: 22},
-                        end: {line: 1, character: 22},
-                      },
-                      newText: ': any',
+          [
+            'textDocument/codeAction',
+            `{${JSON.stringify([
+              {
+                title: 'insert type annotation',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {line: 1, character: 21},
+                      end: {line: 1, character: 22},
                     },
-                  ],
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message: 'Missing type annotation for `a`.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/error1.js': [
+                      {
+                        range: {
+                          start: {line: 1, character: 22},
+                          end: {line: 1, character: 22},
+                        },
+                        newText: ': any',
+                      },
+                    ],
+                  },
                 },
               },
-            },
-          ])}}`,
+            ])}}`,
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -138,33 +141,36 @@ export default suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          `textDocument/codeAction{${JSON.stringify([
-            {
-              title: 'insert type annotation',
-              kind: 'quickfix',
-              diagnostics: [],
-              edit: {
-                changes: {
-                  '<PLACEHOLDER_PROJECT_URL>/error1.js': [
-                    {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 17,
+          [
+            'textDocument/codeAction',
+            `{${JSON.stringify([
+              {
+                title: 'insert type annotation',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/error1.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 6,
+                            character: 17,
+                          },
+                          end: {
+                            line: 6,
+                            character: 17,
+                          },
                         },
-                        end: {
-                          line: 6,
-                          character: 17,
-                        },
+                        newText:
+                          ': {a: number, b: (a: any, b: string) => number}',
                       },
-                      newText:
-                        ': {a: number, b: (a: any, b: string) => number}',
-                    },
-                  ],
+                    ],
+                  },
                 },
               },
-            },
-          ])}}`,
+            ])}}`,
+          ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

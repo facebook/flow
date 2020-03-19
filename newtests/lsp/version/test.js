@@ -18,7 +18,7 @@ export default suite(
       lspRequest('initialize', lspInitializeParams)
         .waitUntilLSPMessage(30000, 'initialize')
         .verifyAllLSPMessagesInStep(
-          ['initialize{Wrong version of Flow. The config specifies}'],
+          [['initialize', '{Wrong version of Flow. The config specifies}']],
           [...lspIgnoreStatusAndCancellation],
         ),
       lspRequest('shutdown')

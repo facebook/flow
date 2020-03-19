@@ -30,11 +30,15 @@ export default suite(
         // was sent at least once, and ignore any additional publishDiagnostics.
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot return}',
+          'textDocument/publishDiagnostics',
+          '{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            [
+              'textDocument/publishDiagnostics',
+              '{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            ],
           ],
           [
             'textDocument/publishDiagnostics',
@@ -48,11 +52,15 @@ export default suite(
       addFile('witherrors2.js')
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot extend}',
+          'textDocument/publishDiagnostics',
+          '{Cannot extend}',
         )
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{"Cannot extend  `H` [1] with `I` because  `H` [1] is not inheritable.","message":"[1] `H`"}',
+            [
+              'textDocument/publishDiagnostics',
+              '{"Cannot extend  `H` [1] with `I` because  `H` [1] is not inheritable.","message":"[1] `H`"}',
+            ],
           ],
           [
             'textDocument/publishDiagnostics',
@@ -66,11 +74,15 @@ export default suite(
       addFile('witherrors1.js')
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot return}',
+          'textDocument/publishDiagnostics',
+          '{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            [
+              'textDocument/publishDiagnostics',
+              '{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            ],
           ],
           [
             'textDocument/publishDiagnostics',
@@ -80,10 +92,11 @@ export default suite(
       modifyFile('witherrors1.js', 'return 23;', 'return "";')
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{"diagnostics":[]}',
+          'textDocument/publishDiagnostics',
+          '{"diagnostics":[]}',
         )
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
           [
             'textDocument/publishDiagnostics',
             ...lspIgnoreStatusAndCancellation,
@@ -106,7 +119,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{Unexpected token}'],
+          [['textDocument/publishDiagnostics', '{Unexpected token}']],
           ['window/showStatus'],
         ),
       // Edit it fix the problem. The live syntax error should be dismissed immediately.
@@ -125,7 +138,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
           [],
         ),
       // Make another change that doesn't introduce errors. We should get no reports.
@@ -160,7 +173,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{Unexpected token}'],
+          [['textDocument/publishDiagnostics', '{Unexpected token}']],
           [],
         ),
       // Close the file. The live error should go away.
@@ -172,7 +185,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
           [],
         ),
     ]),
@@ -206,7 +219,10 @@ export default suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            [
+              'textDocument/publishDiagnostics',
+              '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            ],
           ],
           ['window/showStatus'],
         ),
@@ -226,7 +242,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
           ['window/showStatus'],
         ),
       // Make another change that doesn't introduce errors. We should get no reports.
@@ -263,7 +279,10 @@ export default suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{Cannot assign `123` to `y` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            [
+              'textDocument/publishDiagnostics',
+              '{Cannot assign `123` to `y` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            ],
           ],
           ['window/showStatus'],
         ),
@@ -276,7 +295,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
           ['window/showStatus'],
         ),
     ]),
@@ -297,11 +316,15 @@ export default suite(
       })
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot assign `123` to `x`}',
+          'textDocument/publishDiagnostics',
+          '{Cannot assign `123` to `x`}',
         )
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            [
+              'textDocument/publishDiagnostics',
+              '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+            ],
           ],
           ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
@@ -385,10 +408,16 @@ export default suite(
         })
           .waitUntilLSPMessage(
             9000,
-            'textDocument/publishDiagnostics{Cannot resolve module `./bad`.}',
+            'textDocument/publishDiagnostics',
+            '{Cannot resolve module `./bad`.}',
           )
           .verifyAllLSPMessagesInStep(
-            ['textDocument/publishDiagnostics{Cannot resolve module `./bad`.}'],
+            [
+              [
+                'textDocument/publishDiagnostics',
+                '{Cannot resolve module `./bad`.}',
+              ],
+            ],
             [
               'textDocument/publishDiagnostics',
               ...lspIgnoreStatusAndCancellation,
@@ -411,11 +440,15 @@ export default suite(
         })
           .waitUntilLSPMessage(
             9000,
-            'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
+            'textDocument/publishDiagnostics',
+            '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
           )
           .verifyAllLSPMessagesInStep(
             [
-              'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
+              [
+                'textDocument/publishDiagnostics',
+                '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
+              ],
             ],
             [
               'textDocument/publishDiagnostics',
@@ -504,11 +537,15 @@ export default suite(
       })
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
+          'textDocument/publishDiagnostics',
+          '{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
         )
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
+            [
+              'textDocument/publishDiagnostics',
+              '{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
+            ],
           ],
           [
             'textDocument/publishDiagnostics',
@@ -519,11 +556,15 @@ export default suite(
       addFile('export_string.js', 'importme.js')
         .waitUntilLSPMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
+          'textDocument/publishDiagnostics',
+          '{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
         )
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
+            [
+              'textDocument/publishDiagnostics',
+              '{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
+            ],
           ],
           [
             'textDocument/publishDiagnostics',
@@ -535,62 +576,58 @@ export default suite(
       lspStartAndConnect(),
       addFiles('empty.js', 'importsFakeSymbol.js').waitUntilLSPMessage(
         9000,
-        (() => {
-          const expectedMessage = {
-            uri: '<PLACEHOLDER_PROJECT_URL>/importsFakeSymbol.js',
-            diagnostics: [
-              {
-                range: {
-                  start: {
-                    line: 2,
-                    character: 7,
-                  },
-                  end: {
-                    line: 2,
-                    character: 10,
-                  },
+        'textDocument/publishDiagnostics',
+        JSON.stringify({
+          uri: '<PLACEHOLDER_PROJECT_URL>/importsFakeSymbol.js',
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 2,
+                  character: 7,
                 },
-                severity: 1,
-                code: 'InferError',
-                source: 'Flow',
-                message: 'property `foo` is missing in  exports [1].',
-                relatedInformation: [
-                  {
-                    location: {
-                      uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
-                      range: {
-                        start: {
-                          line: 0,
-                          character: 0,
-                        },
-                        end: {
-                          line: 0,
-                          character: 0,
-                        },
-                      },
-                    },
-                    message: '[1] exports',
-                  },
-                ],
-                relatedLocations: [
-                  {
-                    location: {
-                      uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
-                      range: {
-                        start: {line: 0, character: 0},
-                        end: {line: 0, character: 0},
-                      },
-                    },
-                    message: '[1] exports',
-                  },
-                ],
+                end: {
+                  line: 2,
+                  character: 10,
+                },
               },
-            ],
-          };
-          return `textDocument/publishDiagnostics${JSON.stringify(
-            expectedMessage,
-          )}`;
-        })(),
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+              message: 'property `foo` is missing in  exports [1].',
+              relatedInformation: [
+                {
+                  location: {
+                    uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
+                    range: {
+                      start: {
+                        line: 0,
+                        character: 0,
+                      },
+                      end: {
+                        line: 0,
+                        character: 0,
+                      },
+                    },
+                  },
+                  message: '[1] exports',
+                },
+              ],
+              relatedLocations: [
+                {
+                  location: {
+                    uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
+                    range: {
+                      start: {line: 0, character: 0},
+                      end: {line: 0, character: 0},
+                    },
+                  },
+                  message: '[1] exports',
+                },
+              ],
+            },
+          ],
+        }),
       ),
     ]),
   ],

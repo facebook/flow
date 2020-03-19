@@ -28,13 +28,13 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        ['foobar{unexpected error}'],
+        [['foobar', '{unexpected error}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
         .waitUntilLSPMessage(2000, 'barfoo')
         .verifyAllLSPMessagesInStep(
-          ['telemetry/event{not implemented}'],
+          [['telemetry/event', '{not implemented}']],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(true),
@@ -46,13 +46,13 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        ['foobar{unexpected error}'],
+        [['foobar', '{unexpected error}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
         .waitUntilLSPMessage(2000, 'barfoo')
         .verifyAllLSPMessagesInStep(
-          ['telemetry/event{not implemented}'],
+          [['telemetry/event', '{not implemented}']],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(false),
@@ -85,7 +85,10 @@ export default suite(
       })
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/definition{definition.js,"start":{"line":2,"character":0}}',
+            [
+              'textDocument/definition',
+              '{definition.js,"start":{"line":2,"character":0}}',
+            ],
           ],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -119,7 +122,7 @@ export default suite(
         position: {line: 6, character: 1}, // over a function use
       })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/hover{() => number}'],
+          [['textDocument/hover', '{() => number}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),
@@ -153,7 +156,10 @@ export default suite(
       })
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
+            [
+              'textDocument/completion',
+              '{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
+            ],
           ],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -273,7 +279,10 @@ export default suite(
       })
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+            [
+              'textDocument/documentSymbol',
+              '{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+            ],
           ],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -294,7 +303,10 @@ export default suite(
         })
           .verifyAllLSPMessagesInStep(
             [
-              'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+              [
+                'textDocument/documentSymbol',
+                '{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+              ],
             ],
             [...lspIgnoreStatusAndCancellation],
           )
@@ -327,7 +339,7 @@ export default suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage.js'},
       })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
+          [['textDocument/typeCoverage', '{"line":12,"line":8,"line":6}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),
@@ -356,7 +368,7 @@ export default suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
       })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/typeCoverage{Use @flow}'],
+          [['textDocument/typeCoverage', '{Use @flow}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),

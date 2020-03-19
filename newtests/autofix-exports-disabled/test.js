@@ -36,7 +36,7 @@ export default suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-        [`textDocument/codeAction{[]}`],
+        [['textDocument/codeAction', '{[]}']],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -78,7 +78,7 @@ export default suite(
           ],
         },
       }).verifyAllLSPMessagesInStep(
-        [`textDocument/codeAction{[]}`],
+        [['textDocument/codeAction', '{[]}']],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -103,7 +103,7 @@ export default suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-        [`textDocument/codeAction{[]}`],
+        [['textDocument/codeAction', '{[]}']],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
