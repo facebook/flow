@@ -45,20 +45,30 @@ Flow is written in OCaml (OCaml 4.07.1 is required).
   - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
   - Windows: see [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/)
 
-2. Initialize `opam`:
+2. Validate the `opam` version is `2.x.x`:
+
+  ```sh
+  opam --version
+  ```
+
+  The following instructions expect `2.x.x`.
+  Should your package manager have installed a `1.x.x` version,
+  please refer to the [opam docs](https://opam.ocaml.org/doc/Install.html) to install a newer version manually.
+
+3. Initialize `opam`:
 
   ```sh
   opam init
   ```
 
-3. Install OCaml and Flow's dependencies:
+4. Install OCaml and Flow's dependencies:
 
   ```sh
   # from within this git checkout
   opam switch create . --deps-only -y
   ```
 
-4. Build the `flow` binary:
+5. Build the `flow` binary:
 
   ```sh
   eval $(opam env)
@@ -67,7 +77,7 @@ Flow is written in OCaml (OCaml 4.07.1 is required).
 
   This produces the `bin/flow` binary.
 
-5. Build `flow.js` (optional):
+6. Build `flow.js` (optional):
 
   ```sh
   opam install -y js_of_ocaml.3.4.0
