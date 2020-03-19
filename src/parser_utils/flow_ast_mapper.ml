@@ -650,7 +650,8 @@ class ['loc] mapper =
         (loc, { id = id'; init })
 
     method enum_number_member
-        (member : (Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+        (member :
+          ('loc Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#identifier ident in
@@ -660,7 +661,8 @@ class ['loc] mapper =
         (loc, { id = id'; init })
 
     method enum_string_member
-        (member : (Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+        (member :
+          ('loc Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#identifier ident in
@@ -978,7 +980,32 @@ class ['loc] mapper =
       else
         { id = id'; targs = targs' }
 
-    method string_literal_type _loc (lit : Ast.StringLiteral.t) = lit
+    method string_literal_type _loc (lit : 'loc Ast.StringLiteral.t) =
+      let open Ast.StringLiteral in
+      let { value; raw; comments } = lit in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        lit
+      else
+        { value; raw; comments = comments' }
+
+    method number_literal_type _loc (lit : 'loc Ast.NumberLiteral.t) =
+      let open Ast.NumberLiteral in
+      let { value; raw; comments } = lit in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        lit
+      else
+        { value; raw; comments = comments' }
+
+    method bigint_literal_type _loc (lit : 'loc Ast.BigIntLiteral.t) =
+      let open Ast.BigIntLiteral in
+      let { approx_value; bigint; comments } = lit in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        lit
+      else
+        { approx_value; bigint; comments = comments' }
 
     method nullable_type (t : ('loc, 'loc) Ast.Type.Nullable.t) =
       let open Ast.Type.Nullable in
@@ -1033,8 +1060,6 @@ class ['loc] mapper =
       | (_, BigInt)
       | (_, String)
       | (_, Boolean)
-      | (_, NumberLiteral _)
-      | (_, BigIntLiteral _)
       | (_, BooleanLiteral _)
       | (_, Exists) ->
         t
@@ -1047,6 +1072,10 @@ class ['loc] mapper =
       | (loc, Generic gt) -> id_loc this#generic_type loc gt t (fun gt -> (loc, Generic gt))
       | (loc, StringLiteral lit) ->
         id_loc this#string_literal_type loc lit t (fun lit -> (loc, StringLiteral lit))
+      | (loc, NumberLiteral lit) ->
+        id_loc this#number_literal_type loc lit t (fun lit -> (loc, NumberLiteral lit))
+      | (loc, BigIntLiteral lit) ->
+        id_loc this#bigint_literal_type loc lit t (fun lit -> (loc, BigIntLiteral lit))
       | (loc, Union (t0, t1, ts)) ->
         let t0' = this#type_ t0 in
         let t1' = this#type_ t1 in

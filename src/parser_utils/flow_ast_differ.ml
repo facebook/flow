@@ -197,9 +197,10 @@ let list_diff = function
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | NumberLiteralNode of Ast.NumberLiteral.t
   | Literal of Loc.t Ast.Literal.t
-  | StringLiteral of Ast.StringLiteral.t
+  | StringLiteral of Loc.t * Loc.t Ast.StringLiteral.t
+  | NumberLiteral of Loc.t * Loc.t Ast.NumberLiteral.t
+  | BigIntLiteral of Loc.t * Loc.t Ast.BigIntLiteral.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
@@ -1014,17 +1015,48 @@ let program
   and literal (loc : Loc.t) (lit1 : Loc.t Ast.Literal.t) (lit2 : Loc.t Ast.Literal.t) :
       node change list =
     [(loc, Replace (Literal lit1, Literal lit2))]
-  and number_literal_type (loc : Loc.t) (nlit1 : Ast.NumberLiteral.t) (nlit2 : Ast.NumberLiteral.t)
-      : node change list =
-    [(loc, Replace (NumberLiteralNode nlit1, NumberLiteralNode nlit2))]
-  and string_literal (loc : Loc.t) (lit1 : Ast.StringLiteral.t) (lit2 : Ast.StringLiteral.t) :
-      node change list option =
-    let { Ast.StringLiteral.value = val1; raw = raw1 } = lit1 in
-    let { Ast.StringLiteral.value = val2; raw = raw2 } = lit2 in
-    if String.equal val1 val2 && String.equal raw1 raw2 then
-      Some []
-    else
-      Some [(loc, Replace (StringLiteral lit1, StringLiteral lit2))]
+  and string_literal
+      ((loc1, lit1) : Loc.t * Loc.t Ast.StringLiteral.t)
+      ((loc2, lit2) : Loc.t * Loc.t Ast.StringLiteral.t) : node change list option =
+    let open Ast.StringLiteral in
+    let { value = val1; raw = raw1; comments = comments1 } = lit1 in
+    let { value = val2; raw = raw2; comments = comments2 } = lit2 in
+    let value_diff =
+      if String.equal val1 val2 && String.equal raw1 raw2 then
+        Some []
+      else
+        Some [(loc1, Replace (StringLiteral (loc1, lit1), StringLiteral (loc2, lit2)))]
+    in
+    let comments_diff = syntax_opt loc1 comments1 comments2 in
+    join_diff_list [value_diff; comments_diff]
+  and number_literal
+      ((loc1, lit1) : Loc.t * Loc.t Ast.NumberLiteral.t)
+      ((loc2, lit2) : Loc.t * Loc.t Ast.NumberLiteral.t) : node change list option =
+    let open Ast.NumberLiteral in
+    let { value = value1; raw = raw1; comments = comments1 } = lit1 in
+    let { value = value2; raw = raw2; comments = comments2 } = lit2 in
+    let value_diff =
+      if value1 = value2 && String.equal raw1 raw2 then
+        Some []
+      else
+        Some [(loc1, Replace (NumberLiteral (loc1, lit1), NumberLiteral (loc2, lit2)))]
+    in
+    let comments_diff = syntax_opt loc1 comments1 comments2 in
+    join_diff_list [value_diff; comments_diff]
+  and bigint_literal
+      ((loc1, lit1) : Loc.t * Loc.t Ast.BigIntLiteral.t)
+      ((loc2, lit2) : Loc.t * Loc.t Ast.BigIntLiteral.t) : node change list option =
+    let open Ast.BigIntLiteral in
+    let { approx_value = value1; bigint = bigint1; comments = comments1 } = lit1 in
+    let { approx_value = value2; bigint = bigint2; comments = comments2 } = lit2 in
+    let value_diff =
+      if value1 = value2 && String.equal bigint1 bigint2 then
+        Some []
+      else
+        Some [(loc1, Replace (BigIntLiteral (loc1, lit1), BigIntLiteral (loc2, lit2)))]
+    in
+    let comments_diff = syntax_opt loc1 comments1 comments2 in
+    join_diff_list [value_diff; comments_diff]
   and tagged_template
       (loc : Loc.t)
       (t_tmpl1 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -1799,13 +1831,11 @@ let program
     let (_, { argument = arg1 }) = elem1 in
     let (_, { argument = arg2 }) = elem2 in
     binding_pattern arg1 arg2
-  and type_ ((loc1, type1) : (Loc.t, Loc.t) Ast.Type.t) ((_loc2, type2) : (Loc.t, Loc.t) Ast.Type.t)
+  and type_ ((loc1, type1) : (Loc.t, Loc.t) Ast.Type.t) ((loc2, type2) : (Loc.t, Loc.t) Ast.Type.t)
       : node change list =
     let open Ast.Type in
     let type_diff =
       match (type1, type2) with
-      | (NumberLiteral n1, NumberLiteral n2) ->
-        Some (diff_if_changed (number_literal_type loc1) n1 n2)
       | (Function fn1, Function fn2) -> diff_if_changed_ret_opt (function_type loc1) fn1 fn2
       | (Interface i1, Interface i2) -> interface_type i1 i2
       | (Generic g1, Generic g2) -> generic_type g1 g2
@@ -1814,7 +1844,12 @@ let program
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | (Nullable t1, Nullable t2) -> diff_if_changed_ret_opt (nullable_type loc1) t1 t2
       | (Object obj1, Object obj2) -> diff_if_changed_ret_opt (object_type loc1) obj1 obj2
-      | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) -> (string_literal loc1) s1 s2
+      | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) ->
+        diff_if_changed_ret_opt string_literal (loc1, s1) (loc2, s2)
+      | (Ast.Type.NumberLiteral n1, Ast.Type.NumberLiteral n2) ->
+        diff_if_changed_ret_opt number_literal (loc1, n1) (loc2, n2)
+      | (Ast.Type.BigIntLiteral b1, Ast.Type.BigIntLiteral b2) ->
+        diff_if_changed_ret_opt bigint_literal (loc1, b1) (loc2, b2)
       | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt (tuple_type loc1) t1 t2
       | (Array t1, Array t2) -> diff_if_changed_ret_opt (array_type loc1) t1 t2

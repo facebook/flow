@@ -54,9 +54,10 @@ module Types = struct
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
 end
 
-let string_literal value = { Ast.StringLiteral.value; raw = Printf.sprintf "%S" value }
+let string_literal ?comments value =
+  { Ast.StringLiteral.value; raw = Printf.sprintf "%S" value; comments }
 
-let number_literal value raw = { Ast.NumberLiteral.value; raw }
+let number_literal ?comments value raw = { Ast.NumberLiteral.value; raw; comments }
 
 module Literals = struct
   open Ast.Literal

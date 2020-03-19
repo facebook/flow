@@ -84,8 +84,8 @@ module T = struct
       }
     | ArrayLiteral of array_element_t Nel.t
     | ValueRef of reference (* typeof `x` *)
-    | NumberLiteral of Ast.NumberLiteral.t
-    | StringLiteral of Ast.StringLiteral.t
+    | NumberLiteral of Loc.t Ast.NumberLiteral.t
+    | StringLiteral of Loc.t Ast.StringLiteral.t
     | BooleanLiteral of bool
     | Number
     | String
@@ -105,7 +105,7 @@ module T = struct
 
   and outlinable_t =
     | Class of (Loc.t * string) option * class_t
-    | DynamicImport of Loc.t * Ast.StringLiteral.t
+    | DynamicImport of Loc.t * Loc.t Ast.StringLiteral.t
     | DynamicRequire of (Loc.t, Loc.t) Ast.Expression.t
 
   and function_t =
@@ -344,7 +344,8 @@ module T = struct
 
   let type_of_generic (loc, gt) = (loc, Ast.Type.Generic gt)
 
-  let source_of_source (loc, x) = (loc, { Ast.StringLiteral.value = x; raw = x })
+  let source_of_source (loc, x) =
+    (loc, { Ast.StringLiteral.value = x; raw = x; comments = Flow_ast_utils.mk_comments_opt () })
 
   let temporary_type name loc t =
     ( loc,
@@ -1022,12 +1023,12 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     let string_value_of_object_key object_key =
       let open Ast.Expression.Object.Property in
       match object_key with
-      | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }) ->
-        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
-      | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+      | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments }) ->
+        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw; comments }))
+      | Identifier (loc, { Ast.Identifier.name; comments }) ->
         let value = name in
         let raw = Printf.sprintf "'%s'" name in
-        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
+        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw; comments }))
       | _ -> assert false
     in
     let keys_as_string_values_of_object_properties object_properties =
@@ -1042,11 +1043,13 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     in
     let open Ast.Expression in
     function
-    | (loc, Literal { Ast.Literal.value; raw; comments = _ }) ->
+    | (loc, Literal { Ast.Literal.value; raw; comments }) ->
       begin
         match value with
-        | Ast.Literal.String value -> (loc, T.StringLiteral { Ast.StringLiteral.value; raw })
-        | Ast.Literal.Number value -> (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw })
+        | Ast.Literal.String value ->
+          (loc, T.StringLiteral { Ast.StringLiteral.value; raw; comments })
+        | Ast.Literal.Number value ->
+          (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw; comments })
         | Ast.Literal.Boolean b -> (loc, T.BooleanLiteral b)
         | Ast.Literal.Null -> (loc, T.Null)
         | _ -> T.FixMe.mk_expr_type loc
@@ -1143,7 +1146,11 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                     } ) );
             comments = _;
           } ) ->
-      (loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw })))
+      ( loc,
+        T.Outline
+          (T.DynamicImport
+             ( source_loc,
+               { Ast.StringLiteral.value; raw; comments = Flow_ast_utils.mk_comments_opt () } )) )
     | ( loc,
         Call
           {
@@ -1306,8 +1313,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Minus ->
       begin
         match literal_expr argument with
-        | (_, T.NumberLiteral { Ast.NumberLiteral.value; raw }) ->
-          (loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-" ^ raw })
+        | (_, T.NumberLiteral { Ast.NumberLiteral.value; raw; comments }) ->
+          (loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-" ^ raw; comments })
         | _ -> (loc, T.Number)
       end
     | Not ->

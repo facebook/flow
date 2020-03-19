@@ -697,7 +697,7 @@ struct
         let { exportKind; source; specifiers; declaration } = decl in
         let source =
           match source with
-          | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) -> Some (loc, mref)
+          | Some (loc, { Ast.StringLiteral.value = mref; raw = _; comments = _ }) -> Some (loc, mref)
           | None -> None
         in
         begin
@@ -756,7 +756,7 @@ struct
         let { default; source; specifiers; declaration } = decl in
         let source =
           match source with
-          | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
+          | Some (loc, { Ast.StringLiteral.value = mref; raw = _; comments = _ }) ->
             assert (Base.Option.is_none default);
 
             (* declare export default from not supported *)

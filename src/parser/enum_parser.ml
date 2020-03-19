@@ -18,8 +18,8 @@ end = struct
 
   type members = {
     boolean_members: (bool, Loc.t) InitializedMember.t list;
-    number_members: (NumberLiteral.t, Loc.t) InitializedMember.t list;
-    string_members: (StringLiteral.t, Loc.t) InitializedMember.t list;
+    number_members: (Loc.t NumberLiteral.t, Loc.t) InitializedMember.t list;
+    string_members: (Loc.t StringLiteral.t, Loc.t) InitializedMember.t list;
     defaulted_members: Loc.t DefaultedMember.t list;
   }
 
@@ -32,8 +32,8 @@ end = struct
     | NoInit
     | InvalidInit of Loc.t
     | BooleanInit of Loc.t * bool
-    | NumberInit of Loc.t * NumberLiteral.t
-    | StringInit of Loc.t * StringLiteral.t
+    | NumberInit of Loc.t * Loc.t NumberLiteral.t
+    | StringInit of Loc.t * Loc.t StringLiteral.t
 
   let empty_members =
     { boolean_members = []; number_members = []; string_members = []; defaulted_members = [] }
@@ -49,18 +49,33 @@ end = struct
 
   let member_init env =
     let loc = Peek.loc env in
+    let leading = Peek.comments env in
     match Peek.token env with
     | T_NUMBER { kind; raw } ->
       let value = Parse.number env kind raw in
+      let trailing = Peek.comments env in
       if end_of_member_init env then
-        NumberInit (loc, { NumberLiteral.value; raw })
+        NumberInit
+          ( loc,
+            {
+              NumberLiteral.value;
+              raw;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            } )
       else
         InvalidInit loc
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
+      let trailing = Peek.comments env in
       if end_of_member_init env then
-        StringInit (loc, { StringLiteral.value; raw })
+        StringInit
+          ( loc,
+            {
+              StringLiteral.value;
+              raw;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            } )
       else
         InvalidInit loc
     | (T_TRUE | T_FALSE) as token ->

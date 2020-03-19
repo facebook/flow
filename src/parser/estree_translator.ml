@@ -1166,12 +1166,12 @@ with type t = Impl.t = struct
         | _ -> [("value", value_); ("raw", string raw)]
       in
       node ?comments "Literal" loc props
-    and number_literal (loc, { NumberLiteral.value; raw }) =
-      node "Literal" loc [("value", number value); ("raw", string raw)]
-    and bigint_literal (loc, { Literal.raw; _ }) =
-      node "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
-    and string_literal (loc, { StringLiteral.value; raw }) =
-      node "Literal" loc [("value", string value); ("raw", string raw)]
+    and number_literal (loc, { NumberLiteral.value; raw; comments }) =
+      node ?comments "Literal" loc [("value", number value); ("raw", string raw)]
+    and bigint_literal (loc, { Literal.raw; comments; _ }) =
+      node ?comments "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
+    and string_literal (loc, { StringLiteral.value; raw; comments }) =
+      node ?comments "Literal" loc [("value", string value); ("raw", string raw)]
     and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
         ?comments
@@ -1439,13 +1439,21 @@ with type t = Impl.t = struct
       node ?comments "TypeofTypeAnnotation" loc [("argument", _type argument)]
     and tuple_type (loc, { Type.Tuple.types; comments }) =
       node ?comments "TupleTypeAnnotation" loc [("types", array_of_list _type types)]
-    and string_literal_type (loc, { Ast.StringLiteral.value; raw }) =
-      node "StringLiteralTypeAnnotation" loc [("value", string value); ("raw", string raw)]
-    and number_literal_type (loc, { Ast.NumberLiteral.value; raw }) =
-      node "NumberLiteralTypeAnnotation" loc [("value", number value); ("raw", string raw)]
-    and bigint_literal_type (loc, { Ast.BigIntLiteral.bigint; _ }) =
+    and string_literal_type (loc, { Ast.StringLiteral.value; raw; comments }) =
+      node
+        ?comments
+        "StringLiteralTypeAnnotation"
+        loc
+        [("value", string value); ("raw", string raw)]
+    and number_literal_type (loc, { Ast.NumberLiteral.value; raw; comments }) =
+      node
+        ?comments
+        "NumberLiteralTypeAnnotation"
+        loc
+        [("value", number value); ("raw", string raw)]
+    and bigint_literal_type (loc, { Ast.BigIntLiteral.bigint; comments; _ }) =
       let raw = bigint in
-      node "BigIntLiteralTypeAnnotation" loc [("value", null); ("raw", string raw)]
+      node ?comments "BigIntLiteralTypeAnnotation" loc [("value", null); ("raw", string raw)]
     and boolean_literal_type (loc, value) =
       node
         "BooleanLiteralTypeAnnotation"

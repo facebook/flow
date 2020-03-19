@@ -10,8 +10,6 @@ module Ast = Flow_ast
 let ( * ) : 'a 'b 'c 'd. ('a -> 'c) -> ('b -> 'd) -> 'a * 'b -> 'c * 'd =
  (fun f g (x, y) -> (f x, g y))
 
-let id : 'a. 'a -> 'a = (fun x -> x)
-
 class virtual ['M, 'T, 'N, 'U] mapper =
   object (this)
     method virtual on_loc_annot : 'M -> 'N
@@ -365,7 +363,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.DeclareExportDeclaration in
       let { default; source; specifiers; declaration } = decl in
       let default' = Base.Option.map ~f:this#on_loc_annot default in
-      let source' = Base.Option.map ~f:(this#on_loc_annot * id) source in
+      let source' = Base.Option.map ~f:(this#on_loc_annot * this#string_literal) source in
       let specifiers' = Base.Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Base.Option.map ~f:this#declare_export_declaration_decl declaration in
       { default = default'; source = source'; specifiers = specifiers'; declaration = declaration' }
@@ -405,7 +403,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' =
         match id with
         | Identifier id -> Identifier (this#t_identifier id)
-        | Literal (annot, name) -> Literal (this#on_type_annot annot, name)
+        | Literal (annot, name) -> Literal (this#on_type_annot annot, this#string_literal name)
       in
       let kind' =
         match kind with
@@ -502,19 +500,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       (this#on_loc_annot annot, { id = this#identifier id; init = init' })
 
     method enum_number_member
-        (member : (Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
-        : (Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+        (member : ('M Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        : ('N Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
-      let init' = (this#on_loc_annot init_annot, init_val) in
+      let init' = (this#on_loc_annot init_annot, this#number_literal init_val) in
       (this#on_loc_annot annot, { id = this#identifier id; init = init' })
 
     method enum_string_member
-        (member : (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
-        : (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+        (member : ('M Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        : ('N Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
-      let init' = (this#on_loc_annot init_annot, init_val) in
+      let init' = (this#on_loc_annot init_annot, this#string_literal init_val) in
       (this#on_loc_annot annot, { id = this#identifier id; init = init' })
 
     method export_default_declaration
@@ -538,7 +536,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.ExportNamedDeclaration.t =
       let open Ast.Statement.ExportNamedDeclaration in
       let { exportKind; source; specifiers; declaration } = decl in
-      let source' = Base.Option.map ~f:(this#on_loc_annot * id) source in
+      let source' = Base.Option.map ~f:(this#on_loc_annot * this#string_literal) source in
       let specifiers' = Base.Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Base.Option.map ~f:this#statement declaration in
       { exportKind; source = source'; specifiers = specifiers'; declaration = declaration' }
@@ -824,13 +822,30 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { argument = argument'; comments = comments' }
 
+    method string_literal (t : 'M Ast.StringLiteral.t) : 'N Ast.StringLiteral.t =
+      let open Ast.StringLiteral in
+      let { value; raw; comments } = t in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { value; raw; comments = comments' }
+
+    method number_literal (t : 'M Ast.NumberLiteral.t) : 'N Ast.NumberLiteral.t =
+      let open Ast.NumberLiteral in
+      let { value; raw; comments } = t in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { value; raw; comments = comments' }
+
+    method bigint_literal (t : 'M Ast.BigIntLiteral.t) : 'N Ast.BigIntLiteral.t =
+      let open Ast.BigIntLiteral in
+      let { approx_value; bigint; comments } = t in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { approx_value; bigint; comments = comments' }
+
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       Ast.Type.
         ( this#on_type_annot annot,
           match t with
           | ( Any | Mixed | Empty | Void | Null | Symbol | Number | BigInt | String | Boolean
-            | StringLiteral _ | NumberLiteral _ | BigIntLiteral _ | BooleanLiteral _ | Exists ) as t
-            ->
+            | BooleanLiteral _ | Exists ) as t ->
             t
           | Nullable t' -> Nullable (this#nullable_type t')
           | Array t' -> Array (this#array_type t')
@@ -849,7 +864,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             let t1' = this#type_ t1 in
             let ts' = Base.List.map ~f:this#type_ ts in
             Intersection (t0', t1', ts')
-          | Tuple t' -> Tuple (this#tuple_type t') )
+          | Tuple t' -> Tuple (this#tuple_type t')
+          | StringLiteral t' -> StringLiteral (this#string_literal t')
+          | NumberLiteral t' -> NumberLiteral (this#number_literal t')
+          | BigIntLiteral t' -> BigIntLiteral (this#bigint_literal t') )
 
     method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)
         : ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t =
@@ -1008,7 +1026,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { importKind; source; specifiers; default } = decl in
       let specifiers' = Base.Option.map ~f:this#import_specifier specifiers in
       let default' = Base.Option.map ~f:this#import_default_specifier default in
-      let source' = (this#on_loc_annot * id) source in
+      let source' = (this#on_loc_annot * this#string_literal) source in
       { importKind; source = source'; specifiers = specifiers'; default = default' }
 
     method import_specifier (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier)

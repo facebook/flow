@@ -21,6 +21,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method assignment_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
+    method bigint_literal : 'M Ast.BigIntLiteral.t -> 'N Ast.BigIntLiteral.t
+
     method binary : ('M, 'T) Ast.Expression.Binary.t -> ('N, 'U) Ast.Expression.Binary.t
 
     method binding_pattern :
@@ -151,12 +153,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
 
     method enum_number_member :
-      (Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
-      (Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+      ('M Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      ('N Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
 
     method enum_string_member :
-      (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
-      (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+      ('M Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      ('N Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
 
     method export_default_declaration :
       'M ->
@@ -339,6 +341,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method nullable_type : ('M, 'T) Ast.Type.Nullable.t -> ('N, 'U) Ast.Type.Nullable.t
 
+    method number_literal : 'M Ast.NumberLiteral.t -> 'N Ast.NumberLiteral.t
+
     method object_ : ('M, 'T) Ast.Expression.Object.t -> ('N, 'U) Ast.Expression.Object.t
 
     method object_indexer_type :
@@ -488,6 +492,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method statement : ('M, 'T) Ast.Statement.t -> ('N, 'U) Ast.Statement.t
 
     method statement_list : ('M, 'T) Flow_ast.Statement.t list -> ('N, 'U) Ast.Statement.t list
+
+    method string_literal : 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
     method super_expression : 'M Ast.Expression.Super.t -> 'N Ast.Expression.Super.t
 

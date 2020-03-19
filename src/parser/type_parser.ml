@@ -208,16 +208,40 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       (loc, Type.Generic g)
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
+      let leading = Peek.comments env in
       Expect.token env (T_STRING (loc, value, raw, octal));
-      (loc, Type.StringLiteral { Ast.StringLiteral.value; raw })
+      let trailing = Peek.comments env in
+      ( loc,
+        Type.StringLiteral
+          {
+            Ast.StringLiteral.value;
+            raw;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          } )
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
+      let leading = Peek.comments env in
       Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
+      let trailing = Peek.comments env in
       if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
-      (loc, Type.NumberLiteral { Ast.NumberLiteral.value; raw })
+      ( loc,
+        Type.NumberLiteral
+          {
+            Ast.NumberLiteral.value;
+            raw;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          } )
     | T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw } ->
       let bigint = raw in
+      let leading = Peek.comments env in
       Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw });
-      (loc, Type.BigIntLiteral { Ast.BigIntLiteral.approx_value; bigint })
+      let trailing = Peek.comments env in
+      ( loc,
+        Type.BigIntLiteral
+          {
+            Ast.BigIntLiteral.approx_value;
+            bigint;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          } )
     | (T_TRUE | T_FALSE) as token ->
       Expect.token env token;
       let value = token = T_TRUE in

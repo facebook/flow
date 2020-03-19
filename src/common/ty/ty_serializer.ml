@@ -275,12 +275,13 @@ and str_lit lit =
   let quote = Js_layout_generator.better_quote lit in
   let raw_lit = Js_layout_generator.utf8_escape ~quote lit in
   let raw = quote ^ raw_lit ^ quote in
-  { Ast.StringLiteral.value = lit; raw }
+  { Ast.StringLiteral.value = lit; raw; comments = Flow_ast_utils.mk_comments_opt () }
 
 and num_lit lit =
   {
     Ast.NumberLiteral.value = (try Pervasives.float_of_string lit with Failure _ -> 0.);
     raw = lit;
+    comments = Flow_ast_utils.mk_comments_opt ();
   }
 
 and getter t =

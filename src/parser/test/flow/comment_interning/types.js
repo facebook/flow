@@ -9,3 +9,9 @@ type Test4 = /* 4.1 L typeof */ typeof /* 4.2 L generic */ T /* 4.3 T generic */
 type Test5 = /* 5.1 L tuple */ [ /* 5.2 L generic */ T /* 5.3 T generic */ ] /* 5.4 T tuple */;
 
 type Test6 = /* 6.1 L generic */ T /* 6.2 T generic */ [] /* 6.3 T array */;
+
+type Test7 = /* 7.1 L string lit */ 'foo' /* 7.2 T string lit */;
+
+type Test8 = /* 8.1 L num lit */ 1 /* 8.2 T num lit */;
+
+type Test9 = /* 9.1 L bigint lit */ 1n /* 9.2 T bigint lit */;

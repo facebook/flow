@@ -1067,7 +1067,8 @@ and expression_or_spread ?(ctxt = normal_context) expr_or_spread =
 
 and identifier (loc, { Ast.Identifier.name; comments }) = identifier_with_comments loc name comments
 
-and number_literal_type { Ast.NumberLiteral.raw; _ } = Atom raw
+and number_literal_type loc { Ast.NumberLiteral.value = _; raw; comments } =
+  layout_node_with_comments_opt loc comments (Atom raw)
 
 and number_literal ~in_member_object raw num =
   let str = Dtoa.shortest_string_of_float num in
@@ -1107,7 +1108,11 @@ and literal { Ast.Literal.raw; value; comments = _ (* handled by caller *) } =
     fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
   | _ -> Atom raw
 
-and string_literal_type { Ast.StringLiteral.raw; _ } = Atom raw
+and string_literal_type loc { Ast.StringLiteral.value = _; raw; comments } =
+  layout_node_with_comments_opt loc comments (Atom raw)
+
+and bigint_literal_type loc { Ast.BigIntLiteral.approx_value = _; bigint; comments } =
+  layout_node_with_comments_opt loc comments (Atom bigint)
 
 and member ?(optional = false) ~precedence ~ctxt member_node loc =
   let { Ast.Expression.Member._object; property; comments } = member_node in
@@ -2730,9 +2735,9 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Intersection (t1, t2, ts) -> type_union_or_intersection ~sep:(Atom "&") (t1 :: t2 :: ts)
       | T.Typeof t -> type_typeof loc t
       | T.Tuple t -> type_tuple loc t
-      | T.StringLiteral lit -> string_literal_type lit
-      | T.NumberLiteral t -> number_literal_type t
-      | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Atom bigint
+      | T.StringLiteral lit -> string_literal_type loc lit
+      | T.NumberLiteral lit -> number_literal_type loc lit
+      | T.BigIntLiteral lit -> bigint_literal_type loc lit
       | T.BooleanLiteral value ->
         Atom
           ( if value then

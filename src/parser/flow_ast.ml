@@ -71,28 +71,31 @@ end =
   Literal
 
 and StringLiteral : sig
-  type t = {
+  type 'M t = {
     value: string;
     raw: string;
+    comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end =
   StringLiteral
 
 and NumberLiteral : sig
-  type t = {
+  type 'M t = {
     value: float;
     raw: string;
+    comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end =
   NumberLiteral
 
 and BigIntLiteral : sig
-  type t = {
+  type 'M t = {
     approx_value: float;
     (* Warning! Might lose precision! *)
     bigint: string;
+    comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end =
@@ -341,9 +344,9 @@ and Type : sig
     | Intersection of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Typeof of ('M, 'T) Typeof.t
     | Tuple of ('M, 'T) Tuple.t
-    | StringLiteral of StringLiteral.t
-    | NumberLiteral of NumberLiteral.t
-    | BigIntLiteral of BigIntLiteral.t
+    | StringLiteral of 'M StringLiteral.t
+    | NumberLiteral of 'M NumberLiteral.t
+    | BigIntLiteral of 'M BigIntLiteral.t
     | BooleanLiteral of bool
     | Exists
 
@@ -638,7 +641,7 @@ and Statement : sig
 
     module NumberBody : sig
       type 'M t = {
-        members: (NumberLiteral.t, 'M) InitializedMember.t list;
+        members: ('M NumberLiteral.t, 'M) InitializedMember.t list;
         explicitType: bool;
       }
       [@@deriving show]
@@ -646,7 +649,7 @@ and Statement : sig
 
     module StringBody : sig
       type 'M t = {
-        members: (StringLiteral.t, 'M) members;
+        members: ('M StringLiteral.t, 'M) members;
         explicitType: bool;
       }
 
@@ -717,7 +720,7 @@ and Statement : sig
   module DeclareModule : sig
     type ('M, 'T) id =
       | Identifier of ('M, 'T) Identifier.t
-      | Literal of ('T * StringLiteral.t)
+      | Literal of ('T * 'M StringLiteral.t)
 
     and 'M module_kind =
       | CommonJS of 'M
@@ -745,7 +748,7 @@ and Statement : sig
     type ('M, 'T) t = {
       declaration: ('M, 'T) Statement.t option;
       specifiers: 'M specifier option;
-      source: ('M * StringLiteral.t) option;
+      source: ('M * 'M StringLiteral.t) option;
       exportKind: Statement.exportKind;
     }
 
@@ -790,7 +793,7 @@ and Statement : sig
       default: 'M option;
       declaration: ('M, 'T) declaration option;
       specifiers: 'M ExportNamedDeclaration.specifier option;
-      source: ('M * StringLiteral.t) option;
+      source: ('M * 'M StringLiteral.t) option;
     }
     [@@deriving show]
   end
@@ -813,7 +816,7 @@ and Statement : sig
 
     and ('M, 'T) t = {
       importKind: importKind;
-      source: 'M * StringLiteral.t;
+      source: 'M * 'M StringLiteral.t;
       default: ('M, 'T) Identifier.t option;
       specifiers: ('M, 'T) specifier option;
     }

@@ -131,6 +131,15 @@ module Statement
         | _ -> ()
       end
 
+  let string_literal env (loc, value, raw, octal) =
+    if octal then strict_error env Parse_error.StrictOctalLiteral;
+    let leading = Peek.comments env in
+    Expect.token env (T_STRING (loc, value, raw, octal));
+    let trailing = Peek.comments env in
+    ( loc,
+      { StringLiteral.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    )
+
   let rec empty env =
     let loc = Peek.loc env in
     Expect.token env T_SEMICOLON;
@@ -941,10 +950,7 @@ module Statement
     let declare_module_ env start_loc =
       let id =
         match Peek.token env with
-        | T_STRING (loc, value, raw, octal) ->
-          if octal then strict_error env Parse_error.StrictOctalLiteral;
-          Expect.token env (T_STRING (loc, value, raw, octal));
-          Statement.DeclareModule.Literal (loc, { StringLiteral.value; raw })
+        | T_STRING str -> Statement.DeclareModule.Literal (string_literal env str)
         | _ -> Statement.DeclareModule.Identifier (Parse.identifier env)
       in
       let (body_loc, ((module_kind, body), comments)) =
@@ -1017,13 +1023,10 @@ module Statement
   and export_source env =
     Expect.identifier env "from";
     match Peek.token env with
-    | T_STRING (loc, value, raw, octal) ->
-      if octal then strict_error env Parse_error.StrictOctalLiteral;
-      Expect.token env (T_STRING (loc, value, raw, octal));
-      (loc, { StringLiteral.value; raw })
+    | T_STRING str -> string_literal env str
     | _ ->
       (* Just make up a string for the error case *)
-      let ret = (Peek.loc env, { StringLiteral.value = ""; raw = "" }) in
+      let ret = (Peek.loc env, { StringLiteral.value = ""; raw = ""; comments = None }) in
       error_unexpected ~expected:"a string" env;
       ret
 
@@ -1430,13 +1433,10 @@ module Statement
       let source env =
         Expect.identifier env "from";
         match Peek.token env with
-        | T_STRING (loc, value, raw, octal) ->
-          if octal then strict_error env Parse_error.StrictOctalLiteral;
-          Expect.token env (T_STRING (loc, value, raw, octal));
-          (loc, { StringLiteral.value; raw })
+        | T_STRING str -> string_literal env str
         | _ ->
           (* Just make up a string for the error case *)
-          let ret = (Peek.loc env, { StringLiteral.value = ""; raw = "" }) in
+          let ret = (Peek.loc env, { StringLiteral.value = ""; raw = ""; comments = None }) in
           error_unexpected ~expected:"a string" env;
           ret
       in
@@ -1658,10 +1658,8 @@ module Statement
           (* `import { ... } from "ModuleName";` *)
           | T_LCURLY -> with_specifiers ImportValue env
           (* `import "ModuleName";` *)
-          | T_STRING (str_loc, value, raw, octal) ->
-            if octal then strict_error env Parse_error.StrictOctalLiteral;
-            Expect.token env (T_STRING (str_loc, value, raw, octal));
-            let source = (str_loc, { StringLiteral.value; raw }) in
+          | T_STRING str ->
+            let source = string_literal env str in
             Eat.semicolon env;
             Statement.ImportDeclaration
               { importKind = ImportValue; source; specifiers = None; default = None }

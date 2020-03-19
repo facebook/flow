@@ -233,7 +233,7 @@ let rec convert cx tparams_map =
       Array { Array.argument = t_ast; comments } )
   | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_string cx loc value), t_ast)
-  | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw } as t_ast)) ->
+  | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
     ((loc, mk_singleton_number cx loc value raw), t_ast)
   | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
     let reason = mk_annot_reason (RBigIntLit bigint) loc in
@@ -551,7 +551,9 @@ let rec convert cx tparams_map =
       | "$Exports" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match targs with
-            | Some (targs_loc, (str_loc, StringLiteral { Ast.StringLiteral.value; raw }) :: _) ->
+            | Some
+                (targs_loc, (str_loc, StringLiteral { Ast.StringLiteral.value; raw; comments }) :: _)
+              ->
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
               let remote_module_t = Env.get_var_declared_type cx (internal_module_name value) loc in
@@ -560,7 +562,9 @@ let rec convert cx tparams_map =
                 (Tvar.mk_where cx reason (fun t ->
                      Flow.flow cx (remote_module_t, CJSRequireT (reason, t, Context.is_strict cx))))
                 (Some
-                   (targs_loc, [((str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw })]))
+                   ( targs_loc,
+                     [((str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw; comments })]
+                   ))
             | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast)
       | "$Call" ->
         (match convert_type_params () with
@@ -615,7 +619,8 @@ let rec convert cx tparams_map =
       | "$CharSet" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match targs with
-            | Some (targs_loc, [(str_loc, StringLiteral { Ast.StringLiteral.value; raw })]) ->
+            | Some (targs_loc, [(str_loc, StringLiteral { Ast.StringLiteral.value; raw; comments })])
+              ->
               let str_t = mk_singleton_string cx str_loc value in
               let chars = String_utils.CharSet.of_string value in
               let char_str = String_utils.CharSet.to_string chars in
@@ -624,7 +629,9 @@ let rec convert cx tparams_map =
               reconstruct_ast
                 (DefT (reason, infer_trust cx, CharSetT chars))
                 (Some
-                   (targs_loc, [((str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw })]))
+                   ( targs_loc,
+                     [((str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw; comments })]
+                   ))
             | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast)
       | "this" ->
         if SMap.mem "this" tparams_map then

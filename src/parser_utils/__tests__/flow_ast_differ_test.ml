@@ -37,11 +37,11 @@ class useless_mapper =
         { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
       | _ -> expr
 
-    method! string_literal_type _loc (lit : Ast.StringLiteral.t) =
+    method! string_literal_type _loc (lit : Loc.t Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
-      let { value; _ } = lit in
+      let { value; comments; _ } = lit in
       if String.equal "RenameSL" value then
-        { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\"" }
+        { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\""; comments }
       else
         lit
 
@@ -101,7 +101,8 @@ class useless_mapper =
       let (loc, typ) = annot in
       match typ with
       | Type.Number -> (loc, Type.String)
-      | Type.NumberLiteral _ -> (loc, Type.NumberLiteral { value = 4.0; raw = "4.0" })
+      | Type.NumberLiteral _ ->
+        (loc, Type.NumberLiteral { value = 4.0; raw = "4.0"; comments = None })
       | _ -> annot
 
     method! jsx_element _loc (elem : (Loc.t, Loc.t) Ast.JSX.element) =
@@ -344,7 +345,7 @@ class insert_import_mapper =
             Ast.Statement.ImportDeclaration
               {
                 importKind = Ast.Statement.ImportDeclaration.ImportValue;
-                source = (loc, { value = "baz"; raw = "\"baz\"" });
+                source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
                   Some
@@ -378,7 +379,7 @@ class insert_second_import_mapper =
             Ast.Statement.ImportDeclaration
               {
                 importKind = Ast.Statement.ImportDeclaration.ImportValue;
-                source = (loc, { value = "baz"; raw = "\"baz\"" });
+                source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
                   Some
@@ -590,7 +591,7 @@ class insert_import_and_annot_mapper =
             ImportDeclaration
               {
                 ImportDeclaration.importKind = ImportDeclaration.ImportType;
-                source = (Loc.none, { Ast.StringLiteral.value = imp; raw = imp });
+                source = (Loc.none, { Ast.StringLiteral.value = imp; raw = imp; comments = None });
                 default = None;
                 specifiers =
                   Some
