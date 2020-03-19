@@ -125,7 +125,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_ARROW when not (no_anon_function_type env) ->
       let (start_loc, tparams, params) =
         let param = anonymous_function_param env param in
-        (fst param, None, (fst param, { Ast.Type.Function.Params.params = [param]; rest = None }))
+        ( fst param,
+          None,
+          ( fst param,
+            {
+              Ast.Type.Function.Params.params = [param];
+              rest = None;
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } ) )
       in
       function_with_params env start_loc tparams params
     | _ -> param
@@ -306,7 +313,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           else
             None
         in
-        { Ast.Type.Function.Params.params = List.rev acc; rest }
+        { Ast.Type.Function.Params.params = List.rev acc; rest; comments = None }
       | _ ->
         let acc = param env :: acc in
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
@@ -317,13 +324,19 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   and function_param_list env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_LPAREN;
-        let ret = function_param_list_without_parens env [] in
+        let params = function_param_list_without_parens env [] in
         Expect.token env T_RPAREN;
-        ret)
+        let trailing = Peek.comments env in
+        {
+          params with
+          Ast.Type.Function.Params.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        })
       env
 
   and param_list_or_type env =
+    let leading = Peek.comments env in
     Expect.token env T_LPAREN;
     let ret =
       let env = with_no_anon_function_type false env in
@@ -334,7 +347,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ParamList (function_param_list_without_parens env [])
       | T_RPAREN ->
         (* () or is definitely a param list *)
-        ParamList { Ast.Type.Function.Params.params = []; rest = None }
+        ParamList { Ast.Type.Function.Params.params = []; rest = None; comments = None }
       | T_IDENTIFIER _
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         (* This could be a function parameter or a generic type *)
@@ -377,6 +390,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         | _ -> ret)
     in
     Expect.token env T_RPAREN;
+    let trailing = Peek.comments env in
+    let ret =
+      match ret with
+      | ParamList params ->
+        ParamList
+          {
+            params with
+            Ast.Type.Function.Params.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          }
+      | Type _ -> ret
+    in
     ret
 
   and function_param_or_generic_type env =
@@ -413,7 +437,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       (fun env ->
         Expect.token env T_ARROW;
         let return = _type env in
-        Type.(Function { Function.params; return; tparams }))
+        Type.(Function { Function.params; return; tparams; comments = None }))
       env
 
   and _object =
@@ -424,7 +448,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let params = function_param_list env in
           Expect.token env T_COLON;
           let return = _type env in
-          { Type.Function.params; return; tparams })
+          { Type.Function.params; return; tparams; comments = None })
         env
     in
     let method_property env start_loc static key =
@@ -491,7 +515,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             let (_, { Type.Function.params; _ }) = value in
             begin
               match (is_getter, params) with
-              | (true, (_, { Type.Function.Params.params = []; rest = None })) -> ()
+              | (true, (_, { Type.Function.Params.params = []; rest = None; comments = _ })) -> ()
               | (false, (_, { Type.Function.Params.rest = Some _; _ })) ->
                 (* rest params don't make sense on a setter *)
                 error_at env (key_loc, Parse_error.SetterArity)

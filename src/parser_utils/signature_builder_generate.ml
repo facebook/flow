@@ -606,8 +606,10 @@ module T = struct
                   | None -> None
                   | Some (loc, rest) ->
                     Some (loc, { Ast.Type.Function.RestParam.argument = param_of_type rest }));
+                comments = Flow_ast_utils.mk_comments_opt ();
               } );
           return = type_of_little_annotation outlined return;
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
   and type_of_function outlined function_t =

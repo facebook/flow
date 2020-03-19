@@ -641,15 +641,27 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       let open Ast.Type.Function in
-      let { params = (params_annot, { Params.params = ps; rest = rpo }); return; tparams } = ft in
+      let {
+        params = (params_annot, { Params.params = ps; rest = rpo; comments = params_comments });
+        return;
+        tparams;
+        comments = func_comments;
+      } =
+        ft
+      in
       this#type_params_opt tparams (fun tparams' ->
           let ps' = Base.List.map ~f:this#function_param_type ps in
           let rpo' = Base.Option.map ~f:this#function_rest_param_type rpo in
           let return' = this#type_ return in
+          let func_comments' = Base.Option.map ~f:this#syntax func_comments in
+          let params_comments' = Base.Option.map ~f:this#syntax params_comments in
           {
-            params = (this#on_loc_annot params_annot, { Params.params = ps'; rest = rpo' });
+            params =
+              ( this#on_loc_annot params_annot,
+                { Params.params = ps'; rest = rpo'; comments = params_comments' } );
             return = return';
             tparams = tparams';
+            comments = func_comments';
           })
 
     method label_identifier (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =

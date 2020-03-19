@@ -180,9 +180,9 @@ module Eval (Env : EvalEnv) = struct
     in
     fun tps ft ->
       let open Ast.Type.Function in
-      let { tparams; params; return } = ft in
+      let { tparams; params; return; comments = _ } = ft in
       let (tps, deps) = type_params tps tparams in
-      let (_, { Params.params; rest }) = params in
+      let (_, { Params.params; rest; comments = _ }) = params in
       let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) deps params in
       let deps =
         match rest with

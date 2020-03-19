@@ -114,7 +114,7 @@ class mapper_type_printing_hardcoded_fixes =
 
     method private normalize_function ff =
       let open Flow_ast.Type.Function in
-      let { params = (loc, { Params.params; rest }); _ } = ff in
+      let { params = (loc, { Params.params; rest; comments }); _ } = ff in
       let (normalized_params_rev, _) =
         List.fold_left
           (fun (p, c) param ->
@@ -134,7 +134,7 @@ class mapper_type_printing_hardcoded_fixes =
           params
       in
       let normalized_params = List.rev normalized_params_rev in
-      { ff with params = (loc, { Params.params = normalized_params; rest }) }
+      { ff with params = (loc, { Params.params = normalized_params; rest; comments }) }
 
     method private type_generic_normalize (t : ('loc, 'loc) Flow_ast.Type.t) =
       super#type_

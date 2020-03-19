@@ -9,3 +9,5 @@ type Test4 = {/* 4.1 L variance */ + /* 4.2 L indexer */ [string] /* 4.3 T index
 type Test5 = {/* 5.1 L spread */ ... /* 5.2 L obj */ {} /* 5.3 T obj */};
 
 type Test6 = {/* 6.1 L islot */ [[ /* 6.2 L id */ foo /* 6.3 T id */]] /* 6.4 T islot */ : /* 6.5 L type */ string /* 6.6 T type */};
+
+type Test7 = {/* 7.1 L params */ (/* 7.2 L generic */ X /* 7.3 T generic */) /* 7.4 T params */ : /* 7.5 L generic */ Y /* 7.6 T generic */ };

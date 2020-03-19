@@ -149,6 +149,7 @@ and Type : sig
       and ('M, 'T) t' = {
         params: ('M, 'T) Param.t list;
         rest: ('M, 'T) RestParam.t option;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end
@@ -157,6 +158,7 @@ and Type : sig
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
       return: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

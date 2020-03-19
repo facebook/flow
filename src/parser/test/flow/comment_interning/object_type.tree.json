@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":133}},
-  "range":[0,555],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":142}},
+  "range":[0,699],
   "body":[
     {
       "type":"TypeAlias",
@@ -394,6 +394,130 @@
           }
         ]
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":142}},
+      "range":[557,699],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":13,"column":5},"end":{"line":13,"column":10}},
+        "range":[562,567],
+        "name":"Test7",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":13,"column":13},"end":{"line":13,"column":141}},
+        "range":[570,698],
+        "inexact":false,
+        "exact":false,
+        "properties":[],
+        "indexers":[],
+        "callProperties":[
+          {
+            "type":"ObjectTypeCallProperty",
+            "loc":{"source":null,"start":{"line":13,"column":33},"end":{"line":13,"column":119}},
+            "range":[590,676],
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":13,"column":77},"end":{"line":13,"column":95}},
+                  "range":[634,652],
+                  "value":" 7.4 T params "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":13,"column":14},"end":{"line":13,"column":32}},
+                  "range":[571,589],
+                  "value":" 7.1 L params "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":13,"column":33},"end":{"line":13,"column":119}},
+              "range":[590,676],
+              "params":[
+                {
+                  "type":"FunctionTypeParam",
+                  "loc":{"source":null,"start":{"line":13,"column":54},"end":{"line":13,"column":55}},
+                  "range":[611,612],
+                  "name":null,
+                  "typeAnnotation":{
+                    "type":"GenericTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":13,"column":54},"end":{"line":13,"column":55}},
+                    "range":[611,612],
+                    "id":{
+                      "type":"Identifier",
+                      "trailingComments":[
+                        {
+                          "type":"Block",
+                          "loc":{"source":null,"start":{"line":13,"column":56},"end":{"line":13,"column":75}},
+                          "range":[613,632],
+                          "value":" 7.3 T generic "
+                        }
+                      ],
+                      "leadingComments":[
+                        {
+                          "type":"Block",
+                          "loc":{"source":null,"start":{"line":13,"column":34},"end":{"line":13,"column":53}},
+                          "range":[591,610],
+                          "value":" 7.2 L generic "
+                        }
+                      ],
+                      "loc":{"source":null,"start":{"line":13,"column":54},"end":{"line":13,"column":55}},
+                      "range":[611,612],
+                      "name":"X",
+                      "typeAnnotation":null,
+                      "optional":false
+                    },
+                    "typeParameters":null
+                  },
+                  "optional":false
+                }
+              ],
+              "returnType":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":13,"column":118},"end":{"line":13,"column":119}},
+                "range":[675,676],
+                "id":{
+                  "type":"Identifier",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":13,"column":120},"end":{"line":13,"column":139}},
+                      "range":[677,696],
+                      "value":" 7.6 T generic "
+                    }
+                  ],
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":13,"column":98},"end":{"line":13,"column":117}},
+                      "range":[655,674],
+                      "value":" 7.5 L generic "
+                    }
+                  ],
+                  "loc":{"source":null,"start":{"line":13,"column":118},"end":{"line":13,"column":119}},
+                  "range":[675,676],
+                  "name":"Y",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              },
+              "rest":null,
+              "typeParameters":null
+            },
+            "static":false
+          }
+        ],
+        "internalSlots":[]
+      }
     }
   ],
   "comments":[
@@ -528,6 +652,42 @@
       "loc":{"source":null,"start":{"line":11,"column":115},"end":{"line":11,"column":131}},
       "range":[537,553],
       "value":" 6.6 T type "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":14},"end":{"line":13,"column":32}},
+      "range":[571,589],
+      "value":" 7.1 L params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":34},"end":{"line":13,"column":53}},
+      "range":[591,610],
+      "value":" 7.2 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":56},"end":{"line":13,"column":75}},
+      "range":[613,632],
+      "value":" 7.3 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":77},"end":{"line":13,"column":95}},
+      "range":[634,652],
+      "value":" 7.4 T params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":98},"end":{"line":13,"column":117}},
+      "range":[655,674],
+      "value":" 7.5 L generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":120},"end":{"line":13,"column":139}},
+      "range":[677,696],
+      "value":" 7.6 T generic "
     }
   ]
 }

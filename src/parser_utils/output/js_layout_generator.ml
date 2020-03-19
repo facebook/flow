@@ -2483,10 +2483,14 @@ and type_function_param (loc, { Ast.Type.Function.Param.name; annot; optional })
 
 and type_function
     ~sep
+    loc
     {
-      Ast.Type.Function.params = (_, { Ast.Type.Function.Params.params; rest = restParams });
+      Ast.Type.Function.params =
+        ( params_loc,
+          { Ast.Type.Function.Params.params; rest = restParams; comments = params_comments } );
       return;
       tparams;
+      comments = func_comments;
     } =
   let params = Base.List.map ~f:type_function_param params in
   let params =
@@ -2496,21 +2500,23 @@ and type_function
       @ [source_location_with_comments (loc, fuse [Atom "..."; type_function_param argument])]
     | None -> params
   in
-  fuse
-    [
-      option type_parameter tparams;
-      group
-        [
-          new_list (* Calls should not allow a trailing comma *)
-            ~trailing_sep:false
-            ~wrap:(Atom "(", Atom ")")
-            ~sep:(Atom ",")
-            params;
-        ];
-      sep;
-      pretty_space;
-      type_ return;
-    ]
+  layout_node_with_comments_opt loc func_comments
+  @@ fuse
+       [
+         option type_parameter tparams;
+         layout_node_with_comments_opt params_loc params_comments
+         @@ group
+              [
+                new_list (* Calls should not allow a trailing comma *)
+                  ~trailing_sep:false
+                  ~wrap:(Atom "(", Atom ")")
+                  ~sep:(Atom ",")
+                  params;
+              ];
+         sep;
+         pretty_space;
+         type_ return;
+       ]
 
 and type_object_property =
   let open Ast.Type.Object in
@@ -2535,7 +2541,7 @@ and type_object_property =
         (* Functions with no special properties can be rendered as methods *)
         | (Property.Init (loc, Ast.Type.Function func), true, false, false) ->
           source_location_with_comments
-            (loc, fuse [s_static; object_property_key key; type_function ~sep:(Atom ":") func])
+            (loc, fuse [s_static; object_property_key key; type_function ~sep:(Atom ":") loc func])
         (* Normal properties *)
         | (Property.Init t, _, _, _) ->
           fuse
@@ -2556,12 +2562,14 @@ and type_object_property =
         | (Property.Get (loc, func), _, _, _) ->
           source_location_with_comments
             ( loc,
-              fuse [Atom "get"; space; object_property_key key; type_function ~sep:(Atom ":") func]
+              fuse
+                [Atom "get"; space; object_property_key key; type_function ~sep:(Atom ":") loc func]
             )
         | (Property.Set (loc, func), _, _, _) ->
           source_location_with_comments
             ( loc,
-              fuse [Atom "set"; space; object_property_key key; type_function ~sep:(Atom ":") func]
+              fuse
+                [Atom "set"; space; object_property_key key; type_function ~sep:(Atom ":") loc func]
             ) )
   | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
     source_location_with_comments ?comments (loc, fuse [Atom "..."; type_ argument])
@@ -2597,7 +2605,7 @@ and type_object_property =
               fuse [Atom "static"; space]
             else
               Empty );
-            source_location_with_comments (call_loc, type_function ~sep:(Atom ":") func);
+            source_location_with_comments (call_loc, type_function ~sep:(Atom ":") call_loc func);
           ] )
   | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method = _; comments }) ->
     source_location_with_comments
@@ -2713,7 +2721,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.String -> Atom "string"
       | T.Boolean -> Atom "boolean"
       | T.Nullable t -> type_nullable loc t
-      | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) func
+      | T.Function func -> type_function ~sep:(fuse [pretty_space; Atom "=>"]) loc func
       | T.Object obj -> type_object loc obj
       | T.Interface i -> type_interface i
       | T.Array t -> type_array loc t
@@ -2826,7 +2834,7 @@ and declare_function
            ( loc,
              match t with
              | (loc, Ast.Type.Function func) ->
-               source_location_with_comments (loc, type_function ~sep:(Atom ":") func)
+               source_location_with_comments (loc, type_function ~sep:(Atom ":") loc func)
              | _ -> failwith "Invalid DeclareFunction" );
          begin
            match predicate with

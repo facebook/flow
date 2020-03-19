@@ -1806,7 +1806,7 @@ let program
       match (type1, type2) with
       | (NumberLiteral n1, NumberLiteral n2) ->
         Some (diff_if_changed (number_literal_type loc1) n1 n2)
-      | (Function fn1, Function fn2) -> diff_if_changed_ret_opt function_type fn1 fn2
+      | (Function fn1, Function fn2) -> diff_if_changed_ret_opt (function_type loc1) fn1 fn2
       | (Interface i1, Interface i2) -> interface_type i1 i2
       | (Generic g1, Generic g2) -> generic_type g1 g2
       | (Intersection (t0, t1, ts), Intersection (t0', t1', ts'))
@@ -1933,9 +1933,9 @@ let program
     let open Ast.Type.Object.Property in
     match (opvt1, opvt2) with
     | (Init t1, Init t2) -> diff_if_changed type_ t1 t2 |> Base.Option.return
-    | (Get (_loc1, ft1), Get (_loc2, ft2))
-    | (Set (_loc1, ft1), Set (_loc2, ft2)) ->
-      diff_if_changed_ret_opt function_type ft1 ft2
+    | (Get (loc1, ft1), Get (_, ft2))
+    | (Set (loc1, ft1), Set (_, ft2)) ->
+      diff_if_changed_ret_opt (function_type loc1) ft1 ft2
     | _ -> None
   and object_spread_property_type
       (loc : Loc.t)
@@ -2052,20 +2052,23 @@ let program
     let (_loc2, { argument = arg2 }) = frpt2 in
     diff_if_changed_ret_opt function_param_type arg1 arg2
   and function_type
-      (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t) (ft2 : (Loc.t, Loc.t) Ast.Type.Function.t) :
-      node change list option =
+      (loc : Loc.t)
+      (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t)
+      (ft2 : (Loc.t, Loc.t) Ast.Type.Function.t) : node change list option =
     let open Ast.Type.Function in
     let {
-      params = (_params_loc1, { Params.params = params1; rest = rest1 });
+      params = (params_loc, { Params.params = params1; rest = rest1; comments = params_comments1 });
       return = return1;
       tparams = tparams1;
+      comments = func_comments1;
     } =
       ft1
     in
     let {
-      params = (_params_loc2, { Params.params = params2; rest = rest2 });
+      params = (_, { Params.params = params2; rest = rest2; comments = params_comments2 });
       return = return2;
       tparams = tparams2;
+      comments = func_comments2;
     } =
       ft2
     in
@@ -2073,7 +2076,10 @@ let program
     let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
     let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
     let return_diff = diff_if_changed type_ return1 return2 |> Base.Option.return in
-    join_diff_list [tparams_diff; params_diff; rest_diff; return_diff]
+    let func_comments_diff = syntax_opt loc func_comments1 func_comments2 in
+    let params_comments_diff = syntax_opt params_loc params_comments1 params_comments2 in
+    join_diff_list
+      [tparams_diff; params_diff; rest_diff; return_diff; func_comments_diff; params_comments_diff]
   and nullable_type
       (loc : Loc.t)
       (t1 : (Loc.t, Loc.t) Ast.Type.Nullable.t)

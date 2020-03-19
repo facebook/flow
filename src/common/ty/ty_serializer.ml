@@ -135,11 +135,13 @@ and intersection (t0, t1, rest) =
 and function_ f =
   type_ f.fun_return >>= fun return ->
   fun_params f.fun_params f.fun_rest_param >>= fun params ->
-  opt type_params f.fun_type_params >>| fun tparams -> { T.Function.params; return; tparams }
+  opt type_params f.fun_type_params >>| fun tparams ->
+  { T.Function.params; return; tparams; comments = Flow_ast_utils.mk_comments_opt () }
 
 and fun_params params rest_param =
   mapM fun_param params >>= fun params ->
-  opt fun_rest_param rest_param >>| fun rest -> (Loc.none, { T.Function.Params.params; rest })
+  opt fun_rest_param rest_param >>| fun rest ->
+  (Loc.none, { T.Function.Params.params; rest; comments = Flow_ast_utils.mk_comments_opt () })
 
 and fun_param (name, t, { prm_optional }) =
   let name = Base.Option.map ~f:id_from_string name in

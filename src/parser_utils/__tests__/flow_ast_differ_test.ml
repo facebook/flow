@@ -556,8 +556,9 @@ class insert_function_annot_mapper =
               Type.Function
                 {
                   Type.Function.tparams = None;
-                  params = (loc, { Type.Function.Params.params = []; rest = None });
+                  params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
                   return = (loc, Type.Number);
+                  comments = None;
                 } ) )
   end
 
@@ -575,8 +576,9 @@ class insert_import_and_annot_mapper =
               Type.Function
                 {
                   Type.Function.tparams = None;
-                  params = (loc, { Type.Function.Params.params = []; rest = None });
+                  params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
                   return = (loc, Type.Number);
+                  comments = None;
                 } ) )
 
     method! program prog =

@@ -891,8 +891,14 @@ let rec convert cx tparams_map =
         reconstruct_ast t ~id_t:c targs
     end
   | ( loc,
-      Function { Function.params = (params_loc, { Function.Params.params; rest }); return; tparams }
-    ) ->
+      Function
+        {
+          Function.params =
+            (params_loc, { Function.Params.params; rest; comments = params_comments });
+          return;
+          tparams;
+          comments = func_comments;
+        } ) ->
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx ~tparams_map tparams in
     let (rev_params, rev_param_asts) =
       List.fold_left
@@ -960,9 +966,15 @@ let rec convert cx tparams_map =
       Function
         {
           Function.params =
-            (params_loc, { Function.Params.params = List.rev rev_param_asts; rest = rest_param_ast });
+            ( params_loc,
+              {
+                Function.Params.params = List.rev rev_param_asts;
+                rest = rest_param_ast;
+                comments = params_comments;
+              } );
           return = return_ast;
           tparams = tparams_ast;
+          comments = func_comments;
         } )
   | (loc, Object { Object.exact; properties; inexact; comments }) ->
     let exact_by_default = Context.exact_by_default cx in
@@ -1436,8 +1448,10 @@ and mk_func_sig =
     let rest = (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) })) in
     Func_type_params.add_rest rest x
   in
-  let convert_params cx tparams_map (loc, { Params.params; rest }) =
-    let fparams = Func_type_params.empty (fun params rest -> Some (loc, { Params.params; rest })) in
+  let convert_params cx tparams_map (loc, { Params.params; rest; comments }) =
+    let fparams =
+      Func_type_params.empty (fun params rest -> Some (loc, { Params.params; rest; comments }))
+    in
     let fparams = List.fold_left (add_param cx tparams_map) fparams params in
     let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
     let params_ast = Func_type_params.eval cx fparams in
@@ -1461,7 +1475,12 @@ and mk_func_sig =
         return_t;
         knot;
       },
-      { Ast.Type.Function.tparams = tparams_ast; params = params_ast; return = return_ast } )
+      {
+        Ast.Type.Function.tparams = tparams_ast;
+        params = params_ast;
+        return = return_ast;
+        comments = Flow_ast_utils.mk_comments_opt ();
+      } )
 
 and mk_type cx tparams_map reason = function
   | None ->

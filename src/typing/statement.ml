@@ -7915,9 +7915,11 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
           ( func_annot_loc,
             Ast.Type.Function
               {
-                Ast.Type.Function.params = (params_loc, { Ast.Type.Function.Params.params; rest });
+                Ast.Type.Function.params =
+                  (params_loc, { Ast.Type.Function.Params.params; rest; comments = params_comments });
                 Ast.Type.Function.return;
                 Ast.Type.Function.tparams;
+                comments = func_comments;
               } ) ) ->
         let param_type_to_param =
           let open Ast.Type.Function in
@@ -8042,9 +8044,11 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                     Ast.Type.Function
                       {
                         Ast.Type.Function.params =
-                          (params_loc, { Ast.Type.Function.Params.params; rest });
+                          ( params_loc,
+                            { Ast.Type.Function.Params.params; rest; comments = params_comments } );
                         return;
                         tparams;
+                        comments = func_comments;
                       } ) )
               in
               {

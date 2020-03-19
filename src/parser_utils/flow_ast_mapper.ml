@@ -812,18 +812,35 @@ class ['loc] mapper =
 
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in
-      let { params = (params_loc, { Params.params = ps; rest = rpo }); return; tparams } = ft in
+      let {
+        params = (params_loc, { Params.params = ps; rest = rpo; comments = params_comments });
+        return;
+        tparams;
+        comments = func_comments;
+      } =
+        ft
+      in
       let ps' = ListUtils.ident_map this#function_param_type ps in
       let rpo' = map_opt this#function_rest_param_type rpo in
       let return' = this#type_ return in
       let tparams' = map_opt this#type_params tparams in
-      if ps' == ps && rpo' == rpo && return' == return && tparams' == tparams then
+      let func_comments' = this#syntax_opt func_comments in
+      let params_comments' = this#syntax_opt params_comments in
+      if
+        ps' == ps
+        && rpo' == rpo
+        && return' == return
+        && tparams' == tparams
+        && func_comments' == func_comments
+        && params_comments' == params_comments
+      then
         ft
       else
         {
-          params = (params_loc, { Params.params = ps'; rest = rpo' });
+          params = (params_loc, { Params.params = ps'; rest = rpo'; comments = params_comments' });
           return = return';
           tparams = tparams';
+          comments = func_comments';
         }
 
     method label_identifier (ident : ('loc, 'loc) Ast.Identifier.t) = this#identifier ident

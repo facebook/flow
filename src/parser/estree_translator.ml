@@ -1259,9 +1259,17 @@ with type t = Impl.t = struct
     and nullable_type loc { Type.Nullable.argument; comments } =
       node ?comments "NullableTypeAnnotation" loc [("typeAnnotation", _type argument)]
     and function_type
-        (loc, { Type.Function.params = (_, { Type.Function.Params.params; rest }); return; tparams })
-        =
+        ( loc,
+          {
+            Type.Function.params =
+              (_, { Type.Function.Params.params; rest; comments = params_comments });
+            return;
+            tparams;
+            comments = func_comments;
+          } ) =
+      let comments = Flow_ast_utils.merge_comments ~inner:params_comments ~outer:func_comments in
       node
+        ?comments
         "FunctionTypeAnnotation"
         loc
         [

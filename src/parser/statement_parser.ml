@@ -844,7 +844,7 @@ module Statement
     let return = Type._type env in
     let end_loc = fst return in
     let loc = Loc.btwn start_sig_loc end_loc in
-    let annot = (loc, Ast.Type.(Function { Function.params; return; tparams })) in
+    let annot = (loc, Ast.Type.(Function { Function.params; return; tparams; comments = None })) in
     let annot = (fst annot, annot) in
     let predicate = Type.predicate_opt env in
     Eat.semicolon env;
