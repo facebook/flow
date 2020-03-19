@@ -2323,7 +2323,7 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
 and type_param
     ( _,
       {
-        Ast.Type.TypeParam.name = (loc, { Ast.Identifier.name; comments = _ });
+        Ast.Type.TypeParam.name = (loc, { Ast.Identifier.name; comments });
         bound;
         variance = variance_;
         default;
@@ -2331,7 +2331,7 @@ and type_param
   fuse
     [
       option variance variance_;
-      source_location_with_comments (loc, Atom name);
+      source_location_with_comments ?comments (loc, Atom name);
       hint type_annotation bound;
       begin
         match default with

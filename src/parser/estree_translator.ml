@@ -1466,12 +1466,13 @@ with type t = Impl.t = struct
     and type_param
         ( loc,
           {
-            Type.TypeParam.name = (_, { Identifier.name; comments = _ });
+            Type.TypeParam.name = (_, { Identifier.name; comments });
             bound;
             variance = tp_var;
             default;
           } ) =
       node
+        ?comments
         "TypeParameter"
         loc
         [

@@ -1,6 +1,6 @@
 type Test1 = /* 1.1 L generic */ Foo /* 1.2 T generic */ . /* 1.3 L generic */ bar /* 1.4 T generic */;
 
-type Test2</* 2.1 L variance */+T> = T;
+type Test2</* 2.1 L variance */ + /* 2.2 L tparam */ T /* 2.3 T tparam */ : /* 2.4 L bound */ Bound /* 2.5 T bound */ = /* 2.5 L default */ Default /* 2.6 T default */ > = T;
 
 type Test3 = /* 3.1 L nullable */ ? /* 3.2 L generic */ T /* 3.3 T generic */;
 

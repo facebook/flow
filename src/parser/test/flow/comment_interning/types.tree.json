@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":76}},
-  "range":[0,482],
+  "range":[0,617],
   "body":[
     {
       "type":"TypeAlias",
@@ -78,8 +78,8 @@
     },
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":39}},
-      "range":[105,144],
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":174}},
+      "range":[105,279],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":10}},
@@ -90,15 +90,65 @@
       },
       "typeParameters":{
         "type":"TypeParameterDeclaration",
-        "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":34}},
-        "range":[115,139],
+        "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":169}},
+        "range":[115,274],
         "params":[
           {
             "type":"TypeParameter",
-            "loc":{"source":null,"start":{"line":3,"column":31},"end":{"line":3,"column":33}},
-            "range":[136,138],
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":55},"end":{"line":3,"column":73}},
+                "range":[160,178],
+                "value":" 2.3 T tparam "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":34},"end":{"line":3,"column":52}},
+                "range":[139,157],
+                "value":" 2.2 L tparam "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":3,"column":32},"end":{"line":3,"column":147}},
+            "range":[137,252],
             "name":"T",
-            "bound":null,
+            "bound":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":74},"end":{"line":3,"column":99}},
+              "range":[179,204],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":3,"column":94},"end":{"line":3,"column":99}},
+                "range":[199,204],
+                "id":{
+                  "type":"Identifier",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":3,"column":100},"end":{"line":3,"column":117}},
+                      "range":[205,222],
+                      "value":" 2.5 T bound "
+                    }
+                  ],
+                  "leadingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":3,"column":76},"end":{"line":3,"column":93}},
+                      "range":[181,198],
+                      "value":" 2.4 L bound "
+                    }
+                  ],
+                  "loc":{"source":null,"start":{"line":3,"column":94},"end":{"line":3,"column":99}},
+                  "range":[199,204],
+                  "name":"Bound",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
             "variance":{
               "type":"Variance",
               "leadingComments":[
@@ -109,22 +159,51 @@
                   "value":" 2.1 L variance "
                 }
               ],
-              "loc":{"source":null,"start":{"line":3,"column":31},"end":{"line":3,"column":32}},
-              "range":[136,137],
+              "loc":{"source":null,"start":{"line":3,"column":32},"end":{"line":3,"column":33}},
+              "range":[137,138],
               "kind":"plus"
             },
-            "default":null
+            "default":{
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":140},"end":{"line":3,"column":147}},
+              "range":[245,252],
+              "id":{
+                "type":"Identifier",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":3,"column":148},"end":{"line":3,"column":167}},
+                    "range":[253,272],
+                    "value":" 2.6 T default "
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":3,"column":120},"end":{"line":3,"column":139}},
+                    "range":[225,244],
+                    "value":" 2.5 L default "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":3,"column":140},"end":{"line":3,"column":147}},
+                "range":[245,252],
+                "name":"Default",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
+            }
           }
         ]
       },
       "right":{
         "type":"GenericTypeAnnotation",
-        "loc":{"source":null,"start":{"line":3,"column":37},"end":{"line":3,"column":38}},
-        "range":[142,143],
+        "loc":{"source":null,"start":{"line":3,"column":172},"end":{"line":3,"column":173}},
+        "range":[277,278],
         "id":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":3,"column":37},"end":{"line":3,"column":38}},
-          "range":[142,143],
+          "loc":{"source":null,"start":{"line":3,"column":172},"end":{"line":3,"column":173}},
+          "range":[277,278],
           "name":"T",
           "typeAnnotation":null,
           "optional":false
@@ -135,11 +214,11 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":78}},
-      "range":[146,224],
+      "range":[281,359],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":5,"column":5},"end":{"line":5,"column":10}},
-        "range":[151,156],
+        "range":[286,291],
         "name":"Test3",
         "typeAnnotation":null,
         "optional":false
@@ -151,23 +230,23 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":33}},
-            "range":[159,179],
+            "range":[294,314],
             "value":" 3.1 L nullable "
           }
         ],
         "loc":{"source":null,"start":{"line":5,"column":34},"end":{"line":5,"column":57}},
-        "range":[180,203],
+        "range":[315,338],
         "typeAnnotation":{
           "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":5,"column":56},"end":{"line":5,"column":57}},
-          "range":[202,203],
+          "range":[337,338],
           "id":{
             "type":"Identifier",
             "trailingComments":[
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":5,"column":58},"end":{"line":5,"column":77}},
-                "range":[204,223],
+                "range":[339,358],
                 "value":" 3.3 T generic "
               }
             ],
@@ -175,12 +254,12 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":5,"column":36},"end":{"line":5,"column":55}},
-                "range":[182,201],
+                "range":[317,336],
                 "value":" 3.2 L generic "
               }
             ],
             "loc":{"source":null,"start":{"line":5,"column":56},"end":{"line":5,"column":57}},
-            "range":[202,203],
+            "range":[337,338],
             "name":"T",
             "typeAnnotation":null,
             "optional":false
@@ -192,11 +271,11 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":81}},
-      "range":[226,307],
+      "range":[361,442],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":7,"column":5},"end":{"line":7,"column":10}},
-        "range":[231,236],
+        "range":[366,371],
         "name":"Test4",
         "typeAnnotation":null,
         "optional":false
@@ -208,23 +287,23 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":31}},
-            "range":[239,257],
+            "range":[374,392],
             "value":" 4.1 L typeof "
           }
         ],
         "loc":{"source":null,"start":{"line":7,"column":32},"end":{"line":7,"column":60}},
-        "range":[258,286],
+        "range":[393,421],
         "argument":{
           "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":7,"column":59},"end":{"line":7,"column":60}},
-          "range":[285,286],
+          "range":[420,421],
           "id":{
             "type":"Identifier",
             "trailingComments":[
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":7,"column":61},"end":{"line":7,"column":80}},
-                "range":[287,306],
+                "range":[422,441],
                 "value":" 4.3 T generic "
               }
             ],
@@ -232,12 +311,12 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":7,"column":39},"end":{"line":7,"column":58}},
-                "range":[265,284],
+                "range":[400,419],
                 "value":" 4.2 L generic "
               }
             ],
             "loc":{"source":null,"start":{"line":7,"column":59},"end":{"line":7,"column":60}},
-            "range":[285,286],
+            "range":[420,421],
             "name":"T",
             "typeAnnotation":null,
             "optional":false
@@ -249,11 +328,11 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":95}},
-      "range":[309,404],
+      "range":[444,539],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":9,"column":5},"end":{"line":9,"column":10}},
-        "range":[314,319],
+        "range":[449,454],
         "name":"Test5",
         "typeAnnotation":null,
         "optional":false
@@ -265,7 +344,7 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":9,"column":77},"end":{"line":9,"column":94}},
-            "range":[386,403],
+            "range":[521,538],
             "value":" 5.4 T tuple "
           }
         ],
@@ -273,24 +352,24 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":9,"column":13},"end":{"line":9,"column":30}},
-            "range":[322,339],
+            "range":[457,474],
             "value":" 5.1 L tuple "
           }
         ],
         "loc":{"source":null,"start":{"line":9,"column":31},"end":{"line":9,"column":76}},
-        "range":[340,385],
+        "range":[475,520],
         "types":[
           {
             "type":"GenericTypeAnnotation",
             "loc":{"source":null,"start":{"line":9,"column":53},"end":{"line":9,"column":54}},
-            "range":[362,363],
+            "range":[497,498],
             "id":{
               "type":"Identifier",
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":9,"column":55},"end":{"line":9,"column":74}},
-                  "range":[364,383],
+                  "range":[499,518],
                   "value":" 5.3 T generic "
                 }
               ],
@@ -298,12 +377,12 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":9,"column":33},"end":{"line":9,"column":52}},
-                  "range":[342,361],
+                  "range":[477,496],
                   "value":" 5.2 L generic "
                 }
               ],
               "loc":{"source":null,"start":{"line":9,"column":53},"end":{"line":9,"column":54}},
-              "range":[362,363],
+              "range":[497,498],
               "name":"T",
               "typeAnnotation":null,
               "optional":false
@@ -316,11 +395,11 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":76}},
-      "range":[406,482],
+      "range":[541,617],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":11,"column":5},"end":{"line":11,"column":10}},
-        "range":[411,416],
+        "range":[546,551],
         "name":"Test6",
         "typeAnnotation":null,
         "optional":false
@@ -332,23 +411,23 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":11,"column":58},"end":{"line":11,"column":75}},
-            "range":[464,481],
+            "range":[599,616],
             "value":" 6.3 T array "
           }
         ],
         "loc":{"source":null,"start":{"line":11,"column":33},"end":{"line":11,"column":57}},
-        "range":[439,463],
+        "range":[574,598],
         "elementType":{
           "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":11,"column":33},"end":{"line":11,"column":34}},
-          "range":[439,440],
+          "range":[574,575],
           "id":{
             "type":"Identifier",
             "trailingComments":[
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":11,"column":35},"end":{"line":11,"column":54}},
-                "range":[441,460],
+                "range":[576,595],
                 "value":" 6.2 T generic "
               }
             ],
@@ -356,12 +435,12 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":32}},
-                "range":[419,438],
+                "range":[554,573],
                 "value":" 6.1 L generic "
               }
             ],
             "loc":{"source":null,"start":{"line":11,"column":33},"end":{"line":11,"column":34}},
-            "range":[439,440],
+            "range":[574,575],
             "name":"T",
             "typeAnnotation":null,
             "optional":false
@@ -404,80 +483,116 @@
     },
     {
       "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":34},"end":{"line":3,"column":52}},
+      "range":[139,157],
+      "value":" 2.2 L tparam "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":55},"end":{"line":3,"column":73}},
+      "range":[160,178],
+      "value":" 2.3 T tparam "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":76},"end":{"line":3,"column":93}},
+      "range":[181,198],
+      "value":" 2.4 L bound "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":100},"end":{"line":3,"column":117}},
+      "range":[205,222],
+      "value":" 2.5 T bound "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":120},"end":{"line":3,"column":139}},
+      "range":[225,244],
+      "value":" 2.5 L default "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":148},"end":{"line":3,"column":167}},
+      "range":[253,272],
+      "value":" 2.6 T default "
+    },
+    {
+      "type":"Block",
       "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":33}},
-      "range":[159,179],
+      "range":[294,314],
       "value":" 3.1 L nullable "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":5,"column":36},"end":{"line":5,"column":55}},
-      "range":[182,201],
+      "range":[317,336],
       "value":" 3.2 L generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":5,"column":58},"end":{"line":5,"column":77}},
-      "range":[204,223],
+      "range":[339,358],
       "value":" 3.3 T generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":31}},
-      "range":[239,257],
+      "range":[374,392],
       "value":" 4.1 L typeof "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":7,"column":39},"end":{"line":7,"column":58}},
-      "range":[265,284],
+      "range":[400,419],
       "value":" 4.2 L generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":7,"column":61},"end":{"line":7,"column":80}},
-      "range":[287,306],
+      "range":[422,441],
       "value":" 4.3 T generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":9,"column":13},"end":{"line":9,"column":30}},
-      "range":[322,339],
+      "range":[457,474],
       "value":" 5.1 L tuple "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":9,"column":33},"end":{"line":9,"column":52}},
-      "range":[342,361],
+      "range":[477,496],
       "value":" 5.2 L generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":9,"column":55},"end":{"line":9,"column":74}},
-      "range":[364,383],
+      "range":[499,518],
       "value":" 5.3 T generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":9,"column":77},"end":{"line":9,"column":94}},
-      "range":[386,403],
+      "range":[521,538],
       "value":" 5.4 T tuple "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":32}},
-      "range":[419,438],
+      "range":[554,573],
       "value":" 6.1 L generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":11,"column":35},"end":{"line":11,"column":54}},
-      "range":[441,460],
+      "range":[576,595],
       "value":" 6.2 T generic "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":11,"column":58},"end":{"line":11,"column":75}},
-      "range":[464,481],
+      "range":[599,616],
       "value":" 6.3 T array "
     }
   ]
