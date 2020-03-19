@@ -47,8 +47,8 @@ References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:313:15
-   313|     instance: HTMLButtonElement,
+   <BUILTINS>/react-dom.js:207:15
+   207|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:246:6
    246|   ): {|current: null | T|};
@@ -75,8 +75,8 @@ References:
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:313:15
-   313|     instance: HTMLButtonElement,
+   <BUILTINS>/react-dom.js:207:15
+   207|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [4]
 
 

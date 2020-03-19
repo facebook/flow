@@ -4,19 +4,19 @@ Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [
 argument of property `onKeyDown`.
 
    concretize.js:10:16
-    10| <C1 onKeyDown={_onKeyDown} />;
-                       ^^^^^^^^^^
+   10| <C1 onKeyDown={_onKeyDown} />;
+                      ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:181:21
-   181|   +T: EventTarget = EventTarget,
-                            ^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:75:21
+   75|   +T: EventTarget = EventTarget,
+                           ^^^^^^^^^^^ [1]
    concretize.js:9:47
-     9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
-                                                      ^^ [2]
-   <BUILTINS>/react-dom.js:181:4
-   181|   +T: EventTarget = EventTarget,
-           ^ [3]
+    9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
+                                                     ^^ [2]
+   <BUILTINS>/react-dom.js:75:4
+   75|   +T: EventTarget = EventTarget,
+          ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- concretize.js:10:16
@@ -25,16 +25,16 @@ Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [
 argument of property `onKeyDown`.
 
    concretize.js:10:16
-    10| <C1 onKeyDown={_onKeyDown} />;
-                       ^^^^^^^^^^
+   10| <C1 onKeyDown={_onKeyDown} />;
+                      ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:181:7
-   181|   +T: EventTarget = EventTarget,
-              ^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:75:7
+   75|   +T: EventTarget = EventTarget,
+             ^^^^^^^^^^^ [1]
    concretize.js:9:47
-     9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
-                                                      ^^ [2]
+    9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
+                                                     ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2

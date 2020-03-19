@@ -1,7 +1,6 @@
 // @flow
 
 import React from "react";
-import ReactDOM from "react-dom";
 
 function Clock(props) {
   return (
@@ -11,15 +10,3 @@ function Clock(props) {
     </div>
   );
 }
-
-function tick() {
-  const element = document.getElementById('root');
-  if (element) {
-    ReactDOM.render(
-      <Clock date={new Date()} />,
-      element
-    );
-  }
-}
-
-setInterval(tick, 1000);

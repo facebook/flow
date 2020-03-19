@@ -214,9 +214,8 @@ react-0.js
 // @flow
 
 import React from "react";
-import ReactDOM from "react-dom";
 
-function Clock(props: any): any {
+function Clock(props): any {
   return (
     <div>
       <h1>Hello, world!</h1>
@@ -224,18 +223,6 @@ function Clock(props: any): any {
     </div>
   );
 }
-
-function tick(): void {
-  const element = document.getElementById('root');
-  if (element) {
-    ReactDOM.render(
-      <Clock date={new Date()} />,
-      element
-    );
-  }
-}
-
-setInterval(tick, 1000);
 spread.js
 // @flow
 

@@ -269,11 +269,10 @@ function foo<T: mixed>(x: T) {
   }
 }
 No errors!
-react-0.js 6 21
+react-0.js 5 21
 // @flow
 
 import React from "react";
-import ReactDOM from "react-dom";
 
 function Clock(props: {date: Date}) {
   return (
@@ -283,18 +282,7 @@ function Clock(props: {date: Date}) {
     </div>
   );
 }
-
-function tick() {
-  const element = document.getElementById('root');
-  if (element) {
-    ReactDOM.render(
-      <Clock date={new Date()} />,
-      element
-    );
-  }
-}
-
-setInterval(tick, 1000);
+<Clock date ={new Date()} />;
 No errors!
 string-literal.js 11 14
 // @flow

@@ -908,53 +908,35 @@ References:
         ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- props4.js:9:11
+Error --------------------------------------------------------------------------------------------------- props4.js:8:11
 
 Cannot create `JDiv` element because number [1] is incompatible with string [2] in property `id`.
 
-   props4.js:9:11
-   9| <JDiv id={42} />;
+   props4.js:8:11
+   8| <JDiv id={42} />;
                 ^^ [1]
 
 References:
-   props4.js:6:41
-   6| class JDiv extends React.Component<{id: string}> {}
+   props4.js:5:41
+   5| class JDiv extends React.Component<{id: string}> {}
                                               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- props4.js:18:4
+Error --------------------------------------------------------------------------------------------------- props4.js:16:2
 
 Cannot create `Example` element because property `bar` is missing in props [1] but exists in object type [2].
 
-   props4.js:18:4
-   18|   <Example foo="foo" />,
-          ^^^^^^^
+   props4.js:16:2
+   16| <Example foo="foo" />;
+        ^^^^^^^
 
 References:
-   props4.js:18:3
-   18|   <Example foo="foo" />,
-         ^^^^^^^^^^^^^^^^^^^^^ [1]
-   props4.js:11:39
-   11| class Example extends React.Component<{ bar: string }> {
+   props4.js:16:1
+   16| <Example foo="foo" />;
+       ^^^^^^^^^^^^^^^^^^^^^ [1]
+   props4.js:10:39
+   10| class Example extends React.Component<{ bar: string }> {
                                              ^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- props4.js:19:3
-
-Cannot call `ReactDOM.render` with `document.body` bound to `container` because null [1] is incompatible with
-`Element` [2].
-
-   props4.js:19:3
-    19|   document.body
-          ^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/dom.js:740:27
-   740|   body: HTMLBodyElement | null;
-                                  ^^^^ [1]
-   <BUILTINS>/react-dom.js:18:16
-    18|     container: Element,
-                       ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- state.js:19:33
@@ -1134,7 +1116,7 @@ References:
 
 
 
-Found 67 errors
+Found 66 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

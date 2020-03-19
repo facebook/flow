@@ -1,0 +1,46 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:8:27
+
+Cannot assign `new NotSyntheticEvent()` to `x` because `NotSyntheticEvent` [1] is incompatible with
+`SyntheticEvent` [2].
+
+   test.js:8:27
+   8| var x: SyntheticEvent<> = new NotSyntheticEvent();
+                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:8:8
+   8| var x: SyntheticEvent<> = new NotSyntheticEvent();
+             ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:17
+
+Cannot call `ReactDOM.render` with `null` bound to `element` because inexact null [1] is incompatible with exact
+`React.Element` [2].
+
+   test.js:11:17
+   11| ReactDOM.render(null, null); // Error, null is incompatible
+                       ^^^^ [1]
+
+References:
+   flow-typed/npm/react-dom_v16.x.x.js:7:14
+    7|     element: React$Element<ElementType>,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:23
+
+Cannot call `ReactDOM.render` with `null` bound to `container` because null [1] is incompatible with `Element` [2].
+
+   test.js:11:23
+   11| ReactDOM.render(null, null); // Error, null is incompatible
+                             ^^^^ [1]
+
+References:
+   flow-typed/npm/react-dom_v16.x.x.js:8:16
+    8|     container: Element,
+                      ^^^^^^^ [2]
+
+
+
+Found 3 errors

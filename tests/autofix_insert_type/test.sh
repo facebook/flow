@@ -48,7 +48,7 @@ do_file "object-1.js" 7 8
 do_file "object-2.js" 6 6
 do_file "poly-0.js" 3 22 --strategy=specialize
 do_file "poly-0.js" 3 15
-do_file "react-0.js" 6 21
+do_file "react-0.js" 5 21
 do_file "string-literal.js" 11 14
 do_file "type-utils.js" 6 3
 do_file "union-0.js" 3 15
