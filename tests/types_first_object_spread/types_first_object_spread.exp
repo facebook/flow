@@ -24,9 +24,9 @@ Cannot get `b1.x` because property `x` is missing in object literal [1].
            ^
 
 References:
-   test1.js:12:18
-   12| module.exports = b;
-                        ^ [1]
+   test1.js:6:11
+    6| const b = { z: 0, ...a };
+                 ^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- driver.js:11:2
@@ -55,9 +55,9 @@ Cannot get `b1.y` because property `y` is missing in object literal [1].
            ^
 
 References:
-   test1.js:12:18
-   12| module.exports = b;
-                        ^ [1]
+   test1.js:6:11
+    6| const b = { z: 0, ...a };
+                 ^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- driver.js:12:2

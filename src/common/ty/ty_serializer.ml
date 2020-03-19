@@ -99,6 +99,7 @@ let rec type_ t =
       (T.Typeof
          {
            T.Typeof.argument = mk_generic_type id None;
+           internal = false;
            comments = Flow_ast_utils.mk_comments_opt ();
          })
   | TypeOf _

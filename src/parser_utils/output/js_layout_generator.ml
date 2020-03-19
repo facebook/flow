@@ -2701,7 +2701,7 @@ and type_generic { Ast.Type.Generic.id; targs } =
 and type_nullable loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens argument])
 
-and type_typeof loc { Ast.Type.Typeof.argument; comments } =
+and type_typeof loc { Ast.Type.Typeof.argument; internal = _; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "typeof"; space; type_ argument])
 
 and type_tuple loc { Ast.Type.Tuple.types; comments } =

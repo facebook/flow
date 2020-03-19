@@ -229,6 +229,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           Type.Typeof
             {
               Type.Typeof.argument = primary env;
+              internal = false;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
         env

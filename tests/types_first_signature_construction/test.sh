@@ -15,5 +15,5 @@ assert_one() {
   assert_exit_on_line "${BASH_LINENO[0]}" "1" "$@"
 }
 printf "==== DIFF BETWEEN CLASSIC AND TYPES-FIRST =====\n"
-assert_one diff classic-errors.log types-first-errors.log > diff.log
+assert_ok diff classic-errors.log types-first-errors.log > diff.log
 cat diff.log

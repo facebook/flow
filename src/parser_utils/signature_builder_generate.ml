@@ -402,6 +402,7 @@ module T = struct
             Ast.Type.Typeof.argument =
               type_of_generic
                 (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None });
+            internal = true;
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
@@ -437,6 +438,7 @@ module T = struct
                       Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
                     targs = None;
                   } );
+            internal = true;
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | (loc, ObjectDestruct (annot_or_init, prop)) ->
@@ -469,6 +471,7 @@ module T = struct
                           } );
                     targs = None;
                   } );
+            internal = true;
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | (loc, FixMe) -> FixMe.mk_type loc

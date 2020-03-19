@@ -1030,13 +1030,13 @@ class ['loc] mapper =
 
     method typeof_type (t : ('loc, 'loc) Ast.Type.Typeof.t) =
       let open Ast.Type.Typeof in
-      let { argument; comments } = t in
+      let { argument; internal; comments } = t in
       let argument' = this#type_ argument in
       let comments' = this#syntax_opt comments in
       if argument == argument' && comments == comments' then
         t
       else
-        { argument = argument'; comments = comments' }
+        { argument = argument'; internal; comments = comments' }
 
     method tuple_type (t : ('loc, 'loc) Ast.Type.Tuple.t) =
       let open Ast.Type.Tuple in

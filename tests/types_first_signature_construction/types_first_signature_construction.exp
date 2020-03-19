@@ -172,11 +172,3 @@ References:
 
 Found 11 errors
 ==== DIFF BETWEEN CLASSIC AND TYPES-FIRST =====
-167,169c167,169
-<    file5.js:3:8
-<     3| var f: number = 1;
-<               ^^^^^^ [1]
----
->    file5.js:5:18
->     5| module.exports = f;
->                         ^ [1]

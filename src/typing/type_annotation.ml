@@ -182,7 +182,7 @@ let rec convert cx tparams_map =
     let rep = InterRep.make t0 t1 ts in
     ( (loc, IntersectionT (mk_annot_reason RIntersectionType loc, rep)),
       Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments } )
-  | (loc, Typeof { Typeof.argument = x; comments }) as t_ast ->
+  | (loc, Typeof { Typeof.argument = x; internal; comments }) as t_ast ->
     begin
       match x with
       | (q_loc, Generic { Generic.id = qualification; targs = None }) ->
@@ -191,11 +191,12 @@ let rec convert cx tparams_map =
         in
         let desc = RTypeof (qualified_name qualification) in
         let reason = mk_reason desc loc in
-        ( (loc, Flow.mk_typeof_annotation cx reason valtype),
+        ( (loc, Flow.mk_typeof_annotation ~internal cx reason valtype),
           Typeof
             {
               Typeof.argument =
                 ((q_loc, valtype), Generic { Generic.id = qualification_ast; targs = None });
+              internal;
               comments;
             } )
       | (q_loc, _) -> error_type cx loc (Error_message.EUnexpectedTypeof q_loc) t_ast

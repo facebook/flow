@@ -152,7 +152,7 @@ module Eval (Env : EvalEnv) = struct
     | (_, Function ft) -> function_type tps ft
     | (_, Object ot) -> object_type tps ot
     | (loc, Generic tr) -> type_ref tps (loc, tr)
-    | (_, Typeof { Typeof.argument = v; comments = _ }) ->
+    | (_, Typeof { Typeof.argument = v; internal = _; comments = _ }) ->
       begin
         match v with
         | (loc, Ast.Type.Generic vr) -> value_ref tps (loc, vr)

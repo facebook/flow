@@ -20,13 +20,13 @@ Error --------------------------------------------------------------------------
 Cannot get `foo.other` because property `other` is missing in statics of function type [1].
 
    b.js:9:6
-    9| (foo.other: number);
-            ^^^^^
+   9| (foo.other: number);
+           ^^^^^
 
 References:
-   a.js:25:20
-   25| module.exports = { foo, bar, FooComponent, BarComponent };
-                          ^^^ [1]
+   a.js:3:1
+   3| function foo() {}
+      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:13:2
@@ -55,9 +55,9 @@ Cannot get `bar.other` because property `other` is missing in statics of functio
             ^^^^^
 
 References:
-   a.js:25:25
-   25| module.exports = { foo, bar, FooComponent, BarComponent };
-                               ^^^ [1]
+   a.js:6:1
+    6| const bar = () => {};
+       ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:17:2

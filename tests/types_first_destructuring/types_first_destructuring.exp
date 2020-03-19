@@ -7,9 +7,9 @@ Cannot cast `a` to string because number [1] is incompatible with string [2].
        ^
 
 References:
-   destr.js:4:20
-   4| module.exports = { a, b: xb };
-                         ^ [1]
+   destr.js:3:24
+   3| var { a, b: xb }: { a: number, b: number } = { a: 0, b: 0 };
+                             ^^^^^^ [1]
    test.js:5:5
    5| (a: string);
           ^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `b` to string because number [1] is incompatible with string [2].
        ^
 
 References:
-   destr.js:4:26
-   4| module.exports = { a, b: xb };
-                               ^^ [1]
+   destr.js:3:35
+   3| var { a, b: xb }: { a: number, b: number } = { a: 0, b: 0 };
+                                        ^^^^^^ [1]
    test.js:7:5
    7| (b: string);
           ^^^^^^ [2]
