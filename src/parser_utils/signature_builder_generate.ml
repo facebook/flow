@@ -161,6 +161,7 @@ module T = struct
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "$FlowFixMe"));
             targs = None;
+            comments = Flow_ast_utils.mk_comments_opt ();
           } )
 
     let mk_little_annotation loc = TYPE (mk_type loc)
@@ -181,6 +182,7 @@ module T = struct
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "$TEMPORARY$Super$FlowFixMe"));
             targs = None;
+            comments = Flow_ast_utils.mk_comments_opt ();
           } )
 
     let mk_decl loc = VariableDecl (mk_little_annotation loc)
@@ -354,6 +356,7 @@ module T = struct
           Ast.Type.Generic.id =
             Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
           targs = Some (loc, [(loc, t)]);
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
   let rec type_of_expr_type outlined = function
@@ -401,7 +404,12 @@ module T = struct
           {
             Ast.Type.Typeof.argument =
               type_of_generic
-                (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None });
+                ( loc,
+                  {
+                    Ast.Type.Generic.id = generic_id_of_reference reference;
+                    targs = None;
+                    comments = Flow_ast_utils.mk_comments_opt ();
+                  } );
             internal = true;
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
@@ -420,6 +428,7 @@ module T = struct
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "Promise"));
             targs = Some (loc, [type_of_expr_type outlined t]);
+            comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | (loc, Null) -> (loc, Ast.Type.Null (Flow_ast_utils.mk_comments_opt ()))
     | (_loc, JSXLiteral g) -> type_of_generic g
@@ -437,6 +446,7 @@ module T = struct
                     Ast.Type.Generic.id =
                       Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
                     targs = None;
+                    comments = Flow_ast_utils.mk_comments_opt ();
                   } );
             internal = true;
             comments = Flow_ast_utils.mk_comments_opt ();
@@ -470,6 +480,7 @@ module T = struct
                             id = Flow_ast_utils.ident_of_source prop;
                           } );
                     targs = None;
+                    comments = Flow_ast_utils.mk_comments_opt ();
                   } );
             internal = true;
             comments = Flow_ast_utils.mk_comments_opt ();
@@ -789,7 +800,12 @@ module T = struct
           Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (decl_loc, name))
         in
         ( decl_loc,
-          Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (decl_loc, [annot; assign]) } )
+          Ast.Type.Generic
+            {
+              Ast.Type.Generic.id;
+              targs = Some (decl_loc, [annot; assign]);
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } )
       in
       ( decl_loc,
         Ast.Statement.DeclareVariable
@@ -1253,6 +1269,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                     Ast.Type.Generic.Identifier.Unqualified
                       (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
                   targs = None;
+                  comments = Flow_ast_utils.mk_comments_opt ();
                 } ) )
         | _ -> T.FixMe.mk_expr_type loc
       end
@@ -1524,6 +1541,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                   {
                     Ast.Type.Generic.id = T.generic_id_of_reference reference;
                     targs = type_args super_targs;
+                    comments = Flow_ast_utils.mk_comments_opt ();
                   } )
             | None -> T.FixMe.mk_extends (fst expr)
           end
@@ -1770,7 +1788,12 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               (Flow_ast_utils.ident_of_source (mod_exp_loc, name))
           in
           ( mod_exp_loc,
-            Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (mod_exp_loc, [annot; assign]) } )
+            Ast.Type.Generic
+              {
+                Ast.Type.Generic.id;
+                targs = Some (mod_exp_loc, [annot; assign]);
+                comments = Flow_ast_utils.mk_comments_opt ();
+              } )
         in
         (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, t))
     in

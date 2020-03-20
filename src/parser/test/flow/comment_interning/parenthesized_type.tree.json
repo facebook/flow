@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":49,"column":74}},
-  "range":[0,1767],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":51,"column":65}},
+  "range":[0,1834],
   "body":[
     {
       "type":"TypeAlias",
@@ -988,6 +988,50 @@
         "value":true,
         "raw":"true"
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":51,"column":0},"end":{"line":51,"column":65}},
+      "range":[1769,1834],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":51,"column":5},"end":{"line":51,"column":11}},
+        "range":[1774,1780],
+        "name":"Test26",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"GenericTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":51,"column":42},"end":{"line":51,"column":64}},
+            "range":[1811,1833],
+            "value":" Trailing generic "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":51,"column":14},"end":{"line":51,"column":35}},
+            "range":[1783,1804],
+            "value":" Leading generic "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":51,"column":37},"end":{"line":51,"column":40}},
+        "range":[1806,1809],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":51,"column":37},"end":{"line":51,"column":40}},
+          "range":[1806,1809],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeParameters":null
+      }
     }
   ],
   "comments":[
@@ -1302,6 +1346,18 @@
       "loc":{"source":null,"start":{"line":49,"column":47},"end":{"line":49,"column":73}},
       "range":[1740,1766],
       "value":" Trailing boolean lit "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":51,"column":14},"end":{"line":51,"column":35}},
+      "range":[1783,1804],
+      "value":" Leading generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":51,"column":42},"end":{"line":51,"column":64}},
+      "range":[1811,1833],
+      "value":" Trailing generic "
     }
   ]
 }

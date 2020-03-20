@@ -974,13 +974,14 @@ class ['loc] mapper =
 
     method generic_type _loc (gt : ('loc, 'loc) Ast.Type.Generic.t) =
       let open Ast.Type.Generic in
-      let { id; targs } = gt in
+      let { id; targs; comments } = gt in
       let id' = this#generic_identifier_type id in
       let targs' = map_opt this#type_args targs in
-      if id' == id && targs' == targs then
+      let comments' = this#syntax_opt comments in
+      if id' == id && targs' == targs && comments' == comments then
         gt
       else
-        { id = id'; targs = targs' }
+        { id = id'; targs = targs'; comments = comments' }
 
     method string_literal_type _loc (lit : 'loc Ast.StringLiteral.t) =
       let open Ast.StringLiteral in

@@ -47,3 +47,5 @@ type Test23 = /* Leading number lit */ (1) /* Trailing number lit */;
 type Test24 = /* Leading bigint lit */ (1n) /* Trailing bigint lit */;
 
 type Test25 = /* Leading boolean lit */ (true) /* Trailing boolean lit */;
+
+type Test26 = /* Leading generic */ (Foo) /* Trailing generic */;

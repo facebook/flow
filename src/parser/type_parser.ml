@@ -1130,7 +1130,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let id = (fst id, Type.Generic.Identifier.Unqualified id) in
           let (_id_loc, id) = identifier env id in
           let targs = type_args env in
-          { Type.Generic.id; targs })
+          let trailing =
+            match targs with
+            | None -> []
+            | Some _ -> Peek.comments env
+          in
+          { Type.Generic.id; targs; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
         env
 
   and generic_type_with_identifier env id =
@@ -1172,6 +1177,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Interface { t with Interface.comments = merge_comments comments }
       | Array ({ Array.comments; _ } as t) ->
         Array { t with Array.comments = merge_comments comments }
+      | Generic ({ Generic.comments; _ } as t) ->
+        Generic { t with Generic.comments = merge_comments comments }
       | Union ({ Union.comments; _ } as t) ->
         Union { t with Union.comments = merge_comments comments }
       | Intersection ({ Intersection.comments; _ } as t) ->
@@ -1187,8 +1194,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | BigIntLiteral ({ BigIntLiteral.comments; _ } as t) ->
         BigIntLiteral { t with BigIntLiteral.comments = merge_comments comments }
       | BooleanLiteral ({ BooleanLiteral.comments; _ } as t) ->
-        BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments }
-      | _ -> t )
+        BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments } )
 
   let predicate =
     with_loc (fun env ->

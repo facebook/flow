@@ -1021,13 +1021,13 @@ with type t = Impl.t = struct
           ("body", object_type ~include_inexact:false body);
           ("extends", array_of_list interface_extends extends);
         ]
-    and interface_extends (loc, { Type.Generic.id; targs }) =
+    and interface_extends (loc, { Type.Generic.id; targs; comments }) =
       let id =
         match id with
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
-      node "InterfaceExtends" loc [("id", id); ("typeParameters", option type_args targs)]
+      node ?comments "InterfaceExtends" loc [("id", id); ("typeParameters", option type_args targs)]
     and pattern =
       Pattern.(
         function
@@ -1426,7 +1426,7 @@ with type t = Impl.t = struct
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
       node "QualifiedTypeIdentifier" loc [("qualification", qualification); ("id", identifier id)]
-    and generic_type ?comments (loc, { Type.Generic.id; targs }) =
+    and generic_type (loc, { Type.Generic.id; targs; comments }) =
       let id =
         match id with
         | Type.Generic.Identifier.Unqualified id -> identifier id
@@ -1511,12 +1511,12 @@ with type t = Impl.t = struct
       | Expression.CallTypeArg.Explicit t -> _type t
       | Expression.CallTypeArg.Implicit (loc, { Expression.CallTypeArg.Implicit.comments }) ->
         generic_type
-          ?comments
           ( loc,
             {
               Type.Generic.id =
                 Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
               targs = None;
+              comments;
             } )
     and jsx_element
         (loc, { JSX.openingElement; closingElement; children = (_loc, children); comments }) =

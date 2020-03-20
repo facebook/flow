@@ -2683,11 +2683,11 @@ and interface_extends = function
         fuse_list
           ~sep:(Atom ",")
           (List.map
-             (fun (loc, generic) -> source_location_with_comments (loc, type_generic generic))
+             (fun (loc, generic) -> source_location_with_comments (loc, type_generic loc generic))
              xs);
       ]
 
-and type_generic { Ast.Type.Generic.id; targs } =
+and type_generic loc { Ast.Type.Generic.id; targs; comments } =
   let rec generic_identifier =
     let open Ast.Type.Generic.Identifier in
     function
@@ -2696,7 +2696,7 @@ and type_generic { Ast.Type.Generic.id; targs } =
       source_location_with_comments
         (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
   in
-  fuse [generic_identifier id; option type_args targs]
+  layout_node_with_comments_opt loc comments @@ fuse [generic_identifier id; option type_args targs]
 
 and type_nullable loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens argument])
@@ -2754,7 +2754,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Object obj -> type_object loc obj
       | T.Interface i -> type_interface loc i
       | T.Array t -> type_array loc t
-      | T.Generic generic -> type_generic generic
+      | T.Generic generic -> type_generic loc generic
       | T.Union t -> type_union loc t
       | T.Intersection t -> type_intersection loc t
       | T.Typeof t -> type_typeof loc t
@@ -2805,7 +2805,11 @@ and declare_class
           | Some (loc, generic) ->
             Some
               (fuse
-                 [Atom "extends"; space; source_location_with_comments (loc, type_generic generic)])
+                 [
+                   Atom "extends";
+                   space;
+                   source_location_with_comments (loc, type_generic loc generic);
+                 ])
           | None -> None
         end;
         begin
@@ -2821,7 +2825,7 @@ and declare_class
                      ~sep:(Atom ",")
                      (List.map
                         (fun (loc, generic) ->
-                          source_location_with_comments (loc, type_generic generic))
+                          source_location_with_comments (loc, type_generic loc generic))
                         xs);
                  ])
         end;

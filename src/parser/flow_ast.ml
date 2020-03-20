@@ -193,6 +193,7 @@ and Type : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       targs: ('M, 'T) Type.TypeArgs.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

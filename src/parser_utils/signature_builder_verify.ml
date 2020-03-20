@@ -249,7 +249,7 @@ module Eval (Env : EvalEnv) = struct
         | Qualified (_, { qualification; _ }) -> qualified_type_ref tps qualification)
     in
     fun tps (_, r) ->
-      let { id; targs } = r in
+      let { id; targs; comments = _ } = r in
       let deps = qualified_type_ref tps id in
       Deps.join (deps, type_args tps targs)
 
@@ -266,7 +266,7 @@ module Eval (Env : EvalEnv) = struct
         | Qualified (_, { qualification; _ }) -> qualified_value_ref tps qualification)
     in
     fun tps (_, r) ->
-      let { id; targs } = r in
+      let { id; targs; comments = _ } = r in
       let deps = qualified_value_ref tps id in
       Deps.join (deps, type_args tps targs)
 

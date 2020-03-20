@@ -113,6 +113,7 @@ let mk_custom_fun cx loc t_ast targs (id_loc, name, comments) kind =
             Generic.id =
               Generic.Identifier.Unqualified ((id_loc, t), { Ast.Identifier.name; comments });
             targs = None;
+            comments = Flow_ast_utils.mk_comments_opt ();
           } ))
 
 let mk_eval_id cx loc =
@@ -185,7 +186,8 @@ let rec convert cx tparams_map =
   | (loc, Typeof { Typeof.argument = x; internal; comments }) as t_ast ->
     begin
       match x with
-      | (q_loc, Generic { Generic.id = qualification; targs = None }) ->
+      | (q_loc, Generic { Generic.id = qualification; targs = None; comments = generic_comments })
+        ->
         let (valtype, qualification_ast) =
           convert_qualification ~lookup_mode:ForTypeof cx "typeof-annotation" qualification
         in
@@ -195,7 +197,9 @@ let rec convert cx tparams_map =
           Typeof
             {
               Typeof.argument =
-                ((q_loc, valtype), Generic { Generic.id = qualification_ast; targs = None });
+                ( (q_loc, valtype),
+                  Generic
+                    { Generic.id = qualification_ast; targs = None; comments = generic_comments } );
               internal;
               comments;
             } )
@@ -250,6 +254,7 @@ let rec convert cx tparams_map =
           Generic.id =
             Generic.Identifier.Qualified (qid_loc, { Generic.Identifier.qualification; id }) as qid;
           targs;
+          comments;
         } ) ->
     let (m, qualification_ast) = convert_qualification cx "type-annotation" qualification in
     let (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)) = id in
@@ -273,17 +278,20 @@ let rec convert cx tparams_map =
                   id = ((id_loc, t_unapplied), id_name);
                 } );
           targs;
+          comments;
         } )
   (* type applications: name < params > *)
   | ( loc,
       Generic
         {
           Generic.id =
-            Generic.Identifier.Unqualified (name_loc, ({ Ast.Identifier.name; comments } as id_name));
+            Generic.Identifier.Unqualified
+              (name_loc, ({ Ast.Identifier.name; comments = id_comments } as id_name));
           targs;
+          comments;
         } ) as t_ast ->
     (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
-    let ident = (name_loc, name, comments) in
+    let ident = (name_loc, name, id_comments) in
     let convert_type_params () =
       match targs with
       | None -> ([], None)
@@ -298,6 +306,7 @@ let rec convert cx tparams_map =
             Generic.id =
               Generic.Identifier.Unqualified ((name_loc, Base.Option.value id_t ~default:t), id_name);
             targs;
+            comments;
           } )
     in
     let use_op reason = Op (TypeApplication { type' = reason }) in
@@ -1626,7 +1635,7 @@ and type_identifier cx name loc =
   else
     Env.var_ref ~lookup_mode:ForType cx name loc
 
-and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs }) =
+and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
   let lookup_mode = Env.LookupMode.ForType in
   let (c, id) = convert_qualification ~lookup_mode cx "extends" id in
   let (typeapp, targs) =
@@ -1636,7 +1645,7 @@ and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs }) =
       let (ts, targs_ast) = convert_list cx tparams_map targs in
       ((loc, c, Some ts), Some (targs_loc, targs_ast))
   in
-  (typeapp, (loc, { Ast.Type.Generic.id; targs }))
+  (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
 and add_interface_properties cx tparams_map properties s =
   Class_type_sig.(
@@ -1862,7 +1871,7 @@ let mk_interface_sig cx reason decl =
 
 let mk_declare_class_sig =
   Class_type_sig.(
-    let mk_mixins cx tparams_map (loc, { Ast.Type.Generic.id; targs }) =
+    let mk_mixins cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
       let name = qualified_name id in
       let r = mk_annot_reason (RType name) loc in
       let (i, id) =
@@ -1873,7 +1882,7 @@ let mk_declare_class_sig =
         Tvar.mk_derivable_where cx r (fun tvar -> Flow.flow cx (i, Type.MixinT (r, tvar)))
       in
       let (t, targs) = mk_super cx tparams_map loc props_bag targs in
-      (t, (loc, { Ast.Type.Generic.id; targs }))
+      (t, (loc, { Ast.Type.Generic.id; targs; comments }))
     in
     let is_object_builtin_libdef (loc, { Ast.Identifier.name; comments = _ }) =
       name = "Object"
@@ -1902,7 +1911,7 @@ let mk_declare_class_sig =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
           match extends with
-          | Some (loc, { Ast.Type.Generic.id; targs }) ->
+          | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
             begin
               match (id, targs) with
               | ( Ast.Type.Generic.Identifier.Unqualified
@@ -1916,12 +1925,12 @@ let mk_declare_class_sig =
                   let id_loc_ty = (id_loc, ty) in
                   Ast.Type.Generic.Identifier.Unqualified (id_loc_ty, id_name)
                 in
-                (Some t, Some (loc, { Ast.Type.Generic.id; targs = None }))
+                (Some t, Some (loc, { Ast.Type.Generic.id; targs = None; comments }))
               | _ ->
                 let lookup_mode = Env.LookupMode.ForValue in
                 let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
                 let (t, targs) = mk_super cx tparams_map loc i targs in
-                (Some t, Some (loc, { Ast.Type.Generic.id; targs }))
+                (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
             end
           | None -> (None, None)
         in

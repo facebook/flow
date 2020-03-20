@@ -782,10 +782,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method generic_type (gt : ('M, 'T) Ast.Type.Generic.t) : ('N, 'U) Ast.Type.Generic.t =
       let open Ast.Type.Generic in
-      let { id; targs } = gt in
+      let { id; targs; comments } = gt in
       let id' = this#generic_identifier_type id in
       let targs' = Base.Option.map ~f:this#type_args targs in
-      { id = id'; targs = targs' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { id = id'; targs = targs'; comments = comments' }
 
     method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
         : ('N, 'U) Ast.Type.Predicate.t =

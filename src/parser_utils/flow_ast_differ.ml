@@ -1865,7 +1865,7 @@ let program
         diff_if_changed_ret_opt (syntax_opt loc1) c1 c2
       | (Function fn1, Function fn2) -> diff_if_changed_ret_opt (function_type loc1) fn1 fn2
       | (Interface i1, Interface i2) -> diff_if_changed_ret_opt (interface_type loc1) i1 i2
-      | (Generic g1, Generic g2) -> generic_type g1 g2
+      | (Generic g1, Generic g2) -> diff_if_changed_ret_opt (generic_type loc1) g1 g2
       | (Intersection t1, Intersection t2) -> diff_if_changed_ret_opt (intersection_type loc1) t1 t2
       | (Union t1, Union t2) -> diff_if_changed_ret_opt (union_type loc1) t1 t2
       | (Nullable t1, Nullable t2) -> diff_if_changed_ret_opt (nullable_type loc1) t1 t2
@@ -1896,18 +1896,20 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [extends_diff; body_diff; comments_diff]
   and generic_type
-      (gt1 : (Loc.t, Loc.t) Ast.Type.Generic.t) (gt2 : (Loc.t, Loc.t) Ast.Type.Generic.t) :
-      node change list option =
+      (loc : Loc.t)
+      (gt1 : (Loc.t, Loc.t) Ast.Type.Generic.t)
+      (gt2 : (Loc.t, Loc.t) Ast.Type.Generic.t) : node change list option =
     let open Ast.Type.Generic in
-    let { id = id1; targs = targs1 } = gt1 in
-    let { id = id2; targs = targs2 } = gt2 in
+    let { id = id1; targs = targs1; comments = comments1 } = gt1 in
+    let { id = id2; targs = targs2; comments = comments2 } = gt2 in
     let id_diff = diff_if_changed_ret_opt generic_identifier_type id1 id2 in
     let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
-    join_diff_list [id_diff; targs_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [id_diff; targs_diff; comments_diff]
   and generic_type_with_loc
-      ((_loc1, gt1) : Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      ((loc1, gt1) : Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
       ((_loc2, gt2) : Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) : node change list option =
-    generic_type gt1 gt2
+    generic_type loc1 gt1 gt2
   and generic_identifier_type
       (git1 : (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t)
       (git2 : (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t) : node change list option =

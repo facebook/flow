@@ -26,7 +26,12 @@ let id_from_symbol x =
   else
     Ok (id_from_string sym_name)
 
-let mk_generic x targs = { T.Generic.id = T.Generic.Identifier.Unqualified x; targs }
+let mk_generic x targs =
+  {
+    T.Generic.id = T.Generic.Identifier.Unqualified x;
+    targs;
+    comments = Flow_ast_utils.mk_comments_opt ();
+  }
 
 let mk_generic_type x targs = (Loc.none, T.Generic (mk_generic x targs))
 
