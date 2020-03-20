@@ -503,7 +503,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             params with
             Ast.Type.Function.Params.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
-      | Type _ -> ret
+      | Type t -> Type (add_comments t leading trailing)
     in
     ret
 
@@ -1141,6 +1141,54 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     match Peek.token env with
     | T_COLON -> Type.Available (annotation env)
     | _ -> Type.Missing (Peek.loc_skip_lookahead env)
+
+  and add_comments (loc, t) leading trailing =
+    let merge_comments inner =
+      Flow_ast_utils.merge_comments
+        ~inner
+        ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
+    in
+    let open Ast.Type in
+    ( loc,
+      match t with
+      | Any comments -> Any (merge_comments comments)
+      | Mixed comments -> Mixed (merge_comments comments)
+      | Empty comments -> Empty (merge_comments comments)
+      | Void comments -> Void (merge_comments comments)
+      | Null comments -> Null (merge_comments comments)
+      | Number comments -> Number (merge_comments comments)
+      | BigInt comments -> BigInt (merge_comments comments)
+      | String comments -> String (merge_comments comments)
+      | Boolean comments -> Boolean (merge_comments comments)
+      | Symbol comments -> Symbol (merge_comments comments)
+      | Exists comments -> Exists (merge_comments comments)
+      | Nullable ({ Nullable.comments; _ } as t) ->
+        Nullable { t with Nullable.comments = merge_comments comments }
+      | Function ({ Function.comments; _ } as t) ->
+        Function { t with Function.comments = merge_comments comments }
+      | Object ({ Object.comments; _ } as t) ->
+        Object { t with Object.comments = merge_comments comments }
+      | Interface ({ Interface.comments; _ } as t) ->
+        Interface { t with Interface.comments = merge_comments comments }
+      | Array ({ Array.comments; _ } as t) ->
+        Array { t with Array.comments = merge_comments comments }
+      | Union ({ Union.comments; _ } as t) ->
+        Union { t with Union.comments = merge_comments comments }
+      | Intersection ({ Intersection.comments; _ } as t) ->
+        Intersection { t with Intersection.comments = merge_comments comments }
+      | Typeof ({ Typeof.comments; _ } as t) ->
+        Typeof { t with Typeof.comments = merge_comments comments }
+      | Tuple ({ Tuple.comments; _ } as t) ->
+        Tuple { t with Tuple.comments = merge_comments comments }
+      | StringLiteral ({ StringLiteral.comments; _ } as t) ->
+        StringLiteral { t with StringLiteral.comments = merge_comments comments }
+      | NumberLiteral ({ NumberLiteral.comments; _ } as t) ->
+        NumberLiteral { t with NumberLiteral.comments = merge_comments comments }
+      | BigIntLiteral ({ BigIntLiteral.comments; _ } as t) ->
+        BigIntLiteral { t with BigIntLiteral.comments = merge_comments comments }
+      | BooleanLiteral ({ BooleanLiteral.comments; _ } as t) ->
+        BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments }
+      | _ -> t )
 
   let predicate =
     with_loc (fun env ->
