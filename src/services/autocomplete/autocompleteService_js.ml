@@ -37,28 +37,10 @@ let remove_autocomplete_token_from_loc loc =
   Loc.{ loc with _end = { loc._end with column = loc._end.column - Autocomplete_js.suffix_len } }
 
 let autocomplete_result_to_json ~strip_root result =
-  let func_param_to_json param =
-    Hh_json.JSON_Object
-      [("name", Hh_json.JSON_String param.param_name); ("type", Hh_json.JSON_String param.param_ty)]
-  in
-  let func_details_to_json details =
-    match details with
-    | Some fd ->
-      Hh_json.JSON_Object
-        [
-          ("return_type", Hh_json.JSON_String fd.return_ty);
-          ("params", Hh_json.JSON_Array (Base.List.map ~f:func_param_to_json fd.param_tys));
-        ]
-    | None -> Hh_json.JSON_Null
-  in
   let name = result.res_name in
   Pervasives.ignore strip_root;
   Hh_json.JSON_Object
-    [
-      ("name", Hh_json.JSON_String name);
-      ("type", Hh_json.JSON_String result.res_ty);
-      ("func_details", func_details_to_json result.func_details);
-    ]
+    [("name", Hh_json.JSON_String name); ("type", Hh_json.JSON_String result.res_ty)]
 
 let autocomplete_response_to_json ~strip_root response =
   Hh_json.(
@@ -116,26 +98,12 @@ let lsp_completion_of_decl =
   | EnumDecl _ -> Lsp.Completion.Enum
   | ModuleDecl _ -> Lsp.Completion.Module
 
-let autocomplete_create_result ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) ty =
+let autocomplete_create_result ?insert_text ?(rank = 0) (name, loc) ty =
   let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
-  let func_details =
-    match ty with
-    | Ty.(Fun { fun_params; fun_rest_param; fun_return; _ }) when show_func_details ->
-      Some (Signature_help.func_details fun_params fun_rest_param fun_return)
-    | _ -> None
-  in
-  {
-    res_loc = loc;
-    res_kind;
-    res_name = name;
-    res_insert_text = insert_text;
-    res_ty;
-    func_details;
-    rank;
-  }
+  { res_loc = loc; res_kind; res_name = name; res_insert_text = insert_text; res_ty; rank }
 
-let autocomplete_create_result_decl ~show_func_details:_ ?insert_text:_ ~rank (name, loc) d =
+let autocomplete_create_result_decl ?insert_text:_ ~rank (name, loc) d =
   let open Ty in
   match d with
   | ModuleDecl _ ->
@@ -145,7 +113,6 @@ let autocomplete_create_result_decl ~show_func_details:_ ?insert_text:_ ~rank (n
       res_name = name;
       res_insert_text = None;
       res_ty = "module " ^ name;
-      func_details = None;
       rank;
     }
   | Ty.VariableDecl (_, ty) ->
@@ -155,7 +122,6 @@ let autocomplete_create_result_decl ~show_func_details:_ ?insert_text:_ ~rank (n
       res_name = name;
       res_insert_text = None;
       res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty;
-      func_details = None;
       rank;
     }
   | d ->
@@ -165,15 +131,13 @@ let autocomplete_create_result_decl ~show_func_details:_ ?insert_text:_ ~rank (n
       res_name = name;
       res_insert_text = None;
       res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false d;
-      func_details = None;
       rank;
     }
 
-let autocomplete_create_result_elt
-    ?(show_func_details = true) ?insert_text ?(rank = 0) (name, loc) elt =
+let autocomplete_create_result_elt ?insert_text ?(rank = 0) (name, loc) elt =
   match elt with
-  | Ty.Type t -> autocomplete_create_result ~show_func_details ?insert_text ~rank (name, loc) t
-  | Ty.Decl d -> autocomplete_create_result_decl ~show_func_details ?insert_text ~rank (name, loc) d
+  | Ty.Type t -> autocomplete_create_result ?insert_text ~rank (name, loc) t
+  | Ty.Decl d -> autocomplete_create_result_decl ?insert_text ~rank (name, loc) d
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -572,8 +536,7 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id
-    ~reader ~cx ~ac_loc ~id_type ~file_sig ~typed_ast ~include_super ~include_this ~tparams =
+let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~include_this ~tparams =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let (results, errors_to_log) =
     local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
@@ -581,12 +544,7 @@ let autocomplete_id
          (fun (results, errors_to_log) (name, elt_result) ->
            match elt_result with
            | Ok elt ->
-             let result =
-               autocomplete_create_result_elt
-                 ~show_func_details:(id_type <> JSXIdent)
-                 (name, ac_loc)
-                 elt
-             in
+             let result = autocomplete_create_result_elt (name, ac_loc) elt in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -601,7 +559,6 @@ let autocomplete_id
         res_kind = Some Lsp.Completion.Variable;
         res_name = "this";
         res_ty = "this";
-        func_details = None;
         res_insert_text = None;
         rank = 0;
       }
@@ -617,7 +574,6 @@ let autocomplete_id
         res_kind = Some Lsp.Completion.Variable;
         res_name = "super";
         res_ty = "super";
-        func_details = None;
         res_insert_text = None;
         rank = 0;
       }
@@ -742,7 +698,6 @@ let type_exports_of_module_ty ~ac_loc =
               res_name = name.Ty.sym_name;
               res_insert_text = None;
               res_ty = Ty_printer.string_of_decl_single_line d;
-              func_details = None;
               rank = 0;
             }
         | InterfaceDecl (name, _) as d ->
@@ -753,7 +708,6 @@ let type_exports_of_module_ty ~ac_loc =
               res_name = name.Ty.sym_name;
               res_insert_text = None;
               res_ty = Ty_printer.string_of_decl_single_line d;
-              func_details = None;
               rank = 0;
             }
         | ClassDecl (name, _) as d ->
@@ -764,7 +718,6 @@ let type_exports_of_module_ty ~ac_loc =
               res_name = name.Ty.sym_name;
               res_insert_text = None;
               res_ty = Ty_printer.string_of_decl_single_line d;
-              func_details = None;
               rank = 0;
             }
         | _ -> None)
@@ -784,7 +737,6 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
           res_kind = Some Lsp.Completion.TypeParameter;
           res_name = name;
           res_ty = name;
-          func_details = None;
           res_insert_text = None;
           rank = 0;
         })
@@ -855,18 +807,10 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cur
   | Some (_, _, Ackey) ->
     (* TODO: complete object keys based on their upper bounds *)
     ("Ackey", AcResult { results = []; errors_to_log = [] })
-  | Some (tparams, ac_loc, Acid { id_type; include_super; include_this }) ->
+  | Some (tparams, ac_loc, Acid { id_type = _; include_super; include_this }) ->
     ( "Acid",
-      autocomplete_id
-        ~reader
-        ~cx
-        ~ac_loc
-        ~id_type
-        ~file_sig
-        ~typed_ast
-        ~include_super
-        ~include_this
-        ~tparams )
+      autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~include_this ~tparams
+    )
   | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
     ( "Acmem",
       autocomplete_member

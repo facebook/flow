@@ -22,15 +22,7 @@ Find-refs class property:
   ]
 }
 Autocomplete class property:
-{
-  "result":[
-    {
-      "name":"foo",
-      "type":"() => void",
-      "func_details":{"return_type":"void","params":[]}
-    }
-  ]
-}
+{"result":[{"name":"foo","type":"() => void"}]}
 dump types:
 [
   {

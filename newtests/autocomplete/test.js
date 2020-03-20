@@ -37,76 +37,35 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "num",
-               "type": "number",
-               "func_details": null
+               "type": "number"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "str",
-               "type": "string",
-               "func_details": null
+               "type": "string"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              }
            ]
          }
@@ -136,71 +95,31 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              },
              {
                "name": "x",
-               "type": "number",
-               "func_details": null
+               "type": "number"
              }
            ]
          }
@@ -218,529 +137,167 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "@@iterator",
-               "type": "() => Iterator<string>",
-               "func_details": {
-                 "return_type": "Iterator<string>",
-                 "params": []
-               }
+               "type": "() => Iterator<string>"
              },
              {
                "name": "anchor",
-               "type": "(name: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "name",
-                     "type": "string"
-                   }
-                 ]
-               }
+               "type": "(name: string) => string"
              },
              {
                "name": "charAt",
-               "type": "(pos: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "pos",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(pos: number) => string"
              },
              {
                "name": "charCodeAt",
-               "type": "(index: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "index",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(index: number) => number"
              },
              {
                "name": "codePointAt",
-               "type": "(index: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "index",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(index: number) => number"
              },
              {
                "name": "concat",
-               "type": "(...strings: Array<string>) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "...strings",
-                     "type": "Array<string>"
-                   }
-                 ]
-               }
+               "type": "(...strings: Array<string>) => string"
              },
              {
                "name": "endsWith",
-               "type": "(searchString: string, position?: number) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(searchString: string, position?: number) => boolean"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "includes",
-               "type": "(searchString: string, position?: number) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(searchString: string, position?: number) => boolean"
              },
              {
                "name": "indexOf",
-               "type": "(searchString: string, position?: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(searchString: string, position?: number) => number"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "lastIndexOf",
-               "type": "(searchString: string, position?: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(searchString: string, position?: number) => number"
              },
              {
                "name": "length",
-               "type": "number",
-               "func_details": null
+               "type": "number"
              },
              {
                "name": "link",
-               "type": "(href: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "href",
-                     "type": "string"
-                   }
-                 ]
-               }
+               "type": "(href: string) => string"
              },
              {
                "name": "localeCompare",
-               "type": "(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "that",
-                     "type": "string"
-                   },
-                   {
-                     "name": "locales?",
-                     "type": "string | Array<string>"
-                   },
-                   {
-                     "name": "options?",
-                     "type": "Intl$CollatorOptions"
-                   }
-                 ]
-               }
+               "type": "(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number"
              },
              {
                "name": "match",
-               "type": "(regexp: (string | RegExp)) => (RegExp$matchResult | null)",
-               "func_details": {
-                 "return_type": "RegExp$matchResult | null",
-                 "params": [
-                   {
-                     "name": "regexp",
-                     "type": "string | RegExp"
-                   }
-                 ]
-               }
+               "type": "(regexp: (string | RegExp)) => (RegExp$matchResult | null)"
              },
              {
                "name": "matchAll",
-               "type": "(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>",
-               "func_details": {
-                 "return_type": "Iterator<RegExp$matchResult>",
-                 "params": [
-                   {
-                     "name": "regexp",
-                     "type": "string | RegExp"
-                   }
-                 ]
-               }
+               "type": "(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>"
              },
              {
                "name": "normalize",
-               "type": "(format?: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "format?",
-                     "type": "string"
-                   }
-                 ]
-               }
+               "type": "(format?: string) => string"
              },
              {
                "name": "padEnd",
-               "type": "(targetLength: number, padString?: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "targetLength",
-                     "type": "number"
-                   },
-                   {
-                     "name": "padString?",
-                     "type": "string"
-                   }
-                 ]
-               }
+               "type": "(targetLength: number, padString?: string) => string"
              },
              {
                "name": "padStart",
-               "type": "(targetLength: number, padString?: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "targetLength",
-                     "type": "number"
-                   },
-                   {
-                     "name": "padString?",
-                     "type": "string"
-                   }
-                 ]
-               }
+               "type": "(targetLength: number, padString?: string) => string"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "repeat",
-               "type": "(count: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "count",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(count: number) => string"
              },
              {
                "name": "replace",
-               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "searchValue",
-                     "type": "string | RegExp"
-                   },
-                   {
-                     "name": "replaceValue",
-                     "type": "string | ((substring: string, ...args: Array<any>) => string)"
-                   }
-                 ]
-               }
+               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
              },
              {
                "name": "search",
-               "type": "(regexp: (string | RegExp)) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "regexp",
-                     "type": "string | RegExp"
-                   }
-                 ]
-               }
+               "type": "(regexp: (string | RegExp)) => number"
              },
              {
                "name": "slice",
-               "type": "(start?: number, end?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "start?",
-                     "type": "number"
-                   },
-                   {
-                     "name": "end?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(start?: number, end?: number) => string"
              },
              {
                "name": "split",
-               "type": "(separator?: (string | RegExp), limit?: number) => Array<string>",
-               "func_details": {
-                 "return_type": "Array<string>",
-                 "params": [
-                   {
-                     "name": "separator?",
-                     "type": "string | RegExp"
-                   },
-                   {
-                     "name": "limit?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(separator?: (string | RegExp), limit?: number) => Array<string>"
              },
              {
                "name": "startsWith",
-               "type": "(searchString: string, position?: number) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(searchString: string, position?: number) => boolean"
              },
              {
                "name": "substr",
-               "type": "(from: number, length?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "from",
-                     "type": "number"
-                   },
-                   {
-                     "name": "length?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(from: number, length?: number) => string"
              },
              {
                "name": "substring",
-               "type": "(start: number, end?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "start",
-                     "type": "number"
-                   },
-                   {
-                     "name": "end?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(start: number, end?: number) => string"
              },
              {
                "name": "toLocaleLowerCase",
-               "type": "(locale?: (string | Array<string>)) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locale?",
-                     "type": "string | Array<string>"
-                   }
-                 ]
-               }
+               "type": "(locale?: (string | Array<string>)) => string"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toLocaleUpperCase",
-               "type": "(locale?: (string | Array<string>)) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locale?",
-                     "type": "string | Array<string>"
-                   }
-                 ]
-               }
+               "type": "(locale?: (string | Array<string>)) => string"
              },
              {
                "name": "toLowerCase",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toUpperCase",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "trim",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "trimEnd",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "trimLeft",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "trimRight",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "trimStart",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              }
            ]
          }
@@ -758,119 +315,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toExponential",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toFixed",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locales?",
-                     "type": "string | Array<string>"
-                   },
-                   {
-                     "name": "options?",
-                     "type": "Intl$NumberFormatOptions"
-                   }
-                 ]
-               }
+               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
              },
              {
                "name": "toPrecision",
-               "type": "(precision?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "precision?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(precision?: number) => string"
              },
              {
                "name": "toString",
-               "type": "(radix?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "radix?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(radix?: number) => string"
              },
              {
                "name": "valueOf",
-               "type": "() => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": []
-               }
+               "type": "() => number"
              }
            ]
          }
@@ -888,66 +365,27 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": []
-               }
+               "type": "() => boolean"
              }
            ]
          }
@@ -965,38 +403,31 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "bar",
-               "type": "string | any",
-               "func_details": null
+               "type": "string | any"
              },
              {
                "name": "hasOwnProperty",
-               "type": "((prop: mixed) => boolean) | any",
-               "func_details": null
+               "type": "((prop: mixed) => boolean) | any"
              },
              {
                "name": "isPrototypeOf",
-               "type": "((o: mixed) => boolean) | any",
-               "func_details": null
+               "type": "((o: mixed) => boolean) | any"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "((prop: mixed) => boolean) | any",
-               "func_details": null
+               "type": "((prop: mixed) => boolean) | any"
              },
              {
                "name": "toLocaleString",
-               "type": "(() => string) | any",
-               "func_details": null
+               "type": "(() => string) | any"
              },
              {
                "name": "toString",
-               "type": "(() => string) | any",
-               "func_details": null
+               "type": "(() => string) | any"
              },
              {
                "name": "valueOf",
-               "type": "(() => mixed) | any",
-               "func_details": null
+               "type": "(() => mixed) | any"
              }
            ]
          }
@@ -1042,137 +473,55 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "apply",
-               "type": "(thisArg: any, argArray?: any) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "argArray?",
-                     "type": "any"
-                   }
-                 ]
-               }
+               "type": "(thisArg: any, argArray?: any) => any"
              },
              {
                "name": "arguments",
-               "type": "any",
-               "func_details": null
+               "type": "any"
              },
              {
                "name": "bind",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...argArray",
-                     "type": "Array<any>"
-                   }
-                 ]
-               }
+               "type": "(thisArg: any, ...argArray: Array<any>) => any"
              },
              {
                "name": "call",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...argArray",
-                     "type": "Array<any>"
-                   }
-                 ]
-               }
+               "type": "(thisArg: any, ...argArray: Array<any>) => any"
              },
              {
                "name": "caller",
-               "type": "any | null",
-               "func_details": null
+               "type": "any | null"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "length",
-               "type": "number",
-               "func_details": null
+               "type": "number"
              },
              {
                "name": "name",
-               "type": "string",
-               "func_details": null
+               "type": "string"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              }
            ]
          }
@@ -1190,87 +539,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "bar",
-               "type": "() => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": []
-               }
+               "type": "() => void"
              },
              {
                "name": "baz",
-               "type": "string",
-               "func_details": null
+               "type": "string"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "hello",
-               "type": "() => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": []
-               }
+               "type": "() => void"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              }
            ]
          }
@@ -1288,119 +589,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toExponential",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toFixed",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locales?",
-                     "type": "string | Array<string>"
-                   },
-                   {
-                     "name": "options?",
-                     "type": "Intl$NumberFormatOptions"
-                   }
-                 ]
-               }
+               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
              },
              {
                "name": "toPrecision",
-               "type": "(precision?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "precision?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(precision?: number) => string"
              },
              {
                "name": "toString",
-               "type": "(radix?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "radix?",
-                     "type": "number"
-                   }
-                 ]
-               }
+               "type": "(radix?: number) => string"
              },
              {
                "name": "valueOf",
-               "type": "() => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": []
-               }
+               "type": "() => number"
              }
            ]
          }
@@ -1418,71 +639,31 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "cn",
-               "type": "C<number>",
-               "func_details": null
+               "type": "C<number>"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              }
            ]
          }
@@ -1500,89 +681,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "f",
-               "type": "(x?: string) => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": [
-                   {
-                     "name": "x?",
-                     "type": "string"
-                   }
-                 ]
-               }
+               "type": "(x?: string) => void"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "o",
-               "type": "{x?: string}",
-               "func_details": null
+               "type": "{x?: string}"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              },
              {
                "name": "x",
-               "type": "string | void",
-               "func_details": null
+               "type": "string | void"
              }
            ]
          }
@@ -1600,8 +731,7 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "x",
-               "type": "number",
-               "func_details": null
+               "type": "number"
              }
            ]
          }
@@ -1619,8 +749,7 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "y",
-               "type": "string",
-               "func_details": null
+               "type": "string"
              }
            ]
          }
@@ -1638,50 +767,15 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "objectGetPrototypeOf",
-               "type": "(o: any) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "any"
-                   }
-                 ]
-               }
+               "type": "(o: any) => any"
              },
              {
                "name": "objectAssign",
-               "type": "(target: any, ...sources: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "target",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...sources",
-                     "type": "Array<any>"
-                   }
-                 ]
-               }
+               "type": "(target: any, ...sources: Array<any>) => any"
              },
              {
                "name": "idx",
-               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
-               "func_details": {
-                 "return_type": "?IdxResult",
-                 "params": [
-                   {
-                     "name": "obj",
-                     "type": "IdxObject"
-                   },
-                   {
-                     "name": "pathCallback",
-                     "type": "(demaybefiedObj: IdxObject) => IdxResult"
-                   }
-                 ]
-               }
+               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
              }
            ]
          }
@@ -1699,84 +793,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "extended",
-               "type": "string",
-               "func_details": null
+               "type": "string"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "method",
-               "type": "() => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": []
-               }
+               "type": "() => void"
              },
              {
                "name": "prop",
-               "type": "number",
-               "func_details": null
+               "type": "number"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               }
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               }
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               }
+               "type": "() => mixed"
              }
            ]
          }
@@ -1793,76 +842,35 @@ export default suite(({addFile, flowCmd}) => [
          "result": [
            {
              "name": "hasOwnProperty",
-             "type": "(prop: mixed) => boolean",
-             "func_details": {
-               "return_type": "boolean",
-               "params": [
-                 {
-                   "name": "prop",
-                   "type": "mixed"
-                 }
-               ]
-             }
+             "type": "(prop: mixed) => boolean"
            },
            {
              "name": "isPrototypeOf",
-             "type": "(o: mixed) => boolean",
-             "func_details": {
-               "return_type": "boolean",
-               "params": [
-                 {
-                   "name": "o",
-                   "type": "mixed"
-                 }
-               ]
-             }
+             "type": "(o: mixed) => boolean"
            },
            {
              "name": "num",
-             "type": "number",
-             "func_details": null
+             "type": "number"
            },
            {
              "name": "propertyIsEnumerable",
-             "type": "(prop: mixed) => boolean",
-             "func_details": {
-               "return_type": "boolean",
-               "params": [
-                 {
-                   "name": "prop",
-                   "type": "mixed"
-                 }
-               ]
-             }
+             "type": "(prop: mixed) => boolean"
            },
            {
              "name": "str",
-             "type": "string",
-             "func_details": null
+             "type": "string"
            },
            {
              "name": "toLocaleString",
-             "type": "() => string",
-             "func_details": {
-               "return_type": "string",
-               "params": []
-             }
+             "type": "() => string"
            },
            {
              "name": "toString",
-             "type": "() => string",
-             "func_details": {
-               "return_type": "string",
-               "params": []
-             }
+             "type": "() => string"
            },
            {
              "name": "valueOf",
-             "type": "() => mixed",
-             "func_details": {
-               "return_type": "mixed",
-               "params": []
-             }
+             "type": "() => mixed"
            }
          ]
        }
@@ -1879,8 +887,7 @@ export default suite(({addFile, flowCmd}) => [
           "result": [
             {
               "name": "obj",
-              "type": "{|num: number, str: string|}",
-              "func_details": null
+              "type": "{|num: number, str: string|}"
             }
           ]
         }

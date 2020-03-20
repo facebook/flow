@@ -67,7 +67,7 @@ let flow_signature_help_to_lsp
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
 let flow_completion_to_lsp
-    (is_snippet_supported : bool) (item : ServerProt.Response.complete_autocomplete_result) :
+    (_is_snippet_supported : bool) (item : ServerProt.Response.complete_autocomplete_result) :
     Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
@@ -79,24 +79,8 @@ let flow_completion_to_lsp
           String.sub s 0 n ^ "..."
       in
       let column_width = 80 in
-      let flow_params_to_string params =
-        let params = Base.List.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
-        "(" ^ String.concat ", " params ^ ")"
-      in
-      let flow_params_to_lsp_snippet name params =
-        let params =
-          Base.List.mapi
-            ~f:(fun i p -> "${" ^ string_of_int (i + 1) ^ ":" ^ p.param_name ^ "}")
-            params
-        in
-        name ^ "(" ^ String.concat ", " params ^ ")"
-      in
       let text_edit loc newText : Lsp.TextEdit.t =
         { Lsp.TextEdit.range = loc_to_lsp_range loc; Lsp.TextEdit.newText }
-      in
-      let func_snippet func_details =
-        let newText = flow_params_to_lsp_snippet insert_text func_details.param_tys in
-        text_edit item.res_loc newText
       in
       let plaintext_text_edits =
         lazy
@@ -106,22 +90,10 @@ let flow_completion_to_lsp
             [] )
       in
       let (itemType, inlineDetail, detail, insertTextFormat, textEdits) =
-        match item.func_details with
-        | Some func_details ->
-          let itemType = Some (trunc 30 func_details.return_ty) in
-          let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
-          let detail = Some (trunc column_width item.res_ty) in
-          let (insertTextFormat, textEdits) =
-            match is_snippet_supported with
-            | true -> (Some SnippetFormat, [func_snippet func_details])
-            | false -> (Some PlainText, Lazy.force plaintext_text_edits)
-          in
-          (itemType, inlineDetail, detail, insertTextFormat, textEdits)
-        | None ->
-          let itemType = None in
-          let inlineDetail = Some (trunc column_width item.res_ty) in
-          let detail = inlineDetail in
-          (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
+        let itemType = None in
+        let inlineDetail = Some (trunc column_width item.res_ty) in
+        let detail = inlineDetail in
+        (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
       in
       let sortText = Some (Printf.sprintf "%020u" item.rank) in
       {

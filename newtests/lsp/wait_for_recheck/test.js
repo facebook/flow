@@ -158,7 +158,7 @@ export default suite(
           [
             [
               'textDocument/completion',
-              '{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
+              '{"label":"x","label":"fred","detail":"(a: number, b: string) => number"}',
             ],
           ],
           [...lspIgnoreStatusAndCancellation],
