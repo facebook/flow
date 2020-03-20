@@ -464,6 +464,8 @@ module Expressions = struct
 
   let false_ () = literal (Literals.bool false)
 
+  let parenthesis_hint () = literal (Literals.string "_flowmin_paren_")
+
   let logical_and (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.And l r
 
   let logical_or (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
