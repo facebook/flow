@@ -807,7 +807,7 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cur
   | Some (_, _, Ackey) ->
     (* TODO: complete object keys based on their upper bounds *)
     ("Ackey", AcResult { results = []; errors_to_log = [] })
-  | Some (tparams, ac_loc, Acid { id_type = _; include_super; include_this }) ->
+  | Some (tparams, ac_loc, Acid { include_super; include_this }) ->
     ( "Acid",
       autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~include_this ~tparams
     )

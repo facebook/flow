@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ident_type =
-  | NormalIdent
-  | JSXIdent
-
 type autocomplete_type =
   (* ignore extraneous requests the IDE sends *)
   | Acignored
@@ -18,7 +14,6 @@ type autocomplete_type =
   | Accomment
   (* identifier references *)
   | Acid of {
-      id_type: ident_type;
       include_super: bool;
       include_this: bool;
     }
@@ -102,13 +97,12 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! t_identifier ident =
       match identifier_is_autocomplete ident with
-      | Some loc ->
-        this#find loc (Acid { id_type = NormalIdent; include_super = false; include_this = false })
+      | Some loc -> this#find loc (Acid { include_super = false; include_this = false })
       | None -> ident
 
     method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
       if is_autocomplete name then
-        this#find ac_loc (Acid { id_type = JSXIdent; include_super = false; include_this = false });
+        this#find ac_loc (Acid { include_super = false; include_this = false });
       ident
 
     method! member expr =
@@ -238,8 +232,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! class_body x =
       try super#class_body x
-      with Found (tparams, loc, Acid id) ->
-        raise (Found (tparams, loc, Acid { id with include_super = true; include_this = true }))
+      with Found (tparams, loc, Acid _) ->
+        raise (Found (tparams, loc, Acid { include_super = true; include_this = true }))
 
     method! function_expression x =
       try super#function_expression x
