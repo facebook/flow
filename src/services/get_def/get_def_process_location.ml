@@ -111,6 +111,34 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
             this#chain result)
         local
 
+    method! export_named_declaration export_loc decl =
+      let open Flow_ast.Statement.ExportNamedDeclaration in
+      match decl.source with
+      | None -> super#export_named_declaration export_loc decl
+      | Some (source_loc, { Flow_ast.StringLiteral.value = module_name; _ }) ->
+        let { specifiers; _ } = decl in
+        Base.Option.iter ~f:(this#export_specifier_with_loc ~source_loc) specifiers;
+        if this#covers_target export_loc then
+          this#chain (Get_def_request.Require ((source_loc, module_name), export_loc));
+        decl
+
+    method export_specifier_with_loc ~source_loc specifier =
+      let open Flow_ast.Statement.ExportNamedDeclaration in
+      match specifier with
+      | ExportSpecifiers named_specifiers ->
+        Base.List.iter ~f:(this#export_named_specifier_with_loc ~source_loc) named_specifiers
+      | ExportBatchSpecifier _ -> ()
+
+    method export_named_specifier_with_loc ~source_loc specifier =
+      let open Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+      let (specifier_loc, { local; _ }) = specifier in
+      let (_, { Flow_ast.Identifier.name = local_name; _ }) = local in
+      let result =
+        Get_def_request.(
+          Member { prop_name = local_name; object_source = ObjectRequireLoc source_loc })
+      in
+      if this#covers_target specifier_loc then this#chain result
+
     method! member expr =
       let open Flow_ast.Expression.Member in
       let { _object; property; comments = _ } = expr in

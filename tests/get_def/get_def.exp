@@ -54,3 +54,11 @@ nested property access on the arg to the idx callback = {"path":"idx.js","line":
 global (builtin) variable = {"path":"[LIB] prelude.js","line":30,"endline":30,"start":15,"end":19}
 object destructuring key = {"path":"destructuring.js","line":4,"endline":4,"start":15,"end":17}
 object destructuring binding = {"path":"destructuring.js","line":5,"endline":5,"start":13,"end":15}
+exports.js:3:9
+Flags:
+helpers/exports_named.js:3:14,3:16
+
+exports.js:5:16
+Flags:
+helpers/exports_named.js:3:14,3:16
+
