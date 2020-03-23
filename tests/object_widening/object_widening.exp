@@ -1,3 +1,50 @@
+Error ------------------------------------------------------------------------------------------ annot_in_union.js:16:31
+
+Cannot assign object literal to `x` because possibly missing property `thisFieldIsMissing` in object literal [1] is
+incompatible with boolean literal `true` [2] in property `thisFieldIsMissing`.
+
+   annot_in_union.js:16:31
+                                     v
+   16| const x: LiterallyAnyObject = {
+   17|   ...prevPagers.object, // Error
+   18| };
+       ^ [1]
+
+References:
+   annot_in_union.js:5:23
+    5|   thisFieldIsMissing: true,
+                             ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- intersection.js:5:24
+
+Cannot assign object literal to `i` because property `bar` is missing in object literal [1] but exists in
+`OtherProps` [2].
+
+   intersection.js:5:24
+   5| const i: Intersected = {...null}; // error, missing foo and bar
+                             ^^^^^^^^^ [1]
+
+References:
+   intersection.js:4:28
+   4| type Intersected = Props & OtherProps;
+                                 ^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- intersection.js:5:24
+
+Cannot assign object literal to `i` because property `foo` is missing in object literal [1] but exists in `Props` [2].
+
+   intersection.js:5:24
+   5| const i: Intersected = {...null}; // error, missing foo and bar
+                             ^^^^^^^^^ [1]
+
+References:
+   intersection.js:4:20
+   4| type Intersected = Props & OtherProps;
+                         ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- type_widening.js:27:2
 
 Cannot cast `a.foo` to number because undefined [1] is incompatible with number [2].
@@ -668,4 +715,4 @@ References:
 
 
 
-Found 41 errors
+Found 44 errors
