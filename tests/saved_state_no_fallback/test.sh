@@ -8,8 +8,7 @@
 # find a saved state file.
 # Exit code 78 indicates that server start failed (start_flow_unsafe adds the
 # --wait flag).
-# TODO should be exit code 78
-assert_exit 0 start_flow_unsafe . --saved-state-fetcher "local" --saved-state-no-fallback
+assert_exit 78 start_flow_unsafe . --saved-state-fetcher "local" --saved-state-no-fallback
 
 assert_ok "$FLOW" stop
 

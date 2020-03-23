@@ -2817,9 +2817,12 @@ let load_saved_state ~profiling ~workers options =
   in
   Profiling_js.merge ~from:fetch_profiling ~into:profiling;
   match fetch_result with
-  | Saved_state_fetcher.No_saved_state
-  | Saved_state_fetcher.Saved_state_error ->
+  | Saved_state_fetcher.No_saved_state ->
     Hh_logger.info "No saved state available";
+    Lwt.return_none
+  | Saved_state_fetcher.Saved_state_error ->
+    Hh_logger.info "Failed to load saved state";
+    exit_if_no_fallback options;
     Lwt.return_none
   | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files } ->
     let changed_files_count = SSet.cardinal changed_files in
