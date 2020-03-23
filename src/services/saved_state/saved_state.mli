@@ -6,7 +6,7 @@
  *)
 
 type denormalized_file_data = {
-  package: Package_json.t option;
+  package: (Package_json.t, unit) result option;
   (* Only package.json files have this *)
   file_sig: File_sig.With_Loc.t;
   resolved_requires: Module_heaps.resolved_requires;

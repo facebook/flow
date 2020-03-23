@@ -2575,8 +2575,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                                (Printf.sprintf
                                   "Saved state for `%s` missing Package_json.t data"
                                   str)
-                           | Some package ->
+                           | Some (Ok package) ->
                              Module_heaps.Package_heap_mutator.add_package_json str package
+                           | Some (Error ()) -> Module_heaps.Package_heap_mutator.add_error str
                          end
                        | _ -> ()
                      end;

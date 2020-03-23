@@ -90,5 +90,5 @@ module From_saved_state : sig
 end
 
 module For_saved_state : sig
-  val get_package_json_unsafe : string -> Package_json.t
+  val get_package_json_unsafe : string -> (Package_json.t, unit) result
 end
