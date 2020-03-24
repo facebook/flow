@@ -932,7 +932,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     (* Internal helper for function declarations, function expressions and arrow functions *)
     method function_ (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       let open Ast.Function in
-      let { id = ident; params; body; async; generator; predicate; return; tparams; sig_loc } =
+      let {
+        id = ident;
+        params;
+        body;
+        async;
+        generator;
+        predicate;
+        return;
+        tparams;
+        sig_loc;
+        comments;
+      } =
         expr
       in
       let ident' = Base.Option.map ~f:this#t_function_identifier ident in
@@ -942,6 +953,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let body' = this#function_body body in
           let predicate' = Base.Option.map ~f:this#type_predicate predicate in
           let sig_loc' = this#on_loc_annot sig_loc in
+          let comments' = Base.Option.map ~f:this#syntax comments in
           {
             id = ident';
             params = params';
@@ -952,6 +964,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             predicate = predicate';
             tparams = tparams';
             sig_loc = sig_loc';
+            comments = comments';
           })
 
     method function_params (params : ('M, 'T) Ast.Function.Params.t)

@@ -1122,6 +1122,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             async;
             predicate = _;
             sig_loc = _;
+            comments = _;
           } ) ->
       (loc, T.Function (function_ generator async tparams params return body))
     | ( loc,
@@ -1137,6 +1138,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             (* TODO: arrow functions can't have ids or be generators: *)
             id = _;
             generator = _;
+            comments = _;
           } ) ->
       (loc, T.Function (function_ false async tparams params return body))
     | (loc, Object stuff) ->
@@ -1515,6 +1517,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                 async;
                 predicate = _;
                 sig_loc = _;
+                comments = _;
               } ) =
           value
         in
@@ -1600,6 +1603,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
           async;
           predicate = _;
           sig_loc = _;
+          comments = _;
         } =
           fn
         in
@@ -1616,6 +1620,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
           async;
           predicate = _;
           sig_loc = _;
+          comments = _;
         } =
           fn
         in
@@ -1632,6 +1637,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
           async;
           predicate = _;
           sig_loc = _;
+          comments = _;
         } =
           fn
         in
@@ -1882,6 +1888,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               async;
               predicate = _;
               sig_loc = _;
+              comments = _;
             } ) ->
       `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->

@@ -7757,8 +7757,18 @@ and mk_func_sig =
     finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
   in
   fun cx tparams_map loc func ->
-    let { Ast.Function.tparams; return; body; predicate; params; id; async; generator; sig_loc = _ }
-        =
+    let {
+      Ast.Function.tparams;
+      return;
+      body;
+      predicate;
+      params;
+      id;
+      async;
+      generator;
+      sig_loc = _;
+      comments = _;
+    } =
       func
     in
     let reason = func_reason ~async ~generator loc in
@@ -7995,6 +8005,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                 return;
                 tparams;
                 sig_loc = declare_loc;
+                comments = Flow_ast_utils.mk_comments_opt ();
               },
             function
             | ( _,

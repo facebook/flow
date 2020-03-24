@@ -1155,7 +1155,18 @@ class ['loc] mapper =
     (* Internal helper for function declarations, function expressions and arrow functions *)
     method function_ _loc (expr : ('loc, 'loc) Ast.Function.t) =
       let open Ast.Function in
-      let { id = ident; params; body; async; generator; predicate; return; tparams; sig_loc } =
+      let {
+        id = ident;
+        params;
+        body;
+        async;
+        generator;
+        predicate;
+        return;
+        tparams;
+        sig_loc;
+        comments;
+      } =
         expr
       in
       let ident' = map_opt this#function_identifier ident in
@@ -1164,12 +1175,14 @@ class ['loc] mapper =
       let body' = this#function_body_any body in
       (* TODO: walk predicate *)
       let tparams' = map_opt this#type_params tparams in
+      let comments' = this#syntax_opt comments in
       if
         ident == ident'
         && params == params'
         && body == body'
         && return == return'
         && tparams == tparams'
+        && comments == comments'
       then
         expr
       else
@@ -1183,6 +1196,7 @@ class ['loc] mapper =
           predicate;
           tparams = tparams';
           sig_loc;
+          comments = comments';
         }
 
     method function_params (params : ('loc, 'loc) Ast.Function.Params.t) =

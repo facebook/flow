@@ -248,6 +248,7 @@ let eval_property_assignment class_body =
                       return = _;
                       tparams = _;
                       sig_loc = _;
+                      comments = _;
                     } );
                 key = _;
                 static = _;

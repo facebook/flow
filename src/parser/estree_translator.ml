@@ -395,6 +395,7 @@ with type t = Impl.t = struct
               tparams;
               return;
               body;
+              comments;
               sig_loc = _;
               (* TODO: arrows shouldn't have these: *)
               id = _;
@@ -411,6 +412,7 @@ with type t = Impl.t = struct
           | Ast.Type.Available t -> Some t
         in
         node
+          ?comments
           "ArrowFunctionExpression"
           loc
           [
@@ -616,6 +618,7 @@ with type t = Impl.t = struct
             tparams;
             return;
             body;
+            comments;
             sig_loc = _;
           } ) =
       let body =
@@ -629,6 +632,7 @@ with type t = Impl.t = struct
         | Ast.Type.Available t -> Some t
       in
       node
+        ?comments
         "FunctionDeclaration"
         loc
         [
@@ -656,6 +660,7 @@ with type t = Impl.t = struct
             tparams;
             return;
             body;
+            comments;
             sig_loc = _;
           } ) =
       let body =
@@ -669,6 +674,7 @@ with type t = Impl.t = struct
         | Ast.Type.Available t -> Some t
       in
       node
+        ?comments
         "FunctionExpression"
         loc
         [

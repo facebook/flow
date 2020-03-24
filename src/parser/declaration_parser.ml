@@ -13,9 +13,9 @@ open Flow_ast
 module SSet = Set.Make (String)
 
 module type DECLARATION = sig
-  val async : env -> bool
+  val async : env -> bool * Loc.t Comment.t list
 
-  val generator : env -> bool
+  val generator : env -> bool * Loc.t Comment.t list
 
   val variance : env -> bool -> bool -> Loc.t Variance.t option
 
@@ -218,16 +218,23 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       None
     | _ -> variance
 
-  let generator env = Expect.maybe env T_MULT
+  let generator env =
+    if Peek.token env = T_MULT then (
+      let leading = Peek.comments env in
+      Eat.token env;
+      (true, leading)
+    ) else
+      (false, [])
 
   (* Returns true and consumes a token if the token is `async` and the token after it is on
      the same line (see https://tc39.github.io/ecma262/#sec-async-function-definitions) *)
   let async env =
     if Peek.token env = T_ASYNC && not (Peek.ith_is_line_terminator ~i:1 env) then
+      let leading = Peek.comments env in
       let () = Eat.token env in
-      true
+      (true, leading)
     else
-      false
+      (false, [])
 
   let is_simple_function_params =
     let is_simple_param = function
@@ -239,12 +246,14 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
 
   let _function =
     with_loc (fun env ->
-        let async = async env in
-        let (sig_loc, (generator, tparams, id, params, return, predicate)) =
+        let (async, leading_async) = async env in
+        let (sig_loc, (generator, tparams, id, params, return, predicate, leading)) =
           with_loc
             (fun env ->
+              let leading_function = Peek.comments env in
               Expect.token env T_FUNCTION;
-              let generator = generator env in
+              let (generator, leading_generator) = generator env in
+              let leading = List.concat [leading_async; leading_function; leading_generator] in
               let (tparams, id) =
                 match (in_export env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
@@ -263,14 +272,25 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               in
               let params = function_params ~await:async ~yield:generator env in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
-              (generator, tparams, id, params, return, predicate))
+              (generator, tparams, id, params, return, predicate, leading))
             env
         in
         let (body, strict) = function_body env ~async ~generator in
         let simple = is_simple_function_params params in
         strict_post_check env ~strict ~simple id params;
         Statement.FunctionDeclaration
-          { Function.id; params; body; generator; async; predicate; return; tparams; sig_loc })
+          {
+            Function.id;
+            params;
+            body;
+            generator;
+            async;
+            predicate;
+            return;
+            tparams;
+            sig_loc;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          })
 
   let variable_declaration_list =
     let variable_declaration env =

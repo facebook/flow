@@ -1,0 +1,144 @@
+{
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":3,"column":64}},
+  "range":[18,135],
+  "body":[
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":69}},
+      "range":[18,69],
+      "expression":{
+        "type":"ArrowFunctionExpression",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
+            "range":[0,17],
+            "value":" 1.1 L arrow "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":50}},
+        "range":[18,50],
+        "id":null,
+        "params":[],
+        "body":{
+          "type":"BlockStatement",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":1,"column":51},"end":{"line":1,"column":68}},
+              "range":[51,68],
+              "value":" 1.3 T block "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":47}},
+              "range":[30,47],
+              "value":" 1.2 L block "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":1,"column":48},"end":{"line":1,"column":50}},
+          "range":[48,50],
+          "body":[]
+        },
+        "async":true,
+        "generator":false,
+        "predicate":null,
+        "expression":false,
+        "returnType":null,
+        "typeParameters":null
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":3,"column":18},"end":{"line":3,"column":64}},
+      "range":[89,135],
+      "expression":{
+        "type":"ArrowFunctionExpression",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":17}},
+            "range":[71,88],
+            "value":" 2.1 L arrow "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":3,"column":18},"end":{"line":3,"column":47}},
+        "range":[89,118],
+        "id":null,
+        "params":[],
+        "body":{
+          "type":"Literal",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":3,"column":48},"end":{"line":3,"column":63}},
+              "range":[119,134],
+              "value":" 2.3 T num "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":3,"column":30},"end":{"line":3,"column":45}},
+              "range":[101,116],
+              "value":" 2.2 L num "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":3,"column":46},"end":{"line":3,"column":47}},
+          "range":[117,118],
+          "value":1,
+          "raw":"1"
+        },
+        "async":true,
+        "generator":false,
+        "predicate":null,
+        "expression":true,
+        "returnType":null,
+        "typeParameters":null
+      },
+      "directive":null
+    }
+  ],
+  "comments":[
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
+      "range":[0,17],
+      "value":" 1.1 L arrow "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":47}},
+      "range":[30,47],
+      "value":" 1.2 L block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":51},"end":{"line":1,"column":68}},
+      "range":[51,68],
+      "value":" 1.3 T block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":17}},
+      "range":[71,88],
+      "value":" 2.1 L arrow "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":30},"end":{"line":3,"column":45}},
+      "range":[101,116],
+      "value":" 2.2 L num "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":48},"end":{"line":3,"column":63}},
+      "range":[119,134],
+      "value":" 2.3 T num "
+    }
+  ]
+}

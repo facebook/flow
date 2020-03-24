@@ -80,6 +80,14 @@
       "range":[109,159],
       "declaration":{
         "type":"FunctionDeclaration",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":3,"column":34},"end":{"line":3,"column":55}},
+            "range":[124,145],
+            "value":" 2.2 L func decl "
+          }
+        ],
         "loc":{"source":null,"start":{"line":3,"column":56},"end":{"line":3,"column":69}},
         "range":[146,159],
         "id":null,

@@ -510,8 +510,8 @@ let program
       match (stmt1, stmt2) with
       | ((loc, VariableDeclaration var1), (_, VariableDeclaration var2)) ->
         variable_declaration loc var1 var2
-      | ((_, FunctionDeclaration func1), (_, FunctionDeclaration func2)) ->
-        function_declaration func1 func2
+      | ((loc, FunctionDeclaration func1), (_, FunctionDeclaration func2)) ->
+        function_declaration loc func1 func2
       | ((_, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ class1 class2
       | ((_, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2)) -> interface intf1 intf2
       | ((loc, If if1), (_, If if2)) -> if_statement loc if1 if2
@@ -691,9 +691,10 @@ let program
       let spec_diff = diff_if_changed_opt import_specifier spec1 spec2 in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [dflt_diff; spec_diff; comments_diff]
-  and function_declaration func1 func2 = function_ func1 func2
+  and function_declaration loc func1 func2 = function_ loc func1 func2
   and function_
       ?(is_arrow = false)
+      (loc : Loc.t)
       (func1 : (Loc.t, Loc.t) Ast.Function.t)
       (func2 : (Loc.t, Loc.t) Ast.Function.t) : node change list option =
     let open Ast.Function in
@@ -707,6 +708,7 @@ let program
       return = return1;
       tparams = tparams1;
       sig_loc = _;
+      comments = comments1;
     } =
       func1
     in
@@ -720,6 +722,7 @@ let program
       return = return2;
       tparams = tparams2;
       sig_loc = _;
+      comments = comments2;
     } =
       func2
     in
@@ -741,7 +744,8 @@ let program
       in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Base.Option.return in
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
-      join_diff_list [id; tparams; params; returns; fnbody]
+      let comments = syntax_opt loc comments1 comments2 in
+      join_diff_list [id; tparams; params; returns; fnbody; comments]
   and function_params
       (params1 : (Loc.t, Loc.t) Ast.Function.Params.t)
       (params2 : (Loc.t, Loc.t) Ast.Function.Params.t) : node change list option =
@@ -964,7 +968,7 @@ let program
     let {
       kind = kind1;
       key = key1;
-      value = (_loc, value1);
+      value = (value_loc, value1);
       static = static1;
       decorators = decorators1;
     } =
@@ -988,7 +992,7 @@ let program
     then
       None
     else
-      function_ value1 value2
+      function_ value_loc value1 value2
   and block
       (loc : Loc.t)
       (block1 : (Loc.t, Loc.t) Ast.Statement.Block.t)
@@ -1026,8 +1030,8 @@ let program
       | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
       | ((loc, Member member1), (_, Member member2)) -> member loc member1 member2
       | ((loc, Call call1), (_, Call call2)) -> call loc call1 call2
-      | ((_, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true f1 f2
-      | ((_, Function f1), (_, Function f2)) -> function_ f1 f2
+      | ((loc, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true loc f1 f2
+      | ((loc, Function f1), (_, Function f2)) -> function_ loc f1 f2
       | ((_, Class class1), (_, Class class2)) -> class_ class1 class2
       | ((loc, Assignment assn1), (_, Assignment assn2)) -> assignment loc assn1 assn2
       | ((loc, Object obj1), (_, Object obj2)) -> object_ loc obj1 obj2
@@ -1405,7 +1409,7 @@ let program
     | (Set { value = val1; key = key1 }, Set { value = val2; key = key2 })
     | (Method { value = val1; key = key1 }, Method { value = val2; key = key2 })
     | (Get { value = val1; key = key1 }, Get { value = val2; key = key2 }) ->
-      let values = diff_if_changed_ret_opt function_ (snd val1) (snd val2) in
+      let values = diff_if_changed_ret_opt (function_ (fst val1)) (snd val1) (snd val2) in
       let keys = diff_if_changed_ret_opt object_key key1 key2 in
       join_diff_list [keys; values]
     | _ -> None

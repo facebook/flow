@@ -308,6 +308,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             return = _;
             tparams = _;
             sig_loc = _;
+            comments = _;
           } =
             expr
           in
@@ -337,6 +338,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             return = _;
             tparams = _;
             sig_loc = _;
+            comments = _;
           } =
             expr
           in

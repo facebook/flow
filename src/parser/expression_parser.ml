@@ -960,12 +960,14 @@ module Expression
   and _function env =
     with_loc
       (fun env ->
-        let async = Declaration.async env in
-        let (sig_loc, (id, params, generator, predicate, return, tparams)) =
+        let (async, leading_async) = Declaration.async env in
+        let (sig_loc, (id, params, generator, predicate, return, tparams, leading)) =
           with_loc
             (fun env ->
+              let leading_function = Peek.comments env in
               Expect.token env T_FUNCTION;
-              let generator = Declaration.generator env in
+              let (generator, leading_generator) = Declaration.generator env in
+              let leading = List.concat [leading_async; leading_function; leading_generator] in
               (* `await` is a keyword in async functions:
           - proposal-async-iteration/#prod-AsyncGeneratorExpression
           - #prod-AsyncFunctionExpression *)
@@ -991,14 +993,25 @@ module Expression
               let env = env |> with_allow_super No_super in
               let params = Declaration.function_params ~await ~yield env in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
-              (id, params, generator, predicate, return, tparams))
+              (id, params, generator, predicate, return, tparams, leading))
             env
         in
         let (body, strict) = Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple id params;
         Expression.Function
-          { Function.id; params; body; generator; async; predicate; return; tparams; sig_loc })
+          {
+            Function.id;
+            params;
+            body;
+            generator;
+            async;
+            predicate;
+            return;
+            tparams;
+            sig_loc;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          })
       env
 
   and number env kind raw =
@@ -1259,6 +1272,8 @@ module Expression
       match expression with
       | Array ({ Array.comments; _ } as e) ->
         Array { e with Array.comments = merge_comments comments }
+      | ArrowFunction ({ Function.comments; _ } as e) ->
+        ArrowFunction { e with Function.comments = merge_comments comments }
       | Assignment ({ Assignment.comments; _ } as e) ->
         Assignment { e with Assignment.comments = merge_comments comments }
       | Binary ({ Binary.comments; _ } as e) ->
@@ -1268,6 +1283,8 @@ module Expression
         Class { e with Class.comments = merge_comments comments }
       | Conditional ({ Conditional.comments; _ } as e) ->
         Conditional { e with Conditional.comments = merge_comments comments }
+      | Function ({ Function.comments; _ } as e) ->
+        Function { e with Function.comments = merge_comments comments }
       | Identifier (loc, ({ Identifier.comments; _ } as e)) ->
         Identifier (loc, { e with Identifier.comments = merge_comments comments })
       | Import ({ Import.comments; _ } as e) ->
@@ -1444,7 +1461,12 @@ module Expression
       let start_loc = Peek.loc env in
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
-      let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
+      let (async, leading) =
+        if Peek.ith_token ~i:1 env <> T_ARROW then
+          Declaration.async env
+        else
+          (false, [])
+      in
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->
@@ -1526,6 +1548,7 @@ module Expression
               return;
               tparams;
               sig_loc;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
             } )
 
   and sequence env acc =

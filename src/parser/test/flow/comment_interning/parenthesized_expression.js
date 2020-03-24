@@ -6,6 +6,8 @@ function foo() {}
 
 /* Leading array */ ([]) /* Trailing array */;
 
+/* Leading arrow function */ (() => {}) /* Trailing arrow function */;
+
 /* Leading assign */ (i = 1) /* Trailing assign */;
 
 /* Leading binary */ (1 + 2) /* Trailing binary */;
@@ -15,6 +17,8 @@ function foo() {}
 /* Leading class */ (class C {}) /* Trailing class */;
 
 /* Leading conditional */ (true ? 1 : 2) /* Trailing conditional */;
+
+/* Leading function */ (function(){}) /* Trailing function */;
 
 /* Leading identifier */ (i) /* Trailing identifier */;
 

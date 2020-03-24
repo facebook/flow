@@ -702,7 +702,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                  ]);
             statement_after_test ~pretty_semicolon body;
           ]
-      | S.FunctionDeclaration func -> function_ func
+      | S.FunctionDeclaration func -> function_ loc func
       | S.VariableDeclaration decl -> with_semicolon (variable_declaration (loc, decl))
       | S.ClassDeclaration class_ -> class_base class_
       | S.EnumDeclaration enum -> enum_declaration enum
@@ -810,8 +810,8 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
         @@ group [join (fuse [Atom ","; pretty_line]) layouts]
       | E.Identifier ident -> identifier ident
       | E.Literal lit -> literal lit
-      | E.Function func -> function_ func
-      | E.ArrowFunction func -> arrow_function ~ctxt ~precedence func
+      | E.Function func -> function_ loc func
+      | E.ArrowFunction func -> arrow_function ~ctxt ~precedence loc func
       | E.Assignment { E.Assignment.operator; left; right; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse
@@ -1357,6 +1357,7 @@ and variable_declarator ~ctxt (loc, { Ast.Statement.VariableDeclaration.Declarat
 and arrow_function
     ?(ctxt = normal_context)
     ~precedence
+    loc
     {
       Ast.Function.params;
       body;
@@ -1364,6 +1365,7 @@ and arrow_function
       predicate;
       return;
       tparams;
+      comments;
       generator = _;
       id = _;
       (* arrows don't have ids and can't be generators *) sig_loc = _;
@@ -1400,34 +1402,35 @@ and arrow_function
           function_return return predicate;
         ]
   in
-  fuse
-    [
-      fuse_with_space
-        [
-          ( if async then
-            Atom "async"
-          else
-            Empty );
-          params_and_stuff;
-        ];
-      (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         fuse_with_space
+           [
+             ( if async then
+               Atom "async"
+             else
+               Empty );
+             params_and_stuff;
+           ];
+         (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
        unexpected multiply-and-assign operator. Thus, we format this with a
        space e.g. `():* =>{}`. *)
-      begin
-        match return with
-        | Ast.Type.Available (_, (_, Ast.Type.Exists _)) -> space
-        | _ -> pretty_space
-      end;
-      Atom "=>";
-      pretty_space;
-      begin
-        match body with
-        | Ast.Function.BodyBlock b -> block b
-        | Ast.Function.BodyExpression expr ->
-          let ctxt = { normal_context with group = In_arrow_func } in
-          expression_with_parens ~precedence ~ctxt expr
-      end;
-    ]
+         begin
+           match return with
+           | Ast.Type.Available (_, (_, Ast.Type.Exists _)) -> space
+           | _ -> pretty_space
+         end;
+         Atom "=>";
+         pretty_space;
+         begin
+           match body with
+           | Ast.Function.BodyBlock b -> block b
+           | Ast.Function.BodyExpression expr ->
+             let ctxt = { normal_context with group = In_arrow_func } in
+             expression_with_parens ~precedence ~ctxt expr
+         end;
+       ]
 
 and arrow_function_params params =
   group
@@ -1438,8 +1441,19 @@ and arrow_function_params params =
         (function_params ~ctxt:normal_context params);
     ]
 
-and function_ func =
-  let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ } =
+and function_ loc func =
+  let {
+    Ast.Function.id;
+    params;
+    body;
+    async;
+    generator;
+    predicate;
+    return;
+    tparams;
+    sig_loc = _;
+    comments;
+  } =
     func
   in
   let prefix =
@@ -1463,22 +1477,26 @@ and function_ func =
     else
       id
   in
-  function_base ~prefix ~params ~body ~predicate ~return ~tparams
+  function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~comments
 
-and function_base ~prefix ~params ~body ~predicate ~return ~tparams =
-  fuse
-    [
-      prefix;
-      option type_parameter tparams;
-      list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") (function_params ~ctxt:normal_context params);
-      function_return return predicate;
-      pretty_space;
-      begin
-        match body with
-        | Ast.Function.BodyBlock b -> block b
-        | Ast.Function.BodyExpression _ -> failwith "Only arrows should have BodyExpressions"
-      end;
-    ]
+and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~comments =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         prefix;
+         option type_parameter tparams;
+         list
+           ~wrap:(Atom "(", Atom ")")
+           ~sep:(Atom ",")
+           (function_params ~ctxt:normal_context params);
+         function_return return predicate;
+         pretty_space;
+         begin
+           match body with
+           | Ast.Function.BodyBlock b -> block b
+           | Ast.Function.BodyExpression _ -> failwith "Only arrows should have BodyExpressions"
+         end;
+       ]
 
 and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
   let s_params =
@@ -1556,6 +1574,7 @@ and class_method (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); s
     tparams;
     id = _;
     (* methods don't use id; see `key` *) sig_loc = _;
+    comments = func_comments;
   } =
     func
   in
@@ -1592,7 +1611,16 @@ and class_method (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); s
           else
             Empty );
           source_location_with_comments
-            (func_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams);
+            ( func_loc,
+              function_base
+                ~prefix
+                ~params
+                ~body
+                ~predicate
+                ~return
+                ~tparams
+                ~loc:func_loc
+                ~comments:func_comments );
         ] )
 
 and class_property_helper loc key value static annot variance_ =
@@ -1902,8 +1930,18 @@ and object_property property =
             ] )
   | O.Property (loc, O.Property.Method { key; value = (fn_loc, func) }) ->
     let s_key = object_property_key key in
-    let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
-        =
+    let {
+      Ast.Function.id;
+      params;
+      body;
+      async;
+      generator;
+      predicate;
+      return;
+      tparams;
+      sig_loc = _;
+      comments = fn_comments;
+    } =
       func
     in
     assert (id = None);
@@ -1926,10 +1964,29 @@ and object_property property =
     source_location_with_comments
       ( loc,
         source_location_with_comments
-          (fn_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams) )
+          ( fn_loc,
+            function_base
+              ~prefix
+              ~params
+              ~body
+              ~predicate
+              ~return
+              ~tparams
+              ~loc:fn_loc
+              ~comments:fn_comments ) )
   | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
-    let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
-        =
+    let {
+      Ast.Function.id;
+      params;
+      body;
+      async;
+      generator;
+      predicate;
+      return;
+      tparams;
+      sig_loc = _;
+      comments = fn_comments;
+    } =
       func
     in
     assert (id = None);
@@ -1945,10 +2002,29 @@ and object_property property =
     source_location_with_comments
       ( loc,
         source_location_with_comments
-          (fn_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams) )
+          ( fn_loc,
+            function_base
+              ~prefix
+              ~params
+              ~body
+              ~predicate
+              ~return
+              ~tparams
+              ~loc:fn_loc
+              ~comments:fn_comments ) )
   | O.Property (loc, O.Property.Set { key; value = (fn_loc, func) }) ->
-    let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
-        =
+    let {
+      Ast.Function.id;
+      params;
+      body;
+      async;
+      generator;
+      predicate;
+      return;
+      tparams;
+      sig_loc = _;
+      comments = fn_comments;
+    } =
       func
     in
     assert (id = None);
@@ -1964,7 +2040,16 @@ and object_property property =
     source_location_with_comments
       ( loc,
         source_location_with_comments
-          (fn_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams) )
+          ( fn_loc,
+            function_base
+              ~prefix
+              ~params
+              ~body
+              ~predicate
+              ~return
+              ~tparams
+              ~loc:fn_loc
+              ~comments:fn_comments ) )
   | O.SpreadProperty (loc, { O.SpreadProperty.argument; comments }) ->
     source_location_with_comments ?comments (loc, fuse [Atom "..."; expression argument])
 

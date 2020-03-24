@@ -107,7 +107,7 @@ module Object
   let getter_or_setter env ~in_class_body is_getter =
     (* this is a getter or setter, it cannot be async *)
     let async = false in
-    let generator = Declaration.generator env in
+    let (generator, leading) = Declaration.generator env in
     let (key_loc, key) = key ~class_body:in_class_body env in
     let value =
       with_loc
@@ -150,6 +150,7 @@ module Object
             return;
             tparams;
             sig_loc;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
           })
         env
     in
@@ -199,7 +200,7 @@ module Object
           expr
       in
       (* #prod-MethodDefinition *)
-      let parse_method ~async ~generator =
+      let parse_method ~async ~generator ~leading =
         with_loc (fun env ->
             (* #sec-function-definitions-static-semantics-early-errors *)
             let env = env |> with_allow_super Super_prop in
@@ -237,6 +238,7 @@ module Object
               return;
               tparams;
               sig_loc;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
       in
       (* PropertyName `:` AssignmentExpression *)
@@ -276,10 +278,10 @@ module Object
         | Property.Computed _ ->
           parse_value env
       in
-      let parse_init ~key ~async ~generator env =
+      let parse_init ~key ~async ~generator ~leading env =
         if async || generator then
           (* the `async` and `*` modifiers are only valid on methods *)
-          let value = parse_method env ~async ~generator in
+          let value = parse_method env ~async ~generator ~leading in
           let prop = Method { key; value } in
           (prop, Pattern_cover.empty_errors)
         else
@@ -291,7 +293,7 @@ module Object
             (prop, Pattern_cover.empty_errors)
           | T_LESS_THAN
           | T_LPAREN ->
-            let value = parse_method env ~async ~generator in
+            let value = parse_method env ~async ~generator ~leading in
             let prop = Method { key; value } in
             (prop, Pattern_cover.empty_errors)
           | T_ASSIGN ->
@@ -303,8 +305,10 @@ module Object
             let prop = Init { key; value; shorthand = false } in
             (prop, errs)
       in
-      fun env start_loc key async generator ->
-        let (loc, (prop, errs)) = with_loc ~start_loc (parse_init ~key ~async ~generator) env in
+      fun env start_loc key async generator leading ->
+        let (loc, (prop, errs)) =
+          with_loc ~start_loc (parse_init ~key ~async ~generator ~leading) env
+        in
         (Ast.Expression.Object.Property (loc, prop), errs)
     in
     let property env =
@@ -324,7 +328,7 @@ module Object
           errs )
       else
         let start_loc = Peek.loc env in
-        let async =
+        let (async, leading_async) =
           match Peek.ith_token ~i:1 env with
           | T_ASSIGN
           (* { async = true } (destructuring) *)
@@ -337,10 +341,11 @@ module Object
           | T_COMMA
           (* { async, other, shorthand } *)
           | T_RCURLY (* { async } *) ->
-            false
+            (false, [])
           | _ -> Declaration.async env
         in
-        let generator = Declaration.generator env in
+        let (generator, leading_generator) = Declaration.generator env in
+        let leading = leading_async @ leading_generator in
         match (async, generator, Peek.token env) with
         | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
           let (_, key) = key env in
@@ -352,7 +357,7 @@ module Object
             | T_LPAREN
             | T_COMMA
             | T_RCURLY ->
-              init env start_loc key false false
+              init env start_loc key false false leading
             | _ -> (get env start_loc, Pattern_cover.empty_errors)
           end
         | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
@@ -365,12 +370,12 @@ module Object
             | T_LPAREN
             | T_COMMA
             | T_RCURLY ->
-              init env start_loc key false false
+              init env start_loc key false false leading
             | _ -> (set env start_loc, Pattern_cover.empty_errors)
           end
         | (async, generator, _) ->
           let (_, key) = key env in
-          init env start_loc key async generator
+          init env start_loc key async generator leading
     in
     let rec properties env ~rest_trailing_comma (props, errs) =
       match Peek.token env with
@@ -547,7 +552,7 @@ module Object
         Body.PrivateField (loc, { PrivateField.key = private_name; value; annot; static; variance })
       | _ -> Ast.Class.(Body.Property (loc, { Property.key; value; annot; static; variance }))
     in
-    let rec init env start_loc decorators key ~async ~generator ~static ~declare variance =
+    let rec init env start_loc decorators key ~async ~generator ~static ~declare variance leading =
       match Peek.token env with
       | T_COLON
       | T_ASSIGN
@@ -559,7 +564,7 @@ module Object
         (* TODO: add support for optional class properties *)
         error_unexpected env;
         Eat.token env;
-        init env start_loc decorators key ~async ~generator ~static ~declare variance
+        init env start_loc decorators key ~async ~generator ~static ~declare variance leading
       | _ when Peek.is_implicit_semicolon env ->
         (* an uninitialized, unannotated property *)
         property env start_loc key static declare variance
@@ -614,6 +619,7 @@ module Object
                 return;
                 tparams;
                 sig_loc;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
             env
         in
@@ -654,20 +660,27 @@ module Object
         && not (Peek.ith_is_line_terminator ~i:1 env)
       in
       (* consume `async` *)
-      if async then Eat.token env;
-
-      let generator = Declaration.generator env in
+      let leading_async =
+        if async then (
+          let leading = Peek.comments env in
+          Eat.token env;
+          leading
+        ) else
+          []
+      in
+      let (generator, leading_generator) = Declaration.generator env in
       let variance = Declaration.variance env async generator in
-      let generator =
+      let (generator, leading_generator) =
         match (generator, variance) with
         | (false, Some _) -> Declaration.generator env
-        | _ -> generator
+        | _ -> (generator, leading_generator)
       in
+      let leading = leading_async @ leading_generator in
       match (async, generator, Peek.token env) with
       | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
         let (_, key) = key ~class_body:true env in
         if implies_identifier env then
-          init env start_loc decorators key ~async ~generator ~static ~declare variance
+          init env start_loc decorators key ~async ~generator ~static ~declare variance leading
         else (
           error_unsupported_declare env declare;
           error_unsupported_variance env variance;
@@ -676,7 +689,7 @@ module Object
       | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
         let (_, key) = key ~class_body:true env in
         if implies_identifier env then
-          init env start_loc decorators key ~async ~generator ~static ~declare variance
+          init env start_loc decorators key ~async ~generator ~static ~declare variance leading
         else (
           error_unsupported_declare env declare;
           error_unsupported_variance env variance;
@@ -684,7 +697,7 @@ module Object
         )
       | (_, _, _) ->
         let (_, key) = key ~class_body:true env in
-        init env start_loc decorators key ~async ~generator ~static ~declare variance
+        init env start_loc decorators key ~async ~generator ~static ~declare variance leading
 
   let class_body =
     let rec elements env seen_constructor private_names acc =
