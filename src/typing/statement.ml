@@ -6592,26 +6592,21 @@ and predicates_of_condition cx ~cond e =
   (* inspect a typeof equality test *)
   let typeof_test loc sense arg typename str_loc reconstruct_ast =
     let bool = BoolT.at loc |> with_trust bogus_trust in
-    let pred_and_not_undef =
+    let pred_and_chain_sense sense =
       match typename with
-      | "boolean" -> Some (BoolP loc, true)
-      | "function" -> Some (FunP, true)
-      | "number" -> Some (NumP loc, true)
-      | "object" -> Some (ObjP, true)
-      | "string" -> Some (StrP loc, true)
-      | "symbol" -> Some (SymbolP loc, true)
-      | "undefined" -> Some (VoidP, false)
+      | "boolean" -> Some (BoolP loc, sense)
+      | "function" -> Some (FunP, sense)
+      | "number" -> Some (NumP loc, sense)
+      | "object" -> Some (ObjP, sense)
+      | "string" -> Some (StrP loc, sense)
+      | "symbol" -> Some (SymbolP loc, sense)
+      | "undefined" -> Some (VoidP, not sense)
       | _ -> None
     in
-    match pred_and_not_undef with
-    | Some (pred, not_undef) ->
+    match pred_and_chain_sense sense with
+    | Some (pred, chain_sense) ->
       let make_ast_and_pred ast _ = (((loc, bool), reconstruct_ast ast), pred) in
-      instance_test
-        loc
-        arg
-        make_ast_and_pred
-        sense
-        ((sense && not_undef) || ((not sense) && not not_undef))
+      instance_test loc arg make_ast_and_pred sense chain_sense
     | None ->
       let arg = condition cx ~cond arg in
       Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
