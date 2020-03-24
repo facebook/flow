@@ -345,37 +345,37 @@ References:
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:79:27
+Error ---------------------------------------------------------------------------------------------------- type.js:79:12
 
-Cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
-`p`'s definition in object type [3]. Can you make object type [2] exact?
+Flow cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
+with `p`'s definition in object type [3]. Can you make object type [2] exact?.
 
-   type.js:79:27
-   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
-                                 ^^^^^ [2]
-
-References:
    type.js:79:12
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type.js:79:27
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
+                                 ^^^^^ [2]
    type.js:79:16
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                       ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:84:25
+Error ---------------------------------------------------------------------------------------------------- type.js:84:12
 
-Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
-`p`'s definition in object type [3]. Can you make object type [2] exact?
+Flow cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
+with `p`'s definition in object type [3]. Can you make object type [2] exact?.
 
-   type.js:84:25
-   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
-                               ^^^^^ [2]
-
-References:
    type.js:84:12
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                   ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type.js:84:25
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
+                               ^^^^^ [2]
    type.js:84:16
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                       ^^^^^ [3]
@@ -1112,19 +1112,19 @@ References:
                                              ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:17:32
+Error ---------------------------------------------------------------------------------------------- type_union.js:17:17
 
-Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
-conflicts with `foo`'s definition in object type [3]. Can you make object type [2] exact?
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
+conflicts with `foo`'s definition in object type [3]. Can you make object type [2] exact?.
 
-   type_union.js:17:32
-   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
-                                      ^^ [2]
-
-References:
    type_union.js:17:17
    17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
                        ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_union.js:17:32
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                                      ^^ [2]
    type_union.js:17:21
    17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
                            ^^^^^^ [3]

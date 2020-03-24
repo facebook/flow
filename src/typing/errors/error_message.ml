@@ -293,6 +293,7 @@ and 'loc t' =
       object2_reason: 'loc virtual_reason;
       propname: string;
       error_kind: spread_error_kind;
+      use_op: 'loc virtual_use_op;
     }
   | EInexactMayOverwriteIndexer of {
       spread_reason: 'loc virtual_reason;
@@ -763,7 +764,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         object_reason = map_reason object_reason;
         key_reason = map_reason key_reason;
       }
-  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind } ->
+  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
+    ->
     EUnableToSpread
       {
         spread_reason = map_reason spread_reason;
@@ -771,6 +773,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         object2_reason = map_reason object2_reason;
         propname;
         error_kind;
+        use_op = map_use_op use_op;
       }
   | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
     EInexactMayOverwriteIndexer
@@ -1076,14 +1079,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
    * the reduction in coverage is far more drastic. *)
   | ECannotSpreadInterface { spread_reason = _; interface_reason = reason }
   | ECannotSpreadIndexerOnRight { spread_reason = _; object_reason = reason; key_reason = _ }
-  | EUnableToSpread
-      {
-        spread_reason = _;
-        object1_reason = _;
-        object2_reason = reason;
-        propname = _;
-        error_kind = _;
-      }
   | EInexactMayOverwriteIndexer
       { spread_reason = _; key_reason = _; value_reason = _; object2_reason = reason } ->
     Some (poly_loc_of_reason reason)
@@ -1190,6 +1185,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
+  | EUnableToSpread _
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
   | EInvalidReactConfigType _
@@ -2769,7 +2765,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind } ->
+  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op } ->
     let (error_reason, fix_suggestion) =
       match error_kind with
       | Inexact -> ("is inexact", [text " Can you make "; ref object2_reason; text " exact?"])
@@ -2785,7 +2781,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let features =
       [
-        text "Cannot determine a type for ";
+        text "Flow cannot determine a type for ";
         ref spread_reason;
         text ". ";
         ref object2_reason;
@@ -2801,7 +2797,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
       @ fix_suggestion
     in
-    Normal { features }
+    UseOp { loc = loc_of_reason spread_reason; features; use_op }
   | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
     let features =
       [

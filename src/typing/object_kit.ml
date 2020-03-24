@@ -300,6 +300,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                        object2_reason = r2;
                                        propname = x;
                                        error_kind = Error_message.Inexact;
+                                       use_op;
                                      }))
                          (* We care about a few cases here. We want to make sure that we can
                           * infer a precise type. This is tricky when the left-hand slice is inexact,
@@ -345,6 +346,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                        object2_reason = inexact_reason;
                                        propname = x;
                                        error_kind;
+                                       use_op;
                                      }))
                            else
                              Some (fst p2, true))

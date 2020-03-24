@@ -1499,13 +1499,14 @@ let dump_error_message =
         (dump_reason cx spread_reason)
         (dump_reason cx object_reason)
         (dump_reason cx key_reason)
-    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ } ->
+    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _; use_op } ->
       spf
-        "EUnableToSpread (%s) (%s) (%s) (%s)"
+        "EUnableToSpread (%s) (%s) (%s) (%s) (%s)" 
         (dump_reason cx spread_reason)
         (dump_reason cx object1_reason)
         (dump_reason cx object2_reason)
         propname
+        (string_of_use_op use_op)
     | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
       spf
         "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s)"

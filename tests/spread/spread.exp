@@ -24,6 +24,46 @@ References:
                                  ^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
+
+Cannot call `bar` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may
+contain `m` with a type that conflicts with `m`'s definition in object type [1]. Can you make object type [2] exact?.
+
+   error_positions.js:11:6
+   11| (foo(bar(C)): F<typeof C>); // error on call
+            ^^^
+
+References:
+   error_positions.js:7:45
+    7| declare function bar<P>(React$ComponentType<{ m: number, ...P}>): React$ComponentType<P>;
+                                                   ^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:9:33
+    9| class C extends React.Component<{}> {}
+                                       ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_positions.js:16:8
+
+Cannot call `spread` with `inexact` bound to `x` because Flow cannot determine a type for object type [1]. object
+type [2] is inexact, so it may contain `foo` with a type that conflicts with `foo`'s definition in object type [3]. Can
+you make object type [2] exact?.
+
+   error_positions.js:16:8
+   16| spread(inexact); // error on call
+              ^^^^^^^
+
+References:
+   error_positions.js:13:39
+   13| declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
+                                             ^^^^^^^^^^^^^ [1]
+   error_positions.js:13:49
+   13| declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
+                                                       ^^ [2]
+   error_positions.js:15:22
+   15| declare var inexact: {foo: number};
+                            ^^^^^^^^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- exact.js:14:35
 
 Cannot assign object literal to `spread_inexact_first` because inexact object literal [1] is incompatible with exact
@@ -39,19 +79,17 @@ References:
                                    ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- exact.js:15:50
+Error --------------------------------------------------------------------------------------------------- exact.js:15:36
 
-Cannot determine a type for object literal [1]. object type [2] is inexact, so it may contain `bar` with a type that
-conflicts with `bar`'s definition in object literal [3]. Can you make object type [2] exact?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
+it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Can you make object
+type [2] exact?.
 
-   exact.js:15:50
-   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
-                                                        ^^^^^^^^^^^
-
-References:
    exact.js:15:36
    15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    exact.js:13:20
    13| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
                           ^^^^^^^^^^^^^^^ [2]
@@ -268,4 +306,4 @@ References:
 
 
 
-Found 15 errors
+Found 17 errors
