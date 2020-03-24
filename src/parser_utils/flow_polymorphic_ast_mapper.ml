@@ -1051,11 +1051,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method import_declaration _loc (decl : ('M, 'T) Ast.Statement.ImportDeclaration.t)
         : ('N, 'U) Ast.Statement.ImportDeclaration.t =
       let open Ast.Statement.ImportDeclaration in
-      let { importKind; source; specifiers; default } = decl in
+      let { importKind; source; specifiers; default; comments } = decl in
       let specifiers' = Base.Option.map ~f:this#import_specifier specifiers in
       let default' = Base.Option.map ~f:this#import_default_specifier default in
       let source' = (this#on_loc_annot * this#string_literal) source in
-      { importKind; source = source'; specifiers = specifiers'; default = default' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      {
+        importKind;
+        source = source';
+        specifiers = specifiers';
+        default = default';
+        comments = comments';
+      }
 
     method import_specifier (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier)
         : ('N, 'U) Ast.Statement.ImportDeclaration.specifier =

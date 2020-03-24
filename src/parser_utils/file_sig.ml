@@ -587,7 +587,7 @@ struct
 
       method! import_declaration import_loc (decl : (L.t, L.t) Ast.Statement.ImportDeclaration.t) =
         let open Ast.Statement.ImportDeclaration in
-        let { importKind; source; specifiers; default } = decl in
+        let { importKind; source; specifiers; default; comments = _ } = decl in
         let source =
           match source with
           | (loc, { Ast.StringLiteral.value = name; _ }) -> (loc, name)

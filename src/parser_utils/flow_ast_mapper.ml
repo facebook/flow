@@ -1291,13 +1291,14 @@ class ['loc] mapper =
 
     method import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
-      let { importKind; source; specifiers; default } = decl in
+      let { importKind; source; specifiers; default; comments } = decl in
       let specifiers' = map_opt this#import_specifier specifiers in
       let default' = map_opt this#import_default_specifier default in
-      if specifiers == specifiers' && default == default' then
+      let comments' = this#syntax_opt comments in
+      if specifiers == specifiers' && default == default' && comments == comments' then
         decl
       else
-        { importKind; source; specifiers = specifiers'; default = default' }
+        { importKind; source; specifiers = specifiers'; default = default'; comments = comments' }
 
     method import_specifier (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
       let open Ast.Statement.ImportDeclaration in

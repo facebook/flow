@@ -730,7 +730,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                  ]);
             statement_after_test ~pretty_semicolon body;
           ]
-      | S.ImportDeclaration import -> import_declaration import
+      | S.ImportDeclaration import -> import_declaration loc import
       | S.ExportNamedDeclaration export -> export_declaration export
       | S.ExportDefaultDeclaration export -> export_default_declaration export
       | S.TypeAlias typeAlias -> type_alias ~declare:false loc typeAlias
@@ -2203,37 +2203,40 @@ and import_named_specifiers named_specifiers =
         (Base.List.map ~f:import_named_specifier named_specifiers);
     ]
 
-and import_declaration { Ast.Statement.ImportDeclaration.importKind; source; specifiers; default } =
+and import_declaration
+    loc { Ast.Statement.ImportDeclaration.importKind; source; specifiers; default; comments } =
   let s_from = fuse [Atom "from"; pretty_space] in
   let module I = Ast.Statement.ImportDeclaration in
-  with_semicolon
-    (fuse
-       [
-         Atom "import";
-         begin
-           match importKind with
-           | I.ImportType -> fuse [space; Atom "type"]
-           | I.ImportTypeof -> fuse [space; Atom "typeof"]
-           | I.ImportValue -> Empty
-         end;
-         begin
-           match (partition_specifiers default specifiers, importKind) with
-           (* No export specifiers *)
-           (* `import 'module-name';` *)
-           | (([], None), I.ImportValue) -> pretty_space
-           (* `import type {} from 'module-name';` *)
-           | (([], None), (I.ImportType | I.ImportTypeof)) ->
-             fuse [pretty_space; Atom "{}"; pretty_space; s_from]
-           (* Only has named specifiers *)
-           | (([], Some named), _) -> fuse [pretty_space; named; pretty_space; s_from]
-           (* Only has default or namedspaced specifiers *)
-           | ((special, None), _) -> fuse [space; fuse_list ~sep:(Atom ",") special; space; s_from]
-           (* Has both default or namedspaced specifiers and named specifiers *)
-           | ((special, Some named), _) ->
-             fuse [space; fuse_list ~sep:(Atom ",") (special @ [named]); pretty_space; s_from]
-         end;
-         string_literal source;
-       ])
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            Atom "import";
+            begin
+              match importKind with
+              | I.ImportType -> fuse [space; Atom "type"]
+              | I.ImportTypeof -> fuse [space; Atom "typeof"]
+              | I.ImportValue -> Empty
+            end;
+            begin
+              match (partition_specifiers default specifiers, importKind) with
+              (* No export specifiers *)
+              (* `import 'module-name';` *)
+              | (([], None), I.ImportValue) -> pretty_space
+              (* `import type {} from 'module-name';` *)
+              | (([], None), (I.ImportType | I.ImportTypeof)) ->
+                fuse [pretty_space; Atom "{}"; pretty_space; s_from]
+              (* Only has named specifiers *)
+              | (([], Some named), _) -> fuse [pretty_space; named; pretty_space; s_from]
+              (* Only has default or namedspaced specifiers *)
+              | ((special, None), _) ->
+                fuse [space; fuse_list ~sep:(Atom ",") special; space; s_from]
+              (* Has both default or namedspaced specifiers and named specifiers *)
+              | ((special, Some named), _) ->
+                fuse [space; fuse_list ~sep:(Atom ",") (special @ [named]); pretty_space; s_from]
+            end;
+            string_literal source;
+          ])
 
 and export_source ~prefix = function
   | Some lit -> fuse [prefix; Atom "from"; pretty_space; string_literal lit]

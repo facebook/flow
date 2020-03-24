@@ -75,6 +75,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
         source = (source_loc, { Flow_ast.StringLiteral.value = module_name; _ });
         specifiers;
         default;
+        comments = _;
       } =
         decl
       in

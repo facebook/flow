@@ -605,7 +605,9 @@ and statement_decl cx =
       let (stmt, _) = Import_export.nameify_default_export_decl stmt in
       statement_decl cx stmt
     | ExportDefaultDeclaration.Expression _ -> ())
-  | (_, ImportDeclaration { ImportDeclaration.importKind; specifiers; default; source = _ }) ->
+  | ( _,
+      ImportDeclaration
+        { ImportDeclaration.importKind; specifiers; default; source = _; comments = _ } ) ->
     let isType =
       match importKind with
       | ImportDeclaration.ImportType -> true
@@ -2351,7 +2353,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   | (import_loc, ImportDeclaration import_decl) ->
     Context.add_import_stmt cx import_decl;
 
-    let { ImportDeclaration.source; specifiers; default; importKind } = import_decl in
+    let { ImportDeclaration.source; specifiers; default; importKind; comments } = import_decl in
     let (source_loc, { Ast.StringLiteral.value = module_name; _ }) = source in
     let type_kind_of_kind = function
       | ImportDeclaration.ImportType -> Type.ImportType
@@ -2482,8 +2484,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
     ( import_loc,
       ImportDeclaration
-        { ImportDeclaration.source; specifiers = specifiers_ast; default = default_ast; importKind }
-    )
+        {
+          ImportDeclaration.source;
+          specifiers = specifiers_ast;
+          default = default_ast;
+          importKind;
+          comments;
+        } )
 
 and export_statement cx loc ~default declaration_export_info specifiers source exportKind =
   let open Ast.Statement in

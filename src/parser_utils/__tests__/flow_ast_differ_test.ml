@@ -357,6 +357,7 @@ class insert_import_mapper =
                            remote = Flow_ast_utils.ident_of_source (loc, "baz");
                          };
                        ]);
+                comments = None;
               } )
         in
         imp :: stmts
@@ -391,6 +392,7 @@ class insert_second_import_mapper =
                            remote = Flow_ast_utils.ident_of_source (loc, "baz");
                          };
                        ]);
+                comments = None;
               } )
         in
         List.hd stmts :: imp :: List.tl stmts
@@ -604,6 +606,7 @@ class insert_import_and_annot_mapper =
                             remote = Flow_ast_utils.ident_of_source (Loc.none, "there");
                           };
                         ]);
+                comments = None;
               } )
       in
       (loc, List.hd stmts :: import 1 :: import 2 :: List.tl stmts, comments)

@@ -1616,13 +1616,21 @@ module Statement
           Expect.token env T_RCURLY;
           ImportNamedSpecifiers specifiers
       in
-      let with_specifiers importKind env =
+      let with_specifiers importKind env leading =
         let specifiers = Some (named_or_namespace_specifier env importKind) in
         let source = source env in
         Eat.semicolon env;
-        Statement.ImportDeclaration { importKind; source; specifiers; default = None }
+        let trailing = Peek.comments env in
+        Statement.ImportDeclaration
+          {
+            importKind;
+            source;
+            specifiers;
+            default = None;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          }
       in
-      let with_default importKind env =
+      let with_default importKind env leading =
         let default_specifier =
           match importKind with
           | ImportType
@@ -1640,29 +1648,39 @@ module Statement
         in
         let source = source env in
         Eat.semicolon env;
+        let trailing = Peek.comments env in
         Statement.ImportDeclaration
           {
             importKind;
             source;
             specifiers = additional_specifiers;
             default = Some default_specifier;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       in
       with_loc (fun env ->
           let env = env |> with_strict true in
+          let leading = Peek.comments env in
           Expect.token env T_IMPORT;
 
           match Peek.token env with
           (* `import * as ns from "ModuleName";` *)
-          | T_MULT -> with_specifiers ImportValue env
+          | T_MULT -> with_specifiers ImportValue env leading
           (* `import { ... } from "ModuleName";` *)
-          | T_LCURLY -> with_specifiers ImportValue env
+          | T_LCURLY -> with_specifiers ImportValue env leading
           (* `import "ModuleName";` *)
           | T_STRING str ->
             let source = string_literal env str in
             Eat.semicolon env;
+            let trailing = Peek.comments env in
             Statement.ImportDeclaration
-              { importKind = ImportValue; source; specifiers = None; default = None }
+              {
+                importKind = ImportValue;
+                source;
+                specifiers = None;
+                default = None;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              }
           (* `import type [...] from "ModuleName";`
          note that if [...] is missing, we're importing a value named `type`! *)
           | T_TYPE when should_parse_types env ->
@@ -1673,7 +1691,7 @@ module Statement
               (* Importing the exported value named "type." This is not a type-import.
                * `import type from "ModuleName";` *)
               | T_IDENTIFIER { raw = "from"; _ } ->
-                with_default ImportValue env
+                with_default ImportValue env leading
               | T_MULT ->
                 (* `import type *` is invalid, since the namespace can't be a type *)
                 Eat.token env;
@@ -1682,17 +1700,17 @@ module Statement
                 error_unexpected env;
 
                 (* unexpected `*` *)
-                with_specifiers ImportType env
+                with_specifiers ImportType env leading
               | T_LCURLY ->
                 Eat.token env;
 
                 (* consume `type` *)
-                with_specifiers ImportType env
+                with_specifiers ImportType env leading
               | _ ->
                 Eat.token env;
 
                 (* consume `type` *)
-                with_default ImportType env
+                with_default ImportType env leading
             end
           (* `import typeof ... from "ModuleName";` *)
           | T_TYPEOF when should_parse_types env ->
@@ -1701,9 +1719,9 @@ module Statement
               match Peek.token env with
               | T_MULT
               | T_LCURLY ->
-                with_specifiers ImportTypeof env
-              | _ -> with_default ImportTypeof env
+                with_specifiers ImportTypeof env leading
+              | _ -> with_default ImportTypeof env leading
             end
           (* import Foo from "ModuleName"; *)
-          | _ -> with_default ImportValue env))
+          | _ -> with_default ImportValue env leading))
 end

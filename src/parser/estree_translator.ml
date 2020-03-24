@@ -331,7 +331,9 @@ with type t = Impl.t = struct
           "ExportDefaultDeclaration"
           loc
           [("declaration", declaration); ("exportKind", string (export_kind Statement.ExportValue))]
-      | (loc, ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source }) ->
+      | ( loc,
+          ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source; comments }
+        ) ->
         let specifiers =
           match specifiers with
           | Some (ImportDeclaration.ImportNamedSpecifiers specifiers) ->
@@ -354,6 +356,7 @@ with type t = Impl.t = struct
           | ImportDeclaration.ImportValue -> "value"
         in
         node
+          ?comments
           "ImportDeclaration"
           loc
           [

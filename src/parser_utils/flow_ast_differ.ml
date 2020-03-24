@@ -535,8 +535,8 @@ let program
         export_default_declaration export1 export2
       | ((_, DeclareExportDeclaration export1), (_, DeclareExportDeclaration export2)) ->
         declare_export export1 export2
-      | ((_, ImportDeclaration import1), (_, ImportDeclaration import2)) ->
-        import_declaration import1 import2
+      | ((loc, ImportDeclaration import1), (_, ImportDeclaration import2)) ->
+        import_declaration loc import1 import2
       | ((_, ExportNamedDeclaration export1), (_, ExportNamedDeclaration export2)) ->
         export_named_declaration export1 export2
       | ((loc, Try try1), (_, Try try2)) -> try_ loc try1 try2
@@ -640,17 +640,35 @@ let program
       diff_if_changed_ret_opt import_namespace_specifier ident1 ident2
     | _ -> None
   and import_declaration
+      (loc : Loc.t)
       (import1 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t)
       (import2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) : node change list option =
     let open Ast.Statement.ImportDeclaration in
-    let { importKind = imprt_knd1; source = src1; default = dflt1; specifiers = spec1 } = import1 in
-    let { importKind = imprt_knd2; source = src2; default = dflt2; specifiers = spec2 } = import2 in
+    let {
+      importKind = imprt_knd1;
+      source = src1;
+      default = dflt1;
+      specifiers = spec1;
+      comments = comments1;
+    } =
+      import1
+    in
+    let {
+      importKind = imprt_knd2;
+      source = src2;
+      default = dflt2;
+      specifiers = spec2;
+      comments = comments2;
+    } =
+      import2
+    in
     if imprt_knd1 != imprt_knd2 || src1 != src2 then
       None
     else
       let dflt_diff = import_default_specifier dflt1 dflt2 in
       let spec_diff = diff_if_changed_opt import_specifier spec1 spec2 in
-      join_diff_list [dflt_diff; spec_diff]
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [dflt_diff; spec_diff; comments_diff]
   and function_declaration func1 func2 = function_ func1 func2
   and function_
       ?(is_arrow = false)

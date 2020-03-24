@@ -520,7 +520,13 @@ module T = struct
         in
         ( decl_loc,
           Ast.Statement.ImportDeclaration
-            { Ast.Statement.ImportDeclaration.importKind; source; default; specifiers } ) )
+            {
+              Ast.Statement.ImportDeclaration.importKind;
+              source;
+              default;
+              specifiers;
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } ) )
     | DynamicRequire require ->
       ( None,
         let kind = Ast.Statement.VariableDeclaration.Const in
@@ -847,7 +853,13 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.ImportDeclaration
-          { Ast.Statement.ImportDeclaration.importKind; source; default; specifiers } )
+          {
+            Ast.Statement.ImportDeclaration.importKind;
+            source;
+            default;
+            specifiers;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | ImportStar { kind; source } ->
       let importKind = kind in
       let source = source_of_source source in
@@ -857,7 +869,13 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.ImportDeclaration
-          { Ast.Statement.ImportDeclaration.importKind; source; default; specifiers } )
+          {
+            Ast.Statement.ImportDeclaration.importKind;
+            source;
+            default;
+            specifiers;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | Require { source; name } ->
       let kind = Ast.Statement.VariableDeclaration.Const in
       let pattern = name_opt_pattern id name in

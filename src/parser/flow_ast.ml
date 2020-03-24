@@ -848,6 +848,7 @@ and Statement : sig
       source: 'M * 'M StringLiteral.t;
       default: ('M, 'T) Identifier.t option;
       specifiers: ('M, 'T) specifier option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
