@@ -515,8 +515,8 @@ let program
       | ((_, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ class1 class2
       | ((_, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2)) -> interface intf1 intf2
       | ((loc, If if1), (_, If if2)) -> if_statement loc if1 if2
-      | ((_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2)) ->
-        expression_statement expr1 expr2
+      | ((loc, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2)) ->
+        expression_statement loc expr1 expr2
       | ((loc, Block block1), (_, Block block2)) -> block loc block1 block2
       | ((_, For for1), (_, For for2)) -> for_statement for1 for2
       | ((_, ForIn for_in1), (_, ForIn for_in2)) -> for_in_statement for_in1 for_in2
@@ -1004,15 +1004,18 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [body_diff; comments_diff]
   and expression_statement
+      (loc : Loc.t)
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Expression.t)
       (stmt2 : (Loc.t, Loc.t) Ast.Statement.Expression.t) : node change list option =
     let open Ast.Statement.Expression in
-    let { expression = expr1; directive = dir1 } = stmt1 in
-    let { expression = expr2; directive = dir2 } = stmt2 in
+    let { expression = expr1; directive = dir1; comments = comments1 } = stmt1 in
+    let { expression = expr2; directive = dir2; comments = comments2 } = stmt2 in
     if dir1 != dir2 then
       None
     else
-      Some (expression expr1 expr2)
+      let expression_diff = Some (expression expr1 expr2) in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [expression_diff; comments_diff]
   and expression (expr1 : (Loc.t, Loc.t) Ast.Expression.t) (expr2 : (Loc.t, Loc.t) Ast.Expression.t)
       : node change list =
     let changes =

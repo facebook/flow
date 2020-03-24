@@ -37,6 +37,7 @@ let object_of_statement statement =
               Expression.Assignment
                 { Expression.Assignment.operator = None; left = _; right = obj; comments = _ } );
           directive = _;
+          comments = _;
         } ) ->
     Ok obj
   | (loc, _) -> Error (loc, "Expected an assignment")

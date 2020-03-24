@@ -250,8 +250,8 @@ module Statements = struct
 
   let for_of_pattern patt = ForOf.LeftPattern patt
 
-  let expression ?(loc = Loc.none) ?directive expression =
-    (loc, Expression { Expression.expression; directive })
+  let expression ?(loc = Loc.none) ?directive ?comments expression =
+    (loc, Expression { Expression.expression; directive; comments })
 
   let labeled ?comments label body = (Loc.none, Labeled { Labeled.label; body; comments })
 

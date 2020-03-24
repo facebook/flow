@@ -492,9 +492,10 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.Debugger { S.Debugger.comments } ->
         with_semicolon @@ layout_node_with_comments_opt loc comments (Atom "debugger")
       | S.Block b -> block (loc, b)
-      | S.Expression { S.Expression.expression = expr; _ } ->
+      | S.Expression { S.Expression.expression = expr; directive = _; comments } ->
         let ctxt = { normal_context with left = In_expression_statement } in
-        with_semicolon (expression_with_parens ~precedence:0 ~ctxt expr)
+        layout_node_with_comments_opt loc comments
+        @@ with_semicolon (expression_with_parens ~precedence:0 ~ctxt expr)
       | S.If { S.If.test; consequent; alternate; comments } ->
         layout_node_with_comments_opt
           loc

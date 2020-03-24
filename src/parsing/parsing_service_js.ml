@@ -167,6 +167,7 @@ let parse_json_file ~fail content file =
                   comments = Flow_ast_utils.mk_comments_opt ();
                 } );
           directive = None;
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
   in
   let comments = ([] : Loc.t Comment.t list) in

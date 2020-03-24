@@ -811,8 +811,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               toplevels cx body))
     in
     Abnormal.check_stmt_control_flow_exception ((loc, Block { Block.body; comments }), abnormal_opt)
-  | (loc, Expression { Expression.expression = e; directive }) ->
-    (loc, Expression { Expression.expression = expression cx e; directive })
+  | (loc, Expression { Expression.expression = e; directive; comments }) ->
+    (loc, Expression { Expression.expression = expression cx e; directive; comments })
   (* Refinements for `if` are derived by the following Hoare logic rule:
 
      [Pre & c] S1 [Post1]

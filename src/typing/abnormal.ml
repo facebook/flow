@@ -95,7 +95,11 @@ let ( catch_stmt_control_flow_exception,
         | Expr (loc, exp) ->
           ( loc,
             Flow_ast.Statement.Expression
-              { Flow_ast.Statement.Expression.expression = exp; directive = None } )
+              {
+                Flow_ast.Statement.Expression.expression = exp;
+                directive = None;
+                comments = Flow_ast_utils.mk_comments_opt ();
+              } )
         | Stmts _ -> assert_false "Statement expected"),
     catch_control_flow_exception (function
         | Stmts stmts -> stmts

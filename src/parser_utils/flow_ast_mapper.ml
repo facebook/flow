@@ -737,8 +737,13 @@ class ['loc] mapper =
 
     method expression_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Expression.t) =
       let open Ast.Statement.Expression in
-      let { expression = expr; directive = _ } = stmt in
-      id this#expression expr stmt (fun expression -> { stmt with expression })
+      let { expression = expr; directive; comments } = stmt in
+      let expr' = this#expression expr in
+      let comments' = this#syntax_opt comments in
+      if expr == expr' && comments == comments' then
+        stmt
+      else
+        { expression = expr'; directive; comments = comments' }
 
     method expression_or_spread expr_or_spread =
       let open Ast.Expression in

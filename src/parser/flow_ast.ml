@@ -859,6 +859,7 @@ and Statement : sig
     type ('M, 'T) t = {
       expression: ('M, 'T) Expression.t;
       directive: string option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

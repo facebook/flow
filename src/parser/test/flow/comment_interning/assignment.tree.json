@@ -41,6 +41,14 @@
     },
     {
       "type":"ExpressionStatement",
+      "trailingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":27}},
+          "range":[128,155],
+          "value":" 2.1 Leading on assign "
+        }
+      ],
       "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":114}},
       "range":[38,126],
       "expression":{

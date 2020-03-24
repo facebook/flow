@@ -75,6 +75,14 @@
         "body":[
           {
             "type":"ExpressionStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":20}},
+                "range":[127,145],
+                "value":" 2.1 L member "
+              }
+            ],
             "loc":{"source":null,"start":{"line":4,"column":17},"end":{"line":4,"column":68}},
             "range":[72,123],
             "expression":{
@@ -222,6 +230,14 @@
         "body":[
           {
             "type":"ExpressionStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":12,"column":2},"end":{"line":12,"column":20}},
+                "range":[333,351],
+                "value":" 4.1 L member "
+              }
+            ],
             "loc":{"source":null,"start":{"line":10,"column":17},"end":{"line":10,"column":87}},
             "range":[259,329],
             "expression":{

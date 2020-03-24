@@ -144,7 +144,11 @@ let before_and_after_stmts file_name =
         [
           ( annot,
             Flow_ast.Statement.Expression
-              { Flow_ast.Statement.Expression.expression = t_expr; directive = None } );
+              {
+                Flow_ast.Statement.Expression.expression = t_expr;
+                directive = None;
+                comments = Flow_ast_utils.mk_comments_opt ();
+              } );
         ]
       | e ->
         let e = Exception.wrap e in

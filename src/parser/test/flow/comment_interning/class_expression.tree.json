@@ -5,6 +5,14 @@
   "body":[
     {
       "type":"ExpressionStatement",
+      "trailingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":3,"column":65},"end":{"line":3,"column":74}},
+          "range":[78,87],
+          "value":" c05 "
+        }
+      ],
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":64}},
       "range":[13,77],
       "expression":{
@@ -89,6 +97,14 @@
     },
     {
       "type":"ExpressionStatement",
+      "trailingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":5,"column":46},"end":{"line":5,"column":55}},
+          "range":[135,144],
+          "value":" c15 "
+        }
+      ],
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":45}},
       "range":[89,134],
       "expression":{

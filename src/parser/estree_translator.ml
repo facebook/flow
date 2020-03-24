@@ -129,8 +129,9 @@ with type t = Impl.t = struct
       function
       | (loc, Empty) -> node "EmptyStatement" loc []
       | (loc, Block b) -> block (loc, b)
-      | (loc, Expression { Expression.expression = expr; directive }) ->
+      | (loc, Expression { Expression.expression = expr; directive; comments }) ->
         node
+          ?comments
           "ExpressionStatement"
           loc
           [("expression", expression expr); ("directive", option string directive)]

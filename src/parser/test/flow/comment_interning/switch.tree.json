@@ -31,6 +31,14 @@
           "consequent":[
             {
               "type":"ExpressionStatement",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":32}},
+                  "range":[136,168],
+                  "value":" 1.4 Not attached to switch "
+                }
+              ],
               "loc":{"source":null,"start":{"line":3,"column":8},"end":{"line":3,"column":10}},
               "range":[133,135],
               "expression":{

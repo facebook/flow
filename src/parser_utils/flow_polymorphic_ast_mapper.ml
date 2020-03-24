@@ -570,8 +570,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method expression_statement (stmt : ('M, 'T) Ast.Statement.Expression.t)
         : ('N, 'U) Ast.Statement.Expression.t =
       let open Ast.Statement.Expression in
-      let { expression = expr; directive } = stmt in
-      { expression = this#expression expr; directive }
+      let { expression = expr; directive; comments } = stmt in
+      let expression' = this#expression expr in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { expression = expression'; directive; comments = comments' }
 
     method expression_or_spread (expr_or_spread : ('M, 'T) Ast.Expression.expression_or_spread)
         : ('N, 'U) Ast.Expression.expression_or_spread =

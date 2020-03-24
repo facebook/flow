@@ -439,6 +439,7 @@ class insert_second_cjsimport_mapper =
                         comments = Flow_ast_utils.mk_comments_opt ();
                       } );
                 directive = None;
+                comments = Flow_ast_utils.mk_comments_opt ();
               } )
         in
         List.hd stmts :: imp :: List.tl stmts
@@ -485,6 +486,7 @@ class add_body_mapper =
                         comments = Flow_ast_utils.mk_comments_opt ();
                       } );
                 directive = None;
+                comments = Flow_ast_utils.mk_comments_opt ();
               } )
         in
         stmts @ [imp]

@@ -672,13 +672,20 @@ module Statement
             { Statement.Labeled.label; body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         | (expression, _) ->
           Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
+          let trailing = Peek.comments env in
           let open Statement in
-          Expression { Expression.expression; directive = None })
+          Expression
+            {
+              Expression.expression;
+              directive = None;
+              comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+            })
 
   and expression =
     with_loc (fun env ->
         let expression = Parse.expression env in
         Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
+        let trailing = Peek.comments env in
         let directive =
           if allow_directive env then
             match expression with
@@ -688,7 +695,12 @@ module Statement
           else
             None
         in
-        Statement.Expression { Statement.Expression.expression; directive })
+        Statement.Expression
+          {
+            Statement.Expression.expression;
+            directive;
+            comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+          })
 
   and type_alias_helper env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAlias;
