@@ -2250,7 +2250,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     (loc, DeclareModuleExports (t_loc, t_ast))
   | ( loc,
       ExportNamedDeclaration
-        ({ ExportNamedDeclaration.declaration; specifiers; source; exportKind } as export_decl) ) ->
+        ( { ExportNamedDeclaration.declaration; specifiers; source; exportKind; comments = _ } as
+        export_decl ) ) ->
     let (declaration, export_info) =
       match declaration with
       | Some decl ->
@@ -2302,7 +2303,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     export_statement cx loc ~default:None export_info specifiers source exportKind;
 
     (loc, ExportNamedDeclaration { export_decl with ExportNamedDeclaration.declaration })
-  | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration }) ->
+  | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
     Type_inference_hooks_js.dispatch_export_named_hook "default" default;
     let (declaration, export_info) =
       match declaration with
@@ -2349,7 +2350,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let exportKind = Ast.Statement.ExportValue in
     export_statement cx loc ~default:(Some default) export_info None None exportKind;
 
-    (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration })
+    (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
   | (import_loc, ImportDeclaration import_decl) ->
     Context.add_import_stmt cx import_decl;
 

@@ -731,8 +731,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
             statement_after_test ~pretty_semicolon body;
           ]
       | S.ImportDeclaration import -> import_declaration loc import
-      | S.ExportNamedDeclaration export -> export_declaration export
-      | S.ExportDefaultDeclaration export -> export_default_declaration export
+      | S.ExportNamedDeclaration export -> export_declaration loc export
+      | S.ExportDefaultDeclaration export -> export_default_declaration loc export
       | S.TypeAlias typeAlias -> type_alias ~declare:false loc typeAlias
       | S.OpaqueType opaqueType -> opaque_type ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration interface
@@ -2281,41 +2281,45 @@ and export_specifier source =
     fuse [source_location_with_comments (loc, Atom "*"); export_source ~prefix:pretty_space source]
 
 and export_declaration
-    { Ast.Statement.ExportNamedDeclaration.declaration; specifiers; source; exportKind } =
-  fuse
-    [
-      Atom "export";
-      begin
-        match (declaration, specifiers) with
-        | (Some decl, None) -> fuse [space; statement decl]
-        | (None, Some specifier) ->
-          with_semicolon
-            (fuse
-               [
-                 begin
-                   match exportKind with
-                   | Ast.Statement.ExportType -> fuse [space; Atom "type"]
-                   | Ast.Statement.ExportValue -> Empty
-                 end;
-                 pretty_space;
-                 export_specifier source specifier;
-               ])
-        | (_, _) -> failwith "Invalid export declaration"
-      end;
-    ]
+    loc
+    { Ast.Statement.ExportNamedDeclaration.declaration; specifiers; source; exportKind; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         Atom "export";
+         begin
+           match (declaration, specifiers) with
+           | (Some decl, None) -> fuse [space; statement decl]
+           | (None, Some specifier) ->
+             with_semicolon
+               (fuse
+                  [
+                    begin
+                      match exportKind with
+                      | Ast.Statement.ExportType -> fuse [space; Atom "type"]
+                      | Ast.Statement.ExportValue -> Empty
+                    end;
+                    pretty_space;
+                    export_specifier source specifier;
+                  ])
+           | (_, _) -> failwith "Invalid export declaration"
+         end;
+       ]
 
-and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.default = _; declaration } =
-  fuse
-    [
-      Atom "export";
-      space;
-      Atom "default";
-      space;
-      (let open Ast.Statement.ExportDefaultDeclaration in
-      match declaration with
-      | Declaration stat -> statement stat
-      | Expression expr -> with_semicolon (expression expr));
-    ]
+and export_default_declaration
+    loc { Ast.Statement.ExportDefaultDeclaration.default = _; declaration; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         Atom "export";
+         space;
+         Atom "default";
+         space;
+         (let open Ast.Statement.ExportDefaultDeclaration in
+         match declaration with
+         | Declaration stat -> statement stat
+         | Expression expr -> with_semicolon (expression expr));
+       ]
 
 and variance (loc, { Ast.Variance.kind; comments }) =
   source_location_with_comments

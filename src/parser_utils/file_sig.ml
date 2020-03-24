@@ -674,7 +674,7 @@ struct
       method! export_default_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.ExportDefaultDeclaration.t) =
         let open Ast.Statement.ExportDefaultDeclaration in
-        let { default = default_loc; declaration } = decl in
+        let { default = default_loc; declaration; comments = _ } = decl in
         let local =
           match declaration with
           | Declaration (_, Ast.Statement.FunctionDeclaration { Ast.Function.id; _ }) -> id
@@ -694,7 +694,7 @@ struct
       method! export_named_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.ExportNamedDeclaration.t) =
         let open Ast.Statement.ExportNamedDeclaration in
-        let { exportKind; source; specifiers; declaration } = decl in
+        let { exportKind; source; specifiers; declaration; comments = _ } = decl in
         let source =
           match source with
           | Some (loc, { Ast.StringLiteral.value = mref; raw = _; comments = _ }) -> Some (loc, mref)

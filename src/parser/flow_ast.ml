@@ -779,6 +779,7 @@ and Statement : sig
       specifiers: 'M specifier option;
       source: ('M * 'M StringLiteral.t) option;
       exportKind: Statement.exportKind;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and 'M specifier =
@@ -791,6 +792,7 @@ and Statement : sig
     type ('M, 'T) t = {
       default: 'M;
       declaration: ('M, 'T) declaration;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and ('M, 'T) declaration =

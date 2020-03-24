@@ -1928,6 +1928,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                  ]);
           source;
           exportKind;
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
   let export_named_specifier export_loc local remote source exportKind =
@@ -1955,6 +1956,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                  (star_loc, Base.Option.map ~f:Flow_ast_utils.ident_of_source remote));
           source = Some (T.source_of_source source);
           exportKind;
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
   let declare_export_default_declaration export_loc default_loc declaration =

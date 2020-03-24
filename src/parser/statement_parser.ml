@@ -1102,6 +1102,7 @@ module Statement
     with_loc (fun env ->
         let env = env |> with_strict true |> with_in_export true in
         let start_loc = Peek.loc env in
+        let leading = Peek.comments env in
         Expect.token env T_EXPORT;
         match Peek.token env with
         | T_DEFAULT ->
@@ -1111,25 +1112,31 @@ module Statement
             record_export
               env
               (Flow_ast_utils.ident_of_source (Loc.btwn start_loc (Peek.loc env), "default"));
-            let declaration =
+            let (declaration, trailing) =
               if Peek.is_function env then
                 (* export default [async] function [foo] (...) { ... } *)
                 let fn = Declaration._function env in
-                Declaration fn
+                (Declaration fn, [])
               else if Peek.is_class env then
                 (* export default class foo { ... } *)
                 let _class = Object.class_declaration env decorators in
-                Declaration _class
+                (Declaration _class, [])
               else if Peek.token env = T_ENUM then
                 (* export default enum foo { ... } *)
-                Declaration (Declaration.enum_declaration env)
+                (Declaration (Declaration.enum_declaration env), [])
               else
                 (* export default [assignment expression]; *)
                 let expr = Parse.assignment env in
                 Eat.semicolon env;
-                Expression expr
+                let trailing = Peek.comments env in
+                (Expression expr, trailing)
             in
-            Statement.ExportDefaultDeclaration { default; declaration })
+            Statement.ExportDefaultDeclaration
+              {
+                default;
+                declaration;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              })
         | T_TYPE when Peek.ith_token ~i:1 env <> T_LCURLY ->
           (* export type ... *)
           Statement.ExportNamedDeclaration.(
@@ -1141,12 +1148,14 @@ module Statement
               Expect.token env T_MULT;
               let source = export_source env in
               Eat.semicolon env;
+              let trailing = Peek.comments env in
               Statement.ExportNamedDeclaration
                 {
                   declaration = None;
                   specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
                   source = Some source;
                   exportKind = Statement.ExportType;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
                 }
             | _ ->
               let (loc, type_alias) = with_loc type_alias_helper env in
@@ -1161,6 +1170,7 @@ module Statement
                   specifiers = None;
                   source = None;
                   exportKind = Statement.ExportType;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }))
         | T_OPAQUE ->
           (* export opaque type ... *)
@@ -1177,6 +1187,7 @@ module Statement
                 specifiers = None;
                 source = None;
                 exportKind = Statement.ExportType;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_INTERFACE ->
           (* export interface I { ... } *)
@@ -1196,6 +1207,7 @@ module Statement
                 specifiers = None;
                 source = None;
                 exportKind = Statement.ExportType;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_LET
         | T_CONST
@@ -1240,6 +1252,7 @@ module Statement
                 specifiers = None;
                 source = None;
                 exportKind = Statement.ExportValue;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_MULT ->
           Statement.ExportNamedDeclaration.(
@@ -1262,8 +1275,15 @@ module Statement
             let source = export_source env in
             let source = Some source in
             Eat.semicolon env;
+            let trailing = Peek.comments env in
             Statement.ExportNamedDeclaration
-              { declaration = None; specifiers; source; exportKind = Statement.ExportValue })
+              {
+                declaration = None;
+                specifiers;
+                source;
+                exportKind = Statement.ExportValue;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              })
         | _ ->
           Statement.ExportNamedDeclaration.(
             let exportKind =
@@ -1284,12 +1304,14 @@ module Statement
                 None
             in
             Eat.semicolon env;
+            let trailing = Peek.comments env in
             Statement.ExportNamedDeclaration
               {
                 declaration = None;
                 specifiers = Some (ExportSpecifiers specifiers);
                 source;
                 exportKind;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }))
 
   and declare_export_declaration ?(allow_export_type = false) =

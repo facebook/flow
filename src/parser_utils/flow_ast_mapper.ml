@@ -675,12 +675,13 @@ class ['loc] mapper =
     method export_default_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.ExportDefaultDeclaration.t) =
       let open Ast.Statement.ExportDefaultDeclaration in
-      let { default; declaration } = decl in
+      let { default; declaration; comments } = decl in
       let declaration' = this#export_default_declaration_decl declaration in
-      if declaration' = declaration then
+      let comments' = this#syntax_opt comments in
+      if declaration' == declaration && comments' == comments then
         decl
       else
-        { default; declaration = declaration' }
+        { default; declaration = declaration'; comments = comments' }
 
     method export_default_declaration_decl
         (decl : ('loc, 'loc) Ast.Statement.ExportDefaultDeclaration.declaration) =
@@ -692,13 +693,20 @@ class ['loc] mapper =
     method export_named_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.t) =
       let open Ast.Statement.ExportNamedDeclaration in
-      let { exportKind; source; specifiers; declaration } = decl in
+      let { exportKind; source; specifiers; declaration; comments } = decl in
       let specifiers' = map_opt this#export_named_specifier specifiers in
       let declaration' = map_opt this#statement declaration in
-      if specifiers == specifiers' && declaration == declaration' then
+      let comments' = this#syntax_opt comments in
+      if specifiers == specifiers' && declaration == declaration' && comments == comments' then
         decl
       else
-        { exportKind; source; specifiers = specifiers'; declaration = declaration' }
+        {
+          exportKind;
+          source;
+          specifiers = specifiers';
+          declaration = declaration';
+          comments = comments';
+        }
 
     method export_named_declaration_specifier
         (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =

@@ -531,14 +531,14 @@ let program
       | ((loc, Labeled labeled1), (_, Labeled labeled2)) ->
         Some (labeled_statement loc labeled1 labeled2)
       | ((loc, With with1), (_, With with2)) -> Some (with_statement loc with1 with2)
-      | ((_, ExportDefaultDeclaration export1), (_, ExportDefaultDeclaration export2)) ->
-        export_default_declaration export1 export2
+      | ((loc, ExportDefaultDeclaration export1), (_, ExportDefaultDeclaration export2)) ->
+        export_default_declaration loc export1 export2
       | ((_, DeclareExportDeclaration export1), (_, DeclareExportDeclaration export2)) ->
         declare_export export1 export2
       | ((loc, ImportDeclaration import1), (_, ImportDeclaration import2)) ->
         import_declaration loc import1 import2
-      | ((_, ExportNamedDeclaration export1), (_, ExportNamedDeclaration export2)) ->
-        export_named_declaration export1 export2
+      | ((loc, ExportNamedDeclaration export1), (_, ExportNamedDeclaration export2)) ->
+        export_named_declaration loc export1 export2
       | ((loc, Try try1), (_, Try try2)) -> try_ loc try1 try2
       | ((loc, Throw throw1), (_, Throw throw2)) -> Some (throw_statement loc throw1 throw2)
       | ((loc, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2)) ->
@@ -551,32 +551,54 @@ let program
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
     Base.Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
-  and export_named_declaration export1 export2 =
+  and export_named_declaration loc export1 export2 =
     let open Ast.Statement.ExportNamedDeclaration in
-    let { declaration = decl1; specifiers = specs1; source = src1; exportKind = kind1 } = export1 in
-    let { declaration = decl2; specifiers = specs2; source = src2; exportKind = kind2 } = export2 in
+    let {
+      declaration = decl1;
+      specifiers = specs1;
+      source = src1;
+      exportKind = kind1;
+      comments = comments1;
+    } =
+      export1
+    in
+    let {
+      declaration = decl2;
+      specifiers = specs2;
+      source = src2;
+      exportKind = kind2;
+      comments = comments2;
+    } =
+      export2
+    in
     if src1 != src2 || kind1 != kind2 then
       None
     else
       let decls = diff_if_changed_nonopt_fn statement decl1 decl2 in
       let specs = diff_if_changed_opt export_named_declaration_specifier specs1 specs2 in
-      join_diff_list [decls; specs]
+      let comments = syntax_opt loc comments1 comments2 in
+      join_diff_list [decls; specs; comments]
   and export_default_declaration
+      (loc : Loc.t)
       (export1 : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t)
       (export2 : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t) : node change list option
       =
     let open Ast.Statement.ExportDefaultDeclaration in
-    let { declaration = declaration1; default = default1 } = export1 in
-    let { declaration = declaration2; default = default2 } = export2 in
+    let { declaration = declaration1; default = default1; comments = comments1 } = export1 in
+    let { declaration = declaration2; default = default2; comments = comments2 } = export2 in
     if default1 != default2 then
       None
     else
-      match (declaration1, declaration2) with
-      | (Declaration s1, Declaration s2) -> statement s1 s2 |> Base.Option.return
-      | ( Ast.Statement.ExportDefaultDeclaration.Expression e1,
-          Ast.Statement.ExportDefaultDeclaration.Expression e2 ) ->
-        expression e1 e2 |> Base.Option.return
-      | _ -> None
+      let declaration_diff =
+        match (declaration1, declaration2) with
+        | (Declaration s1, Declaration s2) -> statement s1 s2 |> Base.Option.return
+        | ( Ast.Statement.ExportDefaultDeclaration.Expression e1,
+            Ast.Statement.ExportDefaultDeclaration.Expression e2 ) ->
+          expression e1 e2 |> Base.Option.return
+        | _ -> None
+      in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [declaration_diff; comments_diff]
   and export_specifier
       (spec1 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
       (spec2 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) :

@@ -294,11 +294,12 @@ with type t = Impl.t = struct
         node "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
       | ( loc,
           ExportNamedDeclaration
-            { ExportNamedDeclaration.specifiers; declaration; source; exportKind } ) ->
+            { ExportNamedDeclaration.specifiers; declaration; source; exportKind; comments } ) ->
         begin
           match specifiers with
           | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
             node
+              ?comments
               "ExportAllDeclaration"
               loc
               [
@@ -307,6 +308,7 @@ with type t = Impl.t = struct
               ]
           | _ ->
             node
+              ?comments
               "ExportNamedDeclaration"
               loc
               [
@@ -321,6 +323,7 @@ with type t = Impl.t = struct
             {
               ExportDefaultDeclaration.declaration;
               default = _ (* TODO: confirm we shouldn't use this *);
+              comments;
             } ) ->
         let declaration =
           match declaration with
@@ -328,6 +331,7 @@ with type t = Impl.t = struct
           | ExportDefaultDeclaration.Expression expr -> expression expr
         in
         node
+          ?comments
           "ExportDefaultDeclaration"
           loc
           [("declaration", declaration); ("exportKind", string (export_kind Statement.ExportValue))]
