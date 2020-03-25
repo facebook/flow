@@ -104,7 +104,7 @@ val add_parsed_resolved_requires :
   File_key.t ->
   bool * Flow_error.ErrorSet.t
 
-val add_package : string -> Loc.t Package_json.t_or_error -> unit
+val add_package : string -> (Package_json.t, 'a) result -> unit
 
 type package_incompatible_reason =
   (* Didn't exist before, now it exists *)
