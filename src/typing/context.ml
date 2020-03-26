@@ -147,6 +147,7 @@ type sig_t = {
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   mutable possible_exhaustive_checks: (Type.t * (Reason.t * Type.exhaustive_check_t)) list;
+  mutable openness_graph: Openness.graph;
 }
 
 type phase =
@@ -280,6 +281,7 @@ let make_sig () =
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
     possible_exhaustive_checks = [];
+    openness_graph = Openness.empty_graph;
   }
 
 (* create a new context structure.
@@ -413,6 +415,8 @@ let mem_nominal_prop_id cx id = ISet.mem id cx.sig_cx.nominal_prop_ids
 
 let graph cx = graph_sig cx.sig_cx
 
+let openness_graph cx = cx.sig_cx.openness_graph
+
 let trust_graph cx = trust_graph_sig cx.sig_cx
 
 let import_stmts cx = cx.import_stmts
@@ -516,7 +520,13 @@ let pid_prefix (cx : t) =
 let copy_of_context cx =
   {
     cx with
-    sig_cx = { cx.sig_cx with graph = cx.sig_cx.graph; trust_graph = cx.sig_cx.trust_graph };
+    sig_cx =
+      {
+        cx.sig_cx with
+        graph = cx.sig_cx.graph;
+        trust_graph = cx.sig_cx.trust_graph;
+        openness_graph = cx.sig_cx.openness_graph;
+      };
   }
 
 (* mutators *)
@@ -584,6 +594,8 @@ let set_goals cx goals = cx.sig_cx.goal_map <- goals
 
 let set_graph cx graph = cx.sig_cx.graph <- graph
 
+let set_openness_graph cx graph = cx.sig_cx.openness_graph <- graph
+
 let set_trust_graph cx trust_graph = cx.sig_cx.trust_graph <- trust_graph
 
 let set_property_maps cx property_maps = cx.sig_cx.property_maps <- property_maps
@@ -634,6 +646,8 @@ let clear_master_shared cx master_cx =
   let module PMap = Type.Properties.Map in
   let module EMap = Type.Exports.Map in
   cx.sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) cx.sig_cx.graph;
+  cx.sig_cx.openness_graph <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.openness_graph)) cx.sig_cx.openness_graph;
   cx.sig_cx.trust_graph <-
     IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) cx.sig_cx.trust_graph;
   cx.sig_cx.property_maps <-
@@ -784,6 +798,7 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
   sig_cx.evaluated <- Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
+  sig_cx.openness_graph <- IMap.union sig_cx_other.openness_graph sig_cx.openness_graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
   ()
 

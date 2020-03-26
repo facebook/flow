@@ -173,6 +173,8 @@ val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 
 val graph : t -> Constraint.node IMap.t
 
+val openness_graph : t -> Openness.graph
+
 val trust_graph : t -> Trust_constraint.node IMap.t
 
 val import_stmts : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
@@ -324,6 +326,8 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
 val set_graph : t -> Constraint.node IMap.t -> unit
+
+val set_openness_graph : t -> Openness.graph -> unit
 
 val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 

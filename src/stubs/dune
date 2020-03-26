@@ -30,3 +30,10 @@
   (wrapped false)
   (modules extra_commands)
 )
+
+
+(library
+  (name flow_openness)
+  (wrapped false)
+  (modules openness)
+)
