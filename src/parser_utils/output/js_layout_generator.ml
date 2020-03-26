@@ -1388,6 +1388,7 @@ and arrow_function
                 } );
             ];
           rest = None;
+          comments = _;
         } ) ->
       true
     | _ -> false
@@ -1499,7 +1500,7 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~commen
          end;
        ]
 
-and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
+and function_params ~ctxt (_, { Ast.Function.Params.params; rest; comments = _ }) =
   let s_params =
     Base.List.map
       ~f:(fun (loc, { Ast.Function.Param.argument; default }) ->

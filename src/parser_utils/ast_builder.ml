@@ -136,7 +136,8 @@ end
 module Functions = struct
   open Ast.Function
 
-  let params ?(loc = Loc.none) ?rest ps = (loc, { Ast.Function.Params.params = ps; rest })
+  let params ?(loc = Loc.none) ?rest ?comments ps =
+    (loc, { Ast.Function.Params.params = ps; rest; comments })
 
   let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
 

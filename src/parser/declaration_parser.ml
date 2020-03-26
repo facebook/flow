@@ -19,7 +19,13 @@ module type DECLARATION = sig
 
   val variance : env -> bool -> bool -> Loc.t Variance.t option
 
-  val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
+  val function_params :
+    await:bool ->
+    yield:bool ->
+    arrow:bool ->
+    attach_leading:bool ->
+    env ->
+    (Loc.t, Loc.t) Ast.Function.Params.t
 
   val function_body : env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
 
@@ -106,7 +112,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
   (* Strict is true if we were already in strict mode or if we are newly in
    * strict mode due to a directive in the function.
    * Simple is the IsSimpleParameterList thing from the ES6 spec *)
-  let strict_post_check env ~strict ~simple id (_, { Ast.Function.Params.params; rest }) =
+  let strict_post_check
+      env ~strict ~simple id (_, { Ast.Function.Params.params; rest; comments = _ }) =
     if strict || not simple then (
       (* If we are doing this check due to strict mode than there are two
        * cases to consider. The first is when we were already in strict mode
@@ -166,13 +173,13 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             None
         in
         if Peek.token env <> T_RPAREN then error env Parse_error.ParameterAfterRestParameter;
-        { Ast.Function.Params.params = List.rev acc; rest }
+        (List.rev acc, rest)
       | _ ->
         let the_param = param env in
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
         param_list env (the_param :: acc)
     in
-    fun ~await ~yield ->
+    fun ~await ~yield ~arrow ~attach_leading ->
       with_loc (fun env ->
           let env =
             env
@@ -180,10 +187,27 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             |> with_allow_yield yield
             |> with_in_formal_parameters true
           in
+          let leading =
+            if attach_leading then
+              Peek.comments env
+            else
+              []
+          in
           Expect.token env T_LPAREN;
-          let params = param_list env [] in
+          let (params, rest) = param_list env [] in
           Expect.token env T_RPAREN;
-          params)
+          let trailing =
+            match (arrow, Peek.token env) with
+            | (true, _)
+            | (false, T_COLON) ->
+              Peek.comments env
+            | (false, _) -> []
+          in
+          {
+            Ast.Function.Params.params;
+            rest;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   let function_body env ~async ~generator =
     let env = enter_function env ~async ~generator in
@@ -241,7 +265,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       | (_, { Ast.Function.Param.argument = (_, Pattern.Identifier _); default = None }) -> true
       | _ -> false
     in
-    fun (_, { Ast.Function.Params.params; rest }) ->
+    fun (_, { Ast.Function.Params.params; rest; comments = _ }) ->
       rest = None && List.for_all is_simple_param params
 
   let _function =
@@ -270,7 +294,14 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                   let id = Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env in
                   (Type.type_params env, Some id)
               in
-              let params = function_params ~await:async ~yield:generator env in
+              let params =
+                function_params
+                  ~await:async
+                  ~yield:generator
+                  ~arrow:false
+                  ~attach_leading:(id = None || tparams <> None)
+                  env
+              in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
               (generator, tparams, id, params, return, predicate, leading))
             env

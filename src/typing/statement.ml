@@ -7706,9 +7706,10 @@ and mk_func_sig =
       (* TODO: this should be a parse error, unrepresentable AST *)
       Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
   in
-  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest }) =
+  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest; comments }) =
     let fparams =
-      Func_stmt_params.empty (fun params rest -> Some (loc, { Ast.Function.Params.params; rest }))
+      Func_stmt_params.empty (fun params rest ->
+          Some (loc, { Ast.Function.Params.params; rest; comments }))
     in
     let fparams =
       List.fold_left
@@ -7992,7 +7993,13 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
           ( Ast.Statement.FunctionDeclaration
               {
                 Ast.Function.id = Some id;
-                params = (params_loc, { Ast.Function.Params.params; rest });
+                params =
+                  ( params_loc,
+                    {
+                      Ast.Function.Params.params;
+                      rest;
+                      comments = Flow_ast_utils.mk_comments_opt ();
+                    } );
                 body;
                 async = false;
                 generator = false;
@@ -8008,7 +8015,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   {
                     Ast.Function.id = Some ((id_loc, fun_type), id_name);
                     tparams;
-                    params = (params_loc, { Ast.Function.Params.params; rest });
+                    params = (params_loc, { Ast.Function.Params.params; rest; comments = _ });
                     return = Ast.Type.Available (_, return);
                     body =
                       Ast.Function.BodyBlock

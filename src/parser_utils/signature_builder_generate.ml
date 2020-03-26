@@ -1420,7 +1420,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and function_params params =
     let open Ast.Function in
-    let (params_loc, { Params.params; rest }) = params in
+    let (params_loc, { Params.params; rest; comments = _ }) = params in
     let params = Base.List.map ~f:function_param params in
     let rest =
       match rest with

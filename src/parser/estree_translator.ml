@@ -390,13 +390,13 @@ with type t = Impl.t = struct
       | ( loc,
           ArrowFunction
             {
-              Function.params;
+              Function.params = (_, { Function.Params.comments = params_comments; _ }) as params;
               async;
               predicate = predicate_;
               tparams;
               return;
               body;
-              comments;
+              comments = func_comments;
               sig_loc = _;
               (* TODO: arrows shouldn't have these: *)
               id = _;
@@ -412,6 +412,7 @@ with type t = Impl.t = struct
           | Ast.Type.Missing _ -> None
           | Ast.Type.Available t -> Some t
         in
+        let comments = Flow_ast_utils.merge_comments ~outer:func_comments ~inner:params_comments in
         node
           ?comments
           "ArrowFunctionExpression"
@@ -612,14 +613,14 @@ with type t = Impl.t = struct
         ( loc,
           {
             Function.id;
-            params;
+            params = (_, { Function.Params.comments = params_comments; _ }) as params;
             async;
             generator;
             predicate = predicate_;
             tparams;
             return;
             body;
-            comments;
+            comments = func_comments;
             sig_loc = _;
           } ) =
       let body =
@@ -632,6 +633,7 @@ with type t = Impl.t = struct
         | Ast.Type.Missing _ -> None
         | Ast.Type.Available t -> Some t
       in
+      let comments = Flow_ast_utils.merge_comments ~outer:func_comments ~inner:params_comments in
       node
         ?comments
         "FunctionDeclaration"
@@ -654,14 +656,14 @@ with type t = Impl.t = struct
         ( loc,
           {
             Function.id;
-            params;
+            params = (_, { Function.Params.comments = params_comments; _ }) as params;
             async;
             generator;
             predicate = predicate_;
             tparams;
             return;
             body;
-            comments;
+            comments = func_comments;
             sig_loc = _;
           } ) =
       let body =
@@ -674,6 +676,7 @@ with type t = Impl.t = struct
         | Ast.Type.Missing _ -> None
         | Ast.Type.Available t -> Some t
       in
+      let comments = Flow_ast_utils.merge_comments ~outer:func_comments ~inner:params_comments in
       node
         ?comments
         "FunctionExpression"
@@ -1072,12 +1075,12 @@ with type t = Impl.t = struct
     and function_params =
       let open Ast.Function.Params in
       function
-      | (_, { params; rest = Some (rest_loc, { Function.RestParam.argument }) }) ->
+      | (_, { params; rest = Some (rest_loc, { Function.RestParam.argument }); comments = _ }) ->
         let rest = node "RestElement" rest_loc [("argument", pattern argument)] in
         let rev_params = List.rev_map function_param params in
         let params = List.rev (rest :: rev_params) in
         array params
-      | (_, { params; rest = None }) -> array_of_list function_param params
+      | (_, { params; rest = None; comments = _ }) -> array_of_list function_param params
     and array_pattern_element =
       Pattern.Array.(
         function

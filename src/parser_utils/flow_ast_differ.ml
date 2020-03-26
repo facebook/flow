@@ -735,8 +735,8 @@ let program
       let params =
         match (is_arrow, params1, params2, params) with
         | ( true,
-            (l, { Params.params = [_p1]; rest = None }),
-            (_, { Params.params = [_p2]; rest = None }),
+            (l, { Params.params = [_p1]; rest = None; comments = _ }),
+            (_, { Params.params = [_p2]; rest = None; comments = _ }),
             Some [_] ) ->
           (* reprint the parameter if it's the single parameter of a lambda to add () *)
           Some [(l, Replace (Params params1, Params params2))]
@@ -750,11 +750,12 @@ let program
       (params1 : (Loc.t, Loc.t) Ast.Function.Params.t)
       (params2 : (Loc.t, Loc.t) Ast.Function.Params.t) : node change list option =
     let open Ast.Function.Params in
-    let (_, { params = param_lst1; rest = rest1 }) = params1 in
-    let (_, { params = param_lst2; rest = rest2 }) = params2 in
+    let (loc, { params = param_lst1; rest = rest1; comments = comments1 }) = params1 in
+    let (_, { params = param_lst2; rest = rest2; comments = comments2 }) = params2 in
     let params_diff = diff_and_recurse_no_trivial function_param param_lst1 param_lst2 in
     let rest_diff = diff_if_changed_nonopt_fn function_rest_param rest1 rest2 in
-    join_diff_list [params_diff; rest_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [params_diff; rest_diff; comments_diff]
   and function_param
       (param1 : (Loc.t, Loc.t) Ast.Function.Param.t) (param2 : (Loc.t, Loc.t) Ast.Function.Param.t)
       : node change list option =

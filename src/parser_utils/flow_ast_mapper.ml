@@ -1206,13 +1206,14 @@ class ['loc] mapper =
 
     method function_params (params : ('loc, 'loc) Ast.Function.Params.t) =
       let open Ast.Function in
-      let (loc, { Params.params = params_list; rest }) = params in
+      let (loc, { Params.params = params_list; rest; comments }) = params in
       let params_list' = ListUtils.ident_map this#function_param params_list in
       let rest' = map_opt this#function_rest_param rest in
-      if params_list == params_list' && rest == rest' then
+      let comments' = this#syntax_opt comments in
+      if params_list == params_list' && rest == rest' && comments == comments' then
         params
       else
-        (loc, { Params.params = params_list'; rest = rest' })
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments' })
 
     method function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in

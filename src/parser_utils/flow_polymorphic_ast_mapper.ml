@@ -971,10 +971,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method function_params (params : ('M, 'T) Ast.Function.Params.t)
         : ('N, 'U) Ast.Function.Params.t =
-      let (annot, { Ast.Function.Params.params = params_list; rest }) = params in
+      let (annot, { Ast.Function.Params.params = params_list; rest; comments }) = params in
       let params_list' = Base.List.map ~f:this#function_param params_list in
       let rest' = Base.Option.map ~f:this#function_rest_param rest in
-      (this#on_loc_annot annot, { Ast.Function.Params.params = params_list'; rest = rest' })
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      ( this#on_loc_annot annot,
+        { Ast.Function.Params.params = params_list'; rest = rest'; comments = comments' } )
 
     method function_param (param : ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
       let open Ast.Function.Param in

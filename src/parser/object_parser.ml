@@ -121,10 +121,18 @@ module Object
                  * in Flow's type system. Since this is a Flow syntax extension, we might
                  * as well disallow it until we need it *)
                 let tparams = None in
-                let params = Declaration.function_params ~await:false ~yield:false env in
+                let params =
+                  Declaration.function_params
+                    ~await:false
+                    ~yield:false
+                    ~arrow:false
+                    ~attach_leading:false
+                    env
+                in
                 begin
                   match (is_getter, params) with
-                  | (true, (_, { Ast.Function.Params.params = []; rest = None })) -> ()
+                  | (true, (_, { Ast.Function.Params.params = []; rest = None; comments = _ })) ->
+                    ()
                   | (false, (_, { Ast.Function.Params.rest = Some _; _ })) ->
                     (* rest params don't make sense on a setter *)
                     error_at env (key_loc, Parse_error.SetterArity)
@@ -218,7 +226,12 @@ module Object
                       | (false, false) -> (false, false)
                       (* #prod-MethodDefinition *)
                     in
-                    Declaration.function_params ~await ~yield env
+                    Declaration.function_params
+                      ~await
+                      ~yield
+                      ~arrow:false
+                      ~attach_leading:(tparams <> None)
+                      env
                   in
                   let return = Type.annotation_opt env in
                   (tparams, params, return))
@@ -599,7 +612,12 @@ module Object
                         | (false, false) -> (false, false)
                         (* #prod-MethodDefinition *)
                       in
-                      Declaration.function_params ~await ~yield env
+                      Declaration.function_params
+                        ~await
+                        ~yield
+                        ~arrow:false
+                        ~attach_leading:(tparams <> None)
+                        env
                     in
                     let return = Type.annotation_opt env in
                     (tparams, params, return))

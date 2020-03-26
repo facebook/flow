@@ -579,7 +579,7 @@ module Eval (Env : EvalEnv) = struct
 
   and function_params tps params =
     let open Ast.Function in
-    let (_, { Params.params; rest }) = params in
+    let (_, { Params.params; rest; comments = _ }) = params in
     let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
     match rest with
     | None -> deps

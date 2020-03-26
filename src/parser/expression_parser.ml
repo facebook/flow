@@ -991,7 +991,14 @@ module Expression
               in
               (* #sec-function-definitions-static-semantics-early-errors *)
               let env = env |> with_allow_super No_super in
-              let params = Declaration.function_params ~await ~yield env in
+              let params =
+                Declaration.function_params
+                  ~await
+                  ~yield
+                  ~arrow:false
+                  ~attach_leading:(id = None || tparams <> None)
+                  env
+              in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
               (id, params, generator, predicate, return, tparams, leading))
             env
@@ -1491,14 +1498,14 @@ module Expression
                   } )
               in
               ( tparams,
-                (loc, { Ast.Function.Params.params = [param]; rest = None }),
+                (loc, { Ast.Function.Params.params = [param]; rest = None; comments = None }),
                 Ast.Type.Missing Loc.{ loc with start = loc._end },
                 None )
             else
               let params =
                 let yield = allow_yield env in
                 let await = allow_await env in
-                Declaration.function_params ~await ~yield env
+                Declaration.function_params ~await ~yield ~arrow:true ~attach_leading:true env
               in
               (* There's an ambiguity if you use a function type as the return
                * type for an arrow function. So we disallow anonymous function
