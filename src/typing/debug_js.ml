@@ -1593,6 +1593,12 @@ let dump_error_message =
         (string_of_aloc loc)
         (dump_reason cx definition)
         (Scope.Entry.string_of_let_binding_kind binding_kind)
+    | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
+      spf
+        "ECannotResolveOpenTvar (%s) (%s) (%s)"
+        (string_of_use_op use_op)
+        (dump_reason cx reason)
+        (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

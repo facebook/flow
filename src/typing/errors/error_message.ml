@@ -366,6 +366,11 @@ and 'loc t' =
       definition: 'loc virtual_reason;
       binding_kind: Scope.Entry.let_binding_kind;
     }
+  | ECannotResolveOpenTvar of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      blame_reasons: 'loc virtual_reason list;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -852,6 +857,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
     EAssignExportedConstLikeBinding
       { loc = f loc; definition = map_reason definition; binding_kind }
+  | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
+    ECannotResolveOpenTvar
+      {
+        use_op = map_use_op use_op;
+        reason = map_reason reason;
+        blame_reasons = Base.List.map ~f:map_reason blame_reasons;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -932,6 +944,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
         EInexactMayOverwriteIndexer
           { spread_reason; key_reason; value_reason; object2_reason; use_op })
+  | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
+    util use_op (fun use_op -> ECannotResolveOpenTvar { use_op; reason; blame_reasons })
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1232,7 +1246,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExpectedNumberLit _
   | EExpectedStringLit _
   | EIncompatibleProp _
-  | EIncompatible _ ->
+  | EIncompatible _
+  | ECannotResolveOpenTvar _ ->
     None
 
 let kind_of_msg =
@@ -2417,6 +2432,25 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       {
         loc = loc_of_reason reason;
         features = [ref reason; text " cannot calculate config"];
+        use_op;
+      }
+  | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
+    let rec refs = function
+      | [] -> failwith "cannot have empty reason list"
+      | [r] -> [ref r]
+      | [r1; r2] -> [ref r1; text " and "; ref r2]
+      | r1 :: rs -> [ref r1; text ", "] @ refs rs
+    in
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features =
+          [
+            text "Flow cannot infer the type of ";
+            ref reason;
+            text ". Please provide an annotation for ";
+          ]
+          @ refs blame_reasons;
         use_op;
       }
   | EInvalidReactPropType { reason; use_op; tool } ->
