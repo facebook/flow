@@ -825,19 +825,29 @@ and dump_tvar_ (depth, tvars) cx id =
     spf "%d, ^" id
   else
     let stack = ISet.add id tvars in
+    let open_string =
+      Openness.(
+        match
+          Context.openness_graph cx |> Openness.find_opt id |> Base.Option.map ~f:openness_of_node
+        with
+        | Some Open -> "Open"
+        | Some Closed -> "Closed"
+        | None -> "No Openness")
+    in
     Constraint.(
       try
         match Context.find_tvar cx id with
-        | Goto g -> spf "%d, Goto %d" id g
+        | Goto g -> spf "%d, %s, Goto %d" id open_string g
         | Root { constraints = Resolved (_, t) | FullyResolved (_, t); _ } ->
-          spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
+          spf "%d, %s, Resolved %s" id open_string (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
-            spf "%d" id
+            spf "%d, %s" id open_string
           else
             spf
-              "%d, [%s], [%s]"
+              "%d, %s, [%s], [%s]"
               id
+              open_string
               (String.concat
                  "; "
                  (List.rev
