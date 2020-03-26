@@ -1,8 +1,8 @@
 Error --------------------------------------------------------------------------------------------------- spread.js:2:11
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
-it may contain `y` with a type that conflicts with `y`'s definition in object literal [1]. Can you make object type [2]
-exact?.
+it may contain `y` with a type that conflicts with `y`'s definition in object literal [1]. Try making object type [2]
+exact.
 
    spread.js:2:11
    2| const o = { y: 0, x: 0, ...p, }; // error: cannot determine type inexact

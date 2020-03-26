@@ -1488,32 +1488,37 @@ let dump_error_message =
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg
     | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
-    | ECannotSpreadInterface { spread_reason; interface_reason } ->
+    | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
       spf
-        "ECannotSpreadInterface (%s) (%s)"
+        "ECannotSpreadInterface (%s) (%s) (%s)"
         (dump_reason cx spread_reason)
         (dump_reason cx interface_reason)
-    | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
+        (string_of_use_op use_op)
+    | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
       spf
-        "ECannotSpreadIndexerOnRight (%s) (%s) (%s)"
+        "ECannotSpreadIndexerOnRight (%s) (%s) (%s) (%s)"
         (dump_reason cx spread_reason)
         (dump_reason cx object_reason)
         (dump_reason cx key_reason)
-    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _; use_op } ->
+        (string_of_use_op use_op)
+    | EUnableToSpread
+        { spread_reason; object1_reason; object2_reason; propname; error_kind = _; use_op } ->
       spf
-        "EUnableToSpread (%s) (%s) (%s) (%s) (%s)" 
+        "EUnableToSpread (%s) (%s) (%s) (%s) (%s)"
         (dump_reason cx spread_reason)
         (dump_reason cx object1_reason)
         (dump_reason cx object2_reason)
         propname
         (string_of_use_op use_op)
-    | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
+    | EInexactMayOverwriteIndexer
+        { spread_reason; key_reason; value_reason; object2_reason; use_op } ->
       spf
-        "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s)"
+        "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s) (%s)"
         (dump_reason cx spread_reason)
         (dump_reason cx key_reason)
         (dump_reason cx value_reason)
         (dump_reason cx object2_reason)
+        (string_of_use_op use_op)
     | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
       let format_reason_group { first_reason; second_reason } =
         spf

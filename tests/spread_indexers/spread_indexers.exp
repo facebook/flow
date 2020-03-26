@@ -32,20 +32,17 @@ References:
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:16:21
+Error ---------------------------------------------------------------------------------------------------- test.js:16:11
 
-Cannot determine a type for object literal [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
-the indexer?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spreading object type [2] first or remove the indexer.
 
-   test.js:16:21
-   16| const l = {...j, ...k}; // Error, there may be some properties in j that are not overwritten by the indexer
-                           ^
-
-References:
    test.js:16:11
    16| const l = {...j, ...k}; // Error, there may be some properties in j that are not overwritten by the indexer
                  ^^^^^^^^^^^^ [1]
+
+References:
    test.js:15:10
    15| const k: {[string]: number} = {};
                 ^^^^^^^^^^^^^^^^^^ [2]
@@ -54,20 +51,17 @@ References:
                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:20:21
+Error ---------------------------------------------------------------------------------------------------- test.js:20:11
 
-Cannot determine a type for object literal [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
-the indexer?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spreading object type [2] first or remove the indexer.
 
-   test.js:20:21
-   20| const o = {...m, ...n}; // Error, indexer may overwrite properties with explicit keys
-                           ^
-
-References:
    test.js:20:11
    20| const o = {...m, ...n}; // Error, indexer may overwrite properties with explicit keys
                  ^^^^^^^^^^^^ [1]
+
+References:
    test.js:19:10
    19| const n: {[string]: string} = {foo: 'string'};
                 ^^^^^^^^^^^^^^^^^^ [2]
@@ -76,20 +70,17 @@ References:
                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:24:21
+Error ---------------------------------------------------------------------------------------------------- test.js:24:11
 
-Cannot determine a type for object literal [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
-the indexer?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spreading object type [2] first or remove the indexer.
 
-   test.js:24:21
-   24| const r = {...p, ...q}; // Error, indexer may overwrite properties with explicit keys
-                           ^
-
-References:
    test.js:24:11
    24| const r = {...p, ...q}; // Error, indexer may overwrite properties with explicit keys
                  ^^^^^^^^^^^^ [1]
+
+References:
    test.js:23:10
    23| const q: {[string]: string} = {foo: 'string'};
                 ^^^^^^^^^^^^^^^^^^ [2]

@@ -28,64 +28,67 @@ References:
                                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:16:11
+Error -------------------------------------------------------------------------------------------- no_interfaces.js:16:1
 
-Cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of
-their properties. Can you use an object type instead?
+Cannot call `spread` because Flow cannot determine a type for object type [1]. `B` [2] cannot be spread because
+interfaces do not track the own-ness of their properties. Try using an object type instead.
 
-   no_interfaces.js:16:11
+   no_interfaces.js:16:1
    16| spread<A, B>(a, b); // Error, can't spread interface
-                 ^ [2]
+       ^^^^^^
 
 References:
    no_interfaces.js:9:4
     9| ): {...A, ...B} {
           ^^^^^^^^^^^^ [1]
+   no_interfaces.js:16:11
+   16| spread<A, B>(a, b); // Error, can't spread interface
+                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:20
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:10
 
-Cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
+Flow cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead.
 
-   no_interfaces.js:18:20
-   18| type X = {...A, ...B}; // Error, can't spread interface
-                          ^ [2]
-
-References:
    no_interfaces.js:18:10
    18| type X = {...A, ...B}; // Error, can't spread interface
                 ^^^^^^^^^^^^ [1]
 
-
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:14
-
-Cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
-
-   no_interfaces.js:23:14
-   23| type Y = {...A, foo: number}; // Error, can't spread interface
-                    ^ [2]
-
 References:
+   no_interfaces.js:18:20
+   18| type X = {...A, ...B}; // Error, can't spread interface
+                          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:10
+
+Flow cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead.
+
    no_interfaces.js:23:10
    23| type Y = {...A, foo: number}; // Error, can't spread interface
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
-
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:27
-
-Cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
-
-   no_interfaces.js:27:27
-   27| type Z = {foo: number, ...A}; // Error, can't spread interface
-                                 ^ [2]
-
 References:
+   no_interfaces.js:23:14
+   23| type Y = {...A, foo: number}; // Error, can't spread interface
+                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:10
+
+Flow cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead.
+
    no_interfaces.js:27:10
    27| type Z = {foo: number, ...A}; // Error, can't spread interface
                 ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   no_interfaces.js:27:27
+   27| type Z = {foo: number, ...A}; // Error, can't spread interface
+                                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
@@ -348,7 +351,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- type.js:79:12
 
 Flow cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
-with `p`'s definition in object type [3]. Can you make object type [2] exact?.
+with `p`'s definition in object type [3]. Try making object type [2] exact.
 
    type.js:79:12
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
@@ -366,7 +369,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- type.js:84:12
 
 Flow cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
-with `p`'s definition in object type [3]. Can you make object type [2] exact?.
+with `p`'s definition in object type [3]. Try making object type [2] exact.
 
    type.js:84:12
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
@@ -518,19 +521,19 @@ References:
               ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:4:37
+Error ------------------------------------------------------------------------------------------------ type_dict.js:4:17
 
-Cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts with
-string [3] or a property value that conflicts with `T` [4]. Can you make object type [2] exact?
+Flow cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts
+with string [3] or a property value that conflicts with `T` [4]. Try making object type [2] exact.
 
-   type_dict.js:4:37
-   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
-                                          ^^^^^ [2]
-
-References:
    type_dict.js:4:17
    4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_dict.js:4:37
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                                          ^^^^^ [2]
    type_dict.js:4:23
    4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
                             ^^^^^^ [3]
@@ -1093,20 +1096,20 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:14:32
+Error ---------------------------------------------------------------------------------------------- type_union.js:14:17
 
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
-the indexer?
+Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
+the indexer.
 
-   type_union.js:14:32
-   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
-                                      ^^^^^^ [2]
-
-References:
    type_union.js:14:17
    14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
                        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_union.js:14:32
+   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
+                                      ^^^^^^ [2]
    type_union.js:12:39
    12| type Union2 = {| bar: number |} | {| [number]: string |};
                                              ^^^^^^ [3]
@@ -1115,7 +1118,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_union.js:17:17
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
-conflicts with `foo`'s definition in object type [3]. Can you make object type [2] exact?.
+conflicts with `foo`'s definition in object type [3]. Try making object type [2] exact.
 
    type_union.js:17:17
    17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
@@ -1144,19 +1147,19 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:37:21
+Error ---------------------------------------------------------------------------------------------- type_union.js:37:17
 
-Cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness of
-their properties. Can you use an object type instead?
+Flow cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness
+of their properties. Try using an object type instead.
 
-   type_union.js:37:21
-   37| declare var x4: {...Union5};  // Error, cannot spread interface
-                           ^^^^^^ [2]
-
-References:
    type_union.js:37:17
    37| declare var x4: {...Union5};  // Error, cannot spread interface
                        ^^^^^^^^^^^ [1]
+
+References:
+   type_union.js:37:21
+   37| declare var x4: {...Union5};  // Error, cannot spread interface
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:12:2

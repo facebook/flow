@@ -699,8 +699,8 @@ References:
 Error ------------------------------------------------------------------------------------------ type_widening.js:207:28
 
 Cannot call `inexactSpread` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it
-may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Can you make object type [2]
-exact?.
+may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Try making object type [2]
+exact.
 
    type_widening.js:207:28
    207| const inexact_spread_err = inexactSpread(inexact);

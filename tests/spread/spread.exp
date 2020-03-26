@@ -1,14 +1,9 @@
-Error ----------------------------------------------------------------------------------------------------- dict.js:9:10
+Error ------------------------------------------------------------------------------------------------------ dict.js:7:5
 
-Cannot determine a type for object literal [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
-the indexer?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spreading object type [2] first or remove the indexer.
 
-   dict.js:9:10
-    9|       ...map // Error, can't spread indexer second
-                ^^^
-
-References:
    dict.js:7:5
            v
     7|     {
@@ -16,6 +11,8 @@ References:
     9|       ...map // Error, can't spread indexer second
    10|     },
            ^ [1]
+
+References:
    dict.js:3:19
     3| function foo(map: { [key: string]: mixed }) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -27,7 +24,7 @@ References:
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
 
 Cannot call `bar` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may
-contain `m` with a type that conflicts with `m`'s definition in object type [1]. Can you make object type [2] exact?.
+contain `m` with a type that conflicts with `m`'s definition in object type [1]. Try making object type [2] exact.
 
    error_positions.js:11:6
    11| (foo(bar(C)): F<typeof C>); // error on call
@@ -45,8 +42,8 @@ References:
 Error ------------------------------------------------------------------------------------------ error_positions.js:16:8
 
 Cannot call `spread` with `inexact` bound to `x` because Flow cannot determine a type for object type [1]. object
-type [2] is inexact, so it may contain `foo` with a type that conflicts with `foo`'s definition in object type [3]. Can
-you make object type [2] exact?.
+type [2] is inexact, so it may contain `foo` with a type that conflicts with `foo`'s definition in object type [3]. Try
+making object type [2] exact.
 
    error_positions.js:16:8
    16| spread(inexact); // error on call
@@ -82,8 +79,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- exact.js:15:36
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
-it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Can you make object
-type [2] exact?.
+it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Try making object
+type [2] exact.
 
    exact.js:15:36
    15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
@@ -217,55 +214,46 @@ References:
                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test9.js:5:7
+Error ----------------------------------------------------------------------------------------------------- test9.js:5:2
 
-Cannot determine a type for object literal [1]. `I_call` [2] cannot be spread because interfaces do not track the
-own-ness of their properties. Can you use an object type instead?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_call` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
 
-   test9.js:5:7
-   5| ({ ...o_call }: { "$call": any }); // error: interfaces cannot be spread 
-            ^^^^^^
-
-References:
    test9.js:5:2
    5| ({ ...o_call }: { "$call": any }); // error: interfaces cannot be spread 
        ^^^^^^^^^^^^^ [1]
+
+References:
    test9.js:4:21
    4| declare var o_call: I_call;
                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test9.js:11:7
+Error ---------------------------------------------------------------------------------------------------- test9.js:11:2
 
-Cannot determine a type for object literal [1]. `I_index` [2] cannot be spread because interfaces do not track the
-own-ness of their properties. Can you use an object type instead?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
 
-   test9.js:11:7
-   11| ({ ...o_index }: { "$key": any }); // error: interfaces cannot be spread 
-             ^^^^^^^
-
-References:
    test9.js:11:2
    11| ({ ...o_index }: { "$key": any }); // error: interfaces cannot be spread 
         ^^^^^^^^^^^^^^ [1]
+
+References:
    test9.js:10:22
    10| declare var o_index: I_index;
                             ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test9.js:12:7
+Error ---------------------------------------------------------------------------------------------------- test9.js:12:2
 
-Cannot determine a type for object literal [1]. `I_index` [2] cannot be spread because interfaces do not track the
-own-ness of their properties. Can you use an object type instead?
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
 
-   test9.js:12:7
-   12| ({ ...o_index }: { "$value": any }); // error: interfaces cannot be spread 
-             ^^^^^^^
-
-References:
    test9.js:12:2
    12| ({ ...o_index }: { "$value": any }); // error: interfaces cannot be spread 
         ^^^^^^^^^^^^^^ [1]
+
+References:
    test9.js:10:22
    10| declare var o_index: I_index;
                             ^^^^^^^ [2]

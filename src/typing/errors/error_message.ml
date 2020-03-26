@@ -281,11 +281,13 @@ and 'loc t' =
   | ECannotSpreadInterface of {
       spread_reason: 'loc virtual_reason;
       interface_reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
     }
   | ECannotSpreadIndexerOnRight of {
       spread_reason: 'loc virtual_reason;
       object_reason: 'loc virtual_reason;
       key_reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
     }
   | EUnableToSpread of {
       spread_reason: 'loc virtual_reason;
@@ -300,6 +302,7 @@ and 'loc t' =
       key_reason: 'loc virtual_reason;
       value_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
     }
   | EExponentialSpread of {
       reason: 'loc virtual_reason;
@@ -754,15 +757,20 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification sve -> ESignatureVerification (Signature_error.map_locs ~f sve)
-  | ECannotSpreadInterface { spread_reason; interface_reason } ->
+  | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     ECannotSpreadInterface
-      { spread_reason = map_reason spread_reason; interface_reason = map_reason interface_reason }
-  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
+      {
+        spread_reason = map_reason spread_reason;
+        interface_reason = map_reason interface_reason;
+        use_op = map_use_op use_op;
+      }
+  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
     ECannotSpreadIndexerOnRight
       {
         spread_reason = map_reason spread_reason;
         object_reason = map_reason object_reason;
         key_reason = map_reason key_reason;
+        use_op = map_use_op use_op;
       }
   | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
     ->
@@ -775,13 +783,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         error_kind;
         use_op = map_use_op use_op;
       }
-  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
+  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
+    ->
     EInexactMayOverwriteIndexer
       {
         spread_reason = map_reason spread_reason;
         key_reason = map_reason key_reason;
         value_reason = map_reason value_reason;
         object2_reason = map_reason object2_reason;
+        use_op = map_use_op use_op;
       }
   | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
     EExponentialSpread
@@ -907,6 +917,21 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EInvalidReactCreateClass { reason; use_op; tool })
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
+  | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
+    util use_op (fun use_op -> ECannotSpreadInterface { spread_reason; interface_reason; use_op })
+  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
+    util use_op (fun use_op ->
+        ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op })
+  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
+    ->
+    util use_op (fun use_op ->
+        EUnableToSpread
+          { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op })
+  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
+    ->
+    util use_op (fun use_op ->
+        EInexactMayOverwriteIndexer
+          { spread_reason; key_reason; value_reason; object2_reason; use_op })
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1000,10 +1025,6 @@ let util_use_op_of_msg nope util = function
   | ECannotDelete _
   | EBigIntNotYetSupported _
   | ESignatureVerification _
-  | ECannotSpreadInterface _
-  | ECannotSpreadIndexerOnRight _
-  | EUnableToSpread _
-  | EInexactMayOverwriteIndexer _
   | EExponentialSpread _
   | EComputedPropertyWithMultipleLowerBounds _
   | EComputedPropertyWithUnion _
@@ -1073,14 +1094,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
   | EEnumCheckedInIf reason ->
-    Some (poly_loc_of_reason reason)
-  (* We position around the use of the object instead of the spread because the
-   * spread may be part of a polymorphic type signature. If we add a suppression there,
-   * the reduction in coverage is far more drastic. *)
-  | ECannotSpreadInterface { spread_reason = _; interface_reason = reason }
-  | ECannotSpreadIndexerOnRight { spread_reason = _; object_reason = reason; key_reason = _ }
-  | EInexactMayOverwriteIndexer
-      { spread_reason = _; key_reason = _; value_reason = _; object2_reason = reason } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -1186,6 +1199,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EUnableToSpread _
+  | ECannotSpreadInterface _
+  | ECannotSpreadIndexerOnRight _
+  | EInexactMayOverwriteIndexer _
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
   | EInvalidReactConfigType _
@@ -2737,46 +2753,47 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EBigIntNotYetSupported reason ->
     Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
-  | ECannotSpreadInterface { spread_reason; interface_reason } ->
+  | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     let features =
       [
-        text "Cannot determine a type for ";
+        text "Flow cannot determine a type for ";
         ref spread_reason;
         text ". ";
         ref interface_reason;
         text " cannot be spread because interfaces do not ";
-        text "track the own-ness of their properties. Can you use an object type instead?";
+        text "track the own-ness of their properties. Try using an object type instead";
       ]
     in
-    Normal { features }
-  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
+    UseOp { loc = loc_of_reason spread_reason; features; use_op }
+  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
     let features =
       [
-        text "Cannot determine a type for ";
+        text "Flow cannot determine a type for ";
         ref spread_reason;
         text ". ";
         ref object_reason;
         text " cannot be spread because the indexer ";
         ref key_reason;
         text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
-        text "Can you spread ";
+        text "Try spreading ";
         ref object_reason;
-        text " first or remove the indexer?";
+        text " first or remove the indexer";
       ]
     in
-    Normal { features }
-  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op } ->
+    UseOp { loc = loc_of_reason spread_reason; features; use_op }
+  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
+    ->
     let (error_reason, fix_suggestion) =
       match error_kind with
-      | Inexact -> ("is inexact", [text " Can you make "; ref object2_reason; text " exact?"])
+      | Inexact -> ("is inexact", [text " Try making "; ref object2_reason; text " exact"])
       | Indexer ->
         ( "has an indexer",
           [
-            text " Can you remove the indexer in ";
+            text " Try removing the indexer in ";
             ref object2_reason;
             text " or make ";
             code propname;
-            text " a required property?";
+            text " a required property";
           ] )
     in
     let features =
@@ -2798,10 +2815,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @ fix_suggestion
     in
     UseOp { loc = loc_of_reason spread_reason; features; use_op }
-  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
+  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
+    ->
     let features =
       [
-        text "Cannot determine a type for ";
+        text "Flow cannot determine a type for ";
         ref spread_reason;
         text ". ";
         ref object2_reason;
@@ -2810,12 +2828,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref key_reason;
         text " or a property value that conflicts with ";
         ref value_reason;
-        text ". Can you make ";
+        text ". Try making ";
         ref object2_reason;
-        text " exact?";
+        text " exact";
       ]
     in
-    Normal { features }
+    UseOp { loc = loc_of_reason spread_reason; features; use_op }
   | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
     let format_reason_group { first_reason; second_reason } =
       match second_reason with

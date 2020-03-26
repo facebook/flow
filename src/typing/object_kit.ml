@@ -245,7 +245,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               | (_, Some { key; value = _; dict_name = _; dict_polarity = _ }) ->
                 Error
                   (Error_message.ECannotSpreadIndexerOnRight
-                     { spread_reason = reason; object_reason = r2; key_reason = reason_of_t key })
+                     {
+                       spread_reason = reason;
+                       object_reason = r2;
+                       key_reason = reason_of_t key;
+                       use_op;
+                     })
               | (Some { key; value; dict_name = _; dict_polarity = _ }, _) when not flags2.exact ->
                 Error
                   (Error_message.EInexactMayOverwriteIndexer
@@ -254,6 +259,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                        key_reason = reason_of_t key;
                        value_reason = reason_of_t value;
                        object2_reason = r2;
+                       use_op;
                      })
               | _ -> Ok dict1
             in
@@ -1253,7 +1259,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 cx
                 ~trace
                 (Error_message.ECannotSpreadInterface
-                   { spread_reason = reason; interface_reason = r });
+                   { spread_reason = reason; interface_reason = r; use_op });
               rec_flow cx trace (AnyT.why AnyError reason, UseT (use_op, tout))
             | _ -> rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
           end
