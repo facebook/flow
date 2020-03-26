@@ -19,6 +19,18 @@ let mk_no_wrap cx reason =
 
 let mk cx reason = Type.OpenT (reason, mk_no_wrap cx reason)
 
+let mk_of_type cx reason t op =
+  let tvar = Reason.mk_id () in
+  Context.add_tvar cx tvar (Constraint.new_resolved_root t op);
+  ( if Context.is_verbose cx then
+    let graph = Context.graph cx in
+    Utils_js.prerr_endlinef
+      "TVAR %d (%d): %s"
+      tvar
+      (IMap.cardinal graph)
+      (Debug_js.string_of_reason cx reason) );
+  Type.OpenT (reason, tvar)
+
 let mk_where cx reason f =
   let tvar = mk cx reason in
   let () = f tvar in

@@ -94,3 +94,5 @@ let new_bounds () =
   }
 
 let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }
+
+let new_resolved_root t op = Root { rank = 0; constraints = FullyResolved (op, t) }

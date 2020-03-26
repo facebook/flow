@@ -152,6 +152,9 @@ val unify_declared_fun_type : Context.t -> string -> ALoc.t -> Type.t -> unit
 val var_ref :
   ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
 
+val query_var :
+  ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
+
 val set_var :
   Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> Changeset.EntryRef.t option
 

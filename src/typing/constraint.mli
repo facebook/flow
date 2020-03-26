@@ -31,3 +31,5 @@ and bounds = {
 }
 
 val new_unresolved_root : unit -> node
+
+val new_resolved_root : Type.t -> Type.use_op -> node
