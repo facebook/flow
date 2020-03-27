@@ -187,7 +187,7 @@ and 'loc t' =
   | EFunPredCustom of ('loc virtual_reason * 'loc virtual_reason) * string
   | EIncompatibleWithShape of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EInternal of 'loc * internal_error
-  | EUnsupportedSyntax of 'loc * unsupported_syntax
+  | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
   | EBindingError of binding_error * 'loc * string * Scope.Entry.t
@@ -423,7 +423,7 @@ and internal_error =
   | CheckJobException of Exception.t
   | UnexpectedTypeapp of string
 
-and unsupported_syntax =
+and 'loc unsupported_syntax =
   | ComprehensionExpression
   | GeneratorExpression
   | MetaPropertyExpression
@@ -444,6 +444,7 @@ and unsupported_syntax =
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
   | PredicateInvalidBody
+  | PredicateInvalidParameter of 'loc virtual_reason
   | PredicateFunctionAbstractReturnType
   | PredicateVoidReturn
   | MultipleIndexers
@@ -521,6 +522,21 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | IncompatibleGetKeysT | IncompatibleGetValuesT | IncompatibleUnaryMinusT
       | IncompatibleMapTypeTObject | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT
       | IncompatibleUnclassified _ ) as u ->
+      u
+  in
+  let map_unsupported_syntax = function
+    | PredicateInvalidParameter reason -> PredicateInvalidParameter (map_reason reason)
+    | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
+      | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
+      | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
+      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | RequireLazyDynamicArgument
+      | CatchParameterAnnotation | CatchParameterDeclaration
+      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
+      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
+      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
+      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
+      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
+      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
       u
   in
   function
@@ -703,7 +719,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTypeof loc -> EUnexpectedTypeof (f loc)
   | EFunPredCustom ((r1, r2), s) -> EFunPredCustom ((map_reason r1, map_reason r2), s)
   | EInternal (loc, i) -> EInternal (f loc, i)
-  | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
+  | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
   | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
@@ -2034,6 +2050,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [
           text "Invalid body for predicate function. Expected a simple return ";
           text "statement as body.";
+        ]
+      | PredicateInvalidParameter r ->
+        [
+          text "Invalid ";
+          ref r;
+          text " in predicate function. Predicate functions cannot ";
+          text "have destructured or spread parameters. This predicate annotation will ";
+          text "be ignored.";
         ]
       | PredicateFunctionAbstractReturnType ->
         [

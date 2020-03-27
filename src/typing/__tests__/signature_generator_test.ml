@@ -766,6 +766,15 @@ let tests =
                  "declare function bar(x: mixed): boolean %checks(obj.foo(x));";
                  "declare module.exports: typeof bar;";
                ];
+         "function_predicates5"
+         >:: mk_signature_generator_test
+               [
+                 "export function foo(...x: Array<mixed>): boolean %checks { return typeof x === \"number\"; };";
+               ]
+               [
+                 "declare function foo(...x: Array<mixed>): boolean %checks(typeof x === \"number\");";
+                 "export {foo};";
+               ];
          "destructure_annot"
          >:: mk_signature_generator_test
                ["var { a }: { a: number } = { a: 0 };"; "module.exports = a"]

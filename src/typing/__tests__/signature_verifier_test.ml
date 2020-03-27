@@ -436,6 +436,12 @@ let tests_data =
       ],
       [],
       ["Reachable: isOne, one"] );
+    ( name "function_predicates_6",
+      [
+        "export function foo(...x: Array<mixed>): boolean %checks { return typeof x === \"number\"; };";
+      ],
+      [],
+      ["global type: Array; global value: x; Reachable: foo"] );
     ( name "async_function_1",
       ["async function foo() {};"; "module.exports = foo;"],
       [],

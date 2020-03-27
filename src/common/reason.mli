@@ -351,6 +351,8 @@ val code_desc_of_literal : 'loc Flow_ast.Literal.t -> string
 
 val code_desc_of_expression : wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string
 
+val code_desc_of_pattern : ('a, 'b) Flow_ast.Pattern.t -> string
+
 (* Pass in any available aloc tables to be used when comparing abstract and concrete locations from
  * the same file. Usually `Context.aloc_tables` is a good choice, but if the context is not
  * available, the empty map may be appropriate. *)

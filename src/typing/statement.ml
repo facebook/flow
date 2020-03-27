@@ -7650,17 +7650,44 @@ and mk_class_sig =
           } ))
 
 and mk_func_sig =
-  let function_kind ~async ~generator ~predicate =
-    Func_sig.(
-      let open Ast.Type.Predicate in
-      match (async, generator, predicate) with
-      | (true, true, None) -> AsyncGenerator
-      | (true, false, None) -> Async
-      | (false, true, None) -> Generator
-      | (false, false, None) -> Ordinary
-      | (false, false, Some (_, Declared _)) -> Predicate
-      | (false, false, Some (_, Ast.Type.Predicate.Inferred)) -> Predicate
-      | (_, _, _) -> Utils_js.assert_false "(async || generator) && pred")
+  let predicate_function_kind cx loc params =
+    let open Error_message in
+    let (_, { Ast.Function.Params.params; rest; comments = _ }) = params in
+    let kind = Func_sig.Predicate in
+    let kind =
+      List.fold_left
+        (fun kind (_, param) ->
+          let open Flow_ast.Function.Param in
+          match param.argument with
+          | (ploc, Flow_ast.Pattern.Object _)
+          | (ploc, Flow_ast.Pattern.Array _)
+          | (ploc, Flow_ast.Pattern.Expression _) ->
+            let reason = mk_reason RDestructuring ploc in
+            Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
+            Func_sig.Ordinary
+          | (_, Flow_ast.Pattern.Identifier _) -> kind)
+        kind
+        params
+    in
+    match rest with
+    | Some (rloc, { Flow_ast.Function.RestParam.argument }) ->
+      let desc = Reason.code_desc_of_pattern argument in
+      let reason = mk_reason (RRestParameter (Some desc)) rloc in
+      Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
+      Func_sig.Ordinary
+    | None -> kind
+  in
+  let function_kind cx ~async ~generator ~predicate ~params =
+    let open Func_sig in
+    let open Ast.Type.Predicate in
+    match (async, generator, predicate) with
+    | (true, true, None) -> AsyncGenerator
+    | (true, false, None) -> Async
+    | (false, true, None) -> Generator
+    | (false, false, None) -> Ordinary
+    | (false, false, Some (loc, (Ast.Type.Predicate.Inferred | Declared _))) ->
+      predicate_function_kind cx loc params
+    | (_, _, _) -> Utils_js.assert_false "(async || generator) && pred"
   in
   let id_param cx tparams_map id mk_reason =
     let { Ast.Pattern.Identifier.name; annot; optional } = id in
@@ -7768,7 +7795,7 @@ and mk_func_sig =
       func
     in
     let reason = func_reason ~async ~generator loc in
-    let kind = function_kind ~async ~generator ~predicate in
+    let kind = function_kind cx ~async ~generator ~predicate ~params in
     let (tparams, tparams_map, tparams_ast) =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
