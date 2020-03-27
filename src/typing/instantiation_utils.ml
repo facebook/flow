@@ -69,26 +69,52 @@ module TypeAppExpansion : sig
 
   val set : entry list -> unit
 end = struct
-  type entry = Type.t * TypeSet.t list
+  (* Array types function like type applications but are not implemented as such. Unless 
+     we decide to unify their implementation with regular typeapps, they need special 
+     handling here *)
+  type root =
+    | Type of Type.t
+    | Array of reason
+    | ROArray of reason
+    | Tuple of reason * int
+
+  (* arity *)
+
+  module RootSet : Set.S with type elt = root = Set.Make (struct
+    type elt = root
+
+    type t = elt
+
+    let compare = Pervasives.compare
+  end)
+
+  type entry = Type.t * RootSet.t list
 
   let stack = ref ([] : entry list)
 
   (* visitor to collect roots of type applications nested in a type *)
   let roots_collector =
-    object
-      inherit [TypeSet.t] Type_visitor.t as super
+    object (self)
+      inherit [RootSet.t] Type_visitor.t as super
+
+      method arrtype r =
+        function
+        | ArrayAT _ -> Array r
+        | ROArrayAT _ -> ROArray r
+        | TupleAT (_, ts) -> Tuple (r, List.length ts)
 
       method! type_ cx pole acc t =
         match t with
-        | TypeAppT (_, _, c, _) -> super#type_ cx pole (TypeSet.add c acc) t
+        | TypeAppT (_, _, c, _) -> super#type_ cx pole (RootSet.add (Type c) acc) t
+        | DefT (r, _, ArrT a) -> super#type_ cx pole (RootSet.add (self#arrtype r a) acc) t
         | OpenT _ ->
           (match ImplicitTypeArgument.abstract_targ t with
           | None -> acc
-          | Some t -> TypeSet.add t acc)
+          | Some t -> RootSet.add (Type t) acc)
         | _ -> super#type_ cx pole acc t
     end
 
-  let collect_roots cx = roots_collector#type_ cx Polarity.Neutral TypeSet.empty
+  let collect_roots cx = roots_collector#type_ cx Polarity.Neutral RootSet.empty
 
   (* Util to stringify a list, given a separator string and a function that maps
      elements of the list to strings. Should probably be moved somewhere else
@@ -97,14 +123,21 @@ end = struct
 
   let string_of_desc_of_t t = DescFormat.name_of_instance_reason (reason_of_t t)
 
+  let string_of_desc_of_root = function
+    | Type t -> string_of_desc_of_t t
+    | Array r
+    | ROArray r
+    | Tuple (r, _) ->
+      DescFormat.name_of_instance_reason r
+
   (* show entries in the stack *)
   let show_entry (c, tss) =
     spf
       "%s<%s>"
       (string_of_desc_of_t c)
       (string_of_list tss "," (fun ts ->
-           let ts = TypeSet.elements ts in
-           spf "[%s]" (string_of_list ts ";" string_of_desc_of_t)))
+           let ts = RootSet.elements ts in
+           spf "[%s]" (string_of_list ts ";" string_of_desc_of_root)))
 
   let _dump_stack () = string_of_list !stack "\n" show_entry
 
@@ -122,9 +155,9 @@ end = struct
         | (prev_ts :: prev_tss, ts :: tss) ->
           (* if prev_ts is not a subset of ts, we have found a counterexample
              and we can bail out *)
-          TypeSet.subset prev_ts ts
+          RootSet.subset prev_ts ts
           && (* otherwise, we recurse on the remaining targs, updating the bit *)
-          loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts)) (prev_tss, tss)
+          loop (seen_nonempty_prev_ts || not (RootSet.is_empty prev_ts)) (prev_tss, tss)
         | ([], []) ->
           (* we have found no counterexamples, so it comes down to whether we've
              seen any non-empty prev_ts *)
