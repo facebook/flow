@@ -3169,7 +3169,7 @@ struct
                 ts = [];
                 propref;
                 lookup_action = MatchProp (use_op, t);
-                ids = Properties.Set.empty;
+                ids = Some Properties.Set.empty;
               }
           in
           rec_flow cx trace (l, u)
@@ -4586,7 +4586,7 @@ struct
                             ts = [];
                             propref;
                             lookup_action = LookupProp (use_op, up);
-                            ids = Properties.Set.of_list [lown; lproto];
+                            ids = Some (Properties.Set.of_list [lown; lproto]);
                           } ) ));
 
           rec_flow cx trace (l, UseT (use_op, uproto))
@@ -4984,8 +4984,9 @@ struct
                     propref;
                     lookup_action = action;
                     ids =
-                      Properties.Set.add instance.own_props ids
-                      |> Properties.Set.add instance.proto_props;
+                      Base.Option.map ids ~f:(fun ids ->
+                          Properties.Set.add instance.own_props ids
+                          |> Properties.Set.add instance.proto_props);
                   } )
           | Some p ->
             (match kind with
@@ -5467,7 +5468,7 @@ struct
                     ts = try_ts_on_failure;
                     propref;
                     lookup_action = action;
-                    ids = Properties.Set.add o.props_tmap ids;
+                    ids = Base.Option.map ids ~f:(Properties.Set.add o.props_tmap);
                   } ))
         | ( AnyT (reason, _),
             LookupT
@@ -6535,7 +6536,7 @@ struct
                   ts = [];
                   propref;
                   lookup_action = ReadProp { use_op = unknown_use; obj_t = l; tout };
-                  ids = Properties.Set.empty;
+                  ids = Some Properties.Set.empty;
                 } )
         (************)
         (* indexing *)
@@ -6656,14 +6657,12 @@ struct
               Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
             else
               let use_op = use_op_of_lookup_action action in
+              let suggestion =
+                Base.Option.bind ids ~f:(fun ids ->
+                    prop_typo_suggestion cx (Properties.Set.elements ids) x)
+              in
               Error_message.EStrictLookupFailed
-                {
-                  reason_prop;
-                  reason_obj = strict_reason;
-                  name = Some x;
-                  use_op;
-                  suggestion = prop_typo_suggestion cx (Properties.Set.elements ids) x;
-                }
+                { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
           let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
@@ -6732,14 +6731,12 @@ struct
                 Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
               else
                 let use_op = use_op_of_lookup_action action in
+                let suggestion =
+                  Base.Option.bind ids ~f:(fun ids ->
+                      prop_typo_suggestion cx (Properties.Set.elements ids) x)
+                in
                 Error_message.EStrictLookupFailed
-                  {
-                    reason_prop;
-                    reason_obj = strict_reason;
-                    name = Some x;
-                    use_op;
-                    suggestion = prop_typo_suggestion cx (Properties.Set.elements ids) x;
-                  }
+                  { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
             in
             add_output cx ~trace error_message);
 
@@ -7320,7 +7317,7 @@ struct
                     ts = [];
                     propref;
                     lookup_action = LookupProp (use_op, up);
-                    ids = Properties.Set.singleton lflds;
+                    ids = Some (Properties.Set.singleton lflds);
                   } )
           | _ ->
             (* When an object type is unsealed, typing it as another object type should add properties
@@ -7348,7 +7345,7 @@ struct
                       ts = [];
                       propref;
                       lookup_action = LookupProp (use_op, up);
-                      ids = Properties.Set.singleton lflds;
+                      ids = Some (Properties.Set.singleton lflds);
                     } )));
 
     (* Any properties in l but not u must match indexer *)
@@ -7952,7 +7949,7 @@ struct
                      ts = [];
                      propref;
                      lookup_action = LookupProp (use_op, Field (None, t, polarity));
-                     ids = Properties.Set.empty;
+                     ids = Some Properties.Set.empty;
                    } )
            | _ ->
              let propref =
@@ -7972,7 +7969,7 @@ struct
                      ts = [];
                      propref;
                      lookup_action = LookupProp (use_op, p);
-                     ids = Properties.Set.empty;
+                     ids = Some Properties.Set.empty;
                    } ));
     proto_props
     |> SMap.iter (fun s p ->
@@ -7998,7 +7995,7 @@ struct
                    ts = [];
                    propref;
                    lookup_action = LookupProp (use_op, p);
-                   ids = Properties.Set.empty;
+                   ids = Some Properties.Set.empty;
                  } ));
     call_t
     |> Base.Option.iter ~f:(fun ut ->
@@ -8095,7 +8092,7 @@ struct
                 ts = [];
                 propref = Named (reason, x);
                 lookup_action = action;
-                ids = Properties.Set.empty;
+                ids = Some Properties.Set.empty;
               }
           in
           (* We use GetPropT instead of a strict lookup because a strict lookup directly on
@@ -9386,7 +9383,7 @@ struct
             ts = [];
             propref;
             lookup_action = action;
-            ids = previously_seen_props;
+            ids = Some previously_seen_props;
           } )
 
   and access_prop cx previously_seen_props trace reason_prop reason_op strict super x pmap action =
@@ -9478,7 +9475,7 @@ struct
                 ts = [];
                 propref;
                 lookup_action = ReadProp { use_op; obj_t = l; tout };
-                ids = Properties.Set.singleton o.props_tmap;
+                ids = Some (Properties.Set.singleton o.props_tmap);
               } )
       | Computed elem_t ->
         (match elem_t with
@@ -9561,7 +9558,7 @@ struct
                   ts = [];
                   propref;
                   lookup_action = action;
-                  ids = Properties.Set.singleton o.props_tmap;
+                  ids = Some (Properties.Set.singleton o.props_tmap);
                 } )
       | Computed elem_t ->
         (match elem_t with
@@ -11586,7 +11583,7 @@ struct
             ts = [];
             propref;
             lookup_action = ReadProp { use_op = unknown_use; obj_t = l; tout = builtin };
-            ids = Properties.Set.empty;
+            ids = Some Properties.Set.empty;
           } )
 
   and get_builtin_typeapp cx ?trace reason x ts =

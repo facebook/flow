@@ -569,7 +569,7 @@ module rec TypeTerm : sig
         ts: t list;
         propref: propref;
         lookup_action: lookup_action;
-        ids: Properties.Set.t;
+        ids: Properties.Set.t option;
       }
     (* operations on objects *)
 
