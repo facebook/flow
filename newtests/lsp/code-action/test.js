@@ -243,5 +243,63 @@ export default suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test("don't provide quickfixes for object subtyping errors", [
+      addFile('object-cast.js.ignored', 'object-cast.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/object-cast.js'},
+        range: {
+          start: {
+            line: 3,
+            character: 1,
+          },
+          end: {
+            line: 3,
+            character: 14,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 3,
+                  character: 1,
+                },
+                end: {
+                  line: 3,
+                  character: 14,
+                },
+              },
+              message:
+                'Cannot cast object literal to `T` because property `floo` (did you mean `foo`?) is missing in  `T` [1] but exists in  object literal [2].',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+            {
+              range: {
+                start: {
+                  line: 3,
+                  character: 1,
+                },
+                end: {
+                  line: 3,
+                  character: 14,
+                },
+              },
+              message:
+                'Cannot cast object literal to `T` because property `foo` (did you mean `floo`?) is missing in  object literal [1] but exists in  `T` [2].',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [['textDocument/codeAction', '[]']],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 );

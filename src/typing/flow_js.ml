@@ -7196,13 +7196,7 @@ struct
             let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
             let err =
               Error_message.EPropNotFound
-                {
-                  prop_name = Some s;
-                  reason_prop;
-                  reason_obj = ureason;
-                  use_op;
-                  suggestion = prop_typo_suggestion cx [uflds] s;
-                }
+                { prop_name = Some s; reason_prop; reason_obj = ureason; use_op; suggestion = None }
             in
             add_output cx ~trace err);
       Base.Option.iter lcall ~f:(fun _ ->
@@ -7317,7 +7311,7 @@ struct
                     ts = [];
                     propref;
                     lookup_action = LookupProp (use_op, up);
-                    ids = Some (Properties.Set.singleton lflds);
+                    ids = None;
                   } )
           | _ ->
             (* When an object type is unsealed, typing it as another object type should add properties
@@ -7345,7 +7339,7 @@ struct
                       ts = [];
                       propref;
                       lookup_action = LookupProp (use_op, up);
-                      ids = Some (Properties.Set.singleton lflds);
+                      ids = None;
                     } )));
 
     (* Any properties in l but not u must match indexer *)
