@@ -34,12 +34,7 @@ let choose_provider_and_warn_about_duplicates =
         let w =
           ModuleDuplicateProviderError { module_name = m; provider = current; conflict = f }
         in
-        FilenameMap.add
-          f
-          (match FilenameMap.find_opt f acc with
-          | Some errset -> w :: errset
-          | None -> [w])
-          acc)
+        FilenameMap.add f [w] acc ~combine:(fun old new_ -> Base.List.rev_append new_ old))
       errmap
       modules
   in
