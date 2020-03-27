@@ -168,7 +168,8 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
     else
       []
   in
-  let create_suggestion loc suggestion =
+  let create_suggestion loc ~original ~suggestion =
+    let title = Printf.sprintf "Replace %s with `%s`" original suggestion in
     let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
     let relevant_diagnostics =
       context.CodeActionRequest.diagnostics
@@ -178,7 +179,7 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
     CodeAction.Action
       CodeAction.
         {
-          title = "Apply suggestion";
+          title;
           kind = CodeActionKind.quickfix;
           diagnostics = relevant_diagnostics;
           action =
@@ -188,7 +189,7 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
                   (* https://github.com/microsoft/language-server-protocol/issues/933 *)
                   Command.title = "";
                   command = Command.Command "log";
-                  arguments = [Hh_json.JSON_String "Apply suggestion"];
+                  arguments = [Hh_json.JSON_String title];
                 } );
         }
   in
@@ -201,11 +202,14 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
         with
         | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
           let loc = Reason.loc_of_reason reason in
-          create_suggestion loc suggestion :: actions
+          let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
+          create_suggestion loc ~original ~suggestion :: actions
         | error_message ->
           (match error_message |> Error_message.friendly_message_of_msg with
-          | Error_message.PropMissing { loc; suggestion = Some suggestion; _ } ->
-            create_suggestion loc suggestion :: actions
+          | Error_message.PropMissing
+              { loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
+            let original = Printf.sprintf "`%s`" prop_name in
+            create_suggestion loc ~original ~suggestion :: actions
           | _ -> actions))
       errors
       []
