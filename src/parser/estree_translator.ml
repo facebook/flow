@@ -439,17 +439,7 @@ with type t = Impl.t = struct
       | (loc, Unary { Unary.operator; argument; comments }) ->
         Unary.(
           (match operator with
-          | Await ->
-            (* await is defined as a separate expression in ast-types
-             *
-             * TODO
-             * 1) Send a PR to ast-types
-             *    (https://github.com/benjamn/ast-types/issues/113)
-             * 2) Output a UnaryExpression
-             * 3) Modify the esprima test runner to compare AwaitExpression and
-             *    our UnaryExpression
-             * *)
-            node ?comments "AwaitExpression" loc [("argument", expression argument)]
+          | Await -> node ?comments "AwaitExpression" loc [("argument", expression argument)]
           | _ ->
             let operator =
               match operator with
