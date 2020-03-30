@@ -502,7 +502,8 @@
               "loc":{"source":null,"start":{"line":22,"column":63},"end":{"line":22,"column":65}},
               "range":[555,557],
               "body":[]
-            }
+            },
+            "await":false
           }
         ]
       },

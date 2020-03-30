@@ -65,6 +65,7 @@
             "typeAnnotation":null,
             "optional":false
           },
+          "typeArguments":null,
           "arguments":[
             {
               "type":"Identifier",
@@ -77,7 +78,8 @@
           ]
         },
         "directive":null
-      }
+      },
+      "await":false
     }
   ],
   "comments":[]

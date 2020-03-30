@@ -772,14 +772,14 @@ class ['loc] mapper =
 
     method for_of_statement _loc (stuff : ('loc, 'loc) Ast.Statement.ForOf.t) =
       let open Ast.Statement.ForOf in
-      let { left; right; body; async } = stuff in
+      let { left; right; body; await } = stuff in
       let left' = this#for_of_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
       if left == left' && right == right' && body == body' then
         stuff
       else
-        { left = left'; right = right'; body = body'; async }
+        { left = left'; right = right'; body = body'; await }
 
     method for_of_statement_lhs (left : ('loc, 'loc) Ast.Statement.ForOf.left) =
       let open Ast.Statement.ForOf in

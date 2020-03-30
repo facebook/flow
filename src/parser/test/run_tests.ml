@@ -238,6 +238,8 @@ end = struct
     | (_, None, Some "decorators")
     (* Esprima doesn't support async functions *)
     | (_, None, Some "async")
+    (* Esprima doesn't support for-await *)
+    | (_, None, Some "await")
     (* TODO: Flow should include this *)
     | ([], Some "sourceType", None)
     (* TODO: enable this in tests *)

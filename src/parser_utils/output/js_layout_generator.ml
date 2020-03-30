@@ -707,11 +707,11 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.VariableDeclaration decl -> with_semicolon (variable_declaration (loc, decl))
       | S.ClassDeclaration class_ -> class_base class_
       | S.EnumDeclaration enum -> enum_declaration enum
-      | S.ForOf { S.ForOf.left; right; body; async } ->
+      | S.ForOf { S.ForOf.left; right; body; await } ->
         fuse
           [
             Atom "for";
-            ( if async then
+            ( if await then
               fuse [space; Atom "await"]
             else
               Empty );

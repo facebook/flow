@@ -1847,7 +1847,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
         (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each }))
-  | (loc, ForOf { ForOf.left; right; body; async }) ->
+  | (loc, ForOf { ForOf.left; right; body; await }) ->
     let reason_desc =
       match left with
       | ForOf.LeftDeclaration
@@ -1897,7 +1897,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             EmptyT.why reason |> with_trust bogus_trust;
           ]
         in
-        if async then
+        if await then
           let reason = mk_reason (RCustom "async iteration expected on AsyncIterable") loc in
           Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
         else
@@ -1989,7 +1989,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-        (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; async }))
+        (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await }))
   | (_, Debugger _) as stmt -> stmt
   | (loc, FunctionDeclaration func) ->
     let { Ast.Function.id; sig_loc; _ } = func in
