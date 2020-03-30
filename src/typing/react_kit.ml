@@ -116,7 +116,7 @@ let get_intrinsic
           ts = [];
           propref;
           lookup_action = LookupProp (unknown_use, prop);
-          ids = Properties.Set.empty;
+          ids = Some Properties.Set.empty;
         } )
 
 (* Lookup the defaultProps of a component and flow with upper depending
@@ -151,7 +151,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
           ts = [];
           propref;
           lookup_action = action;
-          ids = Properties.Set.empty;
+          ids = Some Properties.Set.empty;
         } )
 
 (* Get a type for the default props of a component. If a component has no
@@ -584,7 +584,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 ts = [];
                 propref;
                 lookup_action = action;
-                ids = Properties.Set.empty;
+                ids = Some Properties.Set.empty;
               } )
       in
       (* Check the type of React refs in the config input.
@@ -621,7 +621,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 ts = [];
                 propref;
                 lookup_action = action;
-                ids = Properties.Set.empty;
+                ids = Some Properties.Set.empty;
               } )
       in
       let annot_loc = aloc_of_reason reason_op in

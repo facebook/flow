@@ -694,9 +694,14 @@ and dump_use_t_ (depth, tvars) cx t =
              (propref prop)
              (lookup_kind kind)
              (lookup_action action)
-             (String.concat
-                "; "
-                (Properties.Set.elements ids |> Base.List.map ~f:Properties.string_of_id)))
+             (match ids with
+             | None -> "None"
+             | Some ids ->
+               spf
+                 "Some %s"
+                 (String.concat
+                    "; "
+                    (Properties.Set.elements ids |> Base.List.map ~f:Properties.string_of_id))))
         t
     | MakeExactT _ -> p t
     | MapTypeT _ -> p t
