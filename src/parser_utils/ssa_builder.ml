@@ -909,7 +909,7 @@ struct
       method private ssa_switch_case
           (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
         let open Ast.Statement.Switch.Case in
-        let { test; consequent } = case in
+        let { test; consequent; comments = _ } = case in
         ignore @@ Flow_ast_mapper.map_opt this#expression test;
         let env0 = this#ssa_env in
         this#merge_ssa_env env0 env;

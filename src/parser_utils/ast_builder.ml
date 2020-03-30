@@ -291,7 +291,8 @@ module Statements = struct
   let switch ?comments discriminant cases =
     (Loc.none, Switch { Switch.discriminant; cases; comments })
 
-  let switch_case ?(loc = Loc.none) ?test consequent = (loc, { Switch.Case.test; consequent })
+  let switch_case ?(loc = Loc.none) ?test ?comments consequent =
+    (loc, { Switch.Case.test; consequent; comments })
 
   let break ?comments ?label () = (Loc.none, Break { Break.label; comments })
 

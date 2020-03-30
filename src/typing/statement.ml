@@ -1096,7 +1096,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         if List.exists (fun (_, { test; _ }) -> test = None) cases then
           (cases, false)
         else
-          (cases @ [(switch_loc, { test = None; consequent = [] })], true))
+          (cases @ [(switch_loc, { test = None; consequent = []; comments = None })], true))
     in
     (* typecheck discriminant *)
     let discriminant_ast = expression cx discriminant in
@@ -1134,7 +1134,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         (* traverse case list, get list of control flow exits and list of ASTs *)
         let (exits, cases_ast) =
           cases
-          |> Base.List.map ~f:(fun (loc, { Switch.Case.test; consequent }) ->
+          |> Base.List.map ~f:(fun (loc, { Switch.Case.test; consequent; comments }) ->
                  (* compute predicates implied by case expr or default *)
                  let (test_ast, preds, not_preds, xtypes) =
                    match test with
@@ -1220,7 +1220,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                  (* TODO add API to do this without having to swap in env *)
                  Env.update_env cx loc case_start_env;
                  let _ = Env.refine_with_preds cx loc not_preds xtypes in
-                 (exit, (loc, { Switch.Case.test = test_ast; consequent = consequent_ast })))
+                 ( exit,
+                   (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments }) ))
           |> List.split
         in
         let cases_ast =

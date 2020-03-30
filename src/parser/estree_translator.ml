@@ -707,8 +707,9 @@ with type t = Impl.t = struct
       (* ESTree does not have a unique node for argument lists, so there's nowhere to
          include the loc. *)
       array_of_list expression_or_spread arguments
-    and case (loc, { Statement.Switch.Case.test; consequent }) =
+    and case (loc, { Statement.Switch.Case.test; consequent; comments }) =
       node
+        ?comments
         "SwitchCase"
         loc
         [("test", option expression test); ("consequent", array_of_list statement consequent)]

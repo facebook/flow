@@ -519,6 +519,7 @@ and Statement : sig
       and ('M, 'T) t' = {
         test: ('M, 'T) Expression.t option;
         consequent: ('M, 'T) Statement.t list;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end

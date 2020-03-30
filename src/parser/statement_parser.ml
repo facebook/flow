@@ -448,19 +448,21 @@ module Statement
         List.rev acc
       | _ ->
         let start_loc = Peek.loc env in
-        let test =
+        let leading = Peek.comments env in
+        let (test, trailing) =
           match Peek.token env with
           | T_DEFAULT ->
             if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
             Expect.token env T_DEFAULT;
-            None
+            (None, Peek.comments env)
           | _ ->
             Expect.token env T_CASE;
-            Some (Parse.expression env)
+            (Some (Parse.expression env), [])
         in
         let seen_default = seen_default || test = None in
         let end_loc = Peek.loc env in
         Expect.token env T_COLON;
+        let trailing = trailing @ Peek.comments env in
         let term_fn = function
           | T_RCURLY
           | T_DEFAULT
@@ -474,7 +476,13 @@ module Statement
           | last_stmt :: _ -> fst last_stmt
           | _ -> end_loc
         in
-        let acc = (Loc.btwn start_loc end_loc, Statement.Switch.Case.{ test; consequent }) :: acc in
+        let acc =
+          ( Loc.btwn start_loc end_loc,
+            Statement.Switch.Case.
+              { test; consequent; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+          )
+          :: acc
+        in
         case_list env (seen_default, acc)
     in
     with_loc (fun env ->

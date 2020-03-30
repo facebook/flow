@@ -1785,14 +1785,15 @@ let program
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [discriminant; cases; comments]
   and switch_case
-      ((_, s1) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
+      ((loc, s1) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
       ((_, s2) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t) : node change list option =
     let open Ast.Statement.Switch.Case in
-    let { test = test1; consequent = consequent1 } = s1 in
-    let { test = test2; consequent = consequent2 } = s2 in
+    let { test = test1; consequent = consequent1; comments = comments1 } = s1 in
+    let { test = test2; consequent = consequent2; comments = comments2 } = s2 in
     let test = diff_if_changed_nonopt_fn expression test1 test2 in
     let consequent = statement_list consequent1 consequent2 in
-    join_diff_list [test; consequent]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [test; consequent; comments]
   and function_param_pattern
       (pat1 : (Loc.t, Loc.t) Ast.Pattern.t) (pat2 : (Loc.t, Loc.t) Ast.Pattern.t) : node change list
       =

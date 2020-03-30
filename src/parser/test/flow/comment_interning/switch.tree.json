@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":19,"column":1}},
-  "range":[0,375],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":26,"column":1}},
+  "range":[0,582],
   "body":[
     {
       "type":"SwitchStatement",
@@ -25,6 +25,14 @@
       "cases":[
         {
           "type":"SwitchCase",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":1,"column":79},"end":{"line":1,"column":111}},
+              "range":[79,111],
+              "value":" 1.3 Not attached to switch "
+            }
+          ],
           "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":3,"column":10}},
           "range":[116,135],
           "test":null,
@@ -202,6 +210,154 @@
           ]
         }
       ]
+    },
+    {
+      "type":"SwitchStatement",
+      "leadingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":19,"column":2},"end":{"line":19,"column":30}},
+          "range":[376,404],
+          "value":" 4.2 Trailing on switch "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":26,"column":1}},
+      "range":[406,582],
+      "discriminant":{
+        "type":"Literal",
+        "loc":{"source":null,"start":{"line":21,"column":8},"end":{"line":21,"column":9}},
+        "range":[414,415],
+        "value":1,
+        "raw":"1"
+      },
+      "cases":[
+        {
+          "type":"SwitchCase",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":22,"column":62},"end":{"line":22,"column":78}},
+              "range":[481,497],
+              "value":" 5.4 T case "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":22,"column":20}},
+              "range":[423,439],
+              "value":" 5.1 L case "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":22,"column":21},"end":{"line":23,"column":8}},
+          "range":[440,506],
+          "test":{
+            "type":"Literal",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":22,"column":44},"end":{"line":22,"column":59}},
+                "range":[463,478],
+                "value":" 5.3 T num "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":22,"column":26},"end":{"line":22,"column":41}},
+                "range":[445,460],
+                "value":" 5.2 L num "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":22,"column":42},"end":{"line":22,"column":43}},
+            "range":[461,462],
+            "value":1,
+            "raw":"1"
+          },
+          "consequent":[
+            {
+              "type":"ExpressionStatement",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":24,"column":4},"end":{"line":24,"column":20}},
+                  "range":[511,527],
+                  "value":" 5.5 L case "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":23,"column":6},"end":{"line":23,"column":8}},
+              "range":[504,506],
+              "expression":{
+                "type":"Literal",
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":22,"column":62},"end":{"line":22,"column":78}},
+                    "range":[481,497],
+                    "value":" 5.4 T case "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":23,"column":6},"end":{"line":23,"column":7}},
+                "range":[504,505],
+                "value":1,
+                "raw":"1"
+              },
+              "directive":null
+            }
+          ]
+        },
+        {
+          "type":"SwitchCase",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":24,"column":29},"end":{"line":24,"column":45}},
+              "range":[536,552],
+              "value":" 5.6 T case "
+            },
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":24,"column":48},"end":{"line":24,"column":64}},
+              "range":[555,571],
+              "value":" 5.7 T case "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":24,"column":4},"end":{"line":24,"column":20}},
+              "range":[511,527],
+              "value":" 5.5 L case "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":24,"column":21},"end":{"line":25,"column":8}},
+          "range":[528,580],
+          "test":null,
+          "consequent":[
+            {
+              "type":"ExpressionStatement",
+              "loc":{"source":null,"start":{"line":25,"column":6},"end":{"line":25,"column":8}},
+              "range":[578,580],
+              "expression":{
+                "type":"Literal",
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":24,"column":48},"end":{"line":24,"column":64}},
+                    "range":[555,571],
+                    "value":" 5.7 T case "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":25,"column":6},"end":{"line":25,"column":7}},
+                "range":[578,579],
+                "value":1,
+                "raw":"1"
+              },
+              "directive":null
+            }
+          ]
+        }
+      ]
     }
   ],
   "comments":[
@@ -252,6 +408,48 @@
       "loc":{"source":null,"start":{"line":19,"column":2},"end":{"line":19,"column":30}},
       "range":[376,404],
       "value":" 4.2 Trailing on switch "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":22,"column":20}},
+      "range":[423,439],
+      "value":" 5.1 L case "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":22,"column":26},"end":{"line":22,"column":41}},
+      "range":[445,460],
+      "value":" 5.2 L num "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":22,"column":44},"end":{"line":22,"column":59}},
+      "range":[463,478],
+      "value":" 5.3 T num "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":22,"column":62},"end":{"line":22,"column":78}},
+      "range":[481,497],
+      "value":" 5.4 T case "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":4},"end":{"line":24,"column":20}},
+      "range":[511,527],
+      "value":" 5.5 L case "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":29},"end":{"line":24,"column":45}},
+      "range":[536,552],
+      "value":" 5.6 T case "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":48},"end":{"line":24,"column":64}},
+      "range":[555,571],
+      "value":" 5.7 T case "
     }
   ]
 }
