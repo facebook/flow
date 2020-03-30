@@ -89,7 +89,8 @@
         "type":"EmptyStatement",
         "loc":{"source":null,"start":{"line":2,"column":31},"end":{"line":2,"column":32}},
         "range":[45,46]
-      }
+      },
+      "await":false
     }
   ],
   "comments":[]

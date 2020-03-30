@@ -327,7 +327,7 @@ module Statement
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
           assert_not_labelled_function env body;
-          Statement.ForOf { Statement.ForOf.left; right; body; async }
+          Statement.ForOf { Statement.ForOf.left; right; body; await = async }
         | T_IN ->
           let left =
             match init with

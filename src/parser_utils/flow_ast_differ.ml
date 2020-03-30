@@ -1667,8 +1667,8 @@ let program
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.ForOf.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.ForOf.t)
       : node change list option =
     let open Ast.Statement.ForOf in
-    let { left = left1; right = right1; body = body1; async = async1 } = stmt1 in
-    let { left = left2; right = right2; body = body2; async = async2 } = stmt2 in
+    let { left = left1; right = right1; body = body1; await = await1 } = stmt1 in
+    let { left = left2; right = right2; body = body2; await = await2 } = stmt2 in
     let left =
       if left1 == left2 then
         Some []
@@ -1677,13 +1677,13 @@ let program
     in
     let body = Some (diff_if_changed statement body1 body2) in
     let right = Some (diff_if_changed expression right1 right2) in
-    let async =
-      if async1 != async2 then
+    let await =
+      if await1 != await2 then
         None
       else
         Some []
     in
-    join_diff_list [left; right; body; async]
+    join_diff_list [left; right; body; await]
   and for_of_statement_lhs
       (left1 : (Loc.t, Loc.t) Ast.Statement.ForOf.left)
       (left2 : (Loc.t, Loc.t) Ast.Statement.ForOf.left) : node change list option =

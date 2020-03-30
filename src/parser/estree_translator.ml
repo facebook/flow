@@ -216,19 +216,21 @@ with type t = Impl.t = struct
             ("body", statement body);
             ("each", bool each);
           ]
-      | (loc, ForOf { ForOf.async; left; right; body }) ->
-        let type_ =
-          if async then
-            "ForAwaitStatement"
-          else
-            "ForOfStatement"
-        in
+      | (loc, ForOf { ForOf.await; left; right; body }) ->
         let left =
           match left with
           | ForOf.LeftDeclaration left -> variable_declaration left
           | ForOf.LeftPattern left -> pattern left
         in
-        node type_ loc [("left", left); ("right", expression right); ("body", statement body)]
+        node
+          "ForOfStatement"
+          loc
+          [
+            ("left", left);
+            ("right", expression right);
+            ("body", statement body);
+            ("await", bool await);
+          ]
       | (loc, EnumDeclaration enum) -> enum_declaration (loc, enum)
       | (loc, Debugger { Debugger.comments }) -> node ?comments "DebuggerStatement" loc []
       | (loc, ClassDeclaration c) -> class_declaration (loc, c)

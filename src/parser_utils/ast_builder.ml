@@ -244,7 +244,7 @@ module Statements = struct
 
   let for_in_pattern patt = ForIn.LeftPattern patt
 
-  let for_of ?(async = false) left right body = (Loc.none, ForOf { ForOf.left; right; body; async })
+  let for_of ?(await = false) left right body = (Loc.none, ForOf { ForOf.left; right; body; await })
 
   let for_of_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) ?comments declarations =
     ForOf.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind; comments })

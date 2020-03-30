@@ -634,7 +634,7 @@ and Statement : sig
       left: ('M, 'T) left;
       right: ('M, 'T) Expression.t;
       body: ('M, 'T) Statement.t;
-      async: bool;
+      await: bool;
     }
 
     and ('M, 'T) left =

@@ -231,7 +231,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! for_of_statement loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         let open Ast.Statement.ForOf in
-        let { left; right = _; body = _; async = _ } = stmt in
+        let { left; right = _; body = _; await = _ } = stmt in
         let lexical_hoist = new lexical_hoister in
         let lexical_bindings =
           match left with

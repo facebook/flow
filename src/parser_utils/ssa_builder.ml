@@ -824,7 +824,7 @@ struct
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.ForOf in
-            let { left; right; body; async = _ } = stmt in
+            let { left; right; body; await = _ } = stmt in
             ignore @@ this#expression right;
             let env1 = this#fresh_ssa_env in
             this#merge_self_ssa_env env1;
