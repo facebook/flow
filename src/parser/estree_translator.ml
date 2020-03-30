@@ -762,8 +762,9 @@ with type t = Impl.t = struct
           ("implements", array_of_list class_implements implements);
           ("mixins", array_of_list interface_extends mixins);
         ]
-    and declare_interface (loc, { Statement.Interface.id; tparams; body; extends }) =
+    and declare_interface (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
       node
+        ?comments
         "DeclareInterface"
         loc
         [
@@ -1020,8 +1021,9 @@ with type t = Impl.t = struct
             ]
       in
       node "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)]
-    and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends }) =
+    and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
       node
+        ?comments
         "InterfaceDeclaration"
         loc
         [

@@ -513,7 +513,8 @@ let program
       | ((loc, FunctionDeclaration func1), (_, FunctionDeclaration func2)) ->
         function_declaration loc func1 func2
       | ((_, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ class1 class2
-      | ((_, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2)) -> interface intf1 intf2
+      | ((loc, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2)) ->
+        interface loc intf1 intf2
       | ((loc, If if1), (_, If if2)) -> if_statement loc if1 if2
       | ((loc, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2)) ->
         expression_statement loc expr1 expr2
@@ -916,16 +917,34 @@ let program
     let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
     join_diff_list [expr_diff; targs_diff]
   and interface
+      (loc : Loc.t)
       (intf1 : (Loc.t, Loc.t) Ast.Statement.Interface.t)
       (intf2 : (Loc.t, Loc.t) Ast.Statement.Interface.t) : node change list option =
     let open Ast.Statement.Interface in
-    let { id = id1; tparams = tparams1; extends = extends1; body = (body_loc, body1) } = intf1 in
-    let { id = id2; tparams = tparams2; extends = extends2; body = (_, body2) } = intf2 in
+    let {
+      id = id1;
+      tparams = tparams1;
+      extends = extends1;
+      body = (body_loc, body1);
+      comments = comments1;
+    } =
+      intf1
+    in
+    let {
+      id = id2;
+      tparams = tparams2;
+      extends = extends2;
+      body = (_, body2);
+      comments = comments2;
+    } =
+      intf2
+    in
     let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
     let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
     let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
-    join_diff_list [id_diff; tparams_diff; extends_diff; body_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [id_diff; tparams_diff; extends_diff; body_diff; comments_diff]
   and class_body
       (class_body1 : (Loc.t, Loc.t) Ast.Class.Body.t)
       (class_body2 : (Loc.t, Loc.t) Ast.Class.Body.t) : node change list option =

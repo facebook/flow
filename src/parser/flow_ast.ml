@@ -717,6 +717,7 @@ and Statement : sig
       tparams: ('M, 'T) Type.TypeParams.t option;
       extends: ('M * ('M, 'T) Type.Generic.t) list;
       body: 'M * ('M, 'T) Type.Object.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

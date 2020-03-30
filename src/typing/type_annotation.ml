@@ -1833,7 +1833,7 @@ let mk_interface_sig cx reason decl =
         ( body_loc,
           { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } );
       extends;
-      _;
+      comments;
     } =
       decl
     in
@@ -1869,6 +1869,7 @@ let mk_interface_sig cx reason decl =
         body =
           ( body_loc,
             { Ast.Type.Object.exact; properties; inexact = false; comments = object_comments } );
+        comments;
       } ))
 
 let mk_declare_class_sig =

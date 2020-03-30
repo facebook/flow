@@ -736,10 +736,10 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.ExportDefaultDeclaration export -> export_default_declaration loc export
       | S.TypeAlias typeAlias -> type_alias ~declare:false loc typeAlias
       | S.OpaqueType opaqueType -> opaque_type ~declare:false loc opaqueType
-      | S.InterfaceDeclaration interface -> interface_declaration interface
+      | S.InterfaceDeclaration interface -> interface_declaration loc interface
       | S.DeclareClass interface -> declare_class interface
       | S.DeclareFunction func -> declare_function func
-      | S.DeclareInterface interface -> declare_interface interface
+      | S.DeclareInterface interface -> declare_interface loc interface
       | S.DeclareVariable var -> declare_variable var
       | S.DeclareModuleExports annot -> declare_module_exports annot
       | S.DeclareModule m -> declare_module m
@@ -2857,22 +2857,26 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Exists comments -> layout_node_with_comments_opt loc comments (Atom "*") )
 
 and interface_declaration_base
-    ~def { Ast.Statement.Interface.id; tparams; body = (loc, obj); extends } =
-  fuse
-    [
-      def;
-      identifier id;
-      option type_parameter tparams;
-      interface_extends extends;
-      pretty_space;
-      source_location_with_comments (loc, type_object ~sep:(Atom ",") loc obj);
-    ]
+    ~def loc { Ast.Statement.Interface.id; tparams; body = (body_loc, obj); extends; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         def;
+         identifier id;
+         option type_parameter tparams;
+         interface_extends extends;
+         pretty_space;
+         source_location_with_comments (body_loc, type_object ~sep:(Atom ",") body_loc obj);
+       ]
 
-and interface_declaration interface =
-  interface_declaration_base ~def:(fuse [Atom "interface"; space]) interface
+and interface_declaration loc interface =
+  interface_declaration_base ~def:(fuse [Atom "interface"; space]) loc interface
 
-and declare_interface interface =
-  interface_declaration_base ~def:(fuse [Atom "declare"; space; Atom "interface"; space]) interface
+and declare_interface loc interface =
+  interface_declaration_base
+    ~def:(fuse [Atom "declare"; space; Atom "interface"; space])
+    loc
+    interface
 
 and declare_class
     ?(s_type = Empty)
@@ -3026,7 +3030,7 @@ and declare_export_declaration
     (* declare export interface *)
     | Interface (loc, interface) ->
       source_location_with_comments
-        (loc, fuse [Atom "declare"; space; s_export; interface_declaration interface]))
+        (loc, fuse [Atom "declare"; space; s_export; interface_declaration loc interface]))
   | (None, Some specifier) ->
     fuse [Atom "declare"; space; Atom "export"; pretty_space; export_specifier source specifier]
   | (_, _) -> failwith "Invalid declare export declaration"

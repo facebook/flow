@@ -121,7 +121,7 @@ let opaque_type loc opaque_type =
 
 let interface loc interface =
   let open Ast.Statement.Interface in
-  let { id; tparams; body; extends } = interface in
+  let { id; tparams; body; extends; comments = _ } = interface in
   (id, (loc, Kind.InterfaceDef { tparams; body; extends }))
 
 let import_star loc id kind source = (id, (loc, Kind.ImportStarDef { kind; source }))

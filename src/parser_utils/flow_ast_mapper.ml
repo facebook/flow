@@ -1253,15 +1253,22 @@ class ['loc] mapper =
 
     method interface _loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
-      let { id = ident; tparams; extends; body } = interface in
+      let { id = ident; tparams; extends; body; comments } = interface in
       let id' = this#class_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
       let body' = map_loc this#object_type body in
-      if id' == ident && tparams' == tparams && extends' == extends && body' == body then
+      let comments' = this#syntax_opt comments in
+      if
+        id' == ident
+        && tparams' == tparams
+        && extends' == extends
+        && body' == body
+        && comments' == comments
+      then
         interface
       else
-        { id = id'; tparams = tparams'; extends = extends'; body = body' }
+        { id = id'; tparams = tparams'; extends = extends'; body = body'; comments = comments' }
 
     method interface_declaration loc (decl : ('loc, 'loc) Ast.Statement.Interface.t) =
       this#interface loc decl

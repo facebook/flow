@@ -1027,12 +1027,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method interface (interface : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =
       let open Ast.Statement.Interface in
-      let { id = ident; tparams; extends; body } = interface in
+      let { id = ident; tparams; extends; body; comments } = interface in
       let id' = this#class_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let extends' = Base.List.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let body' = (this#on_loc_annot * this#object_type) body in
-          { id = id'; tparams = tparams'; extends = extends'; body = body' })
+          let comments' = Base.Option.map ~f:this#syntax comments in
+          { id = id'; tparams = tparams'; extends = extends'; body = body'; comments = comments' })
 
     method interface_declaration (decl : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =

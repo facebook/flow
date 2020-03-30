@@ -731,7 +731,14 @@ module T = struct
           } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
-        Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body } )
+        Ast.Statement.InterfaceDeclaration
+          {
+            Ast.Statement.Interface.id;
+            tparams;
+            extends;
+            body;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =

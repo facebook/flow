@@ -785,11 +785,13 @@ module Statement
 
   and interface_helper env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
+    let leading = Peek.comments env in
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
     let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
-    let (extends, body) = Type.interface_helper env in
-    Statement.Interface.{ id; tparams; body; extends }
+    let (extends, body) = Type.interface_helper env ~id:(Some id) in
+    Statement.Interface.
+      { id; tparams; body; extends; comments = Flow_ast_utils.mk_comments_opt ~leading () }
 
   and declare_interface env =
     with_loc

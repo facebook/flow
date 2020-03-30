@@ -29,6 +29,7 @@ module type TYPE = sig
   val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
 
   val interface_helper :
+    id:(Loc.t, Loc.t) Ast.Identifier.t option ->
     env ->
     (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list * (Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t)
 
@@ -214,14 +215,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_LPAREN -> function_or_group env
     | T_LCURLY
     | T_LCURLYBAR ->
-      let (loc, o) = _object env ~is_class:false ~allow_exact:true ~allow_spread:true in
+      let (loc, o) =
+        _object env ~is_class:false ~allow_exact:true ~allow_spread:true ~attach_leading:true
+      in
       (loc, Type.Object o)
     | T_INTERFACE ->
       with_loc
         (fun env ->
           let leading = Peek.comments env in
           Expect.token env T_INTERFACE;
-          let (extends, body) = interface_helper env in
+          let (extends, body) = interface_helper env ~id:None in
           Type.Interface
             { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
         env
@@ -964,12 +967,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 init_property env start_loc ~variance ~static ~proto key
             end))
     in
-    fun ~is_class ~allow_exact ~allow_spread env ->
+    fun ~is_class ~allow_exact ~allow_spread ~attach_leading env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       let allow_inexact = allow_exact && not exact in
       with_loc
         (fun env ->
-          let leading = Peek.comments env in
+          let leading =
+            if attach_leading then
+              Peek.comments env
+            else
+              []
+          in
           Expect.token
             env
             ( if exact then
@@ -1007,7 +1015,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         supers env acc
       | _ -> List.rev acc
     in
-    fun env ->
+    fun ~id env ->
       let extends =
         if Peek.token env = T_EXTENDS then (
           Expect.token env T_EXTENDS;
@@ -1015,7 +1023,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ) else
           []
       in
-      let body = _object env ~allow_exact:false ~allow_spread:false ~is_class:false in
+      let body =
+        _object
+          env
+          ~allow_exact:false
+          ~allow_spread:false
+          ~is_class:false
+          ~attach_leading:(id = None && extends = [])
+      in
       (extends, body)
 
   and type_identifier env =
@@ -1262,9 +1277,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   let type_args = wrap type_args
 
-  let _object ~is_class env = wrap (_object ~is_class ~allow_exact:false ~allow_spread:false) env
+  let _object ~is_class env =
+    wrap (_object ~is_class ~allow_exact:false ~allow_spread:false ~attach_leading:true) env
 
-  let interface_helper = wrap interface_helper
+  let interface_helper ~id env = wrap (interface_helper ~id) env
 
   let function_param_list = wrap function_param_list
 
