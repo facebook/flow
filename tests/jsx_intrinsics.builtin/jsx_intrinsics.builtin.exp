@@ -18,8 +18,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:14:3
 
-Cannot assign `<CustomComponent />` to `c` because property `prop1` (did you mean `prop`?) is missing in object type [1]
-but exists in object type [2] in property `props`.
+Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
+type [2] in property `props`.
 
    main.js:14:3
    14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>

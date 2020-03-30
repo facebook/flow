@@ -175,8 +175,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- config.js:13:2
 
-Cannot cast `y` to `NotTheRightConfig` because property `baz` (did you mean `bar`?) is missing in `Props` [1] but exists
-in `NotTheRightConfig` [2].
+Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Props` [1] but exists in
+`NotTheRightConfig` [2].
 
    config.js:13:2
    13| (y: NotTheRightConfig); // Error, configs don't match
@@ -211,8 +211,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- config.js:16:2
 
-Cannot cast `z` to config of React component because property `bar` (did you mean `baz`?) is missing in
-`NotTheRightConfig` [1] but exists in `Props` [2].
+Cannot cast `z` to config of React component because property `bar` is missing in `NotTheRightConfig` [1] but exists in
+`Props` [2].
 
    config.js:16:2
    16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
@@ -264,8 +264,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:9:13
 
-Cannot create `C` element because property `bar` (did you mean `baz`?) is missing in props [1] but exists in object
-type [2].
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
 
    create_element.js:9:13
    9| const _c = <C baz={4} />; // Error missing bar
@@ -282,8 +281,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:10:13
 
-Cannot create `C` element because property `baz` (did you mean `bar`?) is missing in props [1] but exists in object
-type [2].
+Cannot create `C` element because property `baz` is missing in props [1] but exists in object type [2].
 
    create_element.js:10:13
    10| const _d = <C bar={3} />; // Error missing baz
@@ -345,8 +343,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:9:13
 
-Cannot create `C` element because property `bar` (did you mean `baz`?) is missing in props [1] but exists in object
-type [2].
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
 
    destructors.js:9:13
    9| const _b = <C baz={3} />; // Error, bar missing
@@ -377,8 +374,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
 
-Cannot cast object literal to `React.ElementConfig` because property `bar` (did you mean `baz`?) is missing in object
-literal [1] but exists in object type [2].
+Cannot cast object literal to `React.ElementConfig` because property `bar` is missing in object literal [1] but exists
+in object type [2].
 
    destructors.js:21:2
    21| ({baz: 3}: React$ElementConfig<typeof C>); // Error, bar missing

@@ -630,8 +630,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_component.js:17:13
 
-Cannot create `Component` element because property `baz` (did you mean `bar`?) is missing in object type [1] but exists
-in props [2].
+Cannot create `Component` element because property `baz` is missing in object type [1] but exists in props [2].
 
    object_component.js:17:13
    17| const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the config
@@ -677,8 +676,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_component.js:24:57
 
-Cannot assign object literal to `_badProps2` because property `baz` (did you mean `bar`?) is missing in object type [1]
-but exists in object literal [2].
+Cannot assign object literal to `_badProps2` because property `baz` is missing in object type [1] but exists in object
+literal [2].
 
    object_component.js:24:57
    24| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
