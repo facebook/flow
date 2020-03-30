@@ -2446,8 +2446,9 @@ and type_param
       end;
     ]
 
-and type_parameter (loc, params) =
+and type_parameter (loc, { Ast.Type.TypeParams.params; comments }) =
   source_location_with_comments
+    ?comments
     ( loc,
       group
         [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_param params)]

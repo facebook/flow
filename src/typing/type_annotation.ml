@@ -1615,11 +1615,13 @@ and mk_type_param_declarations cx ?(tparams_map = SMap.empty) tparams =
   in
   match tparams with
   | None -> (None, tparams_map, None)
-  | Some (tparams_loc, tparams) ->
+  | Some (tparams_loc, { Ast.Type.TypeParams.params = tparams; comments }) ->
     let (rev_tparams, tparams_map, _, rev_asts) =
       List.fold_left add_type_param ([], tparams_map, SMap.empty, []) tparams
     in
-    let tparams_ast = Some (tparams_loc, List.rev rev_asts) in
+    let tparams_ast =
+      Some (tparams_loc, { Ast.Type.TypeParams.params = List.rev rev_asts; comments })
+    in
     let tparams =
       match List.rev rev_tparams with
       | [] -> None

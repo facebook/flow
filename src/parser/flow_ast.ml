@@ -405,7 +405,11 @@ and Type : sig
   module TypeParams : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = ('M, 'T) TypeParam.t list [@@deriving show]
+    and ('M, 'T) t' = {
+      params: ('M, 'T) TypeParam.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module TypeArgs : sig

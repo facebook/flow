@@ -4,6 +4,6 @@
 
 /* 3.1 L id */ x /* 3.2 T id */ => {};
 
-<T> /* 4.1 L params */ () /* 4.2 T params */ => {};
+/* 4.1 L tparams */ <T> /* 4.2 L params */ () /* 4.3 T params */ => {};
 
 /* 5.1 L params */ () /* 5.2 T params */ : /* 5.3 L any */ any /* 5.4 T any */ => {}

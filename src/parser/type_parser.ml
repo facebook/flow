@@ -16,7 +16,11 @@ module type TYPE = sig
 
   val type_identifier : env -> (Loc.t, Loc.t) Ast.Identifier.t
 
-  val type_params : env -> (Loc.t, Loc.t) Ast.Type.TypeParams.t option
+  val type_params :
+    attach_leading:bool ->
+    attach_trailing:bool ->
+    env ->
+    (Loc.t, Loc.t) Ast.Type.TypeParams.t option
 
   val type_args : env -> (Loc.t, Loc.t) Ast.Type.TypeArgs.t option
 
@@ -530,7 +534,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and _function env =
     let start_loc = Peek.loc env in
-    let tparams = type_params env in
+    let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
     let params = function_param_list env in
     function_with_params env start_loc tparams params
 
@@ -556,7 +560,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         env
     in
     let method_property env start_loc static key =
-      let tparams = type_params env in
+      let tparams = type_params env ~attach_leading:false ~attach_trailing:false in
       let value = methodish env start_loc tparams in
       let value = (fst value, Type.Function (snd value)) in
       Type.Object.(
@@ -578,7 +582,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            let tparams = type_params env in
+            let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
             let value = methodish env (Peek.loc env) tparams in
             Type.Object.CallProperty.{ value; static = static <> None })
           env
@@ -692,7 +696,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
-                let tparams = type_params env in
+                let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
                 let value =
                   let (fn_loc, fn) = methodish env start_loc tparams in
                   (fn_loc, Type.Function fn)
@@ -1065,16 +1069,31 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           else
             params env ~require_default acc)
     in
-    fun env ->
+    fun ~attach_leading ~attach_trailing env ->
       if Peek.token env = T_LESS_THAN then (
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
         Some
           (with_loc
              (fun env ->
+               let leading =
+                 if attach_leading then
+                   Peek.comments env
+                 else
+                   []
+               in
                Expect.token env T_LESS_THAN;
                let params = params env ~require_default:false [] in
                Expect.token env T_GREATER_THAN;
-               params)
+               let trailing =
+                 if attach_trailing then
+                   Peek.comments env
+                 else
+                   []
+               in
+               {
+                 Type.TypeParams.params;
+                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+               })
              env)
       ) else
         None
@@ -1238,7 +1257,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   let type_identifier = wrap type_identifier
 
-  let type_params = wrap type_params
+  let type_params ~attach_leading ~attach_trailing env =
+    wrap (type_params ~attach_leading ~attach_trailing) env
 
   let type_args = wrap type_args
 

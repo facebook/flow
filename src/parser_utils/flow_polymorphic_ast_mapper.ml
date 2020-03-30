@@ -770,9 +770,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let tparams' =
           Base.Option.map
             ~f:(fun tparams ->
-              let (annot, tps) = tparams in
+              let open Ast.Type.TypeParams in
+              let (annot, { params = tps; comments }) = tparams in
+              let annot' = this#on_loc_annot annot in
               let tps' = Base.List.map ~f:this#type_param tps in
-              (this#on_loc_annot annot, tps'))
+              let comments' = Base.Option.map ~f:this#syntax comments in
+              (annot', { params = tps'; comments = comments' }))
             tparams
         in
         f tparams'

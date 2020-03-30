@@ -966,12 +966,14 @@ class ['loc] mapper =
         (loc, ts')
 
     method type_params (tparams : ('loc, 'loc) Ast.Type.TypeParams.t) =
-      let (loc, tps) = tparams in
+      let open Ast.Type.TypeParams in
+      let (loc, { params = tps; comments }) = tparams in
       let tps' = ListUtils.ident_map this#type_param tps in
-      if tps' == tps then
+      let comments' = this#syntax_opt comments in
+      if tps' == tps && comments' == comments then
         tparams
       else
-        (loc, tps')
+        (loc, { params = tps'; comments = comments' })
 
     method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in

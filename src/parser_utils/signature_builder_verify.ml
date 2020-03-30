@@ -296,7 +296,7 @@ module Eval (Env : EvalEnv) = struct
       let init = (tps, Deps.bot) in
       function
       | None -> init
-      | Some (_, tparams) ->
+      | Some (_, { Ast.Type.TypeParams.params = tparams; comments = _ }) ->
         List.fold_left
           (fun (tps, deps) tparam ->
             let (tp, deps') = type_param tps tparam in

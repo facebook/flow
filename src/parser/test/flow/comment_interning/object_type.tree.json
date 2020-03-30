@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":142}},
-  "range":[0,699],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":19,"column":116}},
+  "range":[0,1010],
   "body":[
     {
       "type":"TypeAlias",
@@ -566,6 +566,297 @@
         ],
         "internalSlots":[]
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":86}},
+      "range":[701,787],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":15,"column":5},"end":{"line":15,"column":10}},
+        "range":[706,711],
+        "name":"Test8",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":15,"column":13},"end":{"line":15,"column":85}},
+        "range":[714,786],
+        "inexact":false,
+        "exact":false,
+        "properties":[],
+        "indexers":[],
+        "callProperties":[
+          {
+            "type":"ObjectTypeCallProperty",
+            "loc":{"source":null,"start":{"line":15,"column":34},"end":{"line":15,"column":84}},
+            "range":[735,785],
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":15,"column":60},"end":{"line":15,"column":78}},
+                  "range":[761,779],
+                  "value":" 8.3 T params "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":15,"column":38},"end":{"line":15,"column":56}},
+                  "range":[739,757],
+                  "value":" 8.2 L params "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":15,"column":57},"end":{"line":15,"column":84}},
+              "range":[758,785],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":15,"column":80},"end":{"line":15,"column":84}},
+                "range":[781,785]
+              },
+              "rest":null,
+              "typeParameters":{
+                "type":"TypeParameterDeclaration",
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":15,"column":14},"end":{"line":15,"column":33}},
+                    "range":[715,734],
+                    "value":" 8.1 L tparams "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":15,"column":34},"end":{"line":15,"column":37}},
+                "range":[735,738],
+                "params":[
+                  {
+                    "type":"TypeParameter",
+                    "loc":{"source":null,"start":{"line":15,"column":35},"end":{"line":15,"column":36}},
+                    "range":[736,737],
+                    "name":"T",
+                    "bound":null,
+                    "variance":null,
+                    "default":null
+                  }
+                ]
+              }
+            },
+            "static":false
+          }
+        ],
+        "internalSlots":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":103}},
+      "range":[789,892],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":17,"column":5},"end":{"line":17,"column":10}},
+        "range":[794,799],
+        "name":"Test9",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":17,"column":13},"end":{"line":17,"column":102}},
+        "range":[802,891],
+        "inexact":false,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":17,"column":29},"end":{"line":17,"column":101}},
+            "range":[818,890],
+            "key":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":17,"column":36},"end":{"line":17,"column":50}},
+                  "range":[825,839],
+                  "value":" 9.2 T id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":17,"column":14},"end":{"line":17,"column":28}},
+                  "range":[803,817],
+                  "value":" 9.1 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":17,"column":29},"end":{"line":17,"column":35}},
+              "range":[818,824],
+              "name":"method",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":17,"column":77},"end":{"line":17,"column":95}},
+                  "range":[866,884],
+                  "value":" 9.4 T params "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":17,"column":55},"end":{"line":17,"column":73}},
+                  "range":[844,862],
+                  "value":" 9.3 L params "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":17,"column":29},"end":{"line":17,"column":101}},
+              "range":[818,890],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":17,"column":97},"end":{"line":17,"column":101}},
+                "range":[886,890]
+              },
+              "rest":null,
+              "typeParameters":{
+                "type":"TypeParameterDeclaration",
+                "loc":{"source":null,"start":{"line":17,"column":51},"end":{"line":17,"column":54}},
+                "range":[840,843],
+                "params":[
+                  {
+                    "type":"TypeParameter",
+                    "loc":{"source":null,"start":{"line":17,"column":52},"end":{"line":17,"column":53}},
+                    "range":[841,842],
+                    "name":"T",
+                    "bound":null,
+                    "variance":null,
+                    "default":null
+                  }
+                ]
+              }
+            },
+            "method":true,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":116}},
+      "range":[894,1010],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":19,"column":5},"end":{"line":19,"column":11}},
+        "range":[899,905],
+        "name":"Test10",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":19,"column":14},"end":{"line":19,"column":116}},
+        "range":[908,1010],
+        "inexact":false,
+        "exact":false,
+        "properties":[],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[
+          {
+            "type":"ObjectTypeInternalSlot",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":19,"column":15},"end":{"line":19,"column":33}},
+                "range":[909,927],
+                "value":" 10.1 L islot "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":19,"column":34},"end":{"line":19,"column":115}},
+            "range":[928,1009],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":19,"column":36},"end":{"line":19,"column":39}},
+              "range":[930,933],
+              "name":"key",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "optional":false,
+            "static":false,
+            "method":true,
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":19,"column":90},"end":{"line":19,"column":109}},
+                  "range":[984,1003],
+                  "value":" 10.4 T params "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":19,"column":67},"end":{"line":19,"column":86}},
+                  "range":[961,980],
+                  "value":" 10.3 L params "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":19,"column":34},"end":{"line":19,"column":115}},
+              "range":[928,1009],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":19,"column":111},"end":{"line":19,"column":115}},
+                "range":[1005,1009]
+              },
+              "rest":null,
+              "typeParameters":{
+                "type":"TypeParameterDeclaration",
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":19,"column":42},"end":{"line":19,"column":62}},
+                    "range":[936,956],
+                    "value":" 10.2 L tparams "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":19,"column":63},"end":{"line":19,"column":66}},
+                "range":[957,960],
+                "params":[
+                  {
+                    "type":"TypeParameter",
+                    "loc":{"source":null,"start":{"line":19,"column":64},"end":{"line":19,"column":65}},
+                    "range":[958,959],
+                    "name":"T",
+                    "bound":null,
+                    "variance":null,
+                    "default":null
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
     }
   ],
   "comments":[
@@ -736,6 +1027,72 @@
       "loc":{"source":null,"start":{"line":13,"column":120},"end":{"line":13,"column":139}},
       "range":[677,696],
       "value":" 7.6 T generic "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":15,"column":14},"end":{"line":15,"column":33}},
+      "range":[715,734],
+      "value":" 8.1 L tparams "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":15,"column":38},"end":{"line":15,"column":56}},
+      "range":[739,757],
+      "value":" 8.2 L params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":15,"column":60},"end":{"line":15,"column":78}},
+      "range":[761,779],
+      "value":" 8.3 T params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":14},"end":{"line":17,"column":28}},
+      "range":[803,817],
+      "value":" 9.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":36},"end":{"line":17,"column":50}},
+      "range":[825,839],
+      "value":" 9.2 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":55},"end":{"line":17,"column":73}},
+      "range":[844,862],
+      "value":" 9.3 L params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":77},"end":{"line":17,"column":95}},
+      "range":[866,884],
+      "value":" 9.4 T params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":15},"end":{"line":19,"column":33}},
+      "range":[909,927],
+      "value":" 10.1 L islot "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":42},"end":{"line":19,"column":62}},
+      "range":[936,956],
+      "value":" 10.2 L tparams "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":67},"end":{"line":19,"column":86}},
+      "range":[961,980],
+      "value":" 10.3 L params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":90},"end":{"line":19,"column":109}},
+      "range":[984,1003],
+      "value":" 10.4 T params "
     }
   ]
 }

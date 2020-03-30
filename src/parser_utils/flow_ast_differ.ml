@@ -2326,9 +2326,12 @@ let program
   and type_params
       (pd1 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) (pd2 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) :
       node change list option =
-    let (_, t_params1) = pd1 in
-    let (_, t_params2) = pd2 in
-    diff_and_recurse_nonopt_no_trivial type_param t_params1 t_params2
+    let open Ast.Type.TypeParams in
+    let (loc, { params = params1; comments = comments1 }) = pd1 in
+    let (_, { params = params2; comments = comments2 }) = pd2 in
+    let params_diff = diff_and_recurse_nonopt_no_trivial type_param params1 params2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [params_diff; comments_diff]
   and type_param
       ((loc1, t_param1) : (Loc.t, Loc.t) Ast.Type.TypeParam.t)
       ((_, t_param2) : (Loc.t, Loc.t) Ast.Type.TypeParam.t) : node change list =

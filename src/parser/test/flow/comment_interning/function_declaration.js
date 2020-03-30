@@ -2,6 +2,6 @@
 
 export default function /* 2.1 L params */ () /* 2.2 L block */ {}
 
-function name<T> /* 3.1 L params */ () {}
+function /* 3.1 L id */ name /* 3.2 T id */ <T> /* 3.3 L params */ () {}
 
 function name() /* 4.1 T params */ : any {}

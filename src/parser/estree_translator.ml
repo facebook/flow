@@ -1489,8 +1489,8 @@ with type t = Impl.t = struct
         ]
     and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
-    and type_parameter_declaration (loc, params) =
-      node "TypeParameterDeclaration" loc [("params", array_of_list type_param params)]
+    and type_parameter_declaration (loc, { Type.TypeParams.params; comments }) =
+      node ?comments "TypeParameterDeclaration" loc [("params", array_of_list type_param params)]
     and type_param
         ( loc,
           {

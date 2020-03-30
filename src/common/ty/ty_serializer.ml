@@ -274,7 +274,9 @@ and arr { arr_readonly; arr_elt_t; _ } =
   else
     builtin_from_string "Array" ~targs:(Loc.none, [t])
 
-and type_params ts = mapM type_param ts >>| fun ts -> (Loc.none, ts)
+and type_params ts =
+  mapM type_param ts >>| fun ts ->
+  (Loc.none, { T.TypeParams.params = ts; comments = Flow_ast_utils.mk_comments_opt () })
 
 and type_param tp =
   opt annotation tp.tp_bound >>= fun bound ->

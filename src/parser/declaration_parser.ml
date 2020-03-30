@@ -283,7 +283,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 match (in_export env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
-                  let tparams = Type.type_params env in
+                  let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:false in
                   let id =
                     if Peek.token env = T_LPAREN then
                       None
@@ -293,7 +293,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                   (tparams, id)
                 | _ ->
                   let id = Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env in
-                  (Type.type_params env, Some id)
+                  (Type.type_params env ~attach_leading:false ~attach_trailing:false, Some id)
               in
               let params =
                 function_params

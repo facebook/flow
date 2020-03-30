@@ -215,7 +215,7 @@ module Object
             let (sig_loc, (tparams, params, return)) =
               with_loc
                 (fun env ->
-                  let tparams = Type.type_params env in
+                  let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:false in
                   let params =
                     let (yield, await) =
                       match (async, generator) with
@@ -601,7 +601,9 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams = Type.type_params env in
+                    let tparams =
+                      Type.type_params env ~attach_leading:false ~attach_trailing:false
+                    in
                     let params =
                       let (yield, await) =
                         match (async, generator) with
@@ -813,7 +815,7 @@ module Object
       | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
       | _ -> Some (Parse.identifier tmp_env)
     in
-    let tparams = Type.type_params env in
+    let tparams = Type.type_params env ~attach_leading:(id = None) ~attach_trailing:true in
     let (extends, implements) = class_heritage env in
     let body = class_body env in
     let trailing = Peek.comments env in
