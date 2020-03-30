@@ -51,7 +51,8 @@ module type PARSER = sig
 
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
 
-  val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
+  val function_block_body :
+    attach_leading:bool -> env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
 
   val jsx_element_or_fragment :
     env ->

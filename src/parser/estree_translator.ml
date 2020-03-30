@@ -1683,14 +1683,14 @@ with type t = Impl.t = struct
           | Block s -> ("Block", s)
         in
         node _type loc [("value", string value)])
-    and predicate (loc, p) =
+    and predicate (loc, { Ast.Type.Predicate.kind; comments }) =
       let open Ast.Type.Predicate in
       let (_type, value) =
-        match p with
+        match kind with
         | Declared e -> ("DeclaredPredicate", [("value", expression e)])
         | Inferred -> ("InferredPredicate", [])
       in
-      node _type loc value
+      node ?comments _type loc value
     and call_node_properties { Expression.Call.callee; targs; arguments; comments = _ } =
       [
         ("callee", expression callee);

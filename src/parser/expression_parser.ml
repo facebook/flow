@@ -995,7 +995,6 @@ module Expression
                 Declaration.function_params
                   ~await
                   ~yield
-                  ~arrow:false
                   ~attach_leading:(id = None || tparams <> None)
                   env
               in
@@ -1457,7 +1456,7 @@ module Expression
       let env = enter_function env ~async ~generator:false in
       match Peek.token env with
       | T_LCURLY ->
-        let (loc, body, strict) = Parse.function_block_body env in
+        let (loc, body, strict) = Parse.function_block_body env ~attach_leading:true in
         (Function.BodyBlock (loc, body), strict)
       | _ ->
         let expr = Parse.assignment env in
@@ -1505,7 +1504,7 @@ module Expression
               let params =
                 let yield = allow_yield env in
                 let await = allow_await env in
-                Declaration.function_params ~await ~yield ~arrow:true ~attach_leading:true env
+                Declaration.function_params ~await ~yield ~attach_leading:true env
               in
               (* There's an ambiguity if you use a function type as the return
                * type for an arrow function. So we disallow anonymous function

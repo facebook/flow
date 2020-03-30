@@ -421,7 +421,12 @@ and Type : sig
   module Predicate : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' =
+    and ('M, 'T) t' = {
+      kind: ('M, 'T) kind;
+      comments: ('M, unit) Syntax.t option;
+    }
+
+    and ('M, 'T) kind =
       | Declared of ('M, 'T) Expression.t
       | Inferred
     [@@deriving show]

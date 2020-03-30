@@ -2537,14 +2537,15 @@ and type_annotation ?(parens = false) (loc, t) =
             type_ t );
         ] )
 
-and type_predicate (loc, pred) =
+and type_predicate (loc, { Ast.Type.Predicate.kind; comments }) =
   source_location_with_comments
+    ?comments
     ( loc,
       fuse
         [
           Atom "%checks";
           (let open Ast.Type.Predicate in
-          match pred with
+          match kind with
           | Declared expr -> wrap_in_parens (expression expr)
           | Inferred -> Empty);
         ] )

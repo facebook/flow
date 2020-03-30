@@ -523,11 +523,11 @@ class ['loc] mapper =
       let { id = ident; annot; predicate } = decl in
       let id' = this#function_identifier ident in
       let annot' = this#type_annotation annot in
-      (* TODO: walk predicate *)
-      if id' == ident && annot' == annot then
+      let predicate' = map_opt this#predicate predicate in
+      if id' == ident && annot' == annot && predicate' == predicate then
         decl
       else
-        { id = id'; annot = annot'; predicate }
+        { id = id'; annot = annot'; predicate = predicate' }
 
     method declare_interface loc (decl : ('loc, 'loc) Ast.Statement.Interface.t) =
       this#interface loc decl
@@ -1180,13 +1180,14 @@ class ['loc] mapper =
       let params' = this#function_params params in
       let return' = this#type_annotation_hint return in
       let body' = this#function_body_any body in
-      (* TODO: walk predicate *)
+      let predicate' = map_opt this#predicate predicate in
       let tparams' = map_opt this#type_params tparams in
       let comments' = this#syntax_opt comments in
       if
         ident == ident'
         && params == params'
         && body == body'
+        && predicate = predicate'
         && return == return'
         && tparams == tparams'
         && comments == comments'
@@ -1200,7 +1201,7 @@ class ['loc] mapper =
           body = body';
           async;
           generator;
-          predicate;
+          predicate = predicate';
           tparams = tparams';
           sig_loc;
           comments = comments';
@@ -1910,6 +1911,20 @@ class ['loc] mapper =
       this#pattern ?kind expr
 
     method pattern_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
+
+    method predicate (pred : ('loc, 'loc) Ast.Type.Predicate.t) =
+      let open Ast.Type.Predicate in
+      let (loc, { kind; comments }) = pred in
+      let kind' =
+        match kind with
+        | Inferred -> kind
+        | Declared expr -> id this#expression expr kind (fun expr' -> Declared expr')
+      in
+      let comments' = this#syntax_opt comments in
+      if kind == kind' && comments == comments' then
+        pred
+      else
+        (loc, { kind = kind'; comments = comments' })
 
     method predicate_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
 

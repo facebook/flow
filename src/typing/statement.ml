@@ -3341,7 +3341,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | Function func ->
     let { Ast.Function.id; predicate; sig_loc; _ } = func in
     (match predicate with
-    | Some (_, Ast.Type.Predicate.Inferred) ->
+    | Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = _ }) ->
       Flow.add_output
         cx
         Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression))
@@ -7685,7 +7685,8 @@ and mk_func_sig =
     | (true, false, None) -> Async
     | (false, true, None) -> Generator
     | (false, false, None) -> Ordinary
-    | (false, false, Some (loc, (Ast.Type.Predicate.Inferred | Declared _))) ->
+    | (false, false, Some (loc, { kind = Ast.Type.Predicate.Inferred | Declared _; comments = _ }))
+      ->
       predicate_function_kind cx loc params
     | (_, _, _) -> Utils_js.assert_false "(async || generator) && pred"
   in
@@ -7811,7 +7812,7 @@ and mk_func_sig =
       let open Ast.Type.Predicate in
       match predicate with
       | None -> (return_t, None)
-      | Some ((loc, Ast.Type.Predicate.Inferred) as pred) ->
+      | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred) ->
         (* Predicate Functions
          *
          * function f(x: S): [T] %checks { return e; }
@@ -7832,7 +7833,7 @@ and mk_func_sig =
         let bounds = free_bound_ts cx return_t in
         if Loc_collections.ALocSet.is_empty bounds then
           let return_t' = Tvar.mk_where cx reason (fun t -> Flow.flow_t cx (t, return_t)) in
-          (return_t', Some (loc, Ast.Type.Predicate.Inferred))
+          (return_t', Some pred)
         else
           (* If T is a polymorphic type P<X>, this approach can lead to some
            * complications. The 2nd constraint from above would become
@@ -7852,7 +7853,7 @@ and mk_func_sig =
               bounds
           in
           (return_t, Some (Tast_utils.error_mapper#type_predicate pred))
-      | Some ((loc, Declared _) as pred) ->
+      | Some ((loc, { kind = Declared _; comments = _ }) as pred) ->
         Flow_js.add_output
           cx
           Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
@@ -7944,12 +7945,13 @@ and mk_arrow cx loc func =
 and declare_function_to_function_declaration cx declare_loc func_decl =
   let { Ast.Statement.DeclareFunction.id; annot; predicate } = func_decl in
   match predicate with
-  | Some (loc, Ast.Type.Predicate.Inferred) ->
+  | Some (loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = _ }) ->
     Flow.add_output
       cx
       Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression));
     None
-  | Some (loc, Ast.Type.Predicate.Declared e) ->
+  | Some (loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared e; comments = pred_comments })
+    ->
     begin
       match annot with
       | ( annot_loc,
@@ -8030,7 +8032,13 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                 body;
                 async = false;
                 generator = false;
-                predicate = Some (loc, Ast.Type.Predicate.Inferred);
+                predicate =
+                  Some
+                    ( loc,
+                      {
+                        Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred;
+                        comments = Flow_ast_utils.mk_comments_opt ();
+                      } );
                 return;
                 tparams;
                 sig_loc = declare_loc;
@@ -8102,7 +8110,13 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
               {
                 Ast.Statement.DeclareFunction.id = ((id_loc, fun_type), id_name);
                 annot;
-                predicate = Some (pred_loc, Ast.Type.Predicate.Declared e);
+                predicate =
+                  Some
+                    ( pred_loc,
+                      {
+                        Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared e;
+                        comments = pred_comments;
+                      } );
               }
             | _ -> failwith "Internal error: malformed predicate declare function" )
       | _ -> None

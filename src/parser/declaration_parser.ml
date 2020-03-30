@@ -20,12 +20,7 @@ module type DECLARATION = sig
   val variance : env -> bool -> bool -> Loc.t Variance.t option
 
   val function_params :
-    await:bool ->
-    yield:bool ->
-    arrow:bool ->
-    attach_leading:bool ->
-    env ->
-    (Loc.t, Loc.t) Ast.Function.Params.t
+    await:bool -> yield:bool -> attach_leading:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
 
   val function_body : env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
 
@@ -180,7 +175,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
         param_list env (the_param :: acc)
     in
-    fun ~await ~yield ~arrow ~attach_leading ->
+    fun ~await ~yield ~attach_leading ->
       with_loc (fun env ->
           let env =
             env
@@ -197,13 +192,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           Expect.token env T_LPAREN;
           let (params, rest) = param_list env [] in
           Expect.token env T_RPAREN;
-          let trailing =
-            match (arrow, Peek.token env) with
-            | (true, _)
-            | (false, T_COLON) ->
-              Peek.comments env
-            | (false, _) -> []
-          in
+          let trailing = Peek.comments env in
           {
             Ast.Function.Params.params;
             rest;
@@ -212,7 +201,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
 
   let function_body env ~async ~generator =
     let env = enter_function env ~async ~generator in
-    let (loc, block, strict) = Parse.function_block_body env in
+    let (loc, block, strict) = Parse.function_block_body env ~attach_leading:false in
     (Function.BodyBlock (loc, block), strict)
 
   let variance env is_async is_generator =
@@ -299,7 +288,6 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 function_params
                   ~await:async
                   ~yield:generator
-                  ~arrow:false
                   ~attach_leading:(id = None || tparams <> None)
                   env
               in

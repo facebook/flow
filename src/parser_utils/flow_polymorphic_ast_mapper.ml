@@ -803,11 +803,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
         : ('N, 'U) Ast.Type.Predicate.t =
-      Ast.Type.Predicate.
-        ( this#on_loc_annot annot,
-          match pred with
-          | Declared e -> Declared (this#expression e)
-          | Inferred -> Inferred )
+      let open Ast.Type.Predicate in
+      let { kind; comments } = pred in
+      let annot' = this#on_loc_annot annot in
+      let kind' =
+        match kind with
+        | Declared e -> Declared (this#expression e)
+        | Inferred -> Inferred
+      in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { kind = kind'; comments = comments' })
 
     method nullable_type (t : ('M, 'T) Ast.Type.Nullable.t) : ('N, 'U) Ast.Type.Nullable.t =
       let open Ast.Type.Nullable in

@@ -315,9 +315,14 @@ module rec Parse : PARSER = struct
       { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     )
 
-  and function_block_body env =
+  and function_block_body ~attach_leading env =
     let start_loc = Peek.loc env in
-    let leading = Peek.comments env in
+    let leading =
+      if attach_leading then
+        Peek.comments env
+      else
+        []
+    in
     Expect.token env T_LCURLY;
     let term_fn t = t = T_RCURLY in
     let (body, strict) = statement_list_with_directives ~term_fn env in

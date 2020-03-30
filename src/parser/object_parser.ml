@@ -122,12 +122,7 @@ module Object
                  * as well disallow it until we need it *)
                 let tparams = None in
                 let params =
-                  Declaration.function_params
-                    ~await:false
-                    ~yield:false
-                    ~arrow:false
-                    ~attach_leading:false
-                    env
+                  Declaration.function_params ~await:false ~yield:false ~attach_leading:false env
                 in
                 begin
                   match (is_getter, params) with
@@ -226,12 +221,7 @@ module Object
                       | (false, false) -> (false, false)
                       (* #prod-MethodDefinition *)
                     in
-                    Declaration.function_params
-                      ~await
-                      ~yield
-                      ~arrow:false
-                      ~attach_leading:(tparams <> None)
-                      env
+                    Declaration.function_params ~await ~yield ~attach_leading:(tparams <> None) env
                   in
                   let return = Type.annotation_opt env in
                   (tparams, params, return))
@@ -617,7 +607,6 @@ module Object
                       Declaration.function_params
                         ~await
                         ~yield
-                        ~arrow:false
                         ~attach_leading:(tparams <> None)
                         env
                     in

@@ -597,9 +597,10 @@ module Eval (Env : EvalEnv) = struct
   and function_static tps (_id_prop, right) = literal_expr tps right
 
   and function_predicate params body predicate =
+    let open Ast.Type.Predicate in
     match (predicate, body) with
-    | (Some (_, Ast.Type.Predicate.Declared e), _)
-    | ( Some (_, Ast.Type.Predicate.Inferred),
+    | (Some (_, { kind = Declared e; comments = _ }), _)
+    | ( Some (_, { kind = Inferred; comments = _ }),
         ( Ast.Function.BodyBlock
             ( _,
               {
@@ -633,7 +634,7 @@ module Eval (Env : EvalEnv) = struct
     | ( ( _,
           Ast.Type.Function
             { Ast.Type.Function.params = (_, { Ast.Type.Function.Params.params; _ }); _ } ),
-        Some (_, Ast.Type.Predicate.Declared e) ) ->
+        Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared e; comments = _ }) ) ->
       let params =
         List.fold_left
           (fun acc param ->

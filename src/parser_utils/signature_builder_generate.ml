@@ -1453,9 +1453,10 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Ast.Type.Available (_, t) -> T.TYPE (type_ t)
 
   and function_predicate body predicate =
+    let open Ast.Type.Predicate in
     match (predicate, body) with
     | (None, _) -> None
-    | ( Some (loc, Ast.Type.Predicate.Inferred),
+    | ( Some (loc, { kind = Inferred; comments }),
         ( Ast.Function.BodyBlock
             ( _,
               {
@@ -1464,9 +1465,9 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                 comments = _;
               } )
         | Ast.Function.BodyExpression e ) ) ->
-      Some (loc, Ast.Type.Predicate.Declared e)
-    | (Some (_, Ast.Type.Predicate.Inferred), _) -> None
-    | (Some (_, Ast.Type.Predicate.Declared _), _) -> predicate
+      Some (loc, { kind = Declared e; comments })
+    | (Some (_, { kind = Inferred; comments = _ }), _) -> None
+    | (Some (_, { kind = Declared _; comments = _ }), _) -> predicate
 
   and function_ generator async tparams params return body =
     let tparams = type_params tparams in
