@@ -25,15 +25,6 @@ let blocking_waitpid =
   else
     reasonable_impl
 
-(* An lwt version of Sys_utils.exec_read. Basically just runs a command and returns the first line
- * of stdout *)
-let exec_read cmd args =
-  let process = Lwt_process.open_process_in (cmd, Array.of_list (cmd :: args)) in
-  let%lwt result = Lwt_io.read_line process#stdout in
-  let%lwt status = process#close in
-  assert (status = Unix.WEXITED 0);
-  Lwt.return result
-
 type command_result = {
   stdout: string;
   stderr: string;
