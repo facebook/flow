@@ -127,8 +127,7 @@ MODULES=\
   src/services/coverage\
   src/services/get_def\
   src/services/inference\
-  src/services/inference/module\
-  src/services/flowFileGen\
+  src/services/module\
   src/services/refactor\
   src/services/references\
   src/services/saved_state\
