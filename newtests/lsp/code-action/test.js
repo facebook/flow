@@ -88,7 +88,7 @@ export default suite(
             'textDocument/codeAction',
             JSON.stringify([
               {
-                title: 'Apply suggestion',
+                title: 'Replace `faceboy` with `facebook`',
                 kind: 'quickfix',
                 diagnostics: [
                   {
@@ -133,7 +133,7 @@ export default suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Apply suggestion'],
+                  arguments: ['Replace `faceboy` with `facebook`'],
                 },
               },
             ]),
@@ -189,7 +189,7 @@ export default suite(
             'textDocument/codeAction',
             JSON.stringify([
               {
-                title: 'Apply suggestion',
+                title: 'Replace `Foobat` with `Foobar`',
                 kind: 'quickfix',
                 diagnostics: [
                   {
@@ -234,7 +234,7 @@ export default suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Apply suggestion'],
+                  arguments: ['Replace `Foobat` with `Foobar`'],
                 },
               },
             ]),
