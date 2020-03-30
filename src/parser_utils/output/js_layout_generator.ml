@@ -1188,6 +1188,9 @@ and pattern_object_property_key =
 
 and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t) =
   let module P = Ast.Pattern in
+  let rest_element loc { P.RestElement.argument; comments } =
+    source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern argument])
+  in
   source_location_with_comments
     ( loc,
       match pat with
@@ -1217,10 +1220,7 @@ and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t)
                        | None -> prop
                      in
                      source_location_with_comments (loc, prop)
-                   | P.Object.RestProperty (loc, { P.Object.RestProperty.argument; comments }) ->
-                     source_location_with_comments
-                       ?comments
-                       (loc, fuse [Atom "..."; pattern argument]))
+                   | P.Object.RestElement (loc, el) -> rest_element loc el)
                  properties);
             hint type_annotation annot;
           ]
@@ -1245,11 +1245,7 @@ and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t)
                           | None -> elem
                         in
                         source_location_with_comments (loc, elem)
-                      | Some (P.Array.RestElement (loc, { P.Array.RestElement.argument; comments }))
-                        ->
-                        source_location_with_comments
-                          ?comments
-                          (loc, fuse [Atom "..."; pattern argument]))
+                      | Some (P.Array.RestElement (loc, el)) -> rest_element loc el)
                     elements);
                hint type_annotation annot;
              ])

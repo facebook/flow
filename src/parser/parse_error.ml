@@ -103,7 +103,7 @@ type t =
   | AdjacentJSXElements
   | ParameterAfterRestParameter
   | ElementAfterRestElement
-  | PropertyAfterRestProperty
+  | PropertyAfterRestElement
   | DeclareAsync
   | DeclareClassElement
   | DeclareClassFieldInitializer
@@ -319,7 +319,7 @@ module PP = struct
       ^ "elements must be wrapped in an enclosing parent tag"
     | ParameterAfterRestParameter -> "Rest parameter must be final parameter of an argument list"
     | ElementAfterRestElement -> "Rest element must be final element of an array pattern"
-    | PropertyAfterRestProperty -> "Rest property must be final property of an object pattern"
+    | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
     | DeclareClassElement -> "`declare` modifier can only appear on class fields."

@@ -201,11 +201,7 @@ def("MetaProperty")
 def("ObjectPattern")
   .bases("Pattern")
   .build("properties")
-  .field("properties", [or(def("RestProperty"), def("Property"))]);
-def("RestProperty")
-  .bases("Node")
-  .build("argument")
-  .field("argument", def("Expression"));
+  .field("properties", [or(def("RestElement"), def("Property"))]);
 
 // https://github.com/benjamn/ast-types/issues/183
 def("Super")

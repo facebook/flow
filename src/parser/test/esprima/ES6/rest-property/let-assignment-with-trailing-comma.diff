@@ -1,0 +1,28 @@
+{
+  "body": {
+    "0": {
+      "declarations": {
+        "0": {
+          "id": {
+            "properties" : {
+              "0": {
+                "type": "RestElement"
+              }
+            }
+          }
+        }
+      }
+    },
+    "1": {
+      "expression": {
+        "left": {
+          "properties" : {
+            "0": {
+              "type": "RestElement"
+            }
+          }
+        }
+      }
+    }
+  }
+}

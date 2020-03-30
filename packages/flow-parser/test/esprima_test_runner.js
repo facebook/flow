@@ -121,7 +121,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         var prop = esprima.properties[i];
         switch (prop.type) {
           case 'SpreadProperty':
-            prop.type = 'RestProperty';
+            prop.type = 'RestElement';
             break;
         }
       }

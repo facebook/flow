@@ -1471,6 +1471,16 @@ end =
   JSX
 
 and Pattern : sig
+  module RestElement : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      argument: ('M, 'T) Pattern.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
@@ -1489,19 +1499,9 @@ and Pattern : sig
       [@@deriving show]
     end
 
-    module RestProperty : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        argument: ('M, 'T) Pattern.t;
-        comments: ('M, unit) Syntax.t option;
-      }
-      [@@deriving show]
-    end
-
     type ('M, 'T) property =
       | Property of ('M, 'T) Property.t
-      | RestProperty of ('M, 'T) RestProperty.t
+      | RestElement of ('M, 'T) RestElement.t
 
     and ('M, 'T) t = {
       properties: ('M, 'T) property list;
@@ -1517,16 +1517,6 @@ and Pattern : sig
       and ('M, 'T) t' = {
         argument: ('M, 'T) Pattern.t;
         default: ('M, 'T) Expression.t option;
-      }
-      [@@deriving show]
-    end
-
-    module RestElement : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        argument: ('M, 'T) Pattern.t;
-        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end

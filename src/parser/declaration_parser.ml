@@ -77,25 +77,26 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           check_env)
     and _object check_env o = List.fold_left object_property check_env o.Pattern.Object.properties
     and object_property check_env =
-      Pattern.Object.(
-        function
-        | Property (_, property) ->
-          Property.(
-            let check_env =
-              match property.key with
-              | Identifier id -> identifier_no_dupe_check check_env id
-              | _ -> check_env
-            in
-            pattern check_env property.pattern)
-        | RestProperty (_, { RestProperty.argument; comments = _ }) -> pattern check_env argument)
+      let open Pattern.Object in
+      function
+      | Property (_, property) ->
+        Property.(
+          let check_env =
+            match property.key with
+            | Identifier id -> identifier_no_dupe_check check_env id
+            | _ -> check_env
+          in
+          pattern check_env property.pattern)
+      | RestElement (_, { Pattern.RestElement.argument; comments = _ }) ->
+        pattern check_env argument
     and _array check_env arr = List.fold_left array_element check_env arr.Pattern.Array.elements
     and array_element check_env =
-      Pattern.Array.(
-        function
-        | None -> check_env
-        | Some (Element (_, { Element.argument; default = _ })) -> pattern check_env argument
-        | Some (RestElement (_, { RestElement.argument; comments = _ })) ->
-          pattern check_env argument)
+      let open Pattern.Array in
+      function
+      | None -> check_env
+      | Some (Element (_, { Element.argument; default = _ })) -> pattern check_env argument
+      | Some (RestElement (_, { Pattern.RestElement.argument; comments = _ })) ->
+        pattern check_env argument
     and identifier_pattern check_env { Pattern.Identifier.name = id; _ } = identifier check_env id
     and identifier (env, param_names) ((loc, { Identifier.name; comments = _ }) as id) =
       if SSet.mem name param_names then error_at env (loc, Parse_error.StrictParamDupe);

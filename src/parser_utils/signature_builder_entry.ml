@@ -38,7 +38,7 @@ let rec pattern loc ?annot_path ?init_path (p : (Loc.t, Loc.t) Ast.Pattern.t) =
                 acc @ pattern loc ?annot_path ?init_path p
               | Property.Computed _ -> acc @ pattern loc p
             end
-          | RestProperty (_, { RestProperty.argument = p; comments = _ }) -> acc @ pattern loc p)
+          | RestElement (_, { RestElement.argument = p; comments = _ }) -> acc @ pattern loc p)
         []
         properties)
   | (_, Array { Array.elements; annot = _; comments = _ }) ->

@@ -290,10 +290,10 @@ and array_elements cx ~expr ~f acc =
             let (acc, d) = pattern_default cx ~expr acc d in
             let p = pattern cx ~expr ~f acc p in
             Element (loc, { Element.argument = p; default = d })
-          | RestElement (loc, { RestElement.argument = p; comments }) ->
+          | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
             let acc = array_rest_element cx acc i loc in
             let p = pattern cx ~expr ~f acc p in
-            RestElement (loc, { RestElement.argument = p; comments })))
+            RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments })))
 
 and object_properties =
   let open Ast.Pattern.Object in
@@ -305,10 +305,10 @@ and object_properties =
       let (acc, d) = pattern_default cx ~expr acc d in
       let p = pattern cx ~expr ~f acc p in
       (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))
-    | RestProperty (loc, { RestProperty.argument = p; comments }) ->
+    | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
       let acc = object_rest_property cx acc xs loc in
       let p = pattern cx ~expr ~f acc p in
-      (xs, RestProperty (loc, { RestProperty.argument = p; comments }))
+      (xs, RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }))
   in
   let rec loop cx ~expr ~f acc xs rev_ps = function
     | [] -> List.rev rev_ps

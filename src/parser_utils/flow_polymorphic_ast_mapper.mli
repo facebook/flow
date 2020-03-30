@@ -413,8 +413,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method pattern_array_rest_element :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Pattern.Array.RestElement.t' ->
-      ('N, 'U) Ast.Pattern.Array.RestElement.t'
+      ('M, 'T) Ast.Pattern.RestElement.t' ->
+      ('N, 'U) Ast.Pattern.RestElement.t'
 
     method pattern_array_rest_element_pattern :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
@@ -466,8 +466,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method pattern_object_rest_property :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Pattern.Object.RestProperty.t' ->
-      ('N, 'U) Ast.Pattern.Object.RestProperty.t'
+      ('M, 'T) Ast.Pattern.RestElement.t' ->
+      ('N, 'U) Ast.Pattern.RestElement.t'
 
     method pattern_object_rest_property_pattern :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
