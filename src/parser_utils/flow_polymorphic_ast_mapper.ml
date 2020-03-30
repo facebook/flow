@@ -386,11 +386,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_function (decl : ('M, 'T) Ast.Statement.DeclareFunction.t)
         : ('N, 'U) Ast.Statement.DeclareFunction.t =
       let open Ast.Statement.DeclareFunction in
-      let { id = ident; annot; predicate } = decl in
+      let { id = ident; annot; predicate; comments } = decl in
       let id' = this#t_function_identifier ident in
       let annot' = this#type_annotation annot in
       let predicate' = Base.Option.map ~f:this#type_predicate predicate in
-      { id = id'; annot = annot'; predicate = predicate' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { id = id'; annot = annot'; predicate = predicate'; comments = comments' }
 
     method declare_interface (decl : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =

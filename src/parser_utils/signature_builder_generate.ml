@@ -777,6 +777,7 @@ module T = struct
             Ast.Statement.DeclareFunction.id;
             annot = annot_of_little_annotation outlined little_annotation;
             predicate;
+            comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | FunctionWithStaticsDecl { base; statics } ->
       let annot = type_of_expr_type outlined base in

@@ -2044,14 +2044,16 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       (loc, DeclareFunction (reconstruct_ast (statement cx (loc, func_decl))))
     | None ->
       (* error case *)
-      let { DeclareFunction.id = (id_loc, id_name); annot; predicate; _ } = declare_function in
+      let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } =
+        declare_function
+      in
       let { Ast.Identifier.name; comments = _ } = id_name in
       let (t, annot_ast) = Anno.mk_type_available_annotation cx SMap.empty annot in
       Env.unify_declared_fun_type cx name loc t;
       let predicate = Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
       ( loc,
         DeclareFunction
-          { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate } ))
+          { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments } ))
   | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
   | (class_loc, ClassDeclaration c) ->
     let (name_loc, name) = extract_class_name class_loc c in
@@ -7943,7 +7945,7 @@ and mk_arrow cx loc func =
 (* Also returns a function for reversing this process, for the sake of
    typed AST construction. *)
 and declare_function_to_function_declaration cx declare_loc func_decl =
-  let { Ast.Statement.DeclareFunction.id; annot; predicate } = func_decl in
+  let { Ast.Statement.DeclareFunction.id; annot; predicate; comments } = func_decl in
   match predicate with
   | Some (loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = _ }) ->
     Flow.add_output
@@ -8117,6 +8119,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                         Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared e;
                         comments = pred_comments;
                       } );
+                comments;
               }
             | _ -> failwith "Internal error: malformed predicate declare function" )
       | _ -> None

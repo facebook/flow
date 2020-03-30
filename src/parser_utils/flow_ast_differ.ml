@@ -548,6 +548,8 @@ let program
       | ((loc, OpaqueType o_type1), (_, OpaqueType o_type2)) -> opaque_type loc o_type1 o_type2
       | ((_, DeclareClass declare_class_t1), (_, DeclareClass declare_class_t2)) ->
         declare_class declare_class_t1 declare_class_t2
+      | ((loc, DeclareFunction func1), (_, DeclareFunction func2)) ->
+        declare_function loc func1 func2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
@@ -2342,6 +2344,20 @@ let program
       None
     else
       join_diff_list [id_diff; t_params_diff; body_diff; extends_diff]
+  and declare_function
+      (loc : Loc.t)
+      (func1 : (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t)
+      (func2 : (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) : node change list option =
+    let open Ast.Statement.DeclareFunction in
+    let { id = id1; annot = annot1; predicate = predicate1; comments = comments1 } = func1 in
+    let { id = id2; annot = annot2; predicate = predicate2; comments = comments2 } = func2 in
+    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    if predicate1 != predicate2 then
+      None
+    else
+      join_diff_list [id_diff; annot_diff; comments_diff]
   and type_params
       (pd1 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) (pd2 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) :
       node change list option =

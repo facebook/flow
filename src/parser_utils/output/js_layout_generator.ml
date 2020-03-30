@@ -738,7 +738,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.OpaqueType opaqueType -> opaque_type ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration loc interface
       | S.DeclareClass interface -> declare_class interface
-      | S.DeclareFunction func -> declare_function func
+      | S.DeclareFunction func -> declare_function loc func
       | S.DeclareInterface interface -> declare_interface loc interface
       | S.DeclareVariable var -> declare_variable var
       | S.DeclareModuleExports annot -> declare_module_exports annot
@@ -2944,28 +2944,31 @@ and declare_class
   group parts
 
 and declare_function
-    ?(s_type = Empty) { Ast.Statement.DeclareFunction.id; annot = (loc, t); predicate } =
-  with_semicolon
-    (fuse
-       [
-         Atom "declare";
-         space;
-         s_type;
-         Atom "function";
-         space;
-         identifier id;
-         source_location_with_comments
-           ( loc,
-             match t with
-             | (loc, Ast.Type.Function func) ->
-               source_location_with_comments (loc, type_function ~sep:(Atom ":") loc func)
-             | _ -> failwith "Invalid DeclareFunction" );
-         begin
-           match predicate with
-           | Some pred -> fuse [pretty_space; type_predicate pred]
-           | None -> Empty
-         end;
-       ])
+    ?(s_type = Empty)
+    loc
+    { Ast.Statement.DeclareFunction.id; annot = (annot_lot, t); predicate; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            Atom "declare";
+            space;
+            s_type;
+            Atom "function";
+            space;
+            identifier id;
+            source_location_with_comments
+              ( annot_lot,
+                match t with
+                | (loc, Ast.Type.Function func) ->
+                  source_location_with_comments (loc, type_function ~sep:(Atom ":") loc func)
+                | _ -> failwith "Invalid DeclareFunction" );
+            begin
+              match predicate with
+              | Some pred -> fuse [pretty_space; type_predicate pred]
+              | None -> Empty
+            end;
+          ])
 
 and declare_variable ?(s_type = Empty) { Ast.Statement.DeclareVariable.id; annot } =
   with_semicolon
@@ -3013,7 +3016,7 @@ and declare_export_declaration
       source_location_with_comments (loc, declare_variable ~s_type:s_export var)
     (* declare export function *)
     | Function (loc, func) ->
-      source_location_with_comments (loc, declare_function ~s_type:s_export func)
+      source_location_with_comments (loc, declare_function ~s_type:s_export loc func)
     (* declare export class *)
     | Class (loc, c) -> source_location_with_comments (loc, declare_class ~s_type:s_export c)
     (* declare export default [type]

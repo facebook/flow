@@ -730,9 +730,11 @@ with type t = Impl.t = struct
         [
           ("id", pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false });
         ]
-    and declare_function (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_ }) =
+    and declare_function
+        (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_; comments }) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
       node
+        ?comments
         "DeclareFunction"
         loc
         [

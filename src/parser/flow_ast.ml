@@ -752,6 +752,7 @@ and Statement : sig
       id: ('M, 'T) Identifier.t;
       annot: ('M, 'T) Type.annotation;
       predicate: ('M, 'T) Type.Predicate.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

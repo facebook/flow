@@ -857,7 +857,8 @@ module Statement
         Statement.DeclareClass fn)
       env
 
-  and declare_function env =
+  and declare_function ?(leading = []) env =
+    let leading = leading @ Peek.comments env in
     Expect.token env T_FUNCTION;
     let id = Parse.identifier env in
     let start_sig_loc = Peek.loc env in
@@ -871,11 +872,14 @@ module Statement
     let annot = (fst annot, annot) in
     let predicate = Type.predicate_opt env in
     Eat.semicolon env;
-    Statement.DeclareFunction.{ id; annot; predicate }
+    let trailing = Peek.comments env in
+    Statement.DeclareFunction.
+      { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
 
   and declare_function_statement env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
         begin
           match Peek.token env with
@@ -884,7 +888,7 @@ module Statement
             Expect.token env T_ASYNC
           | _ -> ()
         end;
-        let fn = declare_function env in
+        let fn = declare_function ~leading env in
         Statement.DeclareFunction fn)
       env
 
