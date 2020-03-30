@@ -687,7 +687,11 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
       (state, Some uri)
     | (_, NotificationMessage (DidCloseNotification params)) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
-      let state = state |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri) in
+      let state =
+        state
+        |> update_open_file uri None
+        |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri)
+      in
       (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
