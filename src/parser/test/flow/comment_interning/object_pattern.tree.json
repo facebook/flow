@@ -18,7 +18,7 @@
             "range":[6,63],
             "properties":[
               {
-                "type":"RestProperty",
+                "type":"RestElement",
                 "leadingComments":[
                   {
                     "type":"Block",

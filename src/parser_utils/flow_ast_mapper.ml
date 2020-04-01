@@ -1810,8 +1810,8 @@ class ['loc] mapper =
       match p with
       | Property (loc, prop) ->
         id (this#pattern_object_property ?kind) prop p (fun prop -> Property (loc, prop))
-      | RestProperty (loc, prop) ->
-        id (this#pattern_object_rest_property ?kind) prop p (fun prop -> RestProperty (loc, prop))
+      | RestElement (loc, prop) ->
+        id (this#pattern_object_rest_property ?kind) prop p (fun prop -> RestElement (loc, prop))
 
     method pattern_object_property ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.Property.t') =
       let open Ast.Pattern.Object.Property in
@@ -1846,9 +1846,8 @@ class ['loc] mapper =
       ignore kind;
       this#computed_key key
 
-    method pattern_object_rest_property
-        ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.RestProperty.t') =
-      let open Ast.Pattern.Object.RestProperty in
+    method pattern_object_rest_property ?kind (prop : ('loc, 'loc) Ast.Pattern.RestElement.t') =
+      let open Ast.Pattern.RestElement in
       let { argument; comments } = prop in
       let argument' = this#pattern_object_rest_property_pattern ?kind argument in
       let comments' = this#syntax_opt comments in
@@ -1884,8 +1883,8 @@ class ['loc] mapper =
     method pattern_array_element_pattern ?kind (patt : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ?kind patt
 
-    method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.RestElement.t') =
-      let open Ast.Pattern.Array.RestElement in
+    method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.RestElement.t') =
+      let open Ast.Pattern.RestElement in
       let { argument; comments } = elem in
       let argument' = this#pattern_array_rest_element_pattern ?kind argument in
       let comments' = this#syntax_opt comments in

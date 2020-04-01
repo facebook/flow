@@ -1,0 +1,15 @@
+{
+  "body": {
+    "0": {
+      "expression": {
+        "left": {
+          "properties" : {
+            "0": {
+              "type": "RestElement"
+            }
+          }
+        }
+      }
+    }
+  }
+}

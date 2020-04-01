@@ -1044,30 +1044,29 @@ module Statement
 
   and extract_pattern_binding_names =
     let rec fold acc =
-      Pattern.(
-        function
-        | (_, Object { Object.properties; _ }) ->
-          List.fold_left
-            (fun acc prop ->
-              match prop with
-              | Object.Property (_, { Object.Property.pattern; _ })
-              | Object.RestProperty (_, { Object.RestProperty.argument = pattern; comments = _ }) ->
-                fold acc pattern)
-            acc
-            properties
-        | (_, Array { Array.elements; _ }) ->
-          List.fold_left
-            Array.(
-              fun acc elem ->
-                match elem with
-                | Some (Element (_, { Element.argument = pattern; default = _ }))
-                | Some (RestElement (_, { RestElement.argument = pattern; comments = _ })) ->
-                  fold acc pattern
-                | None -> acc)
-            acc
-            elements
-        | (_, Identifier { Pattern.Identifier.name; _ }) -> name :: acc
-        | (_, Expression _) -> failwith "Parser error: No such thing as an expression pattern!")
+      let open Pattern in
+      function
+      | (_, Object { Object.properties; _ }) ->
+        List.fold_left
+          (fun acc prop ->
+            match prop with
+            | Object.Property (_, { Object.Property.pattern; _ })
+            | Object.RestElement (_, { RestElement.argument = pattern; comments = _ }) ->
+              fold acc pattern)
+          acc
+          properties
+      | (_, Array { Array.elements; _ }) ->
+        List.fold_left
+          (fun acc elem ->
+            match elem with
+            | Some (Array.Element (_, { Array.Element.argument = pattern; default = _ }))
+            | Some (Array.RestElement (_, { RestElement.argument = pattern; comments = _ })) ->
+              fold acc pattern
+            | None -> acc)
+          acc
+          elements
+      | (_, Identifier { Pattern.Identifier.name; _ }) -> name :: acc
+      | (_, Expression _) -> failwith "Parser error: No such thing as an expression pattern!"
     in
     List.fold_left fold
 

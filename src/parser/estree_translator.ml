@@ -1080,14 +1080,15 @@ with type t = Impl.t = struct
         let params = List.rev (rest :: rev_params) in
         array params
       | (_, { params; rest = None }) -> array_of_list function_param params
+    and rest_element loc { Pattern.RestElement.argument; comments } =
+      node ?comments "RestElement" loc [("argument", pattern argument)]
     and array_pattern_element =
-      Pattern.Array.(
-        function
-        | Element (loc, { Element.argument; default = Some default }) ->
-          node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
-        | Element (_loc, { Element.argument; default = None }) -> pattern argument
-        | RestElement (loc, { RestElement.argument; comments }) ->
-          node ?comments "RestElement" loc [("argument", pattern argument)])
+      let open Pattern.Array in
+      function
+      | Element (loc, { Element.argument; default = Some default }) ->
+        node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
+      | Element (_loc, { Element.argument; default = None }) -> pattern argument
+      | RestElement (loc, el) -> rest_element loc el
     and object_property =
       let open Expression.Object in
       function
@@ -1126,37 +1127,36 @@ with type t = Impl.t = struct
       | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
         node ?comments "SpreadProperty" loc [("argument", expression argument)]
     and object_pattern_property =
-      Pattern.Object.(
-        function
-        | Property (loc, { Property.key; pattern = patt; default; shorthand }) ->
-          let (key, computed, comments) =
-            match key with
-            | Property.Literal lit -> (literal lit, false, None)
-            | Property.Identifier id -> (identifier id, false, None)
-            | Property.Computed (_, { ComputedKey.expression = expr; comments }) ->
-              (expression expr, true, comments)
-          in
-          let value =
-            match default with
-            | Some default ->
-              let loc = Loc.btwn (fst patt) (fst default) in
-              node "AssignmentPattern" loc [("left", pattern patt); ("right", expression default)]
-            | None -> pattern patt
-          in
-          node
-            ?comments
-            "Property"
-            loc
-            [
-              ("key", key);
-              ("value", value);
-              ("kind", string "init");
-              ("method", bool false);
-              ("shorthand", bool shorthand);
-              ("computed", bool computed);
-            ]
-        | RestProperty (loc, { RestProperty.argument; comments }) ->
-          node ?comments "RestProperty" loc [("argument", pattern argument)])
+      let open Pattern.Object in
+      function
+      | Property (loc, { Property.key; pattern = patt; default; shorthand }) ->
+        let (key, computed, comments) =
+          match key with
+          | Property.Literal lit -> (literal lit, false, None)
+          | Property.Identifier id -> (identifier id, false, None)
+          | Property.Computed (_, { ComputedKey.expression = expr; comments }) ->
+            (expression expr, true, comments)
+        in
+        let value =
+          match default with
+          | Some default ->
+            let loc = Loc.btwn (fst patt) (fst default) in
+            node "AssignmentPattern" loc [("left", pattern patt); ("right", expression default)]
+          | None -> pattern patt
+        in
+        node
+          ?comments
+          "Property"
+          loc
+          [
+            ("key", key);
+            ("value", value);
+            ("kind", string "init");
+            ("method", bool false);
+            ("shorthand", bool shorthand);
+            ("computed", bool computed);
+          ]
+      | RestElement (loc, el) -> rest_element loc el
     and expression_or_spread =
       let open Expression in
       function
