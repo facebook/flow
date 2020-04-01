@@ -238,7 +238,7 @@ module Eat : sig
 
   val double_pop_lex_mode : env -> unit
 
-  val semicolon : ?expected:string -> env -> unit
+  val comments_until_next_line : env -> Loc.t Flow_ast.Comment.t list
 end
 
 module Expect : sig

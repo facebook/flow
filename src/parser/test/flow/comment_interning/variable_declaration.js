@@ -3,11 +3,11 @@ function leadingOnly() {
 }
 
 function trailingOnly() {
-    let x = 1; /* 2.1 Trailing */;
+    let x = 1; /* 2.1 Trailing */
 }
 
 function leadingAndTrailing() {
-    /* 3.1 Leading */ const x = 1; /* 3.2 Trailing */;
+    /* 3.1 Leading */ const x = 1; /* 3.2 Trailing */
 }
 
 function innerComments() {

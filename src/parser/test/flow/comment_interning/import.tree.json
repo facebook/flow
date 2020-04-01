@@ -5,14 +5,6 @@
   "body":[
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},
-          "range":[54,72],
-          "value":" 2.1 L import "
-        }
-      ],
       "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":52}},
       "range":[19,52],
       "expression":{
@@ -54,14 +46,6 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":18}},
-          "range":[167,185],
-          "value":" 3.1 L import "
-        }
-      ],
       "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":111}},
       "range":[73,165],
       "expression":{
@@ -131,12 +115,6 @@
           "loc":{"source":null,"start":{"line":5,"column":42},"end":{"line":5,"column":60}},
           "range":[209,227],
           "value":" 3.2 T import "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":18}},
-          "range":[229,247],
-          "value":" 4.1 L import "
         }
       ],
       "leadingComments":[
@@ -181,21 +159,9 @@
           "loc":{"source":null,"start":{"line":7,"column":145},"end":{"line":7,"column":163}},
           "range":[374,392],
           "value":" 4.8 T import "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":18}},
-          "range":[394,412],
-          "value":" 5.1 L import "
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":5,"column":42},"end":{"line":5,"column":60}},
-          "range":[209,227],
-          "value":" 3.2 T import "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":18}},
@@ -297,12 +263,6 @@
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":7,"column":145},"end":{"line":7,"column":163}},
-          "range":[374,392],
-          "value":" 4.8 T import "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":18}},

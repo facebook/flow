@@ -50,6 +50,8 @@ module Lookahead : sig
   val lex_env : t -> int -> Lex_env.t
 
   val junk : t -> unit
+
+  val junk_comments : t -> line:int -> Loc.t Comment.t list
 end = struct
   type t = {
     mutable la_results: (Lex_env.t * Lex_result.t) option array;
@@ -127,6 +129,29 @@ end = struct
     if t.la_num_lexed > 1 then Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
     t.la_results.(t.la_num_lexed - 1) <- None;
     t.la_num_lexed <- t.la_num_lexed - 1
+
+  (* Throws away and returns comments on the first peeked-at token that start
+   * on or before the given line *)
+  let junk_comments t ~line =
+    let open Loc in
+    lex_until t 0;
+    let (env, lex_result) =
+      match t.la_results.(0) with
+      | Some (env, lex_result) -> (env, lex_result)
+      | None -> failwith "Lookahead.peek failed"
+    in
+    match Lex_result.token lex_result with
+    | Token.T_EOF
+    | Token.T_RCURLY ->
+      []
+    | _ ->
+      let comments = Lex_result.comments lex_result in
+      let (remaining_comments, junked_comments) =
+        List.partition (fun (loc, _) -> loc.start.line > line) comments
+      in
+      t.la_results.(0) <-
+        Some (env, { lex_result with Lex_result.lex_comments = remaining_comments });
+      junked_comments
 end
 
 type token_sink_result = {
@@ -952,16 +977,14 @@ module Eat = struct
     env.lex_mode_stack := new_stack;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
 
-  (* Semicolon insertion is handled here :(. There seem to be 2 cases where
-  * semicolons are inserted. First, if we reach the EOF. Second, if the next
-  * token is } or is separated by a LineTerminator.
-  *)
-  let semicolon ?(expected = "the token `;`") env =
-    if not (Peek.is_implicit_semicolon env) then
-      if Peek.token env = Token.T_SEMICOLON then
-        token env
-      else
-        error_unexpected ~expected env
+  let comments_until_next_line env =
+    let open Loc in
+    match !(env.last_lex_result) with
+    | None -> []
+    | Some { Lex_result.lex_loc = last_loc; _ } ->
+      let trailing = Lookahead.junk_comments !(env.lookahead) ~line:last_loc._end.line in
+      env.comments := List.rev_append trailing !(env.comments);
+      trailing
 end
 
 module Expect = struct

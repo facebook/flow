@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":61,"column":1}},
-  "range":[0,1760],
+  "range":[0,1761],
   "body":[
     {
       "type":"VariableDeclaration",
@@ -67,14 +67,6 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":19}},
-          "range":[133,152],
-          "value":" Leading array "
-        }
-      ],
       "loc":{"source":null,"start":{"line":5,"column":23},"end":{"line":5,"column":100}},
       "range":[54,131],
       "expression":{
@@ -117,14 +109,6 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":28}},
-          "range":[181,209],
-          "value":" Leading arrow function "
-        }
-      ],
       "loc":{"source":null,"start":{"line":7,"column":20},"end":{"line":7,"column":46}},
       "range":[153,179],
       "expression":{
@@ -153,14 +137,6 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":20}},
-          "range":[253,273],
-          "value":" Leading assign "
-        }
-      ],
       "loc":{"source":null,"start":{"line":9,"column":29},"end":{"line":9,"column":70}},
       "range":[210,251],
       "expression":{
@@ -202,14 +178,6 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":20}},
-          "range":[306,326],
-          "value":" Leading binary "
-        }
-      ],
       "loc":{"source":null,"start":{"line":11,"column":21},"end":{"line":11,"column":51}},
       "range":[274,304],
       "expression":{
@@ -253,14 +221,6 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":18}},
-          "range":[359,377],
-          "value":" Leading call "
-        }
-      ],
       "loc":{"source":null,"start":{"line":13,"column":21},"end":{"line":13,"column":51}},
       "range":[327,357],
       "expression":{
@@ -303,114 +263,98 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":25}},
-          "range":[463,488],
-          "value":" Leading conditional "
-        }
-      ],
-      "loc":{"source":null,"start":{"line":15,"column":19},"end":{"line":17,"column":54}},
-      "range":[378,461],
+      "loc":{"source":null,"start":{"line":15,"column":19},"end":{"line":15,"column":47}},
+      "range":[378,406],
       "expression":{
         "type":"CallExpression",
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":17,"column":33},"end":{"line":17,"column":53}},
-            "range":[440,460],
-            "value":" Trailing class "
+            "loc":{"source":null,"start":{"line":15,"column":27},"end":{"line":15,"column":46}},
+            "range":[386,405],
+            "value":" Trailing call "
           }
         ],
-        "loc":{"source":null,"start":{"line":15,"column":19},"end":{"line":17,"column":32}},
-        "range":[378,439],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":18}},
+            "range":[359,377],
+            "value":" Leading call "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":25}},
+        "range":[379,384],
         "callee":{
-          "type":"CallExpression",
-          "trailingComments":[
-            {
-              "type":"Block",
-              "loc":{"source":null,"start":{"line":15,"column":27},"end":{"line":15,"column":46}},
-              "range":[386,405],
-              "value":" Trailing call "
-            },
-            {
-              "type":"Block",
-              "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":19}},
-              "range":[407,426],
-              "value":" Leading class "
-            }
-          ],
-          "leadingComments":[
-            {
-              "type":"Block",
-              "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":18}},
-              "range":[359,377],
-              "value":" Leading call "
-            }
-          ],
-          "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":25}},
-          "range":[379,384],
-          "callee":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":23}},
-            "range":[379,382],
-            "name":"foo",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "typeArguments":null,
-          "arguments":[]
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":23}},
+          "range":[379,382],
+          "name":"foo",
+          "typeAnnotation":null,
+          "optional":false
         },
         "typeArguments":null,
-        "arguments":[
-          {
-            "type":"ClassExpression",
-            "loc":{"source":null,"start":{"line":17,"column":21},"end":{"line":17,"column":31}},
-            "range":[428,438],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":17,"column":27},"end":{"line":17,"column":28}},
-              "range":[434,435],
-              "name":"C",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "body":{
-              "type":"ClassBody",
-              "loc":{"source":null,"start":{"line":17,"column":29},"end":{"line":17,"column":31}},
-              "range":[436,438],
-              "body":[]
-            },
-            "typeParameters":null,
-            "superClass":null,
-            "superTypeParameters":null,
-            "implements":[],
-            "decorators":[]
-          }
-        ]
+        "arguments":[]
       },
       "directive":null
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":22}},
-          "range":[533,555],
-          "value":" Leading function "
-        }
-      ],
+      "loc":{"source":null,"start":{"line":17,"column":20},"end":{"line":17,"column":54}},
+      "range":[428,462],
+      "expression":{
+        "type":"ClassExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":17,"column":33},"end":{"line":17,"column":53}},
+            "range":[441,461],
+            "value":" Trailing class "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":19}},
+            "range":[408,427],
+            "value":" Leading class "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":17,"column":21},"end":{"line":17,"column":31}},
+        "range":[429,439],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":17,"column":27},"end":{"line":17,"column":28}},
+          "range":[435,436],
+          "name":"C",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "body":{
+          "type":"ClassBody",
+          "loc":{"source":null,"start":{"line":17,"column":29},"end":{"line":17,"column":31}},
+          "range":[437,439],
+          "body":[]
+        },
+        "typeParameters":null,
+        "superClass":null,
+        "superTypeParameters":null,
+        "implements":[],
+        "decorators":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":19,"column":26},"end":{"line":19,"column":68}},
-      "range":[489,531],
+      "range":[490,532],
       "expression":{
         "type":"ConditionalExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":19,"column":41},"end":{"line":19,"column":67}},
-            "range":[504,530],
+            "range":[505,531],
             "value":" Trailing conditional "
           }
         ],
@@ -418,30 +362,30 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":25}},
-            "range":[463,488],
+            "range":[464,489],
             "value":" Leading conditional "
           }
         ],
         "loc":{"source":null,"start":{"line":19,"column":27},"end":{"line":19,"column":39}},
-        "range":[490,502],
+        "range":[491,503],
         "test":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":19,"column":27},"end":{"line":19,"column":31}},
-          "range":[490,494],
+          "range":[491,495],
           "value":true,
           "raw":"true"
         },
         "consequent":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":19,"column":34},"end":{"line":19,"column":35}},
-          "range":[497,498],
+          "range":[498,499],
           "value":1,
           "raw":"1"
         },
         "alternate":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":19,"column":38},"end":{"line":19,"column":39}},
-          "range":[501,502],
+          "range":[502,503],
           "value":2,
           "raw":"2"
         }
@@ -450,23 +394,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":24}},
-          "range":[597,621],
-          "value":" Leading identifier "
-        }
-      ],
       "loc":{"source":null,"start":{"line":21,"column":23},"end":{"line":21,"column":62}},
-      "range":[556,595],
+      "range":[557,596],
       "expression":{
         "type":"FunctionExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":21,"column":38},"end":{"line":21,"column":61}},
-            "range":[571,594],
+            "range":[572,595],
             "value":" Trailing function "
           }
         ],
@@ -474,18 +410,18 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":22}},
-            "range":[533,555],
+            "range":[534,556],
             "value":" Leading function "
           }
         ],
         "loc":{"source":null,"start":{"line":21,"column":24},"end":{"line":21,"column":36}},
-        "range":[557,569],
+        "range":[558,570],
         "id":null,
         "params":[],
         "body":{
           "type":"BlockStatement",
           "loc":{"source":null,"start":{"line":21,"column":34},"end":{"line":21,"column":36}},
-          "range":[567,569],
+          "range":[568,570],
           "body":[]
         },
         "async":false,
@@ -499,23 +435,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":20}},
-          "range":[654,674],
-          "value":" Leading import "
-        }
-      ],
       "loc":{"source":null,"start":{"line":23,"column":25},"end":{"line":23,"column":55}},
-      "range":[622,652],
+      "range":[623,653],
       "expression":{
         "type":"Identifier",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":23,"column":29},"end":{"line":23,"column":54}},
-            "range":[626,651],
+            "range":[627,652],
             "value":" Trailing identifier "
           }
         ],
@@ -523,12 +451,12 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":24}},
-            "range":[597,621],
+            "range":[598,622],
             "value":" Leading identifier "
           }
         ],
         "loc":{"source":null,"start":{"line":23,"column":26},"end":{"line":23,"column":27}},
-        "range":[623,624],
+        "range":[624,625],
         "name":"i",
         "typeAnnotation":null,
         "optional":false
@@ -537,23 +465,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":25}},
-          "range":[716,741],
-          "value":" Leading JSX element "
-        }
-      ],
       "loc":{"source":null,"start":{"line":25,"column":21},"end":{"line":25,"column":60}},
-      "range":[675,714],
+      "range":[676,715],
       "expression":{
         "type":"CallExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":25,"column":38},"end":{"line":25,"column":59}},
-            "range":[692,713],
+            "range":[693,714],
             "value":" Trailing import "
           }
         ],
@@ -561,22 +481,22 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":20}},
-            "range":[654,674],
+            "range":[655,675],
             "value":" Leading import "
           }
         ],
         "loc":{"source":null,"start":{"line":25,"column":22},"end":{"line":25,"column":36}},
-        "range":[676,690],
+        "range":[677,691],
         "callee":{
           "type":"Import",
           "loc":{"source":null,"start":{"line":25,"column":22},"end":{"line":25,"column":35}},
-          "range":[676,689]
+          "range":[677,690]
         },
         "arguments":[
           {
             "type":"Literal",
             "loc":{"source":null,"start":{"line":25,"column":29},"end":{"line":25,"column":35}},
-            "range":[683,689],
+            "range":[684,690],
             "value":"test",
             "raw":"'test'"
           }
@@ -586,23 +506,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":26}},
-          "range":[789,815],
-          "value":" Leading JSX fragment "
-        }
-      ],
       "loc":{"source":null,"start":{"line":27,"column":26},"end":{"line":27,"column":71}},
-      "range":[742,787],
+      "range":[743,788],
       "expression":{
         "type":"JSXElement",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":27,"column":44},"end":{"line":27,"column":70}},
-            "range":[760,786],
+            "range":[761,787],
             "value":" Trailing JSX element "
           }
         ],
@@ -610,20 +522,20 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":25}},
-            "range":[716,741],
+            "range":[717,742],
             "value":" Leading JSX element "
           }
         ],
         "loc":{"source":null,"start":{"line":27,"column":27},"end":{"line":27,"column":42}},
-        "range":[743,758],
+        "range":[744,759],
         "openingElement":{
           "type":"JSXOpeningElement",
           "loc":{"source":null,"start":{"line":27,"column":27},"end":{"line":27,"column":32}},
-          "range":[743,748],
+          "range":[744,749],
           "name":{
             "type":"JSXIdentifier",
             "loc":{"source":null,"start":{"line":27,"column":28},"end":{"line":27,"column":31}},
-            "range":[744,747],
+            "range":[745,748],
             "name":"div"
           },
           "attributes":[],
@@ -632,11 +544,11 @@
         "closingElement":{
           "type":"JSXClosingElement",
           "loc":{"source":null,"start":{"line":27,"column":36},"end":{"line":27,"column":42}},
-          "range":[752,758],
+          "range":[753,759],
           "name":{
             "type":"JSXIdentifier",
             "loc":{"source":null,"start":{"line":27,"column":38},"end":{"line":27,"column":41}},
-            "range":[754,757],
+            "range":[755,758],
             "name":"div"
           }
         },
@@ -644,7 +556,7 @@
           {
             "type":"JSXText",
             "loc":{"source":null,"start":{"line":27,"column":32},"end":{"line":27,"column":36}},
-            "range":[748,752],
+            "range":[749,753],
             "value":"test",
             "raw":"test"
           }
@@ -654,23 +566,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":21}},
-          "range":[858,879],
-          "value":" Leading literal "
-        }
-      ],
       "loc":{"source":null,"start":{"line":29,"column":27},"end":{"line":29,"column":67}},
-      "range":[816,856],
+      "range":[817,857],
       "expression":{
         "type":"JSXFragment",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":29,"column":39},"end":{"line":29,"column":66}},
-            "range":[828,855],
+            "range":[829,856],
             "value":" Trailing JSX fragment "
           }
         ],
@@ -678,22 +582,22 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":26}},
-            "range":[789,815],
+            "range":[790,816],
             "value":" Leading JSX fragment "
           }
         ],
         "loc":{"source":null,"start":{"line":29,"column":28},"end":{"line":29,"column":37}},
-        "range":[817,826],
+        "range":[818,827],
         "openingFragment":{
           "type":"JSXOpeningFragment",
           "loc":{"source":null,"start":{"line":29,"column":28},"end":{"line":29,"column":30}},
-          "range":[817,819]
+          "range":[818,820]
         },
         "children":[
           {
             "type":"JSXText",
             "loc":{"source":null,"start":{"line":29,"column":30},"end":{"line":29,"column":34}},
-            "range":[819,823],
+            "range":[820,824],
             "value":"test",
             "raw":"test"
           }
@@ -701,30 +605,22 @@
         "closingFragment":{
           "type":"JSXClosingFragment",
           "loc":{"source":null,"start":{"line":29,"column":34},"end":{"line":29,"column":37}},
-          "range":[823,826]
+          "range":[824,827]
         }
       },
       "directive":null
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":21}},
-          "range":[909,930],
-          "value":" Leading logical "
-        }
-      ],
       "loc":{"source":null,"start":{"line":31,"column":22},"end":{"line":31,"column":49}},
-      "range":[880,907],
+      "range":[881,908],
       "expression":{
         "type":"Literal",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":31,"column":26},"end":{"line":31,"column":48}},
-            "range":[884,906],
+            "range":[885,907],
             "value":" Trailing literal "
           }
         ],
@@ -732,12 +628,12 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":21}},
-            "range":[858,879],
+            "range":[859,880],
             "value":" Leading literal "
           }
         ],
         "loc":{"source":null,"start":{"line":31,"column":23},"end":{"line":31,"column":24}},
-        "range":[881,882],
+        "range":[882,883],
         "value":1,
         "raw":"1"
       },
@@ -745,23 +641,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":20}},
-          "range":[972,992],
-          "value":" Leading member "
-        }
-      ],
       "loc":{"source":null,"start":{"line":33,"column":22},"end":{"line":33,"column":61}},
-      "range":[931,970],
+      "range":[932,971],
       "expression":{
         "type":"LogicalExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":33,"column":38},"end":{"line":33,"column":60}},
-            "range":[947,969],
+            "range":[948,970],
             "value":" Trailing logical "
           }
         ],
@@ -769,24 +657,24 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":21}},
-            "range":[909,930],
+            "range":[910,931],
             "value":" Leading logical "
           }
         ],
         "loc":{"source":null,"start":{"line":33,"column":23},"end":{"line":33,"column":36}},
-        "range":[932,945],
+        "range":[933,946],
         "operator":"||",
         "left":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":33,"column":23},"end":{"line":33,"column":28}},
-          "range":[932,937],
+          "range":[933,938],
           "value":false,
           "raw":"false"
         },
         "right":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":33,"column":32},"end":{"line":33,"column":36}},
-          "range":[941,945],
+          "range":[942,946],
           "value":true,
           "raw":"true"
         }
@@ -795,23 +683,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":37,"column":0},"end":{"line":37,"column":17}},
-          "range":[1027,1044],
-          "value":" Leading new "
-        }
-      ],
       "loc":{"source":null,"start":{"line":35,"column":21},"end":{"line":35,"column":53}},
-      "range":[993,1025],
+      "range":[994,1026],
       "expression":{
         "type":"MemberExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":35,"column":31},"end":{"line":35,"column":52}},
-            "range":[1003,1024],
+            "range":[1004,1025],
             "value":" Trailing member "
           }
         ],
@@ -819,16 +699,16 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":20}},
-            "range":[972,992],
+            "range":[973,993],
             "value":" Leading member "
           }
         ],
         "loc":{"source":null,"start":{"line":35,"column":22},"end":{"line":35,"column":29}},
-        "range":[994,1001],
+        "range":[995,1002],
         "object":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":35,"column":22},"end":{"line":35,"column":23}},
-          "range":[994,995],
+          "range":[995,996],
           "name":"i",
           "typeAnnotation":null,
           "optional":false
@@ -836,7 +716,7 @@
         "property":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":35,"column":24},"end":{"line":35,"column":29}},
-          "range":[996,1001],
+          "range":[997,1002],
           "name":"isNaN",
           "typeAnnotation":null,
           "optional":false
@@ -847,23 +727,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":39,"column":0},"end":{"line":39,"column":20}},
-          "range":[1076,1096],
-          "value":" Leading object "
-        }
-      ],
       "loc":{"source":null,"start":{"line":37,"column":18},"end":{"line":37,"column":47}},
-      "range":[1045,1074],
+      "range":[1046,1075],
       "expression":{
         "type":"NewExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":37,"column":28},"end":{"line":37,"column":46}},
-            "range":[1055,1073],
+            "range":[1056,1074],
             "value":" Trailing new "
           }
         ],
@@ -871,16 +743,16 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":37,"column":0},"end":{"line":37,"column":17}},
-            "range":[1027,1044],
+            "range":[1028,1045],
             "value":" Leading new "
           }
         ],
         "loc":{"source":null,"start":{"line":37,"column":19},"end":{"line":37,"column":26}},
-        "range":[1046,1053],
+        "range":[1047,1054],
         "callee":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":37,"column":23},"end":{"line":37,"column":24}},
-          "range":[1050,1051],
+          "range":[1051,1052],
           "name":"C",
           "typeAnnotation":null,
           "optional":false
@@ -892,23 +764,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":41,"column":0},"end":{"line":41,"column":27}},
-          "range":[1126,1153],
-          "value":" Leading optional call "
-        }
-      ],
       "loc":{"source":null,"start":{"line":39,"column":21},"end":{"line":39,"column":48}},
-      "range":[1097,1124],
+      "range":[1098,1125],
       "expression":{
         "type":"ObjectExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":39,"column":26},"end":{"line":39,"column":47}},
-            "range":[1102,1123],
+            "range":[1103,1124],
             "value":" Trailing object "
           }
         ],
@@ -916,35 +780,27 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":39,"column":0},"end":{"line":39,"column":20}},
-            "range":[1076,1096],
+            "range":[1077,1097],
             "value":" Leading object "
           }
         ],
         "loc":{"source":null,"start":{"line":39,"column":22},"end":{"line":39,"column":24}},
-        "range":[1098,1100],
+        "range":[1099,1101],
         "properties":[]
       },
       "directive":null
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":43,"column":29}},
-          "range":[1198,1227],
-          "value":" Leading optional member "
-        }
-      ],
       "loc":{"source":null,"start":{"line":41,"column":28},"end":{"line":41,"column":70}},
-      "range":[1154,1196],
+      "range":[1155,1197],
       "expression":{
         "type":"OptionalCallExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":69}},
-            "range":[1167,1195],
+            "range":[1168,1196],
             "value":" Trailing optional call "
           }
         ],
@@ -952,20 +808,20 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":41,"column":0},"end":{"line":41,"column":27}},
-            "range":[1126,1153],
+            "range":[1127,1154],
             "value":" Leading optional call "
           }
         ],
         "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":39}},
-        "range":[1155,1165],
+        "range":[1156,1166],
         "callee":{
           "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":37}},
-          "range":[1155,1163],
+          "range":[1156,1164],
           "object":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":30}},
-            "range":[1155,1156],
+            "range":[1156,1157],
             "name":"i",
             "typeAnnotation":null,
             "optional":false
@@ -973,7 +829,7 @@
           "property":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":41,"column":32},"end":{"line":41,"column":37}},
-            "range":[1158,1163],
+            "range":[1159,1164],
             "name":"isNaN",
             "typeAnnotation":null,
             "optional":false
@@ -989,23 +845,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":45,"column":0},"end":{"line":45,"column":30}},
-          "range":[1272,1302],
-          "value":" Leading template literal "
-        }
-      ],
       "loc":{"source":null,"start":{"line":43,"column":30},"end":{"line":43,"column":72}},
-      "range":[1228,1270],
+      "range":[1229,1271],
       "expression":{
         "type":"OptionalMemberExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":43,"column":41},"end":{"line":43,"column":71}},
-            "range":[1239,1269],
+            "range":[1240,1270],
             "value":" Trailing optional member "
           }
         ],
@@ -1013,16 +861,16 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":43,"column":29}},
-            "range":[1198,1227],
+            "range":[1199,1228],
             "value":" Leading optional member "
           }
         ],
         "loc":{"source":null,"start":{"line":43,"column":31},"end":{"line":43,"column":39}},
-        "range":[1229,1237],
+        "range":[1230,1238],
         "object":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":43,"column":31},"end":{"line":43,"column":32}},
-          "range":[1229,1230],
+          "range":[1230,1231],
           "name":"i",
           "typeAnnotation":null,
           "optional":false
@@ -1030,7 +878,7 @@
         "property":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":43,"column":34},"end":{"line":43,"column":39}},
-          "range":[1232,1237],
+          "range":[1233,1238],
           "name":"isNaN",
           "typeAnnotation":null,
           "optional":false
@@ -1042,23 +890,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":47,"column":0},"end":{"line":47,"column":29}},
-          "range":[1350,1379],
-          "value":" Leading tagged template "
-        }
-      ],
       "loc":{"source":null,"start":{"line":45,"column":31},"end":{"line":45,"column":76}},
-      "range":[1303,1348],
+      "range":[1304,1349],
       "expression":{
         "type":"TemplateLiteral",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":45,"column":44},"end":{"line":45,"column":75}},
-            "range":[1316,1347],
+            "range":[1317,1348],
             "value":" Trailing template literal "
           }
         ],
@@ -1066,17 +906,17 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":45,"column":0},"end":{"line":45,"column":30}},
-            "range":[1272,1302],
+            "range":[1273,1303],
             "value":" Leading template literal "
           }
         ],
         "loc":{"source":null,"start":{"line":45,"column":32},"end":{"line":45,"column":42}},
-        "range":[1304,1314],
+        "range":[1305,1315],
         "quasis":[
           {
             "type":"TemplateElement",
             "loc":{"source":null,"start":{"line":45,"column":32},"end":{"line":45,"column":42}},
-            "range":[1304,1314],
+            "range":[1305,1315],
             "value":{"raw":"template","cooked":"template"},
             "tail":true
           }
@@ -1087,23 +927,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":49,"column":0},"end":{"line":49,"column":18}},
-          "range":[1429,1447],
-          "value":" Leading this "
-        }
-      ],
       "loc":{"source":null,"start":{"line":47,"column":30},"end":{"line":47,"column":77}},
-      "range":[1380,1427],
+      "range":[1381,1428],
       "expression":{
         "type":"TaggedTemplateExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":47,"column":46},"end":{"line":47,"column":76}},
-            "range":[1396,1426],
+            "range":[1397,1427],
             "value":" Trailing tagged template "
           }
         ],
@@ -1111,16 +943,16 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":47,"column":0},"end":{"line":47,"column":29}},
-            "range":[1350,1379],
+            "range":[1351,1380],
             "value":" Leading tagged template "
           }
         ],
         "loc":{"source":null,"start":{"line":47,"column":31},"end":{"line":47,"column":44}},
-        "range":[1381,1394],
+        "range":[1382,1395],
         "tag":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":47,"column":31},"end":{"line":47,"column":34}},
-          "range":[1381,1384],
+          "range":[1382,1385],
           "name":"tag",
           "typeAnnotation":null,
           "optional":false
@@ -1128,12 +960,12 @@
         "quasi":{
           "type":"TemplateLiteral",
           "loc":{"source":null,"start":{"line":47,"column":34},"end":{"line":47,"column":44}},
-          "range":[1384,1394],
+          "range":[1385,1395],
           "quasis":[
             {
               "type":"TemplateElement",
               "loc":{"source":null,"start":{"line":47,"column":34},"end":{"line":47,"column":44}},
-              "range":[1384,1394],
+              "range":[1385,1395],
               "value":{"raw":"template","cooked":"template"},
               "tail":true
             }
@@ -1145,23 +977,15 @@
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":51,"column":0},"end":{"line":51,"column":19}},
-          "range":[1477,1496],
-          "value":" Leading unary "
-        }
-      ],
       "loc":{"source":null,"start":{"line":49,"column":19},"end":{"line":49,"column":46}},
-      "range":[1448,1475],
+      "range":[1449,1476],
       "expression":{
         "type":"ThisExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":49,"column":26},"end":{"line":49,"column":45}},
-            "range":[1455,1474],
+            "range":[1456,1475],
             "value":" Trailing this "
           }
         ],
@@ -1169,34 +993,26 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":49,"column":0},"end":{"line":49,"column":18}},
-            "range":[1429,1447],
+            "range":[1430,1448],
             "value":" Leading this "
           }
         ],
         "loc":{"source":null,"start":{"line":49,"column":20},"end":{"line":49,"column":24}},
-        "range":[1449,1453]
+        "range":[1450,1454]
       },
       "directive":null
     },
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":53,"column":0},"end":{"line":53,"column":20}},
-          "range":[1525,1545],
-          "value":" Leading update "
-        }
-      ],
       "loc":{"source":null,"start":{"line":51,"column":20},"end":{"line":51,"column":46}},
-      "range":[1497,1523],
+      "range":[1498,1524],
       "expression":{
         "type":"UnaryExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":51,"column":25},"end":{"line":51,"column":45}},
-            "range":[1502,1522],
+            "range":[1503,1523],
             "value":" Trailing unary "
           }
         ],
@@ -1204,18 +1020,18 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":51,"column":0},"end":{"line":51,"column":19}},
-            "range":[1477,1496],
+            "range":[1478,1497],
             "value":" Leading unary "
           }
         ],
         "loc":{"source":null,"start":{"line":51,"column":21},"end":{"line":51,"column":23}},
-        "range":[1498,1500],
+        "range":[1499,1501],
         "operator":"+",
         "prefix":true,
         "argument":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":51,"column":22},"end":{"line":51,"column":23}},
-          "range":[1499,1500],
+          "range":[1500,1501],
           "value":1,
           "raw":"1"
         }
@@ -1225,14 +1041,14 @@
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":53,"column":21},"end":{"line":53,"column":49}},
-      "range":[1546,1574],
+      "range":[1547,1575],
       "expression":{
         "type":"UpdateExpression",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":53,"column":27},"end":{"line":53,"column":48}},
-            "range":[1552,1573],
+            "range":[1553,1574],
             "value":" Trailing update "
           }
         ],
@@ -1240,17 +1056,17 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":53,"column":0},"end":{"line":53,"column":20}},
-            "range":[1525,1545],
+            "range":[1526,1546],
             "value":" Leading update "
           }
         ],
         "loc":{"source":null,"start":{"line":53,"column":22},"end":{"line":53,"column":25}},
-        "range":[1547,1550],
+        "range":[1548,1551],
         "operator":"++",
         "argument":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":53,"column":22},"end":{"line":53,"column":23}},
-          "range":[1547,1548],
+          "range":[1548,1549],
           "name":"i",
           "typeAnnotation":null,
           "optional":false
@@ -1262,11 +1078,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":55,"column":0},"end":{"line":57,"column":1}},
-      "range":[1576,1678],
+      "range":[1577,1679],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":55,"column":9},"end":{"line":55,"column":21}},
-        "range":[1585,1597],
+        "range":[1586,1598],
         "name":"metaProperty",
         "typeAnnotation":null,
         "optional":false
@@ -1275,19 +1091,19 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":55,"column":24},"end":{"line":57,"column":1}},
-        "range":[1600,1678],
+        "range":[1601,1679],
         "body":[
           {
             "type":"ExpressionStatement",
             "loc":{"source":null,"start":{"line":56,"column":32},"end":{"line":56,"column":74}},
-            "range":[1634,1676],
+            "range":[1635,1677],
             "expression":{
               "type":"MetaProperty",
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":56,"column":45},"end":{"line":56,"column":73}},
-                  "range":[1647,1675],
+                  "range":[1648,1676],
                   "value":" Trailing meta property "
                 }
               ],
@@ -1295,16 +1111,16 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":56,"column":4},"end":{"line":56,"column":31}},
-                  "range":[1606,1633],
+                  "range":[1607,1634],
                   "value":" Leading meta property "
                 }
               ],
               "loc":{"source":null,"start":{"line":56,"column":33},"end":{"line":56,"column":43}},
-              "range":[1635,1645],
+              "range":[1636,1646],
               "meta":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":56,"column":33},"end":{"line":56,"column":36}},
-                "range":[1635,1638],
+                "range":[1636,1639],
                 "name":"new",
                 "typeAnnotation":null,
                 "optional":false
@@ -1312,7 +1128,7 @@
               "property":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":56,"column":37},"end":{"line":56,"column":43}},
-                "range":[1639,1645],
+                "range":[1640,1646],
                 "name":"target",
                 "typeAnnotation":null,
                 "optional":false
@@ -1332,11 +1148,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":59,"column":0},"end":{"line":61,"column":1}},
-      "range":[1680,1760],
+      "range":[1681,1761],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":59,"column":10},"end":{"line":59,"column":19}},
-        "range":[1690,1699],
+        "range":[1691,1700],
         "name":"generator",
         "typeAnnotation":null,
         "optional":false
@@ -1345,27 +1161,19 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":59,"column":22},"end":{"line":61,"column":1}},
-        "range":[1702,1760],
+        "range":[1703,1761],
         "body":[
           {
             "type":"ExpressionStatement",
-            "trailingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":60,"column":34},"end":{"line":60,"column":54}},
-                "range":[1738,1758],
-                "value":" Trailing yield "
-              }
-            ],
             "loc":{"source":null,"start":{"line":60,"column":24},"end":{"line":60,"column":33}},
-            "range":[1728,1737],
+            "range":[1729,1738],
             "expression":{
               "type":"YieldExpression",
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":60,"column":34},"end":{"line":60,"column":54}},
-                  "range":[1738,1758],
+                  "range":[1739,1759],
                   "value":" Trailing yield "
                 }
               ],
@@ -1373,16 +1181,16 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":60,"column":4},"end":{"line":60,"column":23}},
-                  "range":[1708,1727],
+                  "range":[1709,1728],
                   "value":" Leading yield "
                 }
               ],
               "loc":{"source":null,"start":{"line":60,"column":25},"end":{"line":60,"column":32}},
-              "range":[1729,1736],
+              "range":[1730,1737],
               "argument":{
                 "type":"Literal",
                 "loc":{"source":null,"start":{"line":60,"column":31},"end":{"line":60,"column":32}},
-                "range":[1735,1736],
+                "range":[1736,1737],
                 "value":1,
                 "raw":"1"
               },
@@ -1488,253 +1296,253 @@
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":19}},
-      "range":[407,426],
+      "range":[408,427],
       "value":" Leading class "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":17,"column":33},"end":{"line":17,"column":53}},
-      "range":[440,460],
+      "range":[441,461],
       "value":" Trailing class "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":25}},
-      "range":[463,488],
+      "range":[464,489],
       "value":" Leading conditional "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":19,"column":41},"end":{"line":19,"column":67}},
-      "range":[504,530],
+      "range":[505,531],
       "value":" Trailing conditional "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":22}},
-      "range":[533,555],
+      "range":[534,556],
       "value":" Leading function "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":21,"column":38},"end":{"line":21,"column":61}},
-      "range":[571,594],
+      "range":[572,595],
       "value":" Trailing function "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":23,"column":0},"end":{"line":23,"column":24}},
-      "range":[597,621],
+      "range":[598,622],
       "value":" Leading identifier "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":23,"column":29},"end":{"line":23,"column":54}},
-      "range":[626,651],
+      "range":[627,652],
       "value":" Trailing identifier "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":25,"column":20}},
-      "range":[654,674],
+      "range":[655,675],
       "value":" Leading import "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":25,"column":38},"end":{"line":25,"column":59}},
-      "range":[692,713],
+      "range":[693,714],
       "value":" Trailing import "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":27,"column":0},"end":{"line":27,"column":25}},
-      "range":[716,741],
+      "range":[717,742],
       "value":" Leading JSX element "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":27,"column":44},"end":{"line":27,"column":70}},
-      "range":[760,786],
+      "range":[761,787],
       "value":" Trailing JSX element "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":26}},
-      "range":[789,815],
+      "range":[790,816],
       "value":" Leading JSX fragment "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":29,"column":39},"end":{"line":29,"column":66}},
-      "range":[828,855],
+      "range":[829,856],
       "value":" Trailing JSX fragment "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":31,"column":0},"end":{"line":31,"column":21}},
-      "range":[858,879],
+      "range":[859,880],
       "value":" Leading literal "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":31,"column":26},"end":{"line":31,"column":48}},
-      "range":[884,906],
+      "range":[885,907],
       "value":" Trailing literal "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":33,"column":21}},
-      "range":[909,930],
+      "range":[910,931],
       "value":" Leading logical "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":33,"column":38},"end":{"line":33,"column":60}},
-      "range":[947,969],
+      "range":[948,970],
       "value":" Trailing logical "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":20}},
-      "range":[972,992],
+      "range":[973,993],
       "value":" Leading member "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":35,"column":31},"end":{"line":35,"column":52}},
-      "range":[1003,1024],
+      "range":[1004,1025],
       "value":" Trailing member "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":37,"column":0},"end":{"line":37,"column":17}},
-      "range":[1027,1044],
+      "range":[1028,1045],
       "value":" Leading new "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":37,"column":28},"end":{"line":37,"column":46}},
-      "range":[1055,1073],
+      "range":[1056,1074],
       "value":" Trailing new "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":39,"column":0},"end":{"line":39,"column":20}},
-      "range":[1076,1096],
+      "range":[1077,1097],
       "value":" Leading object "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":39,"column":26},"end":{"line":39,"column":47}},
-      "range":[1102,1123],
+      "range":[1103,1124],
       "value":" Trailing object "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":41,"column":0},"end":{"line":41,"column":27}},
-      "range":[1126,1153],
+      "range":[1127,1154],
       "value":" Leading optional call "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":69}},
-      "range":[1167,1195],
+      "range":[1168,1196],
       "value":" Trailing optional call "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":43,"column":29}},
-      "range":[1198,1227],
+      "range":[1199,1228],
       "value":" Leading optional member "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":43,"column":41},"end":{"line":43,"column":71}},
-      "range":[1239,1269],
+      "range":[1240,1270],
       "value":" Trailing optional member "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":45,"column":0},"end":{"line":45,"column":30}},
-      "range":[1272,1302],
+      "range":[1273,1303],
       "value":" Leading template literal "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":45,"column":44},"end":{"line":45,"column":75}},
-      "range":[1316,1347],
+      "range":[1317,1348],
       "value":" Trailing template literal "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":47,"column":0},"end":{"line":47,"column":29}},
-      "range":[1350,1379],
+      "range":[1351,1380],
       "value":" Leading tagged template "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":47,"column":46},"end":{"line":47,"column":76}},
-      "range":[1396,1426],
+      "range":[1397,1427],
       "value":" Trailing tagged template "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":49,"column":0},"end":{"line":49,"column":18}},
-      "range":[1429,1447],
+      "range":[1430,1448],
       "value":" Leading this "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":49,"column":26},"end":{"line":49,"column":45}},
-      "range":[1455,1474],
+      "range":[1456,1475],
       "value":" Trailing this "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":51,"column":0},"end":{"line":51,"column":19}},
-      "range":[1477,1496],
+      "range":[1478,1497],
       "value":" Leading unary "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":51,"column":25},"end":{"line":51,"column":45}},
-      "range":[1502,1522],
+      "range":[1503,1523],
       "value":" Trailing unary "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":53,"column":0},"end":{"line":53,"column":20}},
-      "range":[1525,1545],
+      "range":[1526,1546],
       "value":" Leading update "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":53,"column":27},"end":{"line":53,"column":48}},
-      "range":[1552,1573],
+      "range":[1553,1574],
       "value":" Trailing update "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":56,"column":4},"end":{"line":56,"column":31}},
-      "range":[1606,1633],
+      "range":[1607,1634],
       "value":" Leading meta property "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":56,"column":45},"end":{"line":56,"column":73}},
-      "range":[1647,1675],
+      "range":[1648,1676],
       "value":" Trailing meta property "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":60,"column":4},"end":{"line":60,"column":23}},
-      "range":[1708,1727],
+      "range":[1709,1728],
       "value":" Leading yield "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":60,"column":34},"end":{"line":60,"column":54}},
-      "range":[1738,1758],
+      "range":[1739,1759],
       "value":" Trailing yield "
     }
   ]

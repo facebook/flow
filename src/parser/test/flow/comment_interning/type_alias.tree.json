@@ -11,12 +11,6 @@
           "loc":{"source":null,"start":{"line":1,"column":127},"end":{"line":1,"column":144}},
           "range":[127,144],
           "value":" 1.7 T alias "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},
-          "range":[146,164],
-          "value":" 2.1 L opaque "
         }
       ],
       "leadingComments":[
@@ -110,12 +104,6 @@
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":1,"column":127},"end":{"line":1,"column":144}},
-          "range":[127,144],
-          "value":" 1.7 T alias "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},

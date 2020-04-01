@@ -12,7 +12,7 @@ function foo() {}
 
 /* Leading binary */ (1 + 2) /* Trailing binary */;
 
-/* Leading call */ (foo()) /* Trailing call */
+/* Leading call */ (foo()) /* Trailing call */;
 
 /* Leading class */ (class C {}) /* Trailing class */;
 

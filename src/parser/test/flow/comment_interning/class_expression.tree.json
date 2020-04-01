@@ -127,12 +127,6 @@
         "leadingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":3,"column":112},"end":{"line":3,"column":133}},
-            "range":[125,146],
-            "value":" 0.6 T expr stmt "
-          },
-          {
-            "type":"Block",
             "loc":{"source":null,"start":{"line":5,"column":1},"end":{"line":5,"column":18}},
             "range":[149,166],
             "value":" 1.1 L class "
@@ -192,14 +186,6 @@
       "range":[263,608],
       "expression":{
         "type":"ClassExpression",
-        "leadingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":5,"column":92},"end":{"line":5,"column":113}},
-            "range":[240,261],
-            "value":" 1.5 T expr stmt "
-          }
-        ],
         "loc":{"source":null,"start":{"line":7,"column":1},"end":{"line":15,"column":1}},
         "range":[264,606],
         "id":null,

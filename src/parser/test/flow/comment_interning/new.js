@@ -1,6 +1,6 @@
 function leading() {
   /* 1.0 unreachable leading */
-  var F = function(){}; /* 1.1 leading */
+  var F = function(){}; /* 1.1 trailing var decl */
   /* 1.2 leading */
   new F();
 }
@@ -14,7 +14,7 @@ function trailing() {
 
 function leading_and_trailing() {
   /* 3.0 unreachable leading */
-  var F = function(){}; /* 3.1 leading */
+  var F = function(){}; /* 3.1 trailing var decl */
   /* 3.2 leading */
   new /* 3.3 unreachable by New node */ F() /* 3.4 trailing */;
   /* 3.5 unreachable trailing */

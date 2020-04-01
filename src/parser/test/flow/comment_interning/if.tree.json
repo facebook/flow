@@ -1,12 +1,12 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":28,"column":1}},
-  "range":[0,686],
+  "range":[0,692],
   "body":[
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":8,"column":1}},
-      "range":[0,185],
+      "range":[0,188],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":19}},
@@ -19,22 +19,16 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":8,"column":1}},
-        "range":[23,185],
+        "range":[23,188],
         "body":[
           {
             "type":"VariableDeclaration",
             "trailingComments":[
               {
                 "type":"Line",
-                "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":41}},
-                "range":[68,87],
-                "value":" pre if leading 1"
-              },
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":26}},
-                "range":[92,114],
-                "value":" pre if leading 2 "
+                "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
+                "range":[68,90],
+                "value":" trailing var decl 1"
               }
             ],
             "leadingComments":[
@@ -75,30 +69,24 @@
             "type":"IfStatement",
             "leadingComments":[
               {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":41}},
-                "range":[68,87],
-                "value":" pre if leading 1"
-              },
-              {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":26}},
-                "range":[92,114],
+                "range":[95,117],
                 "value":" pre if leading 2 "
               },
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":5,"column":31}},
-                "range":[122,146],
+                "range":[125,149],
                 "value":" pre cond leading 1 "
               }
             ],
             "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":7,"column":5}},
-            "range":[119,183],
+            "range":[122,186],
             "test":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":5,"column":33},"end":{"line":5,"column":37}},
-              "range":[148,152],
+              "range":[151,155],
               "name":"pred",
               "typeAnnotation":null,
               "optional":false
@@ -106,21 +94,21 @@
             "consequent":{
               "type":"BlockStatement",
               "loc":{"source":null,"start":{"line":5,"column":39},"end":{"line":7,"column":5}},
-              "range":[154,183],
+              "range":[157,186],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":21}},
-                  "range":[164,177],
+                  "range":[167,180],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":20}},
-                    "range":[164,176],
+                    "range":[167,179],
                     "operator":"=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":12}},
-                      "range":[164,168],
+                      "range":[167,171],
                       "name":"pred",
                       "typeAnnotation":null,
                       "optional":false
@@ -128,7 +116,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":6,"column":15},"end":{"line":6,"column":20}},
-                      "range":[171,176],
+                      "range":[174,179],
                       "value":false,
                       "raw":"false"
                     }
@@ -151,11 +139,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":16,"column":1}},
-      "range":[187,318],
+      "range":[190,321],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":10,"column":9},"end":{"line":10,"column":20}},
-        "range":[196,207],
+        "range":[199,210],
         "name":"if_trailing",
         "typeAnnotation":null,
         "optional":false
@@ -164,21 +152,21 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":10,"column":23},"end":{"line":16,"column":1}},
-        "range":[210,318],
+        "range":[213,321],
         "body":[
           {
             "type":"VariableDeclaration",
             "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":21}},
-            "range":[216,233],
+            "range":[219,236],
             "declarations":[
               {
                 "type":"VariableDeclarator",
                 "loc":{"source":null,"start":{"line":11,"column":8},"end":{"line":11,"column":20}},
-                "range":[220,232],
+                "range":[223,235],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":11,"column":8},"end":{"line":11,"column":12}},
-                  "range":[220,224],
+                  "range":[223,227],
                   "name":"pred",
                   "typeAnnotation":null,
                   "optional":false
@@ -186,7 +174,7 @@
                 "init":{
                   "type":"Literal",
                   "loc":{"source":null,"start":{"line":11,"column":15},"end":{"line":11,"column":20}},
-                  "range":[227,232],
+                  "range":[230,235],
                   "value":false,
                   "raw":"false"
                 }
@@ -200,22 +188,22 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
-                "range":[249,265],
+                "range":[252,268],
                 "value":" trailing 1 "
               }
             ],
             "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":14,"column":5}},
-            "range":[238,294],
+            "range":[241,297],
             "test":{
               "type":"UnaryExpression",
               "loc":{"source":null,"start":{"line":12,"column":8},"end":{"line":12,"column":13}},
-              "range":[242,247],
+              "range":[245,250],
               "operator":"!",
               "prefix":true,
               "argument":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":12,"column":9},"end":{"line":12,"column":13}},
-                "range":[243,247],
+                "range":[246,250],
                 "name":"pred",
                 "typeAnnotation":null,
                 "optional":false
@@ -227,7 +215,7 @@
                 {
                   "type":"Line",
                   "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":21}},
-                  "range":[299,316],
+                  "range":[302,319],
                   "value":" not trailing 1"
                 }
               ],
@@ -235,26 +223,26 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
-                  "range":[249,265],
+                  "range":[252,268],
                   "value":" trailing 1 "
                 }
               ],
               "loc":{"source":null,"start":{"line":12,"column":32},"end":{"line":14,"column":5}},
-              "range":[266,294],
+              "range":[269,297],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":13,"column":20}},
-                  "range":[276,288],
+                  "range":[279,291],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":13,"column":19}},
-                    "range":[276,287],
+                    "range":[279,290],
                     "operator":"=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":13,"column":12}},
-                      "range":[276,280],
+                      "range":[279,283],
                       "name":"pred",
                       "typeAnnotation":null,
                       "optional":false
@@ -262,7 +250,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":13,"column":15},"end":{"line":13,"column":19}},
-                      "range":[283,287],
+                      "range":[286,290],
                       "value":true,
                       "raw":"true"
                     }
@@ -285,11 +273,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":18,"column":0},"end":{"line":28,"column":1}},
-      "range":[320,686],
+      "range":[323,692],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":18,"column":9},"end":{"line":18,"column":32}},
-        "range":[329,352],
+        "range":[332,355],
         "name":"if_leading_and_trailing",
         "typeAnnotation":null,
         "optional":false
@@ -298,43 +286,37 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":18,"column":35},"end":{"line":28,"column":1}},
-        "range":[355,686],
+        "range":[358,692],
         "body":[
           {
             "type":"VariableDeclaration",
             "trailingComments":[
               {
                 "type":"Line",
-                "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":41}},
-                "range":[400,419],
-                "value":" pre if leading 3"
-              },
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":26}},
-                "range":[424,446],
-                "value":" pre if leading 4 "
+                "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":44}},
+                "range":[403,425],
+                "value":" trailing var decl 3"
               }
             ],
             "leadingComments":[
               {
                 "type":"Line",
                 "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":20}},
-                "range":[361,377],
+                "range":[364,380],
                 "value":" not leading 2"
               }
             ],
             "loc":{"source":null,"start":{"line":20,"column":4},"end":{"line":20,"column":20}},
-            "range":[382,398],
+            "range":[385,401],
             "declarations":[
               {
                 "type":"VariableDeclarator",
                 "loc":{"source":null,"start":{"line":20,"column":8},"end":{"line":20,"column":19}},
-                "range":[386,397],
+                "range":[389,400],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":20,"column":8},"end":{"line":20,"column":12}},
-                  "range":[386,390],
+                  "range":[389,393],
                   "name":"pred",
                   "typeAnnotation":null,
                   "optional":false
@@ -342,7 +324,7 @@
                 "init":{
                   "type":"Literal",
                   "loc":{"source":null,"start":{"line":20,"column":15},"end":{"line":20,"column":19}},
-                  "range":[393,397],
+                  "range":[396,400],
                   "value":true,
                   "raw":"true"
                 }
@@ -356,36 +338,30 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
-                "range":[486,502],
+                "range":[492,508],
                 "value":" trailing 2 "
               }
             ],
             "leadingComments":[
               {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":41}},
-                "range":[400,419],
-                "value":" pre if leading 3"
-              },
-              {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":26}},
-                "range":[424,446],
+                "range":[430,452],
                 "value":" pre if leading 4 "
               },
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":22,"column":31}},
-                "range":[454,478],
+                "range":[460,484],
                 "value":" pre cond leading 2 "
               }
             ],
             "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":26,"column":5}},
-            "range":[451,662],
+            "range":[457,668],
             "test":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":22,"column":33},"end":{"line":22,"column":37}},
-              "range":[480,484],
+              "range":[486,490],
               "name":"pred",
               "typeAnnotation":null,
               "optional":false
@@ -396,7 +372,7 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":26}},
-                  "range":[533,553],
+                  "range":[539,559],
                   "value":" not trailing 2 "
                 }
               ],
@@ -404,26 +380,26 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
-                  "range":[486,502],
+                  "range":[492,508],
                   "value":" trailing 2 "
                 }
               ],
               "loc":{"source":null,"start":{"line":22,"column":56},"end":{"line":24,"column":5}},
-              "range":[503,532],
+              "range":[509,538],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":21}},
-                  "range":[513,526],
+                  "range":[519,532],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":20}},
-                    "range":[513,525],
+                    "range":[519,531],
                     "operator":"=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":12}},
-                      "range":[513,517],
+                      "range":[519,523],
                       "name":"pred",
                       "typeAnnotation":null,
                       "optional":false
@@ -431,7 +407,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":23,"column":15},"end":{"line":23,"column":20}},
-                      "range":[520,525],
+                      "range":[526,531],
                       "value":false,
                       "raw":"false"
                     }
@@ -446,7 +422,7 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
-                  "range":[617,633],
+                  "range":[623,639],
                   "value":" trailing 3 "
                 }
               ],
@@ -454,22 +430,22 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":24,"column":32},"end":{"line":24,"column":54}},
-                  "range":[559,581],
+                  "range":[565,587],
                   "value":" pre if leading 5 "
                 },
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":24,"column":58},"end":{"line":24,"column":82}},
-                  "range":[585,609],
+                  "range":[591,615],
                   "value":" pre cond leading 3 "
                 }
               ],
               "loc":{"source":null,"start":{"line":24,"column":55},"end":{"line":26,"column":5}},
-              "range":[582,662],
+              "range":[588,668],
               "test":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":24,"column":84},"end":{"line":24,"column":88}},
-                "range":[611,615],
+                "range":[617,621],
                 "name":"pred",
                 "typeAnnotation":null,
                 "optional":false
@@ -480,7 +456,7 @@
                   {
                     "type":"Line",
                     "loc":{"source":null,"start":{"line":27,"column":4},"end":{"line":27,"column":21}},
-                    "range":[667,684],
+                    "range":[673,690],
                     "value":" not trailing 3"
                   }
                 ],
@@ -488,26 +464,26 @@
                   {
                     "type":"Block",
                     "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
-                    "range":[617,633],
+                    "range":[623,639],
                     "value":" trailing 3 "
                   }
                 ],
                 "loc":{"source":null,"start":{"line":24,"column":107},"end":{"line":26,"column":5}},
-                "range":[634,662],
+                "range":[640,668],
                 "body":[
                   {
                     "type":"ExpressionStatement",
                     "loc":{"source":null,"start":{"line":25,"column":8},"end":{"line":25,"column":20}},
-                    "range":[644,656],
+                    "range":[650,662],
                     "expression":{
                       "type":"AssignmentExpression",
                       "loc":{"source":null,"start":{"line":25,"column":8},"end":{"line":25,"column":19}},
-                      "range":[644,655],
+                      "range":[650,661],
                       "operator":"=",
                       "left":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":25,"column":8},"end":{"line":25,"column":12}},
-                        "range":[644,648],
+                        "range":[650,654],
                         "name":"pref",
                         "typeAnnotation":null,
                         "optional":false
@@ -515,7 +491,7 @@
                       "right":{
                         "type":"Literal",
                         "loc":{"source":null,"start":{"line":25,"column":15},"end":{"line":25,"column":19}},
-                        "range":[651,655],
+                        "range":[657,661],
                         "value":true,
                         "raw":"true"
                       }
@@ -546,92 +522,92 @@
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":41}},
-      "range":[68,87],
-      "value":" pre if leading 1"
+      "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
+      "range":[68,90],
+      "value":" trailing var decl 1"
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":26}},
-      "range":[92,114],
+      "range":[95,117],
       "value":" pre if leading 2 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":5,"column":31}},
-      "range":[122,146],
+      "range":[125,149],
       "value":" pre cond leading 1 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
-      "range":[249,265],
+      "range":[252,268],
       "value":" trailing 1 "
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":21}},
-      "range":[299,316],
+      "range":[302,319],
       "value":" not trailing 1"
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":20}},
-      "range":[361,377],
+      "range":[364,380],
       "value":" not leading 2"
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":41}},
-      "range":[400,419],
-      "value":" pre if leading 3"
+      "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":44}},
+      "range":[403,425],
+      "value":" trailing var decl 3"
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":26}},
-      "range":[424,446],
+      "range":[430,452],
       "value":" pre if leading 4 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":22,"column":31}},
-      "range":[454,478],
+      "range":[460,484],
       "value":" pre cond leading 2 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
-      "range":[486,502],
+      "range":[492,508],
       "value":" trailing 2 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":26}},
-      "range":[533,553],
+      "range":[539,559],
       "value":" not trailing 2 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":32},"end":{"line":24,"column":54}},
-      "range":[559,581],
+      "range":[565,587],
       "value":" pre if leading 5 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":58},"end":{"line":24,"column":82}},
-      "range":[585,609],
+      "range":[591,615],
       "value":" pre cond leading 3 "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
-      "range":[617,633],
+      "range":[623,639],
       "value":" trailing 3 "
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":27,"column":4},"end":{"line":27,"column":21}},
-      "range":[667,684],
+      "range":[673,690],
       "value":" not trailing 3"
     }
   ]

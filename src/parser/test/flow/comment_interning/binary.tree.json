@@ -5,14 +5,6 @@
   "body":[
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":27}},
-          "range":[116,143],
-          "value":" 2.1 Leading on binary "
-        }
-      ],
       "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":114}},
       "range":[26,114],
       "expression":{

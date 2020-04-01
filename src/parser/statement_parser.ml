@@ -79,6 +79,10 @@ module Statement
     | For_expression of pattern_cover
     | For_declaration of (Loc.t * (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
 
+  type semicolon_type =
+    | Explicit of Loc.t Comment.t list
+    | Implicit of Loc.t Comment.t list
+
   (* FunctionDeclaration is not a valid Statement, but Annex B sometimes allows it.
      However, AsyncFunctionDeclaration and GeneratorFunctionDeclaration are never
      allowed as statements. We still parse them as statements (and raise an error) to
@@ -140,6 +144,28 @@ module Statement
       { StringLiteral.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     )
 
+  (* Semicolon insertion is handled here :(. There seem to be 2 cases where
+  * semicolons are inserted. First, if we reach the EOF. Second, if the next
+  * token is } or is separated by a LineTerminator.
+  *)
+  let semicolon ?(expected = "the token `;`") env =
+    match Peek.token env with
+    | T_EOF
+    | T_RCURLY ->
+      Implicit (Peek.comments env)
+    | T_SEMICOLON ->
+      Eat.token env;
+      (match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        Explicit (Peek.comments env)
+      | _ when Peek.is_line_terminator env -> Explicit (Eat.comments_until_next_line env)
+      | _ -> Explicit [])
+    | _ when Peek.is_line_terminator env -> Implicit (Eat.comments_until_next_line env)
+    | _ ->
+      error_unexpected ~expected env;
+      Explicit []
+
   let rec empty env =
     let loc = Peek.loc env in
     Expect.token env T_SEMICOLON;
@@ -147,7 +173,7 @@ module Statement
 
   and break env =
     let leading = Peek.comments env in
-    let (loc, label) =
+    let (loc, (label, trailing)) =
       with_loc
         (fun env ->
           Expect.token env T_BREAK;
@@ -159,11 +185,14 @@ module Statement
               if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
               Some label
           in
-          Eat.semicolon env;
-          label)
+          let trailing =
+            match semicolon env with
+            | Explicit comments -> comments
+            | Implicit _ -> []
+          in
+          (label, trailing))
         env
     in
-    let trailing = Peek.comments env in
     if label = None && not (in_loop env || in_switch env) then
       error_at env (loc, Parse_error.IllegalBreak);
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
@@ -171,7 +200,7 @@ module Statement
 
   and continue env =
     let leading = Peek.comments env in
-    let (loc, label) =
+    let (loc, (label, trailing)) =
       with_loc
         (fun env ->
           Expect.token env T_CONTINUE;
@@ -183,12 +212,15 @@ module Statement
               if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
               Some label
           in
-          Eat.semicolon env;
-          label)
+          let trailing =
+            match semicolon env with
+            | Explicit comments -> comments
+            | Implicit _ -> []
+          in
+          (label, trailing))
         env
     in
     if not (in_loop env) then error_at env (loc, Parse_error.IllegalContinue);
-    let trailing = Peek.comments env in
     ( loc,
       Statement.Continue
         {
@@ -201,7 +233,7 @@ module Statement
         let leading = Peek.comments env in
         Expect.token env T_DEBUGGER;
         let trailing = Peek.comments env in
-        Eat.semicolon env;
+        let _ = semicolon env in
         Statement.Debugger
           { Statement.Debugger.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
 
@@ -225,7 +257,7 @@ module Statement
         (* The rules of automatic semicolon insertion in ES5 don't mention this,
          * but the semicolon after a do-while loop is optional. This is properly
          * specified in ES6 *)
-        if Peek.token env = T_SEMICOLON then Eat.semicolon env;
+        if Peek.token env = T_SEMICOLON then Eat.token env;
         let trailing = pre_keyword_trailing @ pre_cond_trailing @ past_cond_trailing in
         Statement.DoWhile
           {
@@ -432,8 +464,11 @@ module Statement
           else
             Some (Parse.expression env)
         in
-        Eat.semicolon env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         Statement.Return
           {
             Statement.Return.argument;
@@ -509,7 +544,7 @@ module Statement
         Expect.token env T_THROW;
         if Peek.is_line_terminator env then error_at env (start_loc, Parse_error.NewlineAfterThrow);
         let argument = Parse.expression env in
-        Eat.semicolon env;
+        let _ = semicolon env in
         let open Statement in
         Throw { Throw.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () })
 
@@ -570,8 +605,11 @@ module Statement
   and var =
     with_loc (fun env ->
         let (declarations, leading, errs) = Declaration.var env in
-        Eat.semicolon env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         errs |> List.iter (error_at env);
         Statement.VariableDeclaration
           {
@@ -583,8 +621,11 @@ module Statement
   and const =
     with_loc (fun env ->
         let (declarations, leading, errs) = Declaration.const env in
-        Eat.semicolon env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         errs |> List.iter (error_at env);
         Statement.VariableDeclaration
           {
@@ -596,8 +637,11 @@ module Statement
   and let_ =
     with_loc (fun env ->
         let (declarations, leading, errs) = Declaration.let_ env in
-        Eat.semicolon env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         errs |> List.iter (error_at env);
         Statement.VariableDeclaration
           {
@@ -679,8 +723,11 @@ module Statement
           Statement.Labeled
             { Statement.Labeled.label; body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         | (expression, _) ->
-          Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
-          let trailing = Peek.comments env in
+          let trailing =
+            match semicolon ~expected:"the end of an expression statement (`;`)" env with
+            | Explicit comments -> comments
+            | Implicit _ -> []
+          in
           let open Statement in
           Expression
             {
@@ -692,8 +739,11 @@ module Statement
   and expression =
     with_loc (fun env ->
         let expression = Parse.expression env in
-        Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon ~expected:"the end of an expression statement (`;`)" env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         let directive =
           if allow_directive env then
             match expression with
@@ -719,9 +769,12 @@ module Statement
     let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
-    Eat.semicolon env;
-    let trailing = Peek.comments env in
     Eat.pop_lex_mode env;
+    let trailing =
+      match semicolon env with
+      | Explicit comments -> comments
+      | Implicit _ -> []
+    in
     Statement.TypeAlias.
       { id; tparams; right; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
 
@@ -764,9 +817,12 @@ module Statement
       ) else
         None
     in
-    Eat.semicolon env;
-    let trailing = Peek.comments env in
     Eat.pop_lex_mode env;
+    let trailing =
+      match semicolon env with
+      | Explicit comments -> comments
+      | Implicit _ -> []
+    in
     Statement.OpaqueType.
       {
         id;
@@ -879,8 +935,11 @@ module Statement
     let annot = (loc, Ast.Type.(Function { Function.params; return; tparams; comments = None })) in
     let annot = (fst annot, annot) in
     let predicate = Type.predicate_opt env in
-    Eat.semicolon env;
-    let trailing = Peek.comments env in
+    let trailing =
+      match semicolon env with
+      | Explicit comments -> comments
+      | Implicit _ -> []
+    in
     Statement.DeclareFunction.
       { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
 
@@ -905,7 +964,7 @@ module Statement
     let (_loc, { Pattern.Identifier.name; annot; _ }) =
       Parse.identifier_with_type env ~no_optional:true Parse_error.StrictVarName
     in
-    Eat.semicolon env;
+    let _ = semicolon env in
     Statement.DeclareVariable.{ id = name; annot }
 
   and declare_var_statement env =
@@ -1013,7 +1072,7 @@ module Statement
     Expect.token env T_PERIOD;
     Expect.identifier env "exports";
     let type_annot = Type.annotation env in
-    Eat.semicolon env;
+    let _ = semicolon env in
     Statement.DeclareModuleExports type_annot
 
   and declare ?(in_module = false) env =
@@ -1152,8 +1211,11 @@ module Statement
               else
                 (* export default [assignment expression]; *)
                 let expr = Parse.assignment env in
-                Eat.semicolon env;
-                let trailing = Peek.comments env in
+                let trailing =
+                  match semicolon env with
+                  | Explicit comments -> comments
+                  | Implicit _ -> []
+                in
                 (Expression expr, trailing)
             in
             Statement.ExportDefaultDeclaration
@@ -1172,8 +1234,11 @@ module Statement
               let specifier_loc = Peek.loc env in
               Expect.token env T_MULT;
               let source = export_source env in
-              Eat.semicolon env;
-              let trailing = Peek.comments env in
+              let trailing =
+                match semicolon env with
+                | Explicit comments -> comments
+                | Implicit _ -> []
+              in
               Statement.ExportNamedDeclaration
                 {
                   declaration = None;
@@ -1299,8 +1364,11 @@ module Statement
             let specifiers = Some (ExportBatchSpecifier (loc, local_name)) in
             let source = export_source env in
             let source = Some source in
-            Eat.semicolon env;
-            let trailing = Peek.comments env in
+            let trailing =
+              match semicolon env with
+              | Explicit comments -> comments
+              | Implicit _ -> []
+            in
             Statement.ExportNamedDeclaration
               {
                 declaration = None;
@@ -1328,8 +1396,11 @@ module Statement
                 assert_export_specifier_identifiers env specifiers;
                 None
             in
-            Eat.semicolon env;
-            let trailing = Peek.comments env in
+            let trailing =
+              match semicolon env with
+              | Explicit comments -> comments
+              | Implicit _ -> []
+            in
             Statement.ExportNamedDeclaration
               {
                 declaration = None;
@@ -1364,7 +1435,7 @@ module Statement
               | _ ->
                 (* declare export default [type]; *)
                 let type_ = Type._type env in
-                Eat.semicolon env;
+                let _ = semicolon env in
                 Some (DefaultType type_)
             in
             Statement.DeclareExportDeclaration
@@ -1418,7 +1489,7 @@ module Statement
               Statement.ExportNamedDeclaration.(Some (ExportBatchSpecifier (loc, local_name)))
             in
             let source = export_source env in
-            Eat.semicolon env;
+            let _ = semicolon env in
             Statement.DeclareExportDeclaration
               { default = None; declaration = None; specifiers; source = Some source }
           | T_TYPE when allow_export_type ->
@@ -1466,7 +1537,7 @@ module Statement
                 assert_export_specifier_identifiers env specifiers;
                 None
             in
-            Eat.semicolon env;
+            let _ = semicolon env in
             Statement.DeclareExportDeclaration
               {
                 default = None;
@@ -1666,8 +1737,11 @@ module Statement
       let with_specifiers importKind env leading =
         let specifiers = Some (named_or_namespace_specifier env importKind) in
         let source = source env in
-        Eat.semicolon env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         Statement.ImportDeclaration
           {
             importKind;
@@ -1694,8 +1768,11 @@ module Statement
           | _ -> None
         in
         let source = source env in
-        Eat.semicolon env;
-        let trailing = Peek.comments env in
+        let trailing =
+          match semicolon env with
+          | Explicit comments -> comments
+          | Implicit _ -> []
+        in
         Statement.ImportDeclaration
           {
             importKind;
@@ -1718,8 +1795,11 @@ module Statement
           (* `import "ModuleName";` *)
           | T_STRING str ->
             let source = string_literal env str in
-            Eat.semicolon env;
-            let trailing = Peek.comments env in
+            let trailing =
+              match semicolon env with
+              | Explicit comments -> comments
+              | Implicit _ -> []
+            in
             Statement.ImportDeclaration
               {
                 importKind = ImportValue;

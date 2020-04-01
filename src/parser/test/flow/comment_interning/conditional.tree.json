@@ -5,14 +5,6 @@
   "body":[
     {
       "type":"ExpressionStatement",
-      "trailingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":23}},
-          "range":[113,136],
-          "value":" 2.1 L conditional "
-        }
-      ],
       "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":111}},
       "range":[17,111],
       "expression":{

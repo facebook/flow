@@ -1,6 +1,6 @@
 function if_leading () {
     // not leading 1
-    var pred = true;  // pre if leading 1
+    var pred = true;  // trailing var decl 1
     /* pre if leading 2 */
     if /* pre cond leading 1 */ (pred) {
         pred = false;
@@ -17,7 +17,7 @@ function if_trailing() {
 
 function if_leading_and_trailing() {
     // not leading 2
-    var pred = true;  // pre if leading 3
+    var pred = true;  // trailing var decl 3
     /* pre if leading 4 */
     if /* pre cond leading 2 */ (pred) /* trailing 2 */ {
         pred = false;

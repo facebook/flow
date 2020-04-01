@@ -23,20 +23,6 @@
         "body":[
           {
             "type":"VariableDeclaration",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":26}},
-                "range":[81,103],
-                "value":" 1.2 Leading comment"
-              },
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":29}},
-                "range":[108,133],
-                "value":" 1.3 Leading comment "
-              }
-            ],
             "leadingComments":[
               {
                 "type":"Line",

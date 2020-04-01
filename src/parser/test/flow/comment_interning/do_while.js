@@ -1,7 +1,7 @@
 function only_leading () {
     // 1.0. unreachable leading comment
-    var i = 0;  // 1.1. leading comment
-    // 1.2. another leading comment
+    var i = 0;  // 1.1. trailing var decl
+    // 1.2. leading comment
     do {
         i += 1;
     } while (i < 3);

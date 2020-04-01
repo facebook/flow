@@ -23,14 +23,6 @@
         "body":[
           {
             "type":"ExpressionStatement",
-            "trailingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":18}},
-                "range":[97,113],
-                "value":" 2.1 L meta "
-              }
-            ],
             "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":75}},
             "range":[35,93],
             "expression":{

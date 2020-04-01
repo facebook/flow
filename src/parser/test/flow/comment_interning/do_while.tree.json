@@ -1,12 +1,12 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":27,"column":1}},
-  "range":[0,631],
+  "range":[0,625],
   "body":[
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":8,"column":1}},
-      "range":[0,190],
+      "range":[0,184],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":21}},
@@ -19,22 +19,16 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":8,"column":1}},
-        "range":[25,190],
+        "range":[25,184],
         "body":[
           {
             "type":"VariableDeclaration",
             "trailingComments":[
               {
                 "type":"Line",
-                "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":39}},
-                "range":[83,106],
-                "value":" 1.1. leading comment"
-              },
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":35}},
-                "range":[111,142],
-                "value":" 1.2. another leading comment"
+                "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":41}},
+                "range":[83,108],
+                "value":" 1.1. trailing var decl"
               }
             ],
             "leadingComments":[
@@ -76,37 +70,31 @@
             "leadingComments":[
               {
                 "type":"Line",
-                "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":39}},
-                "range":[83,106],
-                "value":" 1.1. leading comment"
-              },
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":35}},
-                "range":[111,142],
-                "value":" 1.2. another leading comment"
+                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":27}},
+                "range":[113,136],
+                "value":" 1.2. leading comment"
               }
             ],
             "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":7,"column":20}},
-            "range":[147,188],
+            "range":[141,182],
             "body":{
               "type":"BlockStatement",
               "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":7,"column":5}},
-              "range":[150,173],
+              "range":[144,167],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":15}},
-                  "range":[160,167],
+                  "range":[154,161],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":14}},
-                    "range":[160,166],
+                    "range":[154,160],
                     "operator":"+=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":9}},
-                      "range":[160,161],
+                      "range":[154,155],
                       "name":"i",
                       "typeAnnotation":null,
                       "optional":false
@@ -114,7 +102,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":6,"column":13},"end":{"line":6,"column":14}},
-                      "range":[165,166],
+                      "range":[159,160],
                       "value":1,
                       "raw":"1"
                     }
@@ -126,12 +114,12 @@
             "test":{
               "type":"BinaryExpression",
               "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":18}},
-              "range":[181,186],
+              "range":[175,180],
               "operator":"<",
               "left":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":14}},
-                "range":[181,182],
+                "range":[175,176],
                 "name":"i",
                 "typeAnnotation":null,
                 "optional":false
@@ -139,7 +127,7 @@
               "right":{
                 "type":"Literal",
                 "loc":{"source":null,"start":{"line":7,"column":17},"end":{"line":7,"column":18}},
-                "range":[185,186],
+                "range":[179,180],
                 "value":3,
                 "raw":"3"
               }
@@ -157,11 +145,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":18,"column":1}},
-      "range":[192,384],
+      "range":[186,378],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":10,"column":9},"end":{"line":10,"column":27}},
-        "range":[201,219],
+        "range":[195,213],
         "name":"leading_n_trailing",
         "typeAnnotation":null,
         "optional":false
@@ -170,29 +158,21 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":10,"column":30},"end":{"line":18,"column":1}},
-        "range":[222,384],
+        "range":[216,378],
         "body":[
           {
             "type":"VariableDeclaration",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":27}},
-                "range":[243,266],
-                "value":" 2.1. leading comment"
-              }
-            ],
             "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":14}},
-            "range":[228,238],
+            "range":[222,232],
             "declarations":[
               {
                 "type":"VariableDeclarator",
                 "loc":{"source":null,"start":{"line":11,"column":8},"end":{"line":11,"column":13}},
-                "range":[232,237],
+                "range":[226,231],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":11,"column":8},"end":{"line":11,"column":9}},
-                  "range":[232,233],
+                  "range":[226,227],
                   "name":"i",
                   "typeAnnotation":null,
                   "optional":false
@@ -200,7 +180,7 @@
                 "init":{
                   "type":"Literal",
                   "loc":{"source":null,"start":{"line":11,"column":12},"end":{"line":11,"column":13}},
-                  "range":[236,237],
+                  "range":[230,231],
                   "value":0,
                   "raw":"0"
                 }
@@ -214,7 +194,7 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":47}},
-                "range":[312,339],
+                "range":[306,333],
                 "value":" 2.2. trailing comment "
               }
             ],
@@ -222,30 +202,30 @@
               {
                 "type":"Line",
                 "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":27}},
-                "range":[243,266],
+                "range":[237,260],
                 "value":" 2.1. leading comment"
               }
             ],
             "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":15,"column":48}},
-            "range":[271,340],
+            "range":[265,334],
             "body":{
               "type":"BlockStatement",
               "loc":{"source":null,"start":{"line":13,"column":7},"end":{"line":15,"column":5}},
-              "range":[274,297],
+              "range":[268,291],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":14,"column":8},"end":{"line":14,"column":15}},
-                  "range":[284,291],
+                  "range":[278,285],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":14,"column":8},"end":{"line":14,"column":14}},
-                    "range":[284,290],
+                    "range":[278,284],
                     "operator":"+=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":14,"column":8},"end":{"line":14,"column":9}},
-                      "range":[284,285],
+                      "range":[278,279],
                       "name":"i",
                       "typeAnnotation":null,
                       "optional":false
@@ -253,7 +233,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":14,"column":13},"end":{"line":14,"column":14}},
-                      "range":[289,290],
+                      "range":[283,284],
                       "value":1,
                       "raw":"1"
                     }
@@ -265,12 +245,12 @@
             "test":{
               "type":"BinaryExpression",
               "loc":{"source":null,"start":{"line":15,"column":13},"end":{"line":15,"column":18}},
-              "range":[305,310],
+              "range":[299,304],
               "operator":"<",
               "left":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":15,"column":13},"end":{"line":15,"column":14}},
-                "range":[305,306],
+                "range":[299,300],
                 "name":"i",
                 "typeAnnotation":null,
                 "optional":false
@@ -278,7 +258,7 @@
               "right":{
                 "type":"Literal",
                 "loc":{"source":null,"start":{"line":15,"column":17},"end":{"line":15,"column":18}},
-                "range":[309,310],
+                "range":[303,304],
                 "value":3,
                 "raw":"3"
               }
@@ -296,11 +276,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":20,"column":0},"end":{"line":27,"column":1}},
-      "range":[386,631],
+      "range":[380,625],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":20,"column":9},"end":{"line":20,"column":22}},
-        "range":[395,408],
+        "range":[389,402],
         "name":"only_trailing",
         "typeAnnotation":null,
         "optional":false
@@ -309,21 +289,21 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":20,"column":25},"end":{"line":27,"column":1}},
-        "range":[411,631],
+        "range":[405,625],
         "body":[
           {
             "type":"VariableDeclaration",
             "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":14}},
-            "range":[417,427],
+            "range":[411,421],
             "declarations":[
               {
                 "type":"VariableDeclarator",
                 "loc":{"source":null,"start":{"line":21,"column":8},"end":{"line":21,"column":13}},
-                "range":[421,426],
+                "range":[415,420],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":21,"column":8},"end":{"line":21,"column":9}},
-                  "range":[421,422],
+                  "range":[415,416],
                   "name":"i",
                   "typeAnnotation":null,
                   "optional":false
@@ -331,7 +311,7 @@
                 "init":{
                   "type":"Literal",
                   "loc":{"source":null,"start":{"line":21,"column":12},"end":{"line":21,"column":13}},
-                  "range":[425,426],
+                  "range":[419,420],
                   "value":0,
                   "raw":"0"
                 }
@@ -345,50 +325,50 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
-                "range":[459,498],
+                "range":[453,492],
                 "value":" 3.0. pre-keyword trailing comment "
               },
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":24,"column":52},"end":{"line":24,"column":88}},
-                "range":[505,541],
+                "range":[499,535],
                 "value":" 3.1. pre-cond trailing comment "
               },
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":24,"column":96},"end":{"line":24,"column":133}},
-                "range":[549,586],
+                "range":[543,580],
                 "value":" 3.2. past-cond trailing comment "
               }
             ],
             "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":24,"column":134}},
-            "range":[432,587],
+            "range":[426,581],
             "body":{
               "type":"BlockStatement",
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
-                  "range":[459,498],
+                  "range":[453,492],
                   "value":" 3.0. pre-keyword trailing comment "
                 }
               ],
               "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":24,"column":5}},
-              "range":[435,458],
+              "range":[429,452],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":15}},
-                  "range":[445,452],
+                  "range":[439,446],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":14}},
-                    "range":[445,451],
+                    "range":[439,445],
                     "operator":"+=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":9}},
-                      "range":[445,446],
+                      "range":[439,440],
                       "name":"i",
                       "typeAnnotation":null,
                       "optional":false
@@ -396,7 +376,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":23,"column":13},"end":{"line":23,"column":14}},
-                      "range":[450,451],
+                      "range":[444,445],
                       "value":1,
                       "raw":"1"
                     }
@@ -408,12 +388,12 @@
             "test":{
               "type":"BinaryExpression",
               "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":94}},
-              "range":[543,547],
+              "range":[537,541],
               "operator":"<",
               "left":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":91}},
-                "range":[543,544],
+                "range":[537,538],
                 "name":"i",
                 "typeAnnotation":null,
                 "optional":false
@@ -421,7 +401,7 @@
               "right":{
                 "type":"Literal",
                 "loc":{"source":null,"start":{"line":24,"column":93},"end":{"line":24,"column":94}},
-                "range":[546,547],
+                "range":[540,541],
                 "value":3,
                 "raw":"3"
               }
@@ -446,56 +426,56 @@
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":39}},
-      "range":[83,106],
-      "value":" 1.1. leading comment"
+      "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":41}},
+      "range":[83,108],
+      "value":" 1.1. trailing var decl"
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":35}},
-      "range":[111,142],
-      "value":" 1.2. another leading comment"
+      "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":27}},
+      "range":[113,136],
+      "value":" 1.2. leading comment"
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":27}},
-      "range":[243,266],
+      "range":[237,260],
       "value":" 2.1. leading comment"
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":47}},
-      "range":[312,339],
+      "range":[306,333],
       "value":" 2.2. trailing comment "
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":40}},
-      "range":[346,382],
+      "range":[340,376],
       "value":" 2.3. unreachable trailing comment"
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
-      "range":[459,498],
+      "range":[453,492],
       "value":" 3.0. pre-keyword trailing comment "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":52},"end":{"line":24,"column":88}},
-      "range":[505,541],
+      "range":[499,535],
       "value":" 3.1. pre-cond trailing comment "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":96},"end":{"line":24,"column":133}},
-      "range":[549,586],
+      "range":[543,580],
       "value":" 3.2. past-cond trailing comment "
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":40}},
-      "range":[593,629],
+      "range":[587,623],
       "value":" 3.3. unreachable trailing comment"
     }
   ]

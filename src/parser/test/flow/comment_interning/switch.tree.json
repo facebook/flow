@@ -277,14 +277,6 @@
           "consequent":[
             {
               "type":"ExpressionStatement",
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":24,"column":4},"end":{"line":24,"column":20}},
-                  "range":[511,527],
-                  "value":" 5.5 L case "
-                }
-              ],
               "loc":{"source":null,"start":{"line":23,"column":6},"end":{"line":23,"column":8}},
               "range":[504,506],
               "expression":{

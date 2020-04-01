@@ -17,12 +17,6 @@
           "loc":{"source":null,"start":{"line":1,"column":70},"end":{"line":1,"column":88}},
           "range":[70,88],
           "value":" 1.4 T export "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},
-          "range":[90,108],
-          "value":" 2.1 L export "
         }
       ],
       "leadingComments":[
@@ -63,12 +57,6 @@
     {
       "type":"ExportDefaultDeclaration",
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":1,"column":70},"end":{"line":1,"column":88}},
-          "range":[70,88],
-          "value":" 1.4 T export "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":18}},
@@ -129,12 +117,6 @@
           "loc":{"source":null,"start":{"line":5,"column":31},"end":{"line":5,"column":49}},
           "range":[210,228],
           "value":" 3.2 T export "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":18}},
-          "range":[230,248],
-          "value":" 4.1 L export "
         }
       ],
       "leadingComments":[
@@ -188,21 +170,9 @@
           "loc":{"source":null,"start":{"line":7,"column":139},"end":{"line":7,"column":157}},
           "range":[369,387],
           "value":" 4.8 T export "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":18}},
-          "range":[389,407],
-          "value":" 5.1 L export "
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":5,"column":31},"end":{"line":5,"column":49}},
-          "range":[210,228],
-          "value":" 3.2 T export "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":18}},
@@ -301,21 +271,9 @@
           "loc":{"source":null,"start":{"line":9,"column":40},"end":{"line":9,"column":58}},
           "range":[429,447],
           "value":" 5.2 T export "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":18}},
-          "range":[449,467],
-          "value":" 6.1 L export "
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":7,"column":139},"end":{"line":7,"column":157}},
-          "range":[369,387],
-          "value":" 4.8 T export "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":18}},
@@ -342,21 +300,9 @@
           "loc":{"source":null,"start":{"line":11,"column":45},"end":{"line":11,"column":63}},
           "range":[494,512],
           "value":" 6.2 T export "
-        },
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":18}},
-          "range":[514,532],
-          "value":" 7.1 L export "
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":9,"column":40},"end":{"line":9,"column":58}},
-          "range":[429,447],
-          "value":" 5.2 T export "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":18}},
@@ -380,12 +326,6 @@
       "leadingComments":[
         {
           "type":"Block",
-          "loc":{"source":null,"start":{"line":11,"column":45},"end":{"line":11,"column":63}},
-          "range":[494,512],
-          "value":" 6.2 T export "
-        },
-        {
-          "type":"Block",
           "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":18}},
           "range":[514,532],
           "value":" 7.1 L export "
@@ -401,12 +341,6 @@
             "loc":{"source":null,"start":{"line":13,"column":65},"end":{"line":13,"column":87}},
             "range":[579,601],
             "value":" 7.3 T type alias "
-          },
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":18}},
-            "range":[603,621],
-            "value":" 8.1 L export "
           }
         ],
         "leadingComments":[
@@ -441,12 +375,6 @@
     {
       "type":"ExportNamedDeclaration",
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":13,"column":65},"end":{"line":13,"column":87}},
-          "range":[579,601],
-          "value":" 7.3 T type alias "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":18}},
