@@ -273,6 +273,21 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
         (* should never happen *)
         Lwt.return (Error errors, info))
 
+let flow_error_of_module_error file err =
+  match err with
+  | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict } ->
+    Error_message.(
+      let provider =
+        let pos = Loc.{ line = 1; column = 0 } in
+        ALoc.of_loc Loc.{ source = Some provider; start = pos; _end = pos }
+      in
+      let conflict =
+        let pos = Loc.{ line = 1; column = 0 } in
+        ALoc.of_loc Loc.{ source = Some conflict; start = pos; _end = pos }
+      in
+      EDuplicateModuleProvider { module_name; provider; conflict })
+    |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
+
 (* commit providers for old and new modules, collect errors. *)
 let (commit_modules, commit_modules_from_saved_state) =
   let commit_modules_generic
@@ -328,23 +343,8 @@ let (commit_modules, commit_modules_from_saved_state) =
                 let errset =
                   List.fold_left
                     (fun acc err ->
-                      match err with
-                      | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict }
-                        ->
-                        let error =
-                          Error_message.(
-                            let provider =
-                              let pos = Loc.{ line = 1; column = 0 } in
-                              ALoc.of_loc Loc.{ source = Some provider; start = pos; _end = pos }
-                            in
-                            let conflict =
-                              let pos = Loc.{ line = 1; column = 0 } in
-                              ALoc.of_loc Loc.{ source = Some conflict; start = pos; _end = pos }
-                            in
-                            EDuplicateModuleProvider { module_name; provider; conflict })
-                          |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
-                        in
-                        Flow_error.ErrorSet.add error acc)
+                      let error = flow_error_of_module_error file err in
+                      Flow_error.ErrorSet.add error acc)
                     Flow_error.ErrorSet.empty
                     errors
                 in
