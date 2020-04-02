@@ -187,10 +187,10 @@ ast-types@0.8.14:
   resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.8.14.tgz#65bf58559a23488e076981627b5eb987aba67cda"
   integrity sha1-Zb9YVZojSI4HaYFie165h6umfNo=
 
-ast-types@0.8.18:
-  version "0.8.18"
-  resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.8.18.tgz#c8b98574898e8914e9d8de74b947564a9fe929af"
-  integrity sha1-yLmFdImOiRTp2N50uUdWSp/pKa8=
+ast-types@^0.13.3:
+  version "0.13.3"
+  resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.13.3.tgz#50da3f28d17bdbc7969a3a2d83a0e4a72ae755a7"
+  integrity sha512-XTZ7xGML849LkQP86sWdQzfhwbt3YwIO6MqbX9mUNYY98VKaaVZP7YNNm70IpwecbkkxmfC5IYAzOQ/2p29zRA==
 
 astral-regex@^1.0.0:
   version "1.0.0"
