@@ -55,6 +55,7 @@ let rec exists = function
         | NumT (Literal (_, (0., _))) ) ) ->
     DefT (r, trust, EmptyT Bottom)
   (* unknown things become truthy *)
+  | UnionT (r, rep) -> recurse_into_union exists (r, UnionRep.members rep)
   | MaybeT (_, t) -> t
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists t
   | DefT (r, trust, BoolT None) -> DefT (r, trust, BoolT (Some true))
@@ -82,6 +83,7 @@ let rec not_exists t =
         | NumT (Literal (_, (0., _))) ) ) ->
     t
   | AnyT (r, _) -> DefT (r, Trust.bogus_trust (), EmptyT Bottom)
+  | UnionT (r, rep) -> recurse_into_union not_exists (r, UnionRep.members rep)
   (* truthy things get removed *)
   | DefT
       ( r,
