@@ -294,32 +294,33 @@ module Node = struct
           (* invalid, but we already raised an error when building PackageHeap *)
           Package_json.empty
         | None ->
-          let msg =
-            let is_included = Files.is_included file_options package_filename in
-            let project_root_str = Path.to_string root in
-            let is_contained_in_root = Files.is_prefix project_root_str package_filename in
-            let package_relative_to_root =
-              spf
-                "<<PROJECT_ROOT>>%s%s"
-                Filename.dir_sep
-                (Files.relative_path project_root_str package_filename)
-            in
-            if is_included || is_contained_in_root then
-              Error_message.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
-            else
-              Error_message.EModuleOutsideRoot (loc, package_relative_to_root)
-          in
           begin
             match resolution_acc with
-            | Some resolution_acc -> resolution_acc.errors <- msg :: resolution_acc.errors
+            | Some resolution_acc ->
+              let msg =
+                let is_included = Files.is_included file_options package_filename in
+                let project_root_str = Path.to_string root in
+                let is_contained_in_root = Files.is_prefix project_root_str package_filename in
+                let package_relative_to_root =
+                  spf
+                    "<<PROJECT_ROOT>>%s%s"
+                    Filename.dir_sep
+                    (Files.relative_path project_root_str package_filename)
+                in
+                if is_included || is_contained_in_root then
+                  Error_message.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
+                else
+                  Error_message.EModuleOutsideRoot (loc, package_relative_to_root)
+              in
+              resolution_acc.errors <- msg :: resolution_acc.errors
             | None -> ()
           end;
           Package_json.empty
       in
-      let dir = Filename.dirname package_filename in
       match Package_json.main package with
       | None -> None
       | Some file ->
+        let dir = Filename.dirname package_filename in
         let path = Files.normalize_path dir file in
         let path_w_index = Filename.concat path "index" in
         lazy_seq
