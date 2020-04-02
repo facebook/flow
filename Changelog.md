@@ -1,3 +1,32 @@
+### 0.122.0
+
+Likely to cause new Flow errors:
+* Moved `react-dom` modules out of built-in libdefs. They are now available on [flow-typed](https://github.com/flow-typed/flow-typed/pull/3716).
+
+  To install the libdefs, run `flow-typed install --flow-version=0.122.0 react-dom@16.13.0`
+
+  This diff is necessary to allow React to make breaking changes to react-dom without force-pinning Flow users to the latest version of react-dom.
+* Fixed an unsoundness in union and intersection spreads
+* Improved object spread-related error messages, which may cause suppressed errors to become unsuppressed because they moved to better locations
+
+Improved Editor Integration:
+* Removed completion of function param snippets. Before, `f<tab>` might complete `foo(aParam)`, which is problematic if you don't want to call the function. Now it just completes `foo`. These snippets are further obviated by signature help, which appears when you type `(`.
+* Improved accuracy of "Did You Mean?" Quick Fixes for object property type errors
+* Added support for Go to Definition on export-from declarations (`export { HERE } from ...`)
+* Fixed tracking of open files in LSP clients which could cause stale errors in the IDE
+
+Misc:
+* Added `HTMLUnknownElement` and support for custom elements to `document.createElement` (thanks @YevhenKap!)
+* Fixed `--saved-state-no-fallback` flag so that Flow exits when saved state is not found
+* Fixed an issue where an invalid package.json would prevent generating saved state
+* Fixed a potential deadlock when communicating with Watchman
+* Fixed types-first signatures for CJS requires introduced with var
+* Enabling `experimental.types_first` now implies `experimental.well_formed_exports`
+
+Parser:
+* Renamed `RestProperty` to `RestElement` to match [estree](https://github.com/estree/estree/blob/master/es2018.md#patterns)
+* Changed 'for await' nodes from `ForAwaitStatement` to `ForOf` with `await: true` to match [estree](https://github.com/estree/estree/blob/master/es2018.md#statements)
+
 ### 0.121.0
 
 Highlights:
