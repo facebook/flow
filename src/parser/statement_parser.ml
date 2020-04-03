@@ -842,10 +842,11 @@ module Statement
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.pop_lex_mode env;
-    let trailing =
+    let (trailing, right) =
       match semicolon env with
-      | Explicit comments -> comments
-      | Implicit _ -> []
+      | Explicit comments -> (comments, right)
+      | Implicit (_, remove_trailing) ->
+        ([], remove_trailing right (fun remover right -> remover#type_ right))
     in
     Statement.TypeAlias.
       { id; tparams; right; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }

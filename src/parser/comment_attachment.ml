@@ -11,6 +11,8 @@ open Parser_env
 
 let id = Flow_ast_mapper.id
 
+let map_loc = Flow_ast_mapper.map_loc
+
 let id_list_last (map : 'a -> 'a) (lst : 'a list) : 'a list =
   match List.rev lst with
   | [] -> lst
@@ -41,6 +43,11 @@ class ['loc] trailing_comments_remover ~after_pos =
       let open Ast.Expression.Array in
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
+
+    method! array_type t =
+      let open Ast.Type.Array in
+      let { comments; _ } = t in
+      id this#syntax_opt comments t (fun comments' -> { t with comments = comments' })
 
     method! assignment _loc expr =
       let open Ast.Expression.Assignment in
@@ -104,10 +111,64 @@ class ['loc] trailing_comments_remover ~after_pos =
       else
         { func with body = body'; comments = comments' }
 
+    method! function_type _loc func =
+      let open Ast.Type.Function in
+      let { return; comments; _ } = func in
+      let return' = this#type_ return in
+      let comments' = this#syntax_opt comments in
+      if return == return' && comments == comments' then
+        func
+      else
+        { func with return = return'; comments = comments' }
+
+    method! generic_type _loc t =
+      let open Ast.Type.Generic in
+      let { id; comments; _ } = t in
+      let id' = this#generic_identifier_type id in
+      let comments' = this#syntax_opt comments in
+      if id == id' && comments == comments' then
+        t
+      else
+        { t with id = id'; comments = comments' }
+
+    method! generic_identifier_type git =
+      let open Ast.Type.Generic.Identifier in
+      match git with
+      | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
+      | Qualified (loc, ({ id; _ } as qualified)) ->
+        let id' = this#identifier id in
+        if id == id' then
+          git
+        else
+          Qualified (loc, { qualified with id = id' })
+
     method! import _loc expr =
       let open Ast.Expression.Import in
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
+
+    method! interface_type _loc t =
+      let open Ast.Type.Interface in
+      let { body; comments; _ } = t in
+      let body' = map_loc this#object_type body in
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
+        t
+      else
+        { t with body = body'; comments = comments' }
+
+    method! intersection_type _loc t =
+      let { Ast.Type.Intersection.types = (t0, t1, ts); comments } = t in
+      let (t1', ts') =
+        match ts with
+        | [] -> (this#type_ t1, [])
+        | _ -> (t1, id_list_last this#type_ ts)
+      in
+      let comments' = this#syntax_opt comments in
+      if t1 == t1' && ts == ts' && comments == comments' then
+        t
+      else
+        { Ast.Type.Intersection.types = (t0, t1', ts'); comments = comments' }
 
     method! jsx_element _loc elem =
       let open Ast.JSX in
@@ -169,10 +230,28 @@ class ['loc] trailing_comments_remover ~after_pos =
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
 
+    method! tuple_type t =
+      let open Ast.Type.Tuple in
+      let { comments; _ } = t in
+      id this#syntax_opt comments t (fun comments' -> { t with comments = comments' })
+
     method! type_cast _loc expr =
       let open Ast.Expression.TypeCast in
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
+
+    method! union_type _loc t =
+      let { Ast.Type.Union.types = (t0, t1, ts); comments } = t in
+      let (t1', ts') =
+        match ts with
+        | [] -> (this#type_ t1, [])
+        | _ -> (t1, id_list_last this#type_ ts)
+      in
+      let comments' = this#syntax_opt comments in
+      if t1 == t1' && ts == ts' && comments == comments' then
+        t
+      else
+        { Ast.Type.Union.types = (t0, t1', ts'); comments = comments' }
   end
 
 let mk_remover_after_last_loc env =
