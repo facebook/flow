@@ -215,6 +215,11 @@ class ['loc] trailing_comments_remover ~after_pos =
       let { comments; _ } = obj in
       id this#syntax_opt comments obj (fun comments' -> { obj with comments = comments' })
 
+    method! predicate pred =
+      let open Ast.Type.Predicate in
+      let (loc, { kind; comments }) = pred in
+      id this#syntax_opt comments pred (fun comments' -> (loc, { kind; comments = comments' }))
+
     method! sequence _loc expr =
       let open Ast.Expression.Sequence in
       let { expressions; comments } = expr in

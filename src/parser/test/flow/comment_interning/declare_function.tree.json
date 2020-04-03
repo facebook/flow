@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":3,"column":138}},
-  "range":[20,232],
+  "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":15,"column":1}},
+  "range":[20,526],
   "body":[
     {
       "type":"DeclareFunction",
@@ -149,6 +149,216 @@
         "optional":false
       },
       "predicate":null
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":9,"column":1}},
+      "range":[234,371],
+      "body":[
+        {
+          "type":"DeclareFunction",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":18}},
+              "range":[238,254],
+              "value":" 3.1 L decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":6,"column":19},"end":{"line":6,"column":48}},
+          "range":[255,284],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":6,"column":36},"end":{"line":6,"column":48}},
+            "range":[272,284],
+            "name":"name",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":6,"column":40},"end":{"line":6,"column":48}},
+              "range":[276,284],
+              "typeAnnotation":{
+                "type":"FunctionTypeAnnotation",
+                "loc":{"source":null,"start":{"line":6,"column":40},"end":{"line":6,"column":48}},
+                "range":[276,284],
+                "params":[],
+                "returnType":{
+                  "type":"VoidTypeAnnotation",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":6,"column":49},"end":{"line":6,"column":65}},
+                      "range":[285,301],
+                      "value":" 3.2 T void "
+                    }
+                  ],
+                  "loc":{"source":null,"start":{"line":6,"column":44},"end":{"line":6,"column":48}},
+                  "range":[280,284]
+                },
+                "rest":null,
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          },
+          "predicate":null
+        },
+        {
+          "type":"DeclareFunction",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":7,"column":2},"end":{"line":7,"column":18}},
+              "range":[304,320],
+              "value":" 3.3 L decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":7,"column":19},"end":{"line":7,"column":48}},
+          "range":[321,350],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":7,"column":36},"end":{"line":7,"column":48}},
+            "range":[338,350],
+            "name":"name",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":7,"column":40},"end":{"line":7,"column":48}},
+              "range":[342,350],
+              "typeAnnotation":{
+                "type":"FunctionTypeAnnotation",
+                "loc":{"source":null,"start":{"line":7,"column":40},"end":{"line":7,"column":48}},
+                "range":[342,350],
+                "params":[],
+                "returnType":{
+                  "type":"VoidTypeAnnotation",
+                  "trailingComments":[
+                    {
+                      "type":"Block",
+                      "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":18}},
+                      "range":[353,369],
+                      "value":" 3.4 T void "
+                    }
+                  ],
+                  "loc":{"source":null,"start":{"line":7,"column":44},"end":{"line":7,"column":48}},
+                  "range":[346,350]
+                },
+                "rest":null,
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          },
+          "predicate":null
+        }
+      ]
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":15,"column":1}},
+      "range":[373,526],
+      "body":[
+        {
+          "type":"DeclareFunction",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":12,"column":2},"end":{"line":12,"column":18}},
+              "range":[377,393],
+              "value":" 4.1 L decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":12,"column":19},"end":{"line":12,"column":56}},
+          "range":[394,431],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":12,"column":36},"end":{"line":12,"column":48}},
+            "range":[411,423],
+            "name":"name",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":12,"column":40},"end":{"line":12,"column":48}},
+              "range":[415,423],
+              "typeAnnotation":{
+                "type":"FunctionTypeAnnotation",
+                "loc":{"source":null,"start":{"line":12,"column":40},"end":{"line":12,"column":48}},
+                "range":[415,423],
+                "params":[],
+                "returnType":{
+                  "type":"VoidTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":12,"column":44},"end":{"line":12,"column":48}},
+                  "range":[419,423]
+                },
+                "rest":null,
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          },
+          "predicate":{
+            "type":"InferredPredicate",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":12,"column":57},"end":{"line":12,"column":73}},
+                "range":[432,448],
+                "value":" 4.2 T pred "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":12,"column":49},"end":{"line":12,"column":56}},
+            "range":[424,431]
+          }
+        },
+        {
+          "type":"DeclareFunction",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":18}},
+              "range":[451,467],
+              "value":" 4.3 L decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":13,"column":19},"end":{"line":13,"column":56}},
+          "range":[468,505],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":13,"column":36},"end":{"line":13,"column":48}},
+            "range":[485,497],
+            "name":"name",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":13,"column":40},"end":{"line":13,"column":48}},
+              "range":[489,497],
+              "typeAnnotation":{
+                "type":"FunctionTypeAnnotation",
+                "loc":{"source":null,"start":{"line":13,"column":40},"end":{"line":13,"column":48}},
+                "range":[489,497],
+                "params":[],
+                "returnType":{
+                  "type":"VoidTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":13,"column":44},"end":{"line":13,"column":48}},
+                  "range":[493,497]
+                },
+                "rest":null,
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          },
+          "predicate":{
+            "type":"InferredPredicate",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":14,"column":2},"end":{"line":14,"column":18}},
+                "range":[508,524],
+                "value":" 4.4 T pred "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":13,"column":49},"end":{"line":13,"column":56}},
+            "range":[498,505]
+          }
+        }
+      ]
     }
   ],
   "comments":[
@@ -205,6 +415,54 @@
       "loc":{"source":null,"start":{"line":3,"column":121},"end":{"line":3,"column":137}},
       "range":[215,231],
       "value":" 2.6 T void "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":18}},
+      "range":[238,254],
+      "value":" 3.1 L decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":6,"column":49},"end":{"line":6,"column":65}},
+      "range":[285,301],
+      "value":" 3.2 T void "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":7,"column":2},"end":{"line":7,"column":18}},
+      "range":[304,320],
+      "value":" 3.3 L decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":18}},
+      "range":[353,369],
+      "value":" 3.4 T void "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":12,"column":2},"end":{"line":12,"column":18}},
+      "range":[377,393],
+      "value":" 4.1 L decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":12,"column":57},"end":{"line":12,"column":73}},
+      "range":[432,448],
+      "value":" 4.2 T pred "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":18}},
+      "range":[451,467],
+      "value":" 4.3 L decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":14,"column":2},"end":{"line":14,"column":18}},
+      "range":[508,524],
+      "value":" 4.4 T pred "
     }
   ]
 }

@@ -1038,13 +1038,16 @@ module Statement
     let end_loc = fst return in
     let loc = Loc.btwn start_sig_loc end_loc in
     let annot = (loc, Ast.Type.(Function { Function.params; return; tparams; comments = None })) in
-    let annot = (fst annot, annot) in
     let predicate = Type.predicate_opt env in
-    let trailing =
-      match semicolon env with
-      | Explicit comments -> comments
-      | Implicit _ -> []
+    let (trailing, annot, predicate) =
+      match (semicolon env, predicate) with
+      | (Explicit comments, _) -> (comments, annot, predicate)
+      | (Implicit { remove_trailing; _ }, None) ->
+        ([], remove_trailing annot (fun remover annot -> remover#type_ annot), None)
+      | (Implicit { remove_trailing; _ }, Some pred) ->
+        ([], annot, Some (remove_trailing pred (fun remover pred -> remover#predicate pred)))
     in
+    let annot = (loc, annot) in
     Statement.DeclareFunction.
       { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
 
