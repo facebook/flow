@@ -315,7 +315,7 @@ module rec Parse : PARSER = struct
       { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     )
 
-  and function_block_body ~attach_leading env =
+  and function_block_body ~attach_leading ~expression env =
     let start_loc = Peek.loc env in
     let leading =
       if attach_leading then
@@ -328,7 +328,14 @@ module rec Parse : PARSER = struct
     let (body, strict) = statement_list_with_directives ~term_fn env in
     let end_loc = Peek.loc env in
     Expect.token env T_RCURLY;
-    let trailing = Peek.comments env in
+    let trailing =
+      match (expression, Peek.token env) with
+      | (true, _)
+      | (_, (T_RCURLY | T_EOF)) ->
+        Peek.comments env
+      | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+      | _ -> []
+    in
     ( Loc.btwn start_loc end_loc,
       { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () },
       strict )

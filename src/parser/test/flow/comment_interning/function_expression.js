@@ -7,3 +7,6 @@
 (function name() /* 4.1 T params */ : any {});
 
 (function /* 5.1 L tparams */ <T> /* 5.2 L params */ () {});
+
+(function () {} /* 6.1 T block */
+/* 6.2 T block */);

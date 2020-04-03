@@ -11,3 +11,11 @@ function name(): /* 5.1 L pred */ %checks /* 5.2 T pred */ {}
 function name(): /* 6.1 L pred */ %checks /* 6.2 L pred */ (true) /* 6.3 T pred */ {}
 
 function name(): boolean /* 7.1 T boolean */ %checks /* 7.2 T pred */ {}
+
+{
+  /* 8.1 L func decl */ function name() {} /* 8.2 T block */
+  /* 8.3 L func decl */ function name() {}
+  /* 8.4 T block */
+}
+
+function name() {} /* 9.1 L func */ function name() {} /* 9.2 T block */

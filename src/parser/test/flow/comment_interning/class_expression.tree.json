@@ -250,12 +250,6 @@
                       "loc":{"source":null,"start":{"line":8,"column":87},"end":{"line":8,"column":104}},
                       "range":[359,376],
                       "value":" 2.5 T block "
-                    },
-                    {
-                      "type":"Block",
-                      "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":16}},
-                      "range":[380,394],
-                      "value":" 3.1 L id "
                     }
                   ],
                   "loc":{"source":null,"start":{"line":8,"column":84},"end":{"line":8,"column":86}},
@@ -289,12 +283,6 @@
                   }
                 ],
                 "leadingComments":[
-                  {
-                    "type":"Block",
-                    "loc":{"source":null,"start":{"line":8,"column":87},"end":{"line":8,"column":104}},
-                    "range":[359,376],
-                    "value":" 2.5 T block "
-                  },
                   {
                     "type":"Block",
                     "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":16}},

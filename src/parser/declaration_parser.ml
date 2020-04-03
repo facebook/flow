@@ -22,7 +22,8 @@ module type DECLARATION = sig
   val function_params :
     await:bool -> yield:bool -> attach_leading:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
 
-  val function_body : env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
+  val function_body :
+    env -> async:bool -> generator:bool -> expression:bool -> (Loc.t, Loc.t) Function.body * bool
 
   val is_simple_function_params : (Loc.t, Loc.t) Ast.Function.Params.t -> bool
 
@@ -199,9 +200,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
 
-  let function_body env ~async ~generator =
+  let function_body env ~async ~generator ~expression =
     let env = enter_function env ~async ~generator in
-    let (loc, block, strict) = Parse.function_block_body env ~attach_leading:false in
+    let (loc, block, strict) = Parse.function_block_body env ~attach_leading:false ~expression in
     (Function.BodyBlock (loc, block), strict)
 
   let variance env is_async is_generator =
@@ -295,7 +296,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               (generator, tparams, id, params, return, predicate, leading))
             env
         in
-        let (body, strict) = function_body env ~async ~generator in
+        let (body, strict) = function_body env ~async ~generator ~expression:false in
         let simple = is_simple_function_params params in
         strict_post_check env ~strict ~simple id params;
         Statement.FunctionDeclaration

@@ -88,12 +88,6 @@
               "loc":{"source":null,"start":{"line":3,"column":70},"end":{"line":3,"column":87}},
               "range":[160,177],
               "value":" 2.3 T block "
-            },
-            {
-              "type":"Block",
-              "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":18}},
-              "range":[179,197],
-              "value":" 3.1 L export "
             }
           ],
           "loc":{"source":null,"start":{"line":3,"column":67},"end":{"line":3,"column":69}},
@@ -120,12 +114,6 @@
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":3,"column":70},"end":{"line":3,"column":87}},
-          "range":[160,177],
-          "value":" 2.3 T block "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":18}},

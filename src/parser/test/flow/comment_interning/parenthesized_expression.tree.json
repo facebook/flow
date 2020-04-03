@@ -46,14 +46,6 @@
       "params":[],
       "body":{
         "type":"BlockStatement",
-        "trailingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":22}},
-            "range":[31,53],
-            "value":" Nested leading 1 "
-          }
-        ],
         "loc":{"source":null,"start":{"line":3,"column":15},"end":{"line":3,"column":17}},
         "range":[27,29],
         "body":[]

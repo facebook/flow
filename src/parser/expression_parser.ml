@@ -1006,7 +1006,7 @@ module Expression
               (id, params, generator, predicate, return, tparams, leading))
             env
         in
-        let (body, strict) = Declaration.function_body env ~async ~generator in
+        let (body, strict) = Declaration.function_body env ~async ~generator ~expression:true in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple id params;
         Expression.Function
@@ -1469,7 +1469,9 @@ module Expression
       let env = enter_function env ~async ~generator:false in
       match Peek.token env with
       | T_LCURLY ->
-        let (loc, body, strict) = Parse.function_block_body env ~attach_leading:true in
+        let (loc, body, strict) =
+          Parse.function_block_body env ~attach_leading:true ~expression:true
+        in
         (Function.BodyBlock (loc, body), strict)
       | _ ->
         let expr = Parse.assignment env in

@@ -139,7 +139,7 @@ module Object
                 (tparams, params, return))
               env
           in
-          let (body, strict) = Declaration.function_body env ~async ~generator in
+          let (body, strict) = Declaration.function_body env ~async ~generator ~expression:false in
           let simple = Declaration.is_simple_function_params params in
           Declaration.strict_post_check env ~strict ~simple None params;
           {
@@ -227,7 +227,9 @@ module Object
                   (tparams, params, return))
                 env
             in
-            let (body, strict) = Declaration.function_body env ~async ~generator in
+            let (body, strict) =
+              Declaration.function_body env ~async ~generator ~expression:false
+            in
             let simple = Declaration.is_simple_function_params params in
             Declaration.strict_post_check env ~strict ~simple None params;
             {
@@ -614,7 +616,9 @@ module Object
                     (tparams, params, return))
                   env
               in
-              let (body, strict) = Declaration.function_body env ~async ~generator in
+              let (body, strict) =
+                Declaration.function_body env ~async ~generator ~expression:false
+              in
               let simple = Declaration.is_simple_function_params params in
               Declaration.strict_post_check env ~strict ~simple None params;
               {

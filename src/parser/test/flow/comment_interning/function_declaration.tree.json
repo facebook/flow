@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":13,"column":72}},
-  "range":[17,589],
+  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":21,"column":54}},
+  "range":[17,774],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -83,14 +83,6 @@
     },
     {
       "type":"ExportDefaultDeclaration",
-      "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":1,"column":128},"end":{"line":1,"column":145}},
-          "range":[128,145],
-          "value":" 1.7 T block "
-        }
-      ],
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":67}},
       "range":[147,214],
       "declaration":{
@@ -413,6 +405,165 @@
         }
       },
       "typeParameters":null
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":19,"column":1}},
+      "range":[591,718],
+      "body":[
+        {
+          "type":"FunctionDeclaration",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":16,"column":2},"end":{"line":16,"column":23}},
+              "range":[595,616],
+              "value":" 8.1 L func decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":16,"column":24},"end":{"line":16,"column":42}},
+          "range":[617,635],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":16,"column":33},"end":{"line":16,"column":37}},
+            "range":[626,630],
+            "name":"name",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "params":[],
+          "body":{
+            "type":"BlockStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":16,"column":43},"end":{"line":16,"column":60}},
+                "range":[636,653],
+                "value":" 8.2 T block "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":16,"column":40},"end":{"line":16,"column":42}},
+            "range":[633,635],
+            "body":[]
+          },
+          "async":false,
+          "generator":false,
+          "predicate":null,
+          "expression":false,
+          "returnType":null,
+          "typeParameters":null
+        },
+        {
+          "type":"FunctionDeclaration",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":17,"column":2},"end":{"line":17,"column":23}},
+              "range":[656,677],
+              "value":" 8.3 L func decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":17,"column":24},"end":{"line":17,"column":42}},
+          "range":[678,696],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":17,"column":33},"end":{"line":17,"column":37}},
+            "range":[687,691],
+            "name":"name",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "params":[],
+          "body":{
+            "type":"BlockStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":19}},
+                "range":[699,716],
+                "value":" 8.4 T block "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":17,"column":40},"end":{"line":17,"column":42}},
+            "range":[694,696],
+            "body":[]
+          },
+          "async":false,
+          "generator":false,
+          "predicate":null,
+          "expression":false,
+          "returnType":null,
+          "typeParameters":null
+        }
+      ]
+    },
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":21,"column":18}},
+      "range":[720,738],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":21,"column":9},"end":{"line":21,"column":13}},
+        "range":[729,733],
+        "name":"name",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":21,"column":16},"end":{"line":21,"column":18}},
+        "range":[736,738],
+        "body":[]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "leadingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":21,"column":19},"end":{"line":21,"column":35}},
+          "range":[739,755],
+          "value":" 9.1 L func "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":21,"column":36},"end":{"line":21,"column":54}},
+      "range":[756,774],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":21,"column":45},"end":{"line":21,"column":49}},
+        "range":[765,769],
+        "name":"name",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":21,"column":55},"end":{"line":21,"column":72}},
+            "range":[775,792],
+            "value":" 9.2 T block "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":21,"column":52},"end":{"line":21,"column":54}},
+        "range":[772,774],
+        "body":[]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
     }
   ],
   "comments":[
@@ -547,6 +698,42 @@
       "loc":{"source":null,"start":{"line":13,"column":53},"end":{"line":13,"column":69}},
       "range":[570,586],
       "value":" 7.2 T pred "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":16,"column":2},"end":{"line":16,"column":23}},
+      "range":[595,616],
+      "value":" 8.1 L func decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":16,"column":43},"end":{"line":16,"column":60}},
+      "range":[636,653],
+      "value":" 8.2 T block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":2},"end":{"line":17,"column":23}},
+      "range":[656,677],
+      "value":" 8.3 L func decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":19}},
+      "range":[699,716],
+      "value":" 8.4 T block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":19},"end":{"line":21,"column":35}},
+      "range":[739,755],
+      "value":" 9.1 L func "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":55},"end":{"line":21,"column":72}},
+      "range":[775,792],
+      "value":" 9.2 T block "
     }
   ]
 }
