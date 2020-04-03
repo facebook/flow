@@ -7,3 +7,9 @@
   /* 3.3 L alias */ type t = any
   /* 3.4 T any */
 }
+
+{
+  /* 4.1 L opaque */ opaque type T = any /* 4.2 T any */
+  /* 4.3 L opaque */ opaque type T = any
+  /* 4.4 T any */
+}

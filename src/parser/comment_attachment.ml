@@ -240,6 +240,11 @@ class ['loc] trailing_comments_remover ~after_pos =
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
 
+    method! type_params tparams =
+      let open Ast.Type.TypeParams in
+      let (loc, { params; comments }) = tparams in
+      id this#syntax_opt comments tparams (fun comments' -> (loc, { params; comments = comments' }))
+
     method! union_type _loc t =
       let { Ast.Type.Union.types = (t0, t1, ts); comments } = t in
       let (t1', ts') =
@@ -268,24 +273,34 @@ let mk_remover_after_last_line env =
     let next_line_start = { line = line + 1; column = 0 } in
     Some (new trailing_comments_remover ~after_pos:next_line_start)
 
-let apply_remover remover node f =
-  match remover with
-  | None -> node
-  | Some remover -> f remover node
+type trailing_and_remover_result = {
+  trailing: Loc.t Comment.t list;
+  remove_trailing: 'a. 'a -> (Loc.t trailing_comments_remover -> 'a -> 'a) -> 'a;
+}
 
-(* Returns a remover function which removes comments beginning after the previous token. *)
-let remover_after_last_loc env =
+(* Returns a remover function which removes comments beginning after the previous token.
+   No trailing comments are returned, since all comments since the last loc should be removed. *)
+let trailing_and_remover_after_last_loc : Parser_env.env -> trailing_and_remover_result =
+ fun env ->
   let remover =
     if Peek.comments env <> [] then
       mk_remover_after_last_loc env
     else
       None
   in
-  apply_remover remover
+  {
+    trailing = [];
+    remove_trailing =
+      (fun node f ->
+        match remover with
+        | None -> node
+        | Some remover -> f remover node);
+  }
 
 (* Consumes and returns comments on the same line as the previous token. Also returns a remover
    function which can be used to remove comments beginning after the previous token's line. *)
-let trailing_and_remover_after_last_line env =
+let trailing_and_remover_after_last_line : Parser_env.env -> trailing_and_remover_result =
+ fun env ->
   let trailing = Eat.comments_until_next_line env in
   let remover =
     if trailing <> Peek.comments env then
@@ -293,4 +308,11 @@ let trailing_and_remover_after_last_line env =
     else
       None
   in
-  (trailing, apply_remover remover)
+  {
+    trailing;
+    remove_trailing =
+      (fun node f ->
+        match remover with
+        | None -> node
+        | Some remover -> f remover node);
+  }
