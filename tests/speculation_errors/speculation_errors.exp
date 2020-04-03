@@ -317,13 +317,13 @@ References:
                         ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:51:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:51:2
 
 Cannot cast `any` to number literal `42` because boolean [1] is incompatible with number literal `42` [2].
 
-   errors_intersection.js:51:3
+   errors_intersection.js:51:2
    51| ((any: {} & {} & {} & boolean): 42); // Error: number ~> boolean
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:51:23
@@ -334,13 +334,13 @@ References:
                                        ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:52:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:52:2
 
 Cannot cast `any` to number literal `42` because boolean [1] is incompatible with number literal `42` [2].
 
-   errors_intersection.js:52:3
+   errors_intersection.js:52:2
    52| ((any: {} & ({} & ({} & boolean))): 42); // Error: number ~> boolean
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:52:25
@@ -351,15 +351,15 @@ References:
                                            ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:54:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:54:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:54:3
+   errors_intersection.js:54:2
    54| ((any: number & string): true); // Error
-         ^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:54:8
@@ -373,15 +373,15 @@ References:
                        ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:55:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:55:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:55:3
+   errors_intersection.js:55:2
    55| ((any: number & string & {}): true); // Error: should not show the {} branch
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:55:8
@@ -395,15 +395,15 @@ References:
                        ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:56:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:56:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:56:3
+   errors_intersection.js:56:2
    56| ((any: {} & number & string): true); // Error: should not show the {} branch
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:56:13
@@ -417,15 +417,15 @@ References:
                             ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:57:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:57:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:57:3
+   errors_intersection.js:57:2
    57| ((any: number & {} & string): true); // Error: should not show the {} branch
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:57:8
@@ -685,16 +685,16 @@ References:
                          ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:86:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:86:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:86:3
+   errors_intersection.js:86:2
    86| ((any: number & (string & false)): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:86:8
@@ -711,16 +711,16 @@ References:
                                  ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:87:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:87:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either string [1] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [3] is incompatible with boolean literal `true` [2].
  - Or number [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:87:3
+   errors_intersection.js:87:2
    87| ((any: (string & false) & number): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:87:9
@@ -737,16 +737,16 @@ References:
                                  ^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:88:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:88:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:88:3
+   errors_intersection.js:88:2
    88| ((any: {} & number & (string & false)): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:88:13
@@ -763,16 +763,16 @@ References:
                                       ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:89:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:89:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:89:3
+   errors_intersection.js:89:2
    89| ((any: number & (string & false) & {}): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:89:8
@@ -789,16 +789,16 @@ References:
                                  ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:90:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:90:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:90:3
+   errors_intersection.js:90:2
    90| ((any: number & (string & {} & false)): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:90:8
@@ -815,7 +815,7 @@ References:
                                       ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:92:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:92:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -823,9 +823,9 @@ Cannot cast `any` to boolean literal `true` because:
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or string [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:92:3
+   errors_intersection.js:92:2
    92| ((any: number & number & number & string): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:92:8
@@ -845,7 +845,7 @@ References:
                                          ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:93:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:93:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -853,9 +853,9 @@ Cannot cast `any` to boolean literal `true` because:
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or string [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:93:3
+   errors_intersection.js:93:2
    93| ((any: number & number & (number & string)): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:93:8
@@ -875,7 +875,7 @@ References:
                                           ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:94:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:94:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -883,9 +883,9 @@ Cannot cast `any` to boolean literal `true` because:
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or string [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:94:3
+   errors_intersection.js:94:2
    94| ((any: number & (number & (number & string))): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:94:8
@@ -905,7 +905,7 @@ References:
                                            ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:95:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:95:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either string [1] is incompatible with boolean literal `true` [2].
@@ -913,9 +913,9 @@ Cannot cast `any` to boolean literal `true` because:
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or number [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:95:3
+   errors_intersection.js:95:2
    95| ((any: (string & number) & number & number): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:95:9
@@ -935,7 +935,7 @@ References:
                                            ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:96:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:96:2
 
 Cannot cast `any` to boolean literal `true` because:
  - Either string [1] is incompatible with boolean literal `true` [2].
@@ -943,9 +943,9 @@ Cannot cast `any` to boolean literal `true` because:
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or number [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:96:3
+   errors_intersection.js:96:2
    96| ((any: ((string & number) & number) & number): true); // Error: should be flattened
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:96:10
@@ -965,13 +965,13 @@ References:
                                              ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:98:3
+Error -------------------------------------------------------------------------------------- errors_intersection.js:98:2
 
 Cannot cast `any` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:98:3
+   errors_intersection.js:98:2
    98| ((any: number & {}): true); // Error
-         ^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:98:8
@@ -1055,7 +1055,7 @@ References:
                                                                             ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:103:3
+Error ------------------------------------------------------------------------------------- errors_intersection.js:103:2
 
 Cannot cast `any` to tuple type because:
  - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
@@ -1063,9 +1063,9 @@ Cannot cast `any` to tuple type because:
  - Or `C` [4] is incompatible with number [2] in index 1 of index 0.
  - Or `D` [5] is incompatible with number [2] in index 1 of index 0.
 
-   errors_intersection.js:103:3
+   errors_intersection.js:103:2
    103| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:103:16
@@ -1085,16 +1085,16 @@ References:
                                                              ^ [5]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:106:3
+Error ------------------------------------------------------------------------------------- errors_intersection.js:106:2
 
 Cannot cast `any` to tuple type because:
  - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
  - Or `C` [3] is incompatible with number [2] in index 1 of index 0.
  - Or `D` [4] is incompatible with number [2] in index 1 of index 0.
 
-   errors_intersection.js:106:3
+   errors_intersection.js:106:2
    106| ((any: [[null, A] & {}] & [[null, C] & [null, D]]): [[null, number]]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:106:16
@@ -1111,15 +1111,15 @@ References:
                                                       ^ [4]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:109:3
+Error ------------------------------------------------------------------------------------- errors_intersection.js:109:2
 
 Cannot cast `any` to tuple type because:
  - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
  - Or `C` [3] is incompatible with number [2] in index 1 of index 0.
 
-   errors_intersection.js:109:3
+   errors_intersection.js:109:2
    109| ((any: [[null, A] & {}] & [[null, C] & {}]): [[null, number]]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:109:16
@@ -1133,13 +1133,13 @@ References:
                                           ^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:112:3
+Error ------------------------------------------------------------------------------------- errors_intersection.js:112:2
 
 Cannot cast `any` to tuple type because `C` [1] is incompatible with number [2] in index 1 of index 0.
 
-   errors_intersection.js:112:3
+   errors_intersection.js:112:2
    112| ((any: {} & [[null, C] & {}]): [[null, number]]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    errors_intersection.js:112:21

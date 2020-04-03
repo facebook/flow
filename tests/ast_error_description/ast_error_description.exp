@@ -1371,20 +1371,6 @@ References:
                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:64:5
-
-Cannot cast `42` to string because number [1] is incompatible with string [2].
-
-   expression.js:64:5
-   64| ((((42: string): empty): T).p: empty);
-           ^^ [1]
-
-References:
-   expression.js:64:9
-   64| ((((42: string): empty): T).p: empty);
-               ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- expression.js:64:9
 
 Cannot cast `42` to empty because string [1] is incompatible with empty [2].
@@ -1397,6 +1383,20 @@ References:
    expression.js:64:18
    64| ((((42: string): empty): T).p: empty);
                         ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:64:5
+
+Cannot cast `42` to string because number [1] is incompatible with string [2].
+
+   expression.js:64:5
+   64| ((((42: string): empty): T).p: empty);
+           ^^ [1]
+
+References:
+   expression.js:64:9
+   64| ((((42: string): empty): T).p: empty);
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:65:2

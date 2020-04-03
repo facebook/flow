@@ -1,12 +1,12 @@
-Error ---------------------------------------------------------------------------------------------- intersection.js:9:3
+Error ---------------------------------------------------------------------------------------------- intersection.js:9:2
 
 Cannot cast `any` to `$Diff` because:
  - Either property `a` is missing in object type [1] but exists in object type [2].
  - Or property `a` is missing in object type [3] but exists in object type [2].
 
-   intersection.js:9:3
+   intersection.js:9:2
    9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-        ^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    intersection.js:9:8

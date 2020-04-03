@@ -2031,8 +2031,8 @@
                 "value":" L type cast "
               }
             ],
-            "loc":{"source":null,"start":{"line":123,"column":21},"end":{"line":123,"column":30}},
-            "range":[2339,2348],
+            "loc":{"source":null,"start":{"line":123,"column":20},"end":{"line":123,"column":31}},
+            "range":[2338,2349],
             "expression":{
               "type":"Literal",
               "loc":{"source":null,"start":{"line":123,"column":21},"end":{"line":123,"column":22}},

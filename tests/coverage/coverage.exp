@@ -577,20 +577,20 @@ unicode.js
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":2,"offset":11},
-        "end":{"line":3,"column":10,"offset":20}
+        "start":{"line":3,"column":1,"offset":10},
+        "end":{"line":3,"column":11,"offset":21}
       },
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":21,"offset":47},
-        "end":{"line":5,"column":29,"offset":56}
+        "start":{"line":5,"column":20,"offset":46},
+        "end":{"line":5,"column":30,"offset":57}
       },
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":2,"offset":61},
-        "end":{"line":7,"column":10,"offset":70}
+        "start":{"line":7,"column":1,"offset":60},
+        "end":{"line":7,"column":11,"offset":71}
       }
     ],
     "empty_count":0,
@@ -599,11 +599,11 @@ unicode.js
 }
 [0m// @flow
 
-([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+[0m[0m([0m[0mnull[0m[0m:[0m[31m any)[0m[0m;
 
-const [0m[0memoji[0m[0m = [0m[0m"💩"[0m[0m; ([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+const [0m[0memoji[0m[0m = [0m[0m"💩"[0m[0m; [0m[0m([0m[0mnull[0m[0m:[0m[31m any)[0m[0m;
 
-([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+[0m[0m([0m[0mnull[0m[0m:[0m[31m any)[0m[0m;
 [0m
 Covered: 62.50% (5 of 8 expressions)
 

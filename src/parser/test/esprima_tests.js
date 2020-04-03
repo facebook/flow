@@ -3035,64 +3035,6 @@ module.exports = {
       'var a: (A | B)',
       'var a: (A & B)',
     ],
-    'Typecasts': [
-      '(xxx: number)',
-      // distinguish between function type params and typecasts
-      '((xxx) => xxx + 1: (xxx: number) => number)',
-      // parens disambiguate groups from casts
-      {
-        content: '((xxx: number), (yyy: string))',
-        explanation:  'Esprima counts the parens in its locs',
-        expected_differences: {
-          'root.body.0.expression.range.0': {
-            type: 'Wrong number',
-            expected: 1,
-            actual: 2
-          },
-          'root.body.0.expression.range.1': {
-            type: 'Wrong number',
-            expected: 29,
-            actual: 28
-          },
-          'root.body.0.expression.loc.start.column': {
-            type: 'Wrong number',
-            expected: 1,
-            actual: 2
-          },
-          'root.body.0.expression.loc.end.column': {
-            type: 'Wrong number',
-            expected: 29,
-            actual: 28
-          },
-        }
-      },
-    ],
-    'Invalid Typecasts': [
-      // Must be parenthesized
-      {
-        content: 'var x: number = 0: number;',
-        explanation: "Improved error message",
-        expected_differences: {
-          'root.errors.0.message': {
-            type: 'Wrong error message',
-            expected: 'Unexpected token :',
-            actual: 'Unexpected token `:`, expected the token `;`'
-          }
-        }
-      },
-      // ...even within groups
-      {
-        content: '(xxx: number, yyy: string)',
-        explanation: "Improved error message",
-        expected_differences: {
-          'root.errors.0.message': {
-            type: 'Wrong error message',
-            expected: 'Unexpected token ,',
-            actual: 'Unexpected token `,`, expected the token `)`'
-          }
-        }
-      },
-    ],
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
       {

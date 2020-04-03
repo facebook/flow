@@ -39,6 +39,10 @@ module Expression
     | Left_assoc of int
     | Right_assoc of int
 
+  type group_cover =
+    | Group_expr of (Loc.t, Loc.t) Expression.t
+    | Group_typecast of (Loc.t, Loc.t) Expression.TypeCast.t
+
   let is_tighter a b =
     let a_prec =
       match a with
@@ -1251,20 +1255,29 @@ module Expression
 
   and group env =
     let leading = Peek.comments env in
-    Expect.token env T_LPAREN;
-    let expression = assignment env in
-    let ret =
-      match Peek.token env with
-      | T_COMMA -> sequence env [expression]
-      | T_COLON ->
-        let annot = Type.annotation env in
-        let open Expression in
-        ( Loc.btwn (fst expression) (fst annot),
-          TypeCast TypeCast.{ expression; annot; comments = None } )
-      | _ -> expression
+    let (loc, cover) =
+      with_loc
+        (fun env ->
+          Expect.token env T_LPAREN;
+          let expression = assignment env in
+          let ret =
+            match Peek.token env with
+            | T_COLON ->
+              let annot = Type.annotation env in
+              Group_typecast Expression.TypeCast.{ expression; annot; comments = None }
+            | T_COMMA -> Group_expr (sequence env [expression])
+            | _ -> Group_expr expression
+          in
+          Expect.token env T_RPAREN;
+          ret)
+        env
     in
-    Expect.token env T_RPAREN;
     let trailing = Peek.comments env in
+    let ret =
+      match cover with
+      | Group_expr expr -> expr
+      | Group_typecast cast -> (loc, Expression.TypeCast cast)
+    in
     add_comments ret ~leading ~trailing
 
   and add_comments ?(leading = []) ?(trailing = []) (loc, expression) =
