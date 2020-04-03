@@ -11,6 +11,12 @@
   /* 4.2 T expr stmt */
 }
 
-5; /* 5.1 T expr stmt */
+{
+  /* 5.1 L num */ 5 /* 5.2 T num */
+  /* 5.3 L num */ 5
+  /* 5.4 T num */
+}
 
-/* 5.2 T expr stmt */
+6; /* 6.1 T expr stmt */
+
+/* 6.2 T expr stmt */

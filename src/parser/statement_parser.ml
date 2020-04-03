@@ -501,16 +501,25 @@ module Statement
         if not (in_function env) then error env Parse_error.IllegalReturn;
         let leading = Peek.comments env in
         Expect.token env T_RETURN;
+        let trailing =
+          if Peek.token env = T_SEMICOLON then
+            Peek.comments env
+          else
+            []
+        in
         let argument =
           if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
             None
           else
             Some (Parse.expression env)
         in
-        let trailing =
-          match semicolon env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
+        let (trailing, argument) =
+          match (semicolon env, argument) with
+          | (Explicit comments, _)
+          | (Implicit (comments, _), None) ->
+            (trailing @ comments, argument)
+          | (Implicit (_, remove_trailing), Some arg) ->
+            (trailing, Some (remove_trailing arg (fun remover arg -> remover#expression arg)))
         in
         Statement.Return
           {
@@ -587,9 +596,14 @@ module Statement
         Expect.token env T_THROW;
         if Peek.is_line_terminator env then error_at env (start_loc, Parse_error.NewlineAfterThrow);
         let argument = Parse.expression env in
-        let _ = semicolon env in
+        let (trailing, argument) =
+          match semicolon env with
+          | Explicit trailing -> (trailing, argument)
+          | Implicit (_, remove_trailing) ->
+            ([], remove_trailing argument (fun remover arg -> remover#expression arg))
+        in
         let open Statement in
-        Throw { Throw.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+        Throw { Throw.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
 
   and try_ =
     with_loc (fun env ->
@@ -779,10 +793,11 @@ module Statement
           Statement.Labeled
             { Statement.Labeled.label; body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         | (expression, _) ->
-          let trailing =
+          let (trailing, expression) =
             match semicolon ~expected:"the end of an expression statement (`;`)" env with
-            | Explicit comments -> comments
-            | Implicit _ -> []
+            | Explicit comments -> (comments, expression)
+            | Implicit (_, remove_trailing) ->
+              ([], remove_trailing expression (fun remover expr -> remover#expression expr))
           in
           let open Statement in
           Expression
@@ -795,10 +810,11 @@ module Statement
   and expression =
     with_loc (fun env ->
         let expression = Parse.expression env in
-        let trailing =
+        let (trailing, expression) =
           match semicolon ~expected:"the end of an expression statement (`;`)" env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
+          | Explicit comments -> (comments, expression)
+          | Implicit (_, remove_trailing) ->
+            ([], remove_trailing expression (fun remover expr -> remover#expression expr))
         in
         let directive =
           if allow_directive env then

@@ -1615,7 +1615,14 @@ class ['loc] mapper =
       else
         { label = label'; body = body'; comments = comments' }
 
-    method literal _loc (expr : 'loc Ast.Literal.t) = expr
+    method literal _loc (expr : 'loc Ast.Literal.t) =
+      let open Ast.Literal in
+      let { value; raw; comments } = expr in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        expr
+      else
+        { value; raw; comments = comments' }
 
     method logical _loc (expr : ('loc, 'loc) Ast.Expression.Logical.t) =
       let open Ast.Expression.Logical in
@@ -2054,7 +2061,7 @@ class ['loc] mapper =
       let tag' = this#expression tag in
       let quasi' = map_loc this#template_literal quasi in
       let comments' = this#syntax_opt comments in
-      if tag == tag' && quasi == quasi' && comments == comments then
+      if tag == tag' && quasi == quasi' && comments == comments' then
         expr
       else
         { tag = tag'; quasi = quasi'; comments = comments' }
