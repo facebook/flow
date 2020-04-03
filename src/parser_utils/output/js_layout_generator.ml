@@ -488,7 +488,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
   source_location_with_comments
     ( loc,
       match stmt with
-      | S.Empty -> Atom ";"
+      | S.Empty { S.Empty.comments } -> layout_node_with_comments_opt loc comments (Atom ";")
       | S.Debugger { S.Debugger.comments } ->
         with_semicolon @@ layout_node_with_comments_opt loc comments (Atom "debugger")
       | S.Block b -> block (loc, b)
@@ -754,7 +754,7 @@ and statement_with_test name test =
 (* A statement following a "test", like the `statement` in `if (expr) statement` or
    `for (...) statement`. Better names for this are welcome! *)
 and statement_after_test ?pretty_semicolon = function
-  | (_, Ast.Statement.Empty) as stmt -> statement ?pretty_semicolon stmt
+  | (_, Ast.Statement.Empty _) as stmt -> statement ?pretty_semicolon stmt
   | (_, Ast.Statement.Block _) as stmt -> fuse [pretty_space; statement ?pretty_semicolon stmt]
   | stmt -> Indent (fuse [pretty_line; statement ?pretty_semicolon stmt])
 

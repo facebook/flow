@@ -450,7 +450,7 @@ and statement_decl cx =
   in
   let catch_clause cx { Try.CatchClause.body = (_, b); _ } = block_body cx b in
   function
-  | (_, Empty) -> ()
+  | (_, Empty _) -> ()
   | (_, Block b) -> block_body cx b
   | (_, Expression _) -> ()
   | (_, If { If.consequent; alternate; _ }) ->
@@ -661,7 +661,8 @@ and statement_decl cx =
 and toplevels =
   let rec loop acc cx = function
     | [] -> List.rev acc
-    | (loc, Ast.Statement.Empty) :: stmts -> loop ((loc, Ast.Statement.Empty) :: acc) cx stmts
+    | (loc, Ast.Statement.Empty empty) :: stmts ->
+      loop ((loc, Ast.Statement.Empty empty) :: acc) cx stmts
     | stmt :: stmts ->
       (match Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx stmt) with
       | (stmt, Some abnormal) ->
@@ -674,7 +675,7 @@ and toplevels =
               (let open Ast.Statement in
               fun stmt ->
                 match stmt with
-                | (_, Empty) as stmt -> stmt
+                | (_, Empty _) as stmt -> stmt
                 (* function declarations are hoisted, so not unreachable *)
                 | (_, FunctionDeclaration _) -> statement cx stmt
                 (* variable declarations are hoisted, but associated assignments are
@@ -802,7 +803,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         abnormal_opt )
   in
   function
-  | (_, Empty) as stmt -> stmt
+  | (_, Empty _) as stmt -> stmt
   | (loc, Block { Block.body; comments }) ->
     let (body, abnormal_opt) =
       Abnormal.catch_stmts_control_flow_exception (fun () ->

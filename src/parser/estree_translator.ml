@@ -127,7 +127,7 @@ with type t = Impl.t = struct
     and statement =
       let open Statement in
       function
-      | (loc, Empty) -> node "EmptyStatement" loc []
+      | (loc, Empty { Empty.comments }) -> node ?comments "EmptyStatement" loc []
       | (loc, Block b) -> block (loc, b)
       | (loc, Expression { Expression.expression = expr; directive; comments }) ->
         node

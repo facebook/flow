@@ -550,6 +550,7 @@ let program
         declare_class declare_class_t1 declare_class_t2
       | ((loc, DeclareFunction func1), (_, DeclareFunction func2)) ->
         declare_function loc func1 func2
+      | ((loc, Empty empty1), (_, Empty empty2)) -> empty_statement loc empty1 empty2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
@@ -2503,5 +2504,12 @@ let program
     let id_diff = Some (diff_if_changed identifier id1 id2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [id_diff; comments_diff]
+  and empty_statement
+      (loc : Loc.t) (empty1 : Loc.t Ast.Statement.Empty.t) (empty2 : Loc.t Ast.Statement.Empty.t) :
+      node change list option =
+    let open Ast.Statement.Empty in
+    let { comments = comments1 } = empty1 in
+    let { comments = comments2 } = empty2 in
+    syntax_opt loc comments1 comments2
   in
   program' program1 program2 |> List.sort change_compare

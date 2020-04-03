@@ -226,7 +226,7 @@ end
 module Statements = struct
   open Ast.Statement
 
-  let empty () = (Loc.none, Empty)
+  let empty ?comments () = (Loc.none, Empty { Empty.comments })
 
   let block ?comments children = (Loc.none, Block { Block.body = children; comments })
 

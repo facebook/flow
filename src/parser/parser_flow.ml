@@ -190,7 +190,7 @@ module rec Parse : PARSER = struct
     match Peek.token env with
     | T_EOF ->
       error_unexpected ~expected:"the start of a statement" env;
-      (Peek.loc env, Ast.Statement.Empty)
+      (Peek.loc env, Ast.Statement.Empty { Ast.Statement.Empty.comments = None })
     | T_SEMICOLON -> empty env
     | T_LCURLY -> block env
     | T_VAR -> var env

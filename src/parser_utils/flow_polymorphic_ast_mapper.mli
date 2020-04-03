@@ -128,7 +128,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method do_while : ('M, 'T) Ast.Statement.DoWhile.t -> ('N, 'U) Ast.Statement.DoWhile.t
 
-    method empty : unit -> unit
+    method empty : 'M Ast.Statement.Empty.t -> 'N Ast.Statement.Empty.t
 
     method enum_declaration :
       ('M, 'T) Ast.Statement.EnumDeclaration.t -> ('N, 'U) Ast.Statement.EnumDeclaration.t

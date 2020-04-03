@@ -110,9 +110,7 @@ class ['loc] mapper =
             (loc, DeclareModuleExports annot))
       | (loc, DoWhile stuff) ->
         id_loc this#do_while loc stuff stmt (fun stuff -> (loc, DoWhile stuff))
-      | (loc, Empty) ->
-        this#empty loc;
-        stmt
+      | (loc, Empty empty) -> id_loc this#empty loc empty stmt (fun empty -> (loc, Empty empty))
       | (loc, EnumDeclaration enum) ->
         id_loc this#enum_declaration loc enum stmt (fun enum -> (loc, EnumDeclaration enum))
       | (loc, ExportDefaultDeclaration decl) ->
@@ -599,7 +597,14 @@ class ['loc] mapper =
       else
         { body = body'; test = test'; comments = comments' }
 
-    method empty _loc = ()
+    method empty _loc empty =
+      let open Ast.Statement.Empty in
+      let { comments } = empty in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        empty
+      else
+        { comments = comments' }
 
     method enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in

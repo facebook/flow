@@ -876,6 +876,10 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module Empty : sig
+    type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
+  end
+
   type exportKind =
     | ExportType
     | ExportValue
@@ -898,7 +902,7 @@ and Statement : sig
     | DeclareOpaqueType of ('M, 'T) OpaqueType.t
     | DeclareVariable of ('M, 'T) DeclareVariable.t
     | DoWhile of ('M, 'T) DoWhile.t
-    | Empty
+    | Empty of 'M Empty.t
     | EnumDeclaration of ('M, 'T) EnumDeclaration.t
     | ExportDefaultDeclaration of ('M, 'T) ExportDefaultDeclaration.t
     | ExportNamedDeclaration of ('M, 'T) ExportNamedDeclaration.t

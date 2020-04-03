@@ -187,8 +187,12 @@ module Statement
 
   let rec empty env =
     let loc = Peek.loc env in
+    let leading = Peek.comments env in
     Expect.token env T_SEMICOLON;
-    (loc, Statement.Empty)
+    let (trailing, _) = statement_end_trailing_comments env in
+    ( loc,
+      Statement.Empty
+        { Statement.Empty.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
 
   and break env =
     let leading = Peek.comments env in

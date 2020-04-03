@@ -43,9 +43,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | DeclareModuleExports t_annot ->
             DeclareModuleExports (this#declare_module_exports annot t_annot)
           | DoWhile stuff -> DoWhile (this#do_while stuff)
-          | Empty ->
-            this#empty ();
-            Empty
+          | Empty comments -> Empty (this#empty comments)
           | EnumDeclaration enum -> EnumDeclaration (this#enum_declaration enum)
           | ExportDefaultDeclaration decl ->
             ExportDefaultDeclaration (this#export_default_declaration annot decl)
@@ -438,7 +436,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { body = body'; test = test'; comments = comments' }
 
-    method empty () = ()
+    method empty (empty : 'M Ast.Statement.Empty.t) : 'N Ast.Statement.Empty.t =
+      let open Ast.Statement.Empty in
+      let { comments } = empty in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { comments = comments' }
 
     method enum_declaration (enum : ('M, 'T) Ast.Statement.EnumDeclaration.t)
         : ('N, 'U) Ast.Statement.EnumDeclaration.t =
