@@ -536,7 +536,7 @@ module Statement
         let seen_default = seen_default || test = None in
         let end_loc = Peek.loc env in
         Expect.token env T_COLON;
-        let trailing = trailing @ Peek.comments env in
+        let trailing = trailing @ fst (statement_end_trailing_comments env) in
         let term_fn = function
           | T_RCURLY
           | T_DEFAULT
