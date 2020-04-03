@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":5,"column":115}},
-  "range":[22,260],
+  "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":10,"column":1}},
+  "range":[22,359],
   "body":[
     {
       "type":"InterfaceDeclaration",
@@ -62,14 +62,6 @@
     },
     {
       "type":"InterfaceDeclaration",
-      "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":1,"column":70},"end":{"line":1,"column":85}},
-          "range":[70,85],
-          "value":" 1.4 T obj "
-        }
-      ],
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":56}},
       "range":[87,143],
       "id":{
@@ -217,6 +209,87 @@
           "typeParameters":null
         }
       ]
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":10,"column":1}},
+      "range":[262,359],
+      "body":[
+        {
+          "type":"InterfaceDeclaration",
+          "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":19}},
+          "range":[266,283],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":8,"column":12},"end":{"line":8,"column":16}},
+            "range":[276,280],
+            "name":"name",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeParameters":null,
+          "body":{
+            "type":"ObjectTypeAnnotation",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":8,"column":20},"end":{"line":8,"column":35}},
+                "range":[284,299],
+                "value":" 4.1 T obj "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":8,"column":17},"end":{"line":8,"column":19}},
+            "range":[281,283],
+            "exact":false,
+            "properties":[],
+            "indexers":[],
+            "callProperties":[],
+            "internalSlots":[]
+          },
+          "extends":[]
+        },
+        {
+          "type":"InterfaceDeclaration",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":23}},
+              "range":[302,323],
+              "value":" 4.2 L interface "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":41}},
+          "range":[324,341],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":34},"end":{"line":9,"column":38}},
+            "range":[334,338],
+            "name":"name",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeParameters":null,
+          "body":{
+            "type":"ObjectTypeAnnotation",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":9,"column":42},"end":{"line":9,"column":57}},
+                "range":[342,357],
+                "value":" 4.3 T obj "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":9,"column":39},"end":{"line":9,"column":41}},
+            "range":[339,341],
+            "exact":false,
+            "properties":[],
+            "indexers":[],
+            "callProperties":[],
+            "internalSlots":[]
+          },
+          "extends":[]
+        }
+      ]
     }
   ],
   "comments":[
@@ -285,6 +358,24 @@
       "loc":{"source":null,"start":{"line":5,"column":98},"end":{"line":5,"column":112}},
       "range":[243,257],
       "value":" 3.5 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":8,"column":20},"end":{"line":8,"column":35}},
+      "range":[284,299],
+      "value":" 4.1 T obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":23}},
+      "range":[302,323],
+      "value":" 4.2 L interface "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":9,"column":42},"end":{"line":9,"column":57}},
+      "range":[342,357],
+      "value":" 4.3 T obj "
     }
   ]
 }

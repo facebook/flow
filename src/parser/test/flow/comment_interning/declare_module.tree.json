@@ -1,0 +1,43 @@
+{
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
+  "range":[0,21],
+  "body":[
+    {
+      "type":"DeclareModule",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
+      "range":[0,21],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
+        "range":[15,18],
+        "name":"Foo",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "body":{
+        "type":"BlockStatement",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":39}},
+            "range":[22,39],
+            "value":" 1.1 T block "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":21}},
+        "range":[19,21],
+        "body":[]
+      },
+      "kind":"CommonJS"
+    }
+  ],
+  "comments":[
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":39}},
+      "range":[22,39],
+      "value":" 1.1 T block "
+    }
+  ]
+}

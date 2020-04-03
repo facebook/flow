@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":15,"column":1}},
-  "range":[0,311],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":28,"column":1}},
+  "range":[0,580],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -166,6 +166,161 @@
       "expression":false,
       "returnType":null,
       "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":28,"column":1}},
+      "range":[313,580],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":17,"column":9},"end":{"line":17,"column":27}},
+        "range":[322,340],
+        "name":"implicit_semicolon",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":17,"column":30},"end":{"line":28,"column":1}},
+        "range":[343,580],
+        "body":[
+          {
+            "type":"LabeledStatement",
+            "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":27,"column":3}},
+            "range":[347,578],
+            "label":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":7}},
+              "range":[347,352],
+              "name":"label",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "body":{
+              "type":"ForStatement",
+              "loc":{"source":null,"start":{"line":18,"column":9},"end":{"line":27,"column":3}},
+              "range":[354,578],
+              "init":null,
+              "test":null,
+              "update":null,
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":18,"column":18},"end":{"line":27,"column":3}},
+                "range":[363,578],
+                "body":[
+                  {
+                    "type":"BlockStatement",
+                    "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":22,"column":5}},
+                    "range":[369,469],
+                    "body":[
+                      {
+                        "type":"ContinueStatement",
+                        "trailingComments":[
+                          {
+                            "type":"Block",
+                            "loc":{"source":null,"start":{"line":20,"column":15},"end":{"line":20,"column":35}},
+                            "range":[386,406],
+                            "value":" 3.1 T continue "
+                          }
+                        ],
+                        "loc":{"source":null,"start":{"line":20,"column":6},"end":{"line":20,"column":14}},
+                        "range":[377,385],
+                        "label":null
+                      },
+                      {
+                        "type":"ContinueStatement",
+                        "trailingComments":[
+                          {
+                            "type":"Block",
+                            "loc":{"source":null,"start":{"line":21,"column":36},"end":{"line":21,"column":56}},
+                            "range":[443,463],
+                            "value":" 3.3 T continue "
+                          }
+                        ],
+                        "leadingComments":[
+                          {
+                            "type":"Block",
+                            "loc":{"source":null,"start":{"line":21,"column":6},"end":{"line":21,"column":26}},
+                            "range":[413,433],
+                            "value":" 3.2 L continue "
+                          }
+                        ],
+                        "loc":{"source":null,"start":{"line":21,"column":27},"end":{"line":21,"column":35}},
+                        "range":[434,442],
+                        "label":null
+                      }
+                    ]
+                  },
+                  {
+                    "type":"BlockStatement",
+                    "loc":{"source":null,"start":{"line":23,"column":4},"end":{"line":26,"column":5}},
+                    "range":[474,574],
+                    "body":[
+                      {
+                        "type":"ContinueStatement",
+                        "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":20}},
+                        "range":[482,496],
+                        "label":{
+                          "type":"Identifier",
+                          "trailingComments":[
+                            {
+                              "type":"Block",
+                              "loc":{"source":null,"start":{"line":24,"column":21},"end":{"line":24,"column":35}},
+                              "range":[497,511],
+                              "value":" 3.4 T id "
+                            }
+                          ],
+                          "loc":{"source":null,"start":{"line":24,"column":15},"end":{"line":24,"column":20}},
+                          "range":[491,496],
+                          "name":"label",
+                          "typeAnnotation":null,
+                          "optional":false
+                        }
+                      },
+                      {
+                        "type":"ContinueStatement",
+                        "leadingComments":[
+                          {
+                            "type":"Block",
+                            "loc":{"source":null,"start":{"line":25,"column":6},"end":{"line":25,"column":26}},
+                            "range":[518,538],
+                            "value":" 3.5 L continue "
+                          }
+                        ],
+                        "loc":{"source":null,"start":{"line":25,"column":27},"end":{"line":25,"column":41}},
+                        "range":[539,553],
+                        "label":{
+                          "type":"Identifier",
+                          "trailingComments":[
+                            {
+                              "type":"Block",
+                              "loc":{"source":null,"start":{"line":25,"column":42},"end":{"line":25,"column":56}},
+                              "range":[554,568],
+                              "value":" 3.6 T id "
+                            }
+                          ],
+                          "loc":{"source":null,"start":{"line":25,"column":36},"end":{"line":25,"column":41}},
+                          "range":[548,553],
+                          "name":"label",
+                          "typeAnnotation":null,
+                          "optional":false
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
     }
   ],
   "comments":[
@@ -210,6 +365,42 @@
       "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":22}},
       "range":[287,305],
       "value":" 2.3 trailing "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":20,"column":15},"end":{"line":20,"column":35}},
+      "range":[386,406],
+      "value":" 3.1 T continue "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":6},"end":{"line":21,"column":26}},
+      "range":[413,433],
+      "value":" 3.2 L continue "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":21,"column":36},"end":{"line":21,"column":56}},
+      "range":[443,463],
+      "value":" 3.3 T continue "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":21},"end":{"line":24,"column":35}},
+      "range":[497,511],
+      "value":" 3.4 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":25,"column":6},"end":{"line":25,"column":26}},
+      "range":[518,538],
+      "value":" 3.5 L continue "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":25,"column":42},"end":{"line":25,"column":56}},
+      "range":[554,568],
+      "value":" 3.6 T id "
     }
   ]
 }

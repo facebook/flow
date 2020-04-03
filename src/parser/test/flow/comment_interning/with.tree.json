@@ -24,14 +24,6 @@
       },
       "body":{
         "type":"BlockStatement",
-        "trailingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":25}},
-            "range":[107,132],
-            "value":" 2.1 Leading on with "
-          }
-        ],
         "leadingComments":[
           {
             "type":"Block",
@@ -76,12 +68,6 @@
       "trailingComments":[
         {
           "type":"Block",
-          "loc":{"source":null,"start":{"line":5,"column":12},"end":{"line":5,"column":38}},
-          "range":[158,184],
-          "value":" 3.1 Trailing on with "
-        },
-        {
-          "type":"Block",
           "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":25}},
           "range":[186,211],
           "value":" 4.1 Leading on with "
@@ -104,12 +90,6 @@
             "loc":{"source":null,"start":{"line":5,"column":12},"end":{"line":5,"column":38}},
             "range":[158,184],
             "value":" 3.1 Trailing on with "
-          },
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":25}},
-            "range":[186,211],
-            "value":" 4.1 Leading on with "
           }
         ],
         "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":11}},
@@ -128,12 +108,6 @@
         }
       ],
       "leadingComments":[
-        {
-          "type":"Block",
-          "loc":{"source":null,"start":{"line":5,"column":12},"end":{"line":5,"column":38}},
-          "range":[158,184],
-          "value":" 3.1 Trailing on with "
-        },
         {
           "type":"Block",
           "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":25}},

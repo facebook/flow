@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":27,"column":1}},
-  "range":[0,625],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":32,"column":1}},
+  "range":[0,772],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -145,7 +145,7 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":18,"column":1}},
-      "range":[186,378],
+      "range":[186,366],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":10,"column":9},"end":{"line":10,"column":27}},
@@ -158,7 +158,7 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":10,"column":30},"end":{"line":18,"column":1}},
-        "range":[216,378],
+        "range":[216,366],
         "body":[
           {
             "type":"VariableDeclaration",
@@ -196,6 +196,12 @@
                 "loc":{"source":null,"start":{"line":15,"column":20},"end":{"line":15,"column":47}},
                 "range":[306,333],
                 "value":" 2.2. trailing comment "
+              },
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":28}},
+                "range":[340,364],
+                "value":" 2.3. trailing comment"
               }
             ],
             "leadingComments":[
@@ -276,11 +282,11 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":20,"column":0},"end":{"line":27,"column":1}},
-      "range":[380,625],
+      "range":[368,635],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":20,"column":9},"end":{"line":20,"column":22}},
-        "range":[389,402],
+        "range":[377,390],
         "name":"only_trailing",
         "typeAnnotation":null,
         "optional":false
@@ -289,21 +295,21 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":20,"column":25},"end":{"line":27,"column":1}},
-        "range":[405,625],
+        "range":[393,635],
         "body":[
           {
             "type":"VariableDeclaration",
             "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":14}},
-            "range":[411,421],
+            "range":[399,409],
             "declarations":[
               {
                 "type":"VariableDeclarator",
                 "loc":{"source":null,"start":{"line":21,"column":8},"end":{"line":21,"column":13}},
-                "range":[415,420],
+                "range":[403,408],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":21,"column":8},"end":{"line":21,"column":9}},
-                  "range":[415,416],
+                  "range":[403,404],
                   "name":"i",
                   "typeAnnotation":null,
                   "optional":false
@@ -311,7 +317,7 @@
                 "init":{
                   "type":"Literal",
                   "loc":{"source":null,"start":{"line":21,"column":12},"end":{"line":21,"column":13}},
-                  "range":[419,420],
+                  "range":[407,408],
                   "value":0,
                   "raw":"0"
                 }
@@ -325,50 +331,54 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
-                "range":[453,492],
+                "range":[441,480],
                 "value":" 3.0. pre-keyword trailing comment "
               },
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":24,"column":52},"end":{"line":24,"column":88}},
-                "range":[499,535],
+                "range":[487,523],
                 "value":" 3.1. pre-cond trailing comment "
               },
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":24,"column":96},"end":{"line":24,"column":133}},
-                "range":[543,580],
+                "range":[531,568],
                 "value":" 3.2. past-cond trailing comment "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":24,"column":135},"end":{"line":24,"column":168}},
+                "range":[570,603],
+                "value":" 3.3 past semicolon trailing "
+              },
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":28}},
+                "range":[609,633],
+                "value":" 3.4. trailing comment"
               }
             ],
             "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":24,"column":134}},
-            "range":[426,581],
+            "range":[414,569],
             "body":{
               "type":"BlockStatement",
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
-                  "range":[453,492],
-                  "value":" 3.0. pre-keyword trailing comment "
-                }
-              ],
               "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":24,"column":5}},
-              "range":[429,452],
+              "range":[417,440],
               "body":[
                 {
                   "type":"ExpressionStatement",
                   "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":15}},
-                  "range":[439,446],
+                  "range":[427,434],
                   "expression":{
                     "type":"AssignmentExpression",
                     "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":14}},
-                    "range":[439,445],
+                    "range":[427,433],
                     "operator":"+=",
                     "left":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":9}},
-                      "range":[439,440],
+                      "range":[427,428],
                       "name":"i",
                       "typeAnnotation":null,
                       "optional":false
@@ -376,7 +386,7 @@
                     "right":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":23,"column":13},"end":{"line":23,"column":14}},
-                      "range":[444,445],
+                      "range":[432,433],
                       "value":1,
                       "raw":"1"
                     }
@@ -388,12 +398,12 @@
             "test":{
               "type":"BinaryExpression",
               "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":94}},
-              "range":[537,541],
+              "range":[525,529],
               "operator":"<",
               "left":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":91}},
-                "range":[537,538],
+                "range":[525,526],
                 "name":"i",
                 "typeAnnotation":null,
                 "optional":false
@@ -401,10 +411,97 @@
               "right":{
                 "type":"Literal",
                 "loc":{"source":null,"start":{"line":24,"column":93},"end":{"line":24,"column":94}},
-                "range":[540,541],
+                "range":[528,529],
                 "value":3,
                 "raw":"3"
               }
+            }
+          }
+        ]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":32,"column":1}},
+      "range":[637,772],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":29,"column":9},"end":{"line":29,"column":27}},
+        "range":[646,664],
+        "name":"implicit_semicolon",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":29,"column":30},"end":{"line":32,"column":1}},
+        "range":[667,772],
+        "body":[
+          {
+            "type":"DoWhileStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":30,"column":23},"end":{"line":30,"column":41}},
+                "range":[692,710],
+                "value":" 4.1 Trailing "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":30,"column":4},"end":{"line":30,"column":22}},
+            "range":[673,691],
+            "body":{
+              "type":"BlockStatement",
+              "loc":{"source":null,"start":{"line":30,"column":7},"end":{"line":30,"column":9}},
+              "range":[676,678],
+              "body":[]
+            },
+            "test":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":30,"column":17},"end":{"line":30,"column":21}},
+              "range":[686,690],
+              "value":true,
+              "raw":"true"
+            }
+          },
+          {
+            "type":"DoWhileStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":31,"column":41},"end":{"line":31,"column":59}},
+                "range":[752,770],
+                "value":" 4.3 Trailing "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":31,"column":4},"end":{"line":31,"column":21}},
+                "range":[715,732],
+                "value":" 4.2 Leading "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":31,"column":22},"end":{"line":31,"column":40}},
+            "range":[733,751],
+            "body":{
+              "type":"BlockStatement",
+              "loc":{"source":null,"start":{"line":31,"column":25},"end":{"line":31,"column":27}},
+              "range":[736,738],
+              "body":[]
+            },
+            "test":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":31,"column":35},"end":{"line":31,"column":39}},
+              "range":[746,750],
+              "value":true,
+              "raw":"true"
             }
           }
         ]
@@ -450,33 +547,57 @@
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":40}},
-      "range":[340,376],
-      "value":" 2.3. unreachable trailing comment"
+      "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":28}},
+      "range":[340,364],
+      "value":" 2.3. trailing comment"
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
-      "range":[453,492],
+      "range":[441,480],
       "value":" 3.0. pre-keyword trailing comment "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":52},"end":{"line":24,"column":88}},
-      "range":[499,535],
+      "range":[487,523],
       "value":" 3.1. pre-cond trailing comment "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":24,"column":96},"end":{"line":24,"column":133}},
-      "range":[543,580],
+      "range":[531,568],
       "value":" 3.2. past-cond trailing comment "
     },
     {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":135},"end":{"line":24,"column":168}},
+      "range":[570,603],
+      "value":" 3.3 past semicolon trailing "
+    },
+    {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":40}},
-      "range":[587,623],
-      "value":" 3.3. unreachable trailing comment"
+      "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":28}},
+      "range":[609,633],
+      "value":" 3.4. trailing comment"
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":30,"column":23},"end":{"line":30,"column":41}},
+      "range":[692,710],
+      "value":" 4.1 Trailing "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":31,"column":4},"end":{"line":31,"column":21}},
+      "range":[715,732],
+      "value":" 4.2 Leading "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":31,"column":41},"end":{"line":31,"column":59}},
+      "range":[752,770],
+      "value":" 4.3 Trailing "
     }
   ]
 }

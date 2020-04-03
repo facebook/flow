@@ -24,3 +24,8 @@ switch (1) {
     /* 5.5 L case */ default /* 5.6 T case */ : /* 5.7 T case */
       1;
 }
+
+{
+    switch (1) { default: 1; } /* 6.1 T switch */
+    /* 6.2 L switch */ switch (1) { default: 1; } /* 6.3 T switch */
+}

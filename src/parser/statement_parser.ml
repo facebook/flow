@@ -79,9 +79,11 @@ module Statement
     | For_expression of pattern_cover
     | For_declaration of (Loc.t * (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
 
-  type semicolon_type =
+  type 'a semicolon_type =
     | Explicit of Loc.t Comment.t list
-    | Implicit of Loc.t Comment.t list
+    | Implicit of
+        ( Loc.t Comment.t list
+        * ('a -> (Loc.t Comment_attachment.trailing_comments_remover -> 'a -> 'a) -> 'a) )
 
   (* FunctionDeclaration is not a valid Statement, but Annex B sometimes allows it.
      However, AsyncFunctionDeclaration and GeneratorFunctionDeclaration are never
@@ -148,11 +150,11 @@ module Statement
   * semicolons are inserted. First, if we reach the EOF. Second, if the next
   * token is } or is separated by a LineTerminator.
   *)
-  let semicolon ?(expected = "the token `;`") env =
+  let semicolon ?(expected = "the token `;`") ?(required = true) env =
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
-      Implicit (Peek.comments env)
+      Implicit (Peek.comments env, (fun x _ -> x))
     | T_SEMICOLON ->
       Eat.token env;
       (match Peek.token env with
@@ -161,10 +163,27 @@ module Statement
         Explicit (Peek.comments env)
       | _ when Peek.is_line_terminator env -> Explicit (Eat.comments_until_next_line env)
       | _ -> Explicit [])
-    | _ when Peek.is_line_terminator env -> Implicit (Eat.comments_until_next_line env)
+    | _ when Peek.is_line_terminator env ->
+      Implicit (Comment_attachment.trailing_and_remover_after_last_line env)
     | _ ->
-      error_unexpected ~expected env;
+      if required then error_unexpected ~expected env;
       Explicit []
+
+  (* Consumes and returns the trailing comments after the end of a statement. Also returns
+     a remover that can remove all comments that are not trailing the previous token.
+
+     If a statement is the end of a block or file, all comments are trailing.
+     Otherwise, if a statement is followed by a new line, only comments on the current
+     line are trailing. If a statement is not followed by a new line, it does not have
+     trailing comments as they are instead leading comments for the next statement. *)
+  let statement_end_trailing_comments env =
+    match Peek.token env with
+    | T_EOF
+    | T_RCURLY ->
+      (Peek.comments env, (fun x _ -> x))
+    | _ when Peek.is_line_terminator env ->
+      Comment_attachment.trailing_and_remover_after_last_line env
+    | _ -> ([], Comment_attachment.remover_after_last_loc env)
 
   let rec empty env =
     let loc = Peek.loc env in
@@ -185,10 +204,13 @@ module Statement
               if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
               Some label
           in
-          let trailing =
-            match semicolon env with
-            | Explicit comments -> comments
-            | Implicit _ -> []
+          let (trailing, label) =
+            match (semicolon env, label) with
+            | (Explicit comments, _)
+            | (Implicit (comments, _), None) ->
+              (comments, label)
+            | (Implicit (_, remove_trailing), Some label) ->
+              ([], Some (remove_trailing label (fun remover label -> remover#identifier label)))
           in
           (label, trailing))
         env
@@ -212,10 +234,13 @@ module Statement
               if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
               Some label
           in
-          let trailing =
-            match semicolon env with
-            | Explicit comments -> comments
-            | Implicit _ -> []
+          let (trailing, label) =
+            match (semicolon env, label) with
+            | (Explicit comments, _)
+            | (Implicit (comments, _), None) ->
+              (comments, label)
+            | (Implicit (_, remove_trailing), Some label) ->
+              ([], Some (remove_trailing label (fun remover label -> remover#identifier label)))
           in
           (label, trailing))
         env
@@ -232,8 +257,18 @@ module Statement
     with_loc (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_DEBUGGER;
-        let trailing = Peek.comments env in
-        let _ = semicolon env in
+        let pre_semicolon_trailing =
+          if Peek.token env = T_SEMICOLON then
+            Peek.comments env
+          else
+            []
+        in
+        let trailing =
+          match semicolon env with
+          | Explicit trailing
+          | Implicit (trailing, _) ->
+            pre_semicolon_trailing @ trailing
+        in
         Statement.Debugger
           { Statement.Debugger.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
 
@@ -257,7 +292,11 @@ module Statement
         (* The rules of automatic semicolon insertion in ES5 don't mention this,
          * but the semicolon after a do-while loop is optional. This is properly
          * specified in ES6 *)
-        if Peek.token env = T_SEMICOLON then Eat.token env;
+        let past_cond_trailing =
+          match semicolon ~required:false env with
+          | Explicit trailing -> past_cond_trailing @ trailing
+          | Implicit (trailing, _) -> trailing
+        in
         let trailing = pre_keyword_trailing @ pre_cond_trailing @ past_cond_trailing in
         Statement.DoWhile
           {
@@ -529,7 +568,7 @@ module Statement
         Expect.token env T_LCURLY;
         let cases = case_list env (false, []) in
         Expect.token env T_RCURLY;
-        let trailing = Peek.comments env in
+        let (trailing, _) = statement_end_trailing_comments env in
         Statement.Switch
           {
             Statement.Switch.discriminant;
@@ -552,7 +591,6 @@ module Statement
     with_loc (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_TRY;
-        let trailing = Peek.comments env in
         let block = Parse.block_body env in
         let handler =
           match Peek.token env with
@@ -573,6 +611,15 @@ module Statement
                       None
                   in
                   let body = Parse.block_body env in
+                  (* Fix trailing comment attachment if catch block is end of statement *)
+                  let body =
+                    if Peek.token env <> T_FINALLY then
+                      let (_, remove_trailing) = statement_end_trailing_comments env in
+                      remove_trailing body (fun remover (loc, body) ->
+                          (loc, remover#block loc body))
+                    else
+                      body
+                  in
                   {
                     Ast.Statement.Try.CatchClause.param;
                     body;
@@ -587,7 +634,10 @@ module Statement
           match Peek.token env with
           | T_FINALLY ->
             Expect.token env T_FINALLY;
-            Some (Parse.block_body env)
+            let (loc, body) = Parse.block_body env in
+            let (_, remove_trailing) = statement_end_trailing_comments env in
+            let body = remove_trailing body (fun remover body -> remover#block loc body) in
+            Some (loc, body)
           | _ -> None
         in
         (* No catch or finally? That's an error! *)
@@ -599,7 +649,7 @@ module Statement
             Statement.Try.block;
             handler;
             finalizer;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
           })
 
   and var =
@@ -700,6 +750,8 @@ module Statement
 
   and block env =
     let (loc, block) = Parse.block_body env in
+    let (_, remove_trailing) = statement_end_trailing_comments env in
+    let block = remove_trailing block (fun remover block -> remover#block loc block) in
     (loc, Statement.Block block)
 
   and maybe_labeled =
@@ -854,6 +906,10 @@ module Statement
     let id = Type.type_identifier env in
     let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
     let (extends, body) = Type.interface_helper env ~id:(Some id) in
+    let (_, remove_trailing) = statement_end_trailing_comments env in
+    let body =
+      remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))
+    in
     Statement.Interface.
       { id; tparams; body; extends; comments = Flow_ast_utils.mk_comments_opt ~leading () }
 
@@ -911,6 +967,10 @@ module Statement
         | _ -> []
       in
       let body = Type._object ~is_class:true env in
+      let (_, remove_trailing) = statement_end_trailing_comments env in
+      let body =
+        remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))
+      in
       Statement.DeclareClass.{ id; tparams; body; extends; mixins; implements }
 
   and declare_class_statement env =
@@ -1045,7 +1105,7 @@ module Statement
             Expect.token env T_LCURLY;
             let res = module_items env ~module_kind:None [] in
             Expect.token env T_RCURLY;
-            let trailing = Peek.comments env in
+            let (trailing, _) = statement_end_trailing_comments env in
             (res, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
           env
       in
@@ -1734,14 +1794,18 @@ module Statement
           Expect.token env T_RCURLY;
           ImportNamedSpecifiers specifiers
       in
+      let semicolon_and_trailing env source =
+        match semicolon env with
+        | Explicit trailing -> (trailing, source)
+        | Implicit (_, remove_trailing) ->
+          ( [],
+            remove_trailing source (fun remover (loc, source) ->
+                (loc, remover#string_literal_type loc source)) )
+      in
       let with_specifiers importKind env leading =
         let specifiers = Some (named_or_namespace_specifier env importKind) in
         let source = source env in
-        let trailing =
-          match semicolon env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
-        in
+        let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
             importKind;
@@ -1768,11 +1832,7 @@ module Statement
           | _ -> None
         in
         let source = source env in
-        let trailing =
-          match semicolon env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
-        in
+        let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
             importKind;
@@ -1795,11 +1855,7 @@ module Statement
           (* `import "ModuleName";` *)
           | T_STRING str ->
             let source = string_literal env str in
-            let trailing =
-              match semicolon env with
-              | Explicit comments -> comments
-              | Implicit _ -> []
-            in
+            let (trailing, source) = semicolon_and_trailing env source in
             Statement.ImportDeclaration
               {
                 importKind = ImportValue;

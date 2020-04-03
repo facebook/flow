@@ -368,14 +368,6 @@
             },
             "consequent":{
               "type":"BlockStatement",
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":26}},
-                  "range":[539,559],
-                  "value":" not trailing 2 "
-                }
-              ],
               "leadingComments":[
                 {
                   "type":"Block",

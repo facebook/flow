@@ -13,3 +13,16 @@ function continue_without_label() {
     /* 2.3 trailing */
   }
 }
+
+function implicit_semicolon() {
+  label: for (;;) {
+    {
+      continue /* 3.1 T continue */
+      /* 3.2 L continue */ continue /* 3.3 T continue */
+    }
+    {
+      continue label /* 3.4 T id */
+      /* 3.5 L continue */ continue label /* 3.6 T id */
+    }
+  }
+}
