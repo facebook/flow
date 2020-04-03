@@ -262,6 +262,16 @@ class ['loc] trailing_comments_remover ~after_pos =
         t
       else
         { Ast.Type.Union.types = (t0, t1', ts'); comments = comments' }
+
+    method! variable_declarator ~kind decl =
+      let open Ast.Statement.VariableDeclaration.Declarator in
+      let (loc, { id = ident; init }) = decl in
+      match init with
+      | None ->
+        id (this#variable_declarator_pattern ~kind) ident decl (fun ident' ->
+            (loc, { id = ident'; init }))
+      | Some init ->
+        id this#expression init decl (fun init' -> (loc, { id = ident; init = Some init' }))
   end
 
 let mk_remover_after_last_loc env =

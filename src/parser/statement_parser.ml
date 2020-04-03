@@ -184,6 +184,22 @@ module Statement
       Comment_attachment.trailing_and_remover_after_last_line env
     | _ -> Comment_attachment.trailing_and_remover_after_last_loc env
 
+  let variable_declaration_end ~kind env declarations =
+    match semicolon env with
+    | Explicit comments -> (comments, declarations)
+    | Implicit { remove_trailing; _ } ->
+      (* Remove trailing comments from the last declarator *)
+      let declarations =
+        match List.rev declarations with
+        | [] -> []
+        | decl :: decls ->
+          let decl' =
+            remove_trailing decl (fun remover decl -> remover#variable_declarator ~kind decl)
+          in
+          List.rev (decl' :: decls)
+      in
+      ([], declarations)
+
   let rec empty env =
     let loc = Peek.loc env in
     let leading = Peek.comments env in
@@ -672,48 +688,39 @@ module Statement
 
   and var =
     with_loc (fun env ->
+        let kind = Statement.VariableDeclaration.Var in
         let (declarations, leading, errs) = Declaration.var env in
-        let trailing =
-          match semicolon env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
-        in
+        let (trailing, declarations) = variable_declaration_end ~kind env declarations in
         errs |> List.iter (error_at env);
         Statement.VariableDeclaration
           {
-            Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Var;
+            Statement.VariableDeclaration.kind;
             declarations;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
 
   and const =
     with_loc (fun env ->
+        let kind = Statement.VariableDeclaration.Const in
         let (declarations, leading, errs) = Declaration.const env in
-        let trailing =
-          match semicolon env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
-        in
+        let (trailing, declarations) = variable_declaration_end ~kind env declarations in
         errs |> List.iter (error_at env);
         Statement.VariableDeclaration
           {
-            Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Const;
+            Statement.VariableDeclaration.kind;
             declarations;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
 
   and let_ =
     with_loc (fun env ->
+        let kind = Statement.VariableDeclaration.Let in
         let (declarations, leading, errs) = Declaration.let_ env in
-        let trailing =
-          match semicolon env with
-          | Explicit comments -> comments
-          | Implicit _ -> []
-        in
+        let (trailing, declarations) = variable_declaration_end ~kind env declarations in
         errs |> List.iter (error_at env);
         Statement.VariableDeclaration
           {
-            Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Let;
+            Statement.VariableDeclaration.kind;
             declarations;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })

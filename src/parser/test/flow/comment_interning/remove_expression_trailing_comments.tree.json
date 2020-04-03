@@ -862,12 +862,6 @@
                       "loc":{"source":null,"start":{"line":48,"column":40},"end":{"line":48,"column":53}},
                       "range":[929,942],
                       "value":" T block "
-                    },
-                    {
-                      "type":"Block",
-                      "loc":{"source":null,"start":{"line":49,"column":2},"end":{"line":49,"column":13}},
-                      "range":[945,956],
-                      "value":" L str "
                     }
                   ],
                   "loc":{"source":null,"start":{"line":48,"column":37},"end":{"line":48,"column":39}},
