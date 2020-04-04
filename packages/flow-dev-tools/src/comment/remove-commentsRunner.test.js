@@ -48,7 +48,7 @@ const foo = 4;
     [7, 4, 8, 20],
     [],
   ].map(args => makeLoc(testInput, ...args));
-  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('removeExtraSpaceWhenRemovingUnusedFlowLint', async () => {
@@ -87,7 +87,7 @@ test('removeExtraSpaceWhenRemovingUnusedFlowLint', async () => {
     [8, 22, 8, 25],
     [9, 27, 9, 30],
   ].map(args => makeLoc(testInput, ...args));
-  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('deleteUnusedFlowLintComments', async () => {
@@ -156,7 +156,7 @@ let x =
     [18, 17, 18, 20],
     [19, 15, 19, 18],
   ].map(args => makeLoc(testInput, ...args));
-  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('unicode', async () => {
@@ -231,7 +231,7 @@ let x =
     [21, 17, 21, 20],
     [22, 15, 22, 18],
   ].map(args => makeLoc(testInput, ...args));
-  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 function makeLoc(contents, startLine, startCol, endLine, endCol) {
