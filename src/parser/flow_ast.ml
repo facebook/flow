@@ -152,7 +152,11 @@ and Type : sig
     module RestParam : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and ('M, 'T) t' = { argument: ('M, 'T) Param.t } [@@deriving show]
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Param.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
     end
 
     module Params : sig
@@ -1685,7 +1689,11 @@ and Function : sig
   module RestParam : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = { argument: ('M, 'T) Pattern.t } [@@deriving show]
+    and ('M, 'T) t' = {
+      argument: ('M, 'T) Pattern.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module Param : sig

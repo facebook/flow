@@ -630,7 +630,12 @@ module T = struct
                   (match rest with
                   | None -> None
                   | Some (loc, rest) ->
-                    Some (loc, { Ast.Type.Function.RestParam.argument = param_of_type rest }));
+                    Some
+                      ( loc,
+                        {
+                          Ast.Type.Function.RestParam.argument = param_of_type rest;
+                          comments = Flow_ast_utils.mk_comments_opt ();
+                        } ));
                 comments = Flow_ast_utils.mk_comments_opt ();
               } );
           return = type_of_little_annotation outlined return;
@@ -1424,7 +1429,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_param (_, { Ast.Function.Param.argument; default }) =
     pattern ~default:(default <> None) argument
 
-  and function_rest_param (loc, { Ast.Function.RestParam.argument }) = (loc, pattern argument)
+  and function_rest_param (loc, { Ast.Function.RestParam.argument; comments = _ }) =
+    (loc, pattern argument)
 
   and function_params params =
     let open Ast.Function in

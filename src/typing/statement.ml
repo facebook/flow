@@ -408,7 +408,11 @@ module Func_stmt_config = struct
       let { Ast.Pattern.Identifier.name = ((loc, _), { Ast.Identifier.name; _ }); _ } = id in
       bind cx name t loc
     in
-    (loc, { Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id) })
+    ( loc,
+      {
+        Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id);
+        comments = Flow_ast_utils.mk_comments_opt ();
+      } )
 end
 
 module Func_stmt_params = Func_params.Make (Func_stmt_config)
@@ -7674,7 +7678,7 @@ and mk_func_sig =
         params
     in
     match rest with
-    | Some (rloc, { Flow_ast.Function.RestParam.argument }) ->
+    | Some (rloc, { Flow_ast.Function.RestParam.argument; comments = _ }) ->
       let desc = Reason.code_desc_of_pattern argument in
       let reason = mk_reason (RRestParameter (Some desc)) rloc in
       Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
@@ -7725,7 +7729,7 @@ and mk_func_sig =
     Func_stmt_config.Param { t; loc; ploc; pattern; default; expr }
   in
   let mk_rest cx tparams_map rest =
-    let (loc, { Ast.Function.RestParam.argument = (ploc, patt) }) = rest in
+    let (loc, { Ast.Function.RestParam.argument = (ploc, patt); comments = _ }) = rest in
     match patt with
     | Ast.Pattern.Identifier id ->
       let (t, id) =
@@ -8000,9 +8004,9 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
         let rest =
           let open Ast.Type.Function in
           match rest with
-          | Some (rest_loc, { RestParam.argument }) ->
+          | Some (rest_loc, { RestParam.argument; comments }) ->
             let argument = param_type_to_param argument in
-            Some (rest_loc, { Ast.Function.RestParam.argument })
+            Some (rest_loc, { Ast.Function.RestParam.argument; comments })
           | None -> None
         in
         let body =
@@ -8093,9 +8097,12 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
               in
               let rest =
                 Base.Option.map
-                  ~f:(fun (rest_loc, { Ast.Function.RestParam.argument }) ->
+                  ~f:(fun (rest_loc, { Ast.Function.RestParam.argument; comments }) ->
                     ( rest_loc,
-                      { Ast.Type.Function.RestParam.argument = param_to_param_type argument } ))
+                      {
+                        Ast.Type.Function.RestParam.argument = param_to_param_type argument;
+                        comments;
+                      } ))
                   rest
               in
               let annot : (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation =

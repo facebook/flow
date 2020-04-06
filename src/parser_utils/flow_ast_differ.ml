@@ -757,7 +757,7 @@ let program
     let (loc, { params = param_lst1; rest = rest1; comments = comments1 }) = params1 in
     let (_, { params = param_lst2; rest = rest2; comments = comments2 }) = params2 in
     let params_diff = diff_and_recurse_no_trivial function_param param_lst1 param_lst2 in
-    let rest_diff = diff_if_changed_nonopt_fn function_rest_param rest1 rest2 in
+    let rest_diff = diff_if_changed_opt function_rest_param rest1 rest2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [params_diff; rest_diff; comments_diff]
   and function_param
@@ -1906,11 +1906,13 @@ let program
       join_diff_list [ids; annots]
   and function_rest_param
       (elem1 : (Loc.t, Loc.t) Ast.Function.RestParam.t)
-      (elem2 : (Loc.t, Loc.t) Ast.Function.RestParam.t) : node change list =
+      (elem2 : (Loc.t, Loc.t) Ast.Function.RestParam.t) : node change list option =
     let open Ast.Function.RestParam in
-    let (_, { argument = arg1 }) = elem1 in
-    let (_, { argument = arg2 }) = elem2 in
-    binding_pattern arg1 arg2
+    let (loc, { argument = arg1; comments = comments1 }) = elem1 in
+    let (_, { argument = arg2; comments = comments2 }) = elem2 in
+    let arg_diff = Some (binding_pattern arg1 arg2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [arg_diff; comments_diff]
   and type_ ((loc1, type1) : (Loc.t, Loc.t) Ast.Type.t) ((loc2, type2) : (Loc.t, Loc.t) Ast.Type.t)
       : node change list =
     let open Ast.Type in
@@ -2180,9 +2182,11 @@ let program
       (frpt1 : (Loc.t, Loc.t) Ast.Type.Function.RestParam.t)
       (frpt2 : (Loc.t, Loc.t) Ast.Type.Function.RestParam.t) : node change list option =
     let open Ast.Type.Function.RestParam in
-    let (_loc1, { argument = arg1 }) = frpt1 in
-    let (_loc2, { argument = arg2 }) = frpt2 in
-    diff_if_changed_ret_opt function_param_type arg1 arg2
+    let (loc, { argument = arg1; comments = comments1 }) = frpt1 in
+    let (_, { argument = arg2; comments = comments2 }) = frpt2 in
+    let arg_diff = diff_if_changed_ret_opt function_param_type arg1 arg2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [arg_diff; comments_diff]
   and function_type
       (loc : Loc.t)
       (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t)

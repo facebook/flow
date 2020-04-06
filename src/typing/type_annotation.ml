@@ -38,7 +38,7 @@ module Func_type_params = Func_params.Make (struct
     in
     (name, t)
 
-  let rest_type (t, (loc, { Ast.Type.Function.RestParam.argument })) =
+  let rest_type (t, (loc, { Ast.Type.Function.RestParam.argument; comments = _ })) =
     let (_, { Ast.Type.Function.Param.name; _ }) = argument in
     let name = Base.Option.map name ~f:id_name in
     (name, loc, t)
@@ -939,7 +939,7 @@ let rec convert cx tparams_map =
     let reason = mk_annot_reason RFunctionType loc in
     let (rest_param, rest_param_ast) =
       match rest with
-      | Some (rest_loc, { Function.RestParam.argument = (param_loc, param) }) ->
+      | Some (rest_loc, { Function.RestParam.argument = (param_loc, param); comments }) ->
         let { Function.Param.name; annot; optional } = param in
         let (((_, rest), _) as annot_ast) = convert cx tparams_map annot in
         ( Some (Base.Option.map ~f:ident_name name, loc_of_t rest, rest),
@@ -954,6 +954,7 @@ let rec convert cx tparams_map =
                       annot = annot_ast;
                       optional;
                     } );
+                comments;
               } ) )
       | None -> (None, None)
     in
@@ -1462,10 +1463,14 @@ and mk_func_sig =
     Func_type_params.add_param param x
   in
   let add_rest cx tparams_map x rest_param =
-    let (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) }) = rest_param in
+    let (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }) =
+      rest_param
+    in
     let (((_, t), _) as annot) = convert cx tparams_map annot in
     let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
-    let rest = (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) })) in
+    let rest =
+      (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }))
+    in
     Func_type_params.add_rest rest x
   in
   let convert_params cx tparams_map (loc, { Params.params; rest; comments }) =

@@ -19,3 +19,5 @@ function name(): boolean /* 7.1 T boolean */ %checks /* 7.2 T pred */ {}
 }
 
 function name() {} /* 9.1 L func */ function name() {} /* 9.2 T block */
+
+function name(/* 10.1 L rest param */ ... /* 10.2 L id */ x /* 10.3 T id */ ) {}

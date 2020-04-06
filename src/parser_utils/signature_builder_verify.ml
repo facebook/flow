@@ -187,7 +187,8 @@ module Eval (Env : EvalEnv) = struct
       let deps =
         match rest with
         | None -> deps
-        | Some (_, { RestParam.argument }) -> Deps.join (deps, function_type_param tps argument)
+        | Some (_, { RestParam.argument; comments = _ }) ->
+          Deps.join (deps, function_type_param tps argument)
       in
       Deps.join (deps, type_ tps return)
 
@@ -575,7 +576,8 @@ module Eval (Env : EvalEnv) = struct
 
   and function_param tps (_, { Ast.Function.Param.argument; default = _ }) = pattern tps argument
 
-  and function_rest_param tps (_, { Ast.Function.RestParam.argument }) = pattern tps argument
+  and function_rest_param tps (_, { Ast.Function.RestParam.argument; comments = _ }) =
+    pattern tps argument
 
   and function_params tps params =
     let open Ast.Function in

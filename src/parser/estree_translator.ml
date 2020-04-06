@@ -1072,8 +1072,13 @@ with type t = Impl.t = struct
     and function_params =
       let open Ast.Function.Params in
       function
-      | (_, { params; rest = Some (rest_loc, { Function.RestParam.argument }); comments = _ }) ->
-        let rest = node "RestElement" rest_loc [("argument", pattern argument)] in
+      | ( _,
+          {
+            params;
+            rest = Some (rest_loc, { Function.RestParam.argument; comments });
+            comments = _;
+          } ) ->
+        let rest = node ?comments "RestElement" rest_loc [("argument", pattern argument)] in
         let rev_params = List.rev_map function_param params in
         let params = List.rev (rest :: rev_params) in
         array params
@@ -1296,8 +1301,9 @@ with type t = Impl.t = struct
           ("rest", option function_type_rest rest);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
-    and function_type_param (loc, { Type.Function.Param.name; annot; optional }) =
+    and function_type_param ?comments (loc, { Type.Function.Param.name; annot; optional }) =
       node
+        ?comments
         "FunctionTypeParam"
         loc
         [
@@ -1305,7 +1311,7 @@ with type t = Impl.t = struct
           ("typeAnnotation", _type annot);
           ("optional", bool optional);
         ]
-    and function_type_rest (_loc, { Type.Function.RestParam.argument }) =
+    and function_type_rest (_loc, { Type.Function.RestParam.argument; comments }) =
       (* TODO: add a node for the rest param itself, including the `...`,
          like we do with RestElement on normal functions. This should be
          coordinated with Babel, ast-types, etc. so keeping the status quo for
@@ -1313,7 +1319,7 @@ with type t = Impl.t = struct
       (* node "FunctionTypeRestParam" loc [
         "argument", function_type_param argument;
       ] *)
-      function_type_param argument
+      function_type_param ?comments argument
     and object_type ~include_inexact (loc, { Type.Object.properties; exact; inexact; comments }) =
       Type.Object.(
         let (props, ixs, calls, slots) =

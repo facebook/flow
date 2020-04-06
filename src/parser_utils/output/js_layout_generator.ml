@@ -1510,8 +1510,10 @@ and function_params ~ctxt (_, { Ast.Function.Params.params; rest; comments = _ }
       params
   in
   match rest with
-  | Some (loc, { Ast.Function.RestParam.argument }) ->
-    let s_rest = source_location_with_comments (loc, fuse [Atom "..."; pattern ~ctxt argument]) in
+  | Some (loc, { Ast.Function.RestParam.argument; comments }) ->
+    let s_rest =
+      source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern ~ctxt argument])
+    in
     List.append s_params [s_rest]
   | None -> s_params
 
@@ -2604,9 +2606,13 @@ and type_function
   let params = Base.List.map ~f:type_function_param params in
   let params =
     match restParams with
-    | Some (loc, { Ast.Type.Function.RestParam.argument }) ->
+    | Some (loc, { Ast.Type.Function.RestParam.argument; comments }) ->
       params
-      @ [source_location_with_comments (loc, fuse [Atom "..."; type_function_param argument])]
+      @ [
+          source_location_with_comments
+            ?comments
+            (loc, fuse [Atom "..."; type_function_param argument]);
+        ]
     | None -> params
   in
   layout_node_with_comments_opt loc func_comments

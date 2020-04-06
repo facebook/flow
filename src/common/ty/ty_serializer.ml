@@ -170,7 +170,7 @@ and fun_param (name, t, { prm_optional }) =
 
 and fun_rest_param (name, t) =
   fun_param (name, t, { prm_optional = false }) >>| fun argument ->
-  (Loc.none, { T.Function.RestParam.argument })
+  (Loc.none, { T.Function.RestParam.argument; comments = Flow_ast_utils.mk_comments_opt () })
 
 and obj_ o =
   mapM obj_prop o.obj_props >>| fun properties ->

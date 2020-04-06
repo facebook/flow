@@ -137,7 +137,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           params
       in
       match rest with
-      | Some (_, { Function.RestParam.argument }) -> ignore (check_param acc argument)
+      | Some (_, { Function.RestParam.argument; comments = _ }) -> ignore (check_param acc argument)
       | None -> ()
     )
 
@@ -158,6 +158,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       | (T_EOF | T_RPAREN | T_ELLIPSIS) as t ->
         let rest =
           if t = T_ELLIPSIS then
+            let leading = Peek.comments env in
             let (loc, id) =
               with_loc
                 (fun env ->
@@ -165,7 +166,12 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                   Parse.pattern env Parse_error.StrictParamName)
                 env
             in
-            Some (loc, { Function.RestParam.argument = id })
+            Some
+              ( loc,
+                {
+                  Function.RestParam.argument = id;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                } )
           else
             None
         in

@@ -646,9 +646,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method function_rest_param_type (frpt : ('M, 'T) Ast.Type.Function.RestParam.t)
         : ('N, 'U) Ast.Type.Function.RestParam.t =
       let open Ast.Type.Function.RestParam in
-      let (annot, { argument }) = frpt in
+      let (annot, { argument; comments }) = frpt in
+      let annot' = this#on_loc_annot annot in
       let argument' = this#function_param_type argument in
-      (this#on_loc_annot annot, { argument = argument' })
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { argument = argument'; comments = comments' })
 
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       let open Ast.Type.Function in
@@ -1000,8 +1002,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method function_rest_param (expr : ('M, 'T) Ast.Function.RestParam.t)
         : ('N, 'U) Ast.Function.RestParam.t =
       let open Ast.Function.RestParam in
-      let (annot, { argument }) = expr in
-      (this#on_loc_annot annot, { argument = this#function_param_pattern argument })
+      let (annot, { argument; comments }) = expr in
+      let annot' = this#on_loc_annot annot in
+      let argument' = this#function_param_pattern argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { argument = argument'; comments = comments' })
 
     method function_body body =
       let open Ast.Function in

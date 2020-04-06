@@ -418,8 +418,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             let rest =
               with_loc
                 (fun env ->
+                  let leading = Peek.comments env in
                   Expect.token env T_ELLIPSIS;
-                  { Type.Function.RestParam.argument = param env })
+                  {
+                    Type.Function.RestParam.argument = param env;
+                    comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                  })
                 env
             in
             Some rest

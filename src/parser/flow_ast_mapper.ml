@@ -855,12 +855,13 @@ class ['loc] mapper =
 
     method function_rest_param_type (frpt : ('loc, 'loc) Ast.Type.Function.RestParam.t) =
       let open Ast.Type.Function.RestParam in
-      let (loc, { argument }) = frpt in
+      let (loc, { argument; comments }) = frpt in
       let argument' = this#function_param_type argument in
-      if argument' == argument then
+      let comments' = this#syntax_opt comments in
+      if argument' == argument && comments' == comments then
         frpt
       else
-        (loc, { argument = argument' })
+        (loc, { argument = argument'; comments = comments' })
 
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in
@@ -1973,8 +1974,13 @@ class ['loc] mapper =
 
     method function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
-      let (loc, { argument }) = expr in
-      id this#binding_pattern argument expr (fun argument -> (loc, { argument }))
+      let (loc, { argument; comments }) = expr in
+      let argument' = this#binding_pattern argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        expr
+      else
+        (loc, { argument = argument'; comments = comments' })
 
     method return _loc (stmt : ('loc, 'loc) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in
