@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":34,"column":1}},
-  "range":[0,632],
+  "range":[0,676],
   "body":[
     {
       "type":"BlockStatement",
@@ -155,7 +155,7 @@
     {
       "type":"BlockStatement",
       "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":23,"column":1}},
-      "range":[242,400],
+      "range":[242,422],
       "body":[
         {
           "type":"ClassDeclaration",
@@ -163,7 +163,7 @@
             {
               "type":"Block",
               "loc":{"source":null,"start":{"line":22,"column":2},"end":{"line":22,"column":19}},
-              "range":[381,398],
+              "range":[403,420],
               "value":" after class "
             }
           ],
@@ -176,7 +176,7 @@
             }
           ],
           "loc":{"source":null,"start":{"line":19,"column":2},"end":{"line":21,"column":3}},
-          "range":[267,378],
+          "range":[267,400],
           "id":{
             "type":"Identifier",
             "trailingComments":[
@@ -203,8 +203,8 @@
           },
           "body":{
             "type":"ClassBody",
-            "loc":{"source":null,"start":{"line":20,"column":62},"end":{"line":21,"column":3}},
-            "range":[373,378],
+            "loc":{"source":null,"start":{"line":20,"column":84},"end":{"line":21,"column":3}},
+            "range":[395,400],
             "body":[]
           },
           "typeParameters":null,
@@ -213,8 +213,8 @@
           "implements":[
             {
               "type":"ClassImplements",
-              "loc":{"source":null,"start":{"line":20,"column":38},"end":{"line":20,"column":39}},
-              "range":[349,350],
+              "loc":{"source":null,"start":{"line":20,"column":38},"end":{"line":20,"column":65}},
+              "range":[349,376],
               "id":{
                 "type":"Identifier",
                 "trailingComments":[
@@ -239,7 +239,35 @@
                 "typeAnnotation":null,
                 "optional":false
               },
-              "typeParameters":null
+              "typeParameters":{
+                "type":"TypeParameterInstantiation",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":20,"column":66},"end":{"line":20,"column":83}},
+                    "range":[377,394],
+                    "value":" after targs "
+                  }
+                ],
+                "loc":{"source":null,"start":{"line":20,"column":62},"end":{"line":20,"column":65}},
+                "range":[373,376],
+                "params":[
+                  {
+                    "type":"GenericTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":20,"column":63},"end":{"line":20,"column":64}},
+                    "range":[374,375],
+                    "id":{
+                      "type":"Identifier",
+                      "loc":{"source":null,"start":{"line":20,"column":63},"end":{"line":20,"column":64}},
+                      "range":[374,375],
+                      "name":"T",
+                      "typeAnnotation":null,
+                      "optional":false
+                    },
+                    "typeParameters":null
+                  }
+                ]
+              }
             }
           ],
           "decorators":[]
@@ -249,7 +277,7 @@
     {
       "type":"BlockStatement",
       "loc":{"source":null,"start":{"line":25,"column":0},"end":{"line":31,"column":1}},
-      "range":[402,563],
+      "range":[424,607],
       "body":[
         {
           "type":"ClassDeclaration",
@@ -257,7 +285,7 @@
             {
               "type":"Block",
               "loc":{"source":null,"start":{"line":30,"column":2},"end":{"line":30,"column":19}},
-              "range":[544,561],
+              "range":[588,605],
               "value":" after class "
             }
           ],
@@ -265,19 +293,19 @@
             {
               "type":"Block",
               "loc":{"source":null,"start":{"line":26,"column":2},"end":{"line":26,"column":20}},
-              "range":[406,424],
+              "range":[428,446],
               "value":" before class "
             }
           ],
           "loc":{"source":null,"start":{"line":27,"column":2},"end":{"line":29,"column":3}},
-          "range":[427,541],
+          "range":[449,585],
           "id":{
             "type":"Identifier",
             "trailingComments":[
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":27,"column":29},"end":{"line":27,"column":45}},
-                "range":[454,470],
+                "range":[476,492],
                 "value":" after name "
               }
             ],
@@ -285,20 +313,20 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":27,"column":8},"end":{"line":27,"column":25}},
-                "range":[433,450],
+                "range":[455,472],
                 "value":" before name "
               }
             ],
             "loc":{"source":null,"start":{"line":27,"column":26},"end":{"line":27,"column":28}},
-            "range":[451,453],
+            "range":[473,475],
             "name":"C4",
             "typeAnnotation":null,
             "optional":false
           },
           "body":{
             "type":"ClassBody",
-            "loc":{"source":null,"start":{"line":28,"column":65},"end":{"line":29,"column":3}},
-            "range":[536,541],
+            "loc":{"source":null,"start":{"line":28,"column":87},"end":{"line":29,"column":3}},
+            "range":[580,585],
             "body":[]
           },
           "typeParameters":null,
@@ -308,7 +336,7 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":28,"column":40},"end":{"line":28,"column":64}},
-                "range":[511,535],
+                "range":[533,557],
                 "value":" after extends name "
               }
             ],
@@ -316,17 +344,45 @@
               {
                 "type":"Block",
                 "loc":{"source":null,"start":{"line":28,"column":12},"end":{"line":28,"column":37}},
-                "range":[483,508],
+                "range":[505,530],
                 "value":" before extends name "
               }
             ],
             "loc":{"source":null,"start":{"line":28,"column":38},"end":{"line":28,"column":39}},
-            "range":[509,510],
+            "range":[531,532],
             "name":"A",
             "typeAnnotation":null,
             "optional":false
           },
-          "superTypeParameters":null,
+          "superTypeParameters":{
+            "type":"TypeParameterInstantiation",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":28,"column":69},"end":{"line":28,"column":86}},
+                "range":[562,579],
+                "value":" after targs "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":28,"column":65},"end":{"line":28,"column":68}},
+            "range":[558,561],
+            "params":[
+              {
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":28,"column":66},"end":{"line":28,"column":67}},
+                "range":[559,560],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":28,"column":66},"end":{"line":28,"column":67}},
+                  "range":[559,560],
+                  "name":"T",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            ]
+          },
           "implements":[],
           "decorators":[]
         }
@@ -335,14 +391,14 @@
     {
       "type":"ExportDefaultDeclaration",
       "loc":{"source":null,"start":{"line":33,"column":0},"end":{"line":34,"column":1}},
-      "range":[565,632],
+      "range":[609,676],
       "declaration":{
         "type":"ClassDeclaration",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":25}},
-            "range":[633,658],
+            "range":[677,702],
             "value":" after default class "
           }
         ],
@@ -350,17 +406,17 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":33,"column":15},"end":{"line":33,"column":41}},
-            "range":[580,606],
+            "range":[624,650],
             "value":" before default class "
           }
         ],
         "loc":{"source":null,"start":{"line":33,"column":42},"end":{"line":34,"column":1}},
-        "range":[607,632],
+        "range":[651,676],
         "id":null,
         "body":{
           "type":"ClassBody",
           "loc":{"source":null,"start":{"line":33,"column":64},"end":{"line":34,"column":1}},
-          "range":[629,632],
+          "range":[673,676],
           "body":[]
         },
         "typeParameters":null,
@@ -459,62 +515,74 @@
     },
     {
       "type":"Block",
+      "loc":{"source":null,"start":{"line":20,"column":66},"end":{"line":20,"column":83}},
+      "range":[377,394],
+      "value":" after targs "
+    },
+    {
+      "type":"Block",
       "loc":{"source":null,"start":{"line":22,"column":2},"end":{"line":22,"column":19}},
-      "range":[381,398],
+      "range":[403,420],
       "value":" after class "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":26,"column":2},"end":{"line":26,"column":20}},
-      "range":[406,424],
+      "range":[428,446],
       "value":" before class "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":27,"column":8},"end":{"line":27,"column":25}},
-      "range":[433,450],
+      "range":[455,472],
       "value":" before name "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":27,"column":29},"end":{"line":27,"column":45}},
-      "range":[454,470],
+      "range":[476,492],
       "value":" after name "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":28,"column":12},"end":{"line":28,"column":37}},
-      "range":[483,508],
+      "range":[505,530],
       "value":" before extends name "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":28,"column":40},"end":{"line":28,"column":64}},
-      "range":[511,535],
+      "range":[533,557],
       "value":" after extends name "
     },
     {
       "type":"Block",
+      "loc":{"source":null,"start":{"line":28,"column":69},"end":{"line":28,"column":86}},
+      "range":[562,579],
+      "value":" after targs "
+    },
+    {
+      "type":"Block",
       "loc":{"source":null,"start":{"line":30,"column":2},"end":{"line":30,"column":19}},
-      "range":[544,561],
+      "range":[588,605],
       "value":" after class "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":33,"column":15},"end":{"line":33,"column":41}},
-      "range":[580,606],
+      "range":[624,650],
       "value":" before default class "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":33,"column":48},"end":{"line":33,"column":63}},
-      "range":[613,628],
+      "range":[657,672],
       "value":" anonymous "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":35,"column":0},"end":{"line":35,"column":25}},
-      "range":[633,658],
+      "range":[677,702],
       "value":" after default class "
     }
   ]

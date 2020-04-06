@@ -2481,9 +2481,12 @@ and call_type_arg (x : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t) =
   | Implicit (loc, { Implicit.comments }) -> layout_node_with_comments_opt loc comments (Atom "_")
   | Explicit t -> type_ t
 
-and type_args (loc, args) =
+and type_args (loc, { Ast.Type.TypeArgs.arguments; comments }) =
   source_location_with_comments
-    (loc, group [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_ args)])
+    ?comments
+    ( loc,
+      group [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_ arguments)]
+    )
 
 and type_alias ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; comments } =
   layout_node_with_comments_opt loc comments

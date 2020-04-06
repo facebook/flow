@@ -145,12 +145,13 @@ class mapper_type_printing_hardcoded_fixes =
         | _ -> t)
 
     method! type_args (targs : ('loc, 'loc) Flow_ast.Type.TypeArgs.t) =
-      let (loc, ts) = targs in
+      let open Flow_ast.Type.TypeArgs in
+      let (loc, { arguments = ts; comments }) = targs in
       let ts' = Base.List.map ~f:this#type_generic_normalize ts in
       if ts' == ts then
         targs
       else
-        (loc, ts')
+        (loc, { arguments = ts'; comments })
   end
 
 let patch_up_type_ast = (new mapper_type_printing_hardcoded_fixes)#type_

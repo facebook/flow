@@ -355,7 +355,13 @@ module T = struct
         {
           Ast.Type.Generic.id =
             Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
-          targs = Some (loc, [(loc, t)]);
+          targs =
+            Some
+              ( loc,
+                {
+                  Ast.Type.TypeArgs.arguments = [(loc, t)];
+                  comments = Flow_ast_utils.mk_comments_opt ();
+                } );
           comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
@@ -427,7 +433,13 @@ module T = struct
             Ast.Type.Generic.id =
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "Promise"));
-            targs = Some (loc, [type_of_expr_type outlined t]);
+            targs =
+              Some
+                ( loc,
+                  {
+                    Ast.Type.TypeArgs.arguments = [type_of_expr_type outlined t];
+                    comments = Flow_ast_utils.mk_comments_opt ();
+                  } );
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | (loc, Null) -> (loc, Ast.Type.Null (Flow_ast_utils.mk_comments_opt ()))
@@ -822,7 +834,13 @@ module T = struct
           Ast.Type.Generic
             {
               Ast.Type.Generic.id;
-              targs = Some (decl_loc, [annot; assign]);
+              targs =
+                Some
+                  ( decl_loc,
+                    {
+                      Ast.Type.TypeArgs.arguments = [annot; assign];
+                      comments = Flow_ast_utils.mk_comments_opt ();
+                    } );
               comments = Flow_ast_utils.mk_comments_opt ();
             } )
       in
@@ -1025,7 +1043,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and type_args = function
     | None -> None
-    | Some (loc, ts) -> Some (loc, Base.List.map ~f:type_ ts)
+    | Some (loc, { Ast.Type.TypeArgs.arguments; comments }) ->
+      Some (loc, { Ast.Type.TypeArgs.arguments = Base.List.map ~f:type_ arguments; comments })
 
   let rec annot_path = function
     | Kind.Annot_path.Annot (_, t) -> T.TYPE (type_ t)
@@ -1830,7 +1849,13 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
             Ast.Type.Generic
               {
                 Ast.Type.Generic.id;
-                targs = Some (mod_exp_loc, [annot; assign]);
+                targs =
+                  Some
+                    ( mod_exp_loc,
+                      {
+                        Ast.Type.TypeArgs.arguments = [annot; assign];
+                        comments = Flow_ast_utils.mk_comments_opt ();
+                      } );
                 comments = Flow_ast_utils.mk_comments_opt ();
               } )
         in

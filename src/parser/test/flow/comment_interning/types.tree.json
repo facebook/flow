@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":46,"column":75}},
-  "range":[0,1865],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":46,"column":73}},
+  "range":[0,1863],
   "body":[
     {
       "type":"TypeAlias",
@@ -1083,8 +1083,8 @@
     },
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":46,"column":0},"end":{"line":46,"column":75}},
-      "range":[1790,1865],
+      "loc":{"source":null,"start":{"line":46,"column":0},"end":{"line":46,"column":73}},
+      "range":[1790,1863],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":46,"column":5},"end":{"line":46,"column":11}},
@@ -1096,14 +1096,6 @@
       "typeParameters":null,
       "right":{
         "type":"GenericTypeAnnotation",
-        "trailingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":74}},
-            "range":[1844,1864],
-            "value":" 15.3 T generic "
-          }
-        ],
         "loc":{"source":null,"start":{"line":46,"column":30},"end":{"line":46,"column":53}},
         "range":[1820,1843],
         "id":{
@@ -1132,6 +1124,14 @@
         },
         "typeParameters":{
           "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":72}},
+              "range":[1844,1862],
+              "value":" 15.3 T targs "
+            }
+          ],
           "loc":{"source":null,"start":{"line":46,"column":50},"end":{"line":46,"column":53}},
           "range":[1840,1843],
           "params":[
@@ -1571,9 +1571,9 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":74}},
-      "range":[1844,1864],
-      "value":" 15.3 T generic "
+      "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":72}},
+      "range":[1844,1862],
+      "value":" 15.3 T targs "
     }
   ]
 }

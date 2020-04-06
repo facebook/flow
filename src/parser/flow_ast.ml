@@ -419,7 +419,11 @@ and Type : sig
   module TypeArgs : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = ('M, 'T) Type.t list [@@deriving show]
+    and ('M, 'T) t' = {
+      arguments: ('M, 'T) Type.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module Predicate : sig

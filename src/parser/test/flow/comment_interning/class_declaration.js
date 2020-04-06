@@ -17,7 +17,7 @@
 {
   /* before class */
   class /* before name */ C3 /* after name */
-    implements /* before impl name */ A /* after impl name */ {
+    implements /* before impl name */ A /* after impl name */ <T> /* after targs */ {
   }
   /* after class */
 }
@@ -25,7 +25,7 @@
 {
   /* before class */
   class /* before name */ C4 /* after name */
-    extends /* before extends name */ A /* after extends name */ {
+    extends /* before extends name */ A /* after extends name */ <T> /* after targs */ {
   }
   /* after class */
 }

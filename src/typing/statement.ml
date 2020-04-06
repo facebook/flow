@@ -7438,9 +7438,10 @@ and mk_class_sig =
                  let (typeapp, targs) =
                    match targs with
                    | None -> ((loc, c, None), None)
-                   | Some (targs_loc, targs) ->
+                   | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
                      let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
-                     ((loc, c, Some ts), Some (targs_loc, targs_ast))
+                     ( (loc, c, Some ts),
+                       Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
                  in
                  (typeapp, (loc, { Ast.Class.Implements.id = ((id_loc, c), id); targs })))
           |> List.split

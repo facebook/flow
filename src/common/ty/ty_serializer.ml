@@ -33,6 +33,9 @@ let mk_generic x targs =
     comments = Flow_ast_utils.mk_comments_opt ();
   }
 
+let mk_targs arguments =
+  (Loc.none, { T.TypeArgs.arguments; comments = Flow_ast_utils.mk_comments_opt () })
+
 let mk_generic_type x targs = (Loc.none, T.Generic (mk_generic x targs))
 
 let builtin_from_string ?targs x =
@@ -68,19 +71,19 @@ let rec type_ t =
     return
       (builtin_from_string
          "$TEMPORARY$number"
-         ~targs:(Loc.none, [(Loc.none, T.NumberLiteral (num_lit lit))]))
+         ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))]))
   | Num None -> just (T.Number (Flow_ast_utils.mk_comments_opt ()))
   | Str (Some lit) ->
     return
       (builtin_from_string
          "$TEMPORARY$string"
-         ~targs:(Loc.none, [(Loc.none, T.StringLiteral (str_lit lit))]))
+         ~targs:(mk_targs [(Loc.none, T.StringLiteral (str_lit lit))]))
   | Str None -> just (T.String (Flow_ast_utils.mk_comments_opt ()))
   | Bool (Some lit) ->
     return
       (builtin_from_string
          "$TEMPORARY$boolean"
-         ~targs:(Loc.none, [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
+         ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
   | Bool None -> just (T.Boolean (Flow_ast_utils.mk_comments_opt ()))
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
@@ -97,7 +100,7 @@ let rec type_ t =
   | InlineInterface i -> inline_interface i
   | CharSet s ->
     let id = id_from_string "CharSet" in
-    return (mk_generic_type id (Some (Loc.none, [(Loc.none, T.StringLiteral (str_lit s))])))
+    return (mk_generic_type id (Some (mk_targs [(Loc.none, T.StringLiteral (str_lit s))])))
   | TypeOf (TSymbol name) ->
     id_from_symbol name >>= fun id ->
     just
@@ -270,9 +273,9 @@ and obj_spread_prop t =
 and arr { arr_readonly; arr_elt_t; _ } =
   type_ arr_elt_t >>| fun t ->
   if arr_readonly then
-    builtin_from_string "$ReadOnlyArray" ~targs:(Loc.none, [t])
+    builtin_from_string "$ReadOnlyArray" ~targs:(mk_targs [t])
   else
-    builtin_from_string "Array" ~targs:(Loc.none, [t])
+    builtin_from_string "Array" ~targs:(mk_targs [t])
 
 and type_params ts =
   mapM type_param ts >>| fun ts ->
@@ -292,7 +295,7 @@ and type_param tp =
       default;
     } )
 
-and type_arguments ts = mapM type_ ts >>| fun ts -> (Loc.none, ts)
+and type_arguments ts = mapM type_ ts >>| fun ts -> mk_targs ts
 
 and str_lit lit =
   let quote = Js_layout_generator.better_quote lit in

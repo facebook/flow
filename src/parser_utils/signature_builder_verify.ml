@@ -273,7 +273,8 @@ module Eval (Env : EvalEnv) = struct
 
   and type_args tps = function
     | None -> Deps.bot
-    | Some (_, ts) -> List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot ts
+    | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) ->
+      List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot arguments
 
   and type_params =
     let type_param tps tparam =

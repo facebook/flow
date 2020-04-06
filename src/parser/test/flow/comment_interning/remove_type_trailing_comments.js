@@ -36,7 +36,7 @@
 /* L alias */ type T = (Foo) /* T generic */
 /* L alias */ type T = Foo /* T id */
 /* L alias */ type T = Foo.Bar /* T id */
-/* L alias */ type T = Foo<T> /* T generic */
+/* L alias */ type T = Foo<T> /* T targs */
 
 /* L alias */ type T = (string | number) /* T union */
 /* L alias */ type T = string | number /* T number */

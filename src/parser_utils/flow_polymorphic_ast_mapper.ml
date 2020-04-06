@@ -764,9 +764,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         Qualified (this#on_loc_annot annot, { qualification = qualification'; id = id' })
 
     method type_args (targs : ('M, 'T) Ast.Type.TypeArgs.t) : ('N, 'U) Ast.Type.TypeArgs.t =
-      let (annot, ts) = targs in
-      let ts' = Base.List.map ~f:this#type_ ts in
-      (this#on_loc_annot annot, ts')
+      let open Ast.Type.TypeArgs in
+      let (annot, { arguments; comments }) = targs in
+      let annot' = this#on_loc_annot annot in
+      let arguments' = Base.List.map ~f:this#type_ arguments in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { arguments = arguments'; comments = comments' })
 
     method type_params_opt
         : 'a. ('M, 'T) Ast.Type.TypeParams.t option ->

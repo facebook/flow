@@ -1135,9 +1135,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
              (fun env ->
                Expect.token env T_LESS_THAN;
                let env = with_no_anon_function_type false env in
-               let args = args env [] in
+               let arguments = args env [] in
                Expect.token env T_GREATER_THAN;
-               args)
+               let trailing = Peek.comments env in
+               { Type.TypeArgs.arguments; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
              env)
       else
         None
@@ -1168,12 +1169,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let id = (fst id, Type.Generic.Identifier.Unqualified id) in
           let (_id_loc, id) = identifier env id in
           let targs = type_args env in
-          let trailing =
-            match targs with
-            | None -> []
-            | Some _ -> Peek.comments env
-          in
-          { Type.Generic.id; targs; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
+          { Type.Generic.id; targs; comments = None })
         env
 
   and generic_type_with_identifier env id =

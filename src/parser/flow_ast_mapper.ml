@@ -995,12 +995,14 @@ class ['loc] mapper =
     method variance (variance : 'loc Ast.Variance.t option) = variance
 
     method type_args (targs : ('loc, 'loc) Ast.Type.TypeArgs.t) =
-      let (loc, ts) = targs in
-      let ts' = map_list this#type_ ts in
-      if ts' == ts then
+      let open Ast.Type.TypeArgs in
+      let (loc, { arguments; comments }) = targs in
+      let arguments' = map_list this#type_ arguments in
+      let comments' = this#syntax_opt comments in
+      if arguments == arguments' && comments == comments' then
         targs
       else
-        (loc, ts')
+        (loc, { arguments = arguments'; comments = comments' })
 
     method type_params (tparams : ('loc, 'loc) Ast.Type.TypeParams.t) =
       let open Ast.Type.TypeParams in

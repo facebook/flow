@@ -96,7 +96,7 @@ let check_type_arg_arity cx loc t_ast params n f =
       f ()
     else
       error_type cx loc (Error_message.ETypeParamArity (loc, n)) t_ast
-  | Some (_, l) ->
+  | Some (_, { Ast.Type.TypeArgs.arguments = l; comments = _ }) ->
     if n = List.length l && n <> 0 then
       f ()
     else
@@ -295,9 +295,9 @@ let rec convert cx tparams_map =
     let convert_type_params () =
       match targs with
       | None -> ([], None)
-      | Some (loc, targs) ->
+      | Some (loc, { TypeArgs.arguments = targs; comments }) ->
         let (elemts, targs) = convert_list cx tparams_map targs in
-        (elemts, Some (loc, targs))
+        (elemts, Some (loc, { TypeArgs.arguments = targs; comments }))
     in
     let reconstruct_ast t ?id_t targs =
       ( (loc, t),
@@ -564,8 +564,14 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match targs with
             | Some
-                (targs_loc, (str_loc, StringLiteral { Ast.StringLiteral.value; raw; comments }) :: _)
-              ->
+                ( targs_loc,
+                  {
+                    Ast.Type.TypeArgs.arguments =
+                      ( str_loc,
+                        StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments } )
+                      :: _;
+                    comments;
+                  } ) ->
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
               let remote_module_t = Env.get_var_declared_type cx (internal_module_name value) loc in
@@ -575,8 +581,15 @@ let rec convert cx tparams_map =
                      Flow.flow cx (remote_module_t, CJSRequireT (reason, t, Context.is_strict cx))))
                 (Some
                    ( targs_loc,
-                     [((str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw; comments })]
-                   ))
+                     {
+                       Ast.Type.TypeArgs.arguments =
+                         [
+                           ( (str_loc, str_t),
+                             StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments }
+                           );
+                         ];
+                       comments;
+                     } ))
             | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast)
       | "$Call" ->
         (match convert_type_params () with
@@ -631,8 +644,16 @@ let rec convert cx tparams_map =
       | "$CharSet" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match targs with
-            | Some (targs_loc, [(str_loc, StringLiteral { Ast.StringLiteral.value; raw; comments })])
-              ->
+            | Some
+                ( targs_loc,
+                  {
+                    Ast.Type.TypeArgs.arguments =
+                      [
+                        ( str_loc,
+                          StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments } );
+                      ];
+                    comments;
+                  } ) ->
               let str_t = mk_singleton_string cx str_loc value in
               let chars = String_utils.CharSet.of_string value in
               let char_str = String_utils.CharSet.to_string chars in
@@ -642,8 +663,15 @@ let rec convert cx tparams_map =
                 (DefT (reason, infer_trust cx, CharSetT chars))
                 (Some
                    ( targs_loc,
-                     [((str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw; comments })]
-                   ))
+                     {
+                       Ast.Type.TypeArgs.arguments =
+                         [
+                           ( (str_loc, str_t),
+                             StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments }
+                           );
+                         ];
+                       comments;
+                     } ))
             | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast)
       | "this" ->
         if SMap.mem "this" tparams_map then
@@ -724,7 +752,7 @@ let rec convert cx tparams_map =
             let prop_type = ReactPropType (React.PropType.Primitive (false, t)) in
             let targ =
               match targs with
-              | Some (_, [t]) -> t
+              | Some (_, { Ast.Type.TypeArgs.arguments = [t]; comments = _ }) -> t
               | Some _
               | None ->
                 assert false
@@ -738,7 +766,7 @@ let rec convert cx tparams_map =
             let prop_type = ReactPropType (React.PropType.Primitive (true, t)) in
             let targ =
               match targs with
-              | Some (_, [t]) -> t
+              | Some (_, { Ast.Type.TypeArgs.arguments = [t]; comments = _ }) -> t
               | Some _
               | None ->
                 assert false
@@ -767,7 +795,7 @@ let rec convert cx tparams_map =
             in
             let targ =
               match targs with
-              | Some (_, [t]) -> t
+              | Some (_, { Ast.Type.TypeArgs.arguments = [t]; comments = _ }) -> t
               | Some _
               | None ->
                 assert false
@@ -1561,9 +1589,9 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
   | None ->
     let reason = annot_reason ~annot_loc reason in
     (Flow.mk_instance cx reason c, None)
-  | Some (loc, targs) ->
+  | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
     let (targs, targs_ast) = convert_list cx tparams_map targs in
-    (typeapp ~annot_loc c targs, Some (loc, targs_ast))
+    (typeapp ~annot_loc c targs, Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
@@ -1648,9 +1676,9 @@ and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs; commen
   let (typeapp, targs) =
     match targs with
     | None -> ((loc, c, None), None)
-    | Some (targs_loc, targs) ->
+    | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
       let (ts, targs_ast) = convert_list cx tparams_map targs in
-      ((loc, c, Some ts), Some (targs_loc, targs_ast))
+      ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
   in
   (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
@@ -1825,9 +1853,9 @@ and add_interface_properties cx tparams_map properties s =
 let mk_super cx tparams_map loc c targs =
   match targs with
   | None -> ((loc, c, None), None)
-  | Some (targs_loc, targs) ->
+  | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
     let (ts, targs_ast) = convert_list cx tparams_map targs in
-    ((loc, c, Some ts), Some (targs_loc, targs_ast))
+    ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
 let mk_interface_sig cx reason decl =
   Class_type_sig.(
@@ -1954,9 +1982,10 @@ let mk_declare_class_sig =
                  let (typeapp, targs) =
                    match targs with
                    | None -> ((loc, c, None), None)
-                   | Some (targs_loc, targs) ->
+                   | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
                      let (ts, targs_ast) = convert_list cx tparams_map targs in
-                     ((loc, c, Some ts), Some (targs_loc, targs_ast))
+                     ( (loc, c, Some ts),
+                       Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
                  in
                  (typeapp, (loc, { Ast.Class.Implements.id = ((id_loc, c), id_name_inner); targs })))
           |> List.split

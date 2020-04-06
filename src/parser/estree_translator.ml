@@ -1522,8 +1522,8 @@ with type t = Impl.t = struct
           ("variance", option variance tp_var);
           ("default", option _type default);
         ]
-    and type_args (loc, targs) =
-      node "TypeParameterInstantiation" loc [("params", array_of_list _type targs)]
+    and type_args (loc, { Type.TypeArgs.arguments; comments }) =
+      node ?comments "TypeParameterInstantiation" loc [("params", array_of_list _type arguments)]
     and call_type_args (loc, targs) =
       node "TypeParameterInstantiation" loc [("params", array_of_list call_type_arg targs)]
     and call_type_arg x =

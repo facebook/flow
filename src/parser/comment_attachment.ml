@@ -121,16 +121,6 @@ class ['loc] trailing_comments_remover ~after_pos =
       else
         { func with return = return'; comments = comments' }
 
-    method! generic_type _loc t =
-      let open Ast.Type.Generic in
-      let { id; comments; _ } = t in
-      let id' = this#generic_identifier_type id in
-      let comments' = this#syntax_opt comments in
-      if id == id' && comments == comments' then
-        t
-      else
-        { t with id = id'; comments = comments' }
-
     method! generic_identifier_type git =
       let open Ast.Type.Generic.Identifier in
       match git with

@@ -2159,9 +2159,12 @@ let program
   and type_args
       (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) :
       node change list option =
-    let (_, t_args1) = pi1 in
-    let (_, t_args2) = pi2 in
-    diff_and_recurse_nonopt_no_trivial type_ t_args1 t_args2
+    let open Ast.Type.TypeArgs in
+    let (loc, { arguments = arguments1; comments = comments1 }) = pi1 in
+    let (_, { arguments = arguments2; comments = comments2 }) = pi2 in
+    let args_diff = diff_and_recurse_nonopt_no_trivial type_ arguments1 arguments2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [args_diff; comments_diff]
   and function_param_type
       (fpt1 : (Loc.t, Loc.t) Ast.Type.Function.Param.t)
       (fpt2 : (Loc.t, Loc.t) Ast.Type.Function.Param.t) : node change list option =

@@ -43,4 +43,4 @@ type Test14 =
   | /* 14.19 L symbol */ symbol /* 14.20 T symbol */
   | /* 14.21 L exists */ * /* 14.22 T exists */;
 
-type Test15 = /* 15.1 L id */ Foo /* 15.2 T id */ <T> /* 15.3 T generic */;
+type Test15 = /* 15.1 L id */ Foo /* 15.2 T id */ <T> /* 15.3 T targs */;
