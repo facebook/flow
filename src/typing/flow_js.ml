@@ -2779,6 +2779,12 @@ struct
         reposition the entire union type. *)
         | (UnionT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+        | (UnionT (reason, rep), MakeExactT (reason_op, k)) ->
+          let ts = UnionRep.members rep in
+          let f t = ExactT (reason_op, t) in
+          let ts' = Base.List.map ts ~f in
+          let reason' = repos_reason (aloc_of_reason reason_op) reason in
+          continue cx trace (union_of_ts reason' ts') k
         | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout)) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
@@ -3455,8 +3461,9 @@ struct
         | (DefT (_, trust, EmptyT _), MakeExactT (reason_op, k)) ->
           continue cx trace (EmptyT.why reason_op trust) k
         (* unsupported kind *)
-        | (_, MakeExactT (ru, _)) ->
-          add_output cx ~trace (Error_message.EUnsupportedExact (ru, reason_of_t l))
+        | (_, MakeExactT (reason_op, k)) ->
+          add_output cx ~trace (Error_message.EUnsupportedExact (reason_op, reason_of_t l));
+          continue cx trace (AnyT.error reason_op) k
         (*******************************************)
         (* Refinement based on function predicates *)
         (*******************************************)

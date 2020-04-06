@@ -260,6 +260,35 @@ References:
                                                  ^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- union.js:3:2
+
+Cannot cast object literal to union type because property `q` is missing in object type [1] but exists in object
+literal [2].
+
+   union.js:3:2
+   3| ({p:'A',q:0}: $Exact<{p:'A'}|{p:'B'}>); // error: extra prop
+       ^^^^^^^^^^^ [2]
+
+References:
+   union.js:3:22
+   3| ({p:'A',q:0}: $Exact<{p:'A'}|{p:'B'}>); // error: extra prop
+                           ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:4:2
+
+Cannot cast object literal to union type because object literal [1] is incompatible with union type [2].
+
+   union.js:4:2
+   4| ({p:'C'}: $Exact<{p:'A'}|{p:'B'}>); // error: no match
+       ^^^^^^^ [1]
+
+References:
+   union.js:4:18
+   4| ({p:'C'}: $Exact<{p:'A'}|{p:'B'}>); // error: no match
+                       ^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ unsealed.js:16:22
 
 Cannot assign `0` to `o.p` because number [1] is incompatible with string [2].
@@ -326,4 +355,4 @@ References:
 
 
 
-Found 20 errors
+Found 22 errors
