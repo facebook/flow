@@ -112,6 +112,9 @@ test('deleteUnusedFlowLintComments', async () => {
 let x =
   { /* flowlint foo */ };
 { /* flowlint foo */ }
+/* flowlint
+ *   foo
+ */
 `;
 
   const testOutput = `1*1;
@@ -155,6 +158,7 @@ let x =
     [15, 21, 15, 24],
     [18, 17, 18, 20],
     [19, 15, 19, 18],
+    [21, 6, 21, 9],
   ].map(args => makeLoc(testInput, ...args));
   await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });

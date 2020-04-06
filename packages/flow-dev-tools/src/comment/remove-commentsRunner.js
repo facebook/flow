@@ -94,7 +94,7 @@ function expandComment(
 ) {
   const length = contents.length;
 
-  const flowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?( .*)?$/;
+  const flowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?\b/;
   const emptyFlowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?[ \t\n\r*]*$/;
   if (commentAST && commentAST.value.match(flowlintRegex)) {
     // We're operating on a flowlint comment
