@@ -839,9 +839,9 @@ module Statement
             comments = Flow_ast_utils.mk_comments_opt ~trailing ();
           })
 
-  and type_alias_helper env =
+  and type_alias_helper ~leading env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAlias;
-    let leading = Peek.comments env in
+    let leading = leading @ Peek.comments env in
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
@@ -861,21 +861,22 @@ module Statement
   and declare_type_alias env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let type_alias = type_alias_helper env in
+        let type_alias = type_alias_helper ~leading env in
         Statement.DeclareTypeAlias type_alias)
       env
 
   and type_alias env =
     if Peek.ith_is_identifier ~i:1 env then
-      let (loc, type_alias) = with_loc type_alias_helper env in
+      let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
       (loc, Statement.TypeAlias type_alias)
     else
       Parse.statement env
 
-  and opaque_type_helper ?(declare = false) env =
+  and opaque_type_helper ?(declare = false) ~leading env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedOpaqueTypeAlias;
-    let leading_opaque = Peek.comments env in
+    let leading_opaque = leading @ Peek.comments env in
     Expect.token env T_OPAQUE;
     let leading_type = Peek.comments env in
     Expect.token env T_TYPE;
@@ -939,21 +940,22 @@ module Statement
   and declare_opaque_type env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let opaque_t = opaque_type_helper ~declare:true env in
+        let opaque_t = opaque_type_helper ~declare:true ~leading env in
         Statement.DeclareOpaqueType opaque_t)
       env
 
   and opaque_type env =
     match Peek.ith_token ~i:1 env with
     | T_TYPE ->
-      let (loc, opaque_t) = with_loc (opaque_type_helper ~declare:false) env in
+      let (loc, opaque_t) = with_loc (opaque_type_helper ~declare:false ~leading:[]) env in
       (loc, Statement.OpaqueType opaque_t)
     | _ -> Parse.statement env
 
-  and interface_helper env =
+  and interface_helper ~leading env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
-    let leading = Peek.comments env in
+    let leading = leading @ Peek.comments env in
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
     let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
@@ -968,8 +970,9 @@ module Statement
   and declare_interface env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let iface = interface_helper env in
+        let iface = interface_helper ~leading env in
         Statement.DeclareInterface iface)
       env
 
@@ -977,7 +980,7 @@ module Statement
     (* disambiguate between a value named `interface`, like `var interface = 1; interface++`,
        and an interface declaration like `interface Foo {}`.` *)
     if Peek.ith_is_identifier_name ~i:1 env then
-      let (loc, iface) = with_loc interface_helper env in
+      let (loc, iface) = with_loc (interface_helper ~leading:[]) env in
       (loc, Statement.InterfaceDeclaration iface)
     else
       expression env
@@ -1379,7 +1382,7 @@ module Statement
                   comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
                 }
             | _ ->
-              let (loc, type_alias) = with_loc type_alias_helper env in
+              let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
               record_export
                 env
                 (Flow_ast_utils.ident_of_source
@@ -1396,7 +1399,7 @@ module Statement
         | T_OPAQUE ->
           (* export opaque type ... *)
           Statement.ExportNamedDeclaration.(
-            let (loc, opaque_t) = with_loc opaque_type_helper env in
+            let (loc, opaque_t) = with_loc (opaque_type_helper ~leading:[]) env in
             record_export
               env
               (Flow_ast_utils.ident_of_source
@@ -1625,7 +1628,7 @@ module Statement
               { default = None; declaration = None; specifiers; source = Some source }
           | T_TYPE when allow_export_type ->
             (* declare export type = ... *)
-            let alias = with_loc type_alias_helper env in
+            let alias = with_loc (type_alias_helper ~leading:[]) env in
             Statement.DeclareExportDeclaration
               {
                 default = None;
@@ -1635,7 +1638,7 @@ module Statement
               }
           | T_OPAQUE ->
             (* declare export opaque type = ... *)
-            let opaque = with_loc (opaque_type_helper ~declare:true) env in
+            let opaque = with_loc (opaque_type_helper ~declare:true ~leading:[]) env in
             Statement.DeclareExportDeclaration
               {
                 default = None;
@@ -1645,7 +1648,7 @@ module Statement
               }
           | T_INTERFACE when allow_export_type ->
             (* declare export interface ... *)
-            let iface = with_loc interface_helper env in
+            let iface = with_loc (interface_helper ~leading:[]) env in
             Statement.DeclareExportDeclaration
               {
                 default = None;
