@@ -369,7 +369,7 @@ async function interactive(args: Args): Promise<void> {
     width: 'shrink',
     content:
       '(enter/space) select; (a) toggle all; (c) add comments;\n' +
-      '(g) auto-group; (s) toggle sort; (/) filter; (l) loc regex; ( \u21FD / \u21FE ) focus',
+      '(s) toggle sort; (/) filter; (l) loc regex; ( \u21FD / \u21FE ) focus',
     style: {
       bg: 'white',
       fg: 'red',
@@ -565,11 +565,6 @@ async function interactive(args: Args): Promise<void> {
     }),
   );
 
-  screen.key('g', () => {
-    groupErrors(errors.filter(e => e.active));
-    renderLocations();
-  });
-
   screen.key('s', () => {
     sort = sort === 'loc' ? 'count' : 'loc';
     renderLocations();
@@ -618,66 +613,6 @@ export default async function(args: Args): Promise<void> {
     await nonInteractive(args);
   } else {
     await interactive(args);
-  }
-}
-
-function groupErrors(errors: Array<BlessedError>): void {
-  let ungroupedErrors = errors;
-  // Loop through the active errors, choose the most popular location, and
-  // select that location. Then loop again with the still unchosen errors
-  while (ungroupedErrors.length > 0) {
-    // For each error, figure out which locations it refers to
-    const possibleLocsPerError = ungroupedErrors.map(error => {
-      const locToFirstIndexMap = new Map();
-      error.messages.forEach((message, msgIdx) => {
-        if (
-          message.loc &&
-          message.loc.source &&
-          message.loc.type == 'SourceFile'
-        ) {
-          const locString = format(
-            '%s:%s',
-            message.loc.source,
-            message.loc.start.line,
-          );
-          if (!locToFirstIndexMap.has(locString)) {
-            locToFirstIndexMap.set(locString, msgIdx);
-          }
-        }
-      });
-      return locToFirstIndexMap;
-    });
-
-    // Find the most popular location
-    const locToErrorsMap = new Map();
-    let mostPopularErrors = [];
-    possibleLocsPerError.forEach((locToFirstIndexMap, errorIdx) => {
-      locToFirstIndexMap.forEach((msgIdx, locString) => {
-        const errors = locToErrorsMap.get(locString) || [];
-        errors.push([errorIdx, msgIdx]);
-        locToErrorsMap.set(locString, errors);
-
-        if (errors.length > mostPopularErrors.length) {
-          mostPopularErrors = errors;
-        }
-      });
-    });
-
-    // Select the popular location for the relevant errors
-    const groupedErrorIndexes = new Set();
-    for (const [errorIdx, msgIdx] of mostPopularErrors) {
-      groupedErrorIndexes.add(errorIdx);
-      ungroupedErrors[errorIdx].setSelectedMessage(msgIdx);
-    }
-
-    // Forget about the errors that we just selected
-    let stillUngroupedErrors = [];
-    for (let i = 0; i < ungroupedErrors.length; i++) {
-      if (!groupedErrorIndexes.has(i)) {
-        stillUngroupedErrors.push(ungroupedErrors[i]);
-      }
-    }
-    ungroupedErrors = stillUngroupedErrors;
   }
 }
 
