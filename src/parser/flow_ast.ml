@@ -796,6 +796,14 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module DeclareModuleExports : sig
+    type ('M, 'T) t = {
+      annot: ('M, 'T) Type.annotation;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module ExportNamedDeclaration : sig
     module ExportSpecifier : sig
       type 'M t = 'M * 'M t'
@@ -918,7 +926,7 @@ and Statement : sig
     | DeclareFunction of ('M, 'T) DeclareFunction.t
     | DeclareInterface of ('M, 'T) Interface.t
     | DeclareModule of ('M, 'T) DeclareModule.t
-    | DeclareModuleExports of ('M, 'T) Type.annotation
+    | DeclareModuleExports of ('M, 'T) DeclareModuleExports.t
     | DeclareTypeAlias of ('M, 'T) TypeAlias.t
     | DeclareOpaqueType of ('M, 'T) OpaqueType.t
     | DeclareVariable of ('M, 'T) DeclareVariable.t

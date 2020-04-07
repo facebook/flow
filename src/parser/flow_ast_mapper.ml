@@ -629,8 +629,16 @@ class ['loc] mapper =
       else
         { id; body = body'; kind; comments = comments' }
 
-    (* TODO *)
-    method declare_module_exports _loc (annot : ('loc, 'loc) Ast.Type.annotation) = annot
+    method declare_module_exports _loc (exports : ('loc, 'loc) Ast.Statement.DeclareModuleExports.t)
+        =
+      let open Ast.Statement.DeclareModuleExports in
+      let { annot; comments } = exports in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      if annot == annot' && comments == comments' then
+        exports
+      else
+        { annot = annot'; comments = comments' }
 
     method declare_type_alias loc (decl : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       this#type_alias loc decl

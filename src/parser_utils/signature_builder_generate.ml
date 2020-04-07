@@ -1840,7 +1840,12 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
 
   let cjs_exports =
     let declare_module_exports mod_exp_loc loc t =
-      (mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t))
+      ( mod_exp_loc,
+        Ast.Statement.DeclareModuleExports
+          {
+            Ast.Statement.DeclareModuleExports.annot = (loc, t);
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     in
     let additional_properties_of_module_exports outlined add_module_exports_list =
       Base.List.rev_map
@@ -1865,7 +1870,12 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     let set_module_exports mod_exp_loc outlined expr add_module_exports_list =
       let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
       if ListUtils.is_empty add_module_exports_list then
-        (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot))
+        ( mod_exp_loc,
+          Ast.Statement.DeclareModuleExports
+            {
+              Ast.Statement.DeclareModuleExports.annot = (fst annot, annot);
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } )
       else
         let properties = additional_properties_of_module_exports outlined add_module_exports_list in
         let ot =
@@ -1897,7 +1907,12 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                 comments = Flow_ast_utils.mk_comments_opt ();
               } )
         in
-        (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, t))
+        ( mod_exp_loc,
+          Ast.Statement.DeclareModuleExports
+            {
+              Ast.Statement.DeclareModuleExports.annot = (fst annot, t);
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } )
     in
     let add_module_exports mod_exp_loc outlined add_module_exports_list =
       let properties = additional_properties_of_module_exports outlined add_module_exports_list in
@@ -1910,7 +1925,14 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         }
       in
       let t = (mod_exp_loc, Ast.Type.Object ot) in
-      [(mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t))]
+      [
+        ( mod_exp_loc,
+          Ast.Statement.DeclareModuleExports
+            {
+              Ast.Statement.DeclareModuleExports.annot = (mod_exp_loc, t);
+              comments = Flow_ast_utils.mk_comments_opt ();
+            } );
+      ]
     in
     fun outlined -> function
       | (None, _) -> []

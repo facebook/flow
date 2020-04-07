@@ -294,8 +294,8 @@ with type t = Impl.t = struct
                 ("source", option string_literal source);
               ]
         end
-      | (loc, DeclareModuleExports annot) ->
-        node "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
+      | (loc, DeclareModuleExports { DeclareModuleExports.annot; comments }) ->
+        node ?comments "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
       | ( loc,
           ExportNamedDeclaration
             { ExportNamedDeclaration.specifiers; declaration; source; exportKind; comments } ) ->

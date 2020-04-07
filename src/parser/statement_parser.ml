@@ -1197,17 +1197,27 @@ module Statement
       let leading = leading @ Peek.comments env in
       Expect.identifier env "module";
       if in_module || Peek.token env = T_PERIOD then
-        let (loc, exports) = with_loc declare_module_exports env in
+        let (loc, exports) = with_loc (declare_module_exports ~leading) env in
         (Loc.btwn start_loc loc, exports)
       else
         declare_module_ env start_loc leading
 
-  and declare_module_exports env =
+  and declare_module_exports ~leading env =
+    let leading_period = Peek.comments env in
     Expect.token env T_PERIOD;
+    let leading_exports = Peek.comments env in
     Expect.identifier env "exports";
-    let type_annot = Type.annotation env in
-    let _ = semicolon env in
-    Statement.DeclareModuleExports type_annot
+    let leading_annot = Peek.comments env in
+    let leading = List.concat [leading; leading_period; leading_exports; leading_annot] in
+    let annot = Type.annotation env in
+    let (annot, trailing) =
+      match semicolon env with
+      | Explicit trailing -> (annot, trailing)
+      | Implicit { remove_trailing; _ } ->
+        (remove_trailing annot (fun remover annot -> remover#type_annotation annot), [])
+    in
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    Statement.DeclareModuleExports { Statement.DeclareModuleExports.annot; comments }
 
   and declare ?(in_module = false) env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeDeclaration;

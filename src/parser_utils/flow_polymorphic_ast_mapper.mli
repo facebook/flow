@@ -118,7 +118,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'M -> ('M, 'T) Ast.Statement.DeclareModule.t -> ('N, 'U) Ast.Statement.DeclareModule.t
 
     method declare_module_exports :
-      'M -> ('M, 'T) Flow_ast.Type.annotation -> ('N, 'U) Ast.Type.annotation
+      ('M, 'T) Flow_ast.Statement.DeclareModuleExports.t ->
+      ('N, 'U) Ast.Statement.DeclareModuleExports.t
 
     method declare_opaque_type :
       ('M, 'T) Ast.Statement.OpaqueType.t -> ('N, 'U) Ast.Statement.OpaqueType.t

@@ -2257,10 +2257,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       export_statement cx loc ~default export_info specifiers source export_kind;
 
       (loc, DeclareExportDeclaration { decl with DeclareExportDeclaration.declaration }))
-  | (loc, DeclareModuleExports (t_loc, t)) ->
+  | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
+    ->
     let (((_, t), _) as t_ast) = Anno.convert cx SMap.empty t in
     Import_export.cjs_clobber cx loc t;
-    (loc, DeclareModuleExports (t_loc, t_ast))
+    ( loc,
+      DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t_ast); comments }
+    )
   | ( loc,
       ExportNamedDeclaration
         ( { ExportNamedDeclaration.declaration; specifiers; source; exportKind; comments = _ } as

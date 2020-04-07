@@ -746,9 +746,11 @@ struct
         end;
         super#export_named_declaration stmt_loc decl
 
-      method! declare_module_exports loc (annot : (L.t, L.t) Ast.Type.annotation) =
+      method! declare_module_exports loc (exports : (L.t, L.t) Ast.Statement.DeclareModuleExports.t)
+          =
+        let { Ast.Statement.DeclareModuleExports.annot; comments = _ } = exports in
         this#set_cjs_exports loc (DeclareModuleExportsDef annot);
-        super#declare_module_exports loc annot
+        super#declare_module_exports loc exports
 
       method! declare_export_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.DeclareExportDeclaration.t) =

@@ -40,8 +40,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | DeclareModule m -> DeclareModule (this#declare_module annot m)
           | DeclareTypeAlias stuff -> DeclareTypeAlias (this#declare_type_alias stuff)
           | DeclareVariable stuff -> DeclareVariable (this#declare_variable stuff)
-          | DeclareModuleExports t_annot ->
-            DeclareModuleExports (this#declare_module_exports annot t_annot)
+          | DeclareModuleExports exports ->
+            DeclareModuleExports (this#declare_module_exports exports)
           | DoWhile stuff -> DoWhile (this#do_while stuff)
           | Empty comments -> Empty (this#empty comments)
           | EnumDeclaration enum -> EnumDeclaration (this#enum_declaration enum)
@@ -448,9 +448,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { id = id'; body = body'; kind = kind'; comments = comments' }
 
-    method declare_module_exports _annot (t_annot : ('M, 'T) Ast.Type.annotation)
-        : ('N, 'U) Ast.Type.annotation =
-      this#type_annotation t_annot
+    method declare_module_exports (exports : ('M, 'T) Ast.Statement.DeclareModuleExports.t)
+        : ('N, 'U) Ast.Statement.DeclareModuleExports.t =
+      let open Ast.Statement.DeclareModuleExports in
+      let { annot; comments } = exports in
+      let annot' = this#type_annotation annot in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { annot = annot'; comments = comments' }
 
     method declare_type_alias (decl : ('M, 'T) Ast.Statement.TypeAlias.t)
         : ('N, 'U) Ast.Statement.TypeAlias.t =
