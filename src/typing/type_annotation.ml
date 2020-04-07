@@ -326,10 +326,15 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (elemts, targs) = convert_type_params () in
             match List.hd elemts with
-            | DefT (r, trust, SingletonStrT str_lit) ->
-              reconstruct_ast
-                (DefT (replace_desc_reason RString r, trust, StrT (Literal (None, str_lit))))
-                targs
+            | DefT (r, trust, SingletonStrT s) ->
+              let max_literal_length = Context.max_literal_length cx in
+              let (lit, r_desc) =
+                if max_literal_length = 0 || String.length s < max_literal_length then
+                  (Literal (None, s), RString)
+                else
+                  (AnyLiteral, RLongStringLit max_literal_length)
+              in
+              reconstruct_ast (DefT (replace_desc_reason r_desc r, trust, StrT lit)) targs
             | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast)
       | "$TEMPORARY$boolean" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
