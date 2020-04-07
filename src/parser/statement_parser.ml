@@ -1249,6 +1249,16 @@ module Statement
       error_unexpected ~expected:"a string" env;
       ret
 
+  and export_source_and_semicolon env =
+    let (source_loc, source) = export_source env in
+    match semicolon env with
+    | Explicit trailing -> ((source_loc, source), trailing)
+    | Implicit { remove_trailing; _ } ->
+      ( ( source_loc,
+          remove_trailing source (fun remover source ->
+              remover#string_literal_type source_loc source) ),
+        [] )
+
   and extract_pattern_binding_names =
     let rec fold acc =
       let open Pattern in
@@ -1367,12 +1377,7 @@ module Statement
               Expect.token env T_TYPE;
               let specifier_loc = Peek.loc env in
               Expect.token env T_MULT;
-              let source = export_source env in
-              let trailing =
-                match semicolon env with
-                | Explicit comments -> comments
-                | Implicit _ -> []
-              in
+              let (source, trailing) = export_source_and_semicolon env in
               Statement.ExportNamedDeclaration
                 {
                   declaration = None;
@@ -1496,18 +1501,12 @@ module Statement
               | _ -> None
             in
             let specifiers = Some (ExportBatchSpecifier (loc, local_name)) in
-            let source = export_source env in
-            let source = Some source in
-            let trailing =
-              match semicolon env with
-              | Explicit comments -> comments
-              | Implicit _ -> []
-            in
+            let (source, trailing) = export_source_and_semicolon env in
             Statement.ExportNamedDeclaration
               {
                 declaration = None;
                 specifiers;
-                source;
+                source = Some source;
                 exportKind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               })
@@ -1523,17 +1522,19 @@ module Statement
             Expect.token env T_LCURLY;
             let specifiers = export_specifiers env [] in
             Expect.token env T_RCURLY;
-            let source =
+            let (source, trailing) =
               match Peek.token env with
-              | T_IDENTIFIER { raw = "from"; _ } -> Some (export_source env)
+              | T_IDENTIFIER { raw = "from"; _ } ->
+                let (source, trailing) = export_source_and_semicolon env in
+                (Some source, trailing)
               | _ ->
                 assert_export_specifier_identifiers env specifiers;
-                None
-            in
-            let trailing =
-              match semicolon env with
-              | Explicit comments -> comments
-              | Implicit _ -> []
+                let trailing =
+                  match semicolon env with
+                  | Explicit trailing -> trailing
+                  | Implicit { trailing; _ } -> trailing
+                in
+                (None, trailing)
             in
             Statement.ExportNamedDeclaration
               {

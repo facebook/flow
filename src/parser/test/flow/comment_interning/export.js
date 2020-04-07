@@ -15,3 +15,13 @@
 /* 8.1 L export */ export /* 8.2 L class */ class Baz {} /* 8.3 T class body */
 
 /* 9.1 L export */ export /* 9.2 L var decl */ const a = 1; /* 9.3 T var decl */
+
+/* 10.1 L export */ export * from 'source' /* 10.2 T str lit */
+
+/* 11.1 L export */ export type * from 'source' /* 11.2 T str lit */
+
+/* 12.1 L export */ export { Foo1 } from 'source' /* 12.2 T str lit */
+
+/* 13.1 L export */ export { Foo2 } /* 13.2 T export */
+
+/* Final L str */ 'end of tests';
