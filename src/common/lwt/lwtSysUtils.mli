@@ -14,3 +14,6 @@ type command_result = {
 }
 
 val exec : string -> string list -> command_result Lwt.t
+
+val exec_with_timeout :
+  timeout:float -> string -> string list -> (command_result, string) result Lwt.t
