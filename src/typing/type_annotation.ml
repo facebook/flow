@@ -1342,13 +1342,13 @@ and convert_object =
       (acc, prop_ast)
   in
   let make_call cx tparams_map loc call =
-    let { Object.CallProperty.value = (fn_loc, fn); static } = call in
+    let { Object.CallProperty.value = (fn_loc, fn); static; comments } = call in
     let (t, fn) =
       match convert cx tparams_map (loc, Ast.Type.Function fn) with
       | ((_, t), Ast.Type.Function fn) -> (t, fn)
       | _ -> assert false
     in
-    (t, { Object.CallProperty.value = (fn_loc, fn); static })
+    (t, { Object.CallProperty.value = (fn_loc, fn); static; comments })
   in
   let make_dict cx tparams_map indexer =
     let { Object.Indexer.id; key; value; static; variance; comments } = indexer in
@@ -1701,7 +1701,7 @@ and add_interface_properties cx tparams_map properties s =
       List.fold_left
         Ast.Type.Object.(
           fun (x, rev_prop_asts) -> function
-            | CallProperty (loc, { CallProperty.value = (value_loc, ft); static }) ->
+            | CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments }) ->
               let ((_, t), ft) = convert cx tparams_map (loc, Ast.Type.Function ft) in
               let ft =
                 match ft with
@@ -1709,7 +1709,7 @@ and add_interface_properties cx tparams_map properties s =
                 | _ -> assert false
               in
               ( append_call ~static t x,
-                CallProperty (loc, { CallProperty.value = (value_loc, ft); static })
+                CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments })
                 :: rev_prop_asts )
             | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
               ->
@@ -1723,8 +1723,9 @@ and add_interface_properties cx tparams_map properties s =
               ( add_indexer ~static polarity ~key:k ~value:v x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts )
             | Property
-                (loc, ({ Property.key; value; static; proto; optional; _method; variance } as prop))
-              ->
+                ( loc,
+                  ( { Property.key; value; static; proto; optional; _method; variance; comments = _ }
+                  as prop ) ) ->
               if optional && _method then
                 Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
               let polarity = polarity variance in

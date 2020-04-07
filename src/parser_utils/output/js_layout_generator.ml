@@ -2655,7 +2655,9 @@ and type_function
 and type_object_property =
   let open Ast.Type.Object in
   function
-  | Property (loc, { Property.key; value; optional; static; proto; variance = variance_; _method })
+  | Property
+      ( loc,
+        { Property.key; value; optional; static; proto; variance = variance_; _method; comments } )
     ->
     let s_static =
       if static then
@@ -2670,6 +2672,7 @@ and type_object_property =
         Empty
     in
     source_location_with_comments
+      ?comments
       ( loc,
         match (value, _method, proto, optional) with
         (* Functions with no special properties can be rendered as methods *)
@@ -2730,8 +2733,9 @@ and type_object_property =
             pretty_space;
             type_ value;
           ] )
-  | CallProperty (loc, { CallProperty.value = (call_loc, func); static }) ->
+  | CallProperty (loc, { CallProperty.value = (call_loc, func); static; comments }) ->
     source_location_with_comments
+      ?comments
       ( loc,
         fuse
           [

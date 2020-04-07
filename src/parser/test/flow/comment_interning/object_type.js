@@ -17,3 +17,25 @@ type Test8 = {/* 8.1 L tparams */ <T> /* 8.2 L params */ () /* 8.3 T params */: 
 type Test9 = {/* 9.1 L id */ method /* 9.2 T id */ <T> /* 9.3 L params */ () /* 9.4 T params */: void};
 
 type Test10 = {/* 10.1 L islot */ [[key]] /* 10.2 L tparams */ <T> /* 10.3 L params */ () /* 10.4 T params */: void}
+
+declare class PrefixTests {
+  /* 11.1 L prop */ static /* 11.2 L id */ prop: any,
+
+  /* 12.1 L prop */ proto /* 12.2 L id */ prop: any,
+
+  /* 13.1 L id */ static: any;
+
+  /* 14.1 L id */ proto: any;
+
+  /* 15.1 L prop */ static /* 15.2 L prop */ get /* 15.3 L id */ getter(): void,
+
+  /* 16.1 L prop */ static /* 16.2 L prop */ set /* 16.3 L id */ setter(any): void,
+
+  /* 17.1 L prop */ static /* 17.2 L id */ method(): void,
+
+  /* 18.1 L call prop */ static /* 18.2 L func */ (): void,
+
+  /* 19.1 L indexer */ static /* 19.2 L indexer */ [string]: string,
+
+  /* 20.1 L islot */ static /* 20.2 L islot */ [[prop]]: string,
+}

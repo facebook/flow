@@ -722,12 +722,22 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_property_type (opt : ('M, 'T) Ast.Type.Object.Property.t)
         : ('N, 'U) Ast.Type.Object.Property.t =
       let open Ast.Type.Object.Property in
-      let (annot, { key; value; optional; static; proto; _method; variance }) = opt in
+      let (annot, { key; value; optional; static; proto; _method; variance; comments }) = opt in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let variance' = Base.Option.map ~f:this#variance variance in
+      let comments' = Base.Option.map ~f:this#syntax comments in
       ( this#on_loc_annot annot,
-        { key = key'; value = value'; optional; static; proto; _method; variance = variance' } )
+        {
+          key = key';
+          value = value';
+          optional;
+          static;
+          proto;
+          _method;
+          variance = variance';
+          comments = comments';
+        } )
 
     method object_indexer_type (oit : ('M, 'T) Ast.Type.Object.Indexer.t)
         : ('N, 'U) Ast.Type.Object.Indexer.t =
@@ -770,10 +780,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let comments' = Base.Option.map ~f:this#syntax comments in
         SpreadProperty (annot', { SpreadProperty.argument = argument'; comments = comments' })
       | Indexer indexer -> Indexer (this#object_indexer_type indexer)
-      | CallProperty (annot, { CallProperty.value; static }) ->
-        CallProperty.(
-          let value' = (this#on_loc_annot * this#function_type) value in
-          CallProperty (this#on_loc_annot annot, { value = value'; static }))
+      | CallProperty (annot, { CallProperty.value; static; comments }) ->
+        let value' = (this#on_loc_annot * this#function_type) value in
+        let comments' = Base.Option.map ~f:this#syntax comments in
+        CallProperty
+          (this#on_loc_annot annot, { CallProperty.value = value'; static; comments = comments' })
       | InternalSlot islot -> InternalSlot (this#object_internal_slot_type islot)
 
     method interface_type (i : ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =

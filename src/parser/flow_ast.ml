@@ -214,6 +214,7 @@ and Type : sig
         proto: bool;
         _method: bool;
         variance: 'M Variance.t option;
+        comments: ('M, unit) Syntax.t option;
       }
 
       and ('M, 'T) value =
@@ -252,6 +253,7 @@ and Type : sig
       and ('M, 'T) t' = {
         value: 'M * ('M, 'T) Function.t;
         static: bool;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end

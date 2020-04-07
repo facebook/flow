@@ -2074,13 +2074,14 @@ let program
       diff_if_changed_ret_opt (object_indexer_type loc) p1 p2
     | (InternalSlot (loc, s1), InternalSlot (_, s2)) ->
       diff_if_changed_ret_opt (object_internal_slot_type loc) s1 s2
-    | (CallProperty _p1, CallProperty _p2) -> None (* TODO *)
+    | (CallProperty (loc, p1), CallProperty (_, p2)) ->
+      diff_if_changed_ret_opt (object_call_property_type loc) p1 p2
     | _ -> None
   and object_property_type
       (optype1 : (Loc.t, Loc.t) Ast.Type.Object.Property.t)
       (optype2 : (Loc.t, Loc.t) Ast.Type.Object.Property.t) : node change list option =
     let open Ast.Type.Object.Property in
-    let ( _loc1,
+    let ( loc1,
           {
             key = key1;
             value = value1;
@@ -2089,6 +2090,7 @@ let program
             proto = proto1;
             _method = method1;
             variance = var1;
+            comments = comments1;
           } ) =
       optype1
     in
@@ -2101,6 +2103,7 @@ let program
             proto = proto2;
             _method = method2;
             variance = var2;
+            comments = comments2;
           } ) =
       optype2
     in
@@ -2110,7 +2113,8 @@ let program
       let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
       let key_diff = diff_if_changed_ret_opt object_key key1 key2 in
       let value_diff = diff_if_changed_ret_opt object_property_value_type value1 value2 in
-      join_diff_list [variance_diff; key_diff; value_diff]
+      let comments_diff = syntax_opt loc1 comments1 comments2 in
+      join_diff_list [variance_diff; key_diff; value_diff; comments_diff]
   and object_property_value_type
       (opvt1 : (Loc.t, Loc.t) Ast.Type.Object.Property.value)
       (opvt2 : (Loc.t, Loc.t) Ast.Type.Object.Property.value) : node change list option =
@@ -2197,6 +2201,19 @@ let program
       let value_diff = Some (diff_if_changed type_ value1 value2) in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [id_diff; value_diff; comments_diff]
+  and object_call_property_type
+      (loc : Loc.t)
+      (call1 : (Loc.t, Loc.t) Ast.Type.Object.CallProperty.t')
+      (call2 : (Loc.t, Loc.t) Ast.Type.Object.CallProperty.t') : node change list option =
+    let open Ast.Type.Object.CallProperty in
+    let { value = (value_loc, value1); static = static1; comments = comments1 } = call1 in
+    let { value = (_, value2); static = static2; comments = comments2 } = call2 in
+    if static1 != static2 then
+      None
+    else
+      let value_diff = diff_if_changed_ret_opt (function_type value_loc) value1 value2 in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [value_diff; comments_diff]
   and tuple_type
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.t) :
       node change list option =

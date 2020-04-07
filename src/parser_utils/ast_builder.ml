@@ -31,9 +31,20 @@ module Types = struct
         ?(proto = false)
         ?(_method = false)
         ?(variance = None)
+        ?comments
         key
         value =
-      (loc, { Ast.Type.Object.Property.key; value; optional; static; proto; _method; variance })
+      ( loc,
+        {
+          Ast.Type.Object.Property.key;
+          value;
+          optional;
+          static;
+          proto;
+          _method;
+          variance;
+          comments;
+        } )
 
     let getter ?(loc = Loc.none) ?optional ?static ?proto ?_method ?variance key func =
       let value = Ast.Type.Object.Property.Get (loc, func) in

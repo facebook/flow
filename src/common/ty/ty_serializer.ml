@@ -215,6 +215,7 @@ and obj_named_prop =
         proto = false;
         _method = false;
         variance = variance_ polarity;
+        comments = None;
       }
     | Method f ->
       function_ f >>| fun fun_t ->
@@ -226,6 +227,7 @@ and obj_named_prop =
         proto = false;
         _method = true;
         variance = None;
+        comments = None;
       }
     | Get t ->
       getter t >>| fun t ->
@@ -237,6 +239,7 @@ and obj_named_prop =
         proto = false;
         _method = false;
         variance = None;
+        comments = None;
       }
     | Set t ->
       setter t >>| fun t ->
@@ -248,6 +251,7 @@ and obj_named_prop =
         proto = false;
         _method = false;
         variance = None;
+        comments = None;
       }
 
 and obj_index_prop d =
@@ -264,7 +268,8 @@ and obj_index_prop d =
   }
 
 and obj_call_prop f =
-  function_ f >>| fun value -> { T.Object.CallProperty.value = (Loc.none, value); static = false }
+  function_ f >>| fun value ->
+  { T.Object.CallProperty.value = (Loc.none, value); static = false; comments = None }
 
 and obj_spread_prop t =
   type_ t >>| fun t ->

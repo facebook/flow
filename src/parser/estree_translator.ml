@@ -1392,6 +1392,7 @@ with type t = Impl.t = struct
             proto;
             variance = variance_;
             _method;
+            comments;
           } ) =
       let key =
         match key with
@@ -1409,6 +1410,7 @@ with type t = Impl.t = struct
         | Type.Object.Property.Set (loc, f) -> (function_type (loc, f), "set")
       in
       node
+        ?comments
         "ObjectTypeProperty"
         loc
         [
@@ -1436,8 +1438,12 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
-    and object_type_call_property (loc, { Type.Object.CallProperty.value; static }) =
-      node "ObjectTypeCallProperty" loc [("value", function_type value); ("static", bool static)]
+    and object_type_call_property (loc, { Type.Object.CallProperty.value; static; comments }) =
+      node
+        ?comments
+        "ObjectTypeCallProperty"
+        loc
+        [("value", function_type value); ("static", bool static)]
     and object_type_internal_slot
         (loc, { Type.Object.InternalSlot.id; optional; static; _method; value; comments }) =
       node

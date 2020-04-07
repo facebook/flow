@@ -946,12 +946,15 @@ class ['loc] mapper =
 
     method object_property_type (opt : ('loc, 'loc) Ast.Type.Object.Property.t) =
       let open Ast.Type.Object.Property in
-      let (loc, { key; value; optional; static; proto; _method; variance }) = opt in
+      let (loc, { key; value; optional; static; proto; _method; variance; comments }) = opt in
       let value' = this#object_property_value_type value in
-      if value' == value then
+      let comments' = this#syntax_opt comments in
+      if value' == value && comments' == comments then
         opt
       else
-        (loc, { key; value = value'; optional; static; proto; _method; variance })
+        ( loc,
+          { key; value = value'; optional; static; proto; _method; variance; comments = comments' }
+        )
 
     method object_spread_property_type (opt : ('loc, 'loc) Ast.Type.Object.SpreadProperty.t) =
       let open Ast.Type.Object.SpreadProperty in
@@ -986,6 +989,16 @@ class ['loc] mapper =
       else
         (loc, { id = id'; value = value'; optional; static; _method; comments = comments' })
 
+    method object_call_property_type (call : ('loc, 'loc) Ast.Type.Object.CallProperty.t) =
+      let open Ast.Type.Object.CallProperty in
+      let (loc, { value = (value_loc, value); static; comments }) = call in
+      let value' = this#function_type value_loc value in
+      let comments' = this#syntax_opt comments in
+      if value == value' && comments == comments' then
+        call
+      else
+        (loc, { value = (value_loc, value'); static; comments = comments' })
+
     method object_type _loc (ot : ('loc, 'loc) Ast.Type.Object.t) =
       let open Ast.Type.Object in
       let { properties; exact; inexact; comments } = ot in
@@ -999,7 +1012,7 @@ class ['loc] mapper =
             | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
             | InternalSlot p' ->
               id this#object_internal_slot_property_type p' p (fun p' -> InternalSlot p')
-            | CallProperty _ -> p) (* TODO *)
+            | CallProperty p' -> id this#object_call_property_type p' p (fun p' -> CallProperty p'))
           properties
       in
       let comments' = this#syntax_opt comments in

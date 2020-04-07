@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":19,"column":116}},
-  "range":[0,1010],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":41,"column":1}},
+  "range":[0,1636],
   "body":[
     {
       "type":"TypeAlias",
@@ -857,6 +857,452 @@
           }
         ]
       }
+    },
+    {
+      "type":"DeclareClass",
+      "loc":{"source":null,"start":{"line":21,"column":0},"end":{"line":41,"column":1}},
+      "range":[1012,1636],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":21,"column":14},"end":{"line":21,"column":25}},
+        "range":[1026,1037],
+        "name":"PrefixTests",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "body":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":21,"column":26},"end":{"line":41,"column":1}},
+        "range":[1038,1636],
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":22,"column":2},"end":{"line":22,"column":19}},
+                "range":[1042,1059],
+                "value":" 11.1 L prop "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":22,"column":20},"end":{"line":22,"column":52}},
+            "range":[1060,1092],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":22,"column":27},"end":{"line":22,"column":42}},
+                  "range":[1067,1082],
+                  "value":" 11.2 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":22,"column":43},"end":{"line":22,"column":47}},
+              "range":[1083,1087],
+              "name":"prop",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":22,"column":49},"end":{"line":22,"column":52}},
+              "range":[1089,1092]
+            },
+            "method":false,
+            "optional":false,
+            "static":true,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":24,"column":2},"end":{"line":24,"column":19}},
+                "range":[1097,1114],
+                "value":" 12.1 L prop "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":24,"column":20},"end":{"line":24,"column":51}},
+            "range":[1115,1146],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":24,"column":26},"end":{"line":24,"column":41}},
+                  "range":[1121,1136],
+                  "value":" 12.2 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":24,"column":42},"end":{"line":24,"column":46}},
+              "range":[1137,1141],
+              "name":"prop",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":24,"column":48},"end":{"line":24,"column":51}},
+              "range":[1143,1146]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":true,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":26,"column":18},"end":{"line":26,"column":29}},
+            "range":[1167,1178],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":26,"column":2},"end":{"line":26,"column":17}},
+                  "range":[1151,1166],
+                  "value":" 13.1 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":26,"column":18},"end":{"line":26,"column":24}},
+              "range":[1167,1173],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":26,"column":26},"end":{"line":26,"column":29}},
+              "range":[1175,1178]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":28,"column":18},"end":{"line":28,"column":28}},
+            "range":[1199,1209],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":28,"column":2},"end":{"line":28,"column":17}},
+                  "range":[1183,1198],
+                  "value":" 14.1 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":28,"column":18},"end":{"line":28,"column":23}},
+              "range":[1199,1204],
+              "name":"proto",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":28,"column":25},"end":{"line":28,"column":28}},
+              "range":[1206,1209]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":30,"column":2},"end":{"line":30,"column":19}},
+                "range":[1214,1231],
+                "value":" 15.1 L prop "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":30,"column":27},"end":{"line":30,"column":44}},
+                "range":[1239,1256],
+                "value":" 15.2 L prop "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":30,"column":20},"end":{"line":30,"column":79}},
+            "range":[1232,1291],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":30,"column":49},"end":{"line":30,"column":64}},
+                  "range":[1261,1276],
+                  "value":" 15.3 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":30,"column":65},"end":{"line":30,"column":71}},
+              "range":[1277,1283],
+              "name":"getter",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "loc":{"source":null,"start":{"line":30,"column":20},"end":{"line":30,"column":79}},
+              "range":[1232,1291],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":30,"column":75},"end":{"line":30,"column":79}},
+                "range":[1287,1291]
+              },
+              "rest":null,
+              "typeParameters":null
+            },
+            "method":false,
+            "optional":false,
+            "static":true,
+            "proto":false,
+            "variance":null,
+            "kind":"get"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":32,"column":2},"end":{"line":32,"column":19}},
+                "range":[1296,1313],
+                "value":" 16.1 L prop "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":32,"column":27},"end":{"line":32,"column":44}},
+                "range":[1321,1338],
+                "value":" 16.2 L prop "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":32,"column":20},"end":{"line":32,"column":82}},
+            "range":[1314,1376],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":32,"column":49},"end":{"line":32,"column":64}},
+                  "range":[1343,1358],
+                  "value":" 16.3 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":32,"column":65},"end":{"line":32,"column":71}},
+              "range":[1359,1365],
+              "name":"setter",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "loc":{"source":null,"start":{"line":32,"column":20},"end":{"line":32,"column":82}},
+              "range":[1314,1376],
+              "params":[
+                {
+                  "type":"FunctionTypeParam",
+                  "loc":{"source":null,"start":{"line":32,"column":72},"end":{"line":32,"column":75}},
+                  "range":[1366,1369],
+                  "name":null,
+                  "typeAnnotation":{
+                    "type":"AnyTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":32,"column":72},"end":{"line":32,"column":75}},
+                    "range":[1366,1369]
+                  },
+                  "optional":false
+                }
+              ],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":32,"column":78},"end":{"line":32,"column":82}},
+                "range":[1372,1376]
+              },
+              "rest":null,
+              "typeParameters":null
+            },
+            "method":false,
+            "optional":false,
+            "static":true,
+            "proto":false,
+            "variance":null,
+            "kind":"set"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":34,"column":2},"end":{"line":34,"column":19}},
+                "range":[1381,1398],
+                "value":" 17.1 L prop "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":34,"column":20},"end":{"line":34,"column":57}},
+            "range":[1399,1436],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":34,"column":27},"end":{"line":34,"column":42}},
+                  "range":[1406,1421],
+                  "value":" 17.2 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":34,"column":43},"end":{"line":34,"column":49}},
+              "range":[1422,1428],
+              "name":"method",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "loc":{"source":null,"start":{"line":34,"column":20},"end":{"line":34,"column":57}},
+              "range":[1399,1436],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":34,"column":53},"end":{"line":34,"column":57}},
+                "range":[1432,1436]
+              },
+              "rest":null,
+              "typeParameters":null
+            },
+            "method":true,
+            "optional":false,
+            "static":true,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          }
+        ],
+        "indexers":[
+          {
+            "type":"ObjectTypeIndexer",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":38,"column":2},"end":{"line":38,"column":22}},
+                "range":[1502,1522],
+                "value":" 19.1 L indexer "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":38,"column":30},"end":{"line":38,"column":50}},
+                "range":[1530,1550],
+                "value":" 19.2 L indexer "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":38,"column":23},"end":{"line":38,"column":67}},
+            "range":[1523,1567],
+            "id":null,
+            "key":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":38,"column":52},"end":{"line":38,"column":58}},
+              "range":[1552,1558]
+            },
+            "value":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":38,"column":61},"end":{"line":38,"column":67}},
+              "range":[1561,1567]
+            },
+            "static":true,
+            "variance":null
+          }
+        ],
+        "callProperties":[
+          {
+            "type":"ObjectTypeCallProperty",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":36,"column":2},"end":{"line":36,"column":24}},
+                "range":[1441,1463],
+                "value":" 18.1 L call prop "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":36,"column":25},"end":{"line":36,"column":58}},
+            "range":[1464,1497],
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":36,"column":32},"end":{"line":36,"column":49}},
+                  "range":[1471,1488],
+                  "value":" 18.2 L func "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":36,"column":50},"end":{"line":36,"column":58}},
+              "range":[1489,1497],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":36,"column":54},"end":{"line":36,"column":58}},
+                "range":[1493,1497]
+              },
+              "rest":null,
+              "typeParameters":null
+            },
+            "static":true
+          }
+        ],
+        "internalSlots":[
+          {
+            "type":"ObjectTypeInternalSlot",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":40,"column":2},"end":{"line":40,"column":20}},
+                "range":[1572,1590],
+                "value":" 20.1 L islot "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":40,"column":28},"end":{"line":40,"column":46}},
+                "range":[1598,1616],
+                "value":" 20.2 L islot "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":40,"column":21},"end":{"line":40,"column":63}},
+            "range":[1591,1633],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":40,"column":49},"end":{"line":40,"column":53}},
+              "range":[1619,1623],
+              "name":"prop",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "optional":false,
+            "static":true,
+            "method":false,
+            "value":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":40,"column":57},"end":{"line":40,"column":63}},
+              "range":[1627,1633]
+            }
+          }
+        ]
+      },
+      "extends":[],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[
@@ -1093,6 +1539,126 @@
       "loc":{"source":null,"start":{"line":19,"column":90},"end":{"line":19,"column":109}},
       "range":[984,1003],
       "value":" 10.4 T params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":22,"column":2},"end":{"line":22,"column":19}},
+      "range":[1042,1059],
+      "value":" 11.1 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":22,"column":27},"end":{"line":22,"column":42}},
+      "range":[1067,1082],
+      "value":" 11.2 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":2},"end":{"line":24,"column":19}},
+      "range":[1097,1114],
+      "value":" 12.1 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":26},"end":{"line":24,"column":41}},
+      "range":[1121,1136],
+      "value":" 12.2 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":26,"column":2},"end":{"line":26,"column":17}},
+      "range":[1151,1166],
+      "value":" 13.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":28,"column":2},"end":{"line":28,"column":17}},
+      "range":[1183,1198],
+      "value":" 14.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":30,"column":2},"end":{"line":30,"column":19}},
+      "range":[1214,1231],
+      "value":" 15.1 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":30,"column":27},"end":{"line":30,"column":44}},
+      "range":[1239,1256],
+      "value":" 15.2 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":30,"column":49},"end":{"line":30,"column":64}},
+      "range":[1261,1276],
+      "value":" 15.3 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":32,"column":2},"end":{"line":32,"column":19}},
+      "range":[1296,1313],
+      "value":" 16.1 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":32,"column":27},"end":{"line":32,"column":44}},
+      "range":[1321,1338],
+      "value":" 16.2 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":32,"column":49},"end":{"line":32,"column":64}},
+      "range":[1343,1358],
+      "value":" 16.3 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":34,"column":2},"end":{"line":34,"column":19}},
+      "range":[1381,1398],
+      "value":" 17.1 L prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":34,"column":27},"end":{"line":34,"column":42}},
+      "range":[1406,1421],
+      "value":" 17.2 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":36,"column":2},"end":{"line":36,"column":24}},
+      "range":[1441,1463],
+      "value":" 18.1 L call prop "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":36,"column":32},"end":{"line":36,"column":49}},
+      "range":[1471,1488],
+      "value":" 18.2 L func "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":38,"column":2},"end":{"line":38,"column":22}},
+      "range":[1502,1522],
+      "value":" 19.1 L indexer "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":38,"column":30},"end":{"line":38,"column":50}},
+      "range":[1530,1550],
+      "value":" 19.2 L indexer "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":40,"column":2},"end":{"line":40,"column":20}},
+      "range":[1572,1590],
+      "value":" 20.1 L islot "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":40,"column":28},"end":{"line":40,"column":46}},
+      "range":[1598,1616],
+      "value":" 20.2 L islot "
     }
   ]
 }

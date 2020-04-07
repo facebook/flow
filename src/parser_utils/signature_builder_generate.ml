@@ -575,6 +575,7 @@ module T = struct
             proto = false;
             _method = false;
             variance = None;
+            comments = None;
           } )
     | (loc, OMethod (key, function_t)) ->
       Ast.Type.Object.Property
@@ -587,6 +588,7 @@ module T = struct
             proto = false;
             _method = true;
             variance = None;
+            comments = None;
           } )
     | (loc, OGet (key, function_t)) ->
       Ast.Type.Object.Property
@@ -599,6 +601,7 @@ module T = struct
             proto = false;
             _method = false;
             variance = None;
+            comments = None;
           } )
     | (loc, OSet (key, function_t)) ->
       Ast.Type.Object.Property
@@ -610,6 +613,7 @@ module T = struct
             static = false;
             proto = false;
             _method = false;
+            comments = None;
             variance = None;
           } )
     | (loc, OSpread expr_type) ->
@@ -811,6 +815,7 @@ module T = struct
                   proto = false;
                   _method = false;
                   variance = None;
+                  comments = None;
                 } ))
           statics
       in
@@ -967,6 +972,7 @@ module T = struct
             proto = false;
             _method;
             variance = None;
+            comments = None;
           } )
     | (loc, CProperty (object_key, static, variance, t)) ->
       let open Ast.Type.Object in
@@ -980,6 +986,7 @@ module T = struct
             proto = false;
             _method = false;
             variance;
+            comments = None;
           } )
     | (_loc, CPrivateField (_x, _static, _variance, _t)) -> assert false
 end
@@ -1828,6 +1835,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                 proto = false;
                 _method = false;
                 variance = None;
+                comments = None;
               } ))
         add_module_exports_list
     in

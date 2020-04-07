@@ -566,37 +566,42 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           { Type.Function.params; return; tparams; comments = None })
         env
     in
-    let method_property env start_loc static key =
+    let method_property env start_loc static key ~leading =
       let tparams = type_params env ~attach_leading:false ~attach_trailing:false in
       let value = methodish env start_loc tparams in
       let value = (fst value, Type.Function (snd value)) in
       Type.Object.(
         Property
           ( fst value,
-            Property.
-              {
-                key;
-                value = Init value;
-                optional = false;
-                static = static <> None;
-                proto = false;
-                _method = true;
-                variance = None;
-              } ))
+            {
+              Property.key;
+              value = Property.Init value;
+              optional = false;
+              static = static <> None;
+              proto = false;
+              _method = true;
+              variance = None;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            } ))
     in
-    let call_property env start_loc static =
+    let call_property env start_loc static ~leading =
       let prop =
         with_loc
           ~start_loc
           (fun env ->
             let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
             let value = methodish env (Peek.loc env) tparams in
-            Type.Object.CallProperty.{ value; static = static <> None })
+            Type.Object.CallProperty.
+              {
+                value;
+                static = static <> None;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              })
           env
       in
       Type.Object.CallProperty prop
     in
-    let init_property env start_loc ~variance ~static ~proto key =
+    let init_property env start_loc ~variance ~static ~proto ~leading key =
       ignore proto;
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       let prop =
@@ -615,12 +620,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 proto = proto <> None;
                 _method = false;
                 variance;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
           env
       in
       Type.Object.Property prop
     in
-    let getter_or_setter ~is_getter env start_loc static key =
+    let getter_or_setter ~is_getter ~leading env start_loc static key =
       let prop =
         with_loc
           ~start_loc
@@ -651,17 +657,18 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 proto = false;
                 _method = false;
                 variance = None;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
           env
       in
       Type.Object.Property prop
     in
-    let indexer_property env start_loc static variance =
+    let indexer_property env start_loc static variance ~leading =
       let indexer =
         with_loc
           ~start_loc
           (fun env ->
-            let leading = Peek.comments env in
+            let leading = leading @ Peek.comments env in
             Expect.token env T_LBRACKET;
             let id =
               if Peek.ith_token ~i:1 env = T_COLON then (
@@ -688,12 +695,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       in
       Type.Object.Indexer indexer
     in
-    let internal_slot env start_loc static =
+    let internal_slot env start_loc static ~leading =
       let islot =
         with_loc
           ~start_loc
           (fun env ->
-            let leading = Peek.comments env in
+            let leading = leading @ Peek.comments env in
             Expect.token env T_LBRACKET;
             Expect.token env T_LBRACKET;
             let id = identifier_name env in
@@ -729,7 +736,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Type.Object.InternalSlot islot
       (* Expects the T_ELLIPSIS has already been eaten *)
     in
-    let spread_property env start_loc leading =
+    let spread_property env start_loc ~leading =
       let spread =
         with_loc
           ~start_loc
@@ -845,10 +852,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             ~variance:None
             ~static:None
             ~proto:None
+            ~leading:[]
         in
         semicolon exact env;
         properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop :: props, inexact)
-    and property env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
+    and property
+        env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto ~leading start_loc =
       match Peek.token env with
       | T_PLUS
       | T_MINUS
@@ -862,12 +871,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~variance
           ~static
           ~proto
+          ~leading
           start_loc
       | T_STATIC when allow_static ->
         assert (variance = None);
 
         (* if we parsed variance, allow_static = false *)
         let static = Some (Peek.loc env) in
+        let leading = leading @ Peek.comments env in
         Eat.token env;
         property
           env
@@ -877,12 +888,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~variance
           ~static
           ~proto
+          ~leading
           start_loc
       | T_IDENTIFIER { raw = "proto"; _ } when allow_proto ->
         assert (variance = None);
 
         (* if we parsed variance, allow_proto = false *)
         let proto = Some (Peek.loc env) in
+        let leading = leading @ Peek.comments env in
         Eat.token env;
         property
           env
@@ -892,21 +905,22 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~variance
           ~static
           ~proto
+          ~leading
           start_loc
       | T_LBRACKET ->
         error_unexpected_proto env proto;
         (match Peek.ith_token ~i:1 env with
         | T_LBRACKET ->
           error_unexpected_variance env variance;
-          internal_slot env start_loc static
-        | _ -> indexer_property env start_loc static variance)
+          internal_slot env start_loc static ~leading
+        | _ -> indexer_property env start_loc static variance ~leading)
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we
            successfully parsed the static modifier above. *)
         error_unexpected_proto env proto;
         error_unexpected_variance env variance;
-        call_property env start_loc static
+        call_property env start_loc static ~leading
       | token ->
         (match (static, proto, token) with
         | (Some _, Some _, _) -> failwith "Can not have both `static` and `proto`"
@@ -916,20 +930,24 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
              to parse `static` as the key of a named property. *)
           let key =
             Expression.Object.Property.Identifier
-              (Flow_ast_utils.ident_of_source (static_loc, "static"))
+              (Flow_ast_utils.ident_of_source
+                 (static_loc, "static")
+                 ?comments:(Flow_ast_utils.mk_comments_opt ~leading ()))
           in
           let static = None in
-          init_property env start_loc ~variance ~static ~proto key
+          init_property env start_loc ~variance ~static ~proto ~leading:[] key
         | (None, Some proto_loc, (T_PLING | T_COLON)) ->
           (* We speculatively parsed `proto` as a proto modifier, but now
              that we've parsed the next token, we changed our minds and want
              to parse `proto` as the key of a named property. *)
           let key =
             Expression.Object.Property.Identifier
-              (Flow_ast_utils.ident_of_source (proto_loc, "proto"))
+              (Flow_ast_utils.ident_of_source
+                 (proto_loc, "proto")
+                 ?comments:(Flow_ast_utils.mk_comments_opt ~leading ()))
           in
           let proto = None in
-          init_property env start_loc ~variance ~static ~proto key
+          init_property env start_loc ~variance ~static ~proto ~leading:[] key
         | _ ->
           let object_key env =
             Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -937,6 +955,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             Eat.pop_lex_mode env;
             result
           in
+          let leading_key = Peek.comments env in
           (match object_key env with
           | ( _,
               ( Expression.Object.Property.Identifier
@@ -947,16 +966,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               | T_LPAREN ->
                 error_unexpected_proto env proto;
                 error_unexpected_variance env variance;
-                method_property env start_loc static key
+                method_property env start_loc static key leading
               | T_COLON
               | T_PLING ->
-                init_property env start_loc ~variance ~static ~proto key
+                init_property env start_loc ~variance ~static ~proto ~leading key
               | _ ->
                 let key = object_key env in
                 let is_getter = name = "get" in
+                let leading = leading @ leading_key in
                 error_unexpected_proto env proto;
                 error_unexpected_variance env variance;
-                getter_or_setter ~is_getter env start_loc static key
+                getter_or_setter ~is_getter ~leading env start_loc static key
             end
           | (_, key) ->
             begin
@@ -965,10 +985,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               | T_LPAREN ->
                 error_unexpected_proto env proto;
                 error_unexpected_variance env variance;
-                method_property env start_loc static key
+                method_property env start_loc static key leading
               | _ ->
                 error_invalid_property_name env is_class static key;
-                init_property env start_loc ~variance ~static ~proto key
+                init_property env start_loc ~variance ~static ~proto ~leading key
             end))
     in
     fun ~is_class ~allow_exact ~allow_spread ~attach_leading env ->
