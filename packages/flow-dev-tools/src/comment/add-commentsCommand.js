@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {format} from 'util';
@@ -42,11 +43,11 @@ export default class AddCommentsCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Adds flow comments";
+    return 'Adds flow comments';
   }
 
   static async usage(): Promise<string> {
-return `usage: ${process.argv[1]} add-comments [OPTION]... ROOT
+    return `usage: ${process.argv[1]} add-comments [OPTION]... ROOT
 
 Queries Flow for the errors for ROOT. Then opens a curses interface to let you select errors. The selected errors will automatically have a comment added on the line before them.
 `;
@@ -58,16 +59,17 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
       commonFlags.flowconfigName,
       commonFlags.errorCheckCommand,
       {
-        type: "string",
-        name: "comment",
+        type: 'string',
+        name: 'comment',
         argName: '"\\$FlowFixMe foo"',
-        description: "Comment to add before the selected errors. If not set, you will be prompted later for it",
+        description:
+          'Comment to add before the selected errors. If not set, you will be prompted later for it',
       },
       {
-        type: "boolean",
-        name: "all",
-        description: "Select all errors",
-      }
+        type: 'boolean',
+        name: 'all',
+        description: 'Select all errors',
+      },
     ];
   }
 }

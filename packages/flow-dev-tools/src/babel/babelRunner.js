@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {mkdirp, ncp, rimraf, writeFile} from '../utils/async';
@@ -12,7 +13,7 @@ import {defaultTestsDirName, getTestsDir} from '../constants';
 
 import {
   transformFile as babel_transformFile,
-  transform as transformSource
+  transform as transformSource,
 } from 'babel-core';
 
 import {basename, dirname, extname, join, resolve} from 'path';
@@ -33,7 +34,7 @@ function transformFile(filename, options) {
       } else {
         resolve(result);
       }
-    })
+    });
   });
 }
 
@@ -59,7 +60,7 @@ async function transformDir(
       const {code} = transformSource(Buffer.concat(chunks), babelOptions);
       write.end(code);
     });
-  }
+  };
   await ncp(source, dest, {transform, dereference: true});
 }
 
@@ -67,16 +68,16 @@ async function transformDir(
  * Copies the src directory over, transforming all the .js files
  */
 async function transformTool(args: Args): Promise<void> {
-  const source = resolve(__dirname, "..");
-  const dest = join(args.dest, "src");
-  await transformDir(source, dest, (file) => extname(file.name) == ".js");
+  const source = resolve(__dirname, '..');
+  const dest = join(args.dest, 'src');
+  await transformDir(source, dest, file => extname(file.name) == '.js');
 
   await writeFile(
-    join(args.dest, "tool"),
-`#!/usr/bin/env node
+    join(args.dest, 'tool'),
+    `#!/usr/bin/env node
 require("./src/main.js").run();
 `,
-  { mode: 0o777},
+    {mode: 0o777},
   );
 }
 
@@ -87,7 +88,7 @@ async function transformTests(args: Args): Promise<void> {
   await transformDir(
     getTestsDir(args.src),
     join(args.dest, defaultTestsDirName),
-    (file) => basename(file.name) == "test.js",
+    file => basename(file.name) == 'test.js',
   );
 }
 
@@ -95,20 +96,13 @@ export default async function(args: Args): Promise<void> {
   let todo;
   switch (args.transform) {
     case 'all':
-      todo = [
-        transformTool(args),
-        transformTests(args),
-      ];
+      todo = [transformTool(args), transformTests(args)];
       break;
     case 'tests':
-      todo = [
-        transformTests(args),
-      ];
+      todo = [transformTests(args)];
       break;
     case 'tool':
-      todo = [
-        transformTool(args),
-      ];
+      todo = [transformTool(args)];
       break;
     default:
       // Looking forward to when flow can do exhaustivity checks!

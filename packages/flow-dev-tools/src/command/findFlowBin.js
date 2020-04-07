@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {existsSync} from 'fs';
@@ -24,7 +25,6 @@ export default function(binArg: ?string): string {
     }
   }
 
-
   // Default to whatever is in the path
-  return "flow";
+  return 'flow';
 }

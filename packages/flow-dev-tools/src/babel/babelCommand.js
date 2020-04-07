@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {format} from 'util';
@@ -32,7 +33,7 @@ export default class BabelCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Runs babel";
+    return 'Runs babel';
   }
 
   static async usage(): Promise<string> {
@@ -43,25 +44,25 @@ export default class BabelCommand extends Base<Args> {
   static getFlags() {
     return [
       {
-        type: "string",
-        name: "dest",
-        argName: "pathToDest",
-        description: "Where the transformed code should end up",
+        type: 'string',
+        name: 'dest',
+        argName: 'pathToDest',
+        description: 'Where the transformed code should end up',
       },
       {
-        type: "string",
-        name: "src",
-        argName: "pathToSrc",
+        type: 'string',
+        name: 'src',
+        argName: 'pathToSrc',
         description:
-          "The root (containing the package.json) of the code to transform",
+          'The root (containing the package.json) of the code to transform',
       },
       {
-        type: "enum",
-        name: "transform",
-        argName: "string",
-        description: "What to transform",
-        validValues: ["all", "tool", "tests"],
-        default: "all",
+        type: 'enum',
+        name: 'transform',
+        argName: 'string',
+        description: 'What to transform',
+        validValues: ['all', 'tool', 'tests'],
+        default: 'all',
       },
     ];
   }

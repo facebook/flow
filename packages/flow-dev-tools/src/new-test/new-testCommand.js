@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {format} from 'util';
@@ -30,7 +31,7 @@ export default class NewTestCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Creates a new empty test";
+    return 'Creates a new empty test';
   }
 
   static async usage(): Promise<string> {
@@ -43,8 +44,6 @@ NAME
   }
 
   static getFlags() {
-    return [
-      commonFlags.bin,
-    ];
+    return [commonFlags.bin];
   }
 }

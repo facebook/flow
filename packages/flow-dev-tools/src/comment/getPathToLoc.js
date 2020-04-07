@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import type {FlowLoc} from '../flowResult';
@@ -16,14 +17,14 @@ export type PathNode = {
 
 class Path {
   nodes: Array<{
-    ast: Object;
-    key: string;
-    todo: Array<string>;
+    ast: Object,
+    key: string,
+    todo: Array<string>,
   }>;
 
   constructor(ast: Object) {
     this.nodes = [];
-    this.push("root", ast, new Set(['comments']));
+    this.push('root', ast, new Set(['comments']));
   }
 
   push(key: string, ast: Object, exclude?: Set<string>) {
@@ -48,15 +49,15 @@ class Path {
   }
 
   next() {
-    while(this.nodes.length > 0) {
-      const last = this.nodes[this.nodes.length-1];
+    while (this.nodes.length > 0) {
+      const last = this.nodes[this.nodes.length - 1];
       if (last.todo.length === 0) {
         this.nodes.pop();
         continue;
       }
       const prop = last.todo.pop();
       const ast = last.ast[prop];
-      if (this.push(prop, ast, new Set(["range"]))) {
+      if (this.push(prop, ast, new Set(['range']))) {
         return ast;
       }
     }
@@ -97,18 +98,23 @@ function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
   const errorLocFixedStart = {
     line: errorLoc.start.line,
     column: errorLoc.start.column - 1,
-  }
-  return beforeOrEqual(errorLocFixedStart, astLoc.start) &&
-    beforeOrEqual(astLoc.end, errorLoc.end);
+  };
+  return (
+    beforeOrEqual(errorLocFixedStart, astLoc.start) &&
+    beforeOrEqual(astLoc.end, errorLoc.end)
+  );
 }
 
-function rangeMatchesAstRange(range: [number, number], astRange: [number, number]): boolean {
+function rangeMatchesAstRange(
+  range: [number, number],
+  astRange: [number, number],
+): boolean {
   return range[0] == astRange[0] && range[1] == astRange[1];
 }
 
 /* Given a location and an AST, find the ast node whose location falls within
  * the given location. Then return the path to that node. */
-export default function (errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
+export default function(errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
@@ -121,12 +127,15 @@ export default function (errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   return null;
 }
 
-export function getNodeAtRange (range: [number, number], astRoot: Object): ?Object {
+export function getNodeAtRange(
+  range: [number, number],
+  astRoot: Object,
+): ?Object {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
     if (ast.range && rangeMatchesAstRange(range, ast.range)) {
-      return ast
+      return ast;
     }
     ast = path.next();
   }

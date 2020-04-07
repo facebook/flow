@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {format} from 'util';
@@ -19,7 +20,7 @@ type Args = {
 export default class HelpCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     const command = argv._.length > 0 ? argv._[0] : null;
-    return { command };
+    return {command};
   }
 
   static async run(args: Args): Promise<void> {
@@ -29,7 +30,7 @@ export default class HelpCommand extends Base<Args> {
       const commandPath = commandMap.get(commandName);
 
       if (commandPath === undefined) {
-        process.stderr.write(format("Unsupported command `%s`\n", commandName));
+        process.stderr.write(format('Unsupported command `%s`\n', commandName));
         return this.showUsage(this.BAD_ARGS);
       }
 
@@ -41,7 +42,7 @@ export default class HelpCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Shows usage message";
+    return 'Shows usage message';
   }
 
   static async usage(): Promise<string> {
@@ -67,22 +68,24 @@ ${validCommands}
     const commandMap = await commandFinder(__dirname);
     const maxLength = Math.max(
       16,
-      ...Array.from(commandMap.keys()).map(k => k.length)
+      ...Array.from(commandMap.keys()).map(k => k.length),
     );
 
     const validCommands = [];
     for (const commandName of commandMap.keys()) {
-      validCommands.push(format(
-        "%s%s  %s",
-        commandName,
-        Array(maxLength - commandName.length).join(" "),
-        // $FlowFixMe
-        require(commandMap.get(commandName)).default.description(),
-      ));
+      validCommands.push(
+        format(
+          '%s%s  %s',
+          commandName,
+          Array(maxLength - commandName.length).join(' '),
+          // $FlowFixMe
+          require(commandMap.get(commandName)).default.description(),
+        ),
+      );
     }
     return format(
-      "Valid values for COMMAND:\n%s",
-      validCommands.sort().join("\n")
+      'Valid values for COMMAND:\n%s',
+      validCommands.sort().join('\n'),
     );
   }
 }

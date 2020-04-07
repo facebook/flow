@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {format} from 'util';
@@ -18,8 +19,8 @@ type Command = {
 };
 
 export default async function(cwd: string): Promise<Map<string, string>> {
-  const root = join(".", relative(cwd, join(__dirname, "..")));
-  const commands = await glob(format("%s/**/*Command.js", root), {cwd});
+  const root = join('.', relative(cwd, join(__dirname, '..')));
+  const commands = await glob(format('%s/**/*Command.js', root), {cwd});
 
   const commandMap = new Map();
   for (const command of commands) {
@@ -28,12 +29,14 @@ export default async function(cwd: string): Promise<Map<string, string>> {
       const commandName = match[1];
 
       if (commandMap.has(commandName)) {
-        throw new Error(format(
-          "Error: Multiple providers for command `%s`:\n`%s` and `%s`\n",
-          commandName,
-          commandMap.get(commandName),
-          command,
-        ));
+        throw new Error(
+          format(
+            'Error: Multiple providers for command `%s`:\n`%s` and `%s`\n',
+            commandName,
+            commandMap.get(commandName),
+            command,
+          ),
+        );
       }
       commandMap.set(commandName, command);
     }

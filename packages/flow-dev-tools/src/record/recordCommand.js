@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 import {format} from 'util';
@@ -16,7 +17,7 @@ export type Args = {
   suites: ?Set<string>,
   bin: string,
   parallelism: number,
-  errorCheckCommand: "check" | "status",
+  errorCheckCommand: 'check' | 'status',
   rerun: ?string,
 };
 
@@ -28,7 +29,7 @@ export default class RecordCommand extends Base<Args> {
       bin: findFlowBin(argv.bin),
       parallelism: argv.parallelism,
       errorCheckCommand: argv.check,
-      rerun: argv["rerun-failed"],
+      rerun: argv['rerun-failed'],
     };
   }
 
@@ -37,7 +38,7 @@ export default class RecordCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Records tests";
+    return 'Records tests';
   }
 
   static async usage(): Promise<string> {
@@ -59,10 +60,10 @@ SUITE
       commonFlags.parallelism,
       commonFlags.errorCheckCommand,
       {
-        type: "string",
-        name: "rerun-failed",
-        argName: "RUN",
-        description: "Record failed tests from a previous test run",
+        type: 'string',
+        name: 'rerun-failed',
+        argName: 'RUN',
+        description: 'Record failed tests from a previous test run',
       },
     ];
   }

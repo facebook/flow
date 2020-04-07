@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @format
  */
 
 export function splitIntoChunks(str: string, chunkSize: number): Array<string> {
