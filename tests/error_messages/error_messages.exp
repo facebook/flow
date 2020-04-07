@@ -8,21 +8,20 @@ Cannot resolve name `define`.
 
 Error ------------------------------------------------------------------------------------------- long_string_use.js:6:2
 
-Cannot assign `require(...)` to `long_lit` because string [1] is incompatible with string literal
-`aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` [2] because strings longer than `100` characters are not treated as literals.
+Cannot cast `long_lit` to string literal `aaaaaaaaaaaaaaaaaaaaa` because string [1] is incompatible with string literal
+`aaaaaaaaaaaaaaaaaaaaa` [2] because strings longer than `20` characters are not treated as literals.
 
    long_string_use.js:6:2
-   6|  require('./long_string_lit');
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   6| (long_lit: 'aaaaaaaaaaaaaaaaaaaaa'); // error
+       ^^^^^^^^
 
 References:
-   long_string_lit.js:4:2
-   4|  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   long_string_use.js:4:2
-   4|  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   long_string_lit.js:4:18
+   4| const long_lit = 'aaaaaaaaaaaaaaaaaaaaa'
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   long_string_use.js:6:12
+   6| (long_lit: 'aaaaaaaaaaaaaaaaaaaaa'); // error
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 

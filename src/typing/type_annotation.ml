@@ -329,7 +329,7 @@ let rec convert cx tparams_map =
             | DefT (r, trust, SingletonStrT s) ->
               let max_literal_length = Context.max_literal_length cx in
               let (lit, r_desc) =
-                if max_literal_length = 0 || String.length s < max_literal_length then
+                if max_literal_length = 0 || String.length s <= max_literal_length then
                   (Literal (None, s), RString)
                 else
                   (AnyLiteral, RLongStringLit max_literal_length)
