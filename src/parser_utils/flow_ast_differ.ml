@@ -980,7 +980,7 @@ let program
       (elem2 : (Loc.t, Loc.t) Ast.Class.Body.element) : node change list option =
     let open Ast.Class.Body in
     match (elem1, elem2) with
-    | (Method (_, m1), Method (_, m2)) -> class_method m1 m2
+    | (Method (loc, m1), Method (_, m2)) -> class_method loc m1 m2
     | (Property p1, Property p2) -> class_property p1 p2 |> Base.Option.return
     | _ -> None
   (* TODO *)
@@ -1005,8 +1005,9 @@ let program
     | (Initialized e1, Initialized e2) -> Some (diff_if_changed expression e1 e2)
     | _ -> None
   and class_method
-      (m1 : (Loc.t, Loc.t) Ast.Class.Method.t') (m2 : (Loc.t, Loc.t) Ast.Class.Method.t') :
-      node change list option =
+      (loc : Loc.t)
+      (m1 : (Loc.t, Loc.t) Ast.Class.Method.t')
+      (m2 : (Loc.t, Loc.t) Ast.Class.Method.t') : node change list option =
     let open Ast.Class.Method in
     let {
       kind = kind1;
@@ -1014,6 +1015,7 @@ let program
       value = (value_loc, value1);
       static = static1;
       decorators = decorators1;
+      comments = comments1;
     } =
       m1
     in
@@ -1023,6 +1025,7 @@ let program
       value = (_loc, value2);
       static = static2;
       decorators = decorators2;
+      comments = comments2;
     } =
       m2
     in
@@ -1035,7 +1038,9 @@ let program
     then
       None
     else
-      function_ value_loc value1 value2
+      let value_diff = function_ value_loc value1 value2 in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [value_diff; comments_diff]
   and block
       (loc : Loc.t)
       (block1 : (Loc.t, Loc.t) Ast.Statement.Block.t)

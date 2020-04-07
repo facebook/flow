@@ -1536,7 +1536,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             } )
         when Env.ignore_static_propTypes ->
         acc
-      | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _ }) ->
+      | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _; comments = _ }) ->
         let x = object_key key in
         let ( loc,
               {

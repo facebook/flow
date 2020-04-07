@@ -880,15 +880,17 @@ with type t = Impl.t = struct
         | Method m -> class_method m
         | PrivateField p -> class_private_field p
         | Property p -> class_property p)
-    and class_method (loc, { Class.Method.key; value; kind; static; decorators }) =
+    and class_method (loc, { Class.Method.key; value; kind; static; decorators; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
-        | Literal lit -> (literal lit, false, None)
-        | Identifier id -> (identifier id, false, None)
-        | PrivateName name -> (private_name name, false, None)
-        | Computed (_, { ComputedKey.expression = expr; comments }) ->
-          (expression expr, true, comments)
+        | Literal lit -> (literal lit, false, comments)
+        | Identifier id -> (identifier id, false, comments)
+        | PrivateName name -> (private_name name, false, comments)
+        | Computed (_, { ComputedKey.expression = expr; comments = computed_comments }) ->
+          ( expression expr,
+            true,
+            Flow_ast_utils.merge_comments ~outer:comments ~inner:computed_comments )
       in
       let kind =
         Class.Method.(

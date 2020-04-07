@@ -7512,6 +7512,7 @@ and mk_class_sig =
                     kind;
                     static;
                     decorators;
+                    comments;
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
               let decorators = warn_or_ignore_decorators cx decorators in
@@ -7561,6 +7562,7 @@ and mk_class_sig =
                       kind;
                       static;
                       decorators;
+                      comments;
                     } )
               in
               let add =

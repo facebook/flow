@@ -514,19 +514,37 @@ module Object
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   let class_element =
-    let get env start_loc decorators static =
+    let get env start_loc decorators static leading =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
       in
       let open Ast.Class in
-      Body.Method (loc, { Method.key; value; kind = Method.Get; static; decorators })
+      Body.Method
+        ( loc,
+          {
+            Method.key;
+            value;
+            kind = Method.Get;
+            static;
+            decorators;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          } )
     in
-    let set env start_loc decorators static =
+    let set env start_loc decorators static leading =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true false) env
       in
       let open Ast.Class in
-      Body.Method (loc, { Method.key; value; kind = Method.Set; static; decorators })
+      Body.Method
+        ( loc,
+          {
+            Method.key;
+            value;
+            kind = Method.Set;
+            static;
+            decorators;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          } )
     in
     let error_unsupported_variance env = function
       | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
@@ -651,12 +669,21 @@ module Object
                 return;
                 tparams;
                 sig_loc;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                comments = None;
               })
             env
         in
         let open Ast.Class in
-        Body.Method (Loc.btwn start_loc (fst value), { Method.key; value; kind; static; decorators })
+        Body.Method
+          ( Loc.btwn start_loc (fst value),
+            {
+              Method.key;
+              value;
+              kind;
+              static;
+              decorators;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            } )
     in
     let ith_implies_identifier ~i env =
       match Peek.ith_token ~i env with
@@ -673,18 +700,27 @@ module Object
     fun env ->
       let start_loc = Peek.loc env in
       let decorators = decorator_list env in
-      let declare =
+      let (declare, leading_declare) =
         match Peek.token env with
         | T_DECLARE when not (ith_implies_identifier ~i:1 env) ->
           let ret = Some (Peek.loc env) in
+          let leading = Peek.comments env in
           Eat.token env;
-          ret
-        | _ -> None
+          (ret, leading)
+        | _ -> (None, [])
       in
       let static =
         Peek.ith_token ~i:1 env <> T_LPAREN
         && Peek.ith_token ~i:1 env <> T_LESS_THAN
-        && Expect.maybe env T_STATIC
+        && Peek.token env = T_STATIC
+      in
+      let leading_static =
+        if static then (
+          let leading = Peek.comments env in
+          Eat.token env;
+          leading
+        ) else
+          []
       in
       let async =
         Peek.token env = T_ASYNC
@@ -707,25 +743,29 @@ module Object
         | (false, Some _) -> Declaration.generator env
         | _ -> (generator, leading_generator)
       in
-      let leading = leading_async @ leading_generator in
+      let leading =
+        List.concat [leading_declare; leading_static; leading_async; leading_generator]
+      in
       match (async, generator, Peek.token env) with
       | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
+        let leading_get = Peek.comments env in
         let (_, key) = key ~class_body:true env in
         if implies_identifier env then
           init env start_loc decorators key ~async ~generator ~static ~declare variance leading
         else (
           error_unsupported_declare env declare;
           error_unsupported_variance env variance;
-          get env start_loc decorators static
+          get env start_loc decorators static (leading @ leading_get)
         )
       | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
+        let leading_set = Peek.comments env in
         let (_, key) = key ~class_body:true env in
         if implies_identifier env then
           init env start_loc decorators key ~async ~generator ~static ~declare variance leading
         else (
           error_unsupported_declare env declare;
           error_unsupported_variance env variance;
-          set env start_loc decorators static
+          set env start_loc decorators static (leading @ leading_set)
         )
       | (_, _, _) ->
         let (_, key) = key ~class_body:true env in

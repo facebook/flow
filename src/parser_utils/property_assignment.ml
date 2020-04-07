@@ -253,6 +253,7 @@ let eval_property_assignment class_body =
                 key = _;
                 static = _;
                 decorators = _;
+                comments = _;
               } ) ->
           Some block
         | _ -> None)

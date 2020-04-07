@@ -258,11 +258,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_method (meth : ('M, 'T) Ast.Class.Method.t') : ('N, 'U) Ast.Class.Method.t' =
       let open Ast.Class.Method in
-      let { kind; key; value; static; decorators } = meth in
+      let { kind; key; value; static; decorators; comments } = meth in
       let key' = this#object_key key in
       let value' = (this#on_loc_annot * this#function_expression) value in
       let decorators' = Base.List.map ~f:this#class_decorator decorators in
-      { kind; key = key'; value = value'; static; decorators = decorators' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { kind; key = key'; value = value'; static; decorators = decorators'; comments = comments' }
 
     method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       let open Ast.Class.Property in

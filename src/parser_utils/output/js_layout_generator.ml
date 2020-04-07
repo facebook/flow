@@ -1561,8 +1561,8 @@ and decorators_list decorators =
   else
     Empty
 
-and class_method (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); static; decorators })
-    =
+and class_method
+    (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); static; decorators; comments }) =
   let module M = Ast.Class.Method in
   let {
     Ast.Function.params;
@@ -1579,6 +1579,7 @@ and class_method (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); s
     func
   in
   source_location_with_comments
+    ?comments
     ( loc,
       let s_key = object_property_key key in
       let s_key =

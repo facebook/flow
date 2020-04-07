@@ -1603,6 +1603,7 @@ and Class : sig
       value: 'M * ('M, 'T) Function.t;
       static: bool;
       decorators: ('M, 'T) Class.Decorator.t list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

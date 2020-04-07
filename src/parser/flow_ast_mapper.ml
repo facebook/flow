@@ -417,13 +417,14 @@ class ['loc] mapper =
 
     method class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
-      let { kind = _; key; value; static = _; decorators = _ } = meth in
+      let { kind = _; key; value; static = _; decorators = _; comments } = meth in
       let key' = this#object_key key in
       let value' = map_loc this#function_expression value in
-      if key == key' && value == value' then
+      let comments' = this#syntax_opt comments in
+      if key == key' && value == value' && comments == comments' then
         meth
       else
-        { meth with key = key'; value = value' }
+        { meth with key = key'; value = value'; comments = comments' }
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
