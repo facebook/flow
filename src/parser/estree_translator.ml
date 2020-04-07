@@ -1117,23 +1117,26 @@ with type t = Impl.t = struct
       function
       | Property (loc, prop) ->
         Property.(
-          let (key, value, kind, method_, shorthand) =
+          let (key, value, kind, method_, shorthand, comments) =
             match prop with
-            | Init { key; value; shorthand } -> (key, expression value, "init", false, shorthand)
+            | Init { key; value; shorthand } ->
+              (key, expression value, "init", false, shorthand, None)
             | Method { key; value = (loc, func) } ->
-              (key, function_expression (loc, func), "init", true, false)
-            | Get { key; value = (loc, func) } ->
-              (key, function_expression (loc, func), "get", false, false)
-            | Set { key; value = (loc, func) } ->
-              (key, function_expression (loc, func), "set", false, false)
+              (key, function_expression (loc, func), "init", true, false, None)
+            | Get { key; value = (loc, func); comments } ->
+              (key, function_expression (loc, func), "get", false, false, comments)
+            | Set { key; value = (loc, func); comments } ->
+              (key, function_expression (loc, func), "set", false, false, comments)
           in
           let (key, computed, comments) =
             match key with
-            | Literal lit -> (literal lit, false, None)
-            | Identifier id -> (identifier id, false, None)
+            | Literal lit -> (literal lit, false, comments)
+            | Identifier id -> (identifier id, false, comments)
             | PrivateName _ -> failwith "Internal Error: Found private field in object props"
-            | Computed (_, { ComputedKey.expression = expr; comments }) ->
-              (expression expr, true, comments)
+            | Computed (_, { ComputedKey.expression = expr; comments = key_comments }) ->
+              ( expression expr,
+                true,
+                Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments )
           in
           node
             ?comments

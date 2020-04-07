@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":108}},
-  "range":[0,385],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":56}},
+  "range":[0,500],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -327,6 +327,145 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":55}},
+      "range":[387,442],
+      "expression":{
+        "type":"ObjectExpression",
+        "loc":{"source":null,"start":{"line":11,"column":1},"end":{"line":11,"column":53}},
+        "range":[388,440],
+        "properties":[
+          {
+            "type":"Property",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":11,"column":3},"end":{"line":11,"column":21}},
+                "range":[390,408],
+                "value":" 6.1 L getter "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":11,"column":22},"end":{"line":11,"column":51}},
+            "range":[409,438],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":11,"column":26},"end":{"line":11,"column":40}},
+                  "range":[413,427],
+                  "value":" 6.2 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":11,"column":41},"end":{"line":11,"column":47}},
+              "range":[428,434],
+              "name":"getter",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionExpression",
+              "loc":{"source":null,"start":{"line":11,"column":47},"end":{"line":11,"column":51}},
+              "range":[434,438],
+              "id":null,
+              "params":[],
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":11,"column":49},"end":{"line":11,"column":51}},
+                "range":[436,438],
+                "body":[]
+              },
+              "async":false,
+              "generator":false,
+              "predicate":null,
+              "expression":false,
+              "returnType":null,
+              "typeParameters":null
+            },
+            "kind":"get",
+            "method":false,
+            "shorthand":false,
+            "computed":false
+          }
+        ]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":56}},
+      "range":[444,500],
+      "expression":{
+        "type":"ObjectExpression",
+        "loc":{"source":null,"start":{"line":13,"column":1},"end":{"line":13,"column":54}},
+        "range":[445,498],
+        "properties":[
+          {
+            "type":"Property",
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":13,"column":3},"end":{"line":13,"column":21}},
+                "range":[447,465],
+                "value":" 7.1 L setter "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":13,"column":22},"end":{"line":13,"column":52}},
+            "range":[466,496],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":13,"column":26},"end":{"line":13,"column":40}},
+                  "range":[470,484],
+                  "value":" 7.2 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":13,"column":41},"end":{"line":13,"column":47}},
+              "range":[485,491],
+              "name":"setter",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionExpression",
+              "loc":{"source":null,"start":{"line":13,"column":47},"end":{"line":13,"column":52}},
+              "range":[491,496],
+              "id":null,
+              "params":[
+                {
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":13,"column":48},"end":{"line":13,"column":49}},
+                  "range":[492,493],
+                  "name":"x",
+                  "typeAnnotation":null,
+                  "optional":false
+                }
+              ],
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":13,"column":50},"end":{"line":13,"column":52}},
+                "range":[494,496],
+                "body":[]
+              },
+              "async":false,
+              "generator":false,
+              "predicate":null,
+              "expression":false,
+              "returnType":null,
+              "typeParameters":null
+            },
+            "kind":"set",
+            "method":false,
+            "shorthand":false,
+            "computed":false
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -437,6 +576,30 @@
       "loc":{"source":null,"start":{"line":9,"column":87},"end":{"line":9,"column":104}},
       "range":[364,381],
       "value":" 5.5 L block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":3},"end":{"line":11,"column":21}},
+      "range":[390,408],
+      "value":" 6.1 L getter "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":11,"column":26},"end":{"line":11,"column":40}},
+      "range":[413,427],
+      "value":" 6.2 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":3},"end":{"line":13,"column":21}},
+      "range":[447,465],
+      "value":" 7.1 L setter "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":26},"end":{"line":13,"column":40}},
+      "range":[470,484],
+      "value":" 7.2 L id "
     }
   ]
 }

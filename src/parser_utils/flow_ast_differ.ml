@@ -1465,7 +1465,7 @@ let program
       diff_if_changed identifier i1 i2 |> Base.Option.return
     | (EOP.Computed (loc, c1), EOP.Computed (_, c2)) -> computed_key loc c1 c2
     | (_, _) -> None
-  and object_regular_property (_, prop1) (_, prop2) =
+  and object_regular_property (loc, prop1) (_, prop2) =
     let open Ast.Expression.Object.Property in
     match (prop1, prop2) with
     | ( Init { shorthand = sh1; value = val1; key = key1 },
@@ -1476,12 +1476,18 @@ let program
         let values = diff_if_changed expression val1 val2 |> Base.Option.return in
         let keys = diff_if_changed_ret_opt object_key key1 key2 in
         join_diff_list [keys; values]
-    | (Set { value = val1; key = key1 }, Set { value = val2; key = key2 })
-    | (Method { value = val1; key = key1 }, Method { value = val2; key = key2 })
-    | (Get { value = val1; key = key1 }, Get { value = val2; key = key2 }) ->
+    | (Method { value = val1; key = key1 }, Method { value = val2; key = key2 }) ->
       let values = diff_if_changed_ret_opt (function_ (fst val1)) (snd val1) (snd val2) in
       let keys = diff_if_changed_ret_opt object_key key1 key2 in
       join_diff_list [keys; values]
+    | ( Get { value = val1; key = key1; comments = comments1 },
+        Get { value = val2; key = key2; comments = comments2 } )
+    | ( Set { value = val1; key = key1; comments = comments1 },
+        Set { value = val2; key = key2; comments = comments2 } ) ->
+      let key_diff = diff_if_changed_ret_opt object_key key1 key2 in
+      let value_diff = diff_if_changed_ret_opt (function_ (fst val1)) (snd val1) (snd val2) in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [key_diff; value_diff; comments_diff]
     | _ -> None
   and object_property prop1 prop2 =
     let open Ast.Expression.Object in

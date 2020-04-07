@@ -1988,7 +1988,7 @@ and object_property property =
               ~tparams
               ~loc:fn_loc
               ~comments:fn_comments ) )
-  | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
+  | O.Property (loc, O.Property.Get { key; value = (fn_loc, func); comments }) ->
     let {
       Ast.Function.id;
       params;
@@ -2014,6 +2014,7 @@ and object_property property =
     (* getters can't be generators *)
     let prefix = fuse [Atom "get"; space; object_property_key key] in
     source_location_with_comments
+      ?comments
       ( loc,
         source_location_with_comments
           ( fn_loc,
@@ -2026,7 +2027,7 @@ and object_property property =
               ~tparams
               ~loc:fn_loc
               ~comments:fn_comments ) )
-  | O.Property (loc, O.Property.Set { key; value = (fn_loc, func) }) ->
+  | O.Property (loc, O.Property.Set { key; value = (fn_loc, func); comments }) ->
     let {
       Ast.Function.id;
       params;
@@ -2052,6 +2053,7 @@ and object_property property =
     (* setters can't be generators *)
     let prefix = fuse [Atom "set"; space; object_property_key key] in
     source_location_with_comments
+      ?comments
       ( loc,
         source_location_with_comments
           ( fn_loc,

@@ -775,8 +775,8 @@ module Eval (Env : EvalEnv) = struct
         let deps = object_key (loc, key) in
         Deps.join (deps, literal_expr tps value)
       | (loc, Method { key; value = (_, fn) })
-      | (loc, Get { key; value = (_, fn) })
-      | (loc, Set { key; value = (_, fn) }) ->
+      | (loc, Get { key; value = (_, fn); comments = _ })
+      | (loc, Set { key; value = (_, fn); comments = _ }) ->
         let deps = object_key (loc, key) in
         let { Ast.Function.generator; tparams; params; return; body; predicate; _ } = fn in
         Deps.join (deps, function_ tps generator tparams params return body predicate)

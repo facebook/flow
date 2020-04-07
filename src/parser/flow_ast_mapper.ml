@@ -1782,20 +1782,22 @@ class ['loc] mapper =
           prop
         else
           (loc, Method { key = key'; value = fn' })
-      | (loc, Get { key; value = fn }) ->
+      | (loc, Get { key; value = fn; comments }) ->
         let key' = this#object_key key in
         let fn' = map_loc this#function_expression fn in
-        if key == key' && fn == fn' then
+        let comments' = this#syntax_opt comments in
+        if key == key' && fn == fn' && comments == comments' then
           prop
         else
-          (loc, Get { key = key'; value = fn' })
-      | (loc, Set { key; value = fn }) ->
+          (loc, Get { key = key'; value = fn'; comments = comments' })
+      | (loc, Set { key; value = fn; comments }) ->
         let key' = this#object_key key in
         let fn' = map_loc this#function_expression fn in
-        if key == key' && fn == fn' then
+        let comments' = this#syntax_opt comments in
+        if key == key' && fn == fn' && comments == comments' then
           prop
         else
-          (loc, Set { key = key'; value = fn' })
+          (loc, Set { key = key'; value = fn'; comments = comments' })
 
     method object_key (key : ('loc, 'loc) Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object.Property in

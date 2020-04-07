@@ -7,3 +7,7 @@
 ({ /* 4.1 L spread */ ... /* 4.2 L obj */ {} /* 4.3 T obj */ });
 
 ({ /* 5.1 L func */ async /* 5.2 L func */ * /* 5.3 L id */ method /* 5.4 T id */ (){} /* 5.5 L block */ });
+
+({ /* 6.1 L getter */ get /* 6.2 L id */ getter(){} });
+
+({ /* 7.1 L setter */ set /* 7.2 L id */ setter(x){} });

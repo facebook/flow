@@ -1424,14 +1424,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let key' = this#object_key key in
           let fn' = this#function_expression fn in
           Method { key = key'; value = (this#on_loc_annot fn_annot, fn') }
-        | Get { key; value = (fn_annot, fn) } ->
+        | Get { key; value = (fn_annot, fn); comments } ->
           let key' = this#object_key key in
           let fn' = this#function_expression fn in
-          Get { key = key'; value = (this#on_loc_annot fn_annot, fn') }
-        | Set { key; value = (fn_annot, fn) } ->
+          let comments' = Base.Option.map ~f:this#syntax comments in
+          Get { key = key'; value = (this#on_loc_annot fn_annot, fn'); comments = comments' }
+        | Set { key; value = (fn_annot, fn); comments } ->
           let key' = this#object_key key in
           let fn' = this#function_expression fn in
-          Set { key = key'; value = (this#on_loc_annot fn_annot, fn') } )
+          let comments' = Base.Option.map ~f:this#syntax comments in
+          Set { key = key'; value = (this#on_loc_annot fn_annot, fn'); comments = comments' } )
 
     method object_key (key : ('M, 'T) Ast.Expression.Object.Property.key)
         : ('N, 'U) Ast.Expression.Object.Property.key =

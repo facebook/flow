@@ -1035,10 +1035,12 @@ and Expression : sig
         | Get of {
             key: ('M, 'T) key;
             value: 'M * ('M, 'T) Function.t;
+            comments: ('M, unit) Syntax.t option;
           }
         | Set of {
             key: ('M, 'T) key;
             value: 'M * ('M, 'T) Function.t;
+            comments: ('M, unit) Syntax.t option;
           }
       [@@deriving show]
     end

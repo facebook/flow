@@ -2711,6 +2711,7 @@ and object_prop cx acc prop =
               | Property.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
               key;
             value = (vloc, func);
+            comments;
           } ) ->
     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
     let (function_type, func) = mk_function_expression None cx vloc func in
@@ -2719,7 +2720,11 @@ and object_prop cx acc prop =
       Property
         ( loc,
           Property.Get
-            { key = translate_identifier_or_literal_key return_t key; value = (vloc, func) } ) )
+            {
+              key = translate_identifier_or_literal_key return_t key;
+              value = (vloc, func);
+              comments;
+            } ) )
   (* unsafe setter property *)
   | Property
       ( loc,
@@ -2730,6 +2735,7 @@ and object_prop cx acc prop =
               | Property.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
               key;
             value = (vloc, func);
+            comments;
           } ) ->
     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
     let (function_type, func) = mk_function_expression None cx vloc func in
@@ -2738,7 +2744,11 @@ and object_prop cx acc prop =
       Property
         ( loc,
           Property.Set
-            { key = translate_identifier_or_literal_key param_t key; value = (vloc, func) } ) )
+            {
+              key = translate_identifier_or_literal_key param_t key;
+              value = (vloc, func);
+              comments;
+            } ) )
   (* non-string literal LHS *)
   | Property (loc, Property.Init { key = Property.Literal _; _ })
   | Property (loc, Property.Method { key = Property.Literal _; _ })

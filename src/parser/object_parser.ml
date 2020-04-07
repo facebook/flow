@@ -166,19 +166,21 @@ module Object
       | Cover_expr expr -> (expr, Pattern_cover.empty_errors)
       | Cover_patt (expr, errs) -> (expr, errs)
     in
-    let get env start_loc =
+    let get env start_loc leading =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:false true) env
       in
       let open Ast.Expression.Object in
-      Property (loc, Property.Get { key; value })
+      Property
+        (loc, Property.Get { key; value; comments = Flow_ast_utils.mk_comments_opt ~leading () })
     in
-    let set env start_loc =
+    let set env start_loc leading =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:false false) env
       in
       let open Ast.Expression.Object in
-      Property (loc, Property.Set { key; value })
+      Property
+        (loc, Property.Set { key; value; comments = Flow_ast_utils.mk_comments_opt ~leading () })
     in
     (* #prod-PropertyDefinition *)
     let init =
@@ -354,6 +356,7 @@ module Object
         let leading = leading_async @ leading_generator in
         match (async, generator, Peek.token env) with
         | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
+          let leading = Peek.comments env in
           let (_, key) = key env in
           begin
             match Peek.token env with
@@ -364,9 +367,10 @@ module Object
             | T_COMMA
             | T_RCURLY ->
               init env start_loc key false false leading
-            | _ -> (get env start_loc, Pattern_cover.empty_errors)
+            | _ -> (get env start_loc leading, Pattern_cover.empty_errors)
           end
         | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
+          let leading = Peek.comments env in
           let (_, key) = key env in
           begin
             match Peek.token env with
@@ -377,7 +381,7 @@ module Object
             | T_COMMA
             | T_RCURLY ->
               init env start_loc key false false leading
-            | _ -> (set env start_loc, Pattern_cover.empty_errors)
+            | _ -> (set env start_loc leading, Pattern_cover.empty_errors)
           end
         | (async, generator, _) ->
           let (_, key) = key env in

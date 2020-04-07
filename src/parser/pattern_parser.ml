@@ -47,8 +47,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
           | Property.Method { key = _; value = (loc, _) } ->
             error_at env (loc, Parse_error.MethodInDestructuring);
             acc
-          | Property.Get { key = _; value = (loc, _) }
-          | Property.Set { key = _; value = (loc, _) } ->
+          | Property.Get { key = _; value = (loc, _); comments = _ }
+          | Property.Set { key = _; value = (loc, _); comments = _ } ->
             (* these should never happen *)
             error_at env (loc, Parse_error.Unexpected "identifier");
             acc
