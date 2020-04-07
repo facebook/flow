@@ -11,6 +11,7 @@ open Parser_env
 open Flow_ast
 module SMap = Map.Make (String)
 open Parser_common
+open Comment_attachment
 
 (* A module for parsing various object related things, like object literals
  * and classes *)
@@ -56,12 +57,12 @@ module Object
     let open Ast.Expression.Object.Property in
     let leading = Peek.comments env in
     let tkn = Peek.token env in
-    let trailing = Peek.comments env in
     match tkn with
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Expect.token env (T_STRING (loc, value, raw, octal));
       let value = Literal.String value in
+      let trailing = Peek.comments env in
       ( loc,
         Literal
           ( loc,
@@ -71,6 +72,7 @@ module Object
       let loc = Peek.loc env in
       let value = Expression.number env kind raw in
       let value = Literal.Number value in
+      let trailing = Peek.comments env in
       ( loc,
         Literal
           ( loc,
@@ -555,8 +557,56 @@ module Object
       | Some loc -> error_at env (loc, Parse_error.DeclareClassElement)
       | None -> ()
     in
+    let property_end_and_semicolon env key annot value =
+      match Peek.token env with
+      | T_LBRACKET
+      | T_LPAREN ->
+        error_unexpected env;
+        (key, annot, value, [])
+      | T_SEMICOLON ->
+        Eat.token env;
+        let trailing =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY ->
+            Peek.comments env
+          | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+          | _ -> []
+        in
+        (key, annot, value, trailing)
+      | _ ->
+        let remover =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY ->
+            { trailing = []; remove_trailing = (fun x _ -> x) }
+          | _ when Peek.is_line_terminator env ->
+            Comment_attachment.trailing_and_remover_after_last_line env
+          | _ -> Comment_attachment.trailing_and_remover_after_last_loc env
+        in
+        (* Remove trailing comments from the last node in this property *)
+        let (key, annot, value) =
+          match (annot, value) with
+          (* prop = init *)
+          | (_, Class.Property.Initialized expr) ->
+            ( key,
+              annot,
+              Class.Property.Initialized
+                (remover.remove_trailing expr (fun remover expr -> remover#expression expr)) )
+          (* prop: annot *)
+          | (Ast.Type.Available annot, _) ->
+            ( key,
+              Ast.Type.Available
+                (remover.remove_trailing annot (fun remover annot -> remover#type_annotation annot)),
+              value )
+          (* prop *)
+          | _ ->
+            (remover.remove_trailing key (fun remover key -> remover#object_key key), annot, value)
+        in
+        (key, annot, value, [])
+    in
     let property env start_loc key static declare variance leading =
-      let (loc, (annot, value, comments)) =
+      let (loc, (key, annot, value, comments)) =
         with_loc
           ~start_loc
           (fun env ->
@@ -581,11 +631,8 @@ module Object
               | (None, _) -> Ast.Class.Property.Uninitialized
               | (Some _, _) -> Ast.Class.Property.Declared
             in
-            if Expect.maybe env T_SEMICOLON then
-              ()
-            else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
-              error_unexpected env;
-            (annot, value, Flow_ast_utils.mk_comments_opt ~leading ()))
+            let (key, annot, value, trailing) = property_end_and_semicolon env key annot value in
+            (key, annot, value, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
           env
       in
       match key with

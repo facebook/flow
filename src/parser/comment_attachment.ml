@@ -95,6 +95,11 @@ class ['loc] trailing_comments_remover ~after_pos =
       id this#syntax_opt comments body (fun comments' ->
           (loc, { body = _body; comments = comments' }))
 
+    method! computed_key key =
+      let open Ast.ComputedKey in
+      let (loc, { expression; comments }) = key in
+      id this#syntax_opt comments key (fun comments' -> (loc, { expression; comments = comments' }))
+
     method! conditional _loc expr =
       let open Ast.Expression.Conditional in
       let { alternate; comments; _ } = expr in

@@ -9,3 +9,11 @@ class C {
   /* 5.1 L meth */ static /* 5.2 L meth */ get /* 5.3 L id */ getter() {}
   /* 6.1 L meth */ static /* 6.2 L meth */ set /* 6.3 L id */ setter(x) {}
 }
+
+class C { method(){} /* 7.1 L id */ method(){} /* 7.2 T block */ }
+
+class C {
+  /* 8.1 L id */ method(){} /* 8.2 T block */
+  /* 8.3 L id */ method(){} /* 8.4 T block */
+  /* 8.5 T block */
+}
