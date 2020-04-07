@@ -21,7 +21,7 @@ import {
   prettyPrintMessageOfError,
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
-import getFlowErrors from './getFlowErrors';
+import {getFlowErrors} from '../errors';
 import getContext, {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} from './getContext';
 import getAst from './getAst';
 

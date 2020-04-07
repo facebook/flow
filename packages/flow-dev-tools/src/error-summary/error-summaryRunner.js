@@ -8,7 +8,7 @@
  * @format
  */
 
-import getFlowErrors from '../comment/getFlowErrors';
+import {getFlowErrors} from '../errors';
 import {prettyPrintError} from '../flowResult';
 import type {Args} from './error-summaryCommand';
 

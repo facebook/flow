@@ -8,11 +8,11 @@
  */
 
 import {format} from 'util';
-import {execManual} from '../utils/async';
+import {execManual} from './utils/async';
 
-import type {FlowResult} from '../flowResult';
+import type {FlowResult} from './flowResult';
 
-async function getFlowErrors(
+async function getFlowErrorsImpl(
     bin,
     errorCheckCommand,
     root,
@@ -56,14 +56,14 @@ export function getFlowErrorsWithWarnings(
   root: string,
   flowconfigName: string,
 ): Promise<FlowResult> {
-  return getFlowErrors(bin, errorCheckCommand, root, true, flowconfigName);
+  return getFlowErrorsImpl(bin, errorCheckCommand, root, true, flowconfigName);
 }
 
-export default async function(
+export async function getFlowErrors(
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
   flowconfigName: string,
 ): Promise<FlowResult> {
-  return getFlowErrors(bin, errorCheckCommand, root, false, flowconfigName);
+  return getFlowErrorsImpl(bin, errorCheckCommand, root, false, flowconfigName);
 }

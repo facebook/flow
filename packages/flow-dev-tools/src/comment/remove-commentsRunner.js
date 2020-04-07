@@ -10,7 +10,7 @@
 
 import {join} from 'path';
 
-import {getFlowErrorsWithWarnings} from './getFlowErrors';
+import {getFlowErrorsWithWarnings} from '../errors';
 import getAst from './getAst';
 
 import {readFile, writeFile} from '../utils/async';
