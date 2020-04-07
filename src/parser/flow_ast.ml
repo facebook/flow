@@ -684,6 +684,7 @@ and Statement : sig
       type 'M t = {
         members: ('M BooleanLiteral.t, 'M) InitializedMember.t list;
         explicitType: bool;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end
@@ -692,6 +693,7 @@ and Statement : sig
       type 'M t = {
         members: ('M NumberLiteral.t, 'M) InitializedMember.t list;
         explicitType: bool;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end
@@ -700,6 +702,7 @@ and Statement : sig
       type 'M t = {
         members: ('M StringLiteral.t, 'M) members;
         explicitType: bool;
+        comments: ('M, unit) Syntax.t option;
       }
 
       and ('I, 'M) members =
@@ -709,12 +712,17 @@ and Statement : sig
     end
 
     module SymbolBody : sig
-      type 'M t = { members: 'M DefaultedMember.t list } [@@deriving show]
+      type 'M t = {
+        members: 'M DefaultedMember.t list;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
     end
 
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       body: 'M body;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and 'M body = 'M * 'M body'

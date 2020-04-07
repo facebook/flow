@@ -91,7 +91,7 @@ let class_ loc class_ =
 
 let enum loc enum =
   let open Ast.Statement.EnumDeclaration in
-  let { id; body } = enum in
+  let { id; body; comments = _ } = enum in
   (id, (loc, Kind.EnumDef { body }))
 
 let declare_variable loc declare_variable =

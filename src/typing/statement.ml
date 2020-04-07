@@ -2010,7 +2010,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     (loc, FunctionDeclaration func_ast)
   | (loc, EnumDeclaration enum) ->
     let open EnumDeclaration in
-    let { id = (name_loc, ident); body } = enum in
+    let { id = (name_loc, ident); body; comments } = enum in
     let { Ast.Identifier.name; _ } = ident in
     let reason = mk_reason (REnum name) loc in
     let t =
@@ -2036,7 +2036,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       )
     in
     let id' = ((name_loc, t), ident) in
-    (loc, EnumDeclaration { id = id'; body })
+    (loc, EnumDeclaration { id = id'; body; comments })
   | ( loc,
       DeclareVariable
         {
@@ -8251,7 +8251,7 @@ and warn_or_ignore_optional_chaining optional cx loc =
 
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
-  let { id = (name_loc, { Ast.Identifier.name; _ }); body } = enum in
+  let { id = (name_loc, { Ast.Identifier.name; _ }); body; comments = _ } = enum in
   let defaulted_members =
     Base.List.fold
       ~init:SMap.empty
@@ -8353,7 +8353,7 @@ and mk_enum cx ~enum_reason enum =
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
       ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
         defaulted_members members )
-    | (_, SymbolBody { SymbolBody.members }) ->
+    | (_, SymbolBody { SymbolBody.members; comments = _ }) ->
       let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
       (DefT (reason, literal_trust (), SymbolT), defaulted_members members)
   in

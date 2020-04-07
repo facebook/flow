@@ -706,7 +706,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.FunctionDeclaration func -> function_ loc func
       | S.VariableDeclaration decl -> with_semicolon (variable_declaration (loc, decl))
       | S.ClassDeclaration class_ -> class_base loc class_
-      | S.EnumDeclaration enum -> enum_declaration enum
+      | S.EnumDeclaration enum -> enum_declaration loc enum
       | S.ForOf { S.ForOf.left; right; body; await } ->
         fuse
           [
@@ -1784,7 +1784,7 @@ and class_base loc { Ast.Class.id; body; tparams; extends; implements; classDeco
   in
   group [decorator_parts; source_location_with_comments ?comments (loc, group parts)]
 
-and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
+and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
   let open Ast.Statement.EnumDeclaration in
   let representation_type name explicit =
     if explicit then
@@ -1816,40 +1816,47 @@ and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
   in
   let body =
     match body with
-    | (_, BooleanBody { BooleanBody.members; explicitType }) ->
+    | (loc, BooleanBody { BooleanBody.members; explicitType; comments }) ->
       fuse
         [
           representation_type "boolean" explicitType;
           pretty_space;
-          wrap_body @@ Base.List.map ~f:boolean_member members;
+          layout_node_with_comments_opt loc comments
+          @@ wrap_body
+          @@ Base.List.map ~f:boolean_member members;
         ]
-    | (_, NumberBody { NumberBody.members; explicitType }) ->
+    | (loc, NumberBody { NumberBody.members; explicitType; comments }) ->
       fuse
         [
           representation_type "number" explicitType;
           pretty_space;
-          wrap_body @@ Base.List.map ~f:number_member members;
+          layout_node_with_comments_opt loc comments
+          @@ wrap_body
+          @@ Base.List.map ~f:number_member members;
         ]
-    | (_, StringBody { StringBody.members; explicitType }) ->
+    | (loc, StringBody { StringBody.members; explicitType; comments }) ->
       fuse
         [
           representation_type "string" explicitType;
           pretty_space;
-          ( wrap_body
+          ( layout_node_with_comments_opt loc comments
+          @@ wrap_body
           @@
           match members with
           | StringBody.Defaulted members -> Base.List.map ~f:defaulted_member members
           | StringBody.Initialized members -> Base.List.map ~f:string_member members );
         ]
-    | (_, SymbolBody { SymbolBody.members }) ->
+    | (loc, SymbolBody { SymbolBody.members; comments }) ->
       fuse
         [
           representation_type "symbol" true;
           pretty_space;
-          wrap_body @@ Base.List.map ~f:defaulted_member members;
+          layout_node_with_comments_opt loc comments
+          @@ wrap_body
+          @@ Base.List.map ~f:defaulted_member members;
         ]
   in
-  fuse [Atom "enum"; space; identifier id; body]
+  layout_node_with_comments_opt loc comments (fuse [Atom "enum"; space; identifier id; body])
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
 and list_with_newlines (nodes : (Loc.t * Layout.layout_node) list) =

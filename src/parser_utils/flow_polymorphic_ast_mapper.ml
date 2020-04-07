@@ -482,7 +482,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method enum_declaration (enum : ('M, 'T) Ast.Statement.EnumDeclaration.t)
         : ('N, 'U) Ast.Statement.EnumDeclaration.t =
       let open Ast.Statement.EnumDeclaration in
-      let { id; body } = enum in
+      let { id; body; comments } = enum in
       let body' =
         match body with
         | (annot, BooleanBody boolean_body) ->
@@ -494,36 +494,44 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | (annot, SymbolBody symbol_body) ->
           (this#on_loc_annot annot, SymbolBody (this#enum_symbol_body symbol_body))
       in
-      { id = this#t_identifier id; body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { id = this#t_identifier id; body = body'; comments = comments' }
 
     method enum_boolean_body (body : 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
         : 'N Ast.Statement.EnumDeclaration.BooleanBody.t =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
-      let { members; explicitType } = body in
-      { members = Base.List.map ~f:this#enum_boolean_member members; explicitType }
+      let { members; explicitType; comments } = body in
+      let members' = Base.List.map ~f:this#enum_boolean_member members in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { members = members'; explicitType; comments = comments' }
 
     method enum_number_body (body : 'M Ast.Statement.EnumDeclaration.NumberBody.t)
         : 'N Ast.Statement.EnumDeclaration.NumberBody.t =
       let open Ast.Statement.EnumDeclaration.NumberBody in
-      let { members; explicitType } = body in
-      { members = Base.List.map ~f:this#enum_number_member members; explicitType }
+      let { members; explicitType; comments } = body in
+      let members' = Base.List.map ~f:this#enum_number_member members in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { members = members'; explicitType; comments = comments' }
 
     method enum_string_body (body : 'M Ast.Statement.EnumDeclaration.StringBody.t)
         : 'N Ast.Statement.EnumDeclaration.StringBody.t =
       let open Ast.Statement.EnumDeclaration.StringBody in
-      let { members; explicitType } = body in
+      let { members; explicitType; comments } = body in
       let members' =
         match members with
         | Defaulted members -> Defaulted (Base.List.map ~f:this#enum_defaulted_member members)
         | Initialized members -> Initialized (Base.List.map ~f:this#enum_string_member members)
       in
-      { members = members'; explicitType }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { members = members'; explicitType; comments = comments' }
 
     method enum_symbol_body (body : 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
         : 'N Ast.Statement.EnumDeclaration.SymbolBody.t =
       let open Ast.Statement.EnumDeclaration.SymbolBody in
-      let { members } = body in
-      { members = Base.List.map ~f:this#enum_defaulted_member members }
+      let { members; comments } = body in
+      let members' = Base.List.map ~f:this#enum_defaulted_member members in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { members = members'; comments = comments' }
 
     method enum_defaulted_member (member : 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
         : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =

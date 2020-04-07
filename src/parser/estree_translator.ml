@@ -981,12 +981,13 @@ with type t = Impl.t = struct
           []
       in
       node ?comments "ClassProperty" loc props
-    and enum_declaration (loc, { Statement.EnumDeclaration.id; body }) =
+    and enum_declaration (loc, { Statement.EnumDeclaration.id; body; comments }) =
       let open Statement.EnumDeclaration in
       let enum_body =
         match body with
-        | (loc, BooleanBody { BooleanBody.members; explicitType }) ->
+        | (loc, BooleanBody { BooleanBody.members; explicitType; comments }) ->
           node
+            ?comments
             "EnumBooleanBody"
             loc
             [
@@ -1001,8 +1002,9 @@ with type t = Impl.t = struct
                   members );
               ("explicitType", bool explicitType);
             ]
-        | (loc, NumberBody { NumberBody.members; explicitType }) ->
+        | (loc, NumberBody { NumberBody.members; explicitType; comments }) ->
           node
+            ?comments
             "EnumNumberBody"
             loc
             [
@@ -1016,7 +1018,7 @@ with type t = Impl.t = struct
                   members );
               ("explicitType", bool explicitType);
             ]
-        | (loc, StringBody { StringBody.members; explicitType }) ->
+        | (loc, StringBody { StringBody.members; explicitType; comments }) ->
           let members =
             match members with
             | StringBody.Defaulted defaulted_members ->
@@ -1031,11 +1033,13 @@ with type t = Impl.t = struct
                 initialized_members
           in
           node
+            ?comments
             "EnumStringBody"
             loc
             [("members", array members); ("explicitType", bool explicitType)]
-        | (loc, SymbolBody { SymbolBody.members }) ->
+        | (loc, SymbolBody { SymbolBody.members; comments }) ->
           node
+            ?comments
             "EnumSymbolBody"
             loc
             [
@@ -1046,7 +1050,7 @@ with type t = Impl.t = struct
                   members );
             ]
       in
-      node "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)]
+      node ?comments "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)]
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
       node
         ?comments

@@ -314,8 +314,8 @@ module Statements = struct
 
   let with_ ?comments _object body = (Loc.none, With { With._object; body; comments })
 
-  let enum_declaration ?(loc = Loc.none) id body =
-    (loc, EnumDeclaration { EnumDeclaration.id; body })
+  let enum_declaration ?(loc = Loc.none) ?comments id body =
+    (loc, EnumDeclaration { EnumDeclaration.id; body; comments })
 
   module EnumDeclarations = struct
     open EnumDeclaration
@@ -325,21 +325,22 @@ module Statements = struct
 
     let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
 
-    let boolean_body ?(loc = Loc.none) ?(explicit_type = false) members =
-      (loc, BooleanBody { BooleanBody.members; explicitType = explicit_type })
+    let boolean_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
+      (loc, BooleanBody { BooleanBody.members; explicitType = explicit_type; comments })
 
-    let number_body ?(loc = Loc.none) ?(explicit_type = false) members =
-      (loc, NumberBody { NumberBody.members; explicitType = explicit_type })
+    let number_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
+      (loc, NumberBody { NumberBody.members; explicitType = explicit_type; comments })
 
-    let string_defaulted_body ?(loc = Loc.none) ?(explicit_type = false) members =
+    let string_defaulted_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
       let members = StringBody.Defaulted members in
-      (loc, StringBody { StringBody.members; explicitType = explicit_type })
+      (loc, StringBody { StringBody.members; explicitType = explicit_type; comments })
 
-    let string_initialized_body ?(loc = Loc.none) ?(explicit_type = false) members =
+    let string_initialized_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
       let members = StringBody.Initialized members in
-      (loc, StringBody { StringBody.members; explicitType = explicit_type })
+      (loc, StringBody { StringBody.members; explicitType = explicit_type; comments })
 
-    let symbol_body ?(loc = Loc.none) members = (loc, SymbolBody { SymbolBody.members })
+    let symbol_body ?(loc = Loc.none) ?comments members =
+      (loc, SymbolBody { SymbolBody.members; comments })
   end
 end
 

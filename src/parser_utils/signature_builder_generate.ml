@@ -805,7 +805,8 @@ module T = struct
           } )
     | EnumDecl { body } ->
       let open Ast.Statement.EnumDeclaration in
-      (decl_loc, Ast.Statement.EnumDeclaration { id; body })
+      ( decl_loc,
+        Ast.Statement.EnumDeclaration { id; body; comments = Flow_ast_utils.mk_comments_opt () } )
     | FunctionDecl { annot = little_annotation; predicate } ->
       ( decl_loc,
         Ast.Statement.DeclareFunction
