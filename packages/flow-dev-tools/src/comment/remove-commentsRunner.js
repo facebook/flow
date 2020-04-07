@@ -10,7 +10,7 @@
 
 import {join} from 'path';
 
-import {getFlowErrorsWithWarnings} from '../errors';
+import {collateLocs, getUnusedSuppressionErrors} from '../errors';
 import getAst from './getAst';
 
 import {readFile, writeFile} from '../utils/async';
@@ -21,36 +21,13 @@ import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
 import type {Context} from './getContext';
 
 async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
-  const result: FlowResult = await getFlowErrorsWithWarnings(
+  const errors: Array<FlowError> = await getUnusedSuppressionErrors(
     args.bin,
     args.errorCheckCommand,
     args.root,
     args.flowconfigName,
   );
-
-  const errors = result.errors.filter(
-    error =>
-      (error.message[0].descr === 'Error suppressing comment' &&
-        error.message[1].descr === 'Unused suppression') ||
-      error.message[0].descr === 'Unused suppression comment.',
-  );
-
-  const errorsByFile = new Map();
-  for (const error of errors) {
-    const message = error.message[0];
-    const loc = message.loc;
-    if (loc) {
-      const source = loc.source;
-      if (source) {
-        const file = join(args.root, source);
-        const fileErrors: Array<FlowLoc> = errorsByFile.get(file) || [];
-        fileErrors.push(loc);
-        errorsByFile.set(file, fileErrors);
-      }
-    }
-  }
-
-  return errorsByFile;
+  return collateLocs(errors, args.root);
 }
 
 async function removeUnusedErrorSuppressions(

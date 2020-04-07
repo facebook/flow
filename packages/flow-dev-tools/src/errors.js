@@ -8,10 +8,11 @@
  * @format
  */
 
+import path from 'path';
 import {format} from 'util';
 import {execManual} from './utils/async';
 
-import type {FlowResult} from './flowResult';
+import type {FlowError, FlowLoc, FlowResult} from './flowResult';
 
 async function getFlowErrorsImpl(
   bin,
@@ -68,4 +69,46 @@ export async function getFlowErrors(
   flowconfigName: string,
 ): Promise<FlowResult> {
   return getFlowErrorsImpl(bin, errorCheckCommand, root, false, flowconfigName);
+}
+
+export async function getUnusedSuppressionErrors(
+  bin: string,
+  errorCheckCommand: 'check' | 'status',
+  root: string,
+  flowconfigName: string,
+): Promise<Array<FlowError>> {
+  const result: FlowResult = await getFlowErrorsWithWarnings(
+    bin,
+    errorCheckCommand,
+    root,
+    flowconfigName,
+  );
+
+  return result.errors.filter(
+    error =>
+      (error.message[0].descr === 'Error suppressing comment' &&
+        error.message[1].descr === 'Unused suppression') ||
+      error.message[0].descr === 'Unused suppression comment.',
+  );
+}
+
+export function collateLocs(
+  errors: Array<FlowError>,
+  root?: string,
+): Map<string, Array<FlowLoc>> {
+  const locsByFile = new Map();
+  for (const error of errors) {
+    const message = error.message[0];
+    const loc = message.loc;
+    if (loc) {
+      const source = loc.source;
+      if (source) {
+        const file = root != null ? path.join(root, source) : source;
+        const fileErrors: Array<FlowLoc> = locsByFile.get(file) || [];
+        fileErrors.push(loc);
+        locsByFile.set(file, fileErrors);
+      }
+    }
+  }
+  return locsByFile;
 }
