@@ -232,9 +232,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t =
       let open Ast.Class.Decorator in
-      let (annot, { expression }) = dec in
+      let (annot, { expression; comments }) = dec in
+      let annot' = this#on_loc_annot annot in
       let expression' = this#expression expression in
-      (this#on_loc_annot annot, { expression = expression' })
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { expression = expression'; comments = comments' })
 
     method class_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident

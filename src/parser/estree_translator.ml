@@ -868,8 +868,8 @@ with type t = Impl.t = struct
           ("implements", implements);
           ("decorators", array_of_list class_decorator classDecorators);
         ]
-    and class_decorator (loc, { Class.Decorator.expression = expr }) =
-      node "Decorator" loc [("expression", expression expr)]
+    and class_decorator (loc, { Class.Decorator.expression = expr; comments }) =
+      node ?comments "Decorator" loc [("expression", expression expr)]
     and class_implements (loc, { Class.Implements.Interface.id; targs }) =
       node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body; comments }) =

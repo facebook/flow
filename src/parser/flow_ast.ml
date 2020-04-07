@@ -1694,7 +1694,11 @@ and Class : sig
   module Decorator : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = { expression: ('M, 'T) Expression.t } [@@deriving show]
+    and ('M, 'T) t' = {
+      expression: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   type ('M, 'T) t = {

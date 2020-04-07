@@ -38,9 +38,23 @@ module Object
     (Expression : Expression_parser.EXPRESSION)
     (Pattern_cover : Pattern_cover.COVER) : OBJECT = struct
   let decorator_list =
+    let expression env =
+      let expression = Expression.left_hand_side env in
+      let { remove_trailing; _ } =
+        if Peek.is_line_terminator env then
+          trailing_and_remover_after_last_line env
+        else
+          trailing_and_remover_after_last_loc env
+      in
+      remove_trailing expression (fun remover expression -> remover#expression expression)
+    in
     let decorator env =
+      let leading = Peek.comments env in
       Eat.token env;
-      { Ast.Class.Decorator.expression = Expression.left_hand_side env }
+      {
+        Ast.Class.Decorator.expression = expression env;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ();
+      }
     in
     let rec decorator_list_helper env decorators =
       match Peek.token env with

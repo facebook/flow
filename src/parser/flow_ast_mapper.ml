@@ -337,17 +337,19 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
-      let { id; body; tparams = _; extends; implements; classDecorators = _; comments } = cls in
+      let { id; body; tparams = _; extends; implements; classDecorators; comments } = cls in
       let id' = map_opt this#class_identifier id in
       let body' = this#class_body body in
       let extends' = map_opt (map_loc this#class_extends) extends in
       let implements' = map_opt this#class_implements implements in
+      let classDecorators' = map_list this#class_decorator classDecorators in
       let comments' = this#syntax_opt comments in
       if
         id == id'
         && body == body'
         && extends == extends'
         && implements == implements'
+        && classDecorators == classDecorators'
         && comments = comments'
       then
         cls
@@ -358,6 +360,7 @@ class ['loc] mapper =
           body = body';
           extends = extends';
           implements = implements';
+          classDecorators = classDecorators';
           comments = comments';
         }
 
@@ -384,6 +387,16 @@ class ['loc] mapper =
         cls_body
       else
         (loc, { body = body'; comments = comments' })
+
+    method class_decorator (dec : ('loc, 'loc) Ast.Class.Decorator.t) =
+      let open Ast.Class.Decorator in
+      let (loc, { expression; comments }) = dec in
+      let expression' = this#expression expression in
+      let comments' = this#syntax_opt comments in
+      if expression == expression' && comments == comments' then
+        dec
+      else
+        (loc, { expression = expression'; comments = comments' })
 
     method class_element (elem : ('loc, 'loc) Ast.Class.Body.element) =
       let open Ast.Class.Body in
@@ -417,14 +430,15 @@ class ['loc] mapper =
 
     method class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
-      let { kind = _; key; value; static = _; decorators = _; comments } = meth in
+      let { kind = _; key; value; static = _; decorators; comments } = meth in
       let key' = this#object_key key in
       let value' = map_loc this#function_expression value in
+      let decorators' = map_list this#class_decorator decorators in
       let comments' = this#syntax_opt comments in
-      if key == key' && value == value' && comments == comments' then
+      if key == key' && value == value' && decorators == decorators' && comments == comments' then
         meth
       else
-        { meth with key = key'; value = value'; comments = comments' }
+        { meth with key = key'; value = value'; decorators = decorators'; comments = comments' }
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in

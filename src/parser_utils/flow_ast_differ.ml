@@ -897,15 +897,19 @@ let program
     } =
       class2
     in
-    if id1 != id2 || classDecorators1 != classDecorators2 then
+    if id1 != id2 then
       None
     else
       let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
       let extends_diff = diff_if_changed_opt class_extends extends1 extends2 in
       let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
       let body_diff = diff_if_changed_ret_opt class_body body1 body2 in
+      let decorators_diff =
+        diff_and_recurse_no_trivial class_decorator classDecorators1 classDecorators2
+      in
       let comments_diff = syntax_opt loc comments1 comments2 in
-      join_diff_list [tparams_diff; extends_diff; implements_diff; body_diff; comments_diff]
+      join_diff_list
+        [tparams_diff; extends_diff; implements_diff; body_diff; decorators_diff; comments_diff]
   and class_extends
       ((loc, extends1) : (Loc.t, Loc.t) Ast.Class.Extends.t)
       ((_, extends2) : (Loc.t, Loc.t) Ast.Class.Extends.t) =
@@ -975,6 +979,15 @@ let program
     let body_diff = diff_and_recurse_no_trivial class_element body1 body2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [body_diff; comments_diff]
+  and class_decorator
+      ((loc, dec1) : (Loc.t, Loc.t) Ast.Class.Decorator.t)
+      ((_, dec2) : (Loc.t, Loc.t) Ast.Class.Decorator.t) : node change list option =
+    let open Ast.Class.Decorator in
+    let { expression = expression1; comments = comments1 } = dec1 in
+    let { expression = expression2; comments = comments2 } = dec2 in
+    let expression_diff = Some (expression expression1 expression2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [expression_diff; comments_diff]
   and class_element
       (elem1 : (Loc.t, Loc.t) Ast.Class.Body.element)
       (elem2 : (Loc.t, Loc.t) Ast.Class.Body.element) : node change list option =
@@ -1053,13 +1066,13 @@ let program
       || key1 != key2
       (* value handled below *)
       || static1 != static2
-      || decorators1 != decorators2
     then
       None
     else
       let value_diff = function_ value_loc value1 value2 in
+      let decorators_diff = diff_and_recurse_no_trivial class_decorator decorators1 decorators2 in
       let comments_diff = syntax_opt loc comments1 comments2 in
-      join_diff_list [value_diff; comments_diff]
+      join_diff_list [value_diff; decorators_diff; comments_diff]
   and block
       (loc : Loc.t)
       (block1 : (Loc.t, Loc.t) Ast.Statement.Block.t)
