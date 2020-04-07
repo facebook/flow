@@ -162,11 +162,7 @@ type PropsShape = $Shape<Props>;
 //   ^
 
 // $Exports<T>
-declare module m {
-  declare export var x: number;
-}
-
-type ExportsM = $Exports<"m">;
+type ExportsM = $Exports<"lib_m">;
 //   ^
 
 // Multi-params (ordering)

@@ -696,20 +696,20 @@ import-typeof-class.js:7:16 {
   "start":16,
   "end":16
 }
-module-export-0.js:7:13 = {
-  "type":"module \"a\" {class A; }",
+module-export-0.js:3:20 = {
+  "type":"module \"lib_a\" {class A; }",
   "reasons":[],
   "loc":{
     "source":"module-export-0.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":13,"offset":72},
-    "end":{"line":7,"column":13,"offset":73}
+    "start":{"line":3,"column":20,"offset":29},
+    "end":{"line":3,"column":20,"offset":30}
   },
   "path":"module-export-0.js",
-  "line":7,
-  "endline":7,
-  "start":13,
-  "end":13
+  "line":3,
+  "endline":3,
+  "start":20,
+  "end":20
 }
 module-export-1.js:3:8 = {
   "type":"number",
@@ -787,7 +787,7 @@ module-export-1.js:10:9 = {
   "end":15
 }
 module-import.js:3:7 = {
-  "type":"module \"./module-export-0\" {module \"a\" {class A; }; }",
+  "type":"module \"./module-export-0\" {module \"lib_a\" {class A; }; }",
   "reasons":[],
   "loc":{
     "source":"module-import.js",

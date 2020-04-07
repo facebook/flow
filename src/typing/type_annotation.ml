@@ -579,7 +579,15 @@ let rec convert cx tparams_map =
                   } ) ->
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
-              let remote_module_t = Env.get_var_declared_type cx (internal_module_name value) loc in
+              let remote_module_t =
+                Tvar.mk_where cx reason (fun tout ->
+                    Flow_js.lookup_builtin
+                      cx
+                      (internal_module_name value)
+                      reason
+                      (Strict reason)
+                      tout)
+              in
               let str_t = mk_singleton_string cx str_loc value in
               reconstruct_ast
                 (Tvar.mk_where cx reason (fun t ->

@@ -396,39 +396,39 @@ Flags:
 type PropsShape = $Shape<Props>
 type-destructor.js:161:6,161:15
 
-type-destructor.js:169:6
+type-destructor.js:165:6
 Flags:
 type ExportsM = {|+x: number|}
-type-destructor.js:169:6,169:13
+type-destructor.js:165:6,165:13
 
-type-destructor.js:173:18
+type-destructor.js:169:18
 Flags:
 <T: {}, K: T>() => $ElementType<T, K>
-type-destructor.js:173:18,173:28
+type-destructor.js:169:18,169:28
 
-type-destructor.js:175:18
+type-destructor.js:171:18
 Flags:
 <K: any, T: {}>() => $ElementType<T, K>
-type-destructor.js:175:18,175:28
+type-destructor.js:171:18,171:28
 
-type-destructor.js:179:6
+type-destructor.js:175:6
 Flags:
 type RecursiveTypeDestructor = {|
   f: {|g: $PropertyType<RecursiveTypeDestructor, "f">|}
 |}
-type-destructor.js:179:6,179:28
+type-destructor.js:175:6,175:28
 
-type-destructor.js:186:6
+type-destructor.js:182:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
   f: ({|h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f">|} | X)
 |}
-type-destructor.js:186:6,186:32
+type-destructor.js:182:6,182:32
 
-type-destructor.js:192:6
+type-destructor.js:188:6
 Flags:
 type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
-type-destructor.js:192:6,192:10
+type-destructor.js:188:6,188:10
 
 type-destructor.js:20:6
 Flags: --evaluate-type-destructors
@@ -621,35 +621,35 @@ Flags: --evaluate-type-destructors
 type PropsShape = $Shape<Props>
 type-destructor.js:161:6,161:15
 
-type-destructor.js:169:6
+type-destructor.js:165:6
 Flags: --evaluate-type-destructors
 type ExportsM = {|+x: number|}
-type-destructor.js:169:6,169:13
+type-destructor.js:165:6,165:13
 
-type-destructor.js:173:18
+type-destructor.js:169:18
 Flags: --evaluate-type-destructors
 <T: {}, K: T>() => $ElementType<T, K>
-type-destructor.js:173:18,173:28
+type-destructor.js:169:18,169:28
 
-type-destructor.js:175:18
+type-destructor.js:171:18
 Flags: --evaluate-type-destructors
 <K: any, T: {}>() => $ElementType<T, K>
-type-destructor.js:175:18,175:28
+type-destructor.js:171:18,171:28
 
-type-destructor.js:179:6
+type-destructor.js:175:6
 Flags: --evaluate-type-destructors
 type V$0 = {|g: V$0|};
 type RecursiveTypeDestructor = {|f: {|g: V$0|}|}
-type-destructor.js:179:6,179:28
+type-destructor.js:175:6,175:28
 
-type-destructor.js:186:6
+type-destructor.js:182:6
 Flags: --evaluate-type-destructors
 type V$0 = {|h: V$0|} | X;
 type RecursiveTypeDestructorPoly<X> = {|f: ({|h: V$0|} | X)|}
-type-destructor.js:186:6,186:32
+type-destructor.js:182:6,182:32
 
-type-destructor.js:192:6
+type-destructor.js:188:6
 Flags: --evaluate-type-destructors
 type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
-type-destructor.js:192:6,192:10
+type-destructor.js:188:6,188:10
 

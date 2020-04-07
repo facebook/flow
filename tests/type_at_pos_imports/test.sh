@@ -89,8 +89,8 @@ printf "import-typeof-class.js:7:16 "
 assert_ok "$FLOW" type-at-pos import-typeof-class.js 7 16 --strip-root --pretty --expand-json-output
 
 # module-export-0.js
-printf "module-export-0.js:7:13 = "
-assert_ok "$FLOW" type-at-pos module-export-0.js 7 13 --strip-root --pretty
+printf "module-export-0.js:3:20 = "
+assert_ok "$FLOW" type-at-pos module-export-0.js 3 20 --strip-root --pretty
 
 # module-export-1.js
 printf "module-export-1.js:3:8 = "

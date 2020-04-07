@@ -1,8 +1,3 @@
 // @flow
 
-declare module a {
-  declare export class A {}
-}
-
-declare var n: $Exports<'a'>;
-export const m = n;
+declare export var m: $Exports<'lib_a'>;
