@@ -1257,23 +1257,23 @@ let tests =
                  loc
                    (group
                       [
-                        atom "class";
-                        space;
-                        id "a";
-                        indent
-                          (fused
+                        loc
+                          (group
                              [
-                               line;
-                               atom "extends";
+                               atom "class";
                                space;
-                               loc (loc (id "b"));
-                               line;
-                               atom "implements";
-                               space;
-                               loc (id "c");
+                               id "a";
+                               indent
+                                 (fused
+                                    [
+                                      line;
+                                      loc (fused [atom "extends"; space; loc (loc (id "b"))]);
+                                      line;
+                                      loc (fused [atom "implements"; space; loc (id "c")]);
+                                    ]);
+                               pretty_space;
+                               loc (atom "{}");
                              ]);
-                        pretty_space;
-                        atom "{}";
                       ]))
                layout;
              assert_output ~ctxt "class a extends b implements c{}" layout;
@@ -1301,19 +1301,30 @@ let tests =
                                   loc
                                     (group
                                        [
-                                         atom "class";
-                                         space;
-                                         id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-                                         indent
-                                           (fused
+                                         loc
+                                           (group
                                               [
-                                                line;
-                                                atom "extends";
+                                                atom "class";
                                                 space;
-                                                loc (loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
+                                                id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                                                indent
+                                                  (fused
+                                                     [
+                                                       line;
+                                                       loc
+                                                         (fused
+                                                            [
+                                                              atom "extends";
+                                                              space;
+                                                              loc
+                                                                (loc
+                                                                   (id
+                                                                      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
+                                                            ]);
+                                                     ]);
+                                                pretty_space;
+                                                loc (atom "{}");
                                               ]);
-                                         pretty_space;
-                                         atom "{}";
                                        ]);
                                 ]);
                            pretty_hardline;

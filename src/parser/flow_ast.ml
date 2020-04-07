@@ -743,7 +743,7 @@ and Statement : sig
       body: 'M * ('M, 'T) Type.Object.t;
       extends: ('M * ('M, 'T) Type.Generic.t) option;
       mixins: ('M * ('M, 'T) Type.Generic.t) list;
-      implements: ('M, 'T) Class.Implements.t list;
+      implements: ('M, 'T) Class.Implements.t option;
     }
     [@@deriving show]
   end
@@ -1644,16 +1644,27 @@ and Class : sig
     and ('M, 'T) t' = {
       expr: ('M, 'T) Expression.t;
       targs: ('M, 'T) Type.TypeArgs.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
 
   module Implements : sig
+    module Interface : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        id: ('M, 'T) Identifier.t;
+        targs: ('M, 'T) Type.TypeArgs.t option;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
-      id: ('M, 'T) Identifier.t;
-      targs: ('M, 'T) Type.TypeArgs.t option;
+      interfaces: ('M, 'T) Interface.t list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1661,7 +1672,10 @@ and Class : sig
   module Body : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = { body: ('M, 'T) element list }
+    and ('M, 'T) t' = {
+      body: ('M, 'T) element list;
+      comments: ('M, unit) Syntax.t option;
+    }
 
     and ('M, 'T) element =
       | Method of ('M, 'T) Method.t
@@ -1681,7 +1695,7 @@ and Class : sig
     body: ('M, 'T) Class.Body.t;
     tparams: ('M, 'T) Type.TypeParams.t option;
     extends: ('M, 'T) Extends.t option;
-    implements: ('M, 'T) Class.Implements.t list;
+    implements: ('M, 'T) Implements.t option;
     classDecorators: ('M, 'T) Decorator.t list;
     comments: ('M, unit) Syntax.t option;
   }

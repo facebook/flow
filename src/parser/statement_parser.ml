@@ -1013,10 +1013,8 @@ module Statement
       in
       let implements =
         match Peek.token env with
-        | T_IMPLEMENTS ->
-          Eat.token env;
-          Object.class_implements env []
-        | _ -> []
+        | T_IMPLEMENTS -> Some (Object.class_implements env ~attach_leading:true)
+        | _ -> None
       in
       let body = Type._object ~is_class:true env in
       let { remove_trailing; _ } = statement_end_trailing_comments env in

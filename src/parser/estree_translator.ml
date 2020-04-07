@@ -754,6 +754,12 @@ with type t = Impl.t = struct
         | Some extends -> array [interface_extends extends]
         | None -> array []
       in
+      let implements =
+        match implements with
+        | Some (_, { Class.Implements.interfaces; comments = _ }) ->
+          array_of_list class_implements interfaces
+        | None -> array []
+      in
       node
         "DeclareClass"
         loc
@@ -762,7 +768,7 @@ with type t = Impl.t = struct
           ("typeParameters", option type_parameter_declaration tparams);
           ("body", object_type ~include_inexact:false body);
           ("extends", extends);
-          ("implements", array_of_list class_implements implements);
+          ("implements", implements);
           ("mixins", array_of_list interface_extends mixins);
         ]
     and declare_interface (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
@@ -833,10 +839,18 @@ with type t = Impl.t = struct
     and class_helper
         node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators; comments })
         =
-      let (super, super_targs) =
+      let (super, super_targs, comments) =
         match extends with
-        | Some (_, { Class.Extends.expr; targs }) -> (Some expr, targs)
-        | None -> (None, None)
+        | Some (_, { Class.Extends.expr; targs; comments = extends_comments }) ->
+          (Some expr, targs, Flow_ast_utils.merge_comments ~outer:comments ~inner:extends_comments)
+        | None -> (None, None, comments)
+      in
+      let (implements, comments) =
+        match implements with
+        | Some (_, { Class.Implements.interfaces; comments = implements_comments }) ->
+          ( array_of_list class_implements interfaces,
+            Flow_ast_utils.merge_comments ~outer:comments ~inner:implements_comments )
+        | None -> (array [], comments)
       in
       node
         ?comments
@@ -851,15 +865,15 @@ with type t = Impl.t = struct
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
           ("superTypeParameters", option type_args super_targs);
-          ("implements", array_of_list class_implements implements);
+          ("implements", implements);
           ("decorators", array_of_list class_decorator classDecorators);
         ]
     and class_decorator (loc, { Class.Decorator.expression = expr }) =
       node "Decorator" loc [("expression", expression expr)]
-    and class_implements (loc, { Class.Implements.id; targs }) =
+    and class_implements (loc, { Class.Implements.Interface.id; targs }) =
       node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
-    and class_body (loc, { Class.Body.body }) =
-      node "ClassBody" loc [("body", array_of_list class_element body)]
+    and class_body (loc, { Class.Body.body; comments }) =
+      node ?comments "ClassBody" loc [("body", array_of_list class_element body)]
     and class_element =
       Class.Body.(
         function

@@ -363,7 +363,7 @@ module Eval (Env : EvalEnv) = struct
       let (super, super_targs) =
         match extends with
         | None -> (None, None)
-        | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
+        | Some (_, { Extends.expr; targs; comments = _ }) -> (Some expr, targs)
       in
       let deps = class_ tparams body super super_targs implements in
       begin
@@ -719,7 +719,7 @@ module Eval (Env : EvalEnv) = struct
     in
     fun tparams body super super_targs implements ->
       let open Ast.Class in
-      let (_, { Body.body }) = body in
+      let (_, { Body.body; comments = _ }) = body in
       let (tps, deps) = type_params SSet.empty tparams in
       let deps = List.fold_left (Deps.reduce_join (class_element tps)) deps body in
       let deps =
@@ -728,7 +728,12 @@ module Eval (Env : EvalEnv) = struct
         | Some expr -> Deps.join (deps, literal_expr tps expr)
       in
       let deps = Deps.join (deps, type_args tps super_targs) in
-      List.fold_left (Deps.reduce_join (implement tps)) deps implements
+      let interfaces =
+        match implements with
+        | None -> []
+        | Some (_, { Implements.interfaces; comments = _ }) -> interfaces
+      in
+      List.fold_left (Deps.reduce_join (implement tps)) deps interfaces
 
   and array_ =
     let array_element tps loc expr_or_spread_opt =
@@ -743,7 +748,7 @@ module Eval (Env : EvalEnv) = struct
       Nel.fold_left (Deps.reduce_join (array_element tps loc)) Deps.bot elements
 
   and implement tps implement =
-    let open Ast.Class.Implements in
+    let open Ast.Class.Implements.Interface in
     let (_, { id = (_, { Ast.Identifier.name; comments = _ }); targs }) = implement in
     let deps =
       if SSet.mem name tps then
@@ -831,7 +836,12 @@ module Verifier (Env : EvalEnv) = struct
         | Some r -> Deps.join (deps, Eval.value_ref tps r)
       in
       let deps = List.fold_left (Deps.reduce_join (Eval.value_ref tps)) deps mixins in
-      List.fold_left (Deps.reduce_join (Eval.implement tps)) deps implements
+      let interfaces =
+        match implements with
+        | None -> []
+        | Some (_, { Ast.Class.Implements.interfaces; comments = _ }) -> interfaces
+      in
+      List.fold_left (Deps.reduce_join (Eval.implement tps)) deps interfaces
     | Kind.EnumDef _ -> Deps.bot
     | Kind.TypeDef { tparams; right } ->
       let (tps, deps) = Eval.type_params SSet.empty tparams in
@@ -917,7 +927,7 @@ module Verifier (Env : EvalEnv) = struct
       let (super, super_targs) =
         match extends with
         | None -> (None, None)
-        | Some (_, { Ast.Class.Extends.expr; targs }) -> (Some expr, targs)
+        | Some (_, { Ast.Class.Extends.expr; targs; comments = _ }) -> (Some expr, targs)
       in
       Eval.class_ tparams body super super_targs implements
     | Declaration _stmt -> Deps.unreachable

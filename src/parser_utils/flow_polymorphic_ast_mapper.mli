@@ -64,6 +64,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method class_implements :
       ('M, 'T) Flow_ast.Class.Implements.t -> ('N, 'U) Ast.Class.Implements.t
 
+    method class_implements_interface :
+      ('M, 'T) Flow_ast.Class.Implements.Interface.t -> ('N, 'U) Ast.Class.Implements.Interface.t
+
     method class_method : ('M, 'T) Ast.Class.Method.t' -> ('N, 'U) Ast.Class.Method.t'
 
     method class_private_field :

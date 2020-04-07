@@ -7,7 +7,7 @@
   ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":17,"column":59}},
-  "range":[19,738],
+  "range":[19,743],
   "body":[
     {
       "type":"ExportDefaultDeclaration",
@@ -374,20 +374,6 @@
       "range":[622,659],
       "declaration":{
         "type":"ClassDeclaration",
-        "trailingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":15,"column":57},"end":{"line":15,"column":74}},
-            "range":[660,677],
-            "value":" 8.3 T class "
-          },
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":18}},
-            "range":[679,697],
-            "value":" 9.1 L export "
-          }
-        ],
         "leadingComments":[
           {
             "type":"Block",
@@ -408,6 +394,14 @@
         },
         "body":{
           "type":"ClassBody",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":15,"column":57},"end":{"line":15,"column":79}},
+              "range":[660,682],
+              "value":" 8.3 T class body "
+            }
+          ],
           "loc":{"source":null,"start":{"line":15,"column":54},"end":{"line":15,"column":56}},
           "range":[657,659],
           "body":[]
@@ -427,26 +421,20 @@
       "leadingComments":[
         {
           "type":"Block",
-          "loc":{"source":null,"start":{"line":15,"column":57},"end":{"line":15,"column":74}},
-          "range":[660,677],
-          "value":" 8.3 T class "
-        },
-        {
-          "type":"Block",
           "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":18}},
-          "range":[679,697],
+          "range":[684,702],
           "value":" 9.1 L export "
         }
       ],
       "loc":{"source":null,"start":{"line":17,"column":19},"end":{"line":17,"column":59}},
-      "range":[698,738],
+      "range":[703,743],
       "declaration":{
         "type":"VariableDeclaration",
         "trailingComments":[
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":17,"column":60},"end":{"line":17,"column":80}},
-            "range":[739,759],
+            "range":[744,764],
             "value":" 9.3 T var decl "
           }
         ],
@@ -454,21 +442,21 @@
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":17,"column":26},"end":{"line":17,"column":46}},
-            "range":[705,725],
+            "range":[710,730],
             "value":" 9.2 L var decl "
           }
         ],
         "loc":{"source":null,"start":{"line":17,"column":47},"end":{"line":17,"column":59}},
-        "range":[726,738],
+        "range":[731,743],
         "declarations":[
           {
             "type":"VariableDeclarator",
             "loc":{"source":null,"start":{"line":17,"column":53},"end":{"line":17,"column":58}},
-            "range":[732,737],
+            "range":[737,742],
             "id":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":17,"column":53},"end":{"line":17,"column":54}},
-              "range":[732,733],
+              "range":[737,738],
               "name":"a",
               "typeAnnotation":null,
               "optional":false
@@ -476,7 +464,7 @@
             "init":{
               "type":"Literal",
               "loc":{"source":null,"start":{"line":17,"column":57},"end":{"line":17,"column":58}},
-              "range":[736,737],
+              "range":[741,742],
               "value":1,
               "raw":"1"
             }
@@ -648,26 +636,26 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":15,"column":57},"end":{"line":15,"column":74}},
-      "range":[660,677],
-      "value":" 8.3 T class "
+      "loc":{"source":null,"start":{"line":15,"column":57},"end":{"line":15,"column":79}},
+      "range":[660,682],
+      "value":" 8.3 T class body "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":18}},
-      "range":[679,697],
+      "range":[684,702],
       "value":" 9.1 L export "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":17,"column":26},"end":{"line":17,"column":46}},
-      "range":[705,725],
+      "range":[710,730],
       "value":" 9.2 L var decl "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":17,"column":60},"end":{"line":17,"column":80}},
-      "range":[739,759],
+      "range":[744,764],
       "value":" 9.3 T var decl "
     }
   ]

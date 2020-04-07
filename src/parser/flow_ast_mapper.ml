@@ -337,37 +337,53 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
-      let { id; body; tparams = _; extends; implements = _; classDecorators = _; comments } = cls in
+      let { id; body; tparams = _; extends; implements; classDecorators = _; comments } = cls in
       let id' = map_opt this#class_identifier id in
       let body' = this#class_body body in
       let extends' = map_opt (map_loc this#class_extends) extends in
+      let implements' = map_opt this#class_implements implements in
       let comments' = this#syntax_opt comments in
-      if id == id' && body == body' && extends == extends' && comments = comments' then
+      if
+        id == id'
+        && body == body'
+        && extends == extends'
+        && implements == implements'
+        && comments = comments'
+      then
         cls
       else
-        { cls with id = id'; body = body'; extends = extends'; comments = comments' }
+        {
+          cls with
+          id = id';
+          body = body';
+          extends = extends';
+          implements = implements';
+          comments = comments';
+        }
 
     method class_extends _loc (extends : ('loc, 'loc) Ast.Class.Extends.t') =
       let open Ast.Class.Extends in
-      let { expr; targs } = extends in
+      let { expr; targs; comments } = extends in
       let expr' = this#expression expr in
       let targs' = map_opt this#type_args targs in
-      if expr == expr' && targs == targs' then
+      let comments' = this#syntax_opt comments in
+      if expr == expr' && targs == targs' && comments == comments' then
         extends
       else
-        { expr = expr'; targs = targs' }
+        { expr = expr'; targs = targs'; comments = comments' }
 
     method class_identifier (ident : ('loc, 'loc) Ast.Identifier.t) =
       this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
 
     method class_body (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
       let open Ast.Class.Body in
-      let (loc, { body }) = cls_body in
+      let (loc, { body; comments }) = cls_body in
       let body' = map_list this#class_element body in
-      if body == body' then
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
         cls_body
       else
-        (loc, { body = body' })
+        (loc, { body = body'; comments = comments' })
 
     method class_element (elem : ('loc, 'loc) Ast.Class.Body.element) =
       let open Ast.Class.Body in
@@ -378,6 +394,26 @@ class ['loc] mapper =
         id_loc this#class_property loc prop elem (fun prop -> Property (loc, prop))
       | PrivateField (loc, field) ->
         id_loc this#class_private_field loc field elem (fun field -> PrivateField (loc, field))
+
+    method class_implements (implements : ('loc, 'loc) Ast.Class.Implements.t) =
+      let open Ast.Class.Implements in
+      let (loc, { interfaces; comments }) = implements in
+      let interfaces' = map_list this#class_implements_interface interfaces in
+      let comments' = this#syntax_opt comments in
+      if interfaces == interfaces' && comments == comments' then
+        implements
+      else
+        (loc, { interfaces = interfaces'; comments = comments' })
+
+    method class_implements_interface (interface : ('loc, 'loc) Ast.Class.Implements.Interface.t) =
+      let open Ast.Class.Implements.Interface in
+      let (loc, { id; targs }) = interface in
+      let id' = this#identifier id in
+      let targs' = map_opt this#type_args targs in
+      if id == id' && targs == targs' then
+        interface
+      else
+        (loc, { id = id'; targs = targs' })
 
     method class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in

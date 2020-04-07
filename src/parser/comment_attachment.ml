@@ -89,7 +89,11 @@ class ['loc] trailing_comments_remover ~after_pos =
       else
         { cls with body = body'; comments = comments' }
 
-    method! class_body body = body
+    method! class_body body =
+      let open Ast.Class.Body in
+      let (loc, { body = _body; comments }) = body in
+      id this#syntax_opt comments body (fun comments' ->
+          (loc, { body = _body; comments = comments' }))
 
     method! conditional _loc expr =
       let open Ast.Expression.Conditional in

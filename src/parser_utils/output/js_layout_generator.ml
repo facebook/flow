@@ -705,7 +705,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
           ]
       | S.FunctionDeclaration func -> function_ loc func
       | S.VariableDeclaration decl -> with_semicolon (variable_declaration (loc, decl))
-      | S.ClassDeclaration class_ -> class_base class_
+      | S.ClassDeclaration class_ -> class_base loc class_
       | S.EnumDeclaration enum -> enum_declaration enum
       | S.ForOf { S.ForOf.left; right; body; await } ->
         fuse
@@ -972,7 +972,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
              fuse [s_operator; expression ~ctxt argument]
            else
              fuse [expression ~ctxt argument; s_operator])
-      | E.Class class_ -> class_base class_
+      | E.Class class_ -> class_base loc class_
       | E.Yield { E.Yield.argument; delegate; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse
@@ -1681,9 +1681,10 @@ and class_private_field
   in
   class_property_helper loc key value static annot variance
 
-and class_body (loc, { Ast.Class.Body.body }) =
+and class_body (loc, { Ast.Class.Body.body; comments }) =
   if body <> [] then
     source_location_with_comments
+      ?comments
       ( loc,
         group
           [
@@ -1702,26 +1703,30 @@ and class_body (loc, { Ast.Class.Body.body }) =
               ];
           ] )
   else
-    Atom "{}"
+    source_location_with_comments ?comments (loc, Atom "{}")
 
 and class_implements implements =
   match implements with
-  | [] -> None
-  | _ ->
+  | None -> None
+  | Some (loc, { Ast.Class.Implements.interfaces; comments }) ->
     Some
-      (fuse
-         [
-           Atom "implements";
-           space;
-           fuse_list
-             ~sep:(Atom ",")
-             (List.map
-                (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                  source_location_with_comments (loc, fuse [identifier id; option type_args targs]))
-                implements);
-         ])
+      (source_location_with_comments
+         ?comments
+         ( loc,
+           fuse
+             [
+               Atom "implements";
+               space;
+               fuse_list
+                 ~sep:(Atom ",")
+                 (List.map
+                    (fun (loc, { Ast.Class.Implements.Interface.id; targs }) ->
+                      source_location_with_comments
+                        (loc, fuse [identifier id; option type_args targs]))
+                    interfaces);
+             ] ))
 
-and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorators; comments } =
+and class_base loc { Ast.Class.id; body; tparams; extends; implements; classDecorators; comments } =
   let decorator_parts = decorators_list classDecorators in
   let class_parts =
     [
@@ -1738,16 +1743,18 @@ and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorato
       [
         begin
           match extends with
-          | Some (loc, { Ast.Class.Extends.expr; targs }) ->
+          | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
             Some
-              (fuse
-                 [
-                   Atom "extends";
-                   space;
-                   source_location_with_comments
-                     ?comments
-                     (loc, fuse [expression expr; option type_args targs]);
-                 ])
+              (source_location_with_comments
+                 ?comments
+                 ( loc,
+                   fuse
+                     [
+                       Atom "extends";
+                       space;
+                       source_location_with_comments
+                         (loc, fuse [expression expr; option type_args targs]);
+                     ] ))
           | None -> None
         end;
         class_implements implements;
@@ -1765,7 +1772,7 @@ and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorato
     |> List.cons (class_body body)
     |> List.rev
   in
-  group [decorator_parts; group parts]
+  group [decorator_parts; source_location_with_comments ?comments (loc, group parts)]
 
 and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
   let open Ast.Statement.EnumDeclaration in

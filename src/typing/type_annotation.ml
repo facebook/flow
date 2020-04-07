@@ -1987,21 +1987,29 @@ let mk_declare_class_sig =
           mixins |> Base.List.map ~f:(mk_mixins cx tparams_map) |> List.split
         in
         let (implements, implements_ast) =
-          implements
-          |> Base.List.map ~f:(fun (loc, i) ->
-                 let { Ast.Class.Implements.id = (id_loc, id_name_inner); targs } = i in
-                 let { Ast.Identifier.name; comments = _ } = id_name_inner in
-                 let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
-                 let (typeapp, targs) =
-                   match targs with
-                   | None -> ((loc, c, None), None)
-                   | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                     let (ts, targs_ast) = convert_list cx tparams_map targs in
-                     ( (loc, c, Some ts),
-                       Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
-                 in
-                 (typeapp, (loc, { Ast.Class.Implements.id = ((id_loc, c), id_name_inner); targs })))
-          |> List.split
+          let open Ast.Class.Implements in
+          match implements with
+          | None -> ([], None)
+          | Some (implements_loc, { interfaces; comments }) ->
+            let (implements, interfaces_ast) =
+              interfaces
+              |> Base.List.map ~f:(fun (loc, i) ->
+                     let { Interface.id = (id_loc, id_name_inner); targs } = i in
+                     let { Ast.Identifier.name; comments = _ } = id_name_inner in
+                     let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+                     let (typeapp, targs) =
+                       match targs with
+                       | None -> ((loc, c, None), None)
+                       | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
+                         let (ts, targs_ast) = convert_list cx tparams_map targs in
+                         ( (loc, c, Some ts),
+                           Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
+                         )
+                     in
+                     (typeapp, (loc, { Interface.id = ((id_loc, c), id_name_inner); targs })))
+              |> List.split
+            in
+            (implements, Some (implements_loc, { interfaces = interfaces_ast; comments }))
         in
         let super =
           let extends =

@@ -69,8 +69,6 @@ module T = struct
 
   and generic = Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
 
-  and class_implement = (Loc.t, Loc.t) Ast.Class.Implements.t
-
   and little_annotation =
     | TYPE of type_
     | EXPR of (Loc.t * expr_type)
@@ -123,14 +121,14 @@ module T = struct
     | CLASS of {
         tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
-        implements: class_implement list;
+        implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
         body: Loc.t * (Loc.t * class_element_t) list;
       }
     | DECLARE_CLASS of {
         tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
         mixins: generic list;
-        implements: class_implement list;
+        implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
         body: Loc.t * object_type;
       }
 
@@ -1135,7 +1133,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       let (super, super_targs) =
         match extends with
         | None -> (None, None)
-        | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
+        | Some (_, { Extends.expr; targs; comments = _ }) -> (Some expr, targs)
       in
       ( loc,
         T.Outline
@@ -1580,7 +1578,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     in
     fun tparams body super super_targs implements ->
       let open Ast.Class in
-      let (body_loc, { Body.body }) = body in
+      let (body_loc, { Body.body; comments = _ }) = body in
       let tparams = type_params tparams in
       let body = List.rev @@ List.fold_left class_element [] body in
       let extends =
@@ -1601,7 +1599,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             | None -> T.FixMe.mk_extends (fst expr)
           end
       in
-      let implements = Base.List.map ~f:class_implement implements in
+      let implements = class_implements implements in
       T.CLASS { tparams; extends; implements; body = (body_loc, body) }
 
   and array_ =
@@ -1617,6 +1615,13 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | t :: ts -> (try Some (Nel.map array_element (t, ts)) with _ -> None)
 
   and class_implement implement = implement
+
+  and class_implements implements =
+    let open Ast.Class.Implements in
+    match implements with
+    | None -> None
+    | Some (loc, { interfaces; comments }) ->
+      Some (loc, { interfaces = Base.List.map ~f:class_implement interfaces; comments })
 
   and object_ =
     let object_property =
@@ -1733,7 +1738,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         | Some r -> Some (Eval.generic r)
       in
       let mixins = Base.List.map ~f:Eval.generic mixins in
-      let implements = Base.List.map ~f:Eval.class_implement implements in
+      let implements = Eval.class_implements implements in
       T.ClassDecl
         (T.DECLARE_CLASS { tparams; extends; mixins; implements; body = (body_loc, body) })
     | Kind.EnumDef { body } -> T.EnumDecl { body }
@@ -1948,7 +1953,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       let (super, super_targs) =
         match extends with
         | None -> (None, None)
-        | Some (_, { Ast.Class.Extends.expr; targs }) -> (Some expr, targs)
+        | Some (_, { Ast.Class.Extends.expr; targs; comments = _ }) -> (Some expr, targs)
       in
       `Expr (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
     | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> `Decl (Entry.enum loc enum)

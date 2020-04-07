@@ -209,7 +209,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#type_params_opt tparams (fun tparams' ->
           let extends' = Base.Option.map ~f:this#class_extends extends in
           let body' = this#class_body body in
-          let implements' = Base.List.map ~f:this#class_implements implements in
+          let implements' = Base.Option.map ~f:this#class_implements implements in
           let classDecorators' = Base.List.map ~f:this#class_decorator classDecorators in
           {
             id = id';
@@ -223,10 +223,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_extends (extends : ('M, 'T) Ast.Class.Extends.t) : ('N, 'U) Ast.Class.Extends.t =
       let open Ast.Class.Extends in
-      let (annot, { expr; targs }) = extends in
+      let (annot, { expr; targs; comments }) = extends in
+      let annot' = this#on_loc_annot annot in
       let expr' = this#expression expr in
       let targs' = Base.Option.map ~f:this#type_args targs in
-      (this#on_loc_annot annot, { expr = expr'; targs = targs' })
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { expr = expr'; targs = targs'; comments = comments' })
 
     method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t =
       let open Ast.Class.Decorator in
@@ -239,9 +241,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_body (cls_body : ('M, 'T) Ast.Class.Body.t) : ('N, 'U) Ast.Class.Body.t =
       let open Ast.Class.Body in
-      let (annot, { body }) = cls_body in
+      let (annot, { body; comments }) = cls_body in
+      let annot' = this#on_loc_annot annot in
       let body' = Base.List.map ~f:this#class_element body in
-      (this#on_loc_annot annot, { body = body' })
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { body = body'; comments = comments' })
 
     method class_element (elem : ('M, 'T) Ast.Class.Body.element) : ('N, 'U) Ast.Class.Body.element
         =
@@ -337,7 +341,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           in
           let extends' = Base.Option.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let mixins' = Base.List.map ~f:(this#on_loc_annot * this#generic_type) mixins in
-          let implements' = Base.List.map ~f:this#class_implements implements in
+          let implements' = Base.Option.map ~f:this#class_implements implements in
           {
             id = id';
             tparams = tparams';
@@ -350,10 +354,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method class_implements (implements : ('M, 'T) Ast.Class.Implements.t)
         : ('N, 'U) Ast.Class.Implements.t =
       let open Ast.Class.Implements in
-      let (annot, { id = id_; targs }) = implements in
+      let (annot, { interfaces; comments }) = implements in
+      let annot' = this#on_loc_annot annot in
+      let interfaces' = Base.List.map ~f:this#class_implements_interface interfaces in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { interfaces = interfaces'; comments = comments' })
+
+    method class_implements_interface (interface : ('M, 'T) Ast.Class.Implements.Interface.t)
+        : ('N, 'U) Ast.Class.Implements.Interface.t =
+      let open Ast.Class.Implements.Interface in
+      let (annot, { id = id_; targs }) = interface in
+      let annot' = this#on_loc_annot annot in
       let id' = this#t_identifier id_ in
       let targs' = Base.Option.map ~f:this#type_args targs in
-      (this#on_loc_annot annot, { id = id'; targs = targs' })
+      (annot', { id = id'; targs = targs' })
 
     method declare_export_declaration
         _annot (decl : ('M, 'T) Ast.Statement.DeclareExportDeclaration.t)

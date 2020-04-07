@@ -174,18 +174,23 @@ end
 module Classes = struct
   open Ast.Class
 
-  let implements ?targs id = (Loc.none, { Implements.id; targs })
+  let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
 
   (* TODO: add method_ and property *)
   let make ?comments ?super ?(implements = []) ?id elements =
     let extends =
       match super with
       | None -> None
-      | Some expr -> Some (Loc.none, { Extends.expr; targs = None })
+      | Some expr -> Some (Loc.none, { Extends.expr; targs = None; comments = None })
+    in
+    let implements =
+      match implements with
+      | [] -> None
+      | _ -> Some (Loc.none, { Implements.interfaces = implements; comments = None })
     in
     {
       id;
-      body = (Loc.none, { Body.body = elements });
+      body = (Loc.none, { Body.body = elements; comments = None });
       tparams = None;
       extends;
       implements;

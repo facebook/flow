@@ -102,14 +102,14 @@ type t =
       body: (Loc.t, Loc.t) Ast.Class.Body.t;
       super: (Loc.t, Loc.t) Ast.Expression.t option;
       super_targs: (Loc.t, Loc.t) Ast.Type.TypeArgs.t option;
-      implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
+      implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
     }
   | DeclareClassDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) option;
       mixins: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
-      implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
+      implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
     }
   | EnumDef of { body: Loc.t Ast.Statement.EnumDeclaration.body }
   | TypeDef of {

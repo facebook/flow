@@ -7374,10 +7374,10 @@ and mk_class_sig =
     let mk_method = mk_func_sig in
     let mk_extends cx tparams_map = function
       | None -> (Implicit { null = false }, None)
-      | Some (loc, { Ast.Class.Extends.expr; targs }) ->
+      | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
         let (((_, c), _) as expr) = expression cx expr in
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
-        (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs }))
+        (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
     in
     let warn_or_ignore_decorators cx = function
       | [] -> []
@@ -7412,7 +7412,7 @@ and mk_class_sig =
         self
         {
           Ast.Class.id;
-          body = (body_loc, { Ast.Class.Body.body = elements });
+          body = (body_loc, { Ast.Class.Body.body = elements; comments = body_comments });
           tparams;
           extends;
           implements;
@@ -7426,25 +7426,36 @@ and mk_class_sig =
         let id = Context.make_aloc_id cx name_loc in
         let (extends, extends_ast) = mk_extends cx tparams_map extends in
         let (implements, implements_ast) =
-          implements
-          |> Base.List.map ~f:(fun (loc, i) ->
-                 let {
-                   Ast.Class.Implements.id = (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                   targs;
-                 } =
-                   i
-                 in
-                 let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
-                 let (typeapp, targs) =
-                   match targs with
-                   | None -> ((loc, c, None), None)
-                   | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                     let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
-                     ( (loc, c, Some ts),
-                       Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
-                 in
-                 (typeapp, (loc, { Ast.Class.Implements.id = ((id_loc, c), id); targs })))
-          |> List.split
+          match implements with
+          | None -> ([], None)
+          | Some (implements_loc, { Ast.Class.Implements.interfaces; comments }) ->
+            let (implements, interfaces_ast) =
+              interfaces
+              |> Base.List.map ~f:(fun (loc, i) ->
+                     let {
+                       Ast.Class.Implements.Interface.id =
+                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                       targs;
+                     } =
+                       i
+                     in
+                     let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+                     let (typeapp, targs) =
+                       match targs with
+                       | None -> ((loc, c, None), None)
+                       | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
+                         let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
+                         ( (loc, c, Some ts),
+                           Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
+                         )
+                     in
+                     ( typeapp,
+                       (loc, { Ast.Class.Implements.Interface.id = ((id_loc, c), id); targs }) ))
+              |> List.split
+            in
+            ( implements,
+              Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
+            )
         in
         let super = Class { extends; mixins = []; implements } in
         (empty id reason tparams tparams_map super, extends_ast, implements_ast)
@@ -7650,7 +7661,12 @@ and mk_class_sig =
         fun class_t ->
           {
             Ast.Class.id = Base.Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
-            body = (body_loc, { Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements });
+            body =
+              ( body_loc,
+                {
+                  Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements;
+                  comments = body_comments;
+                } );
             tparams = tparams_ast;
             extends = extends_ast;
             implements = implements_ast;

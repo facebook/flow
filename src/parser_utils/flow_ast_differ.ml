@@ -512,7 +512,7 @@ let program
         variable_declaration loc var1 var2
       | ((loc, FunctionDeclaration func1), (_, FunctionDeclaration func2)) ->
         function_declaration loc func1 func2
-      | ((_, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ class1 class2
+      | ((loc, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ loc class1 class2
       | ((loc, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2)) ->
         interface loc intf1 intf2
       | ((loc, If if1), (_, If if2)) -> if_statement loc if1 if2
@@ -872,7 +872,8 @@ let program
     let body_diff = diff_if_changed_ret_opt (block block_loc) block1 block2 in
     let param_diff = diff_if_changed_nonopt_fn pattern param1 param2 in
     join_diff_list [comments; body_diff; param_diff]
-  and class_ (class1 : (Loc.t, Loc.t) Ast.Class.t) (class2 : (Loc.t, Loc.t) Ast.Class.t) =
+  and class_
+      (loc : Loc.t) (class1 : (Loc.t, Loc.t) Ast.Class.t) (class2 : (Loc.t, Loc.t) Ast.Class.t) =
     let open Ast.Class in
     let {
       id = id1;
@@ -896,29 +897,46 @@ let program
     } =
       class2
     in
-    if
-      id1 != id2
-      (* body handled below *)
-      || tparams1 != tparams2
-      (* extends handled below *)
-      || implements1 != implements2
-      || classDecorators1 != classDecorators2
-      || comments1 != comments2
-    then
+    if id1 != id2 || classDecorators1 != classDecorators2 then
       None
     else
+      let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
       let extends_diff = diff_if_changed_opt class_extends extends1 extends2 in
+      let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
       let body_diff = diff_if_changed_ret_opt class_body body1 body2 in
-      join_diff_list [extends_diff; body_diff]
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [tparams_diff; extends_diff; implements_diff; body_diff; comments_diff]
   and class_extends
-      ((_loc, extends1) : (Loc.t, Loc.t) Ast.Class.Extends.t)
-      ((_loc, extends2) : (Loc.t, Loc.t) Ast.Class.Extends.t) =
+      ((loc, extends1) : (Loc.t, Loc.t) Ast.Class.Extends.t)
+      ((_, extends2) : (Loc.t, Loc.t) Ast.Class.Extends.t) =
     let open Ast.Class.Extends in
-    let { expr = expr1; targs = targs1 } = extends1 in
-    let { expr = expr2; targs = targs2 } = extends2 in
+    let { expr = expr1; targs = targs1; comments = comments1 } = extends1 in
+    let { expr = expr2; targs = targs2; comments = comments2 } = extends2 in
     let expr_diff = diff_if_changed expression expr1 expr2 |> Base.Option.return in
     let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
-    join_diff_list [expr_diff; targs_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [expr_diff; targs_diff; comments_diff]
+  and class_implements
+      ((loc, implements1) : (Loc.t, Loc.t) Ast.Class.Implements.t)
+      ((_, implements2) : (Loc.t, Loc.t) Ast.Class.Implements.t) : node change list option =
+    let open Ast.Class.Implements in
+    let { interfaces = interfaces1; comments = comments1 } = implements1 in
+    let { interfaces = interfaces2; comments = comments2 } = implements2 in
+    let interfaces_diff =
+      diff_and_recurse_no_trivial class_implements_interface interfaces1 interfaces2
+    in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [interfaces_diff; comments_diff]
+  and class_implements_interface
+      ((_, interface1) : (Loc.t, Loc.t) Ast.Class.Implements.Interface.t)
+      ((_, interface2) : (Loc.t, Loc.t) Ast.Class.Implements.Interface.t) : node change list option
+      =
+    let open Ast.Class.Implements.Interface in
+    let { id = id1; targs = targs1 } = interface1 in
+    let { id = id2; targs = targs2 } = interface2 in
+    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
+    join_diff_list [id_diff; targs_diff]
   and interface
       (loc : Loc.t)
       (intf1 : (Loc.t, Loc.t) Ast.Statement.Interface.t)
@@ -952,9 +970,11 @@ let program
       (class_body1 : (Loc.t, Loc.t) Ast.Class.Body.t)
       (class_body2 : (Loc.t, Loc.t) Ast.Class.Body.t) : node change list option =
     let open Ast.Class.Body in
-    let (_, { body = body1 }) = class_body1 in
-    let (_, { body = body2 }) = class_body2 in
-    diff_and_recurse_no_trivial class_element body1 body2
+    let (loc, { body = body1; comments = comments1 }) = class_body1 in
+    let (_, { body = body2; comments = comments2 }) = class_body2 in
+    let body_diff = diff_and_recurse_no_trivial class_element body1 body2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [body_diff; comments_diff]
   and class_element
       (elem1 : (Loc.t, Loc.t) Ast.Class.Body.element)
       (elem2 : (Loc.t, Loc.t) Ast.Class.Body.element) : node change list option =
@@ -1058,7 +1078,7 @@ let program
       | ((loc, Call call1), (_, Call call2)) -> call loc call1 call2
       | ((loc, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true loc f1 f2
       | ((loc, Function f1), (_, Function f2)) -> function_ loc f1 f2
-      | ((_, Class class1), (_, Class class2)) -> class_ class1 class2
+      | ((loc, Class class1), (_, Class class2)) -> class_ loc class1 class2
       | ((loc, Assignment assn1), (_, Assignment assn2)) -> assignment loc assn1 assn2
       | ((loc, Object obj1), (_, Object obj2)) -> object_ loc obj1 obj2
       | ((loc, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2)) ->

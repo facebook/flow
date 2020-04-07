@@ -25,8 +25,7 @@ module type OBJECT = sig
 
   val class_expression : env -> (Loc.t, Loc.t) Ast.Expression.t
 
-  val class_implements :
-    env -> (Loc.t, Loc.t) Ast.Class.Implements.t list -> (Loc.t, Loc.t) Ast.Class.Implements.t list
+  val class_implements : env -> attach_leading:bool -> (Loc.t, Loc.t) Ast.Class.Implements.t
 
   val decorator_list : env -> (Loc.t, Loc.t) Ast.Class.Decorator.t list
 end
@@ -452,43 +451,63 @@ module Object
         SMap.add name `Field seen_names
       | None -> SMap.add name kind seen_names
 
-  let rec class_implements env acc =
-    let implement =
-      with_loc
-        (fun env ->
-          let id = Type.type_identifier env in
-          let targs = Type.type_args env in
-          { Ast.Class.Implements.id; targs })
-        env
+  let class_implements env ~attach_leading =
+    let rec interfaces env acc =
+      let interface =
+        with_loc
+          (fun env ->
+            let id = Type.type_identifier env in
+            let targs = Type.type_args env in
+            { Ast.Class.Implements.Interface.id; targs })
+          env
+      in
+      let acc = interface :: acc in
+      match Peek.token env with
+      | T_COMMA ->
+        Expect.token env T_COMMA;
+        interfaces env acc
+      | _ -> List.rev acc
     in
-    let acc = implement :: acc in
-    match Peek.token env with
-    | T_COMMA ->
-      Expect.token env T_COMMA;
-      class_implements env acc
-    | _ -> List.rev acc
+    with_loc
+      (fun env ->
+        let leading =
+          if attach_leading then
+            Peek.comments env
+          else
+            []
+        in
+        Expect.token env T_IMPLEMENTS;
+        let interfaces = interfaces env [] in
+        { Ast.Class.Implements.interfaces; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+      env
 
-  let class_extends =
+  let class_extends ~leading =
     with_loc (fun env ->
         let expr = Expression.left_hand_side (env |> with_allow_yield false) in
         let targs = Type.type_args env in
-        { Class.Extends.expr; targs })
+        { Class.Extends.expr; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () })
 
   (* https://tc39.es/ecma262/#prod-ClassHeritage *)
-  let class_heritage env =
+  let class_heritage env ~attach_leading =
     let extends =
+      let leading =
+        if attach_leading then
+          Peek.comments env
+        else
+          []
+      in
       if Expect.maybe env T_EXTENDS then
-        Some (class_extends env)
+        Some (class_extends ~leading env)
       else
         None
     in
+    let attach_leading = attach_leading && extends = None in
     let implements =
       if Peek.token env = T_IMPLEMENTS then (
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
-        Expect.token env T_IMPLEMENTS;
-        class_implements env []
+        Some (class_implements env ~attach_leading)
       ) else
-        []
+        None
     in
     (extends, implements)
 
@@ -781,22 +800,36 @@ module Object
         in
         elements env seen_constructor' private_names' (element :: acc)
     in
-    fun env ->
+    fun ~expression ~attach_leading env ->
       with_loc
         (fun env ->
+          let leading =
+            if attach_leading then
+              Peek.comments env
+            else
+              []
+          in
           if Expect.maybe env T_LCURLY then (
             enter_class env;
             let body = elements env false SMap.empty [] in
             exit_class env;
             Expect.token env T_RCURLY;
-            { Ast.Class.Body.body }
+            let trailing =
+              match (expression, Peek.token env) with
+              | (true, _)
+              | (_, (T_RCURLY | T_EOF)) ->
+                Peek.comments env
+              | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+              | _ -> []
+            in
+            { Ast.Class.Body.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
           ) else (
             Expect.error env T_LCURLY;
-            { Ast.Class.Body.body = [] }
+            { Ast.Class.Body.body = []; comments = None }
           ))
         env
 
-  let _class ?(decorators = []) env ~optional_id =
+  let _class ?(decorators = []) env ~optional_id ~expression =
     (* 10.2.1 says all parts of a class definition are strict *)
     let env = env |> with_strict true in
     let decorators = decorators @ decorator_list env in
@@ -808,19 +841,22 @@ module Object
       | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
       | _ -> Some (Parse.identifier tmp_env)
     in
-    let tparams = Type.type_params env ~attach_leading:(id = None) ~attach_trailing:true in
-    let (extends, implements) = class_heritage env in
-    let body = class_body env in
-    let trailing = Peek.comments env in
-    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    let attach_leading = id = None in
+    let tparams = Type.type_params env ~attach_leading ~attach_trailing:true in
+    let attach_leading = attach_leading && tparams = None in
+    let (extends, implements) = class_heritage env ~attach_leading in
+    let attach_leading = attach_leading && extends = None && implements = None in
+    let body = class_body env ~expression ~attach_leading in
+    let comments = Flow_ast_utils.mk_comments_opt ~leading () in
     { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments }
 
   let class_declaration env decorators =
     with_loc
       (fun env ->
         let optional_id = in_export env in
-        Ast.Statement.ClassDeclaration (_class env ~decorators ~optional_id))
+        Ast.Statement.ClassDeclaration (_class env ~decorators ~optional_id ~expression:false))
       env
 
-  let class_expression = with_loc (fun env -> Ast.Expression.Class (_class env ~optional_id:true))
+  let class_expression =
+    with_loc (fun env -> Ast.Expression.Class (_class env ~optional_id:true ~expression:true))
 end

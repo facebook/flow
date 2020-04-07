@@ -12,6 +12,6 @@
 
 /* 7.1 L export */ export /* 7.2 L type alias */ type Foo = any; /* 7.3 T type alias */
 
-/* 8.1 L export */ export /* 8.2 L class */ class Baz {} /* 8.3 T class */
+/* 8.1 L export */ export /* 8.2 L class */ class Baz {} /* 8.3 T class body */
 
 /* 9.1 L export */ export /* 9.2 L var decl */ const a = 1; /* 9.3 T var decl */

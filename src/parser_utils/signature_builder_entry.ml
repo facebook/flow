@@ -85,7 +85,7 @@ let class_ loc class_ =
   let (super, super_targs) =
     match extends with
     | None -> (None, None)
-    | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
+    | Some (_, { Extends.expr; targs; comments = _ }) -> (Some expr, targs)
   in
   (Base.Option.value_exn id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements }))
 

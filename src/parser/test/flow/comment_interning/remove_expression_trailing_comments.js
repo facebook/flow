@@ -33,7 +33,7 @@
 
 {
   /* L class */ (class C {}) /* T class */
-  /* L class */ class C {} /* T class body */
+  /* L var decl */ let c = class C {} /* T class body */
   /* L str */ 'end of class tests'
 }
 
