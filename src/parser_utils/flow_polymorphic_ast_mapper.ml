@@ -351,7 +351,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_class (decl : ('M, 'T) Ast.Statement.DeclareClass.t)
         : ('N, 'U) Ast.Statement.DeclareClass.t =
       let open Ast.Statement.DeclareClass in
-      let { id = ident; tparams; body; extends; mixins; implements } = decl in
+      let { id = ident; tparams; body; extends; mixins; implements; comments } = decl in
       let id' = this#class_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let body' =
@@ -361,6 +361,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let extends' = Base.Option.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let mixins' = Base.List.map ~f:(this#on_loc_annot * this#generic_type) mixins in
           let implements' = Base.Option.map ~f:this#class_implements implements in
+          let comments' = Base.Option.map ~f:this#syntax comments in
           {
             id = id';
             tparams = tparams';
@@ -368,6 +369,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             extends = extends';
             mixins = mixins';
             implements = implements';
+            comments = comments';
           })
 
     method class_implements (implements : ('M, 'T) Ast.Class.Implements.t)

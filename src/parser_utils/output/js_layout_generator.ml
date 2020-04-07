@@ -737,7 +737,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.TypeAlias typeAlias -> type_alias ~declare:false loc typeAlias
       | S.OpaqueType opaqueType -> opaque_type ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration loc interface
-      | S.DeclareClass interface -> declare_class interface
+      | S.DeclareClass interface -> declare_class loc interface
       | S.DeclareFunction func -> declare_function loc func
       | S.DeclareInterface interface -> declare_interface loc interface
       | S.DeclareVariable var -> declare_variable loc var
@@ -2914,7 +2914,16 @@ and declare_interface loc interface =
 
 and declare_class
     ?(s_type = Empty)
-    { Ast.Statement.DeclareClass.id; tparams; body = (loc, obj); extends; mixins; implements } =
+    loc
+    {
+      Ast.Statement.DeclareClass.id;
+      tparams;
+      body = (body_loc, obj);
+      extends;
+      mixins;
+      implements;
+      comments;
+    } =
   let class_parts =
     [
       Atom "declare";
@@ -2965,7 +2974,7 @@ and declare_class
     | [] -> Empty
     | items -> Layout.Indent (fuse [line; join line items])
   in
-  let body = source_location_with_comments (loc, type_object ~sep:(Atom ",") loc obj) in
+  let body = source_location_with_comments (body_loc, type_object ~sep:(Atom ",") body_loc obj) in
   let parts =
     []
     |> List.rev_append class_parts
@@ -2974,7 +2983,7 @@ and declare_class
     |> List.cons body
     |> List.rev
   in
-  group parts
+  source_location_with_comments ?comments (loc, group parts)
 
 and declare_function
     ?(s_type = Empty)
@@ -3060,7 +3069,7 @@ and declare_export_declaration
     | Function (loc, func) ->
       source_location_with_comments (loc, declare_function ~s_type:s_export loc func)
     (* declare export class *)
-    | Class (loc, c) -> source_location_with_comments (loc, declare_class ~s_type:s_export c)
+    | Class (loc, c) -> source_location_with_comments (loc, declare_class ~s_type:s_export loc c)
     (* declare export default [type]
      * this corresponds to things like
      * export default 1+1; *)

@@ -746,6 +746,7 @@ and Statement : sig
       extends: ('M * ('M, 'T) Type.Generic.t) option;
       mixins: ('M * ('M, 'T) Type.Generic.t) list;
       implements: ('M, 'T) Class.Implements.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

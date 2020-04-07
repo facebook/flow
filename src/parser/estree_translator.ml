@@ -748,7 +748,7 @@ with type t = Impl.t = struct
           ("predicate", option predicate predicate_);
         ]
     and declare_class
-        (loc, { Statement.DeclareClass.id; tparams; body; extends; implements; mixins }) =
+        (loc, { Statement.DeclareClass.id; tparams; body; extends; implements; mixins; comments }) =
       (* TODO: extends shouldn't return an array *)
       let extends =
         match extends with
@@ -762,6 +762,7 @@ with type t = Impl.t = struct
         | None -> array []
       in
       node
+        ?comments
         "DeclareClass"
         loc
         [

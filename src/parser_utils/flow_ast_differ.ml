@@ -546,8 +546,8 @@ let program
         type_alias loc d_t_alias1 d_t_alias2
       | ((loc, TypeAlias t_alias1), (_, TypeAlias t_alias2)) -> type_alias loc t_alias1 t_alias2
       | ((loc, OpaqueType o_type1), (_, OpaqueType o_type2)) -> opaque_type loc o_type1 o_type2
-      | ((_, DeclareClass declare_class_t1), (_, DeclareClass declare_class_t2)) ->
-        declare_class declare_class_t1 declare_class_t2
+      | ((loc, DeclareClass declare_class_t1), (_, DeclareClass declare_class_t2)) ->
+        declare_class loc declare_class_t1 declare_class_t2
       | ((loc, DeclareFunction func1), (_, DeclareFunction func2)) ->
         declare_function loc func1 func2
       | ((loc, DeclareVariable decl1), (_, DeclareVariable decl2)) ->
@@ -2405,7 +2405,7 @@ let program
     let impltype_diff = diff_if_changed_nonopt_fn type_ impltype1 impltype2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [id_diff; t_params_diff; supertype_diff; impltype_diff; comments_diff]
-  and declare_class dclass1 dclass2 =
+  and declare_class loc dclass1 dclass2 =
     let open Ast.Statement.DeclareClass in
     let {
       id = id1;
@@ -2414,6 +2414,7 @@ let program
       extends = extends1;
       mixins = mixins1;
       implements = implements1;
+      comments = comments1;
     } =
       dclass1
     in
@@ -2424,6 +2425,7 @@ let program
       extends = extends2;
       mixins = mixins2;
       implements = implements2;
+      comments = comments2;
     } =
       dclass2
     in
@@ -2431,10 +2433,13 @@ let program
     let t_params_diff = diff_if_changed_opt type_params tparams1 tparams2 in
     let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
     let extends_diff = diff_if_changed_opt generic_type_with_loc extends1 extends2 in
-    if mixins1 != mixins2 || implements1 != implements2 then
+    let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    if mixins1 != mixins2 then
       None
     else
-      join_diff_list [id_diff; t_params_diff; body_diff; extends_diff]
+      join_diff_list
+        [id_diff; t_params_diff; body_diff; extends_diff; implements_diff; comments_diff]
   and declare_function
       (loc : Loc.t)
       (func1 : (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t)

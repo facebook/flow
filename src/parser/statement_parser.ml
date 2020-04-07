@@ -993,8 +993,9 @@ module Statement
       | _ -> List.rev acc
       (* This is identical to `interface`, except that mixins are allowed *)
     in
-    fun env ->
+    fun ~leading env ->
       let env = env |> with_strict true in
+      let leading = leading @ Peek.comments env in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
       let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
@@ -1021,13 +1022,15 @@ module Statement
       let body =
         remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))
       in
-      Statement.DeclareClass.{ id; tparams; body; extends; mixins; implements }
+      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+      Statement.DeclareClass.{ id; tparams; body; extends; mixins; implements; comments }
 
   and declare_class_statement env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let fn = declare_class env in
+        let fn = declare_class ~leading env in
         Statement.DeclareClass fn)
       env
 
@@ -1556,7 +1559,7 @@ module Statement
                 Some (Function fn)
               | T_CLASS ->
                 (* declare export default class foo { ... } *)
-                let class_ = with_loc declare_class env in
+                let class_ = with_loc (declare_class ~leading:[]) env in
                 Some (Class class_)
               | _ ->
                 (* declare export default [type]; *)
@@ -1579,7 +1582,7 @@ module Statement
                 Some (Function fn)
               | T_CLASS ->
                 (* declare export class foo { ... } *)
-                let class_ = with_loc declare_class env in
+                let class_ = with_loc (declare_class ~leading:[]) env in
                 Some (Class class_)
               | (T_LET | T_CONST | T_VAR) as token ->
                 (match token with

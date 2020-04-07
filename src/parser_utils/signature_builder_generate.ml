@@ -782,11 +782,27 @@ module T = struct
       let mixins = [] in
       ( decl_loc,
         Ast.Statement.DeclareClass
-          { Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body } )
+          {
+            Ast.Statement.DeclareClass.id;
+            tparams;
+            extends;
+            implements;
+            mixins;
+            body;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | ClassDecl (DECLARE_CLASS { tparams; extends; mixins; implements; body }) ->
       ( decl_loc,
         Ast.Statement.DeclareClass
-          { Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body } )
+          {
+            Ast.Statement.DeclareClass.id;
+            tparams;
+            extends;
+            implements;
+            mixins;
+            body;
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | EnumDecl { body } ->
       let open Ast.Statement.EnumDeclaration in
       (decl_loc, Ast.Statement.EnumDeclaration { id; body })

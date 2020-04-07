@@ -517,18 +517,22 @@ class ['loc] mapper =
 
     method declare_class _loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in
-      let { id = ident; tparams; body; extends; mixins; implements } = decl in
+      let { id = ident; tparams; body; extends; mixins; implements; comments } = decl in
       let id' = this#class_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let body' = map_loc this#object_type body in
       let extends' = map_opt (map_loc this#generic_type) extends in
       let mixins' = map_list (map_loc this#generic_type) mixins in
+      let implements' = map_opt this#class_implements implements in
+      let comments' = this#syntax_opt comments in
       if
         id' == ident
         && tparams' == tparams
         && body' == body
         && extends' == extends
         && mixins' == mixins
+        && implements' == implements
+        && comments' == comments
       then
         decl
       else
@@ -538,7 +542,8 @@ class ['loc] mapper =
           body = body';
           extends = extends';
           mixins = mixins';
-          implements;
+          implements = implements';
+          comments = comments';
         }
 
     method declare_export_declaration

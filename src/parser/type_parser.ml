@@ -1311,7 +1311,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   let type_args = wrap type_args
 
   let _object ~is_class env =
-    wrap (_object ~is_class ~allow_exact:false ~allow_spread:false ~attach_leading:true) env
+    wrap (_object ~is_class ~allow_exact:false ~allow_spread:false ~attach_leading:false) env
 
   let interface_helper ~id env = wrap (interface_helper ~id) env
 

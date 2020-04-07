@@ -106,7 +106,7 @@ let declare_function loc declare_function =
 
 let declare_class loc declare_class =
   let open Ast.Statement.DeclareClass in
-  let { id; tparams; body; extends; mixins; implements } = declare_class in
+  let { id; tparams; body; extends; mixins; implements; comments = _ } = declare_class in
   (id, (loc, Kind.DeclareClassDef { tparams; body; extends; mixins; implements }))
 
 let type_alias loc type_alias =

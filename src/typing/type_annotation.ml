@@ -1951,6 +1951,7 @@ let mk_declare_class_sig =
         extends;
         mixins;
         implements;
+        comments;
       } =
         decl
       in
@@ -2044,4 +2045,5 @@ let mk_declare_class_sig =
           extends = extends_ast;
           mixins = mixins_ast;
           implements = implements_ast;
+          comments;
         } ))
