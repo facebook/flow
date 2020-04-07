@@ -470,6 +470,7 @@ module T = struct
               {
                 Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
                 annot = Ast.Type.Available (fst t, t);
+                comments = Flow_ast_utils.mk_comments_opt ();
               } ) )
       in
       let id = Outlined.next outlined loc f in
@@ -849,13 +850,18 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.DeclareVariable
-          { Ast.Statement.DeclareVariable.id; annot = Ast.Type.Available (fst annot, t) } )
+          {
+            Ast.Statement.DeclareVariable.id;
+            annot = Ast.Type.Available (fst annot, t);
+            comments = Flow_ast_utils.mk_comments_opt ();
+          } )
     | VariableDecl little_annotation ->
       ( decl_loc,
         Ast.Statement.DeclareVariable
           {
             Ast.Statement.DeclareVariable.id;
             annot = Ast.Type.Available (annot_of_little_annotation outlined little_annotation);
+            comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | ImportNamed { kind; source; name } ->
       let importKind = kind in

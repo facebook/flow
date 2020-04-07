@@ -740,7 +740,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.DeclareClass interface -> declare_class interface
       | S.DeclareFunction func -> declare_function loc func
       | S.DeclareInterface interface -> declare_interface loc interface
-      | S.DeclareVariable var -> declare_variable var
+      | S.DeclareVariable var -> declare_variable loc var
       | S.DeclareModuleExports annot -> declare_module_exports annot
       | S.DeclareModule m -> declare_module m
       | S.DeclareTypeAlias typeAlias -> type_alias ~declare:true loc typeAlias
@@ -3003,10 +3003,19 @@ and declare_function
             end;
           ])
 
-and declare_variable ?(s_type = Empty) { Ast.Statement.DeclareVariable.id; annot } =
-  with_semicolon
-    (fuse
-       [Atom "declare"; space; s_type; Atom "var"; space; identifier id; hint type_annotation annot])
+and declare_variable ?(s_type = Empty) loc { Ast.Statement.DeclareVariable.id; annot; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            Atom "declare";
+            space;
+            s_type;
+            Atom "var";
+            space;
+            identifier id;
+            hint type_annotation annot;
+          ])
 
 and declare_module_exports annot =
   with_semicolon (fuse [Atom "declare"; space; Atom "module.exports"; type_annotation annot])
@@ -3046,7 +3055,7 @@ and declare_export_declaration
     (match decl with
     (* declare export var *)
     | Variable (loc, var) ->
-      source_location_with_comments (loc, declare_variable ~s_type:s_export var)
+      source_location_with_comments (loc, declare_variable ~s_type:s_export loc var)
     (* declare export function *)
     | Function (loc, func) ->
       source_location_with_comments (loc, declare_function ~s_type:s_export loc func)

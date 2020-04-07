@@ -2039,11 +2039,15 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     (loc, EnumDeclaration { id = id'; body })
   | ( loc,
       DeclareVariable
-        { DeclareVariable.id = (id_loc, ({ Ast.Identifier.name; comments = _ } as id)); annot } ) ->
+        {
+          DeclareVariable.id = (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+          annot;
+          comments;
+        } ) ->
     let r = mk_reason (RCustom (spf "declare %s" name)) loc in
     let (t, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
     Env.unify_declared_type cx name t;
-    (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast })
+    (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
   | (loc, DeclareFunction declare_function) ->
     (match declare_function_to_function_declaration cx loc declare_function with
     | Some (func_decl, reconstruct_ast) ->

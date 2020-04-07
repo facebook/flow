@@ -754,6 +754,7 @@ and Statement : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       annot: ('M, 'T) Type.annotation_or_hint;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

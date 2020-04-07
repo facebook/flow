@@ -1072,19 +1072,32 @@ module Statement
         Statement.DeclareFunction fn)
       env
 
-  and declare_var env =
+  and declare_var env leading =
+    let leading = leading @ Peek.comments env in
     Expect.token env T_VAR;
     let (_loc, { Pattern.Identifier.name; annot; _ }) =
       Parse.identifier_with_type env ~no_optional:true Parse_error.StrictVarName
     in
-    let _ = semicolon env in
-    Statement.DeclareVariable.{ id = name; annot }
+    let (trailing, name, annot) =
+      match (semicolon env, annot) with
+      (* declare var x; *)
+      | (Explicit trailing, _) -> (trailing, name, annot)
+      (* declare var x *)
+      | (Implicit { remove_trailing; _ }, Ast.Type.Missing _) ->
+        ([], remove_trailing name (fun remover name -> remover#identifier name), annot)
+      (* declare var x: mixed *)
+      | (Implicit { remove_trailing; _ }, Ast.Type.Available _) ->
+        ([], name, remove_trailing annot (fun remover annot -> remover#type_annotation_hint annot))
+    in
+    Statement.DeclareVariable.
+      { id = name; annot; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
 
   and declare_var_statement env =
     with_loc
       (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let var = declare_var env in
+        let var = declare_var env leading in
         Statement.DeclareVariable var)
       env
 
@@ -1575,7 +1588,7 @@ module Statement
                 | _ -> ());
 
                 (* declare export var foo: ... *)
-                let var = with_loc declare_var env in
+                let var = with_loc (fun env -> declare_var env []) env in
                 Some (Variable var)
               | _ -> assert false
             in

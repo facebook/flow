@@ -717,7 +717,7 @@ with type t = Impl.t = struct
       node ?comments "CatchClause" loc [("param", option pattern param); ("body", block body)]
     and block (loc, { Statement.Block.body; comments }) =
       node ?comments "BlockStatement" loc [("body", statement_list body)]
-    and declare_variable (loc, { Statement.DeclareVariable.id; annot }) =
+    and declare_variable (loc, { Statement.DeclareVariable.id; annot; comments }) =
       let id_loc =
         Loc.btwn
           (fst id)
@@ -726,6 +726,7 @@ with type t = Impl.t = struct
           | Ast.Type.Missing _ -> fst id)
       in
       node
+        ?comments
         "DeclareVariable"
         loc
         [

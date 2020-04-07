@@ -550,6 +550,8 @@ let program
         declare_class declare_class_t1 declare_class_t2
       | ((loc, DeclareFunction func1), (_, DeclareFunction func2)) ->
         declare_function loc func1 func2
+      | ((loc, DeclareVariable decl1), (_, DeclareVariable decl2)) ->
+        declare_variable loc decl1 decl2
       | ((loc, Empty empty1), (_, Empty empty2)) -> empty_statement loc empty1 empty2
       | (_, _) -> None
     in
@@ -2447,6 +2449,17 @@ let program
       None
     else
       join_diff_list [id_diff; annot_diff; comments_diff]
+  and declare_variable
+      (loc : Loc.t)
+      (decl1 : (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t)
+      (decl2 : (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) : node change list option =
+    let open Ast.Statement.DeclareVariable in
+    let { id = id1; annot = annot1; comments = comments1 } = decl1 in
+    let { id = id2; annot = annot2; comments = comments2 } = decl2 in
+    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let annot_diff = Some (diff_if_changed type_annotation_hint annot1 annot2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [id_diff; annot_diff; comments_diff]
   and type_params
       (pd1 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) (pd2 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) :
       node change list option =

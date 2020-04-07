@@ -96,7 +96,7 @@ let enum loc enum =
 
 let declare_variable loc declare_variable =
   let open Ast.Statement.DeclareVariable in
-  let { id; annot } = declare_variable in
+  let { id; annot; comments = _ } = declare_variable in
   (id, (loc, Kind.VariableDef { id; annot = Kind.Annot_path.mk_annot annot; init = None }))
 
 let declare_function loc declare_function =

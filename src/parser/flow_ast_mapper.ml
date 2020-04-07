@@ -631,13 +631,14 @@ class ['loc] mapper =
 
     method declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id = ident; annot } = decl in
+      let { id = ident; annot; comments } = decl in
       let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
       let annot' = this#type_annotation_hint annot in
-      if id' == ident && annot' == annot then
+      let comments' = this#syntax_opt comments in
+      if id' == ident && annot' == annot && comments' == comments then
         decl
       else
-        { id = id'; annot = annot' }
+        { id = id'; annot = annot'; comments = comments' }
 
     method do_while _loc (stuff : ('loc, 'loc) Ast.Statement.DoWhile.t) =
       let open Ast.Statement.DoWhile in
