@@ -1161,7 +1161,7 @@ module Statement
         in
         module_items env ~module_kind (stmt :: acc)
     in
-    let declare_module_ env start_loc =
+    let declare_module_ env start_loc leading =
       let id =
         match Peek.token env with
         | T_STRING str -> Statement.DeclareModule.Literal (string_literal env str)
@@ -1170,12 +1170,11 @@ module Statement
       let (body_loc, ((module_kind, body), comments)) =
         with_loc
           (fun env ->
-            let leading = Peek.comments env in
             Expect.token env T_LCURLY;
             let res = module_items env ~module_kind:None [] in
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
-            (res, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+            (res, Flow_ast_utils.mk_comments_opt ~trailing ()))
           env
       in
       let body = (body_loc, { Statement.Block.body; comments }) in
@@ -1185,17 +1184,20 @@ module Statement
         | Some k -> k
         | None -> Statement.DeclareModule.CommonJS loc
       in
-      (loc, Statement.(DeclareModule DeclareModule.{ id; body; kind }))
+      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+      (loc, Statement.(DeclareModule DeclareModule.{ id; body; kind; comments }))
     in
     fun ?(in_module = false) env ->
       let start_loc = Peek.loc env in
+      let leading = Peek.comments env in
       Expect.token env T_DECLARE;
+      let leading = leading @ Peek.comments env in
       Expect.identifier env "module";
       if in_module || Peek.token env = T_PERIOD then
         let (loc, exports) = with_loc declare_module_exports env in
         (Loc.btwn start_loc loc, exports)
       else
-        declare_module_ env start_loc
+        declare_module_ env start_loc leading
 
   and declare_module_exports env =
     Expect.token env T_PERIOD;

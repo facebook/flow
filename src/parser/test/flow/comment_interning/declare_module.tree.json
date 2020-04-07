@@ -1,16 +1,46 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
-  "range":[0,21],
+  "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":7,"column":1}},
+  "range":[21,236],
   "body":[
     {
       "type":"DeclareModule",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
-      "range":[0,21],
+      "leadingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":20}},
+          "range":[0,20],
+          "value":" 1.1 L decl mod "
+        },
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":49}},
+          "range":[29,49],
+          "value":" 1.2 L decl mod "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":93}},
+      "range":[21,93],
       "id":{
         "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
-        "range":[15,18],
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":76},"end":{"line":1,"column":90}},
+            "range":[76,90],
+            "value":" 1.4 T id "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":57},"end":{"line":1,"column":71}},
+            "range":[57,71],
+            "value":" 1.3 L id "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":72},"end":{"line":1,"column":75}},
+        "range":[72,75],
         "name":"Foo",
         "typeAnnotation":null,
         "optional":false
@@ -20,24 +50,151 @@
         "trailingComments":[
           {
             "type":"Block",
-            "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":39}},
-            "range":[22,39],
-            "value":" 1.1 T block "
+            "loc":{"source":null,"start":{"line":1,"column":94},"end":{"line":1,"column":111}},
+            "range":[94,111],
+            "value":" 1.5 T block "
           }
         ],
-        "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":21}},
-        "range":[19,21],
+        "loc":{"source":null,"start":{"line":1,"column":91},"end":{"line":1,"column":93}},
+        "range":[91,93],
         "body":[]
       },
       "kind":"CommonJS"
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":7,"column":1}},
+      "range":[113,236],
+      "body":[
+        {
+          "type":"DeclareModule",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":18}},
+              "range":[117,133],
+              "value":" 2.1 L decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":4,"column":19},"end":{"line":4,"column":40}},
+          "range":[134,155],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":4,"column":34},"end":{"line":4,"column":37}},
+            "range":[149,152],
+            "name":"Foo",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "body":{
+            "type":"BlockStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":4,"column":41},"end":{"line":4,"column":58}},
+                "range":[156,173],
+                "value":" 2.2 T block "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":4,"column":38},"end":{"line":4,"column":40}},
+            "range":[153,155],
+            "body":[]
+          },
+          "kind":"CommonJS"
+        },
+        {
+          "type":"DeclareModule",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":18}},
+              "range":[176,192],
+              "value":" 2.3 L decl "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":5,"column":19},"end":{"line":5,"column":40}},
+          "range":[193,214],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":5,"column":34},"end":{"line":5,"column":37}},
+            "range":[208,211],
+            "name":"Foo",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "body":{
+            "type":"BlockStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":19}},
+                "range":[217,234],
+                "value":" 2.4 T block "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":5,"column":38},"end":{"line":5,"column":40}},
+            "range":[212,214],
+            "body":[]
+          },
+          "kind":"CommonJS"
+        }
+      ]
     }
   ],
   "comments":[
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":39}},
-      "range":[22,39],
-      "value":" 1.1 T block "
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":20}},
+      "range":[0,20],
+      "value":" 1.1 L decl mod "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":49}},
+      "range":[29,49],
+      "value":" 1.2 L decl mod "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":57},"end":{"line":1,"column":71}},
+      "range":[57,71],
+      "value":" 1.3 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":76},"end":{"line":1,"column":90}},
+      "range":[76,90],
+      "value":" 1.4 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":94},"end":{"line":1,"column":111}},
+      "range":[94,111],
+      "value":" 1.5 T block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":18}},
+      "range":[117,133],
+      "value":" 2.1 L decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":4,"column":41},"end":{"line":4,"column":58}},
+      "range":[156,173],
+      "value":" 2.2 T block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":18}},
+      "range":[176,192],
+      "value":" 2.3 L decl "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":19}},
+      "range":[217,234],
+      "value":" 2.4 T block "
     }
   ]
 }

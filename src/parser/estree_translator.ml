@@ -243,13 +243,14 @@ with type t = Impl.t = struct
       | (loc, DeclareInterface i) -> declare_interface (loc, i)
       | (loc, DeclareTypeAlias a) -> declare_type_alias (loc, a)
       | (loc, DeclareOpaqueType t) -> opaque_type ~declare:true (loc, t)
-      | (loc, DeclareModule { DeclareModule.id; body; kind }) ->
+      | (loc, DeclareModule { DeclareModule.id; body; kind; comments }) ->
         let id =
           match id with
           | DeclareModule.Literal lit -> string_literal lit
           | DeclareModule.Identifier id -> identifier id
         in
         node
+          ?comments
           "DeclareModule"
           loc
           [

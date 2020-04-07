@@ -742,7 +742,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.DeclareInterface interface -> declare_interface loc interface
       | S.DeclareVariable var -> declare_variable loc var
       | S.DeclareModuleExports annot -> declare_module_exports annot
-      | S.DeclareModule m -> declare_module m
+      | S.DeclareModule m -> declare_module loc m
       | S.DeclareTypeAlias typeAlias -> type_alias ~declare:true loc typeAlias
       | S.DeclareOpaqueType opaqueType -> opaque_type ~declare:true loc opaqueType
       | S.DeclareExportDeclaration export -> declare_export_declaration export )
@@ -3029,21 +3029,24 @@ and declare_variable ?(s_type = Empty) loc { Ast.Statement.DeclareVariable.id; a
 and declare_module_exports annot =
   with_semicolon (fuse [Atom "declare"; space; Atom "module.exports"; type_annotation annot])
 
-and declare_module { Ast.Statement.DeclareModule.id; body; kind = _ } =
-  fuse
-    [
-      Atom "declare";
-      space;
-      Atom "module";
-      space;
-      begin
-        match id with
-        | Ast.Statement.DeclareModule.Identifier id -> identifier id
-        | Ast.Statement.DeclareModule.Literal lit -> string_literal lit
-      end;
-      pretty_space;
-      block body;
-    ]
+and declare_module loc { Ast.Statement.DeclareModule.id; body; kind = _; comments } =
+  source_location_with_comments
+    ?comments
+    ( loc,
+      fuse
+        [
+          Atom "declare";
+          space;
+          Atom "module";
+          space;
+          begin
+            match id with
+            | Ast.Statement.DeclareModule.Identifier id -> identifier id
+            | Ast.Statement.DeclareModule.Literal lit -> string_literal lit
+          end;
+          pretty_space;
+          block body;
+        ] )
 
 and declare_export_declaration
     { Ast.Statement.DeclareExportDeclaration.default; declaration; specifiers; source } =

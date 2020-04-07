@@ -2085,7 +2085,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   | (loc, DeclareClass decl) -> (loc, DeclareClass (declare_class cx loc decl))
   | (loc, DeclareInterface decl) -> (loc, DeclareInterface (interface cx loc decl))
   | (loc, InterfaceDeclaration decl) -> (loc, InterfaceDeclaration (interface cx loc decl))
-  | (loc, DeclareModule { DeclareModule.id; body; kind }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind; comments }) ->
     let (_, name) =
       match id with
       | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
@@ -2166,6 +2166,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               end;
             body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
             kind;
+            comments;
           } )
     in
     ignore

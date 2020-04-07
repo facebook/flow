@@ -783,6 +783,7 @@ and Statement : sig
       id: ('M, 'T) id;
       body: 'M * ('M, 'T) Block.t;
       kind: 'M module_kind;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
