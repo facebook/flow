@@ -5,8 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open OUnit2
-
-let tests = "utils" >::: [LwtUtils_test.tests; LwtTimeout_test.tests]
-
-let () = run_test_tt_main tests
+val with_timeout :
+  ?timeout_msg:string ->
+  ?on_timeout:(unit -> unit Lwt.t) ->
+  float ->
+  (unit -> ('a, string) result Lwt.t) ->
+  ('a, string) result Lwt.t
