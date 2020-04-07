@@ -1624,7 +1624,7 @@ and class_method
                 ~comments:func_comments );
         ] )
 
-and class_property_helper loc key value static annot variance_ =
+and class_property_helper loc key value static annot variance_ comments =
   let (declare, value) =
     match value with
     | Ast.Class.Property.Declared -> (true, None)
@@ -1632,6 +1632,7 @@ and class_property_helper loc key value static annot variance_ =
     | Ast.Class.Property.Initialized expr -> (false, Some expr)
   in
   source_location_with_comments
+    ?comments
     ( loc,
       with_semicolon
         (fuse
@@ -1661,26 +1662,31 @@ and class_property_helper loc key value static annot variance_ =
              end;
            ]) )
 
-and class_property (loc, { Ast.Class.Property.key; value; static; annot; variance }) =
-  class_property_helper loc (object_property_key key) value static annot variance
+and class_property (loc, { Ast.Class.Property.key; value; static; annot; variance; comments }) =
+  class_property_helper loc (object_property_key key) value static annot variance comments
 
 and class_private_field
     ( loc,
       {
         Ast.Class.PrivateField.key =
-          (ident_loc, { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments });
+          ( ident_loc,
+            {
+              Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ });
+              comments = key_comments;
+            } );
         value;
         static;
         annot;
         variance;
+        comments;
       } ) =
   let key =
     layout_node_with_comments_opt
       ident_loc
-      comments
+      key_comments
       (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
   in
-  class_property_helper loc key value static annot variance
+  class_property_helper loc key value static annot variance comments
 
 and class_body (loc, { Ast.Class.Body.body; comments }) =
   if body <> [] then

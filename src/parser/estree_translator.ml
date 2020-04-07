@@ -915,11 +915,12 @@ with type t = Impl.t = struct
     and class_private_field
         ( loc,
           {
-            Class.PrivateField.key = (_, { PrivateName.id; comments });
+            Class.PrivateField.key = (_, { PrivateName.id; comments = key_comments });
             value;
             annot;
             static;
             variance = variance_;
+            comments;
           } ) =
       let (value, declare) =
         match value with
@@ -927,6 +928,7 @@ with type t = Impl.t = struct
         | Class.Property.Uninitialized -> (None, false)
         | Class.Property.Initialized x -> (Some x, false)
       in
+      let comments = Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments in
       let props =
         [
           ("key", identifier id);
@@ -942,15 +944,17 @@ with type t = Impl.t = struct
           []
       in
       node ?comments "ClassPrivateProperty" loc props
-    and class_property (loc, { Class.Property.key; value; annot; static; variance = variance_ }) =
+    and class_property
+        (loc, { Class.Property.key; value; annot; static; variance = variance_; comments }) =
       let (key, computed, comments) =
         match key with
-        | Expression.Object.Property.Literal lit -> (literal lit, false, None)
-        | Expression.Object.Property.Identifier id -> (identifier id, false, None)
+        | Expression.Object.Property.Literal lit -> (literal lit, false, comments)
+        | Expression.Object.Property.Identifier id -> (identifier id, false, comments)
         | Expression.Object.Property.PrivateName _ ->
           failwith "Internal Error: Private name found in class prop"
-        | Expression.Object.Property.Computed (_, { ComputedKey.expression = expr; comments }) ->
-          (expression expr, true, comments)
+        | Expression.Object.Property.Computed
+            (_, { ComputedKey.expression = expr; comments = key_comments }) ->
+          (expression expr, true, Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments)
       in
       let (value, declare) =
         match value with

@@ -1557,7 +1557,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
           T.CMethod (x, kind, static, (loc, function_ generator async tparams params return body))
         )
         :: acc
-      | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
+      | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _; comments = _ })
+        ->
         let x = object_key key in
         (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
       | Body.PrivateField
@@ -1573,6 +1574,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
               static;
               variance;
               value = _;
+              comments = _;
             } ) ->
         (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc
     in

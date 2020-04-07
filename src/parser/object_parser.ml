@@ -555,8 +555,8 @@ module Object
       | Some loc -> error_at env (loc, Parse_error.DeclareClassElement)
       | None -> ()
     in
-    let property env start_loc key static declare variance =
-      let (loc, (annot, value)) =
+    let property env start_loc key static declare variance leading =
+      let (loc, (annot, value, comments)) =
         with_loc
           ~start_loc
           (fun env ->
@@ -585,14 +585,16 @@ module Object
               ()
             else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
               error_unexpected env;
-            (annot, value))
+            (annot, value, Flow_ast_utils.mk_comments_opt ~leading ()))
           env
       in
       match key with
       | Ast.Expression.Object.Property.PrivateName private_name ->
         let open Ast.Class in
-        Body.PrivateField (loc, { PrivateField.key = private_name; value; annot; static; variance })
-      | _ -> Ast.Class.(Body.Property (loc, { Property.key; value; annot; static; variance }))
+        Body.PrivateField
+          (loc, { PrivateField.key = private_name; value; annot; static; variance; comments })
+      | _ ->
+        Ast.Class.(Body.Property (loc, { Property.key; value; annot; static; variance; comments }))
     in
     let rec init env start_loc decorators key ~async ~generator ~static ~declare variance leading =
       match Peek.token env with
@@ -601,7 +603,7 @@ module Object
       | T_SEMICOLON
       | T_RCURLY
         when (not async) && not generator ->
-        property env start_loc key static declare variance
+        property env start_loc key static declare variance leading
       | T_PLING ->
         (* TODO: add support for optional class properties *)
         error_unexpected env;
@@ -609,7 +611,7 @@ module Object
         init env start_loc decorators key ~async ~generator ~static ~declare variance leading
       | _ when Peek.is_implicit_semicolon env ->
         (* an uninitialized, unannotated property *)
-        property env start_loc key static declare variance
+        property env start_loc key static declare variance leading
       | _ ->
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;

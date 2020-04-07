@@ -7587,6 +7587,7 @@ and mk_class_sig =
                     value;
                     static;
                     variance;
+                    comments;
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
@@ -7604,8 +7605,14 @@ and mk_class_sig =
               let get_element () =
                 Body.PrivateField
                   ( (loc, annot_t),
-                    { PrivateField.key; annot = annot_ast; value = get_value (); static; variance }
-                  )
+                    {
+                      PrivateField.key;
+                      annot = annot_ast;
+                      value = get_value ();
+                      static;
+                      variance;
+                      comments;
+                    } )
               in
               (add_private_field ~static name id_loc polarity field c, get_element :: rev_elements)
             | Body.Property
@@ -7618,6 +7625,7 @@ and mk_class_sig =
                     value;
                     static;
                     variance;
+                    comments;
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
@@ -7640,6 +7648,7 @@ and mk_class_sig =
                       value = get_value ();
                       static;
                       variance;
+                      comments;
                     } )
               in
               (add_field ~static name id_loc polarity field c, get_element :: rev_elements)

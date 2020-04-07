@@ -219,12 +219,19 @@ let eval_property_assignment class_body =
                 static = false;
                 annot = _;
                 variance = _;
+                comments = _;
               } ) ->
           Some (public_property loc id, value)
         | Body.PrivateField
             ( _,
-              { PrivateField.key = (loc, _) as id; value; static = false; annot = _; variance = _ }
-            ) ->
+              {
+                PrivateField.key = (loc, _) as id;
+                value;
+                static = false;
+                annot = _;
+                variance = _;
+                comments = _;
+              } ) ->
           Some (private_property loc id, value)
         | _ -> None)
       class_body

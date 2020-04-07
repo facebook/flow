@@ -428,14 +428,15 @@ class ['loc] mapper =
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance = _ } = prop in
+      let { key; value; annot; static = _; variance = _; comments } = prop in
       let key' = this#object_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
-      if key == key' && value == value' && annot' == annot then
+      let comments' = this#syntax_opt comments in
+      if key == key' && value == value' && annot' == annot && comments' == comments then
         prop
       else
-        { prop with key = key'; value = value'; annot = annot' }
+        { prop with key = key'; value = value'; annot = annot'; comments = comments' }
 
     method class_property_value (value : ('loc, 'loc) Ast.Class.Property.value) =
       let open Ast.Class.Property in
@@ -451,14 +452,15 @@ class ['loc] mapper =
 
     method class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance = _ } = prop in
+      let { key; value; annot; static = _; variance = _; comments } = prop in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
-      if key == key' && value == value' && annot' == annot then
+      let comments' = this#syntax_opt comments in
+      if key == key' && value == value' && annot' == annot && comments' == comments then
         prop
       else
-        { prop with key = key'; value = value'; annot = annot' }
+        { prop with key = key'; value = value'; annot = annot'; comments = comments' }
 
     (* TODO *)
     method comprehension _loc (expr : ('loc, 'loc) Ast.Expression.Comprehension.t) = expr

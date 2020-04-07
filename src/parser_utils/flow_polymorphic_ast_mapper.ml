@@ -267,12 +267,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       let open Ast.Class.Property in
-      let { key; value; annot; static; variance } = prop in
+      let { key; value; annot; static; variance; comments } = prop in
       let key' = this#object_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Base.Option.map ~f:this#variance variance in
-      { key = key'; value = value'; annot = annot'; static; variance = variance' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      {
+        key = key';
+        value = value';
+        annot = annot';
+        static;
+        variance = variance';
+        comments = comments';
+      }
 
     method class_property_value (value : ('M, 'T) Ast.Class.Property.value)
         : ('N, 'U) Ast.Class.Property.value =
@@ -284,12 +292,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_private_field (prop : ('M, 'T) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static; variance } = prop in
+      let { key; value; annot; static; variance; comments } = prop in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Base.Option.map ~f:this#variance variance in
-      { key = key'; value = value'; annot = annot'; static; variance = variance' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      {
+        key = key';
+        value = value';
+        annot = annot';
+        static;
+        variance = variance';
+        comments = comments';
+      }
 
     method comprehension (expr : ('M, 'T) Ast.Expression.Comprehension.t)
         : ('N, 'U) Ast.Expression.Comprehension.t =

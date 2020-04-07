@@ -986,16 +986,35 @@ let program
   (* TODO *)
   and class_property prop1 prop2 : node change list =
     let open Ast.Class.Property in
-    let (loc1, { key = key1; value = val1; annot = annot1; static = s1; variance = var1 }) =
+    let ( loc1,
+          {
+            key = key1;
+            value = val1;
+            annot = annot1;
+            static = s1;
+            variance = var1;
+            comments = comments1;
+          } ) =
       prop1
     in
-    let (_, { key = key2; value = val2; annot = annot2; static = s2; variance = var2 }) = prop2 in
+    let ( _,
+          {
+            key = key2;
+            value = val2;
+            annot = annot2;
+            static = s2;
+            variance = var2;
+            comments = comments2;
+          } ) =
+      prop2
+    in
     ( if key1 != key2 || s1 != s2 || var1 != var2 then
       None
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
-      join_diff_list [vals; annots] )
+      let comments = syntax_opt loc1 comments1 comments2 in
+      join_diff_list [vals; annots; comments] )
     |> Base.Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
   and class_property_value val1 val2 : node change list option =
     let open Ast.Class.Property in

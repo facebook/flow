@@ -1617,6 +1617,7 @@ and Class : sig
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and ('M, 'T) value =
@@ -1635,6 +1636,7 @@ and Class : sig
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
