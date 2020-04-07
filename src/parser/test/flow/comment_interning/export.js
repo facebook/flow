@@ -1,6 +1,6 @@
-/* 1.1 L export */ export default /* 1.2 L num */ 1 /* 1.3 T num */ ; /* 1.4 T export */
+/* 1.1 L export */ export /* 1.2 L export */ default /* 1.3 L num */ 1 /* 1.4 T num */ ; /* 1.5 T export */
 
-/* 2.1 L export */ export default /* 2.2 L func decl */ function() {} /* 2.3 T block */
+/* 2.1 L export */ export /* 2.2 L export */ default /* 2.3 L func decl */ function() {} /* 2.4 T block */
 
 /* 3.1 L export */ export {A}; /* 3.2 T export */
 
@@ -23,5 +23,7 @@
 /* 12.1 L export */ export { Foo1 } from 'source' /* 12.2 T str lit */
 
 /* 13.1 L export */ export { Foo2 } /* 13.2 T export */
+
+/* 14.1 L export */ export default 1 /* 14.2 T num */
 
 /* Final L str */ 'end of tests';

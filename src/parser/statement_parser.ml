@@ -1336,6 +1336,7 @@ module Statement
         | T_DEFAULT ->
           (* export default ... *)
           Statement.ExportDefaultDeclaration.(
+            let leading = leading @ Peek.comments env in
             let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
             record_export
               env
@@ -1355,10 +1356,11 @@ module Statement
               else
                 (* export default [assignment expression]; *)
                 let expr = Parse.assignment env in
-                let trailing =
+                let (expr, trailing) =
                   match semicolon env with
-                  | Explicit comments -> comments
-                  | Implicit _ -> []
+                  | Explicit trailing -> (expr, trailing)
+                  | Implicit { remove_trailing; _ } ->
+                    (remove_trailing expr (fun remover expr -> remover#expression expr), [])
                 in
                 (Expression expr, trailing)
             in
