@@ -19,7 +19,7 @@
     "flow-parser": "~0.21.0",
     "glob": "^7.0.3",
     "jest": "^23.0.0",
-    "minimist": "~1.2.0",
+    "minimist": "~1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
     "resolve": "^1.1.7",
