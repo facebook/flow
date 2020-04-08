@@ -351,10 +351,12 @@ module Statement
         ()
     in
     with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_FOR;
         let async = allow_await env && Expect.maybe env T_AWAIT in
+        let leading = leading @ Peek.comments env in
         Expect.token env T_LPAREN;
-
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
         let (init, errs) =
           let env = env |> with_no_in true in
           match Peek.token env with
@@ -417,7 +419,7 @@ module Statement
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
           assert_not_labelled_function env body;
-          Statement.ForOf { Statement.ForOf.left; right; body; await = async }
+          Statement.ForOf { Statement.ForOf.left; right; body; await = async; comments }
         | T_IN ->
           let left =
             match init with
@@ -436,7 +438,7 @@ module Statement
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
           assert_not_labelled_function env body;
-          Statement.ForIn { Statement.ForIn.left; right; body; each = false }
+          Statement.ForIn { Statement.ForIn.left; right; body; each = false; comments }
         | _ ->
           (* This is a for loop *)
           errs |> List.iter (error_at env);
@@ -462,7 +464,7 @@ module Statement
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
           assert_not_labelled_function env body;
-          Statement.For { Statement.For.init; test; update; body })
+          Statement.For { Statement.For.init; test; update; body; comments })
 
   and if_ =
     (*

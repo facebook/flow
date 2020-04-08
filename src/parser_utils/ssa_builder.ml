@@ -716,7 +716,7 @@ struct
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.For in
-            let { init; test; update; body } = stmt in
+            let { init; test; update; body; comments = _ } = stmt in
             ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
             let env1 = this#fresh_ssa_env in
             this#merge_self_ssa_env env1;
@@ -772,7 +772,7 @@ struct
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.ForIn in
-            let { left; right; body; each = _ } = stmt in
+            let { left; right; body; each = _; comments = _ } = stmt in
             ignore @@ this#expression right;
             let env1 = this#fresh_ssa_env in
             this#merge_self_ssa_env env1;
@@ -824,7 +824,7 @@ struct
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.ForOf in
-            let { left; right; body; await = _ } = stmt in
+            let { left; right; body; await = _; comments = _ } = stmt in
             ignore @@ this#expression right;
             let env1 = this#fresh_ssa_env in
             this#merge_self_ssa_env env1;

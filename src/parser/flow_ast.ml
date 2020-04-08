@@ -627,6 +627,7 @@ and Statement : sig
       test: ('M, 'T) Expression.t option;
       update: ('M, 'T) Expression.t option;
       body: ('M, 'T) Statement.t;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and ('M, 'T) init =
@@ -641,6 +642,7 @@ and Statement : sig
       right: ('M, 'T) Expression.t;
       body: ('M, 'T) Statement.t;
       each: bool;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and ('M, 'T) left =
@@ -655,6 +657,7 @@ and Statement : sig
       right: ('M, 'T) Expression.t;
       body: ('M, 'T) Statement.t;
       await: bool;
+      comments: ('M, unit) Syntax.t option;
     }
 
     and ('M, 'T) left =

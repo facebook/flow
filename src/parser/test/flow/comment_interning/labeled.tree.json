@@ -91,6 +91,14 @@
             },
             "body":{
               "type":"ForStatement",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":4,"column":36},"end":{"line":4,"column":60}},
+                  "range":[97,121],
+                  "value":" 1.3 Leading on for "
+                }
+              ],
               "loc":{"source":null,"start":{"line":4,"column":61},"end":{"line":6,"column":5}},
               "range":[122,154],
               "init":null,

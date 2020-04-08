@@ -211,7 +211,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! for_in_statement loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         let open Ast.Statement.ForIn in
-        let { left; right = _; body = _; each = _ } = stmt in
+        let { left; right = _; body = _; each = _; comments = _ } = stmt in
         let lexical_hoist = new lexical_hoister in
         let lexical_bindings =
           match left with
@@ -231,7 +231,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! for_of_statement loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         let open Ast.Statement.ForOf in
-        let { left; right = _; body = _; await = _ } = stmt in
+        let { left; right = _; body = _; await = _; comments = _ } = stmt in
         let lexical_hoist = new lexical_hoister in
         let lexical_bindings =
           match left with
@@ -251,7 +251,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! for_statement loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         let open Ast.Statement.For in
-        let { init; test = _; update = _; body = _ } = stmt in
+        let { init; test = _; update = _; body = _; comments = _ } = stmt in
         let lexical_hoist = new lexical_hoister in
         let lexical_bindings =
           match init with

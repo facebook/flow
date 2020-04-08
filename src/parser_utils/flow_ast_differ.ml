@@ -519,10 +519,10 @@ let program
       | ((loc, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2)) ->
         expression_statement loc expr1 expr2
       | ((loc, Block block1), (_, Block block2)) -> block loc block1 block2
-      | ((_, For for1), (_, For for2)) -> for_statement for1 for2
-      | ((_, ForIn for_in1), (_, ForIn for_in2)) -> for_in_statement for_in1 for_in2
+      | ((loc, For for1), (_, For for2)) -> for_statement loc for1 for2
+      | ((loc, ForIn for_in1), (_, ForIn for_in2)) -> for_in_statement loc for_in1 for_in2
       | ((loc, While while1), (_, While while2)) -> Some (while_statement loc while1 while2)
-      | ((_, ForOf for_of1), (_, ForOf for_of2)) -> for_of_statement for_of1 for_of2
+      | ((loc, ForOf for_of1), (_, ForOf for_of2)) -> for_of_statement loc for_of1 for_of2
       | ((loc, DoWhile do_while1), (_, DoWhile do_while2)) ->
         Some (do_while_statement loc do_while1 do_while2)
       | ((loc, Switch switch1), (_, Switch switch2)) -> switch_statement loc switch1 switch2
@@ -1705,16 +1705,22 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [expressions_diff; comments_diff]
   and for_statement
-      (stmt1 : (Loc.t, Loc.t) Ast.Statement.For.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.For.t) :
-      node change list option =
+      (loc : Loc.t)
+      (stmt1 : (Loc.t, Loc.t) Ast.Statement.For.t)
+      (stmt2 : (Loc.t, Loc.t) Ast.Statement.For.t) : node change list option =
     let open Ast.Statement.For in
-    let { init = init1; test = test1; update = update1; body = body1 } = stmt1 in
-    let { init = init2; test = test2; update = update2; body = body2 } = stmt2 in
+    let { init = init1; test = test1; update = update1; body = body1; comments = comments1 } =
+      stmt1
+    in
+    let { init = init2; test = test2; update = update2; body = body2; comments = comments2 } =
+      stmt2
+    in
     let init = diff_if_changed_opt for_statement_init init1 init2 in
     let test = diff_if_changed_nonopt_fn expression test1 test2 in
     let update = diff_if_changed_nonopt_fn expression update1 update2 in
     let body = Some (diff_if_changed statement body1 body2) in
-    join_diff_list [init; test; update; body]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [init; test; update; body; comments]
   and for_statement_init
       (init1 : (Loc.t, Loc.t) Ast.Statement.For.init)
       (init2 : (Loc.t, Loc.t) Ast.Statement.For.init) : node change list option =
@@ -1727,11 +1733,16 @@ let program
     | (InitExpression _, InitDeclaration _) ->
       None
   and for_in_statement
-      (stmt1 : (Loc.t, Loc.t) Ast.Statement.ForIn.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.ForIn.t)
-      : node change list option =
+      (loc : Loc.t)
+      (stmt1 : (Loc.t, Loc.t) Ast.Statement.ForIn.t)
+      (stmt2 : (Loc.t, Loc.t) Ast.Statement.ForIn.t) : node change list option =
     let open Ast.Statement.ForIn in
-    let { left = left1; right = right1; body = body1; each = each1 } = stmt1 in
-    let { left = left2; right = right2; body = body2; each = each2 } = stmt2 in
+    let { left = left1; right = right1; body = body1; each = each1; comments = comments1 } =
+      stmt1
+    in
+    let { left = left2; right = right2; body = body2; each = each2; comments = comments2 } =
+      stmt2
+    in
     let left =
       if left1 == left2 then
         Some []
@@ -1746,7 +1757,8 @@ let program
       else
         Some []
     in
-    join_diff_list [left; right; body; each]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [left; right; body; each; comments]
   and for_in_statement_lhs
       (left1 : (Loc.t, Loc.t) Ast.Statement.ForIn.left)
       (left2 : (Loc.t, Loc.t) Ast.Statement.ForIn.left) : node change list option =
@@ -1770,11 +1782,16 @@ let program
     let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     test @ body @ comments
   and for_of_statement
-      (stmt1 : (Loc.t, Loc.t) Ast.Statement.ForOf.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.ForOf.t)
-      : node change list option =
+      (loc : Loc.t)
+      (stmt1 : (Loc.t, Loc.t) Ast.Statement.ForOf.t)
+      (stmt2 : (Loc.t, Loc.t) Ast.Statement.ForOf.t) : node change list option =
     let open Ast.Statement.ForOf in
-    let { left = left1; right = right1; body = body1; await = await1 } = stmt1 in
-    let { left = left2; right = right2; body = body2; await = await2 } = stmt2 in
+    let { left = left1; right = right1; body = body1; await = await1; comments = comments1 } =
+      stmt1
+    in
+    let { left = left2; right = right2; body = body2; await = await2; comments = comments2 } =
+      stmt2
+    in
     let left =
       if left1 == left2 then
         Some []
@@ -1789,7 +1806,8 @@ let program
       else
         Some []
     in
-    join_diff_list [left; right; body; await]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [left; right; body; await; comments]
   and for_of_statement_lhs
       (left1 : (Loc.t, Loc.t) Ast.Statement.ForOf.left)
       (left2 : (Loc.t, Loc.t) Ast.Statement.ForOf.left) : node change list option =

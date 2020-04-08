@@ -650,87 +650,90 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                   pretty_space;
                   group [wrap_and_indent (Atom "(", Atom ")") [expression test]];
                 ])
-      | S.For { S.For.init; test; update; body } ->
-        fuse
-          [
-            statement_with_test
-              "for"
-              (join
-                 (fuse [Atom ";"; pretty_line])
-                 [
-                   begin
-                     match init with
-                     | Some (S.For.InitDeclaration decl) ->
-                       let ctxt = { normal_context with group = In_for_init } in
-                       variable_declaration ~ctxt decl
-                     | Some (S.For.InitExpression expr) ->
-                       let ctxt = { normal_context with group = In_for_init } in
-                       expression_with_parens ~precedence:0 ~ctxt expr
-                     | None -> Empty
-                   end;
-                   begin
-                     match test with
-                     | Some expr -> expression expr
-                     | None -> Empty
-                   end;
-                   begin
-                     match update with
-                     | Some expr -> expression expr
-                     | None -> Empty
-                   end;
-                 ]);
-            statement_after_test ~pretty_semicolon body;
-          ]
-      | S.ForIn { S.ForIn.left; right; body; each } ->
-        fuse
-          [
-            Atom "for";
-            ( if each then
-              fuse [space; Atom "each"]
-            else
-              Empty );
-            pretty_space;
-            wrap_in_parens
-              (fuse_with_space
-                 [
-                   begin
-                     match left with
-                     | S.ForIn.LeftDeclaration decl -> variable_declaration decl
-                     | S.ForIn.LeftPattern patt -> pattern patt
-                   end;
-                   Atom "in";
-                   expression right;
-                 ]);
-            statement_after_test ~pretty_semicolon body;
-          ]
+      | S.For { S.For.init; test; update; body; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ fuse
+             [
+               statement_with_test
+                 "for"
+                 (join
+                    (fuse [Atom ";"; pretty_line])
+                    [
+                      begin
+                        match init with
+                        | Some (S.For.InitDeclaration decl) ->
+                          let ctxt = { normal_context with group = In_for_init } in
+                          variable_declaration ~ctxt decl
+                        | Some (S.For.InitExpression expr) ->
+                          let ctxt = { normal_context with group = In_for_init } in
+                          expression_with_parens ~precedence:0 ~ctxt expr
+                        | None -> Empty
+                      end;
+                      begin
+                        match test with
+                        | Some expr -> expression expr
+                        | None -> Empty
+                      end;
+                      begin
+                        match update with
+                        | Some expr -> expression expr
+                        | None -> Empty
+                      end;
+                    ]);
+               statement_after_test ~pretty_semicolon body;
+             ]
+      | S.ForIn { S.ForIn.left; right; body; each; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ fuse
+             [
+               Atom "for";
+               ( if each then
+                 fuse [space; Atom "each"]
+               else
+                 Empty );
+               pretty_space;
+               wrap_in_parens
+                 (fuse_with_space
+                    [
+                      begin
+                        match left with
+                        | S.ForIn.LeftDeclaration decl -> variable_declaration decl
+                        | S.ForIn.LeftPattern patt -> pattern patt
+                      end;
+                      Atom "in";
+                      expression right;
+                    ]);
+               statement_after_test ~pretty_semicolon body;
+             ]
       | S.FunctionDeclaration func -> function_ loc func
       | S.VariableDeclaration decl -> with_semicolon (variable_declaration (loc, decl))
       | S.ClassDeclaration class_ -> class_base loc class_
       | S.EnumDeclaration enum -> enum_declaration loc enum
-      | S.ForOf { S.ForOf.left; right; body; await } ->
-        fuse
-          [
-            Atom "for";
-            ( if await then
-              fuse [space; Atom "await"]
-            else
-              Empty );
-            pretty_space;
-            wrap_in_parens
-              (fuse
-                 [
-                   begin
-                     match left with
-                     | S.ForOf.LeftDeclaration decl -> variable_declaration decl
-                     | S.ForOf.LeftPattern patt -> pattern patt
-                   end;
-                   space;
-                   Atom "of";
-                   space;
-                   expression right;
-                 ]);
-            statement_after_test ~pretty_semicolon body;
-          ]
+      | S.ForOf { S.ForOf.left; right; body; await; comments } ->
+        layout_node_with_comments_opt loc comments
+        @@ fuse
+             [
+               Atom "for";
+               ( if await then
+                 fuse [space; Atom "await"]
+               else
+                 Empty );
+               pretty_space;
+               wrap_in_parens
+                 (fuse
+                    [
+                      begin
+                        match left with
+                        | S.ForOf.LeftDeclaration decl -> variable_declaration decl
+                        | S.ForOf.LeftPattern patt -> pattern patt
+                      end;
+                      space;
+                      Atom "of";
+                      space;
+                      expression right;
+                    ]);
+               statement_after_test ~pretty_semicolon body;
+             ]
       | S.ImportDeclaration import -> import_declaration loc import
       | S.ExportNamedDeclaration export -> export_declaration loc export
       | S.ExportDefaultDeclaration export -> export_default_declaration loc export

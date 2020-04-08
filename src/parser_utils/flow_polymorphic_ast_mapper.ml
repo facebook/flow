@@ -644,11 +644,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method for_in_statement (stmt : ('M, 'T) Ast.Statement.ForIn.t) : ('N, 'U) Ast.Statement.ForIn.t
         =
       let open Ast.Statement.ForIn in
-      let { left; right; body; each } = stmt in
+      let { left; right; body; each; comments } = stmt in
       let left' = this#for_in_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
-      { left = left'; right = right'; body = body'; each }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { left = left'; right = right'; body = body'; each; comments = comments' }
 
     method for_in_statement_lhs (left : ('M, 'T) Ast.Statement.ForIn.left)
         : ('N, 'U) Ast.Statement.ForIn.left =
@@ -661,11 +662,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method for_of_statement (stuff : ('M, 'T) Ast.Statement.ForOf.t)
         : ('N, 'U) Ast.Statement.ForOf.t =
       let open Ast.Statement.ForOf in
-      let { left; right; body; await } = stuff in
+      let { left; right; body; await; comments } = stuff in
       let left' = this#for_of_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
-      { left = left'; right = right'; body = body'; await }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { left = left'; right = right'; body = body'; await; comments = comments' }
 
     method for_of_statement_lhs (left : ('M, 'T) Ast.Statement.ForOf.left) =
       let open Ast.Statement.ForOf in
@@ -676,12 +678,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method for_statement (stmt : ('M, 'T) Ast.Statement.For.t) : ('N, 'U) Ast.Statement.For.t =
       let open Ast.Statement.For in
-      let { init; test; update; body } = stmt in
+      let { init; test; update; body; comments } = stmt in
       let init' = Base.Option.map ~f:this#for_statement_init init in
       let test' = Base.Option.map ~f:this#predicate_expression test in
       let update' = Base.Option.map ~f:this#expression update in
       let body' = this#statement body in
-      { init = init'; test = test'; update = update'; body = body' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { init = init'; test = test'; update = update'; body = body'; comments = comments' }
 
     method for_statement_init (init : ('M, 'T) Ast.Statement.For.init)
         : ('N, 'U) Ast.Statement.For.init =

@@ -869,14 +869,15 @@ class ['loc] mapper =
 
     method for_in_statement _loc (stmt : ('loc, 'loc) Ast.Statement.ForIn.t) =
       let open Ast.Statement.ForIn in
-      let { left; right; body; each } = stmt in
+      let { left; right; body; each; comments } = stmt in
       let left' = this#for_in_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
-      if left == left' && right == right' && body == body' then
+      let comments' = this#syntax_opt comments in
+      if left == left' && right == right' && body == body' && comments == comments' then
         stmt
       else
-        { left = left'; right = right'; body = body'; each }
+        { left = left'; right = right'; body = body'; each; comments = comments' }
 
     method for_in_statement_lhs (left : ('loc, 'loc) Ast.Statement.ForIn.left) =
       let open Ast.Statement.ForIn in
@@ -888,14 +889,15 @@ class ['loc] mapper =
 
     method for_of_statement _loc (stuff : ('loc, 'loc) Ast.Statement.ForOf.t) =
       let open Ast.Statement.ForOf in
-      let { left; right; body; await } = stuff in
+      let { left; right; body; await; comments } = stuff in
       let left' = this#for_of_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
-      if left == left' && right == right' && body == body' then
+      let comments' = this#syntax_opt comments in
+      if left == left' && right == right' && body == body' && comments == comments' then
         stuff
       else
-        { left = left'; right = right'; body = body'; await }
+        { left = left'; right = right'; body = body'; await; comments = comments' }
 
     method for_of_statement_lhs (left : ('loc, 'loc) Ast.Statement.ForOf.left) =
       let open Ast.Statement.ForOf in
@@ -907,15 +909,22 @@ class ['loc] mapper =
 
     method for_statement _loc (stmt : ('loc, 'loc) Ast.Statement.For.t) =
       let open Ast.Statement.For in
-      let { init; test; update; body } = stmt in
+      let { init; test; update; body; comments } = stmt in
       let init' = map_opt this#for_statement_init init in
       let test' = map_opt this#predicate_expression test in
       let update' = map_opt this#expression update in
       let body' = this#statement body in
-      if init == init' && test == test' && update == update' && body == body' then
+      let comments' = this#syntax_opt comments in
+      if
+        init == init'
+        && test == test'
+        && update == update'
+        && body == body'
+        && comments == comments'
+      then
         stmt
       else
-        { init = init'; test = test'; update = update'; body = body' }
+        { init = init'; test = test'; update = update'; body = body'; comments = comments' }
 
     method for_statement_init (init : ('loc, 'loc) Ast.Statement.For.init) =
       let open Ast.Statement.For in

@@ -1703,7 +1703,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
      NOTE: This rule is similar to that for `while`.
   *)
   (***************************************************************************)
-  | (loc, For { For.init; test; update; body }) ->
+  | (loc, For { For.init; test; update; body; comments }) ->
     Env.in_lex_scope cx (fun () ->
         let save_break = Abnormal.clear_saved (Abnormal.Break None) in
         let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
@@ -1749,7 +1749,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         let _ = Env.refine_with_preds cx loc not_preds xtypes in
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-        (loc, For { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast }))
+        ( loc,
+          For
+            { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast; comments }
+        ))
   (***************************************************************************)
   (* Refinements for `for-in` are derived by the following Hoare logic rule:
 
@@ -1761,7 +1764,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
      [Pre] for (i in o) S [Post]
   *)
   (***************************************************************************)
-  | (loc, ForIn { ForIn.left; right; body; each }) ->
+  | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
     let reason = mk_reason (RCustom "for-in") loc in
     let save_break = Abnormal.clear_saved (Abnormal.Break None) in
     let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
@@ -1852,8 +1855,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-        (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each }))
-  | (loc, ForOf { ForOf.left; right; body; await }) ->
+        (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments }))
+  | (loc, ForOf { ForOf.left; right; body; await; comments }) ->
     let reason_desc =
       match left with
       | ForOf.LeftDeclaration
@@ -1995,7 +1998,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-        (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await }))
+        (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments }))
   | (_, Debugger _) as stmt -> stmt
   | (loc, FunctionDeclaration func) ->
     let { Ast.Function.id; sig_loc; _ } = func in

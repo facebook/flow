@@ -250,17 +250,19 @@ module Statements = struct
 
   let do_while body ?comments test = (Loc.none, DoWhile { DoWhile.body; test; comments })
 
-  let for_ init test update body =
-    (Loc.none, For { For.init = Some (For.InitExpression init); test; update; body })
+  let for_ ?comments init test update body =
+    (Loc.none, For { For.init = Some (For.InitExpression init); test; update; body; comments })
 
-  let for_in ?(each = false) left right body = (Loc.none, ForIn { ForIn.left; right; body; each })
+  let for_in ?(each = false) ?comments left right body =
+    (Loc.none, ForIn { ForIn.left; right; body; each; comments })
 
   let for_in_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) ?comments declarations =
     ForIn.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind; comments })
 
   let for_in_pattern patt = ForIn.LeftPattern patt
 
-  let for_of ?(await = false) left right body = (Loc.none, ForOf { ForOf.left; right; body; await })
+  let for_of ?(await = false) ?comments left right body =
+    (Loc.none, ForOf { ForOf.left; right; body; await; comments })
 
   let for_of_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) ?comments declarations =
     ForOf.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind; comments })

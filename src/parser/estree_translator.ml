@@ -187,12 +187,13 @@ with type t = Impl.t = struct
         node ?comments "WhileStatement" loc [("test", expression test); ("body", statement body)]
       | (loc, DoWhile { DoWhile.body; test; comments }) ->
         node ?comments "DoWhileStatement" loc [("body", statement body); ("test", expression test)]
-      | (loc, For { For.init = init_; test; update; body }) ->
+      | (loc, For { For.init = init_; test; update; body; comments }) ->
         let init = function
           | For.InitDeclaration init -> variable_declaration init
           | For.InitExpression expr -> expression expr
         in
         node
+          ?comments
           "ForStatement"
           loc
           [
@@ -201,13 +202,14 @@ with type t = Impl.t = struct
             ("update", option expression update);
             ("body", statement body);
           ]
-      | (loc, ForIn { ForIn.left; right; body; each }) ->
+      | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
         let left =
           match left with
           | ForIn.LeftDeclaration left -> variable_declaration left
           | ForIn.LeftPattern left -> pattern left
         in
         node
+          ?comments
           "ForInStatement"
           loc
           [
@@ -216,13 +218,14 @@ with type t = Impl.t = struct
             ("body", statement body);
             ("each", bool each);
           ]
-      | (loc, ForOf { ForOf.await; left; right; body }) ->
+      | (loc, ForOf { ForOf.await; left; right; body; comments }) ->
         let left =
           match left with
           | ForOf.LeftDeclaration left -> variable_declaration left
           | ForOf.LeftPattern left -> pattern left
         in
         node
+          ?comments
           "ForOfStatement"
           loc
           [
