@@ -745,7 +745,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.DeclareModule m -> declare_module loc m
       | S.DeclareTypeAlias typeAlias -> type_alias ~declare:true loc typeAlias
       | S.DeclareOpaqueType opaqueType -> opaque_type ~declare:true loc opaqueType
-      | S.DeclareExportDeclaration export -> declare_export_declaration export )
+      | S.DeclareExportDeclaration export -> declare_export_declaration loc export )
 
 (* The beginning of a statement that does a "test", like `if (test)` or `while (test)` *)
 and statement_with_test name test =
@@ -3057,7 +3057,8 @@ and declare_module loc { Ast.Statement.DeclareModule.id; body; kind = _; comment
         ] )
 
 and declare_export_declaration
-    { Ast.Statement.DeclareExportDeclaration.default; declaration; specifiers; source } =
+    loc
+    { Ast.Statement.DeclareExportDeclaration.default; declaration; specifiers; source; comments } =
   let s_export =
     fuse
       [
@@ -3075,28 +3076,39 @@ and declare_export_declaration
     (match decl with
     (* declare export var *)
     | Variable (loc, var) ->
-      source_location_with_comments (loc, declare_variable ~s_type:s_export loc var)
+      source_location_with_comments ?comments (loc, declare_variable ~s_type:s_export loc var)
     (* declare export function *)
     | Function (loc, func) ->
-      source_location_with_comments (loc, declare_function ~s_type:s_export loc func)
+      source_location_with_comments ?comments (loc, declare_function ~s_type:s_export loc func)
     (* declare export class *)
-    | Class (loc, c) -> source_location_with_comments (loc, declare_class ~s_type:s_export loc c)
+    | Class (loc, c) ->
+      source_location_with_comments ?comments (loc, declare_class ~s_type:s_export loc c)
     (* declare export default [type]
      * this corresponds to things like
      * export default 1+1; *)
-    | DefaultType t -> with_semicolon (fuse [Atom "declare"; space; s_export; type_ t])
+    | DefaultType t ->
+      source_location_with_comments
+        ?comments
+        (loc, with_semicolon (fuse [Atom "declare"; space; s_export; type_ t]))
     (* declare export type *)
     | NamedType (loc, typeAlias) ->
       source_location_with_comments
+        ?comments
         (loc, fuse [Atom "declare"; space; s_export; type_alias ~declare:false loc typeAlias])
     (* declare export opaque type *)
     | NamedOpaqueType (loc, opaqueType) ->
       source_location_with_comments
+        ?comments
         (loc, fuse [Atom "declare"; space; s_export; opaque_type ~declare:false loc opaqueType])
     (* declare export interface *)
     | Interface (loc, interface) ->
       source_location_with_comments
+        ?comments
         (loc, fuse [Atom "declare"; space; s_export; interface_declaration loc interface]))
   | (None, Some specifier) ->
-    fuse [Atom "declare"; space; Atom "export"; pretty_space; export_specifier source specifier]
+    source_location_with_comments
+      ?comments
+      ( loc,
+        fuse [Atom "declare"; space; Atom "export"; pretty_space; export_specifier source specifier]
+      )
   | (_, _) -> failwith "Invalid declare export declaration"

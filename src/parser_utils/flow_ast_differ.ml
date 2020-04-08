@@ -534,8 +534,8 @@ let program
       | ((loc, With with1), (_, With with2)) -> Some (with_statement loc with1 with2)
       | ((loc, ExportDefaultDeclaration export1), (_, ExportDefaultDeclaration export2)) ->
         export_default_declaration loc export1 export2
-      | ((_, DeclareExportDeclaration export1), (_, DeclareExportDeclaration export2)) ->
-        declare_export export1 export2
+      | ((loc, DeclareExportDeclaration export1), (_, DeclareExportDeclaration export2)) ->
+        declare_export loc export1 export2
       | ((loc, ImportDeclaration import1), (_, ImportDeclaration import2)) ->
         import_declaration loc import1 import2
       | ((loc, ExportNamedDeclaration export1), (_, ExportNamedDeclaration export2)) ->
@@ -626,16 +626,35 @@ let program
       diff_if_changed_nonopt_fn identifier ebs1 ebs2
     | _ -> None
   and declare_export
+      (loc : Loc.t)
       (export1 : (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.t)
       (export2 : (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.t) : node change list option
       =
     let open Ast.Statement.DeclareExportDeclaration in
-    let { default = default1; declaration = decl1; specifiers = specs1; source = src1 } = export1 in
-    let { default = default2; declaration = decl2; specifiers = specs2; source = src2 } = export2 in
+    let {
+      default = default1;
+      declaration = decl1;
+      specifiers = specs1;
+      source = src1;
+      comments = comments1;
+    } =
+      export1
+    in
+    let {
+      default = default2;
+      declaration = decl2;
+      specifiers = specs2;
+      source = src2;
+      comments = comments2;
+    } =
+      export2
+    in
     if default1 != default2 || src1 != src2 || decl1 != decl2 then
       None
     else
-      diff_if_changed_opt export_named_declaration_specifier specs1 specs2
+      let specs_diff = diff_if_changed_opt export_named_declaration_specifier specs1 specs2 in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [specs_diff; comments_diff]
   and import_default_specifier
       (ident1 : (Loc.t, Loc.t) Ast.Identifier.t option)
       (ident2 : (Loc.t, Loc.t) Ast.Identifier.t option) : node change list option =

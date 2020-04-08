@@ -2182,7 +2182,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     ast
   | ( loc,
       DeclareExportDeclaration
-        ({ DeclareExportDeclaration.default; declaration; specifiers; source } as decl) ) ->
+        ({ DeclareExportDeclaration.default; declaration; specifiers; source; comments = _ } as decl)
+    ) ->
     DeclareExportDeclaration.(
       let (export_info, export_kind, declaration) =
         (*  error-handling around calls to `statement` is omitted here because we

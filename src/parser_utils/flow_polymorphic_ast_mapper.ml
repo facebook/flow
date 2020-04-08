@@ -394,12 +394,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         _annot (decl : ('M, 'T) Ast.Statement.DeclareExportDeclaration.t)
         : ('N, 'U) Ast.Statement.DeclareExportDeclaration.t =
       let open Ast.Statement.DeclareExportDeclaration in
-      let { default; source; specifiers; declaration } = decl in
+      let { default; source; specifiers; declaration; comments } = decl in
       let default' = Base.Option.map ~f:this#on_loc_annot default in
       let source' = Base.Option.map ~f:(this#on_loc_annot * this#string_literal) source in
       let specifiers' = Base.Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Base.Option.map ~f:this#declare_export_declaration_decl declaration in
-      { default = default'; source = source'; specifiers = specifiers'; declaration = declaration' }
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      {
+        default = default';
+        source = source';
+        specifiers = specifiers';
+        declaration = declaration';
+        comments = comments';
+      }
 
     method declare_export_declaration_decl
         (decl : ('M, 'T) Ast.Statement.DeclareExportDeclaration.declaration)

@@ -755,7 +755,7 @@ struct
       method! declare_export_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.DeclareExportDeclaration.t) =
         let open Ast.Statement.DeclareExportDeclaration in
-        let { default; source; specifiers; declaration } = decl in
+        let { default; source; specifiers; declaration; comments = _ } = decl in
         let source =
           match source with
           | Some (loc, { Ast.StringLiteral.value = mref; raw = _; comments = _ }) ->

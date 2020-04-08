@@ -549,13 +549,20 @@ class ['loc] mapper =
     method declare_export_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.t) =
       let open Ast.Statement.DeclareExportDeclaration in
-      let { default; source; specifiers; declaration } = decl in
+      let { default; source; specifiers; declaration; comments } = decl in
       let specifiers' = map_opt this#export_named_specifier specifiers in
       let declaration' = map_opt this#declare_export_declaration_decl declaration in
-      if specifiers == specifiers' && declaration == declaration' then
+      let comments' = this#syntax_opt comments in
+      if specifiers == specifiers' && declaration == declaration' && comments == comments' then
         decl
       else
-        { default; source; specifiers = specifiers'; declaration = declaration' }
+        {
+          default;
+          source;
+          specifiers = specifiers';
+          declaration = declaration';
+          comments = comments';
+        }
 
     method declare_export_declaration_decl
         (decl : ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.declaration) =

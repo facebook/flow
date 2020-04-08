@@ -866,6 +866,7 @@ and Statement : sig
       declaration: ('M, 'T) declaration option;
       specifiers: 'M ExportNamedDeclaration.specifier option;
       source: ('M * 'M StringLiteral.t) option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

@@ -1560,33 +1560,41 @@ module Statement
   and declare_export_declaration ?(allow_export_type = false) =
     with_loc (fun env ->
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeDeclaration;
+        let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-
         let env = env |> with_strict true |> with_in_export true in
+        let leading = leading @ Peek.comments env in
         Expect.token env T_EXPORT;
         Statement.DeclareExportDeclaration.(
           match Peek.token env with
           | T_DEFAULT ->
             (* declare export default ... *)
+            let leading = leading @ Peek.comments env in
             let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
-            let declaration =
+            let (declaration, trailing) =
               match Peek.token env with
               | T_FUNCTION ->
                 (* declare export default function foo (...): ...  *)
                 let fn = with_loc declare_function env in
-                Some (Function fn)
+                (Some (Function fn), [])
               | T_CLASS ->
                 (* declare export default class foo { ... } *)
                 let class_ = with_loc (declare_class ~leading:[]) env in
-                Some (Class class_)
+                (Some (Class class_), [])
               | _ ->
                 (* declare export default [type]; *)
                 let type_ = Type._type env in
-                let _ = semicolon env in
-                Some (DefaultType type_)
+                let (type_, trailing) =
+                  match semicolon env with
+                  | Explicit trailing -> (type_, trailing)
+                  | Implicit { remove_trailing; _ } ->
+                    (remove_trailing type_ (fun remover type_ -> remover#type_ type_), [])
+                in
+                (Some (DefaultType type_), trailing)
             in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
             Statement.DeclareExportDeclaration
-              { default = Some default; declaration; specifiers = None; source = None }
+              { default = Some default; declaration; specifiers = None; source = None; comments }
           | T_LET
           | T_CONST
           | T_VAR
@@ -1613,8 +1621,9 @@ module Statement
                 Some (Variable var)
               | _ -> assert false
             in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
             Statement.DeclareExportDeclaration
-              { default = None; declaration; specifiers = None; source = None }
+              { default = None; declaration; specifiers = None; source = None; comments }
           | T_MULT ->
             (* declare export * from 'foo' *)
             let loc = Peek.loc env in
@@ -1635,39 +1644,45 @@ module Statement
             let specifiers =
               Statement.ExportNamedDeclaration.(Some (ExportBatchSpecifier (loc, local_name)))
             in
-            let source = export_source env in
-            let _ = semicolon env in
+            let (source, trailing) = export_source_and_semicolon env in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
             Statement.DeclareExportDeclaration
-              { default = None; declaration = None; specifiers; source = Some source }
+              { default = None; declaration = None; specifiers; source = Some source; comments }
           | T_TYPE when allow_export_type ->
             (* declare export type = ... *)
             let alias = with_loc (type_alias_helper ~leading:[]) env in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
             Statement.DeclareExportDeclaration
               {
                 default = None;
                 declaration = Some (NamedType alias);
                 specifiers = None;
                 source = None;
+                comments;
               }
           | T_OPAQUE ->
             (* declare export opaque type = ... *)
             let opaque = with_loc (opaque_type_helper ~declare:true ~leading:[]) env in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
             Statement.DeclareExportDeclaration
               {
                 default = None;
                 declaration = Some (NamedOpaqueType opaque);
                 specifiers = None;
                 source = None;
+                comments;
               }
           | T_INTERFACE when allow_export_type ->
             (* declare export interface ... *)
             let iface = with_loc (interface_helper ~leading:[]) env in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
             Statement.DeclareExportDeclaration
               {
                 default = None;
                 declaration = Some (Interface iface);
                 specifiers = None;
                 source = None;
+                comments;
               }
           | _ ->
             (match Peek.token env with
@@ -1677,20 +1692,28 @@ module Statement
             Expect.token env T_LCURLY;
             let specifiers = export_specifiers env [] in
             Expect.token env T_RCURLY;
-            let source =
+            let (source, trailing) =
               match Peek.token env with
-              | T_IDENTIFIER { raw = "from"; _ } -> Some (export_source env)
+              | T_IDENTIFIER { raw = "from"; _ } ->
+                let (source, trailing) = export_source_and_semicolon env in
+                (Some source, trailing)
               | _ ->
                 assert_export_specifier_identifiers env specifiers;
-                None
+                let trailing =
+                  match semicolon env with
+                  | Explicit trailing -> trailing
+                  | Implicit { trailing; _ } -> trailing
+                in
+                (None, trailing)
             in
-            let _ = semicolon env in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
             Statement.DeclareExportDeclaration
               {
                 default = None;
                 declaration = None;
                 specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers);
                 source;
+                comments;
               }))
 
   and import_declaration =

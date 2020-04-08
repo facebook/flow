@@ -263,11 +263,15 @@ with type t = Impl.t = struct
           ]
       | ( loc,
           DeclareExportDeclaration
-            { DeclareExportDeclaration.specifiers; declaration; default; source } ) ->
+            { DeclareExportDeclaration.specifiers; declaration; default; source; comments } ) ->
         begin
           match specifiers with
           | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
-            node "DeclareExportAllDeclaration" loc [("source", option string_literal source)]
+            node
+              ?comments
+              "DeclareExportAllDeclaration"
+              loc
+              [("source", option string_literal source)]
           | _ ->
             let declaration =
               match declaration with
@@ -281,6 +285,7 @@ with type t = Impl.t = struct
               | None -> null
             in
             node
+              ?comments
               "DeclareExportDeclaration"
               loc
               [

@@ -2074,6 +2074,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           Ast.Statement.DeclareExportDeclaration.declaration = Some declaration;
           specifiers = None;
           source = None;
+          comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
   let export_value_named_declaration export_loc local =
