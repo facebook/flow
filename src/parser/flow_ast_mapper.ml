@@ -1449,7 +1449,15 @@ class ['loc] mapper =
       ignore has_else;
       this#statement stmt
 
-    method if_alternate_statement (stmt : ('loc, 'loc) Ast.Statement.t) = this#statement stmt
+    method if_alternate_statement (altern : ('loc, 'loc) Ast.Statement.If.Alternate.t) =
+      let open Ast.Statement.If.Alternate in
+      let { body; comments } = altern in
+      let body' = this#statement body in
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
+        altern
+      else
+        { body = body'; comments = comments' }
 
     method if_statement _loc (stmt : ('loc, 'loc) Ast.Statement.If.t) =
       let open Ast.Statement.If in

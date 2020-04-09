@@ -1,606 +1,226 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":28,"column":1}},
-  "range":[0,692],
+  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":8,"column":26}},
+  "range":[15,250],
   "body":[
     {
-      "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":8,"column":1}},
-      "range":[0,188],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":19}},
-        "range":[9,19],
-        "name":"if_leading",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "params":[],
-      "body":{
-        "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":8,"column":1}},
-        "range":[23,188],
-        "body":[
+      "type":"IfStatement",
+      "leadingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":14}},
+          "range":[0,14],
+          "value":" 1.1 L if "
+        },
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":32}},
+          "range":[18,32],
+          "value":" 1.2 L if "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":94}},
+      "range":[15,94],
+      "test":{
+        "type":"Literal",
+        "trailingComments":[
           {
-            "type":"VariableDeclaration",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
-                "range":[68,90],
-                "value":" trailing var decl 1"
-              }
-            ],
-            "leadingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":20}},
-                "range":[29,45],
-                "value":" not leading 1"
-              }
-            ],
-            "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":20}},
-            "range":[50,66],
-            "declarations":[
-              {
-                "type":"VariableDeclarator",
-                "loc":{"source":null,"start":{"line":3,"column":8},"end":{"line":3,"column":19}},
-                "range":[54,65],
-                "id":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":3,"column":8},"end":{"line":3,"column":12}},
-                  "range":[54,58],
-                  "name":"pred",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "init":{
-                  "type":"Literal",
-                  "loc":{"source":null,"start":{"line":3,"column":15},"end":{"line":3,"column":19}},
-                  "range":[61,65],
-                  "value":true,
-                  "raw":"true"
-                }
-              }
-            ],
-            "kind":"var"
-          },
-          {
-            "type":"IfStatement",
-            "leadingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":26}},
-                "range":[95,117],
-                "value":" pre if leading 2 "
-              },
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":5,"column":31}},
-                "range":[125,149],
-                "value":" pre cond leading 1 "
-              }
-            ],
-            "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":7,"column":5}},
-            "range":[122,186],
-            "test":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":5,"column":33},"end":{"line":5,"column":37}},
-              "range":[151,155],
-              "name":"pred",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "consequent":{
-              "type":"BlockStatement",
-              "loc":{"source":null,"start":{"line":5,"column":39},"end":{"line":7,"column":5}},
-              "range":[157,186],
-              "body":[
-                {
-                  "type":"ExpressionStatement",
-                  "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":21}},
-                  "range":[167,180],
-                  "expression":{
-                    "type":"AssignmentExpression",
-                    "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":20}},
-                    "range":[167,179],
-                    "operator":"=",
-                    "left":{
-                      "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":6,"column":8},"end":{"line":6,"column":12}},
-                      "range":[167,171],
-                      "name":"pred",
-                      "typeAnnotation":null,
-                      "optional":false
-                    },
-                    "right":{
-                      "type":"Literal",
-                      "loc":{"source":null,"start":{"line":6,"column":15},"end":{"line":6,"column":20}},
-                      "range":[174,179],
-                      "value":false,
-                      "raw":"false"
-                    }
-                  },
-                  "directive":null
-                }
-              ]
-            },
-            "alternate":null
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":56},"end":{"line":1,"column":72}},
+            "range":[56,72],
+            "value":" 1.4 T bool "
           }
-        ]
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":50}},
+            "range":[34,50],
+            "value":" 1.3 L bool "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":51},"end":{"line":1,"column":55}},
+        "range":[51,55],
+        "value":true,
+        "raw":"true"
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "consequent":{
+        "type":"BlockStatement",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":95},"end":{"line":1,"column":112}},
+            "range":[95,112],
+            "value":" 1.6 T block "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":74},"end":{"line":1,"column":91}},
+            "range":[74,91],
+            "value":" 1.5 L block "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":92},"end":{"line":1,"column":94}},
+        "range":[92,94],
+        "body":[]
+      },
+      "alternate":null
     },
     {
-      "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":16,"column":1}},
-      "range":[190,321],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":10,"column":9},"end":{"line":10,"column":20}},
-        "range":[199,210],
-        "name":"if_trailing",
-        "typeAnnotation":null,
-        "optional":false
+      "type":"IfStatement",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":5,"column":1}},
+      "range":[114,173],
+      "test":{
+        "type":"Literal",
+        "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":8}},
+        "range":[118,122],
+        "value":true,
+        "raw":"true"
       },
-      "params":[],
-      "body":{
+      "consequent":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":10,"column":23},"end":{"line":16,"column":1}},
-        "range":[213,321],
-        "body":[
+        "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":4,"column":1}},
+        "range":[124,127],
+        "body":[]
+      },
+      "alternate":{
+        "type":"BlockStatement",
+        "trailingComments":[
           {
-            "type":"VariableDeclaration",
-            "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":21}},
-            "range":[219,236],
-            "declarations":[
-              {
-                "type":"VariableDeclarator",
-                "loc":{"source":null,"start":{"line":11,"column":8},"end":{"line":11,"column":20}},
-                "range":[223,235],
-                "id":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":11,"column":8},"end":{"line":11,"column":12}},
-                  "range":[223,227],
-                  "name":"pred",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "init":{
-                  "type":"Literal",
-                  "loc":{"source":null,"start":{"line":11,"column":15},"end":{"line":11,"column":20}},
-                  "range":[230,235],
-                  "value":false,
-                  "raw":"false"
-                }
-              }
-            ],
-            "kind":"var"
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":19}},
+            "range":[174,191],
+            "value":" 2.3 T block "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":20}},
+            "range":[128,146],
+            "value":" 2.1 L altern "
           },
           {
-            "type":"IfStatement",
-            "trailingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
-                "range":[252,268],
-                "value":" trailing 1 "
-              }
-            ],
-            "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":14,"column":5}},
-            "range":[241,297],
-            "test":{
-              "type":"UnaryExpression",
-              "loc":{"source":null,"start":{"line":12,"column":8},"end":{"line":12,"column":13}},
-              "range":[245,250],
-              "operator":"!",
-              "prefix":true,
-              "argument":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":12,"column":9},"end":{"line":12,"column":13}},
-                "range":[246,250],
-                "name":"pred",
-                "typeAnnotation":null,
-                "optional":false
-              }
-            },
-            "consequent":{
-              "type":"BlockStatement",
-              "trailingComments":[
-                {
-                  "type":"Line",
-                  "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":21}},
-                  "range":[302,319],
-                  "value":" not trailing 1"
-                }
-              ],
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
-                  "range":[252,268],
-                  "value":" trailing 1 "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":12,"column":32},"end":{"line":14,"column":5}},
-              "range":[269,297],
-              "body":[
-                {
-                  "type":"ExpressionStatement",
-                  "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":13,"column":20}},
-                  "range":[279,291],
-                  "expression":{
-                    "type":"AssignmentExpression",
-                    "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":13,"column":19}},
-                    "range":[279,290],
-                    "operator":"=",
-                    "left":{
-                      "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":13,"column":12}},
-                      "range":[279,283],
-                      "name":"pred",
-                      "typeAnnotation":null,
-                      "optional":false
-                    },
-                    "right":{
-                      "type":"Literal",
-                      "loc":{"source":null,"start":{"line":13,"column":15},"end":{"line":13,"column":19}},
-                      "range":[286,290],
-                      "value":true,
-                      "raw":"true"
-                    }
-                  },
-                  "directive":null
-                }
-              ]
-            },
-            "alternate":null
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":4,"column":26},"end":{"line":4,"column":43}},
+            "range":[152,169],
+            "value":" 2.2 L block "
           }
-        ]
-      },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+        ],
+        "loc":{"source":null,"start":{"line":4,"column":44},"end":{"line":5,"column":1}},
+        "range":[170,173],
+        "body":[]
+      }
     },
     {
-      "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":18,"column":0},"end":{"line":28,"column":1}},
-      "range":[323,692],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":18,"column":9},"end":{"line":18,"column":32}},
-        "range":[332,355],
-        "name":"if_leading_and_trailing",
-        "typeAnnotation":null,
-        "optional":false
+      "type":"IfStatement",
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":8,"column":26}},
+      "range":[193,250],
+      "test":{
+        "type":"Literal",
+        "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":8}},
+        "range":[197,201],
+        "value":true,
+        "raw":"true"
       },
-      "params":[],
-      "body":{
+      "consequent":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":18,"column":35},"end":{"line":28,"column":1}},
-        "range":[358,692],
-        "body":[
+        "trailingComments":[
           {
-            "type":"VariableDeclaration",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":44}},
-                "range":[403,425],
-                "value":" trailing var decl 3"
-              }
-            ],
-            "leadingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":20}},
-                "range":[364,380],
-                "value":" not leading 2"
-              }
-            ],
-            "loc":{"source":null,"start":{"line":20,"column":4},"end":{"line":20,"column":20}},
-            "range":[385,401],
-            "declarations":[
-              {
-                "type":"VariableDeclarator",
-                "loc":{"source":null,"start":{"line":20,"column":8},"end":{"line":20,"column":19}},
-                "range":[389,400],
-                "id":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":20,"column":8},"end":{"line":20,"column":12}},
-                  "range":[389,393],
-                  "name":"pred",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "init":{
-                  "type":"Literal",
-                  "loc":{"source":null,"start":{"line":20,"column":15},"end":{"line":20,"column":19}},
-                  "range":[396,400],
-                  "value":true,
-                  "raw":"true"
-                }
-              }
-            ],
-            "kind":"var"
-          },
-          {
-            "type":"IfStatement",
-            "trailingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
-                "range":[492,508],
-                "value":" trailing 2 "
-              }
-            ],
-            "leadingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":26}},
-                "range":[430,452],
-                "value":" pre if leading 4 "
-              },
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":22,"column":31}},
-                "range":[460,484],
-                "value":" pre cond leading 2 "
-              }
-            ],
-            "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":26,"column":5}},
-            "range":[457,668],
-            "test":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":22,"column":33},"end":{"line":22,"column":37}},
-              "range":[486,490],
-              "name":"pred",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "consequent":{
-              "type":"BlockStatement",
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
-                  "range":[492,508],
-                  "value":" trailing 2 "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":22,"column":56},"end":{"line":24,"column":5}},
-              "range":[509,538],
-              "body":[
-                {
-                  "type":"ExpressionStatement",
-                  "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":21}},
-                  "range":[519,532],
-                  "expression":{
-                    "type":"AssignmentExpression",
-                    "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":20}},
-                    "range":[519,531],
-                    "operator":"=",
-                    "left":{
-                      "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":23,"column":8},"end":{"line":23,"column":12}},
-                      "range":[519,523],
-                      "name":"pred",
-                      "typeAnnotation":null,
-                      "optional":false
-                    },
-                    "right":{
-                      "type":"Literal",
-                      "loc":{"source":null,"start":{"line":23,"column":15},"end":{"line":23,"column":20}},
-                      "range":[526,531],
-                      "value":false,
-                      "raw":"false"
-                    }
-                  },
-                  "directive":null
-                }
-              ]
-            },
-            "alternate":{
-              "type":"IfStatement",
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
-                  "range":[623,639],
-                  "value":" trailing 3 "
-                }
-              ],
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":24,"column":32},"end":{"line":24,"column":54}},
-                  "range":[565,587],
-                  "value":" pre if leading 5 "
-                },
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":24,"column":58},"end":{"line":24,"column":82}},
-                  "range":[591,615],
-                  "value":" pre cond leading 3 "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":24,"column":55},"end":{"line":26,"column":5}},
-              "range":[588,668],
-              "test":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":24,"column":84},"end":{"line":24,"column":88}},
-                "range":[617,621],
-                "name":"pred",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "consequent":{
-                "type":"BlockStatement",
-                "trailingComments":[
-                  {
-                    "type":"Line",
-                    "loc":{"source":null,"start":{"line":27,"column":4},"end":{"line":27,"column":21}},
-                    "range":[673,690],
-                    "value":" not trailing 3"
-                  }
-                ],
-                "leadingComments":[
-                  {
-                    "type":"Block",
-                    "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
-                    "range":[623,639],
-                    "value":" trailing 3 "
-                  }
-                ],
-                "loc":{"source":null,"start":{"line":24,"column":107},"end":{"line":26,"column":5}},
-                "range":[640,668],
-                "body":[
-                  {
-                    "type":"ExpressionStatement",
-                    "loc":{"source":null,"start":{"line":25,"column":8},"end":{"line":25,"column":20}},
-                    "range":[650,662],
-                    "expression":{
-                      "type":"AssignmentExpression",
-                      "loc":{"source":null,"start":{"line":25,"column":8},"end":{"line":25,"column":19}},
-                      "range":[650,661],
-                      "operator":"=",
-                      "left":{
-                        "type":"Identifier",
-                        "loc":{"source":null,"start":{"line":25,"column":8},"end":{"line":25,"column":12}},
-                        "range":[650,654],
-                        "name":"pref",
-                        "typeAnnotation":null,
-                        "optional":false
-                      },
-                      "right":{
-                        "type":"Literal",
-                        "loc":{"source":null,"start":{"line":25,"column":15},"end":{"line":25,"column":19}},
-                        "range":[657,661],
-                        "value":true,
-                        "raw":"true"
-                      }
-                    },
-                    "directive":null
-                  }
-                ]
-              },
-              "alternate":null
-            }
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":30}},
+            "range":[206,223],
+            "value":" 3.1 T block "
           }
-        ]
+        ],
+        "loc":{"source":null,"start":{"line":7,"column":10},"end":{"line":7,"column":12}},
+        "range":[203,205],
+        "body":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "alternate":{
+        "type":"BlockStatement",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":18}},
+            "range":[224,242],
+            "value":" 3.2 L altern "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":8,"column":24},"end":{"line":8,"column":26}},
+        "range":[248,250],
+        "body":[]
+      }
     }
   ],
   "comments":[
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":20}},
-      "range":[29,45],
-      "value":" not leading 1"
-    },
-    {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
-      "range":[68,90],
-      "value":" trailing var decl 1"
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":14}},
+      "range":[0,14],
+      "value":" 1.1 L if "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":26}},
-      "range":[95,117],
-      "value":" pre if leading 2 "
+      "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":32}},
+      "range":[18,32],
+      "value":" 1.2 L if "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":5,"column":31}},
-      "range":[125,149],
-      "value":" pre cond leading 1 "
+      "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":50}},
+      "range":[34,50],
+      "value":" 1.3 L bool "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":12,"column":15},"end":{"line":12,"column":31}},
-      "range":[252,268],
-      "value":" trailing 1 "
-    },
-    {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":21}},
-      "range":[302,319],
-      "value":" not trailing 1"
-    },
-    {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":20}},
-      "range":[364,380],
-      "value":" not leading 2"
-    },
-    {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":20,"column":22},"end":{"line":20,"column":44}},
-      "range":[403,425],
-      "value":" trailing var decl 3"
+      "loc":{"source":null,"start":{"line":1,"column":56},"end":{"line":1,"column":72}},
+      "range":[56,72],
+      "value":" 1.4 T bool "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":21,"column":4},"end":{"line":21,"column":26}},
-      "range":[430,452],
-      "value":" pre if leading 4 "
+      "loc":{"source":null,"start":{"line":1,"column":74},"end":{"line":1,"column":91}},
+      "range":[74,91],
+      "value":" 1.5 L block "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":22,"column":31}},
-      "range":[460,484],
-      "value":" pre cond leading 2 "
+      "loc":{"source":null,"start":{"line":1,"column":95},"end":{"line":1,"column":112}},
+      "range":[95,112],
+      "value":" 1.6 T block "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":22,"column":39},"end":{"line":22,"column":55}},
-      "range":[492,508],
-      "value":" trailing 2 "
+      "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":20}},
+      "range":[128,146],
+      "value":" 2.1 L altern "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":26}},
-      "range":[539,559],
-      "value":" not trailing 2 "
+      "loc":{"source":null,"start":{"line":4,"column":26},"end":{"line":4,"column":43}},
+      "range":[152,169],
+      "value":" 2.2 L block "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":32},"end":{"line":24,"column":54}},
-      "range":[565,587],
-      "value":" pre if leading 5 "
+      "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":19}},
+      "range":[174,191],
+      "value":" 2.3 T block "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":58},"end":{"line":24,"column":82}},
-      "range":[591,615],
-      "value":" pre cond leading 3 "
+      "loc":{"source":null,"start":{"line":7,"column":13},"end":{"line":7,"column":30}},
+      "range":[206,223],
+      "value":" 3.1 T block "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":106}},
-      "range":[623,639],
-      "value":" trailing 3 "
-    },
-    {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":27,"column":4},"end":{"line":27,"column":21}},
-      "range":[673,690],
-      "value":" not trailing 3"
+      "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":18}},
+      "range":[224,242],
+      "value":" 3.2 L altern "
     }
   ]
 }

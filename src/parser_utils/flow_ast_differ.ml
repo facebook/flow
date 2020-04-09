@@ -843,7 +843,11 @@ let program
       | (Some _, None)
       | (None, Some _) ->
         None
-      | (Some a1, Some a2) -> Some (diff_if_changed statement a1 a2)
+      | ( Some { Alternate.body = body1; comments = comments1 },
+          Some { Alternate.body = body2; comments = comments2 } ) ->
+        let body_diff = Some (diff_if_changed statement body1 body2) in
+        let comments_diff = syntax_opt loc comments1 comments2 in
+        join_diff_list [body_diff; comments_diff]
     in
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [comments; expr_diff; cons_diff; alt_diff]

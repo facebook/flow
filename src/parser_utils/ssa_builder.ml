@@ -583,7 +583,11 @@ struct
         this#reset_ssa_env env0;
         let else_completion_state =
           this#run_to_completion (fun () ->
-              ignore @@ Flow_ast_mapper.map_opt this#statement alternate)
+              ignore
+              @@ Flow_ast_mapper.map_opt
+                   (fun { Alternate.body; comments } ->
+                     { Alternate.body = this#statement body; comments })
+                   alternate)
         in
         (* merge environments *)
         this#merge_self_ssa_env env1;

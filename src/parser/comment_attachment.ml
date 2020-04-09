@@ -330,3 +330,81 @@ let trailing_and_remover_after_last_line : Parser_env.env -> trailing_and_remove
         | None -> node
         | Some remover -> f remover node);
   }
+
+let statement_add_comments
+    ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :
+    (Loc.t, Loc.t) Statement.t =
+  let open Statement in
+  let merge_comments inner = Flow_ast_utils.merge_comments ~inner ~outer:comments in
+  ( loc,
+    match stmt with
+    | Block ({ Block.comments; _ } as s) ->
+      Block { s with Block.comments = merge_comments comments }
+    | Break ({ Break.comments; _ } as s) ->
+      Break { s with Break.comments = merge_comments comments }
+    | ClassDeclaration ({ Class.comments; _ } as s) ->
+      ClassDeclaration { s with Class.comments = merge_comments comments }
+    | Continue ({ Continue.comments; _ } as s) ->
+      Continue { s with Continue.comments = merge_comments comments }
+    | Debugger { Debugger.comments } -> Debugger { Debugger.comments = merge_comments comments }
+    | DeclareClass ({ DeclareClass.comments; _ } as s) ->
+      DeclareClass { s with DeclareClass.comments = merge_comments comments }
+    | DeclareExportDeclaration ({ DeclareExportDeclaration.comments; _ } as s) ->
+      DeclareExportDeclaration
+        { s with DeclareExportDeclaration.comments = merge_comments comments }
+    | DeclareFunction ({ DeclareFunction.comments; _ } as s) ->
+      DeclareFunction { s with DeclareFunction.comments = merge_comments comments }
+    | DeclareInterface ({ Interface.comments; _ } as s) ->
+      DeclareInterface { s with Interface.comments = merge_comments comments }
+    | DeclareModule ({ DeclareModule.comments; _ } as s) ->
+      DeclareModule { s with DeclareModule.comments = merge_comments comments }
+    | DeclareModuleExports ({ DeclareModuleExports.comments; _ } as s) ->
+      DeclareModuleExports { s with DeclareModuleExports.comments = merge_comments comments }
+    | DeclareTypeAlias ({ TypeAlias.comments; _ } as s) ->
+      DeclareTypeAlias { s with TypeAlias.comments = merge_comments comments }
+    | DeclareOpaqueType ({ OpaqueType.comments; _ } as s) ->
+      DeclareOpaqueType { s with OpaqueType.comments = merge_comments comments }
+    | DeclareVariable ({ DeclareVariable.comments; _ } as s) ->
+      DeclareVariable { s with DeclareVariable.comments = merge_comments comments }
+    | DoWhile ({ DoWhile.comments; _ } as s) ->
+      DoWhile { s with DoWhile.comments = merge_comments comments }
+    | Empty { Empty.comments } -> Empty { Empty.comments = merge_comments comments }
+    | EnumDeclaration ({ EnumDeclaration.comments; _ } as s) ->
+      EnumDeclaration { s with EnumDeclaration.comments = merge_comments comments }
+    | ExportDefaultDeclaration ({ ExportDefaultDeclaration.comments; _ } as s) ->
+      ExportDefaultDeclaration
+        { s with ExportDefaultDeclaration.comments = merge_comments comments }
+    | ExportNamedDeclaration ({ ExportNamedDeclaration.comments; _ } as s) ->
+      ExportNamedDeclaration { s with ExportNamedDeclaration.comments = merge_comments comments }
+    | Expression ({ Expression.comments; _ } as s) ->
+      Expression { s with Expression.comments = merge_comments comments }
+    | For ({ For.comments; _ } as s) -> For { s with For.comments = merge_comments comments }
+    | ForIn ({ ForIn.comments; _ } as s) ->
+      ForIn { s with ForIn.comments = merge_comments comments }
+    | ForOf ({ ForOf.comments; _ } as s) ->
+      ForOf { s with ForOf.comments = merge_comments comments }
+    | FunctionDeclaration ({ Function.comments; _ } as s) ->
+      FunctionDeclaration { s with Function.comments = merge_comments comments }
+    | If ({ If.comments; _ } as s) -> If { s with If.comments = merge_comments comments }
+    | ImportDeclaration ({ ImportDeclaration.comments; _ } as s) ->
+      ImportDeclaration { s with ImportDeclaration.comments = merge_comments comments }
+    | InterfaceDeclaration ({ Interface.comments; _ } as s) ->
+      InterfaceDeclaration { s with Interface.comments = merge_comments comments }
+    | Labeled ({ Labeled.comments; _ } as s) ->
+      Labeled { s with Labeled.comments = merge_comments comments }
+    | Return ({ Return.comments; _ } as s) ->
+      Return { s with Return.comments = merge_comments comments }
+    | Switch ({ Switch.comments; _ } as s) ->
+      Switch { s with Switch.comments = merge_comments comments }
+    | Throw ({ Throw.comments; _ } as s) ->
+      Throw { s with Throw.comments = merge_comments comments }
+    | Try ({ Try.comments; _ } as s) -> Try { s with Try.comments = merge_comments comments }
+    | TypeAlias ({ TypeAlias.comments; _ } as s) ->
+      TypeAlias { s with TypeAlias.comments = merge_comments comments }
+    | OpaqueType ({ OpaqueType.comments; _ } as s) ->
+      OpaqueType { s with OpaqueType.comments = merge_comments comments }
+    | VariableDeclaration ({ VariableDeclaration.comments; _ } as s) ->
+      VariableDeclaration { s with VariableDeclaration.comments = merge_comments comments }
+    | While ({ While.comments; _ } as s) ->
+      While { s with While.comments = merge_comments comments }
+    | With ({ With.comments; _ } as s) -> With { s with With.comments = merge_comments comments } )

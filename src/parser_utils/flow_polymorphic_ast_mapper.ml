@@ -1154,12 +1154,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       ignore has_else;
       this#statement stmt
 
+    method if_alternate_statement (altern : ('M, 'T) Ast.Statement.If.Alternate.t)
+        : ('N, 'U) Ast.Statement.If.Alternate.t =
+      let open Ast.Statement.If.Alternate in
+      let { body; comments } = altern in
+      let body' = this#statement body in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { body = body'; comments = comments' }
+
     method if_statement (stmt : ('M, 'T) Ast.Statement.If.t) : ('N, 'U) Ast.Statement.If.t =
       let open Ast.Statement.If in
       let { test; consequent; alternate; comments } = stmt in
       let test' = this#predicate_expression test in
       let consequent' = this#if_consequent_statement ~has_else:(alternate <> None) consequent in
-      let alternate' = Base.Option.map ~f:this#statement alternate in
+      let alternate' = Base.Option.map ~f:this#if_alternate_statement alternate in
       let comments' = Base.Option.map ~f:this#syntax comments in
       { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 

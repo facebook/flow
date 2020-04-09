@@ -454,10 +454,18 @@ and Statement : sig
   end
 
   module If : sig
+    module Alternate : sig
+      type ('M, 'T) t = {
+        body: ('M, 'T) Statement.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T) t = {
       test: ('M, 'T) Expression.t;
       consequent: ('M, 'T) Statement.t;
-      alternate: ('M, 'T) Statement.t option;
+      alternate: ('M, 'T) Alternate.t option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

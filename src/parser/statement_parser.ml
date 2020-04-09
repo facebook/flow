@@ -496,12 +496,14 @@ module Statement
         Expect.token env T_LPAREN;
         let test = Parse.expression env in
         Expect.token env T_RPAREN;
-        let trailing = Peek.comments env in
         let consequent = if_branch env in
         let alternate =
           if Peek.token env = T_ELSE then (
+            let leading = Peek.comments env in
             Expect.token env T_ELSE;
-            Some (if_branch env)
+            let body = if_branch env in
+            Some
+              { Statement.If.Alternate.body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
           ) else
             None
         in
@@ -510,7 +512,7 @@ module Statement
             Statement.If.test;
             consequent;
             alternate;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
           })
 
   and return =

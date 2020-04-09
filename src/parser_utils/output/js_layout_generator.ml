@@ -502,12 +502,13 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
           comments
           begin
             match alternate with
-            | Some alt ->
+            | Some { S.If.Alternate.body; comments } ->
               fuse
                 [
                   group [statement_with_test "if" (expression test); statement_after_test consequent];
                   pretty_space;
-                  fuse_with_space [Atom "else"; statement ~pretty_semicolon alt];
+                  layout_node_with_comments_opt loc comments
+                  @@ fuse_with_space [Atom "else"; statement ~pretty_semicolon body];
                 ]
             | None ->
               group

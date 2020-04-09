@@ -987,7 +987,7 @@ let tests =
              S.if_
                (E.identifier "x")
                (S.labeled (I.identifier "y") (S.expression (E.identifier "z")))
-               (Some (S.expression (E.identifier "z")))
+               (Some (S.if_alternate (S.expression (E.identifier "z"))))
            in
            assert_statement ~ctxt "if(x)y:z;else z;" ast;
            assert_statement ~ctxt ~pretty:true "if (x) y: z; else z;" ast );
@@ -1010,7 +1010,7 @@ let tests =
              S.if_
                (E.identifier "x")
                (S.expression (E.identifier "y"))
-               (Some (S.expression (E.identifier "z")))
+               (Some (S.if_alternate (S.expression (E.identifier "z"))))
            in
            assert_statement ~ctxt "if(x)y;else z;" if_else_stmt;
            assert_statement ~ctxt ~pretty:true "if (x) y; else z;" if_else_stmt;
@@ -1023,7 +1023,7 @@ let tests =
              S.if_
                (E.identifier "x")
                (S.expression (E.identifier "y"))
-               (Some (S.expression (E.increment ~prefix:true (E.identifier "z"))))
+               (Some (S.if_alternate (S.expression (E.increment ~prefix:true (E.identifier "z")))))
            in
            assert_statement ~ctxt "if(x)y;else++z;" ast;
            assert_statement ~ctxt ~pretty:true "if (x) y; else ++z;" ast );
@@ -1047,14 +1047,20 @@ let tests =
          ( "if_else_statement_with_empty_consequent" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
-               (S.if_ (E.identifier "x") (S.empty ()) (Some (S.expression (E.identifier "y"))))
+               (S.if_
+                  (E.identifier "x")
+                  (S.empty ())
+                  (Some (S.if_alternate (S.expression (E.identifier "y")))))
            in
            assert_output ~ctxt "if(x);else y;" layout;
            assert_output ~ctxt ~pretty:true "if (x); else y;" layout );
          ( "if_else_statement_with_empty_alternate" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
-               (S.if_ (E.identifier "x") (S.expression (E.identifier "y")) (Some (S.empty ())))
+               (S.if_
+                  (E.identifier "x")
+                  (S.expression (E.identifier "y"))
+                  (Some (S.if_alternate (S.empty ()))))
            in
            assert_output ~ctxt "if(x)y;else;" layout;
            assert_output ~ctxt ~pretty:true "if (x) y; else ;" layout )
@@ -1062,7 +1068,7 @@ let tests =
          ( "if_else_statement_with_empty_consequent_and_alternate" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
-               (S.if_ (E.identifier "x") (S.empty ()) (Some (S.empty ())))
+               (S.if_ (E.identifier "x") (S.empty ()) (Some (S.if_alternate (S.empty ()))))
            in
            assert_output ~ctxt "if(x);else;" layout;
            assert_output ~ctxt ~pretty:true "if (x); else ;" layout )

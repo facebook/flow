@@ -136,14 +136,18 @@ with type t = Impl.t = struct
           loc
           [("expression", expression expr); ("directive", option string directive)]
       | (loc, If { If.test; consequent; alternate; comments }) ->
+        let alternate =
+          match alternate with
+          | None -> null
+          | Some { If.Alternate.body; comments = alternate_comments } ->
+            statement (Comment_attachment.statement_add_comments body alternate_comments)
+        in
         node
           ?comments
           "IfStatement"
           loc
           [
-            ("test", expression test);
-            ("consequent", statement consequent);
-            ("alternate", option statement alternate);
+            ("test", expression test); ("consequent", statement consequent); ("alternate", alternate);
           ]
       | (loc, Labeled { Labeled.label; body; comments }) ->
         node

@@ -251,6 +251,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method if_consequent_statement :
       has_else:bool -> ('M, 'T) Ast.Statement.t -> ('N, 'U) Ast.Statement.t
 
+    method if_alternate_statement :
+      ('M, 'T) Ast.Statement.If.Alternate.t -> ('N, 'U) Ast.Statement.If.Alternate.t
+
     method if_statement : ('M, 'T) Ast.Statement.If.t -> ('N, 'U) Ast.Statement.If.t
 
     method implicit :
