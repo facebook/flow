@@ -27,7 +27,7 @@ async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
     args.root,
     args.flowconfigName,
   );
-  return collateLocs(errors, args.root);
+  return collateLocs(errors);
 }
 
 async function removeUnusedErrorSuppressions(

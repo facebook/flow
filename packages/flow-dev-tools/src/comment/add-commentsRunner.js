@@ -8,7 +8,8 @@
  * @format
  */
 
-import {join} from 'path';
+import path from 'path';
+import {realpathSync} from 'fs';
 import {format} from 'util';
 
 import * as blessed from 'blessed';
@@ -80,10 +81,7 @@ class BlessedError {
 
   getStringOfLocation(): string {
     const loc = this.getLocation();
-    if (loc == null) {
-      return '[No location]';
-    }
-    return format('%s:%s', loc.source || '[No file]', loc.start.line);
+    return getStringOfLocation(loc);
   }
 
   setSelectedMessage(index: number): void {
@@ -205,6 +203,8 @@ async function interactive(args: Args): Promise<void> {
     },
   });
 
+  const realRoot = realpathSync(args.root);
+
   // A message to show while we query flow for the errors
   const loading = blessed.loading({
     parent: outer,
@@ -213,7 +213,7 @@ async function interactive(args: Args): Promise<void> {
     border: 'line',
     align: 'center',
   });
-  loading.load(format('Running `%s check %s`', args.bin, args.root));
+  loading.load(format('Running `%s check %s`', args.bin, realRoot));
   // Lading usually disables all keys, but we still want to be able to quit
   screen.lockKeys = false;
   screen.render();
@@ -222,7 +222,7 @@ async function interactive(args: Args): Promise<void> {
     flowResult = await getFlowErrors(
       args.bin,
       args.errorCheckCommand,
-      args.root,
+      realRoot,
       args.flowconfigName,
     );
   } catch (e) {
@@ -409,7 +409,8 @@ async function interactive(args: Args): Promise<void> {
           : numSelected === errorsOfLoc.length
           ? selectedBox
           : someSelected;
-      rows.push([selected, format('%s (%d)', locString, errorsOfLoc.length)]);
+      const relativeLoc = relativizeStringOfLocation(realRoot, locString);
+      rows.push([selected, format('%s (%d)', relativeLoc, errorsOfLoc.length)]);
     });
 
     numberActiveText.setContent(
@@ -628,7 +629,7 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
   for (const error of errors) {
     const loc = error.getLocation();
     if (loc != null && loc.source != null) {
-      const source = join(args.root, loc.source);
+      const source = loc.source;
       const lineToLocsMap = filenameToLineToLocsMap.get(source) || new Map();
       const prevValue = lineToLocsMap.get(loc.start.line);
       const isError =
@@ -924,4 +925,25 @@ function formatComment(
     commentLines.push(format(!jsx ? '%s */' : '%s  */}', padding));
   }
   return commentLines;
+}
+
+const NO_LOCATION = '[No location]';
+const NO_FILE = '[No file]';
+
+function getStringOfLocation(loc: ?FlowLoc): string {
+  if (loc == null) {
+    return NO_LOCATION;
+  }
+  return format('%s:%s', loc.source || NO_FILE, loc.start.line);
+}
+
+function relativizeStringOfLocation(root: string, str: string): string {
+  if (str === NO_LOCATION) {
+    return str;
+  }
+  let [source, line] = str.split(':', 2);
+  if (source === NO_FILE) {
+    return str;
+  }
+  return format('%s:%s', path.relative(root, source), line);
 }

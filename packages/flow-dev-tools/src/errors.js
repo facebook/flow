@@ -26,14 +26,14 @@ async function getFlowErrorsImpl(
   const cmd =
     errorCheckCommand === 'check'
       ? format(
-          '%s check --strip-root --json %s %s %s',
+          '%s check --json %s %s %s',
           bin,
           includeWarnings,
           flowconfigNameFlag,
           root,
         )
       : format(
-          '%s status --no-auto-start --strip-root --json %s %s %s',
+          '%s status --no-auto-start --json %s %s %s',
           bin,
           includeWarnings,
           flowconfigNameFlag,
@@ -94,7 +94,6 @@ export async function getUnusedSuppressionErrors(
 
 export function collateLocs(
   errors: Array<FlowError>,
-  root?: string,
 ): Map<string, Array<FlowLoc>> {
   const locsByFile = new Map();
   for (const error of errors) {
@@ -103,10 +102,9 @@ export function collateLocs(
     if (loc) {
       const source = loc.source;
       if (source) {
-        const file = root != null ? path.join(root, source) : source;
-        const fileErrors: Array<FlowLoc> = locsByFile.get(file) || [];
+        const fileErrors: Array<FlowLoc> = locsByFile.get(source) || [];
         fileErrors.push(loc);
-        locsByFile.set(file, fileErrors);
+        locsByFile.set(source, fileErrors);
       }
     }
   }
