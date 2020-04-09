@@ -1,3 +1,1 @@
-/* pre */ while /*mid1*/ ( /*mid2*/ true /*mid3*/ ) /*mid4*/ { /*mid5*/
-    let x = 3;
-/*mid6*/ } /*end*/
+/* 1.1 L while */ while /* 1.2 L while */ (/* 1.3 L bool */ true /* 1.4 T bool */) /* 1.5 L block */ {} /* 1.6 T block */

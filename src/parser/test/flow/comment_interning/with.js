@@ -1,7 +1,1 @@
-with /* 1.1 Not attached to with */ (1) /* 1.2 Not attached to with */ { /* 1.3 Not attached to with */ }
-
-/* 2.1 Leading on with */ with (1) {}
-
-with (1) {} /* 3.1 Trailing on with */
-
-/* 4.1 Leading on with */ with (1) {} /* 4.2 Trailing on with */
+/* 1.1 L with */ with /* 1.2 L with */ (/* 1.3 L num */ 1 /* 1.4 T num */) /* 1.5 L block */ {} /* 1.6 T block */
