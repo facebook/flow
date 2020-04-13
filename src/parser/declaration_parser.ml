@@ -10,6 +10,7 @@ open Token
 open Parser_common
 open Parser_env
 open Flow_ast
+open Comment_attachment
 module SSet = Set.Make (String)
 
 module type DECLARATION = sig
@@ -23,7 +24,12 @@ module type DECLARATION = sig
     await:bool -> yield:bool -> attach_leading:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
 
   val function_body :
-    env -> async:bool -> generator:bool -> expression:bool -> (Loc.t, Loc.t) Function.body * bool
+    env ->
+    async:bool ->
+    generator:bool ->
+    expression:bool ->
+    attach_leading:bool ->
+    (Loc.t, Loc.t) Function.body * bool
 
   val is_simple_function_params : (Loc.t, Loc.t) Ast.Function.Params.t -> bool
 
@@ -206,9 +212,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
 
-  let function_body env ~async ~generator ~expression =
+  let function_body env ~async ~generator ~expression ~attach_leading =
     let env = enter_function env ~async ~generator in
-    let (loc, block, strict) = Parse.function_block_body env ~attach_leading:false ~expression in
+    let (loc, block, strict) = Parse.function_block_body env ~attach_leading ~expression in
     (Function.BodyBlock (loc, block), strict)
 
   let variance env is_async is_generator =
@@ -279,30 +285,57 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 match (in_export env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
-                  let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:false in
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
+                  in
                   let id =
                     if Peek.token env = T_LPAREN then
                       None
                     else
-                      Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                      let id =
+                        id_remove_trailing
+                          env
+                          (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                      in
+                      Some id
                   in
                   (tparams, id)
                 | _ ->
-                  let id = Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env in
-                  (Type.type_params env ~attach_leading:false ~attach_trailing:false, Some id)
+                  let id =
+                    id_remove_trailing
+                      env
+                      (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                  in
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
+                  in
+                  (tparams, Some id)
               in
               let params =
-                function_params
-                  ~await:async
-                  ~yield:generator
-                  ~attach_leading:(id = None || tparams <> None)
-                  env
+                let params =
+                  function_params ~await:async ~yield:generator ~attach_leading:true env
+                in
+                if Peek.token env = T_COLON then
+                  params
+                else
+                  function_params_remove_trailing env params
               in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
+              let (return, predicate) =
+                match predicate with
+                | None -> (type_annotation_hint_remove_trailing env return, predicate)
+                | Some _ -> (return, predicate_remove_trailing env predicate)
+              in
               (generator, tparams, id, params, return, predicate, leading))
             env
         in
-        let (body, strict) = function_body env ~async ~generator ~expression:false in
+        let (body, strict) =
+          function_body env ~async ~generator ~expression:false ~attach_leading:true
+        in
         let simple = is_simple_function_params params in
         strict_post_check env ~strict ~simple id params;
         Statement.FunctionDeclaration

@@ -1011,24 +1011,41 @@ module Expression
                     | T_LESS_THAN -> None
                     | _ ->
                       let env = env |> with_allow_await await |> with_allow_yield yield in
-                      Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                      let id =
+                        id_remove_trailing
+                          env
+                          (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                      in
+                      Some id
                   in
-                  (id, Type.type_params env ~attach_leading:(id = None) ~attach_trailing:false)
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
+                  in
+                  (id, tparams)
               in
               (* #sec-function-definitions-static-semantics-early-errors *)
               let env = env |> with_allow_super No_super in
               let params =
-                Declaration.function_params
-                  ~await
-                  ~yield
-                  ~attach_leading:(id = None || tparams <> None)
-                  env
+                let params = Declaration.function_params ~await ~yield ~attach_leading:true env in
+                if Peek.token env = T_COLON then
+                  params
+                else
+                  function_params_remove_trailing env params
               in
               let (return, predicate) = Type.annotation_and_predicate_opt env in
+              let (return, predicate) =
+                match predicate with
+                | None -> (type_annotation_hint_remove_trailing env return, predicate)
+                | Some _ -> (return, predicate_remove_trailing env predicate)
+              in
               (id, params, generator, predicate, return, tparams, leading))
             env
         in
-        let (body, strict) = Declaration.function_body env ~async ~generator ~expression:true in
+        let (body, strict) =
+          Declaration.function_body env ~async ~generator ~expression:true ~attach_leading:true
+        in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple id params;
         Expression.Function

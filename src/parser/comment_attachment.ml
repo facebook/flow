@@ -162,6 +162,12 @@ class ['loc] trailing_comments_remover ~after_pos =
       else
         { func with body = body'; comments = comments' }
 
+    method! function_params (loc, params) =
+      let open Ast.Function.Params in
+      let { comments; _ } = params in
+      id this#syntax_opt comments (loc, params) (fun comments' ->
+          (loc, { params with comments = comments' }))
+
     method! function_type _loc func =
       let open Ast.Type.Function in
       let { return; comments; _ } = func in
@@ -401,6 +407,32 @@ let trailing_and_remover : Parser_env.env -> trailing_and_remover_result =
     trailing_and_remover_after_last_line env
   else
     trailing_and_remover_after_last_loc env
+
+let id_remove_trailing env id =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing id (fun remover id -> remover#identifier id)
+
+let type_params_remove_trailing env tparams =
+  match tparams with
+  | None -> None
+  | Some tparams ->
+    let { remove_trailing; _ } = trailing_and_remover env in
+    Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams))
+
+let type_annotation_hint_remove_trailing env annot =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing annot (fun remover annot -> remover#type_annotation_hint annot)
+
+let function_params_remove_trailing env params =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing params (fun remover params -> remover#function_params params)
+
+let predicate_remove_trailing env pred =
+  match pred with
+  | None -> None
+  | Some pred ->
+    let { remove_trailing; _ } = trailing_and_remover env in
+    Some (remove_trailing pred (fun remover pred -> remover#predicate pred))
 
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :

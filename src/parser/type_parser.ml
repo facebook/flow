@@ -1262,15 +1262,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | BooleanLiteral ({ BooleanLiteral.comments; _ } as t) ->
         BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments } )
 
-  let predicate ~attach_leading =
+  let predicate =
     with_loc (fun env ->
         let open Ast.Type.Predicate in
-        let leading =
-          if attach_leading then
-            Peek.comments env
-          else
-            []
-        in
+        let leading = Peek.comments env in
         Expect.token env T_CHECKS;
         if Peek.token env = T_LPAREN then (
           let leading = leading @ Peek.comments env in
@@ -1288,10 +1283,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
 
-  let predicate_opt ~attach_leading env =
+  let predicate_opt env =
     let env = with_no_anon_function_type false env in
     match Peek.token env with
-    | T_CHECKS -> Some (predicate ~attach_leading env)
+    | T_CHECKS -> Some (predicate env)
     | _ -> None
 
   let annotation_and_predicate_opt env =
@@ -1299,10 +1294,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     match (Peek.token env, Peek.ith_token ~i:1 env) with
     | (T_COLON, T_CHECKS) ->
       Expect.token env T_COLON;
-      (Missing (Peek.loc_skip_lookahead env), predicate_opt ~attach_leading:true env)
+      (Missing (Peek.loc_skip_lookahead env), predicate_opt env)
     | (T_COLON, _) ->
-      let annotation = annotation_opt env in
-      let predicate = predicate_opt ~attach_leading:false env in
+      let annotation =
+        let annotation = annotation_opt env in
+        if Peek.token env = T_CHECKS then
+          type_annotation_hint_remove_trailing env annotation
+        else
+          annotation
+      in
+      let predicate = predicate_opt env in
       (annotation, predicate)
     | _ -> (Missing (Peek.loc_skip_lookahead env), None)
 
@@ -1333,7 +1334,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   let annotation_opt = wrap annotation_opt
 
-  let predicate_opt = wrap (predicate_opt ~attach_leading:false)
+  let predicate_opt = wrap predicate_opt
 
   let annotation_and_predicate_opt = wrap annotation_and_predicate_opt
 
