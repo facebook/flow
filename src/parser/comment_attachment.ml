@@ -13,6 +13,8 @@ let id = Flow_ast_mapper.id
 
 let map_loc = Flow_ast_mapper.map_loc
 
+let map_opt = Flow_ast_mapper.map_opt
+
 let id_list_last (map : 'a -> 'a) (lst : 'a list) : 'a list =
   match List.rev lst with
   | [] -> lst
@@ -94,6 +96,29 @@ class ['loc] trailing_comments_remover ~after_pos =
       let (loc, { body = _body; comments }) = body in
       id this#syntax_opt comments body (fun comments' ->
           (loc, { body = _body; comments = comments' }))
+
+    method! class_extends _loc extends =
+      let open Ast.Class.Extends in
+      let { expr; targs; _ } = extends in
+      if targs = None then
+        id this#expression expr extends (fun expr' -> { extends with expr = expr' })
+      else
+        id (map_opt this#type_args) targs extends (fun targs' -> { extends with targs = targs' })
+
+    method! class_implements implements =
+      let open Ast.Class.Implements in
+      let (loc, { interfaces; comments }) = implements in
+      id (id_list_last this#class_implements_interface) interfaces implements (fun interfaces' ->
+          (loc, { interfaces = interfaces'; comments }))
+
+    method! class_implements_interface interface =
+      let open Ast.Class.Implements.Interface in
+      let (loc, { id = id_; targs }) = interface in
+      if targs = None then
+        id this#identifier id_ interface (fun id' -> (loc, { id = id'; targs }))
+      else
+        id (map_opt this#type_args) targs interface (fun targs' ->
+            (loc, { id = id_; targs = targs' }))
 
     method! computed_key key =
       let open Ast.ComputedKey in

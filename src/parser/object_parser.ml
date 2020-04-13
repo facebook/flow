@@ -522,24 +522,23 @@ module Object
         { Class.Extends.expr; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () })
 
   (* https://tc39.es/ecma262/#prod-ClassHeritage *)
-  let class_heritage env ~attach_leading =
+  let class_heritage env =
     let extends =
-      let leading =
-        if attach_leading then
-          Peek.comments env
-        else
-          []
-      in
+      let leading = Peek.comments env in
       if Expect.maybe env T_EXTENDS then
-        Some (class_extends ~leading env)
+        let (loc, extends) = class_extends ~leading env in
+        let { remove_trailing; _ } = trailing_and_remover env in
+        Some
+          (loc, remove_trailing extends (fun remover extends -> remover#class_extends loc extends))
       else
         None
     in
-    let attach_leading = attach_leading && extends = None in
     let implements =
       if Peek.token env = T_IMPLEMENTS then (
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
-        Some (class_implements env ~attach_leading)
+        let implements = class_implements env ~attach_leading:true in
+        let { remove_trailing; _ } = trailing_and_remover env in
+        Some (remove_trailing implements (fun remover impl -> remover#class_implements impl))
       ) else
         None
     in
@@ -921,15 +920,10 @@ module Object
         in
         elements env seen_constructor' private_names' (element :: acc)
     in
-    fun ~expression ~attach_leading env ->
+    fun ~expression env ->
       with_loc
         (fun env ->
-          let leading =
-            if attach_leading then
-              Peek.comments env
-            else
-              []
-          in
+          let leading = Peek.comments env in
           if Expect.maybe env T_LCURLY then (
             enter_class env;
             let body = elements env false SMap.empty [] in
@@ -960,14 +954,21 @@ module Object
       let tmp_env = env |> with_no_let true in
       match (optional_id, Peek.token tmp_env) with
       | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
-      | _ -> Some (Parse.identifier tmp_env)
+      | _ ->
+        let id = Parse.identifier tmp_env in
+        let { remove_trailing; _ } = trailing_and_remover env in
+        let id = remove_trailing id (fun remover id -> remover#identifier id) in
+        Some id
     in
-    let attach_leading = id = None in
-    let tparams = Type.type_params env ~attach_leading ~attach_trailing:true in
-    let attach_leading = attach_leading && tparams = None in
-    let (extends, implements) = class_heritage env ~attach_leading in
-    let attach_leading = attach_leading && extends = None && implements = None in
-    let body = class_body env ~expression ~attach_leading in
+    let tparams =
+      match Type.type_params env ~attach_leading:true ~attach_trailing:true with
+      | None -> None
+      | Some tparams ->
+        let { remove_trailing; _ } = trailing_and_remover env in
+        Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams))
+    in
+    let (extends, implements) = class_heritage env in
+    let body = class_body env ~expression in
     let comments = Flow_ast_utils.mk_comments_opt ~leading () in
     { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments }
 
