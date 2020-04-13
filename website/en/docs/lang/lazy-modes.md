@@ -29,7 +29,7 @@ typecheck the unchecked files.
 
 ### Choosing Focused Files <a class="toc" id="toc-choosing-focused-files" href="#toc-choosing-focused-files"></a>
 
-There are two ways which Flow can use to tell which files the user cares about.
+There are three ways which Flow can use to tell which files the user cares about.
 
 1. **IDE lazy mode**. The IDE tells Flow which files have been opened and closed
 via `flow lsp`. Flow treats any file which has ever been opened since the Flow
