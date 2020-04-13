@@ -123,6 +123,24 @@ References:
                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- error_position.js:11:2
+
+Cannot cast `foo` to `typeof bar` because property `x` is missing in `Props` [1] but exists in `Props2` [2] in the first
+argument.
+
+   error_position.js:11:2
+   11| (foo : typeof bar);
+        ^^^
+
+References:
+   error_position.js:7:30
+    7| declare function foo<TValue>(Props<TValue>): null;
+                                    ^^^^^^^^^^^^^ [1]
+   error_position.js:9:37
+    9| declare function bar<TValue>(props: Props2<TValue>): null;
+                                           ^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
 
 Cannot instantiate `C` because number [1] is incompatible with `Middle` [2] in type argument `T`.
@@ -331,4 +349,4 @@ References:
 
 
 
-Found 20 errors
+Found 21 errors

@@ -3810,7 +3810,7 @@ struct
                 t2
                 args2
             in
-            rec_flow_t ~use_op:unknown_use cx trace (inst1, inst2)
+            rec_flow_t ~use_op cx trace (inst1, inst2)
         (* general case **)
         | (_, UseT (use_op, DefT (_, _, PolyT { tparams = ids; t_out = t; _ }))) ->
           generate_tests cx (Nel.to_list ids) (fun map_ ->
