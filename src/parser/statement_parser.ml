@@ -847,7 +847,7 @@ module Statement
       else
         id
     in
-    let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
+    let tparams = Type.type_params env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.pop_lex_mode env;
@@ -891,7 +891,7 @@ module Statement
       else
         id
     in
-    let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
+    let tparams = Type.type_params env in
     let supertype =
       match Peek.token env with
       | T_COLON ->
@@ -973,7 +973,7 @@ module Statement
         id_remove_trailing env id
     in
     let tparams =
-      let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
+      let tparams = Type.type_params env in
       if Peek.token env = T_EXTENDS then
         tparams
       else
@@ -1029,7 +1029,7 @@ module Statement
         | _ -> id
       in
       let tparams =
-        let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
+        let tparams = Type.type_params env in
         match Peek.token env with
         | T_LCURLY -> type_params_remove_trailing env tparams
         | _ -> tparams
@@ -1082,12 +1082,24 @@ module Statement
   and declare_function ?(leading = []) env =
     let leading = leading @ Peek.comments env in
     Expect.token env T_FUNCTION;
-    let id = Parse.identifier env in
+    let id = id_remove_trailing env (Parse.identifier env) in
     let start_sig_loc = Peek.loc env in
-    let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:false in
+    let tparams = type_params_remove_trailing env (Type.type_params env) in
     let params = Type.function_param_list env in
     Expect.token env T_COLON;
-    let return = Type._type env in
+    let return =
+      let return = Type._type env in
+      let has_predicate =
+        Eat.push_lex_mode env Lex_mode.TYPE;
+        let type_token = Peek.token env in
+        Eat.pop_lex_mode env;
+        type_token = T_CHECKS
+      in
+      if has_predicate then
+        type_remove_trailing env return
+      else
+        return
+    in
     let end_loc = fst return in
     let loc = Loc.btwn start_sig_loc end_loc in
     let annot = (loc, Ast.Type.(Function { Function.params; return; tparams; comments = None })) in
@@ -1209,17 +1221,20 @@ module Statement
     let declare_module_ env start_loc leading =
       let id =
         match Peek.token env with
-        | T_STRING str -> Statement.DeclareModule.Literal (string_literal env str)
-        | _ -> Statement.DeclareModule.Identifier (Parse.identifier env)
+        | T_STRING str ->
+          Statement.DeclareModule.Literal
+            (string_literal_remove_trailing env (string_literal env str))
+        | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
       let (body_loc, ((module_kind, body), comments)) =
         with_loc
           (fun env ->
+            let leading = Peek.comments env in
             Expect.token env T_LCURLY;
             let res = module_items env ~module_kind:None [] in
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
-            (res, Flow_ast_utils.mk_comments_opt ~trailing ()))
+            (res, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
           env
       in
       let body = (body_loc, { Statement.Block.body; comments }) in

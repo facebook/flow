@@ -274,11 +274,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 match (in_export env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
-                  let tparams =
-                    type_params_remove_trailing
-                      env
-                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
-                  in
+                  let tparams = type_params_remove_trailing env (Type.type_params env) in
                   let id =
                     if Peek.token env = T_LPAREN then
                       None
@@ -297,11 +293,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                       env
                       (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
                   in
-                  let tparams =
-                    type_params_remove_trailing
-                      env
-                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
-                  in
+                  let tparams = type_params_remove_trailing env (Type.type_params env) in
                   (tparams, Some id)
               in
               let params =

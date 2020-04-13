@@ -1018,11 +1018,7 @@ module Expression
                       in
                       Some id
                   in
-                  let tparams =
-                    type_params_remove_trailing
-                      env
-                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
-                  in
+                  let tparams = type_params_remove_trailing env (Type.type_params env) in
                   (id, tparams)
               in
               (* #sec-function-definitions-static-semantics-early-errors *)
@@ -1526,11 +1522,7 @@ module Expression
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->
-            let tparams =
-              type_params_remove_trailing
-                env
-                (Type.type_params env ~attach_leading:true ~attach_trailing:true)
-            in
+            let tparams = type_params_remove_trailing env (Type.type_params env) in
             (* Disallow all fancy features for identifier => body *)
             if Peek.is_identifier env && tparams = None then
               let ((loc, _) as name) =

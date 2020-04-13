@@ -419,6 +419,10 @@ let type_params_remove_trailing env tparams =
     let { remove_trailing; _ } = trailing_and_remover env in
     Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams))
 
+let type_remove_trailing env ty =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing ty (fun remover ty -> remover#type_ ty)
+
 let type_annotation_hint_remove_trailing env annot =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing annot (fun remover annot -> remover#type_annotation_hint annot)
@@ -450,6 +454,10 @@ let generic_type_list_remove_trailing env extends =
 let class_implements_remove_trailing env implements =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing implements (fun remover impl -> remover#class_implements impl)
+
+let string_literal_remove_trailing env str =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing str (fun remover (loc, str) -> (loc, remover#string_literal_type loc str))
 
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :

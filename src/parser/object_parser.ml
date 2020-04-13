@@ -232,11 +232,7 @@ module Object
             let (sig_loc, (tparams, params, return)) =
               with_loc
                 (fun env ->
-                  let tparams =
-                    type_params_remove_trailing
-                      env
-                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
-                  in
+                  let tparams = type_params_remove_trailing env (Type.type_params env) in
                   let params =
                     let (yield, await) =
                       match (async, generator) with
@@ -724,11 +720,7 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams =
-                      type_params_remove_trailing
-                        env
-                        (Type.type_params env ~attach_leading:true ~attach_trailing:true)
-                    in
+                    let tparams = type_params_remove_trailing env (Type.type_params env) in
                     let params =
                       let (yield, await) =
                         match (async, generator) with
@@ -979,7 +971,7 @@ module Object
         Some id
     in
     let tparams =
-      match Type.type_params env ~attach_leading:true ~attach_trailing:true with
+      match Type.type_params env with
       | None -> None
       | Some tparams ->
         let { remove_trailing; _ } = trailing_and_remover env in
