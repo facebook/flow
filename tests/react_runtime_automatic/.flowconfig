@@ -1,0 +1,3 @@
+[options]
+no_flowlib=false
+react.runtime=automatic
