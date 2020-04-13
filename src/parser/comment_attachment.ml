@@ -438,6 +438,11 @@ let object_key_remove_trailing env key =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing key (fun remover key -> remover#object_key key)
 
+let interface_extends_remove_trailing env extends =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing extends (fun remover extends ->
+      id_list_last (map_loc remover#generic_type) extends)
+
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :
     (Loc.t, Loc.t) Statement.t =

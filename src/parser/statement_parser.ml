@@ -965,9 +965,21 @@ module Statement
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
     let leading = leading @ Peek.comments env in
     Expect.token env T_INTERFACE;
-    let id = Type.type_identifier env in
-    let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
-    let (extends, body) = Type.interface_helper env ~id:(Some id) in
+    let id =
+      let id = Type.type_identifier env in
+      if Peek.token env = T_EXTENDS then
+        id
+      else
+        id_remove_trailing env id
+    in
+    let tparams =
+      let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
+      if Peek.token env = T_EXTENDS then
+        tparams
+      else
+        type_params_remove_trailing env tparams
+    in
+    let (extends, body) = Type.interface_helper env in
     let { remove_trailing; _ } = statement_end_trailing_comments env in
     let body =
       remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))

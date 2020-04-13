@@ -30,7 +30,6 @@ module type TYPE = sig
   val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
 
   val interface_helper :
-    id:(Loc.t, Loc.t) Ast.Identifier.t option ->
     env ->
     (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list * (Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t)
 
@@ -225,7 +224,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (fun env ->
           let leading = Peek.comments env in
           Expect.token env T_INTERFACE;
-          let (extends, body) = interface_helper env ~id:None in
+          let (extends, body) = interface_helper env in
           Type.Interface
             { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
         env
@@ -1054,21 +1053,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         supers env acc
       | _ -> List.rev acc
     in
-    fun ~id env ->
+    fun env ->
       let extends =
         if Peek.token env = T_EXTENDS then (
           Expect.token env T_EXTENDS;
-          supers env []
+          let extends = supers env [] in
+          interface_extends_remove_trailing env extends
         ) else
           []
       in
       let body =
-        _object
-          env
-          ~allow_exact:false
-          ~allow_spread:false
-          ~is_class:false
-          ~attach_leading:(id = None && extends = [])
+        _object env ~allow_exact:false ~allow_spread:false ~is_class:false ~attach_leading:true
       in
       (extends, body)
 
@@ -1340,7 +1335,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   let _object ~is_class env =
     wrap (_object ~is_class ~allow_exact:false ~allow_spread:false ~attach_leading:false) env
 
-  let interface_helper ~id env = wrap (interface_helper ~id) env
+  let interface_helper = wrap interface_helper
 
   let function_param_list = wrap function_param_list
 
