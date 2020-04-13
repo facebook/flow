@@ -476,7 +476,14 @@ module Object
       let interface =
         with_loc
           (fun env ->
-            let id = Type.type_identifier env in
+            let id =
+              let id = Type.type_identifier env in
+              if Peek.token env <> T_LESS_THAN then
+                id
+              else
+                let { remove_trailing; _ } = trailing_and_remover env in
+                remove_trailing id (fun remover id -> remover#identifier id)
+            in
             let targs = Type.type_args env in
             { Ast.Class.Implements.Interface.id; targs })
           env
@@ -503,7 +510,14 @@ module Object
 
   let class_extends ~leading =
     with_loc (fun env ->
-        let expr = Expression.left_hand_side (env |> with_allow_yield false) in
+        let expr =
+          let expr = Expression.left_hand_side (env |> with_allow_yield false) in
+          if Peek.token env <> T_LESS_THAN then
+            expr
+          else
+            let { remove_trailing; _ } = trailing_and_remover env in
+            remove_trailing expr (fun remover expr -> remover#expression expr)
+        in
         let targs = Type.type_args env in
         { Class.Extends.expr; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () })
 

@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":46,"column":73}},
-  "range":[0,1863],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":49,"column":25}},
+  "range":[0,1927],
   "body":[
     {
       "type":"TypeAlias",
@@ -1083,8 +1083,8 @@
     },
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":46,"column":0},"end":{"line":46,"column":73}},
-      "range":[1790,1863],
+      "loc":{"source":null,"start":{"line":46,"column":0},"end":{"line":46,"column":76}},
+      "range":[1790,1866],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":46,"column":5},"end":{"line":46,"column":11}},
@@ -1096,18 +1096,10 @@
       "typeParameters":null,
       "right":{
         "type":"GenericTypeAnnotation",
-        "loc":{"source":null,"start":{"line":46,"column":30},"end":{"line":46,"column":53}},
-        "range":[1820,1843],
+        "loc":{"source":null,"start":{"line":46,"column":30},"end":{"line":46,"column":56}},
+        "range":[1820,1846],
         "id":{
           "type":"Identifier",
-          "trailingComments":[
-            {
-              "type":"Block",
-              "loc":{"source":null,"start":{"line":46,"column":34},"end":{"line":46,"column":49}},
-              "range":[1824,1839],
-              "value":" 15.2 T id "
-            }
-          ],
           "leadingComments":[
             {
               "type":"Block",
@@ -1127,22 +1119,94 @@
           "trailingComments":[
             {
               "type":"Block",
-              "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":72}},
-              "range":[1844,1862],
+              "loc":{"source":null,"start":{"line":46,"column":57},"end":{"line":46,"column":75}},
+              "range":[1847,1865],
               "value":" 15.3 T targs "
             }
           ],
-          "loc":{"source":null,"start":{"line":46,"column":50},"end":{"line":46,"column":53}},
-          "range":[1840,1843],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":46,"column":34},"end":{"line":46,"column":52}},
+              "range":[1824,1842],
+              "value":" 15.2 L targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":46,"column":53},"end":{"line":46,"column":56}},
+          "range":[1843,1846],
           "params":[
             {
               "type":"GenericTypeAnnotation",
-              "loc":{"source":null,"start":{"line":46,"column":51},"end":{"line":46,"column":52}},
-              "range":[1841,1842],
+              "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":55}},
+              "range":[1844,1845],
               "id":{
                 "type":"Identifier",
-                "loc":{"source":null,"start":{"line":46,"column":51},"end":{"line":46,"column":52}},
-                "range":[1841,1842],
+                "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":55}},
+                "range":[1844,1845],
+                "name":"T",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":48,"column":0},"end":{"line":49,"column":25}},
+      "range":[1868,1927],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":48,"column":5},"end":{"line":48,"column":11}},
+        "range":[1873,1879],
+        "name":"Test16",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"GenericTypeAnnotation",
+        "loc":{"source":null,"start":{"line":48,"column":14},"end":{"line":49,"column":24}},
+        "range":[1882,1926],
+        "id":{
+          "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":48,"column":18},"end":{"line":48,"column":33}},
+              "range":[1886,1901],
+              "value":" 16.1 T id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":48,"column":14},"end":{"line":48,"column":17}},
+          "range":[1882,1885],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeParameters":{
+          "type":"TypeParameterInstantiation",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":49,"column":2},"end":{"line":49,"column":20}},
+              "range":[1904,1922],
+              "value":" 16.2 L targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":49,"column":21},"end":{"line":49,"column":24}},
+          "range":[1923,1926],
+          "params":[
+            {
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":49,"column":22},"end":{"line":49,"column":23}},
+              "range":[1924,1925],
+              "id":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":49,"column":22},"end":{"line":49,"column":23}},
+                "range":[1924,1925],
                 "name":"T",
                 "typeAnnotation":null,
                 "optional":false
@@ -1565,15 +1629,27 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":46,"column":34},"end":{"line":46,"column":49}},
-      "range":[1824,1839],
-      "value":" 15.2 T id "
+      "loc":{"source":null,"start":{"line":46,"column":34},"end":{"line":46,"column":52}},
+      "range":[1824,1842],
+      "value":" 15.2 L targs "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":46,"column":54},"end":{"line":46,"column":72}},
-      "range":[1844,1862],
+      "loc":{"source":null,"start":{"line":46,"column":57},"end":{"line":46,"column":75}},
+      "range":[1847,1865],
       "value":" 15.3 T targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":48,"column":18},"end":{"line":48,"column":33}},
+      "range":[1886,1901],
+      "value":" 16.1 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":49,"column":2},"end":{"line":49,"column":20}},
+      "range":[1904,1922],
+      "value":" 16.2 L targs "
     }
   ]
 }

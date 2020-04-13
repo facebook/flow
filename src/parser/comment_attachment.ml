@@ -331,6 +331,13 @@ let trailing_and_remover_after_last_line : Parser_env.env -> trailing_and_remove
         | Some remover -> f remover node);
   }
 
+let trailing_and_remover : Parser_env.env -> trailing_and_remover_result =
+ fun env ->
+  if Peek.is_line_terminator env then
+    trailing_and_remover_after_last_line env
+  else
+    trailing_and_remover_after_last_loc env
+
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :
     (Loc.t, Loc.t) Statement.t =

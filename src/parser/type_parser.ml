@@ -10,6 +10,7 @@ open Token
 open Parser_env
 open Flow_ast
 open Parser_common
+open Comment_attachment
 
 module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Ast.Type.t
@@ -1153,12 +1154,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Some
           (with_loc
              (fun env ->
+               let leading = Peek.comments env in
                Expect.token env T_LESS_THAN;
                let env = with_no_anon_function_type false env in
                let arguments = args env [] in
                Expect.token env T_GREATER_THAN;
                let trailing = Eat.trailing_comments env in
-               { Type.TypeArgs.arguments; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
+               {
+                 Type.TypeArgs.arguments;
+                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+               })
              env)
       else
         None
@@ -1187,7 +1192,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ~start_loc:(fst id)
         (fun env ->
           let id = (fst id, Type.Generic.Identifier.Unqualified id) in
-          let (_id_loc, id) = identifier env id in
+          let id =
+            let (_id_loc, id) = identifier env id in
+            if Peek.token env <> T_LESS_THAN then
+              id
+            else
+              let { remove_trailing; _ } = trailing_and_remover env in
+              remove_trailing id (fun remover id -> remover#generic_identifier_type id)
+          in
           let targs = type_args env in
           { Type.Generic.id; targs; comments = None })
         env

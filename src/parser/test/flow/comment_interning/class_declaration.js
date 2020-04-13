@@ -2,9 +2,9 @@
 
 /* 2.1 L class */ class /* 2.2 L id */ C2 /* 2.3 T id */ <T> /* 2.4 T tparams */ {} /* 2.5 T body */
 
-/* 3.1 L class */ class /* 3.2 L id */ C3 /* 3.3 T id */ implements /* 3.4 L id */ A /* 3.5 T id */ <T> /* 3.6 T targs */ {} /* 3.7 T body */
+/* 3.1 L class */ class /* 3.2 L id */ C3 /* 3.3 T id */ implements /* 3.4 L id */ A /* 3.5 L targs */ <T> /* 3.6 T targs */ {} /* 3.7 T body */
 
-/* 4.1 L class */ class /* 4.2 L id */ C4 /* 4.3 T id */ extends /* 4.4 L id */ A /* 4.5 T id */ <T> /* 4.6 T targs */ {} /* 4.7 T body */
+/* 4.1 L class */ class /* 4.2 L id */ C4 /* 4.3 T id */ extends /* 4.4 L id */ A /* 4.5 L targs */ <T> /* 4.6 T targs */ {} /* 4.7 T body */
 
 export default /* 5.1 L class */ class /* 5.2 L body */ {} /* 5.3 T body */
 
@@ -19,3 +19,9 @@ export default class /* 8.1 L implements */ implements /* 8.2 L id */ Interface 
   /* 9.3 L class */ class C {}
   /* 9.4 T body */
 }
+
+class C extends A /* 10.1 T id */
+  /* 10.2 L targs */ <T> /* 10.3 T targs */
+  implements B /* 10.4 T id */
+  /* 10.5 L targs */ <T> /* 10.6 T targs */
+  {}
