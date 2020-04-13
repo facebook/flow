@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":82}},
-  "range":[0,453],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":10,"column":32}},
+  "range":[0,524],
   "body":[
     {
       "type":"TypeAlias",
@@ -382,6 +382,64 @@
         },
         "typeParameters":null
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":10,"column":32}},
+      "range":[455,524],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":9,"column":5},"end":{"line":9,"column":10}},
+        "range":[460,465],
+        "name":"Test5",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"FunctionTypeAnnotation",
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":20}},
+            "range":[494,512],
+            "value":" 5.2 L params "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":9,"column":13},"end":{"line":10,"column":31}},
+        "range":[468,523],
+        "params":[],
+        "returnType":{
+          "type":"VoidTypeAnnotation",
+          "loc":{"source":null,"start":{"line":10,"column":27},"end":{"line":10,"column":31}},
+          "range":[519,523]
+        },
+        "rest":null,
+        "typeParameters":{
+          "type":"TypeParameterDeclaration",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":9,"column":17},"end":{"line":9,"column":36}},
+              "range":[472,491],
+              "value":" 5.1 T tparams "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":9,"column":13},"end":{"line":9,"column":16}},
+          "range":[468,471],
+          "params":[
+            {
+              "type":"TypeParameter",
+              "loc":{"source":null,"start":{"line":9,"column":14},"end":{"line":9,"column":15}},
+              "range":[469,470],
+              "name":"T",
+              "bound":null,
+              "variance":null,
+              "default":null
+            }
+          ]
+        }
+      }
     }
   ],
   "comments":[
@@ -492,6 +550,18 @@
       "loc":{"source":null,"start":{"line":7,"column":58},"end":{"line":7,"column":72}},
       "range":[429,443],
       "value":" 4.3 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":9,"column":17},"end":{"line":9,"column":36}},
+      "range":[472,491],
+      "value":" 5.1 T tparams "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":20}},
+      "range":[494,512],
+      "value":" 5.2 L params "
     }
   ]
 }

@@ -542,7 +542,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and _function env =
     let start_loc = Peek.loc env in
-    let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
+    let tparams =
+      type_params_remove_trailing env (type_params env ~attach_leading:true ~attach_trailing:true)
+    in
     let params = function_param_list env in
     function_with_params env start_loc tparams params
 
@@ -568,7 +570,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         env
     in
     let method_property env start_loc static key ~leading =
-      let tparams = type_params env ~attach_leading:false ~attach_trailing:false in
+      let key = object_key_remove_trailing env key in
+      let tparams =
+        type_params_remove_trailing env (type_params env ~attach_leading:true ~attach_trailing:true)
+      in
       let value = methodish env start_loc tparams in
       let value = (fst value, Type.Function (snd value)) in
       Type.Object.(
@@ -590,7 +595,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
+            let tparams =
+              type_params_remove_trailing
+                env
+                (type_params env ~attach_leading:true ~attach_trailing:true)
+            in
             let value = methodish env (Peek.loc env) tparams in
             Type.Object.CallProperty.
               {
@@ -632,8 +641,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            let value = methodish env start_loc None in
             let (key_loc, key) = key in
+            let key = object_key_remove_trailing env key in
+            let value = methodish env start_loc None in
             let (_, { Type.Function.params; _ }) = value in
             begin
               match (is_getter, params) with
@@ -711,7 +721,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
-                let tparams = type_params env ~attach_leading:true ~attach_trailing:false in
+                let tparams =
+                  type_params_remove_trailing
+                    env
+                    (type_params env ~attach_leading:true ~attach_trailing:true)
+                in
                 let value =
                   let (fn_loc, fn) = methodish env start_loc tparams in
                   (fn_loc, Type.Function fn)
