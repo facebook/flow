@@ -6120,7 +6120,6 @@ and jsx_desugar cx name component_t props attributes children locs =
   match Context.jsx cx with
   | Options.Jsx_react ->
     let reason = mk_reason (RReactElement (Some name)) loc_element in
-    let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
     let children =
       Base.List.map
         ~f:(function
@@ -6130,32 +6129,50 @@ and jsx_desugar cx name component_t props attributes children locs =
             reason_of_t a |> AnyT.error)
         children
     in
-    Tvar.mk_where cx reason (fun tvar ->
-        let reason_createElement = mk_reason (RProperty (Some "createElement")) loc_element in
-        let use_op =
-          Op
-            (ReactCreateElementCall
-               {
-                 op = reason_createElement;
-                 component = reason_of_t component_t;
-                 children = loc_children;
-               })
-        in
-        Flow.flow
-          cx
-          ( react,
-            MethodT
-              ( use_op,
-                reason,
-                reason_createElement,
-                Named (reason_createElement, "createElement"),
-                CallM
-                  (mk_methodcalltype
-                     react
-                     None
-                     ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
-                     tvar),
-                None ) ))
+    let tvar = Tvar.mk cx reason in
+    let args = [Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children in
+    (match Context.react_runtime cx with
+    | Options.ReactRuntimeAutomatic ->
+      (* TODO(jmbrown): Model jsx more faithfully. children are now passed in as part of the props
+       * object. See https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
+       * for more details. *)
+      let reason_jsx = mk_reason (RFunction RNormal) loc_element in
+      let use_op =
+        Op
+          (ReactCreateElementCall
+             { op = reason_jsx; component = reason_of_t component_t; children = loc_children })
+      in
+      let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
+      let calltype = mk_functioncalltype reason_jsx None args tvar in
+      Flow.flow cx (jsx_fun, CallT (use_op, reason, calltype))
+    | Options.ReactRuntimeClassic ->
+      let reason_createElement = mk_reason (RProperty (Some "createElement")) loc_element in
+      let use_op =
+        Op
+          (ReactCreateElementCall
+             {
+               op = reason_createElement;
+               component = reason_of_t component_t;
+               children = loc_children;
+             })
+      in
+      let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
+      Flow.flow
+        cx
+        ( react,
+          MethodT
+            ( use_op,
+              reason,
+              reason_createElement,
+              Named (reason_createElement, "createElement"),
+              CallM
+                (mk_methodcalltype
+                   react
+                   None
+                   ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
+                   tvar),
+              None ) ));
+    tvar
   | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
     let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
     (* A JSX element with no attributes should pass in null as the second
