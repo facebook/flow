@@ -1530,7 +1530,11 @@ module Expression
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->
-            let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:false in
+            let tparams =
+              type_params_remove_trailing
+                env
+                (Type.type_params env ~attach_leading:true ~attach_trailing:true)
+            in
             (* Disallow all fancy features for identifier => body *)
             if Peek.is_identifier env && tparams = None then
               let ((loc, _) as name) =

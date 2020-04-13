@@ -7,3 +7,6 @@
 /* 4.1 L tparams */ <T> /* 4.2 L params */ () /* 4.3 T params */ => {};
 
 /* 5.1 L params */ () /* 5.2 T params */ : /* 5.3 L any */ any /* 5.4 T any */ => {}
+
+/* 6.1 L tparams */ <T> /* 6.2 T tparams */
+  /* 6.3 L params */ () /* 6.4 T params */ => {}
