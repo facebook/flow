@@ -140,7 +140,7 @@ module Statement
     if octal then strict_error env Parse_error.StrictOctalLiteral;
     let leading = Peek.comments env in
     Expect.token env (T_STRING (loc, value, raw, octal));
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     ( loc,
       { StringLiteral.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     )
@@ -153,13 +153,13 @@ module Statement
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
-      Implicit { trailing = Peek.comments env; remove_trailing = (fun x _ -> x) }
+      Implicit { trailing = Eat.trailing_comments env; remove_trailing = (fun x _ -> x) }
     | T_SEMICOLON ->
       Eat.token env;
       (match Peek.token env with
       | T_EOF
       | T_RCURLY ->
-        Explicit (Peek.comments env)
+        Explicit (Eat.trailing_comments env)
       | _ when Peek.is_line_terminator env -> Explicit (Eat.comments_until_next_line env)
       | _ -> Explicit [])
     | _ when Peek.is_line_terminator env ->
@@ -179,7 +179,7 @@ module Statement
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
-      { trailing = Peek.comments env; remove_trailing = (fun x _ -> x) }
+      { trailing = Eat.trailing_comments env; remove_trailing = (fun x _ -> x) }
     | _ when Peek.is_line_terminator env ->
       Comment_attachment.trailing_and_remover_after_last_line env
     | _ -> Comment_attachment.trailing_and_remover_after_last_loc env
@@ -278,7 +278,7 @@ module Statement
         Expect.token env T_DEBUGGER;
         let pre_semicolon_trailing =
           if Peek.token env = T_SEMICOLON then
-            Peek.comments env
+            Eat.trailing_comments env
           else
             []
         in
@@ -301,13 +301,13 @@ module Statement
        (see sec-semantics-static-semantics-early-errors). *)
         if (not (in_strict_mode env)) && is_labelled_function body then
           function_as_statement_error_at env (fst body);
-        let pre_keyword_trailing = Peek.comments env in
+        let pre_keyword_trailing = Eat.trailing_comments env in
         Expect.token env T_WHILE;
-        let pre_cond_trailing = Peek.comments env in
+        let pre_cond_trailing = Eat.trailing_comments env in
         Expect.token env T_LPAREN;
         let test = Parse.expression env in
         Expect.token env T_RPAREN;
-        let past_cond_trailing = Peek.comments env in
+        let past_cond_trailing = Eat.trailing_comments env in
         (* The rules of automatic semicolon insertion in ES5 don't mention this,
          * but the semicolon after a do-while loop is optional. This is properly
          * specified in ES6 *)
@@ -522,7 +522,7 @@ module Statement
         Expect.token env T_RETURN;
         let trailing =
           if Peek.token env = T_SEMICOLON then
-            Peek.comments env
+            Eat.trailing_comments env
           else
             []
         in
@@ -560,7 +560,7 @@ module Statement
           | T_DEFAULT ->
             if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
             Expect.token env T_DEFAULT;
-            (None, Peek.comments env)
+            (None, Eat.trailing_comments env)
           | _ ->
             Expect.token env T_CASE;
             (Some (Parse.expression env), [])
@@ -638,7 +638,7 @@ module Statement
                 (fun env ->
                   let leading = Peek.comments env in
                   Expect.token env T_CATCH;
-                  let trailing = Peek.comments env in
+                  let trailing = Eat.trailing_comments env in
                   let param =
                     if Peek.token env = T_LPAREN then (
                       Expect.token env T_LPAREN;

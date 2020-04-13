@@ -199,7 +199,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           Expect.token env T_LPAREN;
           let (params, rest) = param_list env [] in
           Expect.token env T_RPAREN;
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           {
             Ast.Function.Params.params;
             rest;

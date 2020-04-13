@@ -218,7 +218,7 @@ module Expression
         in
         let trailing =
           match argument with
-          | None -> Peek.comments env
+          | None -> Eat.trailing_comments env
           | Some _ -> []
         in
         let open Expression in
@@ -581,7 +581,7 @@ module Expression
         | _ -> ());
         let end_loc = Peek.loc env in
         Eat.token env;
-        let trailing = Peek.comments env in
+        let trailing = Eat.trailing_comments env in
         let loc = Loc.btwn (fst argument) end_loc in
         Cover_expr
           ( loc,
@@ -620,7 +620,7 @@ module Expression
     let loc = Peek.loc env in
     let leading = Peek.comments env in
     Expect.token env T_SUPER;
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     let super =
       ( loc,
         Expression.Super
@@ -662,7 +662,7 @@ module Expression
         Expect.token env T_LPAREN;
         let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
         Expect.token env T_RPAREN;
-        let trailing = Peek.comments env in
+        let trailing = Eat.trailing_comments env in
         Expression.Import
           {
             Expression.Import.argument;
@@ -722,7 +722,7 @@ module Expression
         Expect.token env T_NEW;
 
         if in_function env && Peek.token env = T_PERIOD then (
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           Eat.token env;
           let meta =
             Flow_ast_utils.ident_of_source
@@ -779,7 +779,7 @@ module Expression
               Some (arguments_loc, arguments)
             | _ -> None
           in
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
           Expression.(New New.{ callee; targs; arguments; comments }))
       env
@@ -798,7 +798,7 @@ module Expression
               let loc = Peek.loc env in
               let leading = Peek.comments env in
               Expect.identifier env "_";
-              let trailing = Peek.comments env in
+              let trailing = Eat.trailing_comments env in
               Expression.CallTypeArg.Implicit
                 ( loc,
                   {
@@ -851,7 +851,7 @@ module Expression
           Expect.token env T_LPAREN;
           let args = arguments' env [] in
           Expect.token env T_RPAREN;
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           (args, trailing))
         env
 
@@ -866,7 +866,7 @@ module Expression
       let expr = Parse.expression (env |> with_no_call false) in
       let last_loc = Peek.loc env in
       Expect.token env T_RBRACKET;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       let loc = Loc.btwn start_loc last_loc in
       let member =
         Expression.Member.
@@ -1087,14 +1087,14 @@ module Expression
     match Peek.token env with
     | T_THIS ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,
           Expression.This
             { Expression.This.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
     | T_NUMBER { kind; raw } ->
       let value = Literal.Number (number env kind raw) in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,
           let open Expression in
@@ -1103,7 +1103,7 @@ module Expression
         )
     | T_BIGINT { kind; raw } ->
       let value = Literal.BigInt (bigint env kind raw) in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,
           let open Expression in
@@ -1114,7 +1114,7 @@ module Expression
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
       let value = Literal.String value in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,
           Expression.Literal
@@ -1130,7 +1130,7 @@ module Expression
           "false"
       in
       let value = Literal.Boolean truthy in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,
           Expression.Literal
@@ -1140,7 +1140,7 @@ module Expression
       Eat.token env;
       let raw = "null" in
       let value = Literal.Null in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,
           Expression.Literal
@@ -1241,7 +1241,7 @@ module Expression
         else
           template_parts env [head] []
       in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       let loc = Loc.btwn start_loc end_loc in
       ( loc,
         Expression.TemplateLiteral.
@@ -1272,7 +1272,7 @@ module Expression
           ret)
         env
     in
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     let ret =
       match cover with
       | Group_expr expr -> expr
@@ -1413,7 +1413,7 @@ module Expression
       Expect.token env T_LBRACKET;
       let (elems, errs) = elements env ([], Pattern_cover.empty_errors) in
       Expect.token env T_RBRACKET;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       ( {
           Ast.Expression.Array.elements = elems;
           comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
@@ -1425,7 +1425,7 @@ module Expression
     let loc = Peek.loc env in
     let leading = Peek.comments env in
     let tkn = Peek.token env in
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     let (raw, pattern, raw_flags) =
       match tkn with
       | T_REGEXP (_, pattern, flags) ->

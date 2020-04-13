@@ -1187,12 +1187,6 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":33},"end":{"line":24,"column":50}},
-      "range":[1019,1036],
-      "value":" 11.7 T expr "
-    },
-    {
-      "type":"Block",
       "loc":{"source":null,"start":{"line":25,"column":2},"end":{"line":25,"column":21}},
       "range":[1039,1058],
       "value":" 11.8 L spread "

@@ -310,7 +310,7 @@ module rec Parse : PARSER = struct
     let body = statement_list ~term_fn env in
     let end_loc = Peek.loc env in
     Expect.token env T_RCURLY;
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     ( Loc.btwn start_loc end_loc,
       { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     )
@@ -332,7 +332,7 @@ module rec Parse : PARSER = struct
       match (expression, Peek.token env) with
       | (true, _)
       | (_, (T_RCURLY | T_EOF)) ->
-        Peek.comments env
+        Eat.trailing_comments env
       | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
       | _ -> []
     in

@@ -362,7 +362,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
           else
             missing_annot env
         in
-        let trailing = Peek.comments env in
+        let trailing = Eat.trailing_comments env in
         let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
         Pattern.Array { Pattern.Array.elements; annot; comments })
 

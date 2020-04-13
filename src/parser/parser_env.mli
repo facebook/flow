@@ -238,6 +238,8 @@ module Eat : sig
 
   val double_pop_lex_mode : env -> unit
 
+  val trailing_comments : env -> Loc.t Flow_ast.Comment.t list
+
   val comments_until_next_line : env -> Loc.t Flow_ast.Comment.t list
 end
 

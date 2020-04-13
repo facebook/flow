@@ -53,7 +53,7 @@ end = struct
     match Peek.token env with
     | T_NUMBER { kind; raw } ->
       let value = Parse.number env kind raw in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       if end_of_member_init env then
         NumberInit
           ( loc,
@@ -67,7 +67,7 @@ end = struct
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       if end_of_member_init env then
         StringInit
           ( loc,
@@ -80,7 +80,7 @@ end = struct
         InvalidInit loc
     | (T_TRUE | T_FALSE) as token ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       if end_of_member_init env then
         BooleanInit
           ( loc,
@@ -264,7 +264,7 @@ end = struct
           match Peek.token env with
           | T_EOF
           | T_RCURLY ->
-            Peek.comments env
+            Eat.trailing_comments env
           | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
           | _ -> []
         in

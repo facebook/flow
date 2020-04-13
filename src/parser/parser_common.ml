@@ -155,7 +155,7 @@ let identifier_name env =
         ""
     in
     Eat.token env;
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
     (loc, { Identifier.name; comments }))
 

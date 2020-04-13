@@ -76,7 +76,7 @@ module Object
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Expect.token env (T_STRING (loc, value, raw, octal));
       let value = Literal.String value in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       ( loc,
         Literal
           ( loc,
@@ -86,7 +86,7 @@ module Object
       let loc = Peek.loc env in
       let value = Expression.number env kind raw in
       let value = Literal.Number value in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       ( loc,
         Literal
           ( loc,
@@ -100,7 +100,7 @@ module Object
             Expect.token env T_LBRACKET;
             let expr = Parse.assignment (env |> with_no_in false) in
             Expect.token env T_RBRACKET;
-            let trailing = Peek.comments env in
+            let trailing = Eat.trailing_comments env in
             {
               ComputedKey.expression = expr;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
@@ -280,7 +280,7 @@ module Object
               (fun env ->
                 let leading = Peek.comments env in
                 Expect.token env T_ASSIGN;
-                let trailing = Peek.comments env in
+                let trailing = Eat.trailing_comments env in
                 let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
                 let right = Parse.assignment env in
                 let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
@@ -434,7 +434,7 @@ module Object
               properties env ~rest_trailing_comma:None ([], Pattern_cover.empty_errors)
             in
             Expect.token env T_RCURLY;
-            let trailing = Peek.comments env in
+            let trailing = Eat.trailing_comments env in
             ( {
                 Ast.Expression.Object.properties = props;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
@@ -587,7 +587,7 @@ module Object
           match Peek.token env with
           | T_EOF
           | T_RCURLY ->
-            Peek.comments env
+            Eat.trailing_comments env
           | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
           | _ -> []
         in
@@ -925,7 +925,7 @@ module Object
               match (expression, Peek.token env) with
               | (true, _)
               | (_, (T_RCURLY | T_EOF)) ->
-                Peek.comments env
+                Eat.trailing_comments env
               | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
               | _ -> []
             in

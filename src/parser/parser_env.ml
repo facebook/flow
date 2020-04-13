@@ -50,8 +50,6 @@ module Lookahead : sig
   val lex_env : t -> int -> Lex_env.t
 
   val junk : t -> unit
-
-  val junk_comments : t -> line:int -> Loc.t Comment.t list
 end = struct
   type t = {
     mutable la_results: (Lex_env.t * Lex_result.t) option array;
@@ -129,29 +127,6 @@ end = struct
     if t.la_num_lexed > 1 then Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
     t.la_results.(t.la_num_lexed - 1) <- None;
     t.la_num_lexed <- t.la_num_lexed - 1
-
-  (* Throws away and returns comments on the first peeked-at token that start
-   * on or before the given line *)
-  let junk_comments t ~line =
-    let open Loc in
-    lex_until t 0;
-    let (env, lex_result) =
-      match t.la_results.(0) with
-      | Some (env, lex_result) -> (env, lex_result)
-      | None -> failwith "Lookahead.peek failed"
-    in
-    match Lex_result.token lex_result with
-    | Token.T_EOF
-    | Token.T_RCURLY ->
-      []
-    | _ ->
-      let comments = Lex_result.comments lex_result in
-      let (remaining_comments, junked_comments) =
-        List.partition (fun (loc, _) -> loc.start.line > line) comments
-      in
-      t.la_results.(0) <-
-        Some (env, { lex_result with Lex_result.lex_comments = remaining_comments });
-      junked_comments
 end
 
 type token_sink_result = {
@@ -223,6 +198,8 @@ type env = {
   (* It is a syntax error to reference private fields not in scope. In order to enforce this,
    * we keep track of the privates we've seen declared and used. *)
   privates: (SSet.t * (string * Loc.t) list) list ref;
+  (* The position up to which comments have been consumed, exclusive. *)
+  consumed_comments_pos: Loc.position ref;
 }
 
 (* constructor *)
@@ -270,6 +247,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     parse_options;
     source;
     privates = ref [];
+    consumed_comments_pos = ref { Loc.line = 0; column = 0 };
   }
 
 (* getters: *)
@@ -633,7 +611,11 @@ module Peek = struct
 
   let ith_errors ~i env = Lex_result.errors (lookahead ~i env)
 
-  let ith_comments ~i env = Lex_result.comments (lookahead ~i env)
+  let ith_comments ~i env =
+    let comments = Lex_result.comments (lookahead ~i env) in
+    List.filter
+      (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
+      comments
 
   let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
 
@@ -950,7 +932,7 @@ module Eat = struct
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
-    env.comments := List.rev_append (Peek.comments env) !(env.comments);
+    env.comments := List.rev_append (Lex_result.comments (lookahead ~i:0 env)) !(env.comments);
     env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
@@ -977,14 +959,31 @@ module Eat = struct
     env.lex_mode_stack := new_stack;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
 
+  let trailing_comments env =
+    let open Loc in
+    if Peek.token env = Token.T_COMMA && Peek.ith_is_line_terminator ~i:1 env then (
+      let loc = Peek.loc env in
+      let trailing_before_comma = Lex_result.comments (lookahead ~i:0 env) in
+      let trailing_after_comma =
+        List.filter
+          (fun (comment_loc, _) -> comment_loc.start.line <= loc._end.line)
+          (Lex_result.comments (lookahead ~i:1 env))
+      in
+      let trailing = trailing_before_comma @ trailing_after_comma in
+      env.consumed_comments_pos := { Loc.line = loc._end.line + 1; column = 0 };
+      trailing
+    ) else
+      Lex_result.comments (lookahead ~i:0 env)
+
   let comments_until_next_line env =
     let open Loc in
     match !(env.last_lex_result) with
     | None -> []
     | Some { Lex_result.lex_loc = last_loc; _ } ->
-      let trailing = Lookahead.junk_comments !(env.lookahead) ~line:last_loc._end.line in
-      env.comments := List.rev_append trailing !(env.comments);
-      trailing
+      let comments = Lex_result.comments (lookahead ~i:0 env) in
+      let comments = List.filter (fun (loc, _) -> loc.start.line <= last_loc._end.line) comments in
+      env.consumed_comments_pos := { line = last_loc._end.line + 1; column = 0 };
+      comments
 end
 
 module Expect = struct
@@ -1032,6 +1031,7 @@ module Try = struct
     saved_last_lex_result: Lex_result.t option;
     saved_lex_mode_stack: Lex_mode.t list;
     saved_lex_env: Lex_env.t;
+    saved_consumed_comments_pos: Loc.position;
     token_buffer: ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }
 
@@ -1050,6 +1050,7 @@ module Try = struct
       saved_last_lex_result = !(env.last_lex_result);
       saved_lex_mode_stack = !(env.lex_mode_stack);
       saved_lex_env = !(env.lex_env);
+      saved_consumed_comments_pos = !(env.consumed_comments_pos);
       token_buffer;
     }
 
@@ -1067,6 +1068,7 @@ module Try = struct
     env.last_lex_result := saved_state.saved_last_lex_result;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
+    env.consumed_comments_pos := saved_state.saved_consumed_comments_pos;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env);
 
     FailedToParse

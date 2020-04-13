@@ -25,7 +25,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
     | T_EOF
     | T_DIV
     | T_GREATER_THAN ->
-      Peek.comments env
+      Eat.trailing_comments env
     | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
     | _ -> []
 
@@ -125,7 +125,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
       | T_PERIOD
       (* Attribute name *)
       | T_ASSIGN ->
-        Peek.comments env
+        Eat.trailing_comments env
       | _ -> tag_component_trailing_comments env
     in
     (loc, JSX.Identifier.{ name; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
@@ -371,7 +371,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
           children_and_closing env
         )
       in
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       let end_loc =
         match closingElement with
         | `Element (loc, { JSX.Closing.name }) ->

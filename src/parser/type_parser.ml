@@ -194,7 +194,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~start_loc:(fst t)
           (fun env ->
             Expect.token env T_RBRACKET;
-            let trailing = Peek.comments env in
+            let trailing = Eat.trailing_comments env in
             Type.Array
               { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
           env
@@ -209,7 +209,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_MULT ->
       let leading = Peek.comments env in
       Expect.token env T_MULT;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       (loc, Type.Exists (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_LESS_THAN -> _function env
     | T_LPAREN -> function_or_group env
@@ -249,7 +249,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       let leading = Peek.comments env in
       Expect.token env (T_STRING (loc, value, raw, octal));
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       ( loc,
         Type.StringLiteral
           {
@@ -260,7 +260,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
       let leading = Peek.comments env in
       Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
       ( loc,
         Type.NumberLiteral
@@ -273,7 +273,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       let bigint = raw in
       let leading = Peek.comments env in
       Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw });
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       ( loc,
         Type.BigIntLiteral
           {
@@ -284,7 +284,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | (T_TRUE | T_FALSE) as token ->
       let leading = Peek.comments env in
       Expect.token env token;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       let value = token = T_TRUE in
       ( loc,
         Type.BooleanLiteral
@@ -317,43 +317,43 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     match token with
     | T_ANY_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Any (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_MIXED_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Mixed (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_EMPTY_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Empty (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_BOOLEAN_TYPE _ ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Boolean (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_NUMBER_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Number (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_BIGINT_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.BigInt (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_STRING_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.String (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_SYMBOL_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Symbol (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_VOID_TYPE ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Void (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_NULL ->
       Eat.token env;
-      let trailing = Peek.comments env in
+      let trailing = Eat.trailing_comments env in
       Some (Type.Null (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | _ -> None
 
@@ -376,7 +376,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           Expect.token env T_LBRACKET;
           let tl = types (with_no_anon_function_type false env) [] in
           Expect.token env T_RBRACKET;
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           Type.Tuple
             {
               Type.Tuple.types = tl;
@@ -445,7 +445,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Expect.token env T_LPAREN;
         let params = function_param_list_without_parens env [] in
         Expect.token env T_RPAREN;
-        let trailing = Peek.comments env in
+        let trailing = Eat.trailing_comments env in
         {
           params with
           Ast.Type.Function.Params.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
@@ -505,7 +505,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         | _ -> ret)
     in
     Expect.token env T_RPAREN;
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     let ret =
       match ret with
       | ParamList params ->
@@ -680,7 +680,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             in
             let key = _type env in
             Expect.token env T_RBRACKET;
-            let trailing = Peek.comments env in
+            let trailing = Eat.trailing_comments env in
             Expect.token env T_COLON;
             let value = _type env in
             {
@@ -718,7 +718,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 (false, true, value, [])
               | _ ->
                 let optional = Expect.maybe env T_PLING in
-                let trailing = Peek.comments env in
+                let trailing = Eat.trailing_comments env in
                 Expect.token env T_COLON;
                 let value = _type env in
                 (optional, false, value, trailing)
@@ -1018,7 +1018,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               T_RCURLYBAR
             else
               T_RCURLY );
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
 
           (* inexact = true iff `...` was used to indicate inexactnes *)
           {
@@ -1125,7 +1125,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                Expect.token env T_GREATER_THAN;
                let trailing =
                  if attach_trailing then
-                   Peek.comments env
+                   Eat.trailing_comments env
                  else
                    []
                in
@@ -1157,7 +1157,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                let env = with_no_anon_function_type false env in
                let arguments = args env [] in
                Expect.token env T_GREATER_THAN;
-               let trailing = Peek.comments env in
+               let trailing = Eat.trailing_comments env in
                { Type.TypeArgs.arguments; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
              env)
       else
@@ -1267,10 +1267,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let exp = Parse.conditional env in
           Eat.pop_lex_mode env;
           Expect.token env T_RPAREN;
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           { kind = Declared exp; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
         ) else
-          let trailing = Peek.comments env in
+          let trailing = Eat.trailing_comments env in
           {
             kind = Ast.Type.Predicate.Inferred;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
