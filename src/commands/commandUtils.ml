@@ -1278,6 +1278,7 @@ let make_options
       opt_include_suppressions = options_flags.include_suppressions;
       opt_trust_mode =
         Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
+      opt_react_runtime = FlowConfig.react_runtime flowconfig;
       opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
       opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
       opt_max_rss_bytes_for_check_per_worker =

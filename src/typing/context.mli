@@ -51,6 +51,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
   strip_root: bool;
@@ -212,6 +213,8 @@ val property_maps : t -> Type.Properties.map
 val call_props : t -> Type.t IMap.t
 
 val export_maps : t -> Type.Exports.map
+
+val react_runtime : t -> Options.react_runtime
 
 val recursion_limit : t -> int
 

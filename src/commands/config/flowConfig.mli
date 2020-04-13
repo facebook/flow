@@ -152,6 +152,8 @@ val node_resolver_root_relative_dirnames : config -> string list
 
 val required_version : config -> string option
 
+val react_runtime : config -> Options.react_runtime
+
 val recursion_limit : config -> int
 
 val root_name : config -> string option

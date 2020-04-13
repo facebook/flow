@@ -50,6 +50,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
   strip_root: bool;
@@ -208,6 +209,7 @@ let metadata_of_options options =
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
+    react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
     strip_root = Options.should_strip_root options;
@@ -448,6 +450,8 @@ let property_maps cx = cx.sig_cx.property_maps
 let call_props cx = cx.sig_cx.call_props
 
 let export_maps cx = cx.sig_cx.export_maps
+
+let react_runtime cx = cx.metadata.react_runtime
 
 let recursion_limit cx = cx.metadata.recursion_limit
 
