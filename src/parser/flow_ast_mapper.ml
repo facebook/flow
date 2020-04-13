@@ -282,12 +282,14 @@ class ['loc] mapper =
         { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 
     method call_arguments (arg_list : ('loc, 'loc) Ast.Expression.ArgList.t) =
-      let (loc, arguments) = arg_list in
+      let open Ast.Expression.ArgList in
+      let (loc, { arguments; comments }) = arg_list in
       let arguments' = map_list this#expression_or_spread arguments in
-      if arguments == arguments' then
+      let comments' = this#syntax_opt comments in
+      if arguments == arguments' && comments == comments' then
         arg_list
       else
-        (loc, arguments')
+        (loc, { arguments = arguments'; comments = comments' })
 
     method optional_call loc (expr : ('loc, 'loc) Ast.Expression.OptionalCall.t) =
       let open Ast.Expression.OptionalCall in
@@ -299,12 +301,14 @@ class ['loc] mapper =
         { expr with call = call' }
 
     method call_type_args (targs : ('loc, 'loc) Ast.Expression.CallTypeArgs.t) =
-      let (loc, ts) = targs in
-      let ts' = map_list this#call_type_arg ts in
-      if ts' == ts then
+      let open Ast.Expression.CallTypeArgs in
+      let (loc, { arguments; comments }) = targs in
+      let arguments' = map_list this#call_type_arg arguments in
+      let comments' = this#syntax_opt comments in
+      if arguments == arguments' && comments == comments' then
         targs
       else
-        (loc, ts')
+        (loc, { arguments = arguments'; comments = comments' })
 
     method call_type_arg t =
       let open Ast.Expression.CallTypeArg in

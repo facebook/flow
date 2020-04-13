@@ -948,16 +948,20 @@ module T = struct
               targs = None;
               arguments =
                 ( approx_loc decl_loc,
-                  [
-                    Ast.Expression.Expression
-                      ( loc,
-                        Ast.Expression.Literal
-                          {
-                            Ast.Literal.value = Ast.Literal.String x;
-                            raw = x;
-                            comments = Flow_ast_utils.mk_comments_opt ();
-                          } );
-                  ] );
+                  {
+                    Ast.Expression.ArgList.arguments =
+                      [
+                        Ast.Expression.Expression
+                          ( loc,
+                            Ast.Expression.Literal
+                              {
+                                Ast.Literal.value = Ast.Literal.String x;
+                                raw = x;
+                                comments = Flow_ast_utils.mk_comments_opt ();
+                              } );
+                      ];
+                    comments = Flow_ast_utils.mk_comments_opt ();
+                  } );
               comments = Flow_ast_utils.mk_comments_opt ();
             } )
       in
@@ -1277,7 +1281,12 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                     comments = _;
                   } );
             targs = None;
-            arguments = (_, [Expression (loc, Object stuff)]);
+            arguments =
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = [Expression (loc, Object stuff)];
+                  comments = _;
+                } );
             comments = _;
           } ) ->
       let open Ast.Expression.Object in
@@ -1293,7 +1302,12 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             Ast.Expression.Call.callee =
               (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
             targs = None;
-            arguments = (_, [Expression (loc, Object stuff)]);
+            arguments =
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = [Expression (loc, Object stuff)];
+                  comments = _;
+                } );
             comments = _;
           } ) ->
       let open Ast.Expression.Object in

@@ -1028,7 +1028,7 @@ and call ?(optional = false) ~precedence ~ctxt call_node loc =
           "("
       in
       (Empty, lparen)
-    | Some (loc, args) ->
+    | Some (loc, { Ast.Expression.CallTypeArgs.arguments; comments }) ->
       let less_than =
         if optional then
           "?.<"
@@ -1036,13 +1036,14 @@ and call ?(optional = false) ~precedence ~ctxt call_node loc =
           "<"
       in
       ( source_location_with_comments
+          ?comments
           ( loc,
             group
               [
                 new_list
                   ~wrap:(Atom less_than, Atom ">")
                   ~sep:(Atom ",")
-                  (Base.List.map ~f:call_type_arg args);
+                  (Base.List.map ~f:call_type_arg arguments);
               ] ),
         "(" )
   in
@@ -2487,8 +2488,9 @@ and type_parameter (loc, { Ast.Type.TypeParams.params; comments }) =
         [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_param params)]
     )
 
-and call_args ?(lparen = "(") (loc, arguments) =
+and call_args ?(lparen = "(") (loc, { Ast.Expression.ArgList.arguments; comments }) =
   source_location_with_comments
+    ?comments
     ( loc,
       group
         [
@@ -2498,8 +2500,9 @@ and call_args ?(lparen = "(") (loc, arguments) =
             (Base.List.map ~f:expression_or_spread arguments);
         ] )
 
-and call_type_args (loc, args) =
+and call_type_args (loc, { Ast.Expression.CallTypeArgs.arguments = args; comments }) =
   source_location_with_comments
+    ?comments
     ( loc,
       group
         [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:call_type_arg args)]

@@ -1,13 +1,10 @@
-function foo<T>(x: T) {}
+/* 1.1 L id */ foo /* 1.2 L targs */ <T> /* 1.3 L args */ (/* 1.4 L num */ 1 /* 1.5 T num */) /* 1.6 T args */;
 
-function trailingOnly() {
-    foo() /* 1.1 Trailing */;
-}
+foo</* 2.1 L any */ any /* 2.2 T any */, /* 2.3 L implicit */ _ /* 2.4 T implicit */>();
 
-function allComments() {
-    /* 2.1 L id */ foo /* 2.2 T id */ </* 2.3 L type */ number /* 2.4 T type */>(/* 2.5 L num */ 1 /* 2.6 T num */) /* 2.7 T call */;
-}
+/* 3.1 L id */ foo /* 3.2 T id */
+  /* 3.3 L args */ () /* 3.4 T args */
 
-function implicitCallTypeArgComments() {
-    foo</* 3.1 L implicit */ _ /* 3.2 T implicit */>(1);
-}
+/* 4.1 L id */ foo /* 4.2 T id */
+  /* 4.3 L targs */ <T> /* 4.4 T targs */
+  /* 4.5 L args */ () /* 4.6 T args */

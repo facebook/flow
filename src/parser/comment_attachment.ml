@@ -78,8 +78,25 @@ class ['loc] trailing_comments_remover ~after_pos =
 
     method! call _annot expr =
       let open Ast.Expression.Call in
-      let { comments; _ } = expr in
-      id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
+      let { arguments; comments; _ } = expr in
+      let arguments' = this#call_arguments arguments in
+      let comments' = this#syntax_opt comments in
+      if arguments == arguments' && comments == comments' then
+        expr
+      else
+        { expr with arguments = arguments'; comments = comments' }
+
+    method! call_arguments arg_list =
+      let open Ast.Expression.ArgList in
+      let (loc, { arguments; comments }) = arg_list in
+      id this#syntax_opt comments arg_list (fun comments' ->
+          (loc, { arguments; comments = comments' }))
+
+    method! call_type_args targs =
+      let open Ast.Expression.CallTypeArgs in
+      let (loc, { arguments; comments }) = targs in
+      id this#syntax_opt comments targs (fun comments' ->
+          (loc, { arguments; comments = comments' }))
 
     method! class_ _loc cls =
       let open Ast.Class in
@@ -216,8 +233,30 @@ class ['loc] trailing_comments_remover ~after_pos =
 
     method! new_ _loc expr =
       let open Ast.Expression.New in
-      let { comments; _ } = expr in
-      id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
+      let { callee; targs; arguments; comments } = expr in
+      let comments' = this#syntax_opt comments in
+      match (targs, arguments) with
+      (* new Callee<T>() *)
+      | (_, Some _) ->
+        let arguments' = map_opt this#call_arguments arguments in
+        if arguments == arguments' && comments == comments' then
+          expr
+        else
+          { expr with arguments = arguments'; comments = comments' }
+      (* new Callee<T> *)
+      | (Some _, _) ->
+        let targs' = map_opt this#call_type_args targs in
+        if targs == targs' && comments == comments' then
+          expr
+        else
+          { expr with targs = targs'; comments = comments' }
+      (* new Callee *)
+      | (None, None) ->
+        let callee' = this#expression callee in
+        if callee == callee' && comments == comments' then
+          expr
+        else
+          { expr with callee = callee'; comments = comments' }
 
     method! member _loc expr =
       let open Ast.Expression.Member in

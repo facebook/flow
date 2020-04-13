@@ -986,7 +986,11 @@ and Expression : sig
   module CallTypeArgs : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = ('M, 'T) CallTypeArg.t list [@@deriving show]
+    and ('M, 'T) t' = {
+      arguments: ('M, 'T) CallTypeArg.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module SpreadElement : sig
@@ -1224,7 +1228,13 @@ and Expression : sig
   end
 
   module ArgList : sig
-    type ('M, 'T) t = 'M * ('M, 'T) expression_or_spread list [@@deriving show]
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      arguments: ('M, 'T) expression_or_spread list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module New : sig

@@ -199,13 +199,15 @@ class useless_mapper =
       | _ -> variance
 
     method! call_type_args (loc, targs) =
-      let open Ast.Expression.CallTypeArg in
+      let open Ast.Expression.CallTypeArgs in
+      let { arguments; comments } = targs in
       let f targ =
+        let open Ast.Expression.CallTypeArg in
         match targ with
         | Explicit targ' -> Explicit (this#type_ targ')
         | Implicit (loc, _) -> Explicit (loc, Ast.Type.Any None)
       in
-      (loc, Base.List.map ~f targs)
+      (loc, { arguments = Base.List.map ~f arguments; comments })
 
     method! function_param_type (fpt : (Loc.t, Loc.t) Ast.Type.Function.Param.t) =
       let open Ast.Type.Function.Param in
@@ -426,16 +428,20 @@ class insert_second_cjsimport_mapper =
                         targs = None;
                         arguments =
                           ( loc,
-                            [
-                              Ast.Expression.Expression
-                                ( loc,
-                                  Ast.Expression.Literal
-                                    {
-                                      value = Ast.Literal.String "baz";
-                                      raw = "\"baz\"";
-                                      comments = Flow_ast_utils.mk_comments_opt ();
-                                    } );
-                            ] );
+                            {
+                              Ast.Expression.ArgList.arguments =
+                                [
+                                  Ast.Expression.Expression
+                                    ( loc,
+                                      Ast.Expression.Literal
+                                        {
+                                          value = Ast.Literal.String "baz";
+                                          raw = "\"baz\"";
+                                          comments = Flow_ast_utils.mk_comments_opt ();
+                                        } );
+                                ];
+                              comments = Flow_ast_utils.mk_comments_opt ();
+                            } );
                         comments = Flow_ast_utils.mk_comments_opt ();
                       } );
                 directive = None;
@@ -473,16 +479,20 @@ class add_body_mapper =
                         targs = None;
                         arguments =
                           ( loc,
-                            [
-                              Ast.Expression.Expression
-                                ( loc,
-                                  Ast.Expression.Literal
-                                    {
-                                      value = Ast.Literal.String "baz";
-                                      raw = "\"baz\"";
-                                      comments = Flow_ast_utils.mk_comments_opt ();
-                                    } );
-                            ] );
+                            {
+                              Ast.Expression.ArgList.arguments =
+                                [
+                                  Ast.Expression.Expression
+                                    ( loc,
+                                      Ast.Expression.Literal
+                                        {
+                                          value = Ast.Literal.String "baz";
+                                          raw = "\"baz\"";
+                                          comments = Flow_ast_utils.mk_comments_opt ();
+                                        } );
+                                ];
+                              comments = Flow_ast_utils.mk_comments_opt ();
+                            } );
                         comments = Flow_ast_utils.mk_comments_opt ();
                       } );
                 directive = None;
@@ -649,8 +659,13 @@ class insert_call_type_args =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! call_type_args (loc, targs) =
-      (loc, Ast.Expression.CallTypeArg.Explicit (loc, Ast.Type.Any None) :: targs)
+    method! call_type_args (loc, { Ast.Expression.CallTypeArgs.arguments; comments }) =
+      ( loc,
+        {
+          Ast.Expression.CallTypeArgs.arguments =
+            Ast.Expression.CallTypeArg.Explicit (loc, Ast.Type.Any None) :: arguments;
+          comments;
+        } )
   end
 
 class add_comment_mapper =

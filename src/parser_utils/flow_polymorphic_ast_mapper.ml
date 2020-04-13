@@ -120,7 +120,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method arg_list ((annot, args) : ('M, 'T) Ast.Expression.ArgList.t)
         : ('N, 'U) Ast.Expression.ArgList.t =
-      (this#on_loc_annot annot, Base.List.map ~f:this#expression_or_spread args)
+      let open Ast.Expression.ArgList in
+      let { arguments; comments } = args in
+      let annot' = this#on_loc_annot annot in
+      let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { arguments = arguments'; comments = comments' })
 
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
       let open Ast.Expression in
@@ -181,9 +186,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method call_type_args (pi : ('M, 'T) Ast.Expression.CallTypeArgs.t)
         : ('N, 'U) Ast.Expression.CallTypeArgs.t =
-      let (annot, targs) = pi in
-      let targs' = Base.List.map ~f:this#call_type_arg targs in
-      (this#on_loc_annot annot, targs')
+      let open Ast.Expression.CallTypeArgs in
+      let (annot, { arguments; comments }) = pi in
+      let annot' = this#on_loc_annot annot in
+      let arguments' = Base.List.map ~f:this#call_type_arg arguments in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (annot', { arguments = arguments'; comments = comments' })
 
     method call_type_arg (x : ('M, 'T) Ast.Expression.CallTypeArg.t)
         : ('N, 'U) Ast.Expression.CallTypeArg.t =

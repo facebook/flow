@@ -27,7 +27,7 @@
 
 {
   /* L call */ (f()) /* T call */
-  /* L id */ f() /* T call */
+  /* L id */ f() /* T args */
   /* L str */ 'end of call tests'
 }
 
@@ -88,7 +88,7 @@
 }
 
 {
-  /* L new */ new Test() /* T new */
+  /* L new */ new Test() /* T args */
   /* L str */ 'end of new tests'
 }
 

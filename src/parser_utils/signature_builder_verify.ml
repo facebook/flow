@@ -421,7 +421,12 @@ module Eval (Env : EvalEnv) = struct
                     comments = _;
                   } );
             targs = None;
-            arguments = (_, [Expression ((_, Object _) as expr)]);
+            arguments =
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = [Expression ((_, Object _) as expr)];
+                  comments = _;
+                } );
             comments = _;
           } ) ->
       literal_expr tps expr
@@ -431,7 +436,12 @@ module Eval (Env : EvalEnv) = struct
             Ast.Expression.Call.callee =
               (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
             targs = None;
-            arguments = (_, [Expression ((_, Object _) as expr)]);
+            arguments =
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = [Expression ((_, Object _) as expr)];
+                  comments = _;
+                } );
             comments = _;
           } )
       when Env.facebook_keyMirror ->

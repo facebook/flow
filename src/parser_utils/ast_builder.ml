@@ -356,7 +356,8 @@ module Expressions = struct
 
   let array ?comments elements = (Loc.none, Array { Array.elements; comments })
 
-  let arg_list ?(loc = Loc.none) args : (Loc.t, 'a) ArgList.t = (loc, args)
+  let arg_list ?(loc = Loc.none) ?comments arguments : (Loc.t, 'a) ArgList.t =
+    (loc, { Ast.Expression.ArgList.arguments; comments })
 
   let call_node ?targs ?args ?comments callee =
     let arguments =

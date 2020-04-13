@@ -1654,15 +1654,21 @@ let program
   and call_type_args
       (pi1 : (Loc.t, Loc.t) Ast.Expression.CallTypeArgs.t)
       (pi2 : (Loc.t, Loc.t) Ast.Expression.CallTypeArgs.t) : node change list option =
-    let (_, t_args1) = pi1 in
-    let (_, t_args2) = pi2 in
-    diff_and_recurse_no_trivial call_type_arg t_args1 t_args2
+    let open Ast.Expression.CallTypeArgs in
+    let (loc, { arguments = arguments1; comments = comments1 }) = pi1 in
+    let (_, { arguments = arguments2; comments = comments2 }) = pi2 in
+    let args_diff = diff_and_recurse_no_trivial call_type_arg arguments1 arguments2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [args_diff; comments_diff]
   and call_args
-      (list1 : (Loc.t, Loc.t) Ast.Expression.ArgList.t)
-      (list2 : (Loc.t, Loc.t) Ast.Expression.ArgList.t) : node change list option =
-    let (_, args1) = list1 in
-    let (_, args2) = list2 in
-    diff_and_recurse_no_trivial expression_or_spread args1 args2
+      (args1 : (Loc.t, Loc.t) Ast.Expression.ArgList.t)
+      (args2 : (Loc.t, Loc.t) Ast.Expression.ArgList.t) : node change list option =
+    let open Ast.Expression.ArgList in
+    let (loc, { arguments = arguments1; comments = comments1 }) = args1 in
+    let (_, { arguments = arguments2; comments = comments2 }) = args2 in
+    let args_diff = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [args_diff; comments_diff]
   and expression_or_spread
       (expr1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
       (expr2 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread) : node change list option =

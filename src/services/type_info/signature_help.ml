@@ -92,7 +92,7 @@ module Callee_finder = struct
 
       method! call annot expr =
         let { Flow_ast.Expression.Call.callee = ((_, t), _); arguments; _ } = expr in
-        let (args_loc, arg_list) = arguments in
+        let (args_loc, { Flow_ast.Expression.ArgList.arguments; comments = _ }) = arguments in
         let inside_loc =
           (* exclude the parens *)
           let args_loc = ALoc.to_loc_exn args_loc in
@@ -105,7 +105,7 @@ module Callee_finder = struct
              so after this line we know we found the right call. *)
           let _ = super#call annot expr in
 
-          let active_parameter = find_argument cursor arg_list 0 in
+          let active_parameter = find_argument cursor arguments 0 in
           this#annot_with_tparams (fun tparams ->
               raise (Found (Some { tparams; type_ = t; active_parameter })))
         else

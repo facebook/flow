@@ -971,13 +971,13 @@ let rec code_desc_of_expression ~wrap (_, x) =
     let targs =
       match targs with
       | None -> ""
-      | Some (_, []) -> "<>"
-      | Some (_, _ :: _) -> "<...>"
+      | Some (_, { CallTypeArgs.arguments = []; comments = _ }) -> "<>"
+      | Some (_, { CallTypeArgs.arguments = _ :: _; comments = _ }) -> "<...>"
     in
     let args =
       match arguments with
-      | (_loc, []) -> "()"
-      | (_loc, _ :: _) -> "(...)"
+      | (_loc, { ArgList.arguments = []; comments = _ }) -> "()"
+      | (_loc, { ArgList.arguments = _ :: _; comments = _ }) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee ^ targs ^ args
   | Class _ -> "class { ... }"
@@ -1017,14 +1017,14 @@ let rec code_desc_of_expression ~wrap (_, x) =
     let targs =
       match targs with
       | None -> ""
-      | Some (_, []) -> "<>"
-      | Some (_, _ :: _) -> "<...>"
+      | Some (_, { CallTypeArgs.arguments = []; comments = _ }) -> "<>"
+      | Some (_, { CallTypeArgs.arguments = _ :: _; comments = _ }) -> "<...>"
     in
     let args =
       match arguments with
       | None -> ""
-      | Some (_loc, []) -> "()"
-      | Some (_loc, _ :: _) -> "(...)"
+      | Some (_loc, { ArgList.arguments = []; comments = _ }) -> "()"
+      | Some (_loc, { ArgList.arguments = _ :: _; comments = _ }) -> "(...)"
     in
     do_wrap ("new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args)
   | Object _ -> "{...}"
@@ -1033,13 +1033,13 @@ let rec code_desc_of_expression ~wrap (_, x) =
     let targ_string =
       match targs with
       | None -> ""
-      | Some (_, []) -> "<>"
-      | Some (_, _ :: _) -> "<...>"
+      | Some (_, { CallTypeArgs.arguments = []; comments = _ }) -> "<>"
+      | Some (_, { CallTypeArgs.arguments = _ :: _; comments = _ }) -> "<...>"
     in
     let arg_string =
       match arguments with
-      | (_loc, []) -> "()"
-      | (_loc, _) -> "(...)"
+      | (_loc, { ArgList.arguments = []; comments = _ }) -> "()"
+      | (_loc, { ArgList.arguments = _; comments = _ }) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee
     ^ ( if optional then

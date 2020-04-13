@@ -537,10 +537,11 @@ with type t = Impl.t = struct
             ("alternate", expression alternate);
           ]
       | (loc, New { New.callee; targs; arguments; comments }) ->
-        let arguments =
+        let (arguments, comments) =
           match arguments with
-          | Some arguments -> arg_list arguments
-          | None -> array []
+          | Some ((_, { ArgList.comments = args_comments; _ }) as arguments) ->
+            (arg_list arguments, Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments)
+          | None -> (array [], comments)
         in
         node
           ?comments
@@ -551,9 +552,21 @@ with type t = Impl.t = struct
             ("typeArguments", option call_type_args targs);
             ("arguments", arguments);
           ]
-      | (loc, Call ({ Call.comments; _ } as call)) ->
+      | ( loc,
+          Call
+            ({ Call.comments; arguments = (_, { ArgList.comments = args_comments; _ }); _ } as call)
+        ) ->
+        let comments = Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments in
         node ?comments "CallExpression" loc (call_node_properties call)
-      | (loc, OptionalCall { OptionalCall.call = { Call.comments; _ } as call; optional }) ->
+      | ( loc,
+          OptionalCall
+            {
+              OptionalCall.call =
+                { Call.comments; arguments = (_, { ArgList.comments = args_comments; _ }); _ } as
+                call;
+              optional;
+            } ) ->
+        let comments = Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments in
         node
           ?comments
           "OptionalCallExpression"
@@ -716,7 +729,7 @@ with type t = Impl.t = struct
           ("typeAnnotation", hint type_annotation annot);
           ("optional", bool optional);
         ]
-    and arg_list (_loc, arguments) =
+    and arg_list (_loc, { Expression.ArgList.arguments; comments = _ }) =
       (* ESTree does not have a unique node for argument lists, so there's nowhere to
          include the loc. *)
       array_of_list expression_or_spread arguments
@@ -1572,8 +1585,12 @@ with type t = Impl.t = struct
         ]
     and type_args (loc, { Type.TypeArgs.arguments; comments }) =
       node ?comments "TypeParameterInstantiation" loc [("params", array_of_list _type arguments)]
-    and call_type_args (loc, targs) =
-      node "TypeParameterInstantiation" loc [("params", array_of_list call_type_arg targs)]
+    and call_type_args (loc, { Expression.CallTypeArgs.arguments; comments }) =
+      node
+        ?comments
+        "TypeParameterInstantiation"
+        loc
+        [("params", array_of_list call_type_arg arguments)]
     and call_type_arg x =
       match x with
       | Expression.CallTypeArg.Explicit t -> _type t

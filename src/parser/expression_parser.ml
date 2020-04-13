@@ -10,6 +10,7 @@ open Token
 open Parser_env
 open Flow_ast
 open Parser_common
+open Comment_attachment
 
 module type EXPRESSION = sig
   val assignment : env -> (Loc.t, Loc.t) Expression.t
@@ -673,16 +674,15 @@ module Expression
   and call_cover ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left =
     let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
     let optional = last_token env = Some T_PLING_PERIOD in
-    let arguments ?targs env =
-      let (args_loc, (arguments, trailing)) = arguments env in
+    let left_to_callee env =
+      let { remove_trailing; _ } = trailing_and_remover env in
+      remove_trailing (as_expression env left) (fun remover left -> remover#expression left)
+    in
+    let arguments ?targs env callee =
+      let (args_loc, arguments) = arguments env in
       let loc = Loc.btwn start_loc args_loc in
       let call =
-        {
-          Expression.Call.callee = as_expression env left;
-          targs;
-          arguments = (args_loc, arguments);
-          comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-        }
+        { Expression.Call.callee; targs; arguments = (args_loc, arguments); comments = None }
       in
       let call =
         if optional || in_optional_chain then
@@ -698,7 +698,7 @@ module Expression
       left
     else
       match Peek.token env with
-      | T_LPAREN -> arguments env
+      | T_LPAREN -> arguments env (left_to_callee env)
       | T_LESS_THAN when should_parse_types env ->
         (* If we are parsing types, then f<T>(e) is a function call with a
            type application. If we aren't, it's a nested binary expression. *)
@@ -707,8 +707,9 @@ module Expression
         (* Parameterized call syntax is ambiguous, so we fall back to
            standard parsing if it fails. *)
         Try.or_else env ~fallback:left (fun env ->
+            let callee = left_to_callee env in
             let targs = call_type_args env in
-            arguments ?targs env)
+            arguments ?targs env callee)
       | _ -> left
 
   and call ?(allow_optional_chain = true) env start_loc left =
@@ -756,9 +757,18 @@ module Expression
            *   new raw`42`
            *)
           let callee =
-            match Peek.token env with
-            | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
-            | _ -> callee
+            let callee =
+              match Peek.token env with
+              | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
+              | _ -> callee
+            in
+            (* Remove trailing comments if the callee is followed by args or type args *)
+            if Peek.token env = T_LPAREN || (should_parse_types env && Peek.token env = T_LESS_THAN)
+            then
+              let { remove_trailing; _ } = trailing_and_remover env in
+              remove_trailing callee (fun remover callee -> remover#expression callee)
+            else
+              callee
           in
           let targs =
             (* If we are parsing types, then new C<T>(e) is a constructor with a
@@ -774,13 +784,10 @@ module Expression
           in
           let arguments =
             match Peek.token env with
-            | T_LPAREN ->
-              let (arguments_loc, (arguments, _)) = arguments env in
-              Some (arguments_loc, arguments)
+            | T_LPAREN -> Some (arguments env)
             | _ -> None
           in
-          let trailing = Eat.trailing_comments env in
-          let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+          let comments = Flow_ast_utils.mk_comments_opt ~leading () in
           Expression.(New New.{ callee; targs; arguments; comments }))
       env
 
@@ -812,10 +819,21 @@ module Expression
           args_helper env acc
       in
       fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_LESS_THAN;
-        let args = args_helper env [] in
+        let arguments = args_helper env [] in
         Expect.token env T_GREATER_THAN;
-        args
+        let trailing =
+          if Peek.token env = T_LPAREN then
+            let { trailing; _ } = trailing_and_remover env in
+            trailing
+          else
+            Eat.trailing_comments env
+        in
+        {
+          Expression.CallTypeArgs.arguments;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        }
     in
     fun env ->
       if Peek.token env = T_LESS_THAN then
@@ -848,11 +866,15 @@ module Expression
     fun env ->
       with_loc
         (fun env ->
+          let leading = Peek.comments env in
           Expect.token env T_LPAREN;
           let args = arguments' env [] in
           Expect.token env T_RPAREN;
           let trailing = Eat.trailing_comments env in
-          (args, trailing))
+          {
+            Expression.ArgList.arguments = args;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
         env
 
   and member_cover =
