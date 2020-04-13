@@ -89,6 +89,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
+    react_runtime: Options.react_runtime;
     recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -188,6 +189,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
+      react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -558,6 +560,10 @@ module Opts = struct
             ("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust);
           ]
           (fun opts trust_mode -> Ok { opts with trust_mode }) );
+      ( "react.runtime",
+        enum
+          [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
+          (fun opts react_runtime -> Ok { opts with react_runtime }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ( "experimental.types_first.max_files_checked_per_worker",
         uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) );
@@ -1189,6 +1195,8 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
+
+let react_runtime c = c.options.Opts.react_runtime
 
 let recursion_limit c = c.options.Opts.recursion_limit
 
