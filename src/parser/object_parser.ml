@@ -551,9 +551,7 @@ module Object
     let implements =
       if Peek.token env = T_IMPLEMENTS then (
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
-        let implements = class_implements env ~attach_leading:true in
-        let { remove_trailing; _ } = trailing_and_remover env in
-        Some (remove_trailing implements (fun remover impl -> remover#class_implements impl))
+        Some (class_implements_remove_trailing env (class_implements env ~attach_leading:true))
       ) else
         None
     in

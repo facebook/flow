@@ -215,9 +215,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_LPAREN -> function_or_group env
     | T_LCURLY
     | T_LCURLYBAR ->
-      let (loc, o) =
-        _object env ~is_class:false ~allow_exact:true ~allow_spread:true ~attach_leading:true
-      in
+      let (loc, o) = _object env ~is_class:false ~allow_exact:true ~allow_spread:true in
       (loc, Type.Object o)
     | T_INTERFACE ->
       with_loc
@@ -1005,17 +1003,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 init_property env start_loc ~variance ~static ~proto ~leading key
             end))
     in
-    fun ~is_class ~allow_exact ~allow_spread ~attach_leading env ->
+    fun ~is_class ~allow_exact ~allow_spread env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       let allow_inexact = allow_exact && not exact in
       with_loc
         (fun env ->
-          let leading =
-            if attach_leading then
-              Peek.comments env
-            else
-              []
-          in
+          let leading = Peek.comments env in
           Expect.token
             env
             ( if exact then
@@ -1058,13 +1051,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         if Peek.token env = T_EXTENDS then (
           Expect.token env T_EXTENDS;
           let extends = supers env [] in
-          interface_extends_remove_trailing env extends
+          generic_type_list_remove_trailing env extends
         ) else
           []
       in
-      let body =
-        _object env ~allow_exact:false ~allow_spread:false ~is_class:false ~attach_leading:true
-      in
+      let body = _object env ~allow_exact:false ~allow_spread:false ~is_class:false in
       (extends, body)
 
   and type_identifier env =
@@ -1332,8 +1323,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   let type_args = wrap type_args
 
-  let _object ~is_class env =
-    wrap (_object ~is_class ~allow_exact:false ~allow_spread:false ~attach_leading:false) env
+  let _object ~is_class env = wrap (_object ~is_class ~allow_exact:false ~allow_spread:false) env
 
   let interface_helper = wrap interface_helper
 

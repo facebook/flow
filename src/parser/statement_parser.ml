@@ -1020,11 +1020,26 @@ module Statement
       let env = env |> with_strict true in
       let leading = leading @ Peek.comments env in
       Expect.token env T_CLASS;
-      let id = Parse.identifier env in
-      let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
+      let id =
+        let id = Parse.identifier env in
+        match Peek.token env with
+        | T_LESS_THAN
+        | T_LCURLY ->
+          id_remove_trailing env id
+        | _ -> id
+      in
+      let tparams =
+        let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
+        match Peek.token env with
+        | T_LCURLY -> type_params_remove_trailing env tparams
+        | _ -> tparams
+      in
       let extends =
         if Expect.maybe env T_EXTENDS then
-          Some (Type.generic env)
+          let extends = Type.generic env in
+          match Peek.token env with
+          | T_LCURLY -> Some (generic_type_remove_trailing env extends)
+          | _ -> Some extends
         else
           None
       in
@@ -1032,12 +1047,19 @@ module Statement
         match Peek.token env with
         | T_IDENTIFIER { raw = "mixins"; _ } ->
           Eat.token env;
-          mixins env []
+          let mixins = mixins env [] in
+          (match Peek.token env with
+          | T_LCURLY -> generic_type_list_remove_trailing env mixins
+          | _ -> mixins)
         | _ -> []
       in
       let implements =
         match Peek.token env with
-        | T_IMPLEMENTS -> Some (Object.class_implements env ~attach_leading:true)
+        | T_IMPLEMENTS ->
+          let implements = Object.class_implements env ~attach_leading:false in
+          (match Peek.token env with
+          | T_LCURLY -> Some (class_implements_remove_trailing env implements)
+          | _ -> Some implements)
         | _ -> None
       in
       let body = Type._object ~is_class:true env in
