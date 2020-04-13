@@ -1402,7 +1402,7 @@ and arrow_function
         [
           option type_parameter tparams;
           arrow_function_params params;
-          function_return return predicate;
+          function_return ~arrow:true return predicate;
         ]
   in
   layout_node_with_comments_opt loc comments
@@ -1492,7 +1492,7 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~commen
            ~wrap:(Atom "(", Atom ")")
            ~sep:(Atom ",")
            (function_params ~ctxt:normal_context params);
-         function_return return predicate;
+         function_return ~arrow:false return predicate;
          pretty_space;
          begin
            match body with
@@ -1522,13 +1522,25 @@ and function_params ~ctxt (_, { Ast.Function.Params.params; rest; comments = _ }
     List.append s_params [s_rest]
   | None -> s_params
 
-and function_return return predicate =
+and function_return ~arrow return predicate =
+  (* Function return types in arrow functions must be wrapped in parens or else arrow
+     from arrow function is interpreted as part of the function type. *)
+  let needs_parens = function
+    | ( _,
+        ( _,
+          Ast.Type.Function
+            { Ast.Type.Function.params = (_, { Ast.Type.Function.Params.params = _ :: _; _ }); _ }
+        ) )
+      when arrow ->
+      true
+    | _ -> false
+  in
   match (return, predicate) with
   | (Ast.Type.Missing _, None) -> Empty
   | (Ast.Type.Missing _, Some pred) -> fuse [Atom ":"; pretty_space; type_predicate pred]
   | (Ast.Type.Available ret, Some pred) ->
-    fuse [type_annotation ret; pretty_space; type_predicate pred]
-  | (Ast.Type.Available ret, None) -> type_annotation ret
+    fuse [type_annotation ~parens:(needs_parens ret) ret; pretty_space; type_predicate pred]
+  | (Ast.Type.Available ret, None) -> type_annotation ~parens:(needs_parens ret) ret
 
 and block (loc, { Ast.Statement.Block.body; comments }) =
   let statements = statement_list ~pretty_semicolon:true body in

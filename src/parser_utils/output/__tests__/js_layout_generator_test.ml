@@ -2253,4 +2253,11 @@ let tests =
              assert_output ~ctxt "enum E of symbol{A,B,}" layout;
              let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
              assert_output ~ctxt ~pretty:true pretty_output layout) );
+         ( "arrow_function_with_function_return_type" >:: fun ctxt ->
+           assert_expression_string ~ctxt "():((x)=>y)=>{}";
+           assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";
+           assert_expression_string ~ctxt "():()=>x=>{}";
+           assert_expression_string ~ctxt "():()=>x%checks=>{}";
+           assert_expression_string ~ctxt "():(...x)=>y=>{}";
+           assert_expression_string ~ctxt "():(...x)=>y%checks=>{}" );
        ]
