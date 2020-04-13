@@ -434,6 +434,10 @@ let predicate_remove_trailing env pred =
     let { remove_trailing; _ } = trailing_and_remover env in
     Some (remove_trailing pred (fun remover pred -> remover#predicate pred))
 
+let object_key_remove_trailing env key =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing key (fun remover key -> remover#object_key key)
+
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :
     (Loc.t, Loc.t) Statement.t =

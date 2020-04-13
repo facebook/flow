@@ -20,16 +20,10 @@ module type DECLARATION = sig
 
   val variance : env -> bool -> bool -> Loc.t Variance.t option
 
-  val function_params :
-    await:bool -> yield:bool -> attach_leading:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
+  val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
 
   val function_body :
-    env ->
-    async:bool ->
-    generator:bool ->
-    expression:bool ->
-    attach_leading:bool ->
-    (Loc.t, Loc.t) Function.body * bool
+    env -> async:bool -> generator:bool -> expression:bool -> (Loc.t, Loc.t) Function.body * bool
 
   val is_simple_function_params : (Loc.t, Loc.t) Ast.Function.Params.t -> bool
 
@@ -188,7 +182,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
         param_list env (the_param :: acc)
     in
-    fun ~await ~yield ~attach_leading ->
+    fun ~await ~yield ->
       with_loc (fun env ->
           let env =
             env
@@ -196,12 +190,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             |> with_allow_yield yield
             |> with_in_formal_parameters true
           in
-          let leading =
-            if attach_leading then
-              Peek.comments env
-            else
-              []
-          in
+          let leading = Peek.comments env in
           Expect.token env T_LPAREN;
           let (params, rest) = param_list env [] in
           Expect.token env T_RPAREN;
@@ -212,9 +201,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
 
-  let function_body env ~async ~generator ~expression ~attach_leading =
+  let function_body env ~async ~generator ~expression =
     let env = enter_function env ~async ~generator in
-    let (loc, block, strict) = Parse.function_block_body env ~attach_leading ~expression in
+    let (loc, block, strict) = Parse.function_block_body env ~expression in
     (Function.BodyBlock (loc, block), strict)
 
   let variance env is_async is_generator =
@@ -316,9 +305,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                   (tparams, Some id)
               in
               let params =
-                let params =
-                  function_params ~await:async ~yield:generator ~attach_leading:true env
-                in
+                let params = function_params ~await:async ~yield:generator env in
                 if Peek.token env = T_COLON then
                   params
                 else
@@ -333,9 +320,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               (generator, tparams, id, params, return, predicate, leading))
             env
         in
-        let (body, strict) =
-          function_body env ~async ~generator ~expression:false ~attach_leading:true
-        in
+        let (body, strict) = function_body env ~async ~generator ~expression:false in
         let simple = is_simple_function_params params in
         strict_post_check env ~strict ~simple id params;
         Statement.FunctionDeclaration

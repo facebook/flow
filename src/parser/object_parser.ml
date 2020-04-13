@@ -124,6 +124,7 @@ module Object
     let async = false in
     let (generator, leading) = Declaration.generator env in
     let (key_loc, key) = key ~class_body:in_class_body env in
+    let key = object_key_remove_trailing env key in
     let value =
       with_loc
         (fun env ->
@@ -137,7 +138,11 @@ module Object
                  * as well disallow it until we need it *)
                 let tparams = None in
                 let params =
-                  Declaration.function_params ~await:false ~yield:false ~attach_leading:false env
+                  let params = Declaration.function_params ~await:false ~yield:false env in
+                  if Peek.token env = T_COLON then
+                    params
+                  else
+                    function_params_remove_trailing env params
                 in
                 begin
                   match (is_getter, params) with
@@ -150,13 +155,11 @@ module Object
                   | (true, _) -> error_at env (key_loc, Parse_error.GetterArity)
                   | (false, _) -> error_at env (key_loc, Parse_error.SetterArity)
                 end;
-                let return = Type.annotation_opt env in
+                let return = type_annotation_hint_remove_trailing env (Type.annotation_opt env) in
                 (tparams, params, return))
               env
           in
-          let (body, strict) =
-            Declaration.function_body env ~async ~generator ~expression:false ~attach_leading:false
-          in
+          let (body, strict) = Declaration.function_body env ~async ~generator ~expression:false in
           let simple = Declaration.is_simple_function_params params in
           Declaration.strict_post_check env ~strict ~simple None params;
           {
@@ -229,7 +232,11 @@ module Object
             let (sig_loc, (tparams, params, return)) =
               with_loc
                 (fun env ->
-                  let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:false in
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      (Type.type_params env ~attach_leading:true ~attach_trailing:true)
+                  in
                   let params =
                     let (yield, await) =
                       match (async, generator) with
@@ -240,19 +247,18 @@ module Object
                       | (false, false) -> (false, false)
                       (* #prod-MethodDefinition *)
                     in
-                    Declaration.function_params ~await ~yield ~attach_leading:(tparams <> None) env
+                    let params = Declaration.function_params ~await ~yield env in
+                    if Peek.token env = T_COLON then
+                      params
+                    else
+                      function_params_remove_trailing env params
                   in
-                  let return = Type.annotation_opt env in
+                  let return = type_annotation_hint_remove_trailing env (Type.annotation_opt env) in
                   (tparams, params, return))
                 env
             in
             let (body, strict) =
-              Declaration.function_body
-                env
-                ~async
-                ~generator
-                ~expression:false
-                ~attach_leading:false
+              Declaration.function_body env ~async ~generator ~expression:false
             in
             let simple = Declaration.is_simple_function_params params in
             Declaration.strict_post_check env ~strict ~simple None params;
@@ -309,6 +315,7 @@ module Object
       in
       let parse_init ~key ~async ~generator ~leading env =
         if async || generator then
+          let key = object_key_remove_trailing env key in
           (* the `async` and `*` modifiers are only valid on methods *)
           let value = parse_method env ~async ~generator ~leading in
           let prop = Method { key; value } in
@@ -322,6 +329,7 @@ module Object
             (prop, Pattern_cover.empty_errors)
           | T_LESS_THAN
           | T_LPAREN ->
+            let key = object_key_remove_trailing env key in
             let value = parse_method env ~async ~generator ~leading in
             let prop = Method { key; value } in
             (prop, Pattern_cover.empty_errors)
@@ -711,6 +719,7 @@ module Object
             (Ast.Class.Method.Constructor, env |> with_allow_super Super_prop_or_call)
           | _ -> (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
         in
+        let key = object_key_remove_trailing env key in
         let value =
           with_loc
             (fun env ->
@@ -718,7 +727,9 @@ module Object
                 with_loc
                   (fun env ->
                     let tparams =
-                      Type.type_params env ~attach_leading:false ~attach_trailing:false
+                      type_params_remove_trailing
+                        env
+                        (Type.type_params env ~attach_leading:true ~attach_trailing:true)
                     in
                     let params =
                       let (yield, await) =
@@ -730,23 +741,20 @@ module Object
                         | (false, false) -> (false, false)
                         (* #prod-MethodDefinition *)
                       in
-                      Declaration.function_params
-                        ~await
-                        ~yield
-                        ~attach_leading:(tparams <> None)
-                        env
+                      let params = Declaration.function_params ~await ~yield env in
+                      if Peek.token env = T_COLON then
+                        params
+                      else
+                        function_params_remove_trailing env params
                     in
-                    let return = Type.annotation_opt env in
+                    let return =
+                      type_annotation_hint_remove_trailing env (Type.annotation_opt env)
+                    in
                     (tparams, params, return))
                   env
               in
               let (body, strict) =
-                Declaration.function_body
-                  env
-                  ~async
-                  ~generator
-                  ~expression:false
-                  ~attach_leading:false
+                Declaration.function_body env ~async ~generator ~expression:false
               in
               let simple = Declaration.is_simple_function_params params in
               Declaration.strict_post_check env ~strict ~simple None params;

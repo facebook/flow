@@ -1028,7 +1028,7 @@ module Expression
               (* #sec-function-definitions-static-semantics-early-errors *)
               let env = env |> with_allow_super No_super in
               let params =
-                let params = Declaration.function_params ~await ~yield ~attach_leading:true env in
+                let params = Declaration.function_params ~await ~yield env in
                 if Peek.token env = T_COLON then
                   params
                 else
@@ -1043,9 +1043,7 @@ module Expression
               (id, params, generator, predicate, return, tparams, leading))
             env
         in
-        let (body, strict) =
-          Declaration.function_body env ~async ~generator ~expression:true ~attach_leading:true
-        in
+        let (body, strict) = Declaration.function_body env ~async ~generator ~expression:true in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple id params;
         Expression.Function
@@ -1508,9 +1506,7 @@ module Expression
       let env = enter_function env ~async ~generator:false in
       match Peek.token env with
       | T_LCURLY ->
-        let (loc, body, strict) =
-          Parse.function_block_body env ~attach_leading:true ~expression:true
-        in
+        let (loc, body, strict) = Parse.function_block_body env ~expression:true in
         (Function.BodyBlock (loc, body), strict)
       | _ ->
         let expr = Parse.assignment env in
@@ -1562,7 +1558,7 @@ module Expression
               let params =
                 let yield = allow_yield env in
                 let await = allow_await env in
-                Declaration.function_params ~await ~yield ~attach_leading:true env
+                Declaration.function_params ~await ~yield env
               in
               (* There's an ambiguity if you use a function type as the return
                * type for an arrow function. So we disallow anonymous function
