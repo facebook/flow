@@ -41,6 +41,7 @@ can be overridden with command line flags.
 * [`module.use_strict`](#toc-module-use-strict-boolean)
 * [`munge_underscores`](#toc-munge-underscores-boolean)
 * [`no_flowlib`](#toc-no-flowlib-boolean)
+* [`react.runtime`](#toc-react-runtime-automatic-classic)
 * [`server.max_workers`](#toc-server-max-workers-integer)
 * [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string)
 * [`sharedmemory.minimum_available`](#toc-sharedmemory-minimum-available-unsigned-integer)
@@ -352,6 +353,14 @@ Flow has builtin library definitions. Setting this to `true` will tell Flow to
 ignore the builtin library definitions.
 
 The default value is `false`.
+
+#### `react.runtime` _`(automatic|classic)`_ <a class="toc" id="toc-react-runtime-automatic-classic" href="#toc-react-runtime-automatic-classic"></a> {% since 0.123.0 %}
+
+Set this to `automatic` if you are using React's automatic runtime in `@babel/plugin-transform-react-jsx`.
+Otherwise, use `classic`. [See the babel documentation](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx)
+for details about the transform.
+
+The default value is `automatic`.
 
 #### `server.max_workers` _`(integer)`_ <a class="toc" id="toc-server-max-workers-integer" href="#toc-server-max-workers-integer"></a>
 
