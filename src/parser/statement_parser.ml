@@ -840,8 +840,14 @@ module Statement
     let leading = leading @ Peek.comments env in
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
-    let id = Type.type_identifier env in
-    let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
+    let id =
+      let id = Type.type_identifier env in
+      if Peek.token env = T_LESS_THAN then
+        id_remove_trailing env id
+      else
+        id
+    in
+    let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.pop_lex_mode env;
@@ -878,8 +884,14 @@ module Statement
     Expect.token env T_TYPE;
     let leading = leading_opaque @ leading_type in
     Eat.push_lex_mode env Lex_mode.TYPE;
-    let id = Type.type_identifier env in
-    let tparams = Type.type_params env ~attach_leading:false ~attach_trailing:true in
+    let id =
+      let id = Type.type_identifier env in
+      if Peek.token env = T_LESS_THAN then
+        id_remove_trailing env id
+      else
+        id
+    in
+    let tparams = Type.type_params env ~attach_leading:true ~attach_trailing:true in
     let supertype =
       match Peek.token env with
       | T_COLON ->
