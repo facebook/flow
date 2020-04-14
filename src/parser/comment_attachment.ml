@@ -412,6 +412,10 @@ let id_remove_trailing env id =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing id (fun remover id -> remover#identifier id)
 
+let expression_remove_trailing env expr =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing expr (fun remover expr -> remover#expression expr)
+
 let type_params_remove_trailing env tparams =
   match tparams with
   | None -> None

@@ -1282,6 +1282,7 @@ module Expression
       )
 
   and tagged_template env start_loc tag part =
+    let tag = expression_remove_trailing env tag in
     let quasi = template_literal env part in
     ( Loc.btwn start_loc (fst quasi),
       Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi; comments = None }) )

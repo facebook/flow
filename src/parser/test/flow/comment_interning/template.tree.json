@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":15,"column":1}},
-  "range":[0,358],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":20,"column":28}},
+  "range":[0,470],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -273,6 +273,114 @@
       "expression":false,
       "returnType":null,
       "typeParameters":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":17,"column":15},"end":{"line":17,"column":61}},
+      "range":[375,421],
+      "expression":{
+        "type":"TaggedTemplateExpression",
+        "loc":{"source":null,"start":{"line":17,"column":15},"end":{"line":17,"column":44}},
+        "range":[375,404],
+        "tag":{
+          "type":"Identifier",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":14}},
+              "range":[360,374],
+              "value":" 5.1 L id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":17,"column":15},"end":{"line":17,"column":18}},
+          "range":[375,378],
+          "name":"tag",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "quasi":{
+          "type":"TemplateLiteral",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":17,"column":45},"end":{"line":17,"column":60}},
+              "range":[405,420],
+              "value":" 5.3 T lit "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":17,"column":19},"end":{"line":17,"column":34}},
+              "range":[379,394],
+              "value":" 5.2 L lit "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":17,"column":35},"end":{"line":17,"column":44}},
+          "range":[395,404],
+          "quasis":[
+            {
+              "type":"TemplateElement",
+              "loc":{"source":null,"start":{"line":17,"column":35},"end":{"line":17,"column":44}},
+              "range":[395,404],
+              "value":{"raw":"literal","cooked":"literal"},
+              "tail":true
+            }
+          ],
+          "expressions":[]
+        }
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":20,"column":28}},
+      "range":[423,470],
+      "expression":{
+        "type":"TaggedTemplateExpression",
+        "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":20,"column":27}},
+        "range":[423,469],
+        "tag":{
+          "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":18}},
+              "range":[427,441],
+              "value":" 6.1 T id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":3}},
+          "range":[423,426],
+          "name":"tag",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "quasi":{
+          "type":"TemplateLiteral",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":20,"column":2},"end":{"line":20,"column":17}},
+              "range":[444,459],
+              "value":" 6.2 L lit "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":20,"column":18},"end":{"line":20,"column":27}},
+          "range":[460,469],
+          "quasis":[
+            {
+              "type":"TemplateElement",
+              "loc":{"source":null,"start":{"line":20,"column":18},"end":{"line":20,"column":27}},
+              "range":[460,469],
+              "value":{"raw":"literal","cooked":"literal"},
+              "tail":true
+            }
+          ],
+          "expressions":[]
+        }
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -323,6 +431,36 @@
       "loc":{"source":null,"start":{"line":14,"column":91},"end":{"line":14,"column":118}},
       "range":[328,355],
       "value":" 4.4 Trailing template "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":14}},
+      "range":[360,374],
+      "value":" 5.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":19},"end":{"line":17,"column":34}},
+      "range":[379,394],
+      "value":" 5.2 L lit "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":45},"end":{"line":17,"column":60}},
+      "range":[405,420],
+      "value":" 5.3 T lit "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":18}},
+      "range":[427,441],
+      "value":" 6.1 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":20,"column":2},"end":{"line":20,"column":17}},
+      "range":[444,459],
+      "value":" 6.2 L lit "
     }
   ]
 }
