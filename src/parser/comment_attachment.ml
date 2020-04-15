@@ -589,9 +589,58 @@ class ['loc] comment_bounds_collector ~loc =
       block
   end
 
+(* Given an AST node and a function to collect all its comments, return the first leading
+   and last trailing comment on the node. *)
+let comment_bounds loc node f =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (f collector node);
+  collector#comment_bounds
+
 (* Return the first leading and last trailing comment of a statement *)
 let statement_comment_bounds ((loc, _) as stmt : (Loc.t, Loc.t) Statement.t) :
     Loc.t Comment.t option * Loc.t Comment.t option =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#statement stmt);
+  collector#comment_bounds
+
+let object_property_comment_bounds property =
+  let open Ast.Expression.Object in
+  let collector =
+    match property with
+    | Property ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_property p);
+      collector
+    | SpreadProperty ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#spread_property p);
+      collector
+  in
+  collector#comment_bounds
+
+let object_type_property_comment_bounds property =
+  let open Ast.Type.Object in
+  let collector =
+    match property with
+    | Property ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_property_type p);
+      collector
+    | SpreadProperty ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_spread_property_type p);
+      collector
+    | Indexer ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_indexer_property_type p);
+      collector
+    | InternalSlot ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_internal_slot_property_type p);
+      collector
+    | CallProperty ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_call_property_type p);
+      collector
+  in
   collector#comment_bounds

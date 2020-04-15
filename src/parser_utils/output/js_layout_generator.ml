@@ -824,15 +824,28 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                  (List.rev rev_elements);
              ]
       | E.Object { E.Object.properties; comments } ->
-        layout_node_with_comments_opt loc comments
-        @@ group
-             [
-               new_list
-                 ~wrap:(Atom "{", Atom "}")
-                 ~sep:(Atom ",")
-                 ~wrap_spaces:true
-                 (object_properties_with_newlines properties);
-             ]
+        let prop_loc = function
+          | E.Object.Property (loc, _) -> loc
+          | E.Object.SpreadProperty (loc, _) -> loc
+        in
+        let props =
+          Base.List.map
+            ~f:(fun prop ->
+              ( prop_loc prop,
+                Comment_attachment.object_property_comment_bounds prop,
+                object_property prop ))
+            properties
+          |> list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line
+        in
+        (* Add trailing comma to last property *)
+        let props =
+          if props = [] then
+            props
+          else
+            [fuse props; if_break (Atom ",") Empty]
+        in
+        let props_layout = wrap_and_indent ?break:(Some pretty_line) (Atom "{", Atom "}") props in
+        layout_node_with_comments_opt loc comments @@ group [props_layout]
       | E.Sequence { E.Sequence.expressions; comments } ->
         (* to get an AST like `x, (y, z)`, then there must've been parens
          around the right side. we can force that by bumping the minimum
@@ -1771,26 +1784,34 @@ and class_private_field
   class_property_helper loc key value static annot variance comments
 
 and class_body (loc, { Ast.Class.Body.body; comments }) =
+  let elements =
+    Base.List.map
+      ~f:
+        (let open Comment_attachment in
+        function
+        | Ast.Class.Body.Method ((loc, _) as meth) ->
+          let comment_bounds =
+            comment_bounds loc meth (fun collector (loc, meth) -> collector#class_method loc meth)
+          in
+          (loc, comment_bounds, class_method meth)
+        | Ast.Class.Body.Property ((loc, _) as prop) ->
+          let comment_bounds =
+            comment_bounds loc prop (fun collector (loc, prop) -> collector#class_property loc prop)
+          in
+          (loc, comment_bounds, class_property prop)
+        | Ast.Class.Body.PrivateField ((loc, _) as field) ->
+          let comment_bounds =
+            comment_bounds loc field (fun collector (loc, field) ->
+                collector#class_private_field loc field)
+          in
+          (loc, comment_bounds, class_private_field field))
+      body
+    |> list_with_newlines
+  in
   if body <> [] then
     source_location_with_comments
       ?comments
-      ( loc,
-        group
-          [
-            wrap_and_indent
-              ~break:pretty_hardline
-              (Atom "{", Atom "}")
-              [
-                join
-                  pretty_hardline
-                  (Base.List.map
-                     ~f:(function
-                       | Ast.Class.Body.Method meth -> class_method meth
-                       | Ast.Class.Body.Property prop -> class_property prop
-                       | Ast.Class.Body.PrivateField field -> class_private_field field)
-                     body);
-              ];
-          ] )
+      (loc, group [wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse elements]])
   else
     source_location_with_comments ?comments (loc, Atom "{}")
 
@@ -2009,41 +2030,6 @@ and statement_list ?(pretty_semicolon = false) statements =
       (mapper [@tailcall]) acc rest
   in
   mapper [] statements |> list_with_newlines
-
-and object_properties_with_newlines properties =
-  let module E = Ast.Expression in
-  let module O = E.Object in
-  let rec has_function_decl = function
-    | O.Property (_, O.Property.Init { value = v; _ }) ->
-      begin
-        match v with
-        | (_, E.Function _)
-        | (_, E.ArrowFunction _) ->
-          true
-        | (_, E.Object { O.properties; comments = _ }) -> List.exists has_function_decl properties
-        | _ -> false
-      end
-    | O.Property (_, O.Property.Get _)
-    | O.Property (_, O.Property.Set _) ->
-      true
-    | _ -> false
-  in
-  let (property_labels, _) =
-    List.fold_left
-      (fun (acc, last_p) p ->
-        match (last_p, p) with
-        | (None, _) ->
-          (* Never on first line *)
-          (object_property p :: acc, Some (has_function_decl p))
-        | (Some true, p) ->
-          (fuse [pretty_hardline; object_property p] :: acc, Some (has_function_decl p))
-        | (_, p) when has_function_decl p ->
-          (fuse [pretty_hardline; object_property p] :: acc, Some true)
-        | _ -> (object_property p :: acc, Some false))
-      ([], None)
-      properties
-  in
-  List.rev property_labels
 
 and object_property_key key =
   let module O = Ast.Expression.Object in
@@ -2906,15 +2892,47 @@ and type_object ?(sep = Atom ",") loc { Ast.Type.Object.exact; properties; inexa
     else
       Empty
   in
-  let props = Base.List.map ~f:type_object_property properties in
+  let sep_linebreak = pretty_line in
+  let prop_loc =
+    let open Ast.Type.Object in
+    function
+    | Property (loc, _)
+    | SpreadProperty (loc, _)
+    | Indexer (loc, _)
+    | CallProperty (loc, _)
+    | InternalSlot (loc, _) ->
+      loc
+  in
+  let props =
+    Base.List.map
+      ~f:(fun property ->
+        ( prop_loc property,
+          Comment_attachment.object_type_property_comment_bounds property,
+          type_object_property property ))
+      properties
+    |> list_with_newlines ~sep ~sep_linebreak
+  in
   let props =
     if inexact then
-      props @ [Atom "..."]
+      let sep =
+        if props = [] then
+          Empty
+        else
+          fuse [sep; sep_linebreak]
+      in
+      props @ [sep; Atom "..."]
     else
       props
   in
-  layout_node_with_comments_opt loc comments
-  @@ group [new_list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep props]
+  (* Add trailing comma to last property *)
+  let props =
+    if props = [] then
+      props
+    else
+      [fuse props; if_break sep Empty]
+  in
+  let props_layout = wrap_and_indent (fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) props in
+  layout_node_with_comments_opt loc comments @@ group [props_layout]
 
 and type_interface loc { Ast.Type.Interface.extends; body = (obj_loc, obj); comments } =
   layout_node_with_comments_opt loc comments

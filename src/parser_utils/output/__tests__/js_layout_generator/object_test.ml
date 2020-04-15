@@ -61,7 +61,6 @@ let tests =
       assert_layout ~ctxt (expected_object2_layout prop1 prop2) layout;
       assert_output ~ctxt ("{foo:" ^ x40 ^ ",bar:" ^ x40 ^ "}") layout;
       assert_output ~ctxt ~pretty:true ("{\n  foo: " ^ x40 ^ ",\n  bar: " ^ x40 ^ ",\n}") layout );
-    (* a function value forces the whole object to break in pretty mode *)
     ( "object_property_is_function" >:: fun ctxt ->
       let prop1 = E.object_property (E.object_property_key "foo") (E.identifier "x") in
       let prop2 = E.object_property (E.object_property_key "bar") (E.function_ ()) in
@@ -85,11 +84,9 @@ let tests =
                         prop1_layout;
                         atom ",";
                         pretty_line;
-                        pretty_hardline;
                         prop2_layout;
                         atom ",";
                         pretty_line;
-                        pretty_hardline;
                         prop3_layout;
                         Layout.IfBreak (atom ",", empty);
                       ]);
@@ -98,11 +95,7 @@ let tests =
                ]))
         layout;
       assert_output ~ctxt "{foo:x,bar:function(){},baz:y}" layout;
-      assert_output
-        ~ctxt
-        ~pretty:true
-        "{\n  foo: x,\n  \n  bar: function() {},\n  \n  baz: y,\n}"
-        layout );
+      assert_output ~ctxt ~pretty:true "{ foo: x, bar: function() {}, baz: y }" layout );
     ( "object_property_is_method" >:: fun ctxt ->
       let layout =
         Js_layout_generator.expression (E.object_ [E.object_method (E.object_property_key "foo")])
@@ -250,4 +243,15 @@ let tests =
         ~pretty:true
         ("{\n  [\n    " ^ b40 ^ " + " ^ b40 ^ "\n  ]: 123,\n}")
         layout );
+    ( "preserve_blank_lines_between_properties" >:: fun ctxt ->
+      (* Single blank line is preserved *)
+      assert_expression_string ~ctxt ~pretty:true "{\n  a: 1,\n  \n  b: 2,\n}";
+      (* Multiple blank lines are condensed to a single blank line *)
+      assert_expression
+        ~ctxt
+        ~pretty:true
+        "{\n  a: 1,\n  \n  b: 2,\n}"
+        (Ast_builder.expression_of_string "{\n  a: 1,\n  \n  \n b: 2,\n}");
+      (* Comments are not treated as blank lines *)
+      assert_expression_string ~ctxt ~pretty:true "{\n  a: 1,\n  //L\n  b: 2,\n}" );
   ]

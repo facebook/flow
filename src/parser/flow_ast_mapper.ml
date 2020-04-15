@@ -1001,14 +1001,23 @@ class ['loc] mapper =
     method object_property_type (opt : ('loc, 'loc) Ast.Type.Object.Property.t) =
       let open Ast.Type.Object.Property in
       let (loc, { key; value; optional; static; proto; _method; variance; comments }) = opt in
+      let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let comments' = this#syntax_opt comments in
-      if value' == value && comments' == comments then
+      if key' == key && value' == value && comments' == comments then
         opt
       else
         ( loc,
-          { key; value = value'; optional; static; proto; _method; variance; comments = comments' }
-        )
+          {
+            key = key';
+            value = value';
+            optional;
+            static;
+            proto;
+            _method;
+            variance;
+            comments = comments';
+          } )
 
     method object_spread_property_type (opt : ('loc, 'loc) Ast.Type.Object.SpreadProperty.t) =
       let open Ast.Type.Object.SpreadProperty in

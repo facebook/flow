@@ -2290,4 +2290,26 @@ let tests =
            assert_expression_string ~ctxt "a||(b??c)";
            assert_expression_string ~ctxt "(a??b)||c" );
          ("optional_call" >:: fun ctxt -> assert_expression_string ~ctxt "foo?.()");
+         ( "class_preserve_blank_lines_between_elements" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "class C {\n  a;\n  \n  b;\n}";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "class C {\n  a;\n  \n  b;\n}"
+             (expression_of_string "class C {\n  a;\n  \n  \n b;\n}");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "class C {\n  a;\n  //L\n  b;\n}" );
+         ( "object_type_preserve_blank_lines_between_properties" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  \n  b: 2,\n};";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "type T = {\n  a: 1,\n  \n  b: 2,\n};"
+             (statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};" );
        ]
