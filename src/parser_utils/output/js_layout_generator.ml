@@ -574,29 +574,21 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
           (fuse [statement_with_test "with" (expression _object); statement_after_test body])
       | S.Switch { S.Switch.discriminant; cases; comments } ->
         let case_nodes =
-          let rec helper acc = function
+          let rec helper acc =
+            let open Comment_attachment in
+            function
             | [] -> List.rev acc
-            | [case] -> List.rev (switch_case ~last:true case :: acc)
-            | case :: next :: rest ->
-              let case_node = switch_case ~last:false case in
-              let next_node = switch_case ~last:(rest = []) next in
-              let case_node =
-                let (Loc.{ _end = { line = case_end; _ }; _ }, _) = case in
-                let (Loc.{ start = { line = next_start; _ }; _ }, _) = next in
-                if case_end + 1 < next_start then
-                  fuse [case_node; pretty_hardline]
-                else
-                  case_node
-              in
-              helper (next_node :: case_node :: acc) rest
+            | [((loc, _) as case)] ->
+              let case = (loc, switch_case_comment_bounds case, switch_case ~last:true case) in
+              List.rev (case :: acc)
+            | ((loc, _) as case) :: rest ->
+              let case = (loc, switch_case_comment_bounds case, switch_case ~last:false case) in
+              helper (case :: acc) rest
           in
-          helper [] cases
+          helper [] cases |> list_with_newlines
         in
         let cases_node =
-          wrap_and_indent
-            ~break:pretty_hardline
-            (Atom "{", Atom "}")
-            [join pretty_hardline case_nodes]
+          wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse case_nodes]
         in
         layout_node_with_comments_opt
           loc

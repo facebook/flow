@@ -644,3 +644,8 @@ let object_type_property_comment_bounds property =
       collector
   in
   collector#comment_bounds
+
+let switch_case_comment_bounds (loc, case) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#switch_case loc case);
+  collector#comment_bounds

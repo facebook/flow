@@ -2312,4 +2312,22 @@ let tests =
              (statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};" );
+         ( "switch_preserve_blank_lines_between_cases" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "switch (true) {\n  case a:\n    break;\n  \n  case b:\n    break;\n}";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "switch (true) {\n  case a:\n    break;\n  \n  case b:\n    break;\n}"
+             (statement_of_string
+                "switch (true) {\n  case a:\n    break;\n  \n  \n  case b:\n    break;\n}");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "switch (true) {\n  case a:\n    break;\n  //L\n  case b:\n    break;\n}" );
        ]
