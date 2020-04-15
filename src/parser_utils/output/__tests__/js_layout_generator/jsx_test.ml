@@ -264,4 +264,13 @@ let tests =
     );
     ( "expression_longhand_and_shorthand_attributes" >:: fun ctxt ->
       assert_expression_string ~ctxt "<A b={1}a />" );
+    ( "preserve_blank_lines_between_children" >:: fun ctxt ->
+      (* Single blank line is preserved *)
+      assert_expression_string ~ctxt ~pretty:true "<A>\n  <B />\n  \n  <C />\n</A>";
+      (* Multiple blank lines are condensed to a single blank line *)
+      assert_expression
+        ~ctxt
+        ~pretty:true
+        "<A>\n  <B />\n  \n  <C />\n</A>"
+        (expression_of_string "<A>\n  <B />\n  \n  \n  <C />\n</A>") );
   ]

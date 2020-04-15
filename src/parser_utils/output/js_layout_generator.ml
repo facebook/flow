@@ -2340,6 +2340,10 @@ and jsx_children loc (_children_loc, children) =
               match last_line with
               (* First child, newlines will always be forced via the `pretty_hardline` below *)
               | None -> child_n
+              (* If there is at least one blank line between the current and previous child,
+                 output a single blank line separating the children. *)
+              | Some last_line when loc.start.line > last_line + 1 ->
+                fuse [pretty_hardline; Newline; child_n]
               (* If the current child and the previous child line positions are offset match
            this via forcing a newline *)
               | Some last_line when loc.start.line > last_line ->
