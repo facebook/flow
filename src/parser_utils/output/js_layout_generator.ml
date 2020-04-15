@@ -1443,12 +1443,17 @@ and arrow_function
          end;
        ]
 
+and has_rest_param = function
+  | (_, { Ast.Function.Params.rest = Some _; _ }) -> true
+  | _ -> false
+
 and arrow_function_params params =
   group
     [
       new_list
         ~wrap:(Atom "(", Atom ")")
         ~sep:(Atom ",")
+        ~trailing_sep:(not (has_rest_param params))
         (function_params ~ctxt:normal_context params);
     ]
 
@@ -1499,6 +1504,7 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~commen
          list
            ~wrap:(Atom "(", Atom ")")
            ~sep:(Atom ",")
+           ~trailing:(not (has_rest_param params))
            (function_params ~ctxt:normal_context params);
          function_return ~arrow:false return predicate;
          pretty_space;

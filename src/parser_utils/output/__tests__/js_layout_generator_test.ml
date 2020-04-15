@@ -1226,6 +1226,25 @@ let tests =
            assert_expression_string ~ctxt "(a):c=>{}";
            assert_expression_string ~ctxt "(a:a,b:b):c=>{}";
            assert_expression_string ~ctxt ~pretty:true "(a: a, b: b): c => {}" );
+         ( "function_parameters" >:: fun ctxt ->
+           let long_a = String.make 80 'a' in
+           let long_b = String.make 80 'b' in
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             ("function f(\n  " ^ long_a ^ ",\n  " ^ long_b ^ ",\n) {}");
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             ("function f(\n  " ^ long_a ^ ",\n  ..." ^ long_b ^ "\n) {}");
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             ("(\n  " ^ long_a ^ ",\n  " ^ long_b ^ ",\n) => {}");
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             ("(\n  " ^ long_a ^ ",\n  ..." ^ long_b ^ "\n) => {}") );
          ( "class_statements" >:: fun ctxt ->
            let long_a = String.make 80 'a' in
            let long_b = String.make 80 'b' in
