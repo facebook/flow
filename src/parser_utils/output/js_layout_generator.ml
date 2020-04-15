@@ -1031,7 +1031,7 @@ and call ?(optional = false) ~precedence ~ctxt call_node loc =
     | None ->
       let lparen =
         if optional then
-          ".?("
+          "?.("
         else
           "("
       in

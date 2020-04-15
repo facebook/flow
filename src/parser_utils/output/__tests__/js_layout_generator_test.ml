@@ -2289,4 +2289,5 @@ let tests =
            assert_expression_string ~ctxt "a??(b||c)";
            assert_expression_string ~ctxt "a||(b??c)";
            assert_expression_string ~ctxt "(a??b)||c" );
+         ("optional_call" >:: fun ctxt -> assert_expression_string ~ctxt "foo?.()");
        ]
