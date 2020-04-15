@@ -25,18 +25,14 @@ let tests =
         ~ctxt
         L.(
           loc
-            (fused
-               [
-                 loc
-                   (fused
-                      [
-                        atom "let";
-                        space;
-                        loc
-                          (fused [loc (id "a"); pretty_space; atom "="; pretty_space; loc (id "a")]);
-                      ]);
-                 atom ";";
-               ]))
+            (loc
+               (fused
+                  [
+                    atom "let";
+                    space;
+                    loc (fused [loc (id "a"); pretty_space; atom "="; pretty_space; loc (id "a")]);
+                    atom ";";
+                  ])))
         layout;
       assert_output ~ctxt "let a=a;" layout;
       assert_output ~ctxt ~pretty:true "let a = a;" layout;
@@ -56,32 +52,29 @@ let tests =
         ~ctxt
         L.(
           loc
-            (fused
-               [
-                 loc
-                   (fused
-                      [
-                        atom "let";
-                        pretty_space;
-                        loc
-                          (fused
-                             [
-                               loc
-                                 (group
-                                    [
-                                      atom "{";
-                                      indent (fused [softline; loc (id "a")]);
-                                      softline;
-                                      atom "}";
-                                    ]);
-                               pretty_space;
-                               atom "=";
-                               pretty_space;
-                               loc (id "a");
-                             ]);
-                      ]);
-                 atom ";";
-               ]))
+            (loc
+               (fused
+                  [
+                    atom "let";
+                    pretty_space;
+                    loc
+                      (fused
+                         [
+                           loc
+                             (group
+                                [
+                                  atom "{";
+                                  indent (fused [softline; loc (id "a")]);
+                                  softline;
+                                  atom "}";
+                                ]);
+                           pretty_space;
+                           atom "=";
+                           pretty_space;
+                           loc (id "a");
+                         ]);
+                    atom ";";
+                  ])))
         layout;
       assert_output ~ctxt "let{a}=a;" layout;
       assert_output ~ctxt ~pretty:true "let {a} = a;" layout;
@@ -139,32 +132,29 @@ let tests =
         ~ctxt
         L.(
           loc
-            (fused
-               [
-                 loc
-                   (fused
-                      [
-                        atom "let";
-                        pretty_space;
-                        loc
-                          (fused
-                             [
-                               loc
-                                 (group
-                                    [
-                                      atom "[";
-                                      indent (fused [softline; loc (loc (id "a"))]);
-                                      softline;
-                                      atom "]";
-                                    ]);
-                               pretty_space;
-                               atom "=";
-                               pretty_space;
-                               loc (id "a");
-                             ]);
-                      ]);
-                 atom ";";
-               ]))
+            (loc
+               (fused
+                  [
+                    atom "let";
+                    pretty_space;
+                    loc
+                      (fused
+                         [
+                           loc
+                             (group
+                                [
+                                  atom "[";
+                                  indent (fused [softline; loc (loc (id "a"))]);
+                                  softline;
+                                  atom "]";
+                                ]);
+                           pretty_space;
+                           atom "=";
+                           pretty_space;
+                           loc (id "a");
+                         ]);
+                    atom ";";
+                  ])))
         layout;
       assert_output ~ctxt "let[a]=a;" layout;
       assert_output ~ctxt ~pretty:true "let [a] = a;" layout;

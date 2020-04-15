@@ -30,58 +30,55 @@ let tests =
                        Loc.start = { Loc.line = 1; column = 0 };
                        _end = { Loc.line = 1; column = 10 };
                      }
-                   (fused
-                      [
-                        loc
-                          ~loc:
-                            {
-                              Loc.none with
-                              Loc.start = { Loc.line = 1; column = 0 };
-                              _end = { Loc.line = 1; column = 10 };
-                            }
-                          (fused
-                             [
-                               atom "var";
-                               space;
-                               loc
-                                 ~loc:
-                                   {
-                                     Loc.none with
-                                     Loc.start = { Loc.line = 1; column = 4 };
-                                     _end = { Loc.line = 1; column = 9 };
-                                   }
-                                 (fused
-                                    [
-                                      loc
-                                        ~loc:
-                                          {
-                                            Loc.none with
-                                            Loc.start = { Loc.line = 1; column = 4 };
-                                            _end = { Loc.line = 1; column = 5 };
-                                          }
-                                        (id
-                                           ~loc:
-                                             {
-                                               Loc.none with
-                                               Loc.start = { Loc.line = 1; column = 4 };
-                                               _end = { Loc.line = 1; column = 5 };
-                                             }
-                                           "x");
-                                      pretty_space;
-                                      atom "=";
-                                      pretty_space;
-                                      loc
-                                        ~loc:
-                                          {
-                                            Loc.none with
-                                            Loc.start = { Loc.line = 1; column = 8 };
-                                            _end = { Loc.line = 1; column = 9 };
-                                          }
-                                        (atom "1");
-                                    ]);
-                             ]);
-                        atom ";";
-                      ]);
+                   (loc
+                      ~loc:
+                        {
+                          Loc.none with
+                          Loc.start = { Loc.line = 1; column = 0 };
+                          _end = { Loc.line = 1; column = 10 };
+                        }
+                      (fused
+                         [
+                           atom "var";
+                           space;
+                           loc
+                             ~loc:
+                               {
+                                 Loc.none with
+                                 Loc.start = { Loc.line = 1; column = 4 };
+                                 _end = { Loc.line = 1; column = 9 };
+                               }
+                             (fused
+                                [
+                                  loc
+                                    ~loc:
+                                      {
+                                        Loc.none with
+                                        Loc.start = { Loc.line = 1; column = 4 };
+                                        _end = { Loc.line = 1; column = 5 };
+                                      }
+                                    (id
+                                       ~loc:
+                                         {
+                                           Loc.none with
+                                           Loc.start = { Loc.line = 1; column = 4 };
+                                           _end = { Loc.line = 1; column = 5 };
+                                         }
+                                       "x");
+                                  pretty_space;
+                                  atom "=";
+                                  pretty_space;
+                                  loc
+                                    ~loc:
+                                      {
+                                        Loc.none with
+                                        Loc.start = { Loc.line = 1; column = 8 };
+                                        _end = { Loc.line = 1; column = 9 };
+                                      }
+                                    (atom "1");
+                                ]);
+                           atom ";";
+                         ]));
                  pretty_hardline;
                  pretty_hardline;
                  loc
@@ -91,58 +88,55 @@ let tests =
                        Loc.start = { Loc.line = 4; column = 0 };
                        _end = { Loc.line = 4; column = 10 };
                      }
-                   (fused
-                      [
-                        loc
-                          ~loc:
-                            {
-                              Loc.none with
-                              Loc.start = { Loc.line = 4; column = 0 };
-                              _end = { Loc.line = 4; column = 10 };
-                            }
-                          (fused
-                             [
-                               atom "var";
-                               space;
-                               loc
-                                 ~loc:
-                                   {
-                                     Loc.none with
-                                     Loc.start = { Loc.line = 4; column = 4 };
-                                     _end = { Loc.line = 4; column = 9 };
-                                   }
-                                 (fused
-                                    [
-                                      loc
-                                        ~loc:
-                                          {
-                                            Loc.none with
-                                            Loc.start = { Loc.line = 4; column = 4 };
-                                            _end = { Loc.line = 4; column = 5 };
-                                          }
-                                        (id
-                                           ~loc:
-                                             {
-                                               Loc.none with
-                                               Loc.start = { Loc.line = 4; column = 4 };
-                                               _end = { Loc.line = 4; column = 5 };
-                                             }
-                                           "y");
-                                      pretty_space;
-                                      atom "=";
-                                      pretty_space;
-                                      loc
-                                        ~loc:
-                                          {
-                                            Loc.none with
-                                            Loc.start = { Loc.line = 4; column = 8 };
-                                            _end = { Loc.line = 4; column = 9 };
-                                          }
-                                        (atom "2");
-                                    ]);
-                             ]);
-                        atom ";";
-                      ]);
+                   (loc
+                      ~loc:
+                        {
+                          Loc.none with
+                          Loc.start = { Loc.line = 4; column = 0 };
+                          _end = { Loc.line = 4; column = 10 };
+                        }
+                      (fused
+                         [
+                           atom "var";
+                           space;
+                           loc
+                             ~loc:
+                               {
+                                 Loc.none with
+                                 Loc.start = { Loc.line = 4; column = 4 };
+                                 _end = { Loc.line = 4; column = 9 };
+                               }
+                             (fused
+                                [
+                                  loc
+                                    ~loc:
+                                      {
+                                        Loc.none with
+                                        Loc.start = { Loc.line = 4; column = 4 };
+                                        _end = { Loc.line = 4; column = 5 };
+                                      }
+                                    (id
+                                       ~loc:
+                                         {
+                                           Loc.none with
+                                           Loc.start = { Loc.line = 4; column = 4 };
+                                           _end = { Loc.line = 4; column = 5 };
+                                         }
+                                       "y");
+                                  pretty_space;
+                                  atom "=";
+                                  pretty_space;
+                                  loc
+                                    ~loc:
+                                      {
+                                        Loc.none with
+                                        Loc.start = { Loc.line = 4; column = 8 };
+                                        _end = { Loc.line = 4; column = 9 };
+                                      }
+                                    (atom "2");
+                                ]);
+                           atom ";";
+                         ]));
                ]))
         layout;
       assert_output ~ctxt "var x=1;var y=2;" layout;

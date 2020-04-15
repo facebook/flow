@@ -106,7 +106,11 @@ let tests =
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
       assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );
+    ("break" >:: fun ctxt -> assert_statement_string ~ctxt "break;/*T*/");
     ("class_private_field" >:: fun ctxt -> assert_expression_string ~ctxt "class C{/*L*/#A/*T*/;}");
+    ("continue" >:: fun ctxt -> assert_statement_string ~ctxt "continue;/*T*/");
+    ("debugger" >:: fun ctxt -> assert_statement_string ~ctxt "debugger;/*T*/");
+    ("do_while" >:: fun ctxt -> assert_statement_string ~ctxt "do{}while(A);/*T*/");
     ( "enum" >:: fun ctxt ->
       assert_statement_string ~ctxt "enum E of boolean{A=/*L*/true/*T*/,}";
       assert_statement_string ~ctxt "enum E of number{A=/*L*/1/*T*/,}";
@@ -119,4 +123,7 @@ let tests =
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
       assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
+    ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
+    ("throw" >:: fun ctxt -> assert_statement_string ~ctxt "throw A;/*T*/");
+    ("variable_declaration" >:: fun ctxt -> assert_statement_string ~ctxt "let A=B;/*T*/");
   ]

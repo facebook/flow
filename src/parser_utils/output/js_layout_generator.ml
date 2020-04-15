@@ -521,7 +521,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       match stmt with
       | S.Empty { S.Empty.comments } -> layout_node_with_comments_opt loc comments (Atom ";")
       | S.Debugger { S.Debugger.comments } ->
-        with_semicolon @@ layout_node_with_comments_opt loc comments (Atom "debugger")
+        layout_node_with_comments_opt loc comments @@ with_semicolon (Atom "debugger")
       | S.Block b -> block (loc, b)
       | S.Expression { S.Expression.expression = expr; directive = _; comments } ->
         let ctxt = { normal_context with left = In_expression_statement } in
@@ -555,19 +555,15 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
           (fuse [identifier label; Atom ":"; pretty_space; statement body])
       | S.Break { S.Break.label; comments } ->
         let s_break = Atom "break" in
-        with_semicolon
-        @@ layout_node_with_comments_opt
-             loc
-             comments
+        layout_node_with_comments_opt loc comments
+        @@ with_semicolon
              (match label with
              | Some l -> fuse [s_break; space; identifier l]
              | None -> s_break)
       | S.Continue { S.Continue.label; comments } ->
         let s_continue = Atom "continue" in
-        with_semicolon
-        @@ layout_node_with_comments_opt
-             loc
-             comments
+        layout_node_with_comments_opt loc comments
+        @@ with_semicolon
              (match label with
              | Some l -> fuse [s_continue; space; identifier l]
              | None -> s_continue)
@@ -608,10 +604,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
           (fuse [statement_with_test "switch" (expression discriminant); pretty_space; cases_node])
       | S.Return { S.Return.argument; comments } ->
         let s_return = Atom "return" in
-        with_semicolon
-        @@ layout_node_with_comments_opt
-             loc
-             comments
+        layout_node_with_comments_opt loc comments
+        @@ with_semicolon
              (match argument with
              | Some arg ->
                let arg =
@@ -626,10 +620,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                fuse_with_space [s_return; arg]
              | None -> s_return)
       | S.Throw { S.Throw.argument; comments } ->
-        with_semicolon
-        @@ layout_node_with_comments_opt
-             loc
-             comments
+        layout_node_with_comments_opt loc comments
+        @@ with_semicolon
              (fuse_with_space [Atom "throw"; group [wrap_in_parens_on_break (expression argument)]])
       | S.Try { S.Try.block = b; handler; finalizer; comments } ->
         layout_node_with_comments_opt
@@ -670,10 +662,8 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                statement_after_test ~pretty_semicolon body;
              ])
       | S.DoWhile { S.DoWhile.body; test; comments } ->
-        with_semicolon
-        @@ layout_node_with_comments_opt
-             loc
-             comments
+        layout_node_with_comments_opt loc comments
+        @@ with_semicolon
              (fuse
                 [
                   fuse_with_space [Atom "do"; statement body];
@@ -738,7 +728,14 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                statement_after_test ~pretty_semicolon body;
              ]
       | S.FunctionDeclaration func -> function_ loc func
-      | S.VariableDeclaration decl -> with_semicolon (variable_declaration (loc, decl))
+      | S.VariableDeclaration decl ->
+        let semicolon =
+          if pretty_semicolon then
+            Some (IfPretty (Atom ";", Empty))
+          else
+            Some (Atom ";")
+        in
+        variable_declaration ?semicolon (loc, decl)
       | S.ClassDeclaration class_ -> class_base loc class_
       | S.EnumDeclaration enum -> enum_declaration loc enum
       | S.ForOf { S.ForOf.left; right; body; await; comments } ->
@@ -1364,6 +1361,7 @@ and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions; comme
 
 and variable_declaration
     ?(ctxt = normal_context)
+    ?(semicolon = Empty)
     (loc, { Ast.Statement.VariableDeclaration.declarations; kind; comments }) =
   let kind_layout =
     match kind with
@@ -1395,7 +1393,9 @@ and variable_declaration
       let tl = Base.List.map ~f:(variable_declarator ~ctxt) tl in
       group [hd; Atom ","; Indent (fuse [sep; join (fuse [Atom ","; sep]) tl])]
   in
-  source_location_with_comments ?comments (loc, fuse_with_space [kind_layout; decls_layout])
+  source_location_with_comments
+    ?comments
+    (loc, fuse [fuse_with_space [kind_layout; decls_layout]; semicolon])
 
 and variable_declarator ~ctxt (loc, { Ast.Statement.VariableDeclaration.Declarator.id; init }) =
   source_location_with_comments
