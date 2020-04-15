@@ -71,7 +71,7 @@ let deoptionalize l =
        l)
 
 (* See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence *)
-let max_precedence = 21
+let max_precedence = 22
 
 let min_precedence = 1
 
@@ -102,43 +102,43 @@ let precedence_of_expression expr =
   | (_, E.Call _)
   | (_, E.OptionalCall _)
   | (_, E.New { E.New.arguments = Some _; _ }) ->
-    20
-  | (_, E.New { E.New.arguments = None; _ }) -> 19
+    21
+  | (_, E.New { E.New.arguments = None; _ }) -> 20
   | (_, E.TaggedTemplate _)
   | (_, E.Import _) ->
-    18
-  | (_, E.Update { E.Update.prefix = false; _ }) -> 17
+    19
+  | (_, E.Update { E.Update.prefix = false; _ }) -> 18
   | (_, E.Update { E.Update.prefix = true; _ })
   | (_, E.Unary _) ->
-    16
+    17
   | (_, E.Binary { E.Binary.operator; _ }) ->
     begin
       match operator with
-      | E.Binary.Exp -> 15
-      | E.Binary.Mult -> 14
-      | E.Binary.Div -> 14
-      | E.Binary.Mod -> 14
-      | E.Binary.Plus -> 13
-      | E.Binary.Minus -> 13
-      | E.Binary.LShift -> 12
-      | E.Binary.RShift -> 12
-      | E.Binary.RShift3 -> 12
-      | E.Binary.LessThan -> 11
-      | E.Binary.LessThanEqual -> 11
-      | E.Binary.GreaterThan -> 11
-      | E.Binary.GreaterThanEqual -> 11
-      | E.Binary.In -> 11
-      | E.Binary.Instanceof -> 11
-      | E.Binary.Equal -> 10
-      | E.Binary.NotEqual -> 10
-      | E.Binary.StrictEqual -> 10
-      | E.Binary.StrictNotEqual -> 10
-      | E.Binary.BitAnd -> 9
-      | E.Binary.Xor -> 8
-      | E.Binary.BitOr -> 7
+      | E.Binary.Exp -> 16
+      | E.Binary.Mult -> 15
+      | E.Binary.Div -> 15
+      | E.Binary.Mod -> 15
+      | E.Binary.Plus -> 14
+      | E.Binary.Minus -> 14
+      | E.Binary.LShift -> 13
+      | E.Binary.RShift -> 13
+      | E.Binary.RShift3 -> 13
+      | E.Binary.LessThan -> 12
+      | E.Binary.LessThanEqual -> 12
+      | E.Binary.GreaterThan -> 12
+      | E.Binary.GreaterThanEqual -> 12
+      | E.Binary.In -> 12
+      | E.Binary.Instanceof -> 12
+      | E.Binary.Equal -> 11
+      | E.Binary.NotEqual -> 11
+      | E.Binary.StrictEqual -> 11
+      | E.Binary.StrictNotEqual -> 11
+      | E.Binary.BitAnd -> 10
+      | E.Binary.Xor -> 9
+      | E.Binary.BitOr -> 8
     end
-  | (_, E.Logical { E.Logical.operator = E.Logical.And; _ }) -> 6
-  | (_, E.Logical { E.Logical.operator = E.Logical.Or; _ }) -> 5
+  | (_, E.Logical { E.Logical.operator = E.Logical.And; _ }) -> 7
+  | (_, E.Logical { E.Logical.operator = E.Logical.Or; _ }) -> 6
   | (_, E.Logical { E.Logical.operator = E.Logical.NullishCoalesce; _ }) -> 5
   | (_, E.Conditional _) -> 4
   | (_, E.Assignment _) -> precedence_of_assignment
@@ -895,6 +895,14 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
                     ]);
              ]
       | E.Logical { E.Logical.operator; left; right; comments } ->
+        let expression_with_parens ~precedence ~ctxt expr =
+          match (operator, expr) with
+          (* Logical expressions inside a nullish coalese expression must be wrapped in parens *)
+          | ( E.Logical.NullishCoalesce,
+              (_, E.Logical { E.Logical.operator = E.Logical.And | E.Logical.Or; _ }) ) ->
+            wrap_in_parens (expression expr)
+          | _ -> expression_with_parens ~precedence ~ctxt expr
+        in
         let left = expression_with_parens ~precedence ~ctxt left in
         let operator =
           match operator with

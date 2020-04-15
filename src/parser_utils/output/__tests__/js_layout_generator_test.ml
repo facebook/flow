@@ -2260,4 +2260,14 @@ let tests =
            assert_expression_string ~ctxt "():()=>x%checks=>{}";
            assert_expression_string ~ctxt "():(...x)=>y=>{}";
            assert_expression_string ~ctxt "():(...x)=>y%checks=>{}" );
+         ( "nullish_coalesce_with_logical" >:: fun ctxt ->
+           assert_expression_string ~ctxt "(a&&b)??c";
+           assert_expression_string ~ctxt "a??(b&&c)";
+           assert_expression_string ~ctxt "a&&(b??c)";
+           assert_expression_string ~ctxt "(a??b)&&c";
+
+           assert_expression_string ~ctxt "(a||b)??c";
+           assert_expression_string ~ctxt "a??(b||c)";
+           assert_expression_string ~ctxt "a||(b??c)";
+           assert_expression_string ~ctxt "(a??b)||c" );
        ]
