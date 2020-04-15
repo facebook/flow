@@ -367,37 +367,68 @@ let utf8_escape =
   fun ~quote str ->
     str |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str)) |> Buffer.contents
 
-let layout_from_comment_preceding loc_node (loc_cm, comment) =
-  let open Ast.Comment in
-  let comment_text =
-    match comment with
-    | Line txt -> Printf.sprintf "//%s\n" txt
-    | Block txt ->
-      if Loc.lines_intersect loc_node loc_cm then
-        Printf.sprintf "\n/*%s*/" txt
-      else
-        Printf.sprintf "/*%s*/" txt
-  in
-  SourceLocation (loc_cm, Atom comment_text)
+let is_single_linebreak prev next = Loc.(next.start.line = prev._end.line + 1)
 
-let layout_from_comment_following loc_node (loc_cm, comment) =
+let is_multi_linebreak prev next = Loc.(next.start.line > prev._end.line + 1)
+
+let layout_comment loc comment =
   let open Ast.Comment in
-  let comment_text =
-    match comment with
-    | Line txt -> Printf.sprintf "//%s\n" txt
-    | Block txt ->
-      if Loc.lines_intersect loc_node loc_cm then
-        Printf.sprintf "/*%s*/\n" txt
-      else
-        Printf.sprintf "/*%s*/" txt
+  SourceLocation
+    ( loc,
+      match comment with
+      | Line text -> fuse [Atom "//"; Atom text; hardline]
+      | Block text -> fuse [Atom "/*"; Atom text; Atom "*/"] )
+
+let layout_from_leading_comment (loc, comment) next_loc =
+  let open Ast.Comment in
+  let is_single_linebreak = is_single_linebreak loc next_loc in
+  let is_multi_linebreak = is_multi_linebreak loc next_loc in
+  let layout_comment = layout_comment loc comment in
+  match comment with
+  | Line _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline]
+  | Line _ -> layout_comment
+  | Block _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline; pretty_hardline]
+  | Block _ when is_single_linebreak -> fuse [layout_comment; pretty_hardline]
+  | Block _ -> fuse [layout_comment; pretty_space]
+
+let layout_from_trailing_comment (loc, comment) (prev_loc, prev_comment) =
+  let open Ast.Comment in
+  let is_single_linebreak = is_single_linebreak prev_loc loc in
+  let is_multi_linebreak = is_multi_linebreak prev_loc loc in
+  let layout_comment = layout_comment loc comment in
+  match prev_comment with
+  | Some (Line _) when is_multi_linebreak -> fuse [pretty_hardline; layout_comment]
+  | Some (Line _) -> layout_comment
+  | Some (Block _) when is_multi_linebreak ->
+    fuse [pretty_hardline; pretty_hardline; layout_comment]
+  | Some (Block _) when is_single_linebreak -> fuse [pretty_hardline; layout_comment]
+  | Some (Block _) -> fuse [pretty_space; layout_comment]
+  | None when is_multi_linebreak -> fuse [pretty_hardline; pretty_hardline; layout_comment]
+  | None when is_single_linebreak -> fuse [pretty_hardline; layout_comment]
+  | None -> fuse [pretty_space; layout_comment]
+
+let layout_from_leading_comments comments node_loc =
+  let rec inner = function
+    | [] -> []
+    | [comment] -> [layout_from_leading_comment comment node_loc]
+    | comment :: ((next_loc, _) :: _ as rest) ->
+      layout_from_leading_comment comment next_loc :: inner rest
   in
-  SourceLocation (loc_cm, Atom comment_text)
+  inner comments
+
+let layout_from_trailing_comments comments node_loc =
+  let rec inner prev_comment = function
+    | [] -> []
+    | (loc, comment) :: rest ->
+      layout_from_trailing_comment (loc, comment) prev_comment :: inner (loc, Some comment) rest
+  in
+  inner node_loc comments
 
 let layout_node_with_comments current_loc comments layout_node =
   let { Ast.Syntax.leading; trailing; _ } = comments in
-  let preceding = List.map (layout_from_comment_preceding current_loc) leading in
-  let following = List.map (layout_from_comment_following current_loc) trailing in
-  Concat (preceding @ [layout_node] @ following)
+  let preceding = layout_from_leading_comments leading current_loc in
+  let following = layout_from_trailing_comments trailing (current_loc, None) in
+  Concat (List.concat [preceding; [layout_node]; following])
 
 let layout_node_with_comments_opt current_loc comments layout_node =
   match comments with
