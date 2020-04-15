@@ -103,6 +103,11 @@ let tests =
       let ast = expression_of_string "A\n/*T1*/\n\n\n/*T2*/" in
       assert_expression ~ctxt "A/*T1*//*T2*/" ast;
       assert_expression ~ctxt ~pretty:true "A\n/*T1*/\n\n/*T2*/" ast );
+    ( "statements_separated_by_comments" >:: fun ctxt ->
+      assert_program_string ~ctxt ~pretty:true "A;\n//L\nB;";
+      assert_program_string ~ctxt ~pretty:true "A;\n/*L1*/\n/*L2*/\nB;";
+      assert_program_string ~ctxt ~pretty:true "A; //L\nB;";
+      assert_program_string ~ctxt ~pretty:true "A; /*T1\nT2*/\nB;" );
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
       assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );

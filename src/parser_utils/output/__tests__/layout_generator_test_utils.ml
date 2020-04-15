@@ -47,3 +47,8 @@ let assert_statement_string ~ctxt ?msg ?pretty str =
   let ast = statement_of_string str in
   let layout = Js_layout_generator.statement ast in
   assert_output ~ctxt ?msg ?pretty str layout
+
+let assert_program_string ~ctxt ?msg ?pretty str =
+  let ast = program_of_string str in
+  let layout = Js_layout_generator.program_simple ast in
+  assert_output ~ctxt ?msg ?pretty str layout

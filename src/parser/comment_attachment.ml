@@ -540,3 +540,58 @@ let statement_add_comments
     | While ({ While.comments; _ } as s) ->
       While { s with While.comments = merge_comments comments }
     | With ({ With.comments; _ } as s) -> With { s with With.comments = merge_comments comments } )
+
+(* Collects the first leading and last trailing comment on an AST node or its children.
+   The first leading comment is the first attached comment that begins before the given node's loc,
+   and the last trailing comment is the last attached comment that begins after the given node's loc. *)
+class ['loc] comment_bounds_collector ~loc =
+  object (this)
+    inherit ['loc] Flow_ast_mapper.mapper
+
+    val mutable first_leading = None
+
+    val mutable last_trailing = None
+
+    method comment_bounds = (first_leading, last_trailing)
+
+    method collect_comments : 'internal. ('loc, 'internal) Syntax.t -> unit =
+      function
+      | { Syntax.leading; trailing; _ } ->
+        List.iter this#visit_leading_comment leading;
+        List.iter this#visit_trailing_comment trailing
+
+    method collect_comments_opt =
+      function
+      | None -> ()
+      | Some comments -> this#collect_comments comments
+
+    method visit_leading_comment ((comment_loc, _) as comment) =
+      let open Loc in
+      match first_leading with
+      | None -> if pos_cmp comment_loc.start loc.start < 0 then first_leading <- Some comment
+      | Some (current_first_loc, _) ->
+        if pos_cmp comment_loc.start current_first_loc.start < 0 then first_leading <- Some comment
+
+    method visit_trailing_comment ((comment_loc, _) as comment) =
+      let open Loc in
+      match last_trailing with
+      | None -> if pos_cmp comment_loc.start loc._end >= 0 then last_trailing <- Some comment
+      | Some (current_last_loc, _) ->
+        if pos_cmp current_last_loc.start comment_loc.start < 0 then last_trailing <- Some comment
+
+    method! syntax comments =
+      this#collect_comments comments;
+      comments
+
+    method! block _loc block =
+      let { Statement.Block.comments; _ } = block in
+      this#collect_comments_opt comments;
+      block
+  end
+
+(* Return the first leading and last trailing comment of a statement *)
+let statement_comment_bounds ((loc, _) as stmt : (Loc.t, Loc.t) Statement.t) :
+    Loc.t Comment.t option * Loc.t Comment.t option =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#statement stmt);
+  collector#comment_bounds

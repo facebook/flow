@@ -457,9 +457,9 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
         | [] -> comments
         | (loc, _) :: _ -> comments_before_loc loc comments
       in
-      combine_directives_and_comments directives comments :: statement_list statements
+      [combine_directives_and_comments directives comments; fuse (statement_list statements)]
     else
-      statement_list statements
+      [fuse (statement_list statements)]
   in
   let nodes = group [join pretty_hardline nodes] in
   let nodes = maybe_embed_checksum nodes checksum in
@@ -467,7 +467,7 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   source_location_with_comments (loc, nodes)
 
 and program_simple (loc, statements, _) =
-  let nodes = group [join pretty_hardline (statement_list statements)] in
+  let nodes = group [fuse (statement_list statements)] in
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0 } } in
   source_location_with_comments (loc, nodes)
 
@@ -478,11 +478,11 @@ and combine_directives_and_comments directives comments : Layout.layout_node =
   let nodes =
     Base.List.map
       ~f:(function
-        | (loc, Statement s) -> (loc, statement s)
-        | (loc, Comment c) -> (loc, comment c))
+        | (loc, Statement s) -> (loc, Comment_attachment.statement_comment_bounds s, statement s)
+        | (loc, Comment c) -> (loc, (None, None), comment c))
       merged
   in
-  join pretty_hardline (list_with_newlines nodes)
+  fuse (list_with_newlines nodes)
 
 and maybe_embed_checksum nodes checksum =
   match checksum with
@@ -1615,13 +1615,7 @@ and block (loc, { Ast.Statement.Block.body; comments }) =
     ?comments
     ( loc,
       if statements <> [] then
-        group
-          [
-            wrap_and_indent
-              ~break:pretty_hardline
-              (Atom "{", Atom "}")
-              [join pretty_hardline statements];
-          ]
+        group [wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse statements]]
       else
         Atom "{}" )
 
@@ -1951,25 +1945,58 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "enum"; space; identifier id; body])
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
-and list_with_newlines (nodes : (Loc.t * Layout.layout_node) list) =
-  let (nodes, _) =
-    List.fold_left
-      (fun (acc, last_loc) (loc, node) ->
-        Loc.(
-          let acc =
-            match (last_loc, node) with
-            (* empty line, don't add anything *)
-            | (_, Empty) -> acc
-            (* Lines are offset by more than one, let's add a line break *)
-            | (Some { Loc._end; _ }, node) when _end.line + 1 < loc.start.line ->
-              fuse [pretty_hardline; node] :: acc
-            (* Hasn't matched, just add the node *)
-            | (_, node) -> node :: acc
-          in
-          (acc, Some loc)))
-      ([], None)
-      nodes
+and list_with_newlines
+    ?(sep = Empty)
+    ?(sep_linebreak = pretty_hardline)
+    (nodes :
+      (Loc.t * (Loc.t Ast.Comment.t option * Loc.t Ast.Comment.t option) * Layout.layout_node) list)
+    =
+  let rec helper nodes acc prev_loc =
+    match nodes with
+    | [] -> acc
+    | (loc, (first_leading, last_trailing), node) :: rest ->
+      let open Loc in
+      (* Expand node's loc to include its attached comments *)
+      let loc =
+        let start =
+          match first_leading with
+          | None -> loc
+          | Some (first_leading_loc, _) -> first_leading_loc
+        in
+        let _end =
+          match last_trailing with
+          | None -> loc
+          | Some (last_trailing_loc, _) -> last_trailing_loc
+        in
+        btwn start _end
+      in
+      let has_trailing_line_comment =
+        match last_trailing with
+        | Some (_, Ast.Comment.Line _) -> true
+        | _ -> false
+      in
+      let sep =
+        if rest = [] then
+          Empty
+        (* Line comments already end in a hard newline, so another linebreak is not needed *)
+        else if has_trailing_line_comment then
+          sep
+        else
+          fuse [sep; sep_linebreak]
+      in
+      let acc =
+        match (prev_loc, node) with
+        (* empty line, don't add anything *)
+        | (_, Empty) -> acc
+        (* Lines are offset by more than one, let's add a line break. *)
+        | (Some { Loc._end; _ }, node) when _end.line + 1 < loc.start.line ->
+          fuse [pretty_hardline; node; sep] :: acc
+        (* Hasn't matched, just add the node *)
+        | (_, node) -> fuse [node; sep] :: acc
+      in
+      helper rest acc (Some loc)
   in
+  let nodes = helper nodes [] None in
   List.rev nodes
 
 and statement_list ?(pretty_semicolon = false) statements =
@@ -1977,7 +2004,8 @@ and statement_list ?(pretty_semicolon = false) statements =
     | [] -> List.rev acc
     | ((loc, _) as stmt) :: rest ->
       let pretty_semicolon = pretty_semicolon && rest = [] in
-      let acc = (loc, statement ~pretty_semicolon stmt) :: acc in
+      let comment_bounds = Comment_attachment.statement_comment_bounds stmt in
+      let acc = (loc, comment_bounds, statement ~pretty_semicolon stmt) :: acc in
       (mapper [@tailcall]) acc rest
   in
   mapper [] statements |> list_with_newlines
@@ -2545,7 +2573,7 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent; commen
       | [] -> case_left
       | _ ->
         let statements = statement_list ~pretty_semicolon:last consequent in
-        fuse [case_left; Indent (fuse [pretty_hardline; join pretty_hardline statements])] )
+        fuse [case_left; Indent (fuse [pretty_hardline; fuse statements])] )
 
 and type_param
     ( _,
