@@ -58,12 +58,12 @@ declare var BB: typeof B | typeof B2;
 const bba: B | B2 = BB.A;
 (BB.A: boolean); // OK
 
+declare var bs: B | B2;
+(bs: boolean); // OK
+
 declare var BS: typeof B | typeof S;
 const bsa: B | S  = BS.A;
 (BS.A: string | boolean); // Error
 
 declare var sb: S | B;
 (sb: string | boolean); // Error
-
-declare var bs: B | B2;
-(bs: boolean); // Error

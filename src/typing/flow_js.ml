@@ -1228,6 +1228,11 @@ struct
         (***************************)
         | (DefT (reason, trust, EnumT enum), TypeCastT (use_op, cast_to_t)) ->
           rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) })
+        | (UnionT _, TypeCastT (_, (UnionT _ as u)))
+          when union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) l u
+          ->
+          ()
+        | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
         (**********************************************************************)
         (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)

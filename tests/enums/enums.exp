@@ -124,14 +124,14 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:63:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
 Cannot cast `BS.A` to union type because:
  - Either `B` [1] is incompatible with string [2].
  - Or `B` [1] is incompatible with boolean [3].
 
-   cast.js:63:2
-   63| (BS.A: string | boolean); // Error
+   cast.js:66:2
+   66| (BS.A: string | boolean); // Error
         ^^^^
 
 References:
@@ -142,22 +142,22 @@ References:
     5|   B = false,
     6| }
        ^ [1]
-   cast.js:63:8
-   63| (BS.A: string | boolean); // Error
+   cast.js:66:8
+   66| (BS.A: string | boolean); // Error
               ^^^^^^ [2]
-   cast.js:63:17
-   63| (BS.A: string | boolean); // Error
+   cast.js:66:17
+   66| (BS.A: string | boolean); // Error
                        ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:63:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
 Cannot cast `BS.A` to union type because:
  - Either `S` [1] is incompatible with string [2].
  - Or `S` [1] is incompatible with boolean [3].
 
-   cast.js:63:2
-   63| (BS.A: string | boolean); // Error
+   cast.js:66:2
+   66| (BS.A: string | boolean); // Error
         ^^^^
 
 References:
@@ -168,90 +168,56 @@ References:
    15|   B,
    16| }
        ^ [1]
-   cast.js:63:8
-   63| (BS.A: string | boolean); // Error
+   cast.js:66:8
+   66| (BS.A: string | boolean); // Error
               ^^^^^^ [2]
-   cast.js:63:17
-   63| (BS.A: string | boolean); // Error
+   cast.js:66:17
+   66| (BS.A: string | boolean); // Error
                        ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
 Cannot cast `sb` to union type because:
  - Either `S` [1] is incompatible with string [2].
  - Or `S` [1] is incompatible with boolean [3].
 
-   cast.js:66:2
-   66| (sb: string | boolean); // Error
+   cast.js:69:2
+   69| (sb: string | boolean); // Error
         ^^
 
 References:
-   cast.js:65:17
-   65| declare var sb: S | B;
+   cast.js:68:17
+   68| declare var sb: S | B;
                        ^ [1]
-   cast.js:66:6
-   66| (sb: string | boolean); // Error
+   cast.js:69:6
+   69| (sb: string | boolean); // Error
             ^^^^^^ [2]
-   cast.js:66:15
-   66| (sb: string | boolean); // Error
+   cast.js:69:15
+   69| (sb: string | boolean); // Error
                      ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
 Cannot cast `sb` to union type because:
  - Either `B` [1] is incompatible with string [2].
  - Or `B` [1] is incompatible with boolean [3].
 
-   cast.js:66:2
-   66| (sb: string | boolean); // Error
-        ^^
-
-References:
-   cast.js:65:21
-   65| declare var sb: S | B;
-                           ^ [1]
-   cast.js:66:6
-   66| (sb: string | boolean); // Error
-            ^^^^^^ [2]
-   cast.js:66:15
-   66| (sb: string | boolean); // Error
-                     ^^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
-
-Cannot cast `bs` to boolean because `B` [1] is incompatible with boolean [2].
-
    cast.js:69:2
-   69| (bs: boolean); // Error
-        ^^
-
-References:
-   cast.js:68:17
-   68| declare var bs: B | B2;
-                       ^ [1]
-   cast.js:69:6
-   69| (bs: boolean); // Error
-            ^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
-
-Cannot cast `bs` to boolean because `B2` [1] is incompatible with boolean [2].
-
-   cast.js:69:2
-   69| (bs: boolean); // Error
+   69| (sb: string | boolean); // Error
         ^^
 
 References:
    cast.js:68:21
-   68| declare var bs: B | B2;
-                           ^^ [1]
+   68| declare var sb: S | B;
+                           ^ [1]
    cast.js:69:6
-   69| (bs: boolean); // Error
-            ^^^^^^^ [2]
+   69| (sb: string | boolean); // Error
+            ^^^^^^ [2]
+   cast.js:69:15
+   69| (sb: string | boolean); // Error
+                     ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
@@ -3097,4 +3063,4 @@ References:
 
 
 
-Found 166 errors
+Found 164 errors
