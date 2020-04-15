@@ -814,7 +814,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
         layout_node_with_comments_opt loc comments
         @@ group [join (fuse [Atom ","; pretty_line]) layouts]
       | E.Identifier ident -> identifier ident
-      | E.Literal lit -> literal lit
+      | E.Literal lit -> literal loc lit
       | E.Function func -> function_ loc func
       | E.ArrowFunction func -> arrow_function ~ctxt ~precedence loc func
       | E.Assignment { E.Assignment.operator; left; right; comments } ->
@@ -1110,8 +1110,10 @@ and number_literal ~in_member_object raw num =
   else
     IfPretty (Atom raw, Atom str)
 
-and literal { Ast.Literal.raw; value; comments = _ (* handled by caller *) } =
+and literal loc { Ast.Literal.raw; value; comments } =
   let open Ast.Literal in
+  layout_node_with_comments_opt loc comments
+  @@
   match value with
   | Number num -> number_literal ~in_member_object:false raw num
   | String str ->
@@ -1193,7 +1195,7 @@ and string_literal (loc, { Ast.StringLiteral.value; _ }) =
 and pattern_object_property_key =
   let open Ast.Pattern.Object in
   function
-  | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
+  | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal loc lit)
   | Property.Identifier ident -> identifier ident
   | Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments }) ->
     layout_node_with_comments_opt loc comments
@@ -1959,7 +1961,7 @@ and object_properties_with_newlines properties =
 and object_property_key key =
   let module O = Ast.Expression.Object in
   match key with
-  | O.Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
+  | O.Property.Literal (loc, lit) -> source_location_with_comments (loc, literal loc lit)
   | O.Property.Identifier ident -> identifier ident
   | O.Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments }) ->
     layout_node_with_comments_opt loc comments
@@ -2193,7 +2195,7 @@ and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
                   Atom "=";
                   begin
                     match v with
-                    | A.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
+                    | A.Literal (loc, lit) -> source_location_with_comments (loc, literal loc lit)
                     | A.ExpressionContainer (loc, express) ->
                       source_location_with_comments (loc, jsx_expression_container loc express)
                   end;

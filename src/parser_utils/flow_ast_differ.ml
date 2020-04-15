@@ -197,7 +197,7 @@ let list_diff = function
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | Literal of Loc.t Ast.Literal.t
+  | Literal of Loc.t * Loc.t Ast.Literal.t
   | StringLiteral of Loc.t * Loc.t Ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Ast.BigIntLiteral.t
@@ -1128,8 +1128,8 @@ let program
        * below *)
       let open Ast.Expression in
       match (expr1, expr2) with
-      | ((loc, Ast.Expression.Literal lit1), (_, Ast.Expression.Literal lit2)) ->
-        Some (literal loc lit1 lit2)
+      | ((loc1, Ast.Expression.Literal lit1), (loc2, Ast.Expression.Literal lit2)) ->
+        Some (literal loc1 loc2 lit1 lit2)
       | ((loc, Binary b1), (_, Binary b2)) -> binary loc b1 b2
       | ((loc, Unary u1), (_, Unary u2)) -> unary loc u1 u2
       | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
@@ -1165,9 +1165,10 @@ let program
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Base.Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
-  and literal (loc : Loc.t) (lit1 : Loc.t Ast.Literal.t) (lit2 : Loc.t Ast.Literal.t) :
+  and literal
+      (loc1 : Loc.t) (loc2 : Loc.t) (lit1 : Loc.t Ast.Literal.t) (lit2 : Loc.t Ast.Literal.t) :
       node change list =
-    [(loc, Replace (Literal lit1, Literal lit2))]
+    [(loc1, Replace (Literal (loc1, lit1), Literal (loc2, lit2)))]
   and string_literal
       ((loc1, lit1) : Loc.t * Loc.t Ast.StringLiteral.t)
       ((loc2, lit2) : Loc.t * Loc.t Ast.StringLiteral.t) : node change list option =
@@ -1417,9 +1418,9 @@ let program
     in
     let value_diff =
       match (value1, value2) with
-      | (Some (Ast.JSX.Attribute.Literal (loc, lit1)), Some (Ast.JSX.Attribute.Literal (_, lit2)))
-        ->
-        diff_if_changed (literal loc) lit1 lit2 |> Base.Option.return
+      | ( Some (Ast.JSX.Attribute.Literal (loc1, lit1)),
+          Some (Ast.JSX.Attribute.Literal (loc2, lit2)) ) ->
+        diff_if_changed (literal loc1 loc2) lit1 lit2 |> Base.Option.return
       | (Some (ExpressionContainer (loc, expr1)), Some (ExpressionContainer (_, expr2))) ->
         diff_if_changed_ret_opt (jsx_expression loc) expr1 expr2
       | _ -> None
@@ -1497,8 +1498,8 @@ let program
   and object_key key1 key2 =
     let module EOP = Ast.Expression.Object.Property in
     match (key1, key2) with
-    | (EOP.Literal (loc, l1), EOP.Literal (_, l2)) ->
-      diff_if_changed (literal loc) l1 l2 |> Base.Option.return
+    | (EOP.Literal (loc1, l1), EOP.Literal (loc2, l2)) ->
+      diff_if_changed (literal loc1 loc2) l1 l2 |> Base.Option.return
     | (EOP.Identifier i1, EOP.Identifier i2) ->
       diff_if_changed identifier i1 i2 |> Base.Option.return
     | (EOP.Computed (loc, c1), EOP.Computed (_, c2)) -> computed_key loc c1 c2
@@ -1959,8 +1960,8 @@ let program
       (k2 : (Loc.t, Loc.t) Ast.Pattern.Object.Property.key) : node change list option =
     let module POP = Ast.Pattern.Object.Property in
     match (k1, k2) with
-    | (POP.Literal (loc, l1), POP.Literal (_, l2)) ->
-      diff_if_changed (literal loc) l1 l2 |> Base.Option.return
+    | (POP.Literal (loc1, l1), POP.Literal (loc2, l2)) ->
+      diff_if_changed (literal loc1 loc2) l1 l2 |> Base.Option.return
     | (POP.Identifier i1, POP.Identifier i2) ->
       diff_if_changed identifier i1 i2 |> Base.Option.return
     | (POP.Computed (loc, c1), POP.Computed (_, c2)) ->

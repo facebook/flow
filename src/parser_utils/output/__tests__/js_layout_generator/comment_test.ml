@@ -24,4 +24,5 @@ let tests =
       assert_layout ~ctxt L.(loc (fused [atom "//"; atom "test"; Layout.Newline])) layout;
       assert_output ~ctxt "//test\n" layout;
       assert_output ~ctxt ~pretty:true "//test\n" layout );
+    ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
   ]

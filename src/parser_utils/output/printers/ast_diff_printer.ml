@@ -11,7 +11,7 @@ open Utils_js
 let layout_of_node = function
   | Raw str -> Layout.Atom str
   | Comment c -> Js_layout_generator.comment c
-  | Literal lit -> Js_layout_generator.literal lit
+  | Literal (loc, lit) -> Js_layout_generator.literal loc lit
   | StringLiteral (loc, lit) -> Js_layout_generator.string_literal_type loc lit
   | NumberLiteral (loc, lit) -> Js_layout_generator.number_literal_type loc lit
   | BigIntLiteral (loc, lit) -> Js_layout_generator.bigint_literal_type loc lit

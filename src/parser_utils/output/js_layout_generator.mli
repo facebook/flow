@@ -32,7 +32,7 @@ val program :
 
 val program_simple : (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
 
-val literal : Loc.t Flow_ast.Literal.t -> Layout.layout_node
+val literal : Loc.t -> Loc.t Flow_ast.Literal.t -> Layout.layout_node
 
 val number_literal_type : Loc.t -> Loc.t Flow_ast.NumberLiteral.t -> Layout.layout_node
 
