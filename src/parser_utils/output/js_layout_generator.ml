@@ -1032,13 +1032,21 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.MetaProperty { E.MetaProperty.meta; property; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [identifier meta; Atom "."; identifier property]
-      | E.TaggedTemplate { E.TaggedTemplate.tag; quasi = (template_loc, template); comments } ->
+      | E.TaggedTemplate
+          {
+            E.TaggedTemplate.tag;
+            quasi =
+              (template_loc, ({ E.TemplateLiteral.comments = template_comments; _ } as template));
+            comments;
+          } ->
         let ctxt = { normal_context with left = In_tagged_template } in
         layout_node_with_comments_opt loc comments
         @@ fuse
              [
                expression_with_parens ~precedence ~ctxt tag;
-               source_location_with_comments (template_loc, template_literal template);
+               source_location_with_comments
+                 ?comments:template_comments
+                 (template_loc, template_literal template);
              ]
       | E.TemplateLiteral ({ E.TemplateLiteral.comments; _ } as template) ->
         layout_node_with_comments_opt loc comments (template_literal template)
@@ -1206,22 +1214,29 @@ and member ?(optional = false) ~precedence ~ctxt member_node loc =
          ldelim;
          begin
            match property with
-           | Ast.Expression.Member.PropertyIdentifier
-               (loc, { Ast.Identifier.name = id; comments = _ }) ->
-             source_location_with_comments (loc, Atom id)
+           | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name = id; comments })
+             ->
+             source_location_with_comments ?comments (loc, Atom id)
            | Ast.Expression.Member.PropertyPrivateName
                ( loc,
-                 { Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = _ }); comments }
-               ) ->
+                 {
+                   Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = id_comments });
+                   comments = private_comments;
+                 } ) ->
+             let comments =
+               Flow_ast_utils.merge_comments ~inner:id_comments ~outer:private_comments
+             in
              source_location_with_comments ?comments (loc, Atom ("#" ^ id))
            | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt expr
          end;
          rdelim;
        ]
 
-and string_literal (loc, { Ast.StringLiteral.value; _ }) =
+and string_literal (loc, { Ast.StringLiteral.value; comments; _ }) =
   let quote = better_quote value in
-  source_location_with_comments (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
+  source_location_with_comments
+    ?comments
+    (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
 
 and pattern_object_property_key =
   let open Ast.Pattern.Object in
@@ -1402,7 +1417,8 @@ and arrow_function
     ~precedence
     loc
     {
-      Ast.Function.params;
+      Ast.Function.params =
+        (params_loc, { Ast.Function.Params.comments = params_comments; _ }) as params;
       body;
       async;
       predicate;
@@ -1437,14 +1453,16 @@ and arrow_function
   in
   let params_and_stuff =
     match (is_single_simple_param, return, predicate, tparams) with
-    | (true, Ast.Type.Missing _, None, None) -> List.hd (function_params ~ctxt params)
+    | (true, Ast.Type.Missing _, None, None) ->
+      layout_node_with_comments_opt
+        params_loc
+        params_comments
+        (List.hd (function_params ~ctxt params))
     | (_, _, _, _) ->
-      fuse
-        [
-          option type_parameter tparams;
-          arrow_function_params params;
-          function_return ~arrow:true return predicate;
-        ]
+      let params =
+        layout_node_with_comments_opt params_loc params_comments (arrow_function_params params)
+      in
+      fuse [option type_parameter tparams; params; function_return ~arrow:true return predicate]
   in
   layout_node_with_comments_opt loc comments
   @@ fuse
@@ -1529,16 +1547,18 @@ and function_ loc func =
   function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~comments
 
 and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~comments =
+  let (params_loc, { Ast.Function.Params.comments = params_comments; _ }) = params in
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
          prefix;
          option type_parameter tparams;
-         list
-           ~wrap:(Atom "(", Atom ")")
-           ~sep:(Atom ",")
-           ~trailing:(not (has_rest_param params))
-           (function_params ~ctxt:normal_context params);
+         layout_node_with_comments_opt params_loc params_comments
+         @@ list
+              ~wrap:(Atom "(", Atom ")")
+              ~sep:(Atom ",")
+              ~trailing:(not (has_rest_param params))
+              (function_params ~ctxt:normal_context params);
          function_return ~arrow:false return predicate;
          pretty_space;
          begin
@@ -1738,8 +1758,8 @@ and class_private_field
         Ast.Class.PrivateField.key =
           ( ident_loc,
             {
-              Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ });
-              comments = key_comments;
+              Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = id_comments });
+              comments = private_comments;
             } );
         value;
         static;
@@ -1747,6 +1767,7 @@ and class_private_field
         variance;
         comments;
       } ) =
+  let key_comments = Flow_ast_utils.merge_comments ~inner:id_comments ~outer:private_comments in
   let key =
     layout_node_with_comments_opt
       ident_loc
@@ -1860,23 +1881,30 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
     wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
   in
   let defaulted_member (_, { DefaultedMember.id }) = fuse [identifier id; Atom ","] in
-  let initialized_member id value_str =
-    fuse [identifier id; pretty_space; Atom "="; pretty_space; Atom value_str; Atom ","]
+  let initialized_member id value =
+    fuse [identifier id; pretty_space; Atom "="; pretty_space; value; Atom ","]
   in
   let boolean_member
-      (_, { InitializedMember.id; init = (_, { Ast.BooleanLiteral.value = init_value; _ }) }) =
+      ( _,
+        { InitializedMember.id; init = (loc, { Ast.BooleanLiteral.value = init_value; comments }) }
+      ) =
     initialized_member
       id
-      ( if init_value then
-        "true"
-      else
-        "false" )
+      (layout_node_with_comments_opt
+         loc
+         comments
+         ( if init_value then
+           Atom "true"
+         else
+           Atom "false" ))
   in
-  let number_member (_, { InitializedMember.id; init = (_, { Ast.NumberLiteral.raw; _ }) }) =
-    initialized_member id raw
+  let number_member
+      (_, { InitializedMember.id; init = (loc, { Ast.NumberLiteral.raw; comments; _ }) }) =
+    initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
   in
-  let string_member (_, { InitializedMember.id; init = (_, { Ast.StringLiteral.raw; _ }) }) =
-    initialized_member id raw
+  let string_member
+      (_, { InitializedMember.id; init = (loc, { Ast.StringLiteral.raw; comments; _ }) }) =
+    initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
   in
   let body =
     match body with

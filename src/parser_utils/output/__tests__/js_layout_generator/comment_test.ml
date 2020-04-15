@@ -103,5 +103,20 @@ let tests =
       let ast = expression_of_string "A\n/*T1*/\n\n\n/*T2*/" in
       assert_expression ~ctxt "A/*T1*//*T2*/" ast;
       assert_expression ~ctxt ~pretty:true "A\n/*T1*/\n\n/*T2*/" ast );
+    ( "arrow_function_params" >:: fun ctxt ->
+      assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
+      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );
+    ("class_private_field" >:: fun ctxt -> assert_expression_string ~ctxt "class C{/*L*/#A/*T*/;}");
+    ( "enum" >:: fun ctxt ->
+      assert_statement_string ~ctxt "enum E of boolean{A=/*L*/true/*T*/,}";
+      assert_statement_string ~ctxt "enum E of number{A=/*L*/1/*T*/,}";
+      assert_statement_string ~ctxt {|enum E of string{A=/*L*/"A"/*T*/,}|} );
+    ( "function_params" >:: fun ctxt ->
+      let ast = expression_of_string "function foo/*L*/()/*T*/\n{}" in
+      assert_expression ~ctxt "function foo/*L*/()/*T*/{}" ast );
     ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
+    ("tagged_template" >:: fun ctxt -> assert_expression_string ~ctxt "/*L1*/A/*L2*/`B`/*T*/");
+    ( "member_expression" >:: fun ctxt ->
+      assert_expression_string ~ctxt "A./*L*/B/*T*/";
+      assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
   ]
