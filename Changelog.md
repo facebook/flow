@@ -1,3 +1,29 @@
+### 0.123.0
+
+New Features:
+* Added support for the babel react jsx transform with the `react.runtime` flowconfig
+option. When set to `automatic` the transform auto-imports jsx (the replacement for
+`createElement`) under a fresh name (unique of all existing names in the source).
+When set to `classic` it will continue transpiling jsx to `React.createElement`.
+
+Notable bug fixes:
+* We are now treating `$Exact<T|U>` as `$Exact<T>|$Exact<U>`. Before, when we checked
+against this type we would treat it like `$Exact<T> & $Exact<U>`, instead.
+* Fix to prevent infinitely expanding recursive type applications of arrays ([example](https://flow.org/try/#0C4TwDgpgBAqgPAFQHxQLxQIICcsEMSIoA+sc2eBySA3FFAFAAUA2gLpQBcpAdgK4C2AIwhYkASmpA)).
+
+Misc:
+* Improvements in comment attachement in various kinds of AST nodes. These will
+help improve the accuracy of error suppression and various services that inspect
+comments (printing, showing documentation, etc.).
+* `$Exports<'m'>` will now lookup module 'm' directly in builtins, instead of the
+environment.
+* Extend union optimizations used on maybe predicate to also be applied in exists
+predicates.
+
+Parser:
+* The range around type cast expression now includes the parentheses. This follows
+the pattern of other constructs with mandatory punctuation like blocks, objects or arrays.
+
 ### 0.122.0
 
 Likely to cause new Flow errors:
