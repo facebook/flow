@@ -498,11 +498,23 @@ let tests =
          "class_statics"
          >:: mk_signature_generator_test
                ["export class C {"; "  static x: number = 0;"; "  static foo(): void { }"; "}"]
-               ["declare class C {static x: number, static foo(): void}"; "export {C};"];
+               [
+                 "declare class C {";
+                 "  static x: number,";
+                 "  static foo(): void,";
+                 "}";
+                 "export {C};";
+               ];
          "class_statics2"
          >:: mk_signature_generator_test
                ["export class C {"; "  foo: () => void;"; "  static foo(): void { }"; "}"]
-               ["declare class C {foo: () => void, static foo(): void}"; "export {C};"];
+               [
+                 "declare class C {";
+                 "  foo: () => void,";
+                 "  static foo(): void,";
+                 "}";
+                 "export {C};";
+               ];
          "class_implements"
          >:: mk_signature_generator_test
                [
@@ -514,8 +526,13 @@ let tests =
                  "}";
                ]
                [
-                 "interface I {foo(x?: string): void}";
-                 "declare class C implements I {foo(x?: string): void}";
+                 "interface I {";
+                 "  foo(x?: string): void,";
+                 "}";
+                 "declare class C";
+                 "  implements I {";
+                 "  foo(x?: string): void,";
+                 "}";
                  "export {C};";
                ];
          "class_extends_error"
@@ -669,7 +686,14 @@ let tests =
          >:: mk_signature_generator_test
                ~facebook_keyMirror:true
                ["module.exports = keyMirror({"; "  a: null,"; "  b: null,"; "})"]
-               ["declare module.exports: $TEMPORARY$object<{|a: 'a', b: 'b'|}>;"];
+               [
+                 "declare module.exports: $TEMPORARY$object<";
+                 "  {|";
+                 "    a: 'a',";
+                 "    b: 'b',";
+                 "  |},";
+                 ">;";
+               ];
          "unusual_cjs_exports1"
          >:: mk_signature_generator_test
                ["exports.wut = 'dead';"; "module.exports = { x: 42 };"]
@@ -680,7 +704,10 @@ let tests =
                [
                  "declare module.exports: $TEMPORARY$module$exports$assign<";
                  "  $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>,";
-                 "  {wut: $TEMPORARY$string<'wut'>, ...},";
+                 "  {";
+                 "    wut: $TEMPORARY$string<'wut'>,";
+                 "    ...,";
+                 "  },";
                  ">;";
                ];
          "unusual_cjs_exports3"
@@ -694,14 +721,23 @@ let tests =
                [
                  "declare module.exports: $TEMPORARY$module$exports$assign<";
                  "  $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>,";
-                 "  {wut: $TEMPORARY$string<'wut'>, ...},";
+                 "  {";
+                 "    wut: $TEMPORARY$string<'wut'>,";
+                 "    ...,";
+                 "  },";
                  ">;";
                ];
          "function_statics"
          >:: mk_signature_generator_test
                ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "module.exports = bar;"]
                [
-                 "declare var bar: $TEMPORARY$function<() => void, {x: typeof x, ...}>;";
+                 "declare var bar: $TEMPORARY$function<";
+                 "  () => void,";
+                 "  {";
+                 "    x: typeof x,";
+                 "    ...,";
+                 "  },";
+                 ">;";
                  "declare var x: $TEMPORARY$number<42>;";
                  "";
                  "declare module.exports: typeof bar;";

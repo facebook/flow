@@ -254,4 +254,9 @@ let tests =
         (Ast_builder.expression_of_string "{\n  a: 1,\n  \n  \n b: 2,\n}");
       (* Comments are not treated as blank lines *)
       assert_expression_string ~ctxt ~pretty:true "{\n  a: 1,\n  //L\n  b: 2,\n}" );
+    ( "preserve_wrapping" >:: fun ctxt ->
+      (* Object that fits on single line with no wrapping is printed on single line *)
+      assert_expression_string ~ctxt ~pretty:true "{ a: 1 }";
+      (* Object that fits on single line but wraps is printed as wrapping *)
+      assert_expression_string ~ctxt ~pretty:true "{\n  a: 1,\n}" );
   ]

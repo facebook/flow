@@ -2330,4 +2330,9 @@ let tests =
              ~ctxt
              ~pretty:true
              "switch (true) {\n  case a:\n    break;\n  //L\n  case b:\n    break;\n}" );
+         ( "object_type_preserve_wrapping" >:: fun ctxt ->
+           (* Object type that fits on single line with no wrapping is printed on single line *)
+           assert_statement_string ~ctxt ~pretty:true "type T = {a: 1};";
+           (* Object type that fits on single line but wraps is printed as wrapping *)
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n};" );
        ]

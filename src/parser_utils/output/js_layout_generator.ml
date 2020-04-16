@@ -836,7 +836,17 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           else
             [fuse props; if_break (Atom ",") Empty]
         in
-        let props_layout = wrap_and_indent ?break:(Some pretty_line) (Atom "{", Atom "}") props in
+        (* If first prop is on a different line then pretty print with line breaks *)
+        let break =
+          match properties with
+          | [] -> None
+          | first_prop :: _ ->
+            if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
+              Some pretty_hardline
+            else
+              Some pretty_line
+        in
+        let props_layout = wrap_and_indent ?break (Atom "{", Atom "}") props in
         layout_node_with_comments_opt loc comments @@ group [props_layout]
       | E.Sequence { E.Sequence.expressions; comments } ->
         (* to get an AST like `x, (y, z)`, then there must've been parens
@@ -2927,7 +2937,19 @@ and type_object ?(sep = Atom ",") loc { Ast.Type.Object.exact; properties; inexa
     else
       [fuse props; if_break sep Empty]
   in
-  let props_layout = wrap_and_indent (fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) props in
+  (* If first prop is on a different line then pretty print with line breaks *)
+  let break =
+    match properties with
+    | [] -> None
+    | first_prop :: _ ->
+      if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
+        Some pretty_hardline
+      else
+        None
+  in
+  let props_layout =
+    wrap_and_indent ?break (fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) props
+  in
   layout_node_with_comments_opt loc comments @@ group [props_layout]
 
 and type_interface loc { Ast.Type.Interface.extends; body = (obj_loc, obj); comments } =
