@@ -73,6 +73,11 @@ exception Show_help
 
 exception Failed_to_parse of string * string
 
+(* If no `col_width` is passed, the length of the longest string of the first column will be used.
+   `col_pad` will be used as additional padding between the two columns. *)
+val format_two_columns :
+  ?margin:int -> ?col_width:int -> ?col_pad:int -> (string * string) list -> string
+
 val usage : ('a, 'b) builder_t -> unit
 
 val command : ('main, unit -> unit) builder_t -> 'main -> t

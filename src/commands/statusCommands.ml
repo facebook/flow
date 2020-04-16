@@ -48,14 +48,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
         |> List.sort (fun (a, _) (b, _) -> String.compare a b)
       in
-      let col_width =
-        List.fold_left (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info
-      in
-      let cmd_usage =
-        command_info
-        |> Base.List.map ~f:(fun (cmd, doc) -> Utils_js.spf "  %-*s  %s" col_width cmd doc)
-        |> String.concat "\n"
-      in
+      let cmd_usage = CommandSpec.format_two_columns ~col_pad:1 command_info in
       {
         CommandSpec.name = "default";
         doc = "";

@@ -415,6 +415,34 @@ let init_from_env spec =
     flags
     SMap.empty
 
+let format_two_columns ?(margin = 100) ?col_width ?(col_pad = 0) list =
+  let col_width =
+    col_pad
+    +
+    match col_width with
+    | Some w -> w
+    | None -> Base.List.fold_left ~f:(fun acc (a, _) -> max acc (String.length a)) ~init:0 list
+  in
+  let open Format in
+  let pp_flag_desc fmt doc =
+    pp_open_hovbox fmt 0;
+    let tokens = String.split_on_char ' ' doc in
+    pp_print_list ~pp_sep:pp_print_space pp_print_string fmt tokens;
+    pp_close_box fmt ()
+  in
+  let pp_flag fmt (name, doc) =
+    pp_open_hovbox fmt 0;
+    fprintf fmt "  %-*s " col_width name;
+    pp_flag_desc fmt doc;
+    pp_close_box fmt ()
+  in
+  let fmt = str_formatter in
+  pp_set_margin fmt margin;
+  pp_open_vbox fmt 0;
+  pp_print_list pp_flag fmt list;
+  pp_close_box fmt ();
+  flush_str_formatter ()
+
 let usage_string spec =
   let usage = spec.usage in
   let flags = SMap.fold (fun k v a -> (k, v) :: a) spec.args.ArgSpec.flags [] in
@@ -422,15 +450,11 @@ let usage_string spec =
     let compare (a, _) (b, _) = String.compare (no_dashes a) (no_dashes b) in
     Base.List.sort ~compare flags
   in
-  let col_width =
-    flags |> Base.List.fold_left ~f:(fun acc (a, _) -> max acc (String.length a)) ~init:0
-  in
   let flag_usage =
     flags
     |> Base.List.filter ~f:(fun (_, meta) -> meta.ArgSpec.doc <> "")
-    |> Base.List.map ~f:(fun (name, meta) ->
-           Utils_js.spf "  %-*s  %s" col_width name meta.ArgSpec.doc)
-    |> String.concat "\n"
+    |> Base.List.map ~f:(fun (name, meta) -> (name, meta.ArgSpec.doc))
+    |> format_two_columns
   in
   usage ^ "\n" ^ flag_usage
 
