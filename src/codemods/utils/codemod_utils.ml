@@ -20,10 +20,6 @@ type 'a job_config = {
   reporter: 'a Codemod_report.t;
 }
 
-let print_rule =
-  let line = String.make 80 '~' in
-  (fun () -> Utils_js.print_endlinef "%s" line)
-
 let print_ast_file_dry ~strip_root ~info file =
   let file_path = File_key.to_string file in
   let file_input = File_input.FileName file_path in
@@ -31,20 +27,13 @@ let print_ast_file_dry ~strip_root ~info file =
   | Some (_x :: _xs as diff) ->
     let source = Replacement_printer.print_unsafe diff file_input in
     let file_path = Reason.string_of_source ~strip_root file in
-    print_rule ();
-    Utils_js.print_endlinef "%s" file_path;
-    Utils_js.print_endlinef "Number of changes: %d" (List.length diff);
-    print_rule ();
+    Utils_js.print_endlinef ">>> %s (#changes: %d)" file_path (List.length diff);
     Utils_js.print_endlinef "%s" source
   | Some []
   | None ->
-    if info then (
+    if info then
       let file_path = Reason.string_of_source ~strip_root file in
-      print_rule ();
-      Utils_js.print_endlinef "%s" file_path;
-      Utils_js.print_endlinef "No changes";
-      print_rule ()
-    )
+      Utils_js.print_endlinef ">>> %s (no changes)" file_path
 
 let print_ast_file_real ~info file =
   let file_path = File_key.to_string file in
@@ -88,9 +77,7 @@ let print_asts ~strip_root ~info ~dry_run files : File_key.t list option Lwt.t =
     print_real ()
 
 let print_results ~report result : unit =
-  print_rule ();
-  Utils_js.print_endlinef "Launching report";
-  print_rule ();
+  Utils_js.print_endlinef ">>> Launching report...";
   report result
 
 (* Mappers produce new ASTs, which are saved to the heap. *)
