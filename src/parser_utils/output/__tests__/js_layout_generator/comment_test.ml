@@ -108,6 +108,11 @@ let tests =
       assert_program_string ~ctxt ~pretty:true "A;\n/*L1*/\n/*L2*/\nB;";
       assert_program_string ~ctxt ~pretty:true "A; //L\nB;";
       assert_program_string ~ctxt ~pretty:true "A; /*T1\nT2*/\nB;" );
+    ( "arrow_function_body" >:: fun ctxt ->
+      (* Body without leading comment separated by space *)
+      assert_expression_string ~ctxt ~pretty:true "() => <A />";
+      (* Body with leading comment separated by newline *)
+      assert_expression_string ~ctxt ~pretty:true "() =>\n//L\n<A />" );
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
       assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );

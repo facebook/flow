@@ -1479,6 +1479,20 @@ and arrow_function
       in
       fuse [option type_parameter tparams; params; function_return ~arrow:true return predicate]
   in
+  let body_separator =
+    let open Comment_attachment in
+    let (first_leading, _) =
+      match body with
+      | Ast.Function.BodyBlock block -> block_comment_bounds block
+      | Ast.Function.BodyExpression expr -> expression_comment_bounds expr
+    in
+    (* If the body begins with a comment we must insert a newline before the body
+       to ensure that comment will be attached to body after formatting. *)
+    if first_leading = None then
+      pretty_space
+    else
+      pretty_hardline
+  in
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
@@ -1499,7 +1513,7 @@ and arrow_function
            | _ -> pretty_space
          end;
          Atom "=>";
-         pretty_space;
+         body_separator;
          begin
            match body with
            | Ast.Function.BodyBlock b -> block b

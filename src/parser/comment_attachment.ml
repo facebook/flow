@@ -603,6 +603,16 @@ let statement_comment_bounds ((loc, _) as stmt : (Loc.t, Loc.t) Statement.t) :
   ignore (collector#statement stmt);
   collector#comment_bounds
 
+let expression_comment_bounds ((loc, _) as expr) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#expression expr);
+  collector#comment_bounds
+
+let block_comment_bounds (loc, block) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#block loc block);
+  collector#comment_bounds
+
 let object_property_comment_bounds property =
   let open Ast.Expression.Object in
   let collector =
