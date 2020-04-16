@@ -1,0 +1,16 @@
+>>> main.js (#changes: 2)
+// @flow
+
+import type {OK} from "./lib.js";import { foo, bar } from './lib';
+
+import { props } from './props';
+
+const f = foo();
+const g: {ok: OK} = bar();
+
+module.exports = {
+  f,
+  g,
+ };
+
+>>> Launching report...

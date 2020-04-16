@@ -78,17 +78,69 @@ let main config codemod_flags () =
   let roots = CommandUtils.expand_file_list ~options:file_options filenames in
   Codemod_utils.mk_main config ~options ~info ~verbose ~dry_run ~log_level ~shared_mem_config roots
 
+(***********************)
+(* Codemod subcommands *)
+(***********************)
+
+module Annotate_exports_command = struct
+  let doc =
+    "Annotates parts of input that are visible from the exports as required by Flow types-first mode."
+
+  let spec =
+    {
+      CommandSpec.name = "annotate-exports";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-exports [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               no_arg
+               ~doc:
+                 ( "Always add precise literal types for string and numeric literals. "
+                 ^ "If not set the codemod uses a heuristic to widen to the respective general type."
+                 )
+          |> flag
+               "--iteration"
+               (required ~default:0 int)
+               ~doc:"Include this number in imported names if greater than 0."
+          |> flag
+               "--max-type-size"
+               (required ~default:100 int)
+               ~doc:"The maximum number of nodes allows in a single type annotation. (default: 100)"
+          |> flag
+               "--default-any"
+               no_arg
+               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+    }
+
+  let config preserve_literals iteration max_type_size default_any =
+    let open Codemod_utils in
+    let runner =
+      TypedRunner
+        (Mapper (Annotate_exports.mapper ~preserve_literals ~iteration ~max_type_size ~default_any))
+    in
+    { reporter = Codemod_report.unit_reporter; runner }
+
+  let main codemod_flags preserve_literals iteration max_type_size default_any () =
+    let config = config preserve_literals iteration max_type_size default_any in
+    main config codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
-  let usage = Printf.sprintf "Usage: %s codemod SUBCOMMAND [OPTIONS]...\n" CommandUtils.exe_name in
-  let args =
-    let open CommandSpec.ArgSpec in
-    let subcommands = command [] in
-    empty |> anon "subcommand" (required subcommands)
-  in
   let spec =
-    (* TODO when the command is ready make it available in the help menu by adding
-       "Runs large-scale codebase refactors" to `doc`. *)
-    { CommandSpec.name = "codemod"; doc = ""; usage; args }
+    CommandUtils.subcommand_spec
+      ~name:"codemod"
+      ~doc:"Runs large-scale codebase refactors"
+      [(Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command)]
   in
   CommandSpec.command spec main

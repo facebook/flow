@@ -254,25 +254,13 @@ end
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
   let spec =
-    {
-      CommandSpec.name = "autofix";
-      doc = "";
-      usage =
-        Printf.sprintf
-          "Usage: %s autofix SUBCOMMAND [OPTIONS]...\n\nSUBCOMMANDS:\nsuggest: Provides type annotation suggestions for a given program\ninsert-type: Insert type information at file and position\nexports: Automatically fix signature verification errors\n"
-          CommandUtils.exe_name;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> anon
-               "subcommand"
-               (required
-                  (command
-                     [
-                       ("suggest", SuggestCommand.command);
-                       ("insert-type", InsertType.command);
-                       ("exports", Exports.command);
-                     ])));
-    }
+    CommandUtils.subcommand_spec
+      ~name:"autofix"
+      ~doc:""
+      [
+        ("suggest", SuggestCommand.command);
+        ("insert-type", InsertType.command);
+        ("exports", Exports.command);
+      ]
   in
   CommandSpec.command spec main

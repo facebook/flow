@@ -1671,6 +1671,26 @@ let json_of_loc_with_offset ?stdin_file ~strip_root loc =
     in
     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)
 
+let subcommand_spec ~name ~doc cmd_list =
+  let command_info =
+    cmd_list
+    |> Base.List.map ~f:(fun (name, command) -> (name, CommandSpec.doc command))
+    |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
+    |> List.sort (fun (a, _) (b, _) -> String.compare a b)
+    |> CommandSpec.format_two_columns ~col_pad:1
+  in
+  {
+    CommandSpec.name;
+    doc;
+    usage =
+      Printf.sprintf
+        "Usage: %s %s SUBCOMMAND [OPTIONS]...\n\nValid values for SUBCOMMAND:\n%s\n"
+        exe_name
+        name
+        command_info;
+    args = CommandSpec.ArgSpec.(empty |> anon "subcommand" (required (command cmd_list)));
+  }
+
 type codemod_params =
   | Codemod_params of {
       options_flags: Options_flags.t;

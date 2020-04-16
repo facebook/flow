@@ -1,0 +1,93 @@
+>>> createClass.js (#changes: 1)
+// @flow
+
+var React = require('react');
+
+const Comp: Class<React$Component<any, {}>> & {defaultProps: void} = React.createClass(Object.freeze({}));
+
+module.exports = Comp;
+
+>>> element-component.js (#changes: 1)
+// @flow
+
+const React = require('react');
+
+type Props = {}
+
+module.exports = (): React.Node => {
+  class Abc extends React.Component<Props> { }
+  return <Abc/>;
+}
+
+>>> element-div.js (#changes: 1)
+// @flow
+
+const React = require('react');
+
+declare var div: React$Element<'div'>;
+module.exports = (): React.Element<"div"> => div;
+
+>>> no-import.js (#changes: 3)
+// @flow
+
+import type {ComponentType} from "React";
+import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react.js";import { foo } from "./lib";
+import { bar } from "./fake-react";
+
+export function my_foo(): ComponentType<any> {
+  return foo();
+}
+export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
+  return bar();
+}
+
+>>> node.js (#changes: 1)
+// @flow
+
+const React = require('react');
+declare var n: React.Node
+module.exports = (): React.Node => n;
+
+>>> propTypes.js (#changes: 3)
+// @flow
+
+const { PropTypes } = require('react');
+
+const XShape = {
+  x: PropTypes.number.isRequired
+};
+const FooShape = {
+  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number}>)
+};
+
+const Bar: React$PropType$Primitive<{foo: {x: number}}> = PropTypes.shape(FooShape);
+
+module.exports = {
+  FooShape,
+  Bar
+};
+
+>>> qualified.js (#changes: 1)
+// @flow
+
+const React = require("react");
+declare var componentType_1: React.ComponentType<number>;
+declare var componentType_2: React.ComponentType<React.ComponentType<number>>;
+declare var elementRef: React.ElementRef<number>;
+declare var elementConfig: React.ElementConfig<number>;
+
+module.exports = (): $TEMPORARY$object<
+  {|
+    componentType_1: React.ComponentType<number>,
+    componentType_2: React.ComponentType<React.ComponentType<number>>,
+    elementConfig: React.ElementConfig<number>,
+    elementRef: React.ElementRef<number>,
+  |},
+> => ({
+  componentType_1,
+  componentType_2,
+  elementRef,
+  elementConfig
+});
+
+>>> Launching report...

@@ -1,0 +1,30 @@
+>>> a.js (#changes: 5)
+// @flow
+
+import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
+
+const b = require("./b");
+
+module.exports = [(foo(): C), (bar(): D)];
+
+>>> b.js (#changes: 5)
+// @flow
+
+import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+
+const c = require("./c");
+
+module.exports = [(foo(): C), (baz(): E)];
+
+>>> c.js (#changes: 3)
+// @flow
+
+import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+
+const a = require("./a");
+
+module.exports = [
+  (0 < 1 ? foo() : baz(): C | E)
+];
+
+>>> Launching report...

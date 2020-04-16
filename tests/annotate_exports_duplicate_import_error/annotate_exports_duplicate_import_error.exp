@@ -1,0 +1,19 @@
+>>> b.js (#changes: 5)
+// @flow
+
+import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
+import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
+import { foo as foo2 } from "./a2";
+
+module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
+
+>>> c.js (#changes: 2)
+// @flow
+
+import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
+import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
+import { foo as foo2 } from "./a2";
+
+module.exports = (): $TEMPORARY$array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // duplicate import in same type
+
+>>> Launching report...

@@ -1,0 +1,16 @@
+>>> fileA.js (#changes: 3)
+// @flow
+
+import type {T} from "react-redux";const {foo} = require('react-redux');
+
+module.exports = (foo(): T);
+
+>>> fileB.js (#changes: 2)
+// @flow
+
+import type {T} from 'react-redux';
+const {foo} = require('react-redux');
+
+module.exports = (foo(): T);
+
+>>> Launching report...

@@ -1,0 +1,7 @@
+>>> b.js (#changes: 2)
+// @flow
+import type A from "./lib.js";const foo = require('./a');
+
+module.exports = (): A => foo();
+
+>>> Launching report...

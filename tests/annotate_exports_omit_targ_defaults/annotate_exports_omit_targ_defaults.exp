@@ -1,0 +1,11 @@
+>>> defaults.js (#changes: 2)
+// @flow
+
+
+type Foo<T = string> = {};
+
+function foo(): Foo<string> { return {}; }
+
+module.exports = (foo(): Foo<>);
+
+>>> Launching report...

@@ -1,0 +1,8 @@
+>>> main.js (#changes: 1)
+// @flow
+
+const C = require('./lib');
+
+module.exports = (): typeof C => C;
+
+>>> Launching report...

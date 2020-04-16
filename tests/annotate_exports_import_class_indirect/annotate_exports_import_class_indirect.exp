@@ -1,0 +1,7 @@
+>>> main.js (#changes: 3)
+// @flow
+
+import type {C} from "./lib.js";import { foo } from './lib';
+module.exports = (foo(): C);
+
+>>> Launching report...

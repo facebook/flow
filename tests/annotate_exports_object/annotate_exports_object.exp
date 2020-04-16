@@ -1,0 +1,43 @@
+>>> a.js (#changes: 1)
+// @flow
+
+module.exports = {
+  a: (): $TEMPORARY$object<{|x: $TEMPORARY$string<"blah">|}> => {
+  return {
+    x:
+      // comment
+      "blah"
+    };
+  }
+}
+
+>>> b.js (#changes: 1)
+// @flow
+
+function foo(): $TEMPORARY$object<{|f: number, g: number, h: $TEMPORARY$string<"blah">|}> {
+  // Comment 0
+  const x = {
+    // Comment 1
+    f: 1,
+    // Comment 2
+    g: 2,
+    // Comment 3
+    h:
+    // Comment 4
+      "blah",
+  }
+  // Comment 5
+  return x;
+}
+module.exports = { foo };
+
+>>> c.js (#changes: 1)
+// @flow
+
+module.exports = {
+  m(): number {
+    return 1;
+  },
+};
+
+>>> Launching report...

@@ -1,0 +1,10 @@
+>>> main.js (#changes: 3)
+// @flow
+
+'use strict';import type {O} from "./lib.js";
+
+const o = require('./lib');
+
+module.exports = (o(): O);
+
+>>> Launching report...

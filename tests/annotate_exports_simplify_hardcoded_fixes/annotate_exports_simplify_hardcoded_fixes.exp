@@ -1,0 +1,8 @@
+>>> a.js (#changes: 3)
+// @flow
+
+import type {Element} from "React";declare function f(): React$Element<'a'> | React$Element<'b'>;
+
+module.exports = (f(): Element<"a"> | Element<"b">);
+
+>>> Launching report...

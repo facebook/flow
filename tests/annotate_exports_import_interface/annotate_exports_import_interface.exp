@@ -1,0 +1,8 @@
+>>> main.js (#changes: 3)
+// @flow
+
+import type {I} from "./lib.js";const i = require('./lib');
+
+module.exports = (i(): I);
+
+>>> Launching report...

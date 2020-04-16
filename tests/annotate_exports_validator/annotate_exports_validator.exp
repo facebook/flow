@@ -1,0 +1,11 @@
+>>> simplify-empty.js (#changes: 1)
+// @flow
+
+export function foo(x: any): any {
+  if (x && x.bar) {
+    return x.bar();
+  }
+  return x;
+}
+
+>>> Launching report...

@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+lib
+
+[lints]
+
+[options]
+no_flowlib=false
+facebook.fbt=FbtElement
+
+[strict]

@@ -56,7 +56,7 @@ let max_files_open = 1024
    where list contains the files that were changed. *)
 let print_asts ~strip_root ~info ~dry_run files : File_key.t list option Lwt.t =
   let print_dry () =
-    List.iter (print_ast_file_dry ~strip_root ~info) files;
+    files |> List.sort File_key.compare |> List.iter (print_ast_file_dry ~strip_root ~info);
     Lwt.return None
   in
   let print_real () =

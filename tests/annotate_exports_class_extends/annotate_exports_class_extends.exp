@@ -1,0 +1,8 @@
+>>> fileA.js (#changes: 3)
+// @flow
+
+import type {Base} from "./lib.js";import { foo } from "./lib";
+
+module.exports = class C extends (foo(): Class<Base>) {};
+
+>>> Launching report...

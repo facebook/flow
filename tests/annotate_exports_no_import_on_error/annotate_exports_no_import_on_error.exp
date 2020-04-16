@@ -1,0 +1,10 @@
+>>> main-2.js (#changes: 3)
+// @flow
+
+import type {D} from "./lib-2.js";import { foo, bar } from "./lib-2";
+
+module.exports._1 = foo(); // error: C is not exported
+module.exports._2 = 0 < 1 ? foo() : bar(); // error: C is not exported, even though D is okay
+module.exports._3 = (bar(): D); // okay
+
+>>> Launching report...

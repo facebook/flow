@@ -1,0 +1,38 @@
+>>> any-in-union.js (#changes: 5)
+// @flow
+
+const React = require('react');
+
+declare var x1: { f: number } | any;
+declare var x2: any | { f: number };
+declare var x3: any | { f: number } | { node: React.Node };
+declare var x4: { f: number } | any | { node: React.Node };
+declare var x5: { f: number } | { node: React.Node } | any;
+
+module.exports = [
+  (): any | {f: number} => x1,
+  (): any | {f: number} => x2,
+  (): any | {f: number} | {node: React.Node} => x3,
+  (): any | {f: number} | {node: React.Node} => x4,
+  (): any | {f: number} | {node: React.Node} => x5,
+];
+
+>>> any-to-flowfixme-no-strict.js (#changes: 1)
+// @flow
+
+declare var x1: { f: number } | any;
+module.exports = (): any | {f: number} => x1;
+
+>>> any-to-flowfixme-strict-local.js (#changes: 1)
+// @flow strict-local
+
+declare var x1: { f: number } | any;
+module.exports = (): $FlowFixMe | {f: number} => x1;
+
+>>> any-to-flowfixme-strict.js (#changes: 1)
+// @flow strict
+
+declare var x1: { f: number } | any;
+module.exports = (): $FlowFixMe | {f: number} => x1;
+
+>>> Launching report...

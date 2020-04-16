@@ -1,0 +1,36 @@
+>>> a.js (#changes: 5)
+// @flow
+
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
+import type {C} from "./lib1.js";import { foo1a } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1a(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> b.js (#changes: 5)
+// @flow
+
+import typeof {C} from "./lib1.js";
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";import { foo1b } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1b(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> c.js (#changes: 5)
+// @flow
+
+import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";
+import type {C} from "./lib1.js";import { foo1a, foo1b } from './lib1';
+
+module.exports = [
+  (foo1a(): C),
+  (foo1b(): $IMPORTED_TYPEOF$_C_1),
+]
+
+>>> Launching report...

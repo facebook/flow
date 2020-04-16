@@ -1,0 +1,15 @@
+>>> a.js (#changes: 5)
+// @flow
+
+declare var cond: boolean;
+
+module.exports = {
+  f1: (): $TEMPORARY$string<"0"> | $TEMPORARY$string<"1"> => (cond ? "0" : "1"),
+  f2: (): $TEMPORARY$string<"A0"> | $TEMPORARY$string<"A1"> => (cond ? "A0" : "A1"),
+  f3: (): $TEMPORARY$string<"Aa"> | $TEMPORARY$string<"Bb"> => (cond ? "Aa" : "Bb"),
+  f4: (): $TEMPORARY$string<"A_"> | $TEMPORARY$string<"B_"> => (cond ? "A_" : "B_"),
+
+  f5: (): string => (cond ? "1/1/2000" : "1/1/2001"),
+}
+
+>>> Launching report...

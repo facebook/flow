@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+no_flowlib=false
+experimental.well_formed_exports=true
+
+[strict]

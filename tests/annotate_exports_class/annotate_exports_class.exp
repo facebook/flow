@@ -1,0 +1,33 @@
+>>> a.js (#changes: 2)
+// @flow
+
+class C {}
+// XYZXYZ
+export default class {
+  array: Array<$FlowFixMeEmpty> = [];
+  num: number = 1;
+}
+
+>>> b.js (#changes: 1)
+// @flow
+
+class C {
+  m(): number {
+    return 1;
+  }
+}
+module.exports = C;
+
+>>> c.js (#changes: 2)
+// @flow
+
+class A {
+  f: ((x: string) => string) = (x: string) => x;
+}
+
+module.exports = {
+  a: A,
+  b: (x: string): string => x,
+};
+
+>>> Launching report...

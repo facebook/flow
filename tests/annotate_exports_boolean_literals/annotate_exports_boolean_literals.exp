@@ -1,0 +1,8 @@
+>>> a.js (#changes: 1)
+// @flow
+
+declare var cond: boolean;
+
+module.exports = (): boolean => (cond ? true : false);
+
+>>> Launching report...

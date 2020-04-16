@@ -1,0 +1,12 @@
+>>> a.js (#changes: 2)
+// @flow
+
+type Key = 'A';
+declare opaque type Val;
+
+declare var key: Key;
+declare var val: Val
+
+module.exports = ({ [key]: val }: $TEMPORARY$object<{|A: Val|}>);
+
+>>> Launching report...

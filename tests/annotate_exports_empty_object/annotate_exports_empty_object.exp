@@ -1,0 +1,60 @@
+>>> a.js (#changes: 2)
+// @flow
+
+module.exports = ({}: $TEMPORARY$object<{||}>);
+
+>>> b.js (#changes: 2)
+// @flow
+
+module.exports = { f: ({}: $TEMPORARY$object<{||}>) };
+
+>>> c.js (#changes: 2)
+// @flow
+
+const obj = { f: ({}: $TEMPORARY$object<{||}>) };
+
+obj.f = { x: 1 };
+obj.f = { x: "a" };
+
+module.exports = obj;
+
+>>> d.js (#changes: 1)
+// @flow
+
+const obj: $TEMPORARY$object<
+  {|
+    f: $TEMPORARY$object<{|x: number|}>,
+    g: $TEMPORARY$object<{|x: $TEMPORARY$string<"a">|}>,
+  |},
+> = { };
+
+obj.f = { x: 1 };
+obj["g"] = { x: "a" };
+
+module.exports = obj;
+
+>>> e.js (#changes: 1)
+// @flow
+
+const obj: $TEMPORARY$object<{|a: number|}> = {};
+declare function foo(x: { a: number }): void;
+foo(obj);
+module.exports = obj;
+
+>>> f.js (#changes: 1)
+// @flow
+
+const obj: $TEMPORARY$object<{|f: number|}> = {};
+(obj.f: number);
+module.exports = obj;
+
+>>> g.js (#changes: 1)
+// @flow
+
+declare function foo<X: { a: 1 }>(x: X): void;
+
+const obj: $TEMPORARY$object<{|a: 1|}> = {};
+foo(obj);
+module.exports = obj;
+
+>>> Launching report...

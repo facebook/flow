@@ -1,0 +1,15 @@
+>>> lib.js (#changes: 2)
+// @flow
+
+class C {}
+
+module.exports = (new C: C);
+
+>>> main.js (#changes: 2)
+// @flow
+
+import typeof C from "./lib.js";const c = require('./lib');
+
+module.exports = (): C => c;
+
+>>> Launching report...

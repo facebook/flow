@@ -1,0 +1,8 @@
+>>> b.js (#changes: 3)
+// @flow
+
+import typeof C from "./lib.js";import { foo } from './a';
+
+module.exports = (foo(): C);
+
+>>> Launching report...

@@ -1,0 +1,11 @@
+>>> a.js (#changes: 1)
+// @flow
+
+module.exports = (): number => 1;
+
+>>> a.js.flow (#changes: 1)
+// @flow
+
+module.exports = (): number => 1;
+
+>>> Launching report...

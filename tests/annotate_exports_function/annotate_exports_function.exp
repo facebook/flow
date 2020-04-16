@@ -1,0 +1,22 @@
+>>> a.js (#changes: 1)
+// @flow
+
+export function f(): number {
+  return 1;
+}
+
+>>> arrow-annot.js (#changes: 1)
+// @flow
+
+const f = (x: string): number => 1;
+f("");
+module.exports = f;
+
+>>> b.js (#changes: 1)
+// @flow
+
+const functionArray = (): $TEMPORARY$array<(x: number) => number> => ([(x: number) => x])
+
+module.exports = functionArray;
+
+>>> Launching report...

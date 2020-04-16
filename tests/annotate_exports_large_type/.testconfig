@@ -1,0 +1,1 @@
+cmd: codemod annotate-exports --max-type-size 10

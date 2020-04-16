@@ -1,0 +1,21 @@
+>>> simple-let.js (#changes: 1)
+// @flow
+
+declare var n: number;
+declare var s: string;
+
+let a: number | string = n;
+a = s;
+module.exports = a;
+
+>>> simple-var.js (#changes: 1)
+// @flow
+
+declare var n: number;
+declare var s: string;
+
+var a: number | string = n;
+a = s;
+module.exports = a;
+
+>>> Launching report...

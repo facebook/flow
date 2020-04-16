@@ -579,6 +579,31 @@ runtest() {
               printf "flow check return code: %d\\n" "$st" >> "$stderr_dest"
               return_status=$RUNTEST_ERROR
             fi
+        elif [ "$(echo "$cmd" | awk '{print $1}')" == "codemod" ]
+        then
+          subcmd=$(echo "$cmd" | awk '{print $2}')
+
+          # parse flags after 'cmd: codemod subcommand'
+          config_cmd_args="$(echo "$cmd" | awk '{$1="";$2="";print}')"
+          cmd_args=("$config_cmd_args")
+
+          # shellcheck disable=SC2086
+          "$FLOW" "codemod" "$subcmd" \
+              $flowlib \
+              ${cmd_args[*]} \
+              $types_first_flag \
+              --strip-root \
+              --dry-run \
+              --quiet \
+              . \
+              1>> "$abs_out_file" \
+              2>> "$stderr_dest"
+          st=$?
+
+          if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+            printf "flow codemod return code: %d\\n" "$st" >> "$stderr_dest"
+            return_status=$RUNTEST_ERROR
+          fi
         else
             # otherwise, run specified flow command, then kill the server
 
