@@ -69,6 +69,8 @@ endif
 ################################################################################
 
 MODULES=\
+  src/codemods\
+  src/codemods/utils\
   src/commands\
   src/commands/config\
   src/commands/options\
@@ -135,6 +137,7 @@ MODULES=\
   src/services/saved_state/fetcher\
   src/services/type_info\
   src/state/heaps/context\
+  src/state/heaps/diffing\
   src/state/heaps/module\
   src/state/heaps/parsing\
   src/state/heaps/parsing/exceptions\

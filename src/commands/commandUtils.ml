@@ -1670,3 +1670,65 @@ let json_of_loc_with_offset ?stdin_file ~strip_root loc =
       Base.Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
     in
     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)
+
+type codemod_params =
+  | Codemod_params of {
+      options_flags: Options_flags.t;
+      shm_flags: shared_mem_params;
+      info: bool;
+      verbose: bool;
+      dry_run: bool;
+      log_level: Hh_logger.Level.t option;
+      root: string option;
+      input_file: string option;
+      base_flag: Base_flags.t;
+      anon: string list option;
+    }
+
+let collect_codemod_flags
+    main options_flags shm_flags info verbose dry_run log_level root input_file base_flag anon =
+  let codemod_flags =
+    Codemod_params
+      {
+        options_flags;
+        shm_flags;
+        info;
+        verbose;
+        dry_run;
+        log_level;
+        root;
+        input_file;
+        base_flag;
+        anon;
+      }
+  in
+  main codemod_flags
+
+let codemod_flags prev =
+  CommandSpec.ArgSpec.(
+    prev
+    |> collect collect_codemod_flags
+    |> options_flags
+    |> shm_flags
+    |> from_flag
+    |> flag "--info" no_arg ~doc:"Verbose transformation status"
+    |> flag "--verbose" no_arg ~doc:"Verbose progress status"
+    |> flag "--dry-run" no_arg ~doc:"Outputs the modifications to stdout"
+    |> flag
+         "--log-level"
+         (enum
+            [
+              ("off", Hh_logger.Level.Off);
+              ("fatal", Hh_logger.Level.Fatal);
+              ("error", Hh_logger.Level.Error);
+              ("warn", Hh_logger.Level.Warn);
+              ("info", Hh_logger.Level.Info);
+              ("debug", Hh_logger.Level.Debug);
+            ])
+         ~env:"FLOW_LOG_LEVEL"
+         ~doc:"Verbosity of logging"
+    |> root_flag
+    |> input_file_flag
+         "File containing a list of paths to transform. Incompatible with stdin and FILE..."
+    |> base_flags
+    |> anon "FILE..." (list_of string))

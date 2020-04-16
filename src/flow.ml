@@ -21,6 +21,7 @@ end = struct
       CheckCommands.CheckCommand.command;
       CheckCommands.FocusCheckCommand.command;
       CheckContentsCommand.command;
+      CodemodCommand.command;
       ConfigCommand.command;
       CoverageCommand.command;
       BatchCoverageCommand.command;
