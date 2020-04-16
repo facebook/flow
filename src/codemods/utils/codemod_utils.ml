@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Codemod_report
 module FilenameMap = Utils_js.FilenameMap
 
 type ('a, 't) abstract_codemod_runner =
@@ -94,32 +93,48 @@ let print_results ~report result : unit =
   print_rule ();
   report result
 
-let digest_typed_results ~reporter results =
-  FilenameMap.fold
-    (fun file_key result acc ->
-      match result with
-      | Ok ok ->
-        let (acc_files, acc_result) = acc in
-        (file_key :: acc_files, reporter.combine acc_result ok)
-      | Error (aloc, err) ->
-        Utils_js.prerr_endlinef
-          "%s: %s"
-          (Reason.string_of_aloc aloc)
-          (Error_message.string_of_internal_error err);
-        acc)
-    results
-    ([], reporter.empty)
+(* Mappers produce new ASTs, which are saved to the heap. *)
+let save_ast_diff ~info file_key ast ast' =
+  let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast ast' in
+  if List.length diff = 0 then
+    ()
+  else
+    let file_path = File_key.to_string file_key in
+    let file_input = File_input.FileName file_path in
+    let patch = Replacement_printer.mk_patch_ast_differ_unsafe diff file_input in
+    if info then
+      Hh_logger.print_with_newline
+        "patches for %s:\n%s"
+        file_path
+        (Replacement_printer.show_patch patch);
+    Diff_heaps.set_diff ~audit:Expensive.ok file_key patch
 
-let digest_untyped_results ~reporter results =
-  FilenameMap.fold
-    (fun file_key r acc ->
-      match r with
-      | None -> acc
-      | Some result ->
-        let (acc_files, acc_result) = acc in
-        (file_key :: acc_files, reporter.Codemod_report.combine result acc_result))
-    results
-    ([], reporter.empty)
+let make_visitor ~info job_config =
+  let f ~info ask file_key ast runner =
+    match runner with
+    | Reducer reducer ->
+      let reducer = reducer ask in
+      let (_ : (Loc.t, Loc.t) Flow_ast.program) = reducer#program ast in
+      reducer#acc
+    | Mapper mapper ->
+      let mapper = mapper ask in
+      let ast' = mapper#program ast in
+      save_ast_diff ~info file_key ast ast';
+      mapper#acc
+  in
+  match job_config.runner with
+  | TypedRunner config ->
+    let f ast typed_ask =
+      let { Codemod_context.Typed.file; _ } = typed_ask in
+      f ~info typed_ask file ast config
+    in
+    Codemod_runner.Typed_visitor f
+  | UntypedRunner config ->
+    let f ast untyped_ask =
+      let { Codemod_context.Untyped.file; _ } = untyped_ask in
+      f ~info untyped_ask file ast config
+    in
+    Codemod_runner.Untyped_visitor f
 
 let initialize_logs options = LoggingUtils.init_loggers ~options ()
 
@@ -143,38 +158,6 @@ let mk_main
   in
   Hh_logger.Level.set_min_level log_level;
 
-  (* Mappers produce new ASTs, which are saved to the heap. *)
-  let save_ast_diff file_key ast ast' =
-    let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast ast' in
-    if List.length diff = 0 then
-      ()
-    else
-      let file_path = File_key.to_string file_key in
-      let file_input = File_input.FileName file_path in
-      let patch = Replacement_printer.mk_patch_ast_differ_unsafe diff file_input in
-      if info then
-        Hh_logger.print_with_newline
-          "patches for %s:\n%s"
-          file_path
-          (Replacement_printer.show_patch patch);
-      Diff_heaps.set_diff ~audit:Expensive.ok file_key patch
-  in
-
-  let f
-        : 't 'a. 't -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program ->
-          ('a, 't) abstract_codemod_runner -> 'a =
-   fun cctx file_key ast runner ->
-    match runner with
-    | Reducer reducer ->
-      let reducer = reducer cctx in
-      let (_ : (Loc.t, Loc.t) Flow_ast.program) = reducer#program ast in
-      reducer#acc
-    | Mapper mapper ->
-      let mapper = mapper cctx in
-      let ast' = mapper#program ast in
-      save_ast_diff file_key ast ast';
-      mapper#acc
-  in
   let initial_lwt_thread () =
     let genv =
       let num_workers = Options.max_workers options in
@@ -190,27 +173,14 @@ let mk_main
         None
     in
     let%lwt (files, result) =
-      match job_config.runner with
-      | TypedRunner config ->
-        let f ast typed_context =
-          let { Codemod_context.Typed.file; _ } = typed_context in
-          f typed_context file ast config
-        in
-        let%lwt (_, results) =
-          Codemod_runner.TypedRunner.run ~genv ~should_print_summary ~info ~f options roots
-        in
-        let results = digest_typed_results ~reporter:job_config.reporter results in
-        Lwt.return results
-      | UntypedRunner config ->
-        let f ast untyped_context =
-          let { Codemod_context.Untyped.file; _ } = untyped_context in
-          f untyped_context file ast config
-        in
-        let%lwt (_, results) =
-          Codemod_runner.UntypedRunner.run ~genv ~should_print_summary ~f options roots
-        in
-        let results = digest_untyped_results ~reporter:job_config.reporter results in
-        Lwt.return results
+      Codemod_runner.run_and_digest
+        ~genv
+        ~should_print_summary
+        ~info
+        ~visitor:(make_visitor ~info job_config)
+        ~reporter:job_config.reporter
+        options
+        roots
     in
     Hh_logger.info "Applying results";
     let%lwt _changed_files = print_asts ~strip_root ~info ~dry_run files in

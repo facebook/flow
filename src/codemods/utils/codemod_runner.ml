@@ -221,6 +221,26 @@ module TypedRunner = struct
                 Lwt.return result)
         in
         Lwt.return results)
+
+  let digest ~reporter results =
+    FilenameMap.fold
+      (fun file_key result acc ->
+        match result with
+        | Ok ok ->
+          let (acc_files, acc_result) = acc in
+          (file_key :: acc_files, reporter.Codemod_report.combine acc_result ok)
+        | Error (aloc, err) ->
+          Utils_js.prerr_endlinef
+            "%s: %s"
+            (Reason.string_of_aloc aloc)
+            (Error_message.string_of_internal_error err);
+          acc)
+      results
+      ([], reporter.Codemod_report.empty)
+
+  let run_and_digest ~genv ~should_print_summary ~info ~f ~reporter options roots =
+    let%lwt (_, results) = run ~genv ~should_print_summary ~info ~f options roots in
+    Lwt.return (digest ~reporter results)
 end
 
 module UntypedRunner = struct
@@ -267,4 +287,33 @@ module UntypedRunner = struct
               ~neutral:FilenameMap.empty
               ~merge:FilenameMap.union
               ~next))
+
+  let digest ~reporter results =
+    FilenameMap.fold
+      (fun file_key r acc ->
+        match r with
+        | None -> acc
+        | Some result ->
+          let (acc_files, acc_result) = acc in
+          (file_key :: acc_files, reporter.Codemod_report.combine result acc_result))
+      results
+      ([], reporter.Codemod_report.empty)
+
+  let run_and_digest ~genv ~should_print_summary ~info:_ ~f ~reporter options roots =
+    let%lwt (_, results) = run ~genv ~should_print_summary ~f options roots in
+    Lwt.return (digest ~reporter results)
 end
+
+type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
+
+type 'a visitor =
+  | Typed_visitor of ('a, Codemod_context.Typed.t) abstract_visitor
+  | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
+
+let run_and_digest ~genv ~should_print_summary ~info ~visitor ~reporter options roots =
+  let run =
+    match visitor with
+    | Typed_visitor f -> TypedRunner.run_and_digest ~f
+    | Untyped_visitor f -> UntypedRunner.run_and_digest ~f
+  in
+  run ~genv ~should_print_summary ~info ~reporter options roots

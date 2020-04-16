@@ -5,25 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module TypedRunner : sig
-  val run :
-    genv:ServerEnv.genv ->
-    should_print_summary:bool ->
-    info:bool ->
-    f:((Loc.t, Loc.t) Flow_ast.program -> Codemod_context.Typed.t -> 'a) ->
-    Options.t ->
-    SSet.t ->
-    ( Profiling_js.finished
-    * ('a, ALoc.t * Error_message.internal_error) result Utils_js.FilenameMap.t )
-    Lwt.t
-end
+type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
 
-module UntypedRunner : sig
-  val run :
-    genv:ServerEnv.genv ->
-    should_print_summary:bool ->
-    f:((Loc.t, Loc.t) Flow_ast.program -> Codemod_context.Untyped.t -> 'a) ->
-    Options.t ->
-    SSet.t ->
-    (Profiling_js.finished * 'a option Utils_js.FilenameMap.t) Lwt.t
-end
+type 'a visitor =
+  | Typed_visitor of ('a, Codemod_context.Typed.t) abstract_visitor
+  | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
+
+val run_and_digest :
+  genv:ServerEnv.genv ->
+  should_print_summary:bool ->
+  info:bool ->
+  visitor:'a visitor ->
+  reporter:'a Codemod_report.t ->
+  Options.t ->
+  SSet.t ->
+  (File_key.t list * 'a) Lwt.t
