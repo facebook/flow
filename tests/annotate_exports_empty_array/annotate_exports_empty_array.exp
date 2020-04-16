@@ -15,3 +15,31 @@ const a3 = [];
 module.exports = { a0, a1, a2, a3 };
 
 >>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
+  Number of annotations added:              3
+  Total size of annotations:               10
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         1
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+    Unrecognizable module error:            0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            1
+  Empty SomeKnownUpper:                     2
+

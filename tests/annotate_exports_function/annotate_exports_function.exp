@@ -20,3 +20,31 @@ const functionArray = (): $TEMPORARY$array<(x: number) => number> => ([(x: numbe
 module.exports = functionArray;
 
 >>> Launching report...
+
+Stats:
+  Files changed:                            3
+  Number of sig. ver. errors:               5
+  Number of annotations required:           5
+  Number of annotations added:              3
+  Total size of annotations:                7
+  Number of annotations skipped:            1
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+    Unrecognizable module error:            0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  1
+  Large type added:                         0
+  Location unhandled:                       1
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

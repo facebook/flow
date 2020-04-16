@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Codemod_report
 module FilenameMap = Utils_js.FilenameMap
 
 type ('a, 't) abstract_codemod_runner =
@@ -76,9 +77,13 @@ let print_asts ~strip_root ~info ~dry_run files : File_key.t list option Lwt.t =
   else
     print_real ()
 
-let print_results ~report result : unit =
-  Utils_js.print_endlinef ">>> Launching report...";
-  report result
+let print_results ~strip_root ~report result : unit =
+  match report with
+  | StringReporter r ->
+    Utils_js.print_endlinef ">>> Launching report...\n\n%s\n" (r ~strip_root result)
+  | UnitReporter r ->
+    Utils_js.print_endlinef ">>> Launching report...";
+    r ~strip_root result
 
 (* Mappers produce new ASTs, which are saved to the heap. *)
 let save_ast_diff ~info file_key ast ast' =
@@ -171,7 +176,7 @@ let mk_main
     in
     Hh_logger.info "Applying results";
     let%lwt _changed_files = print_asts ~strip_root ~info ~dry_run files in
-    print_results ~report:(job_config.reporter.Codemod_report.report ~strip_root) result;
+    print_results ~strip_root ~report:job_config.reporter.Codemod_report.report result;
     Lwt.return ()
   in
   LwtInit.run_lwt initial_lwt_thread

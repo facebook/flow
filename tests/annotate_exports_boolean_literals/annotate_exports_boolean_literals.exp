@@ -6,3 +6,31 @@ declare var cond: boolean;
 module.exports = (): boolean => (cond ? true : false);
 
 >>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
+  Number of annotations added:              1
+  Total size of annotations:                3
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+    Unrecognizable module error:            0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

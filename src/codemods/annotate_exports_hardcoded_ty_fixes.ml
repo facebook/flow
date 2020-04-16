@@ -20,9 +20,13 @@ let maybe_string_literal_tag =
   let re = Str.regexp "^[a-zA-Z0-9-_]+$" in
   (fun s -> Str.string_match re s 0)
 
-let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~preserve_literals =
+let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~preserve_literals acc =
   object (this)
     inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
+
+    val mutable acc = acc
+
+    method acc () = acc
 
     val inferred_any =
       if strict then
@@ -36,14 +40,14 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
       (* `empty` with no upper bounds becomes `any`. All other allowed occurrence
        * `empty` remain as is. *)
       | Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper) ->
-        Logger.warn loc Warning.Empty_NoUpper;
+        acc <- Acc.warn acc loc Warning.Empty_NoUpper;
         Builtins.flowfixme_empty
       | Ty.Bot Ty.EmptyType ->
         (* `empty` annotations remain *)
         t
       | Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeKnownUpper ub)) ->
         (* empty with `UseT ub` upper bounds becomes `ub` - equivalent to `MergedT (UseT ub)` *)
-        Logger.warn loc Warning.Empty_SomeKnownUpper;
+        acc <- Acc.warn acc loc Warning.Empty_SomeKnownUpper;
         this#on_t env ub
       (* Heuristic: These are rarely useful as full precision literal types *)
       | Ty.Num (Some _) when not preserve_literals -> Ty.Num None
@@ -131,9 +135,9 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
       | _ -> super#on_t env t
   end
 
-let run ~cctx ~strict ~imports_react ~preserve_literals loc t =
+let run ~cctx ~strict ~imports_react ~preserve_literals acc loc t =
   let mapper =
-    mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~preserve_literals
+    mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~preserve_literals acc
   in
   let t' = mapper#on_t loc t in
   let t'' =
@@ -142,4 +146,4 @@ let run ~cctx ~strict ~imports_react ~preserve_literals loc t =
     else
       Ty_utils.simplify_type ~merge_kinds:false t'
   in
-  Ok t''
+  (mapper#acc (), t'')

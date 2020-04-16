@@ -126,7 +126,15 @@ module Annotate_exports_command = struct
       TypedRunner
         (Mapper (Annotate_exports.mapper ~preserve_literals ~iteration ~max_type_size ~default_any))
     in
-    { reporter = Codemod_report.unit_reporter; runner }
+    let reporter =
+      let open Annotate_exports_utils in
+      {
+        Codemod_report.report = Codemod_report.StringReporter Acc.report;
+        combine = Acc.combine;
+        empty = Acc.empty;
+      }
+    in
+    { reporter; runner }
 
   let main codemod_flags preserve_literals iteration max_type_size default_any () =
     let config = config preserve_literals iteration max_type_size default_any in

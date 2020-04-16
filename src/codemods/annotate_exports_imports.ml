@@ -41,7 +41,7 @@ module Modules = struct
       | (local_file, _, _) ->
         (match SMap.find_opt local_file paths with
         | Some source -> Ok source
-        | None -> Error (Errors.Unrecognizable_module_error f)))
+        | None -> Error (Error.Unrecognizable_module_error f)))
 end
 
 module AstHelper = struct
@@ -80,7 +80,7 @@ module ExportsHelper : sig
     default: bool;
   }
 
-  val resolve : use_mode -> ALoc.t -> string -> (import_info, Errors.import_error) result
+  val resolve : use_mode -> ALoc.t -> string -> (import_info, Error.import_error) result
 end = struct
   type import_info = {
     import_kind: Ast.Statement.ImportDeclaration.importKind;
@@ -249,11 +249,11 @@ end = struct
     in
     match import_info_opt with
     | Some import_info -> Ok import_info
-    | None -> Error (Errors.No_matching_export (remote_name, loc))
+    | None -> Error (Error.No_matching_export (remote_name, loc))
 
   let from_exports_info_result ~use_mode exports_info_result loc remote_name =
     match exports_info_result with
-    | Error (IndeterminateModuleType _) -> Error Errors.Indeterminate_module_type
+    | Error (IndeterminateModuleType _) -> Error Error.Indeterminate_module_type
     | Ok exports_info -> from_exports_info ~use_mode exports_info loc remote_name
 
   (* Try to find out whether a given symbol is exported and what kind of import
@@ -261,10 +261,10 @@ end = struct
   let resolve use_mode loc name =
     File_sig.With_Loc.(
       match ALoc.source loc with
-      | None -> Error Errors.Loc_source_none
+      | None -> Error Error.Loc_source_none
       | Some remote_file ->
         (match Parsing_heaps.Reader.get_ast ~reader:(State_reader.create ()) remote_file with
-        | None -> Error Errors.Parsing_heaps_get_ast_error
+        | None -> Error Error.Parsing_heaps_get_ast_error
         | Some ast ->
           let exports_info = program_with_exports_info ~ast ~module_ref_prefix:None in
           from_exports_info_result ~use_mode exports_info loc name))
@@ -281,7 +281,7 @@ module ImportsHelper : sig
     -> file:File_key.t
     -> reserved_names:SSet.t
     -> object
-         method type_ : Ty.t -> (Ty.t, Errors.t) result
+         method type_ : Ty.t -> (Ty.t, Error.kind) result
 
          method to_import_stmts : unit -> (Loc.t, Loc.t) Ast.Statement.t list
        end
@@ -494,7 +494,7 @@ end = struct
 
   (* Any errors we encounter should surface as an error to the top-level type
    * that is converted. This exception needs to be caught in 'type_'. *)
-  exception Import_exc of Errors.import_error
+  exception Import_exc of Error.import_error
 
   module BatchImportMap = WrappedMap.Make (struct
     open Ast
@@ -511,7 +511,7 @@ end = struct
       val mutable symbol_cache = SymbolWithUseModeMap.empty
 
       method private gen_import_stmt index use_mode remote_symbol
-          : (import_declaration, Errors.import_error) result =
+          : (import_declaration, Error.import_error) result =
         let reader = State_reader.create () in
         let { Ty.sym_name = remote_name; sym_def_loc; _ } = remote_symbol in
         let module_name =
@@ -650,9 +650,9 @@ end = struct
                * but keep the cache to avoid duplicating work later. *)
               name_map <- old_name_map;
               symbol_cache <- old_symbol_cache;
-              Error (Errors.Import_error err)
+              Error (Error.Import_error err)
             | ty' -> Ok ty'
-            : (Ty.t, Errors.t) result )
+            : (Ty.t, Error.kind) result )
 
       method to_import_stmts () : (Loc.t, Loc.t) Ast.Statement.t list =
         let dummy_loc = Loc.none in

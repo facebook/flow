@@ -28,3 +28,31 @@ module.exports = [
 ];
 
 >>> Launching report...
+
+Stats:
+  Files changed:                            3
+  Number of sig. ver. errors:               9
+  Number of annotations required:           9
+  Number of annotations added:              5
+  Total size of annotations:                7
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     4
+    Unrecognizable module error:            0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
