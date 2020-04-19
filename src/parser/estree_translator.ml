@@ -619,14 +619,7 @@ with type t = Impl.t = struct
           loc
           [("meta", identifier meta); ("property", identifier property)]
       | (loc, Import { Import.argument; comments }) ->
-        node
-          ?comments
-          "CallExpression"
-          loc
-          [
-            ("callee", node "Import" (Loc.btwn loc (fst argument)) []);
-            ("arguments", array_of_list expression [argument]);
-          ]
+        node ?comments "ImportExpression" loc [("source", expression argument)]
     and function_declaration
         ( loc,
           {

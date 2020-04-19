@@ -460,7 +460,7 @@
       "loc":{"source":null,"start":{"line":25,"column":21},"end":{"line":25,"column":60}},
       "range":[676,715],
       "expression":{
-        "type":"CallExpression",
+        "type":"ImportExpression",
         "trailingComments":[
           {
             "type":"Block",
@@ -479,20 +479,13 @@
         ],
         "loc":{"source":null,"start":{"line":25,"column":22},"end":{"line":25,"column":36}},
         "range":[677,691],
-        "callee":{
-          "type":"Import",
-          "loc":{"source":null,"start":{"line":25,"column":22},"end":{"line":25,"column":35}},
-          "range":[677,690]
-        },
-        "arguments":[
-          {
-            "type":"Literal",
-            "loc":{"source":null,"start":{"line":25,"column":29},"end":{"line":25,"column":35}},
-            "range":[684,690],
-            "value":"test",
-            "raw":"'test'"
-          }
-        ]
+        "source":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":25,"column":29},"end":{"line":25,"column":35}},
+          "range":[684,690],
+          "value":"test",
+          "raw":"'test'"
+        }
       },
       "directive":null
     },

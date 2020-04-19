@@ -256,14 +256,4 @@ export default function (fork) {
   def("ClassPrivateProperty")
     .bases("ClassProperty")
     .field("key", def("Identifier"))
-
-  /////////
-  // legacy
-  /////////
-  // ESTree specifies `ImportExpression` instead, but Babel Parser
-  // continues to output a `CallExpression`, so keep this for now
-  def('Import')
-    .bases("Node")
-  def('CallExpression')
-    .field('callee', or(def('Expression'), def('Import')));
 }
