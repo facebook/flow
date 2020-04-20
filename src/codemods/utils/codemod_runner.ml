@@ -37,6 +37,9 @@ let get_target_filename_set ~options ~libs ~all file_set =
     file_set
     FilenameSet.empty
 
+(* TypedRunner - This runner does a full local typecheck and makes available the
+ * typed AST as well as the full CX to each job. This runner is needed for any type
+ * based transforms. It runs a full local typecheck so can be slow on large codebases. *)
 module TypedRunner = struct
   (* We calculate the files that need to be merged in the same way that recheck
      would, but making the following assumptions:
@@ -243,30 +246,42 @@ module TypedRunner = struct
     Lwt.return (digest ~reporter results)
 end
 
+let untyped_runner_job ~f ~reader file_list =
+  let reader = Abstract_state_reader.Mutator_state_reader reader in
+  List.fold_left
+    (fun results file ->
+      let file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
+      let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+      let ccx = { Codemod_context.Untyped.file; file_sig } in
+      FilenameMap.add file (Some (f ast ccx)) results)
+    FilenameMap.empty
+    file_list
+
+let untyped_digest ~reporter results =
+  FilenameMap.fold
+    (fun file_key r acc ->
+      match r with
+      | None -> acc
+      | Some result ->
+        let (acc_files, acc_result) = acc in
+        (file_key :: acc_files, reporter.Codemod_report.combine result acc_result))
+    results
+    ([], reporter.Codemod_report.empty)
+
+(* UntypedRunner - This runner just parses the specified roots, this means no addition
+ * info other than what is passed to the job is available but means this runner is fast. *)
 module UntypedRunner = struct
-  (* creates a closure that lists all files in the given root, returned in chunks *)
-  let make_next_files ~workers ~all ~libs ~options file_set =
-    let filename_set = get_target_filename_set ~options ~libs ~all file_set in
-    Parsing_service_js.next_of_filename_set workers filename_set
-
-  let job ~f ~reader file_list =
-    let reader = Abstract_state_reader.Mutator_state_reader reader in
-    List.fold_left
-      (fun results file ->
-        let file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
-        let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-        let ccx = { Codemod_context.Untyped.file; file_sig } in
-        FilenameMap.add file (Some (f ast ccx)) results)
-      FilenameMap.empty
-      file_list
-
   let run ~genv ~should_print_summary ~f options roots =
     let workers = genv.ServerEnv.workers in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun _profiling ->
         let file_options = Options.file_options options in
         let all = Options.all options in
         let (_ordered_libs, libs) = Files.init file_options in
-        let next = make_next_files ~workers ~all ~libs ~options:file_options roots in
+
+        (* creates a closure that lists all files in the given root, returned in chunks *)
+        let filename_set = get_target_filename_set ~options:file_options ~libs ~all roots in
+        let next = Parsing_service_js.next_of_filename_set workers filename_set in
+
         Transaction.with_transaction (fun transaction ->
             let reader = Mutator_state_reader.create transaction in
             let%lwt {
@@ -283,37 +298,64 @@ module UntypedRunner = struct
             let next = Parsing_service_js.next_of_filename_set workers roots in
             MultiWorkerLwt.call
               workers
-              ~job:(fun _c file_key -> job ~f ~reader file_key)
+              ~job:(fun _c file_key -> untyped_runner_job ~f ~reader file_key)
               ~neutral:FilenameMap.empty
               ~merge:FilenameMap.union
               ~next))
 
-  let digest ~reporter results =
-    FilenameMap.fold
-      (fun file_key r acc ->
-        match r with
-        | None -> acc
-        | Some result ->
-          let (acc_files, acc_result) = acc in
-          (file_key :: acc_files, reporter.Codemod_report.combine result acc_result))
-      results
-      ([], reporter.Codemod_report.empty)
+  let run_and_digest ~genv ~should_print_summary ~info:_ ~f ~reporter options roots =
+    let%lwt (_, results) = run ~genv ~should_print_summary ~f options roots in
+    Lwt.return (untyped_digest ~reporter results)
+end
+
+(* UntypedFlowInitRunner - This runner calls `Types_js.init` which results in the full
+ * codebase being parsed as well as resolving requires and calculating the dependency
+ * graph. This info is available inside each job via the different Heap API's. This
+ * runner is useful if you need access to do transforms that require context outside
+ * of a single file e.g. looking up the exports of a module your file is importing.
+ * For large codebases this runner can be slow. *)
+module UntypedFlowInitRunner = struct
+  let run ~genv ~should_print_summary ~f options roots =
+    let workers = genv.ServerEnv.workers in
+    Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
+        let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
+
+        let file_options = Options.file_options options in
+        let all = Options.all options in
+        let libs = env.ServerEnv.libs in
+
+        (* creates a closure that lists all files in the given root, returned in chunks *)
+        let filename_set = get_target_filename_set ~options:file_options ~libs ~all roots in
+        (* Discard uparseable files *)
+        let filename_set = FilenameSet.inter filename_set env.ServerEnv.files in
+        let next = Parsing_service_js.next_of_filename_set workers filename_set in
+
+        Transaction.with_transaction (fun transaction ->
+            let reader = Mutator_state_reader.create transaction in
+            MultiWorkerLwt.call
+              workers
+              ~job:(fun _c file_key -> untyped_runner_job ~f ~reader file_key)
+              ~neutral:FilenameMap.empty
+              ~merge:FilenameMap.union
+              ~next))
 
   let run_and_digest ~genv ~should_print_summary ~info:_ ~f ~reporter options roots =
     let%lwt (_, results) = run ~genv ~should_print_summary ~f options roots in
-    Lwt.return (digest ~reporter results)
+    Lwt.return (untyped_digest ~reporter results)
 end
 
 type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
 
 type 'a visitor =
   | Typed_visitor of ('a, Codemod_context.Typed.t) abstract_visitor
+  | UntypedFlowInitRunner_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
   | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
 
 let run_and_digest ~genv ~should_print_summary ~info ~visitor ~reporter options roots =
   let run =
     match visitor with
     | Typed_visitor f -> TypedRunner.run_and_digest ~f
+    | UntypedFlowInitRunner_visitor f -> UntypedFlowInitRunner.run_and_digest ~f
     | Untyped_visitor f -> UntypedRunner.run_and_digest ~f
   in
   run ~genv ~should_print_summary ~info ~reporter options roots

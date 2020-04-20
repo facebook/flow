@@ -14,6 +14,7 @@ type ('a, 't) abstract_codemod_runner =
 
 type 'a codemod_runner =
   | TypedRunner of ('a, Codemod_context.Typed.t) abstract_codemod_runner
+  | UntypedFlowInitRunner of ('a, Codemod_context.Untyped.t) abstract_codemod_runner
   | UntypedRunner of ('a, Codemod_context.Untyped.t) abstract_codemod_runner
 
 type 'a job_config = {
@@ -127,6 +128,12 @@ let make_visitor ~info job_config =
       f ~info untyped_ask file ast config
     in
     Codemod_runner.Untyped_visitor f
+  | UntypedFlowInitRunner config ->
+    let f ast untyped_ask =
+      let { Codemod_context.Untyped.file; _ } = untyped_ask in
+      f ~info untyped_ask file ast config
+    in
+    Codemod_runner.UntypedFlowInitRunner_visitor f
 
 let initialize_logs options = LoggingUtils.init_loggers ~options ()
 
