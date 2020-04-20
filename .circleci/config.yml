@@ -479,6 +479,13 @@ jobs:
         name: Upload Windows binary
         command: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-$CIRCLE_TAG.zip"
 
+  flow_bin_deploy:
+    executor: linux-node
+    steps:
+    - run:
+        name: Deploy flow-bin
+        command: .circleci/deploy_flow_bin.sh
+
   website_deploy:
     executor: flow-website
     steps:
