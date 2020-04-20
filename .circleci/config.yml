@@ -616,6 +616,12 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - build_win
+      - flow_bin_deploy:
+          <<: *run_on_release_tags
+          requires:
+            - github_linux
+            - github_macos
+            - github_win
       - try_flow_deploy:
           <<: *run_on_release_tags
           requires:
