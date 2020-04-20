@@ -82,6 +82,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let trailing' = List.map this#comment trailing in
         { leading = leading'; trailing = trailing'; internal }
 
+    method syntax_with_internal (comments : ('M, 'M Ast.Comment.t list) Ast.Syntax.t)
+        : ('N, 'N Ast.Comment.t list) Ast.Syntax.t =
+      let open Ast.Syntax in
+      let { leading; trailing; internal } = comments in
+      let leading' = List.map this#comment leading in
+      let trailing' = List.map this#comment trailing in
+      let internal' = List.map this#comment internal in
+      { leading = leading'; trailing = trailing'; internal = internal' }
+
     method expression ((annot, expr') : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
       Ast.Expression.
         ( this#on_type_annot annot,
@@ -158,7 +167,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.Block in
       let { body; comments } = stmt in
       let body' = this#statement_list body in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { body = body'; comments = comments' }
 
     method break (break : 'M Ast.Statement.Break.t) : 'N Ast.Statement.Break.t =

@@ -8196,7 +8196,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                           comments = Flow_ast_utils.mk_comments_opt ();
                         } );
                   ];
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } )
         in
         let return = Ast.Type.Available (loc, return) in

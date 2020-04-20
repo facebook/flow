@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":41,"column":23}},
-  "range":[17,1572],
+  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":43,"column":37}},
+  "range":[17,1611],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -1029,6 +1029,40 @@
       "expression":false,
       "returnType":null,
       "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":43,"column":37}},
+      "range":[1574,1611],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":43,"column":9},"end":{"line":43,"column":12}},
+        "range":[1583,1586],
+        "name":"foo",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":43,"column":17},"end":{"line":43,"column":35}},
+            "range":[1591,1609],
+            "value":" 15.1 I block "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":43,"column":15},"end":{"line":43,"column":37}},
+        "range":[1589,1611],
+        "body":[]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
     }
   ],
   "comments":[
@@ -1397,6 +1431,12 @@
       "loc":{"source":null,"start":{"line":41,"column":2},"end":{"line":41,"column":20}},
       "range":[1551,1569],
       "value":" 14.5 L block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":43,"column":17},"end":{"line":43,"column":35}},
+      "range":[1591,1609],
+      "value":" 15.1 I block "
     }
   ]
 }

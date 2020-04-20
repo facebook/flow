@@ -11,3 +11,5 @@ declare module Foo /* 3.1 T id */
 
 declare module "Foo" /* 4.1 T str */
   /* 4.2 L block */ {}
+
+declare module Foo { /* 5.1 I block */ }

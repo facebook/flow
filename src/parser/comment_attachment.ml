@@ -468,10 +468,13 @@ let statement_add_comments
     (Loc.t, Loc.t) Statement.t =
   let open Statement in
   let merge_comments inner = Flow_ast_utils.merge_comments ~inner ~outer:comments in
+  let merge_comments_with_internal inner =
+    Flow_ast_utils.merge_comments_with_internal ~inner ~outer:comments
+  in
   ( loc,
     match stmt with
     | Block ({ Block.comments; _ } as s) ->
-      Block { s with Block.comments = merge_comments comments }
+      Block { s with Block.comments = merge_comments_with_internal comments }
     | Break ({ Break.comments; _ } as s) ->
       Break { s with Break.comments = merge_comments comments }
     | ClassDeclaration ({ Class.comments; _ } as s) ->

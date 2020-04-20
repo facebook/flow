@@ -116,15 +116,18 @@ let tests =
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
       assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );
+    ("block" >:: fun ctxt -> assert_statement_string ~ctxt "{/*I*/}");
     ("break" >:: fun ctxt -> assert_statement_string ~ctxt "break;/*T*/");
     ("class_private_field" >:: fun ctxt -> assert_expression_string ~ctxt "class C{/*L*/#A/*T*/;}");
     ("continue" >:: fun ctxt -> assert_statement_string ~ctxt "continue;/*T*/");
     ("debugger" >:: fun ctxt -> assert_statement_string ~ctxt "debugger;/*T*/");
+    ("declare_module" >:: fun ctxt -> assert_statement_string ~ctxt "declare module A{/*I*/}");
     ("do_while" >:: fun ctxt -> assert_statement_string ~ctxt "do{}while(A);/*T*/");
     ( "enum" >:: fun ctxt ->
       assert_statement_string ~ctxt "enum E of boolean{A=/*L*/true/*T*/,}";
       assert_statement_string ~ctxt "enum E of number{A=/*L*/1/*T*/,}";
       assert_statement_string ~ctxt {|enum E of string{A=/*L*/"A"/*T*/,}|} );
+    ("function_body" >:: fun ctxt -> assert_statement_string ~ctxt "function foo(){/*I*/}");
     ( "function_params" >:: fun ctxt ->
       let ast = expression_of_string "function foo/*L*/()/*T*/\n{}" in
       assert_expression ~ctxt "function foo/*L*/()/*T*/{}" ast );

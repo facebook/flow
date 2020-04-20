@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":1}},
-  "range":[0,181],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":21}},
+  "range":[0,204],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -133,6 +133,20 @@
       "expression":false,
       "returnType":null,
       "typeParameters":null
+    },
+    {
+      "type":"BlockStatement",
+      "trailingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":19}},
+          "range":[185,202],
+          "value":" 4.1 I block "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":21}},
+      "range":[183,204],
+      "body":[]
     }
   ],
   "comments":[
@@ -159,6 +173,12 @@
       "loc":{"source":null,"start":{"line":10,"column":25},"end":{"line":10,"column":39}},
       "range":[165,179],
       "value":" Trailing "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":19}},
+      "range":[185,202],
+      "value":" 4.1 I block "
     }
   ]
 }

@@ -309,11 +309,19 @@ module rec Parse : PARSER = struct
     let term_fn t = t = T_RCURLY in
     let body = statement_list ~term_fn env in
     let end_loc = Peek.loc env in
+    let internal =
+      if body = [] then
+        Peek.comments env
+      else
+        []
+    in
     Expect.token env T_RCURLY;
     let trailing = Eat.trailing_comments env in
     ( Loc.btwn start_loc end_loc,
-      { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    )
+      {
+        Ast.Statement.Block.body;
+        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+      } )
 
   and function_block_body ~expression env =
     let start_loc = Peek.loc env in
@@ -322,6 +330,12 @@ module rec Parse : PARSER = struct
     let term_fn t = t = T_RCURLY in
     let (body, strict) = statement_list_with_directives ~term_fn env in
     let end_loc = Peek.loc env in
+    let internal =
+      if body = [] then
+        Peek.comments env
+      else
+        []
+    in
     Expect.token env T_RCURLY;
     let trailing =
       match (expression, Peek.token env) with
@@ -332,7 +346,10 @@ module rec Parse : PARSER = struct
       | _ -> []
     in
     ( Loc.btwn start_loc end_loc,
-      { Ast.Statement.Block.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () },
+      {
+        Ast.Statement.Block.body;
+        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+      },
       strict )
 
   and jsx_element_or_fragment = JSX.element_or_fragment

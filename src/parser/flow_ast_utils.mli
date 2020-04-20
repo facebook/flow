@@ -53,10 +53,21 @@ val mk_comments_opt :
   unit ->
   ('loc, unit) Flow_ast.Syntax.t option
 
+val mk_comments_with_internal_opt :
+  ?leading:'loc Flow_ast.Comment.t list ->
+  ?trailing:'loc Flow_ast.Comment.t list ->
+  internal:'loc Flow_ast.Comment.t list ->
+  ('loc, 'loc Flow_ast.Comment.t list) Flow_ast.Syntax.t option
+
 val merge_comments :
   inner:('M, unit) Flow_ast.Syntax.t option ->
   outer:('M, unit) Flow_ast.Syntax.t option ->
   ('M, unit) Flow_ast.Syntax.t option
+
+val merge_comments_with_internal :
+  inner:('M, 'loc Flow_ast.Comment.t list) Flow_ast.Syntax.t option ->
+  outer:('M, 'a) Flow_ast.Syntax.t option ->
+  ('M, 'loc Flow_ast.Comment.t list) Flow_ast.Syntax.t option
 
 module ExpressionSort : sig
   type t =

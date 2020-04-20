@@ -9,3 +9,5 @@ function trailingOnly() {
 function leadingAndTrialing() {
     /* 3.1 Leading */ {} /* Trailing */
 }
+
+{ /* 4.1 I block */ }

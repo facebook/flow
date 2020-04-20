@@ -448,7 +448,7 @@ and Statement : sig
   module Block : sig
     type ('M, 'T) t = {
       body: ('M, 'T) Statement.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end

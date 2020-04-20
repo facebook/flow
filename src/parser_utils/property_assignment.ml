@@ -265,8 +265,7 @@ let eval_property_assignment class_body =
           Some block
         | _ -> None)
       class_body
-    |> Base.Option.value
-         ~default:{ Ast.Statement.Block.body = []; comments = Flow_ast_utils.mk_comments_opt () }
+    |> Base.Option.value ~default:{ Ast.Statement.Block.body = []; comments = None }
   in
   let properties = Base.List.map ~f:fst property_declarations in
   let bindings : ALoc.t Hoister.Bindings.t =

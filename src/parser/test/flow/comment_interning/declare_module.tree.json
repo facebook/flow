@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":13,"column":22}},
-  "range":[21,358],
+  "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":15,"column":40}},
+  "range":[21,400],
   "body":[
     {
       "type":"DeclareModule",
@@ -210,6 +210,34 @@
         "body":[]
       },
       "kind":"CommonJS"
+    },
+    {
+      "type":"DeclareModule",
+      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":40}},
+      "range":[360,400],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":15,"column":15},"end":{"line":15,"column":18}},
+        "range":[375,378],
+        "name":"Foo",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "body":{
+        "type":"BlockStatement",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":15,"column":21},"end":{"line":15,"column":38}},
+            "range":[381,398],
+            "value":" 5.1 I block "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":15,"column":19},"end":{"line":15,"column":40}},
+        "range":[379,400],
+        "body":[]
+      },
+      "kind":"CommonJS"
     }
   ],
   "comments":[
@@ -290,6 +318,12 @@
       "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":19}},
       "range":[338,355],
       "value":" 4.2 L block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":15,"column":21},"end":{"line":15,"column":38}},
+      "range":[381,398],
+      "value":" 5.1 I block "
     }
   ]
 }

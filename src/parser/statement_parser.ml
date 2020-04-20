@@ -1231,10 +1231,17 @@ module Statement
           (fun env ->
             let leading = Peek.comments env in
             Expect.token env T_LCURLY;
-            let res = module_items env ~module_kind:None [] in
+            let (module_kind, body) = module_items env ~module_kind:None [] in
+            let internal =
+              if body = [] then
+                Peek.comments env
+              else
+                []
+            in
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
-            (res, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+            ( (module_kind, body),
+              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ))
           env
       in
       let body = (body_loc, { Statement.Block.body; comments }) in

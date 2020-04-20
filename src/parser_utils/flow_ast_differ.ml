@@ -407,9 +407,9 @@ let program
   let diff_and_recurse_nonopt_no_trivial f = diff_and_recurse_nonopt f (fun _ -> None) in
   let join_diff_list = Some [] |> List.fold_left (Base.Option.map2 ~f:List.append) in
   let rec syntax_opt
-      (loc : Loc.t)
-      (s1 : (Loc.t, unit) Ast.Syntax.t option)
-      (s2 : (Loc.t, unit) Ast.Syntax.t option) =
+            : 'internal. Loc.t -> (Loc.t, 'internal) Ast.Syntax.t option ->
+              (Loc.t, 'internal) Ast.Syntax.t option -> node change list option =
+   fun loc s1 s2 ->
     let add_comments { Ast.Syntax.leading; trailing; internal = _ } =
       Loc.(
         let fold_comment acc cmt = Comment cmt :: acc in
@@ -428,7 +428,10 @@ let program
         leading_inserts @ trailing_inserts)
     in
     diff_or_add_opt syntax add_comments s1 s2
-  and syntax (s1 : (Loc.t, unit) Ast.Syntax.t) (s2 : (Loc.t, unit) Ast.Syntax.t) =
+  and syntax
+        : 'internal. (Loc.t, 'internal) Ast.Syntax.t -> (Loc.t, 'internal) Ast.Syntax.t ->
+          node change list option =
+   fun s1 s2 ->
     let { Ast.Syntax.leading = leading1; trailing = trailing1; internal = _ } = s1 in
     let { Ast.Syntax.leading = leading2; trailing = trailing2; internal = _ } = s2 in
     let add_comment ((loc, _) as cmt) = Some (loc, Comment cmt) in

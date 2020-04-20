@@ -75,6 +75,11 @@ with type t = Impl.t = struct
     in
     array_of_list error l
 
+  let format_internal_comments = function
+    | None -> None
+    | Some { Ast.Syntax.leading; trailing; internal } ->
+      Flow_ast_utils.mk_comments_opt ~leading ~trailing:(internal @ trailing) ()
+
   (* This is basically a lightweight class. We close over some state and then return more than one
    * function that can access that state. We don't need most class features though, so let's avoid
    * the dynamic dispatch and the disruptive change. *)
@@ -735,7 +740,11 @@ with type t = Impl.t = struct
     and catch (loc, { Statement.Try.CatchClause.param; body; comments }) =
       node ?comments "CatchClause" loc [("param", option pattern param); ("body", block body)]
     and block (loc, { Statement.Block.body; comments }) =
-      node ?comments "BlockStatement" loc [("body", statement_list body)]
+      node
+        ?comments:(format_internal_comments comments)
+        "BlockStatement"
+        loc
+        [("body", statement_list body)]
     and declare_variable (loc, { Statement.DeclareVariable.id; annot; comments }) =
       let id_loc =
         Loc.btwn

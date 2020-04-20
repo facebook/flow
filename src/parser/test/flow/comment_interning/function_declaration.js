@@ -39,3 +39,5 @@ function /* 13.1 L id */ foo /* 13.2 T id */
 function /* 14.1 L id */ foo /* 14.2 T id */
   /* 14.3 L params */ () /* 14.4 T params */
   /* 14.5 L block */ {}
+
+function foo() { /* 15.1 I block */ }

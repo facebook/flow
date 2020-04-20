@@ -83,6 +83,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t
 
+    method syntax_with_internal :
+      ('M, 'M Ast.Comment.t list) Ast.Syntax.t -> ('N, 'N Ast.Comment.t list) Ast.Syntax.t
+
     method comprehension :
       ('M, 'T) Ast.Expression.Comprehension.t -> ('N, 'U) Ast.Expression.Comprehension.t
 

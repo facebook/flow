@@ -441,6 +441,13 @@ let source_location_with_comments ?comments (current_loc, layout_node) =
   | Some comments -> layout_node_with_comments current_loc comments layout
   | None -> layout
 
+let internal_comments = function
+  | None
+  | Some { Ast.Syntax.internal = []; _ } ->
+    None
+  | Some { Ast.Syntax.internal = (first_loc, _) :: _ as internal; _ } ->
+    Some (Concat (layout_from_trailing_comments internal (first_loc, None)))
+
 let identifier_with_comments current_loc name comments =
   let node = Identifier (current_loc, name) in
   match comments with
@@ -1646,7 +1653,9 @@ and block (loc, { Ast.Statement.Block.body; comments }) =
       if statements <> [] then
         group [wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse statements]]
       else
-        Atom "{}" )
+        match internal_comments comments with
+        | None -> Atom "{}"
+        | Some comments -> fuse [Atom "{"; comments; Atom "}"] )
 
 and decorators_list decorators =
   if List.length decorators > 0 then
