@@ -6236,7 +6236,7 @@ struct
         (**************************)
         (* relational comparisons *)
         (**************************)
-        | (l, ComparatorT (reason, flip, r)) -> flow_comparator cx trace reason flip l r
+        | (l, ComparatorT { reason; flip; arg = r }) -> flow_comparator cx trace reason flip l r
         | (l, EqT { reason; flip; arg = r }) -> flow_eq cx trace reason flip l r
         | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
           flow_strict_eq cx trace reason cond_context flip l r
@@ -7093,7 +7093,7 @@ struct
  **)
   and flow_comparator cx trace reason flip l r =
     if needs_resolution r then
-      rec_flow cx trace (r, ComparatorT (reason, not flip, l))
+      rec_flow cx trace (r, ComparatorT { reason; flip = not flip; arg = l })
     else
       let (l, r) =
         if flip then

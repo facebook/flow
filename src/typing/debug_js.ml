@@ -647,7 +647,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
     | CJSExtractNamedExportsT _ -> p t
     | CJSRequireT _ -> p t
-    | ComparatorT (_, _, arg) -> p ~extra:(kid arg) t
+    | ComparatorT { arg; _ } -> p ~extra:(kid arg) t
     | ConstructorT _ -> p t
     | CopyNamedExportsT _ -> p t
     | CopyTypeExportsT _ -> p t

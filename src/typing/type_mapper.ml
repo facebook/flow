@@ -968,12 +968,12 @@ class virtual ['a] t_with_uses =
           t
         else
           AdderT (op, r, flip, t1', t2')
-      | ComparatorT (r, flip, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
+      | ComparatorT { reason; flip; arg } ->
+        let arg' = self#type_ cx map_cx arg in
+        if arg' == arg then
           t
         else
-          ComparatorT (r, flip, t'')
+          ComparatorT { reason; flip; arg = arg' }
       | UnaryMinusT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

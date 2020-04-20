@@ -302,7 +302,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc a in
         let acc = self#type_ cx pole_TODO acc b in
         acc
-      | ComparatorT (_, _, t) -> self#type_ cx pole_TODO acc t
+      | ComparatorT { arg; _ } -> self#type_ cx pole_TODO acc arg
       | UnaryMinusT (_, t) -> self#type_ cx pole_TODO acc t
       | AssertArithmeticOperandT _
       | AssertBinaryInLHST _

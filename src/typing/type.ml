@@ -488,7 +488,11 @@ module rec TypeTerm : sig
     | AdderT of use_op * reason * bool * t * t
     (* overloaded relational operator, could be subsumed by general
        overloading *)
-    | ComparatorT of reason * bool * t
+    | ComparatorT of {
+        reason: reason;
+        flip: bool;
+        arg: t;
+      }
     (* unary minus operator on numbers, allows negative number literals *)
     | UnaryMinusT of reason * t
     | AssertArithmeticOperandT of reason
@@ -2581,7 +2585,7 @@ end = struct
     | ChoiceKitUseT (reason, _) -> reason
     | CJSExtractNamedExportsT (reason, _, _) -> reason
     | CJSRequireT (reason, _, _) -> reason
-    | ComparatorT (reason, _, _) -> reason
+    | ComparatorT { reason; _ } -> reason
     | ConstructorT (_, reason, _, _, _) -> reason
     | CopyNamedExportsT (reason, _, _) -> reason
     | CopyTypeExportsT (reason, _, _) -> reason
@@ -2747,7 +2751,7 @@ end = struct
     | CJSExtractNamedExportsT (reason, exports, t2) ->
       CJSExtractNamedExportsT (f reason, exports, t2)
     | CJSRequireT (reason, t, is_strict) -> CJSRequireT (f reason, t, is_strict)
-    | ComparatorT (reason, flip, t) -> ComparatorT (f reason, flip, t)
+    | ComparatorT ({ reason; _ } as x) -> ComparatorT { x with reason = f reason }
     | ConstructorT (use_op, reason, targs, args, tout) ->
       ConstructorT (use_op, f reason, targs, args, tout)
     | CopyNamedExportsT (reason, target_module_t, t_out) ->
@@ -2923,7 +2927,7 @@ end = struct
     | GetProtoT (_, _)
     | SetProtoT (_, _)
     | MixinT (_, _)
-    | ComparatorT (_, _, _)
+    | ComparatorT _
     | UnaryMinusT (_, _)
     | AssertArithmeticOperandT _
     | AssertBinaryInLHST _

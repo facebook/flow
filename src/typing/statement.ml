@@ -5388,7 +5388,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
           desc_of_reason (reason_of_t t2) )
     in
     let reason = mk_reason desc loc in
-    Flow.flow cx (t1, ComparatorT (reason, false, t2));
+    Flow.flow cx (t1, ComparatorT { reason; flip = false; arg = t2 });
     (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | LShift
   | RShift
