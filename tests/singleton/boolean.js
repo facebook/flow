@@ -35,3 +35,13 @@ function alwaysFalsy(x: boolean): false {
     return x;
   }
 }
+
+function triv () : true {
+  declare var x : false | false;
+  return !x;
+}
+
+function triv2 () : false {
+  declare var x : true | {};
+  return !x;
+}

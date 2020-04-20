@@ -2232,6 +2232,7 @@ struct
         | (DefT (_, trust, VoidT), NotT (reason, tout)) ->
           let reason = replace_desc_reason (RBooleanLit true) reason in
           rec_flow_t ~use_op:unknown_use cx trace (DefT (reason, trust, BoolT (Some true)), tout)
+        | (UnionT (_, rep), NotT _) -> flow_all_in_union cx trace rep u
         (* !x when x is truthy *)
         | (_, NotT (reason, tout)) ->
           let reason = replace_desc_reason (RBooleanLit false) reason in
