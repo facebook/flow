@@ -1363,7 +1363,8 @@ end = struct
         | InstanceKind ->
           Reason_utils.local_type_alias_symbol env r
         | ImportTypeofKind
-        | ImportClassKind ->
+        | ImportClassKind
+        | ImportEnumKind ->
           Reason_utils.imported_type_alias_symbol env r
         | OpaqueKind -> Reason_utils.opaque_type_alias_symbol env r
         | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"TypeParamKind" None
@@ -1921,10 +1922,18 @@ end = struct
       let%map c = class_t ~env t in
       Ty.Type c
     in
+    let enum env t =
+      match t with
+      | DefT (reason, trust, EnumT enum) ->
+        let%map c = enum_t ~env reason trust enum in
+        Ty.Type c
+      | _ -> terr ~kind:BadTypeAlias ~msg:"enum" (Some t)
+    in
     fun ~env r kind t ps ->
       match kind with
       | TypeAliasKind -> local env r t ps
       | ImportClassKind -> class_ env t
+      | ImportEnumKind -> enum env t
       | ImportTypeofKind -> import env r t ps
       | OpaqueKind -> opaque env t ps
       | TypeParamKind -> type_param env r t

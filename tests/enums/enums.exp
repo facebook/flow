@@ -1573,6 +1573,23 @@ References:
         ^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------- import-type.js:10:2
+
+Cannot cast `b` to `C` because `B` [1] is incompatible with `C` [2].
+
+   import-type.js:10:2
+   10| (b: C); // Error
+        ^
+
+References:
+   import-type.js:9:16
+    9| declare var b: B;
+                      ^ [1]
+   import-type.js:10:5
+   10| (b: C); // Error
+           ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- member-as-type.js:8:16
 
 Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
@@ -3063,4 +3080,4 @@ References:
 
 
 
-Found 164 errors
+Found 165 errors

@@ -1312,6 +1312,7 @@ module rec TypeTerm : sig
     | OpaqueKind (* opaque type O [: T] = T' *)
     | ImportTypeofKind (* import typeof *)
     | ImportClassKind (* import type { SomeClass } from ... *)
+    | ImportEnumKind
     | InstanceKind
 end =
   TypeTerm
@@ -3846,6 +3847,7 @@ let string_of_type_t_kind = function
   | OpaqueKind -> "OpaqueKind"
   | ImportTypeofKind -> "ImportTypeofKind"
   | ImportClassKind -> "ImportClassKind"
+  | ImportEnumKind -> "ImportEnumKind"
   | InstanceKind -> "InstanceKind"
 
 let name_of_propref = function

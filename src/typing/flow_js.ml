@@ -8464,6 +8464,9 @@ struct
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
     | ThisClassT (r, i) -> Some (fix_this_class cx trace reason (r, i))
+    | DefT (enum_reason, trust, EnumObjectT enum) ->
+      let enum_type = mk_enum_type ~loc:(aloc_of_reason enum_reason) ~trust enum in
+      Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))
     | DefT (_, _, TypeT _) -> Some t
     | AnyT _ -> Some t
     | _ -> None
