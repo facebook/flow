@@ -147,7 +147,7 @@ type sig_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
-  mutable possible_exhaustive_checks: (Type.t * (Reason.t * Type.exhaustive_check_t)) list;
+  mutable possible_exhaustive_checks: (Type.t * Type.exhaustive_check_t) list;
   mutable openness_graph: Openness.graph;
 }
 

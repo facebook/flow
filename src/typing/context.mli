@@ -391,9 +391,9 @@ val mark_invariant : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_invariants : t -> (ALoc.t * Reason.t) list
 
-val add_possible_exhaustive_check : t -> Type.t -> Reason.t * Type.exhaustive_check_t -> unit
+val add_possible_exhaustive_check : t -> Type.t -> Type.exhaustive_check_t -> unit
 
-val possible_exhaustive_checks : t -> (Type.t * (Reason.t * Type.exhaustive_check_t)) list
+val possible_exhaustive_checks : t -> (Type.t * Type.exhaustive_check_t) list
 
 (* utils *)
 val iter_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit

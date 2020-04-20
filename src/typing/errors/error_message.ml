@@ -3020,7 +3020,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text (string_of_int number_remaining_members_to_check);
           text " members of ";
           ref enum_reason;
-          text " have not been checked in ";
+          text " have not been considered in check of ";
           desc reason;
           text ". For example, the member ";
           code remaining_member_to_check;
@@ -3033,7 +3033,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code remaining_member_to_check;
           text " of ";
           ref enum_reason;
-          text " has not been checked in ";
+          text " has not been considered in check of ";
           desc reason;
           text ".";
         ]

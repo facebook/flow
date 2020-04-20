@@ -1109,17 +1109,13 @@ References:
            ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:1
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:9
 
-Invalid exhaustive check: the member `B` of `E` [1] has not been checked in switch.
+Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
 
-   exhaustive-check.js:51:1
-       v---------------------
+   exhaustive-check.js:51:9
    51| switch (x)  { // Error
-   52|   case E.A:
-   53|     'A';
-   54| }
-       ^
+               ^
 
 References:
    exhaustive-check.js:3:1
@@ -1197,30 +1193,22 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:94:1
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:94:9
 
-Invalid exhaustive check: 2 members of `E` [1] have not been checked in switch. For example, the member `A`.
+Invalid exhaustive check: 2 members of `E` [1] have not been considered in check of `x`. For example, the member `A`.
 
-   exhaustive-check.js:94:1
-        v------------
-    94| switch (x)  {
-    95|   case F.A:
-    96|     'A';
-    97|     break;
-    98|   case F.B:
-    99|     'B';
-   100|     break;
-   101| }
-        ^
+   exhaustive-check.js:94:9
+   94| switch (x)  {
+               ^
 
 References:
    exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [1]
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:8
@@ -1519,21 +1507,13 @@ References:
                           ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:150:1
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:150:9
 
-Invalid exhaustive check: the member `B` of `E` [1] has not been checked in switch.
+Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
 
-   exhaustive-check.js:150:1
-        v-----------
+   exhaustive-check.js:150:9
    150| switch (x) {
-   151|   case E.A:
-   152|     'E.A';
-   153|     break;
-   154|   case F.A:
-   155|     'F.A';
-   156|     break;
-   157| }
-        ^
+                ^
 
 References:
    exhaustive-check.js:3:1

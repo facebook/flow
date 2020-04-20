@@ -1314,15 +1314,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             ([], [], None)
             cases_ast
         in
-        let switch_reason = mk_reason (RCustom "switch") switch_loc in
         Context.add_possible_exhaustive_check
           cx
           discriminant_t
-          ( switch_reason,
-            if List.length invalid_checks = 0 then
-              ExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
-            else
-              ExhaustiveCheckInvalid (List.rev invalid_checks) );
+          ( if List.length invalid_checks = 0 then
+            ExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
+          else
+            ExhaustiveCheckInvalid (List.rev invalid_checks) );
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )

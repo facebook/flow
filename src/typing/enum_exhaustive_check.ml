@@ -36,7 +36,7 @@ let search_for_enum_type cx t =
   let (_, result) = f (ISet.empty, Empty) t in
   result
 
-let detect_invalid_check cx (t, (check_reason, check)) =
+let detect_invalid_check cx (t, check) =
   match search_for_enum_type cx t with
   | Empty
   | Other ->
@@ -70,7 +70,7 @@ let detect_invalid_check cx (t, (check_reason, check)) =
               cx
               (Error_message.EEnumNotAllChecked
                  {
-                   reason = check_reason;
+                   reason = reason_of_t t;
                    enum_reason;
                    remaining_member_to_check;
                    number_remaining_members_to_check = SMap.cardinal left_over;
