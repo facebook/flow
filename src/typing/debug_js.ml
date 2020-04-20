@@ -654,7 +654,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | DebugPrintT _ -> p t
     | DebugSleepT _ -> p t
     | ElemT _ -> p t
-    | EqT (_, _, arg) -> p ~extra:(kid arg) t
     | ExportNamedT (_, tmap, _export_kind, arg) ->
       p
         t
@@ -770,7 +769,9 @@ and dump_use_t_ (depth, tvars) cx t =
             | None -> spf "%s, %s" (specialize_cache cache) (kid ret)
           end
         t
-    | StrictEqT { arg; _ } -> p ~extra:(kid arg) t
+    | StrictEqT { arg; _ }
+    | EqT { arg; _ } ->
+      p ~extra:(kid arg) t
     | ObjKitT (use_op, _, resolve_tool, tool, tout) ->
       p
         ~extra:

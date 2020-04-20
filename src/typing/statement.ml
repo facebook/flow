@@ -5338,7 +5338,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
           desc_of_reason (reason_of_t t2) )
     in
     let reason = mk_reason desc loc in
-    Flow.flow cx (t1, EqT (reason, false, t2));
+    Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 });
     (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | In ->
     let (loc1, _) = left in
@@ -6463,7 +6463,7 @@ and predicates_of_condition cx ~cond e =
       Flow.flow cx (t1, StrictEqT { reason; cond_context = Some cond; flip = false; arg = t2 })
     else
       let reason = mk_reason (RCustom "non-strict equality comparison") loc in
-      Flow.flow cx (t1, EqT (reason, false, t2))
+      Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 })
   in
   (* package result quad from test typed ast, refi key, unrefined type,
      predicate, and predicate's truth sense *)

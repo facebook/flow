@@ -2876,7 +2876,7 @@ struct
                 (remove_predicate_from_union reason cx filter_void rep, opt)
             | _ -> flow_all_in_union cx trace rep u
           end
-        | ((UnionT (_, rep1) as u1), EqT (_, _, (UnionT _ as u2))) ->
+        | ((UnionT (_, rep1) as u1), EqT { arg = UnionT _ as u2; _ }) ->
           if union_optimization_guard cx (curry equatable) u1 u2 then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
           end else
@@ -2886,8 +2886,8 @@ struct
             if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
-        | (UnionT _, EqT (reason, flip, t)) when needs_resolution t ->
-          rec_flow cx trace (t, EqT (reason, not flip, l))
+        | (UnionT _, EqT { reason; flip; arg }) when needs_resolution arg ->
+          rec_flow cx trace (arg, EqT { reason; flip = not flip; arg = l })
         | (UnionT _, StrictEqT { reason; cond_context; flip; arg }) when needs_resolution arg ->
           rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
         | (UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result)) ->
@@ -6237,7 +6237,7 @@ struct
         (* relational comparisons *)
         (**************************)
         | (l, ComparatorT (reason, flip, r)) -> flow_comparator cx trace reason flip l r
-        | (l, EqT (reason, flip, r)) -> flow_eq cx trace reason flip l r
+        | (l, EqT { reason; flip; arg = r }) -> flow_eq cx trace reason flip l r
         | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
           flow_strict_eq cx trace reason cond_context flip l r
         (************************)
@@ -7120,7 +7120,7 @@ struct
  **)
   and flow_eq cx trace reason flip l r =
     if needs_resolution r then
-      rec_flow cx trace (r, EqT (reason, not flip, l))
+      rec_flow cx trace (r, EqT { reason; flip = not flip; arg = l })
     else
       let (l, r) =
         if flip then

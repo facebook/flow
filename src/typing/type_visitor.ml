@@ -318,10 +318,10 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | StrictEqT { arg; _ } -> self#type_ cx pole_TODO acc arg
-      | EqT (_, _, t)
-      | NotT (_, t) ->
-        self#type_ cx pole_TODO acc t
+      | StrictEqT { arg; _ }
+      | EqT { arg; _ } ->
+        self#type_ cx pole_TODO acc arg
+      | NotT (_, t) -> self#type_ cx pole_TODO acc t
       | AndT (_, a, b)
       | OrT (_, a, b)
       | NullishCoalesceT (_, a, b) ->

@@ -1006,12 +1006,12 @@ class virtual ['a] t_with_uses =
           t
         else
           StrictEqT { reason; cond_context; flip; arg = arg' }
-      | EqT (r, flip, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
+      | EqT { reason; flip; arg } ->
+        let arg' = self#type_ cx map_cx arg in
+        if arg' == arg then
           t
         else
-          EqT (r, flip, t'')
+          EqT { reason; flip; arg = arg' }
       | AndT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

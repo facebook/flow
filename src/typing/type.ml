@@ -510,7 +510,11 @@ module rec TypeTerm : sig
         arg: t;
       }
     (* == *)
-    | EqT of reason * bool * t
+    | EqT of {
+        reason: reason;
+        flip: bool;
+        arg: t;
+      }
     (* logical operators *)
     | AndT of reason * t * t
     | OrT of reason * t * t
@@ -2585,7 +2589,7 @@ end = struct
     | DebugSleepT reason -> reason
     | ElemT (_, reason, _, _) -> reason
     | EnumCastT { enum = (reason, _, _); _ } -> reason
-    | EqT (reason, _, _) -> reason
+    | EqT { reason; _ } -> reason
     | ExportNamedT (reason, _, _, _) -> reason
     | ExportTypeT (reason, _, _, _) -> reason
     | AssertExportIsTypeT (reason, _, _) -> reason
@@ -2755,7 +2759,7 @@ end = struct
     | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
     | EnumCastT { use_op; enum = (reason, trust, enum) } ->
       EnumCastT { use_op; enum = (f reason, trust, enum) }
-    | EqT (reason, flip, t) -> EqT (f reason, flip, t)
+    | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
     | ExportNamedT (reason, tmap, export_kind, t_out) ->
       ExportNamedT (f reason, tmap, export_kind, t_out)
     | ExportTypeT (reason, name, t, t_out) -> ExportTypeT (f reason, name, t, t_out)
@@ -2928,7 +2932,7 @@ end = struct
     | PredicateT (_, _)
     | GuardT (_, _, _)
     | StrictEqT _
-    | EqT (_, _, _)
+    | EqT _
     | AndT (_, _, _)
     | OrT (_, _, _)
     | NullishCoalesceT (_, _, _)
