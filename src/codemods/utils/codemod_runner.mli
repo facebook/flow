@@ -7,9 +7,16 @@
 
 type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
 
+module UntypedFlowInitRunner : sig
+  type init = unit -> unit
+
+  val unit_init : init
+end
+
 type 'a visitor =
   | Typed_visitor of ('a, Codemod_context.Typed.t) abstract_visitor
-  | UntypedFlowInitRunner_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
+  | UntypedFlowInitRunner_visitor of
+      (UntypedFlowInitRunner.init * ('a, Codemod_context.Untyped.t) abstract_visitor)
   | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
 
 val run_and_digest :

@@ -315,7 +315,11 @@ end
  * of a single file e.g. looking up the exports of a module your file is importing.
  * For large codebases this runner can be slow. *)
 module UntypedFlowInitRunner = struct
-  let run ~genv ~should_print_summary ~f options roots =
+  type init = unit -> unit
+
+  let unit_init () = ()
+
+  let run ~genv ~should_print_summary ~init ~f options roots =
     let workers = genv.ServerEnv.workers in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
@@ -332,6 +336,7 @@ module UntypedFlowInitRunner = struct
 
         Transaction.with_transaction (fun transaction ->
             let reader = Mutator_state_reader.create transaction in
+            init ();
             MultiWorkerLwt.call
               workers
               ~job:(fun _c file_key -> untyped_runner_job ~f ~reader file_key)
@@ -339,8 +344,8 @@ module UntypedFlowInitRunner = struct
               ~merge:FilenameMap.union
               ~next))
 
-  let run_and_digest ~genv ~should_print_summary ~info:_ ~f ~reporter options roots =
-    let%lwt (_, results) = run ~genv ~should_print_summary ~f options roots in
+  let run_and_digest ~genv ~should_print_summary ~info:_ ~init ~f ~reporter options roots =
+    let%lwt (_, results) = run ~genv ~should_print_summary ~init ~f options roots in
     Lwt.return (untyped_digest ~reporter results)
 end
 
@@ -348,14 +353,17 @@ type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
 
 type 'a visitor =
   | Typed_visitor of ('a, Codemod_context.Typed.t) abstract_visitor
-  | UntypedFlowInitRunner_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
+  | UntypedFlowInitRunner_visitor of
+      (* Runner init function which is called after Types_js.init but before any of the
+       * jobs. This is useful to setup/populate any shared memory for the jobs. *)
+      (UntypedFlowInitRunner.init * ('a, Codemod_context.Untyped.t) abstract_visitor)
   | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
 
 let run_and_digest ~genv ~should_print_summary ~info ~visitor ~reporter options roots =
   let run =
     match visitor with
     | Typed_visitor f -> TypedRunner.run_and_digest ~f
-    | UntypedFlowInitRunner_visitor f -> UntypedFlowInitRunner.run_and_digest ~f
+    | UntypedFlowInitRunner_visitor (init, f) -> UntypedFlowInitRunner.run_and_digest ~init ~f
     | Untyped_visitor f -> UntypedRunner.run_and_digest ~f
   in
   run ~genv ~should_print_summary ~info ~reporter options roots
