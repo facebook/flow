@@ -246,14 +246,14 @@ module TypedRunner = struct
     Lwt.return (digest ~reporter results)
 end
 
-let untyped_runner_job ~f ~reader file_list =
-  let reader = Abstract_state_reader.Mutator_state_reader reader in
+let untyped_runner_job ~mk_ccx ~f ~abstract_reader file_list =
   List.fold_left
     (fun results file ->
-      let file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
-      let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-      let ccx = { Codemod_context.Untyped.file; file_sig } in
-      FilenameMap.add file (Some (f ast ccx)) results)
+      let file_sig =
+        Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader:abstract_reader file
+      in
+      let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader:abstract_reader file in
+      FilenameMap.add file (Some (f ast (mk_ccx file file_sig))) results)
     FilenameMap.empty
     file_list
 
@@ -296,9 +296,11 @@ module UntypedRunner = struct
             let roots = FilenameMap.keys parse_ok |> FilenameSet.of_list in
             log_input_files roots;
             let next = Parsing_service_js.next_of_filename_set workers roots in
+            let mk_ccx file file_sig = { Codemod_context.Untyped.file; file_sig } in
+            let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
             MultiWorkerLwt.call
               workers
-              ~job:(fun _c file_key -> untyped_runner_job ~f ~reader file_key)
+              ~job:(fun _c file_key -> untyped_runner_job ~mk_ccx ~f ~abstract_reader file_key)
               ~neutral:FilenameMap.empty
               ~merge:FilenameMap.union
               ~next))
@@ -315,9 +317,9 @@ end
  * of a single file e.g. looking up the exports of a module your file is importing.
  * For large codebases this runner can be slow. *)
 module UntypedFlowInitRunner = struct
-  type init = unit -> unit
+  type init = reader:State_reader.t -> unit
 
-  let unit_init () = ()
+  let unit_init ~reader:_ = ()
 
   let run ~genv ~should_print_summary ~init ~f options roots =
     let workers = genv.ServerEnv.workers in
@@ -334,15 +336,16 @@ module UntypedFlowInitRunner = struct
         let filename_set = FilenameSet.inter filename_set env.ServerEnv.files in
         let next = Parsing_service_js.next_of_filename_set workers filename_set in
 
-        Transaction.with_transaction (fun transaction ->
-            let reader = Mutator_state_reader.create transaction in
-            init ();
-            MultiWorkerLwt.call
-              workers
-              ~job:(fun _c file_key -> untyped_runner_job ~f ~reader file_key)
-              ~neutral:FilenameMap.empty
-              ~merge:FilenameMap.union
-              ~next))
+        let reader = State_reader.create () in
+        init ~reader;
+        let mk_ccx file file_sig = { Codemod_context.UntypedFlowInit.file; reader; file_sig } in
+        let abstract_reader = Abstract_state_reader.State_reader reader in
+        MultiWorkerLwt.call
+          workers
+          ~job:(fun _c file_key -> untyped_runner_job ~f ~mk_ccx ~abstract_reader file_key)
+          ~neutral:FilenameMap.empty
+          ~merge:FilenameMap.union
+          ~next)
 
   let run_and_digest ~genv ~should_print_summary ~info:_ ~init ~f ~reporter options roots =
     let%lwt (_, results) = run ~genv ~should_print_summary ~init ~f options roots in
@@ -356,7 +359,7 @@ type 'a visitor =
   | UntypedFlowInitRunner_visitor of
       (* Runner init function which is called after Types_js.init but before any of the
        * jobs. This is useful to setup/populate any shared memory for the jobs. *)
-      (UntypedFlowInitRunner.init * ('a, Codemod_context.Untyped.t) abstract_visitor)
+      (UntypedFlowInitRunner.init * ('a, Codemod_context.UntypedFlowInit.t) abstract_visitor)
   | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
 
 let run_and_digest ~genv ~should_print_summary ~info ~visitor ~reporter options roots =

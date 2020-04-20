@@ -46,3 +46,11 @@ module Untyped = struct
     file_sig: File_sig.With_Loc.t;
   }
 end
+
+module UntypedFlowInit = struct
+  type t = {
+    file: File_key.t;
+    file_sig: File_sig.With_Loc.t;
+    reader: State_reader.t;
+  }
+end
