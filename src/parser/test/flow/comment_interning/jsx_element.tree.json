@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":26,"column":10}},
-  "range":[24,1097],
+  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":30,"column":8}},
+  "range":[24,1199],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -930,6 +930,82 @@
         "children":[]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "trailingComments":[
+        {
+          "type":"Line",
+          "loc":{"source":null,"start":{"line":29,"column":9},"end":{"line":29,"column":18}},
+          "range":[1181,1190],
+          "value":" 12.1 T"
+        }
+      ],
+      "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":8}},
+      "range":[1172,1180],
+      "expression":{
+        "type":"JSXElement",
+        "leadingComments":[
+          {
+            "type":"Line",
+            "loc":{"source":null,"start":{"line":28,"column":0},"end":{"line":28,"column":72}},
+            "range":[1099,1171],
+            "value":" Verify comments at boundary of JSX lex mode change are not duplicated"
+          }
+        ],
+        "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":7}},
+        "range":[1172,1179],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":29,"column":0},"end":{"line":29,"column":7}},
+          "range":[1172,1179],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":29,"column":1},"end":{"line":29,"column":4}},
+            "range":[1173,1176],
+            "name":"div"
+          },
+          "attributes":[],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "trailingComments":[
+        {
+          "type":"Line",
+          "loc":{"source":null,"start":{"line":30,"column":9},"end":{"line":30,"column":18}},
+          "range":[1200,1209],
+          "value":" 12.2 T"
+        }
+      ],
+      "loc":{"source":null,"start":{"line":30,"column":0},"end":{"line":30,"column":8}},
+      "range":[1191,1199],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":30,"column":0},"end":{"line":30,"column":7}},
+        "range":[1191,1198],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":30,"column":0},"end":{"line":30,"column":7}},
+          "range":[1191,1198],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":30,"column":1},"end":{"line":30,"column":4}},
+            "range":[1192,1195],
+            "name":"div"
+          },
+          "attributes":[],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -1196,6 +1272,24 @@
       "loc":{"source":null,"start":{"line":25,"column":30},"end":{"line":25,"column":49}},
       "range":[1067,1086],
       "value":" 11.9 T spread "
+    },
+    {
+      "type":"Line",
+      "loc":{"source":null,"start":{"line":28,"column":0},"end":{"line":28,"column":72}},
+      "range":[1099,1171],
+      "value":" Verify comments at boundary of JSX lex mode change are not duplicated"
+    },
+    {
+      "type":"Line",
+      "loc":{"source":null,"start":{"line":29,"column":9},"end":{"line":29,"column":18}},
+      "range":[1181,1190],
+      "value":" 12.1 T"
+    },
+    {
+      "type":"Line",
+      "loc":{"source":null,"start":{"line":30,"column":9},"end":{"line":30,"column":18}},
+      "range":[1200,1209],
+      "value":" 12.2 T"
     }
   ]
 }

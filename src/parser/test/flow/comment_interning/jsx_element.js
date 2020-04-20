@@ -24,3 +24,7 @@
   /* 11.6 L id */ name={'value'} /* 11.7 T expr */
   /* 11.8 L spread */ {...{}} /* 11.9 T spread */
   name />;
+
+// Verify comments at boundary of JSX lex mode change are not duplicated
+<div />; // 12.1 T
+<div />; // 12.2 T
