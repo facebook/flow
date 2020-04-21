@@ -141,6 +141,8 @@ let tests =
     ("object_pattern" >:: fun ctxt -> assert_statement_string ~ctxt "var{/*I*/};");
     ("object_type" >:: fun ctxt -> assert_statement_string ~ctxt "type T={/*I*/};");
     ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
+    ( "switch_case" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );
     ("throw" >:: fun ctxt -> assert_statement_string ~ctxt "throw A;/*T*/");
     ("variable_declaration" >:: fun ctxt -> assert_statement_string ~ctxt "let A=B;/*T*/");
   ]

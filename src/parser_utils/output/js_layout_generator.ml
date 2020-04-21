@@ -2590,12 +2590,14 @@ and variance (loc, { Ast.Variance.kind; comments }) =
 
 and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =
-    match test with
-    | Some expr -> fuse_with_space [Atom "case"; fuse [expression expr; Atom ":"]]
-    | None -> Atom "default:"
+    layout_node_with_comments_opt
+      loc
+      comments
+      (match test with
+      | Some expr -> fuse_with_space [Atom "case"; fuse [expression expr; Atom ":"]]
+      | None -> Atom "default:")
   in
   source_location_with_comments
-    ?comments
     ( loc,
       match consequent with
       | [] -> case_left
