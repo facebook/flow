@@ -193,7 +193,9 @@ end = struct
     | _ ->
       let acc = enum_member ~enum_name ~explicit_type acc env in
       (match Peek.token env with
-      | T_RCURLY -> ()
+      | T_RCURLY
+      | T_EOF ->
+        ()
       | T_SEMICOLON ->
         error env Parse_error.EnumInvalidMemberSeparator;
         Expect.token env T_SEMICOLON
