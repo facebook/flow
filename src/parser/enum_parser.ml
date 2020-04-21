@@ -98,10 +98,16 @@ end = struct
     with_loc (fun env ->
         let id = identifier_name env in
         let init =
-          if Expect.maybe env T_ASSIGN then
+          match Peek.token env with
+          | T_ASSIGN ->
+            Expect.token env T_ASSIGN;
             member_init env
-          else
-            NoInit
+          | T_COLON ->
+            let (_, { Identifier.name = member_name; _ }) = id in
+            error env (Parse_error.EnumInvalidInitializerSeparator { member_name });
+            Expect.token env T_COLON;
+            member_init env
+          | _ -> NoInit
         in
         (id, init))
 

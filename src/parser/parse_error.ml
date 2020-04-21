@@ -20,6 +20,7 @@ type t =
       enum_name: string;
       supplied_type: string option;
     }
+  | EnumInvalidInitializerSeparator of { member_name: string }
   | EnumInvalidMemberInitializer of {
       enum_name: string;
       explicit_type: Enum_common.explicit_type option;
@@ -187,6 +188,11 @@ module PP = struct
           Printf.sprintf "Enum type `%s` is not valid. %s" supplied_type suggestion
         | None -> Printf.sprintf "Supplied enum type is not valid. %s" suggestion
       end
+    | EnumInvalidInitializerSeparator { member_name } ->
+      Printf.sprintf
+        "Enum member names and initializers are separated with `=`. Replace `%s:` with `%s =`."
+        member_name
+        member_name
     | EnumInvalidMemberInitializer { enum_name; explicit_type; member_name } ->
       begin
         match explicit_type with
