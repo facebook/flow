@@ -28,3 +28,5 @@
 // Verify comments at boundary of JSX lex mode change are not duplicated
 <div />; // 12.1 T
 <div />; // 12.2 T
+
+<div>{/* 13.1 I */}</div>;

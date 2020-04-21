@@ -1693,9 +1693,13 @@ with type t = Impl.t = struct
                 _end = { loc._end with column = loc._end.column - 1 };
               }
           in
-          node ?comments "JSXEmptyExpression" empty_loc []
+          node "JSXEmptyExpression" empty_loc []
       in
-      node ?comments "JSXExpressionContainer" loc [("expression", expression)]
+      node
+        ?comments:(format_internal_comments comments)
+        "JSXExpressionContainer"
+        loc
+        [("expression", expression)]
     and jsx_spread_child (loc, { JSX.SpreadChild.expression = expr; comments }) =
       node ?comments "JSXSpreadChild" loc [("expression", expression expr)]
     and jsx_text (loc, { JSX.Text.value; raw }) =

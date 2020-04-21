@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":30,"column":8}},
-  "range":[24,1199],
+  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":32,"column":26}},
+  "range":[24,1237],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -1006,6 +1006,61 @@
         "children":[]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":32,"column":0},"end":{"line":32,"column":26}},
+      "range":[1211,1237],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":32,"column":0},"end":{"line":32,"column":25}},
+        "range":[1211,1236],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":32,"column":0},"end":{"line":32,"column":5}},
+          "range":[1211,1216],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":32,"column":1},"end":{"line":32,"column":4}},
+            "range":[1212,1215],
+            "name":"div"
+          },
+          "attributes":[],
+          "selfClosing":false
+        },
+        "closingElement":{
+          "type":"JSXClosingElement",
+          "loc":{"source":null,"start":{"line":32,"column":19},"end":{"line":32,"column":25}},
+          "range":[1230,1236],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":32,"column":21},"end":{"line":32,"column":24}},
+            "range":[1232,1235],
+            "name":"div"
+          }
+        },
+        "children":[
+          {
+            "type":"JSXExpressionContainer",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":32,"column":6},"end":{"line":32,"column":18}},
+                "range":[1217,1229],
+                "value":" 13.1 I "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":32,"column":5},"end":{"line":32,"column":19}},
+            "range":[1216,1230],
+            "expression":{
+              "type":"JSXEmptyExpression",
+              "loc":{"source":null,"start":{"line":32,"column":6},"end":{"line":32,"column":18}},
+              "range":[1217,1229]
+            }
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -1290,6 +1345,12 @@
       "loc":{"source":null,"start":{"line":30,"column":9},"end":{"line":30,"column":18}},
       "range":[1200,1209],
       "value":" 12.2 T"
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":32,"column":6},"end":{"line":32,"column":18}},
+      "range":[1217,1229],
+      "value":" 13.1 I "
     }
   ]
 }

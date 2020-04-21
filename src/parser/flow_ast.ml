@@ -1419,7 +1419,7 @@ and JSX : sig
   module ExpressionContainer : sig
     type ('M, 'T) t = {
       expression: ('M, 'T) expression;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
 
     and ('M, 'T) expression =

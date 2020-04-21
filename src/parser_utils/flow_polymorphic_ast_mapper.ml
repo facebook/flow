@@ -1331,7 +1331,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Expression expr -> Expression (this#expression expr)
         | EmptyExpression -> EmptyExpression
       in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { expression = expression'; comments = comments' }
 
     method jsx_spread_child (jsx_spread_child : ('M, 'T) Ast.JSX.SpreadChild.t)

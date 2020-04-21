@@ -2269,6 +2269,7 @@ and jsx_member_expression (loc, { Ast.JSX.MemberExpression._object; property }) 
         ] )
 
 and jsx_expression_container loc { Ast.JSX.ExpressionContainer.expression = expr; comments } =
+  let internal_comments = Base.Option.value (internal_comments comments) ~default:Empty in
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
@@ -2278,6 +2279,7 @@ and jsx_expression_container loc { Ast.JSX.ExpressionContainer.expression = expr
            | Ast.JSX.ExpressionContainer.Expression expr -> expression expr
            | Ast.JSX.ExpressionContainer.EmptyExpression -> Empty
          end;
+         internal_comments;
          Atom "}";
        ]
 

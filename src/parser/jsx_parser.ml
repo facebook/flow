@@ -73,7 +73,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
     ( loc,
       {
         JSX.ExpressionContainer.expression;
-        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal:[];
       } )
 
   let expression_container_or_spread_child env =
@@ -95,7 +95,16 @@ module JSX (Parse : Parser_common.PARSER) = struct
                 }
             | _ ->
               let expression = expression_container_contents env in
-              JSX.ExpressionContainer { JSX.ExpressionContainer.expression; comments = None }
+              let internal =
+                match expression with
+                | JSX.ExpressionContainer.EmptyExpression -> Peek.comments env
+                | _ -> []
+              in
+              JSX.ExpressionContainer
+                {
+                  JSX.ExpressionContainer.expression;
+                  comments = Flow_ast_utils.mk_comments_with_internal_opt internal;
+                }
           in
           Expect.token env T_RCURLY;
           result)

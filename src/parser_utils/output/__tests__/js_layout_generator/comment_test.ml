@@ -131,6 +131,7 @@ let tests =
     ( "function_params" >:: fun ctxt ->
       let ast = expression_of_string "function foo/*L*/()/*T*/\n{}" in
       assert_expression ~ctxt "function foo/*L*/()/*T*/{}" ast );
+    ("jsx_expression_container" >:: fun ctxt -> assert_expression_string ~ctxt "<A>{/*I*/}</A>");
     ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
     ("tagged_template" >:: fun ctxt -> assert_expression_string ~ctxt "/*L1*/A/*L2*/`B`/*T*/");
     ( "member_expression" >:: fun ctxt ->
