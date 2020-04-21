@@ -265,10 +265,10 @@ let rec pattern cx ~expr ~f acc (loc, p) =
         let elements = array_elements cx ~expr ~f acc elements in
         let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
         Array { Array.elements; annot; comments }
-      | Object { Object.properties; annot } ->
+      | Object { Object.properties; annot; comments } ->
         let properties = object_properties cx ~expr ~f acc properties in
         let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-        Object { Object.properties; annot }
+        Object { Object.properties; annot; comments }
       | Identifier { Identifier.name = id; optional; annot } ->
         let (id_loc, { Ast.Identifier.name; comments }) = id in
         let id = ((id_loc, acc.current), { Ast.Identifier.name; comments }) in

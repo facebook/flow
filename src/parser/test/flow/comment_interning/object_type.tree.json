@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":59,"column":2}},
-  "range":[0,2066],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":61,"column":33}},
+  "range":[0,2099],
   "body":[
     {
       "type":"TypeAlias",
@@ -1371,7 +1371,7 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":46,"column":0},"end":{"line":59,"column":2}},
-      "range":[1748,2066],
+      "range":[1748,2064],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":46,"column":5},"end":{"line":46,"column":9}},
@@ -1384,7 +1384,7 @@
       "right":{
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":46,"column":12},"end":{"line":59,"column":1}},
-        "range":[1760,2065],
+        "range":[1760,2063],
         "inexact":false,
         "exact":false,
         "properties":[
@@ -1470,19 +1470,19 @@
           {
             "type":"ObjectTypeProperty",
             "loc":{"source":null,"start":{"line":51,"column":2},"end":{"line":52,"column":32}},
-            "range":[1876,1931],
+            "range":[1874,1929],
             "key":{
               "type":"Identifier",
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":51,"column":9},"end":{"line":51,"column":24}},
-                  "range":[1883,1898],
+                  "range":[1881,1896],
                   "value":" 23.1 T id "
                 }
               ],
               "loc":{"source":null,"start":{"line":51,"column":2},"end":{"line":51,"column":8}},
-              "range":[1876,1882],
+              "range":[1874,1880],
               "name":"method",
               "typeAnnotation":null,
               "optional":false
@@ -1493,17 +1493,17 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":52,"column":4},"end":{"line":52,"column":23}},
-                  "range":[1903,1922],
+                  "range":[1901,1920],
                   "value":" 23.2 L params "
                 }
               ],
               "loc":{"source":null,"start":{"line":51,"column":2},"end":{"line":52,"column":32}},
-              "range":[1876,1931],
+              "range":[1874,1929],
               "params":[],
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":52,"column":28},"end":{"line":52,"column":32}},
-                "range":[1927,1931]
+                "range":[1925,1929]
               },
               "rest":null,
               "typeParameters":null
@@ -1521,24 +1521,24 @@
           {
             "type":"ObjectTypeCallProperty",
             "loc":{"source":null,"start":{"line":54,"column":2},"end":{"line":55,"column":32}},
-            "range":[1936,1993],
+            "range":[1934,1991],
             "value":{
               "type":"FunctionTypeAnnotation",
               "leadingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":55,"column":4},"end":{"line":55,"column":23}},
-                  "range":[1965,1984],
+                  "range":[1963,1982],
                   "value":" 24.2 L params "
                 }
               ],
               "loc":{"source":null,"start":{"line":55,"column":24},"end":{"line":55,"column":32}},
-              "range":[1985,1993],
+              "range":[1983,1991],
               "params":[],
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":55,"column":28},"end":{"line":55,"column":32}},
-                "range":[1989,1993]
+                "range":[1987,1991]
               },
               "rest":null,
               "typeParameters":{
@@ -1547,17 +1547,17 @@
                   {
                     "type":"Block",
                     "loc":{"source":null,"start":{"line":54,"column":6},"end":{"line":54,"column":26}},
-                    "range":[1940,1960],
+                    "range":[1938,1958],
                     "value":" 24.1 T tparams "
                   }
                 ],
                 "loc":{"source":null,"start":{"line":54,"column":2},"end":{"line":54,"column":5}},
-                "range":[1936,1939],
+                "range":[1934,1937],
                 "params":[
                   {
                     "type":"TypeParameter",
                     "loc":{"source":null,"start":{"line":54,"column":3},"end":{"line":54,"column":4}},
-                    "range":[1937,1938],
+                    "range":[1935,1936],
                     "name":"T",
                     "bound":null,
                     "variance":null,
@@ -1573,11 +1573,11 @@
           {
             "type":"ObjectTypeInternalSlot",
             "loc":{"source":null,"start":{"line":57,"column":2},"end":{"line":58,"column":32}},
-            "range":[1998,2062],
+            "range":[1996,2060],
             "id":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":57,"column":4},"end":{"line":57,"column":7}},
-              "range":[2000,2003],
+              "range":[1998,2001],
               "name":"key",
               "typeAnnotation":null,
               "optional":false
@@ -1591,17 +1591,17 @@
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":58,"column":4},"end":{"line":58,"column":23}},
-                  "range":[2034,2053],
+                  "range":[2032,2051],
                   "value":" 25.2 L params "
                 }
               ],
               "loc":{"source":null,"start":{"line":57,"column":2},"end":{"line":58,"column":32}},
-              "range":[1998,2062],
+              "range":[1996,2060],
               "params":[],
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":58,"column":28},"end":{"line":58,"column":32}},
-                "range":[2058,2062]
+                "range":[2056,2060]
               },
               "rest":null,
               "typeParameters":{
@@ -1610,17 +1610,17 @@
                   {
                     "type":"Block",
                     "loc":{"source":null,"start":{"line":57,"column":13},"end":{"line":57,"column":33}},
-                    "range":[2009,2029],
+                    "range":[2007,2027],
                     "value":" 25.1 T tparams "
                   }
                 ],
                 "loc":{"source":null,"start":{"line":57,"column":9},"end":{"line":57,"column":12}},
-                "range":[2005,2008],
+                "range":[2003,2006],
                 "params":[
                   {
                     "type":"TypeParameter",
                     "loc":{"source":null,"start":{"line":57,"column":10},"end":{"line":57,"column":11}},
-                    "range":[2006,2007],
+                    "range":[2004,2005],
                     "name":"T",
                     "bound":null,
                     "variance":null,
@@ -1631,6 +1631,39 @@
             }
           }
         ]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":61,"column":0},"end":{"line":61,"column":33}},
+      "range":[2066,2099],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":61,"column":5},"end":{"line":61,"column":9}},
+        "range":[2071,2075],
+        "name":"Test",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":61,"column":14},"end":{"line":61,"column":30}},
+            "range":[2080,2096],
+            "value":" 26.1 I obj "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":61,"column":12},"end":{"line":61,"column":32}},
+        "range":[2078,2098],
+        "inexact":false,
+        "exact":false,
+        "properties":[],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],
@@ -2040,38 +2073,44 @@
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":51,"column":9},"end":{"line":51,"column":24}},
-      "range":[1883,1898],
+      "range":[1881,1896],
       "value":" 23.1 T id "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":52,"column":4},"end":{"line":52,"column":23}},
-      "range":[1903,1922],
+      "range":[1901,1920],
       "value":" 23.2 L params "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":54,"column":6},"end":{"line":54,"column":26}},
-      "range":[1940,1960],
+      "range":[1938,1958],
       "value":" 24.1 T tparams "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":55,"column":4},"end":{"line":55,"column":23}},
-      "range":[1965,1984],
+      "range":[1963,1982],
       "value":" 24.2 L params "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":57,"column":13},"end":{"line":57,"column":33}},
-      "range":[2009,2029],
+      "range":[2007,2027],
       "value":" 25.1 T tparams "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":58,"column":4},"end":{"line":58,"column":23}},
-      "range":[2034,2053],
+      "range":[2032,2051],
       "value":" 25.2 L params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":61,"column":14},"end":{"line":61,"column":30}},
+      "range":[2080,2096],
+      "value":" 26.1 I obj "
     }
   ]
 }

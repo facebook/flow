@@ -283,7 +283,7 @@ and Type : sig
        * *)
       inexact: bool;
       properties: ('M, 'T) property list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
 
     and ('M, 'T) property =
@@ -1098,7 +1098,7 @@ and Expression : sig
 
     and ('M, 'T) t = {
       properties: ('M, 'T) property list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1575,6 +1575,7 @@ and Pattern : sig
     and ('M, 'T) t = {
       properties: ('M, 'T) property list;
       annot: ('M, 'T) Type.annotation_or_hint;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end

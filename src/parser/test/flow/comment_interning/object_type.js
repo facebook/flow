@@ -47,7 +47,7 @@ type Test = {
   method /* 22.1 T id */
     /* 22.2 L tparams */ <T> /* 22.3 T tparams */
     /* 22.4 L params */ (): void,
-  
+
   method /* 23.1 T id */
     /* 23.2 L params */ (): void,
 
@@ -57,3 +57,5 @@ type Test = {
   [[key]]<T> /* 25.1 T tparams */
     /* 25.2 L params */ (): void,
 };
+
+type Test = { /* 26.1 I obj */ };

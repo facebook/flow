@@ -65,10 +65,11 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         error_at env (loc, Parse_error.PropertyAfterRestElement);
         properties env acc remaining
     in
-    fun env (loc, { Ast.Expression.Object.properties = props; comments = _ (* TODO *) }) ->
+    fun env (loc, { Ast.Expression.Object.properties = props; comments }) ->
       ( loc,
-        Pattern.(Object { Object.properties = properties env [] props; annot = missing_annot env })
-      )
+        Pattern.(
+          Object
+            { Object.properties = properties env [] props; annot = missing_annot env; comments }) )
 
   and array_from_expr =
     (* Convert an Expression to a Pattern if it is a valid
@@ -286,16 +287,29 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         | None -> properties env ~seen_rest ~rest_trailing_comma acc)
     in
     with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_LCURLY;
         let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
+        let internal =
+          if properties = [] then
+            Peek.comments env
+          else
+            []
+        in
         Expect.token env T_RCURLY;
+        let trailing = Eat.trailing_comments env in
         let annot =
           if Peek.token env = T_COLON then
             Ast.Type.Available (Type.annotation env)
           else
             missing_annot env
         in
-        Pattern.Object { Pattern.Object.properties; annot })
+        Pattern.Object
+          {
+            Pattern.Object.properties;
+            annot;
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+          })
 
   (* Parse array destructuring pattern *)
   and array_ restricted_error =

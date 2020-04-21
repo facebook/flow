@@ -444,11 +444,17 @@ module Object
             let (props, errs) =
               properties env ~rest_trailing_comma:None ([], Pattern_cover.empty_errors)
             in
+            let internal =
+              if props = [] then
+                Peek.comments env
+              else
+                []
+            in
             Expect.token env T_RCURLY;
             let trailing = Eat.trailing_comments env in
             ( {
                 Ast.Expression.Object.properties = props;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
               },
               errs ))
           env

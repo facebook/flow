@@ -402,7 +402,7 @@ with type t = Impl.t = struct
           [("elements", array_of_list (option expression_or_spread) elements)]
       | (loc, Object { Object.properties; comments }) ->
         node
-          ?comments
+          ?comments:(format_internal_comments comments)
           "ObjectExpression"
           loc
           [("properties", array_of_list object_property properties)]
@@ -1099,8 +1099,9 @@ with type t = Impl.t = struct
     and pattern =
       Pattern.(
         function
-        | (loc, Object { Object.properties; annot }) ->
+        | (loc, Object { Object.properties; annot; comments }) ->
           node
+            ?comments:(format_internal_comments comments)
             "ObjectPattern"
             loc
             [
@@ -1415,7 +1416,7 @@ with type t = Impl.t = struct
           else
             fields
         in
-        node ?comments "ObjectTypeAnnotation" loc fields)
+        node ?comments:(format_internal_comments comments) "ObjectTypeAnnotation" loc fields)
     and object_type_property
         ( loc,
           {

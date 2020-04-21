@@ -1320,6 +1320,11 @@ module Expression
         ~inner
         ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
     in
+    let merge_comments_with_internal inner =
+      Flow_ast_utils.merge_comments_with_internal
+        ~inner
+        ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
+    in
     let open Expression in
     ( loc,
       match expression with
@@ -1356,7 +1361,7 @@ module Expression
         MetaProperty { e with MetaProperty.comments = merge_comments comments }
       | New ({ New.comments; _ } as e) -> New { e with New.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as e) ->
-        Object { e with Object.comments = merge_comments comments }
+        Object { e with Object.comments = merge_comments_with_internal comments }
       | OptionalCall ({ OptionalCall.call = { Call.comments; _ } as call; _ } as optional_call) ->
         OptionalCall
           {

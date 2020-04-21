@@ -811,7 +811,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Object in
       let { properties; exact; inexact; comments } = ot in
       let properties' = Base.List.map ~f:this#object_type_property properties in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { properties = properties'; exact; inexact; comments = comments' }
 
     method object_type_property (prop : ('M, 'T) Ast.Type.Object.property)
@@ -1463,7 +1463,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_ (expr : ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
       let open Ast.Expression.Object in
       let { properties; comments } = expr in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       let properties' = List.map this#object_property_or_spread_property properties in
       { properties = properties'; comments = comments' }
 
@@ -1568,10 +1568,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, patt) = expr in
       ( this#on_type_annot annot,
         match patt with
-        | Object { Object.properties; annot } ->
+        | Object { Object.properties; annot; comments } ->
           let properties' = Base.List.map ~f:(this#pattern_object_p ?kind) properties in
           let annot' = this#type_annotation_hint annot in
-          Object { Object.properties = properties'; annot = annot' }
+          let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
+          Object { Object.properties = properties'; annot = annot'; comments = comments' }
         | Array { Array.elements; annot; comments } ->
           let elements' =
             Base.List.map ~f:(Base.Option.map ~f:(this#pattern_array_e ?kind)) elements

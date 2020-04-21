@@ -33,4 +33,6 @@
   get getter /* 13.1 T id */
     /* 13.2 L params */ () /* 13.3 T params */
     /* 13.4 L block */ {}
-})
+});
+
+({ /* 14.1 I obj */ });

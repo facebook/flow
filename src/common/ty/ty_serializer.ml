@@ -177,14 +177,7 @@ and fun_rest_param (name, t) =
 
 and obj_ o =
   mapM obj_prop o.obj_props >>| fun properties ->
-  ( Loc.none,
-    T.Object
-      {
-        T.Object.exact = o.obj_exact;
-        inexact = false;
-        properties;
-        comments = Flow_ast_utils.mk_comments_opt ();
-      } )
+  (Loc.none, T.Object { T.Object.exact = o.obj_exact; inexact = false; properties; comments = None })
 
 and obj_prop = function
   | NamedProp { name; prop; _ } ->
@@ -346,15 +339,7 @@ and inline_interface i =
   let { obj_props; _ } = if_body in
   mapM interface_extends if_extends >>= fun extends ->
   mapM obj_prop obj_props >>| fun properties ->
-  let body =
-    ( Loc.none,
-      {
-        T.Object.exact = false;
-        inexact = false;
-        properties;
-        comments = Flow_ast_utils.mk_comments_opt ();
-      } )
-  in
+  let body = (Loc.none, { T.Object.exact = false; inexact = false; properties; comments = None }) in
   (Loc.none, T.Interface { T.Interface.body; extends; comments = Flow_ast_utils.mk_comments_opt () })
 
 and utility u =

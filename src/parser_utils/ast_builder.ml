@@ -141,6 +141,7 @@ module Patterns = struct
                     } );
               ];
             annot = Ast.Type.Missing Loc.none;
+            comments = None;
           } )
 end
 

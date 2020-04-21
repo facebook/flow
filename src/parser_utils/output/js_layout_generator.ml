@@ -448,6 +448,11 @@ let internal_comments = function
   | Some { Ast.Syntax.internal = (first_loc, _) :: _ as internal; _ } ->
     Some (Concat (layout_from_trailing_comments internal (first_loc, None)))
 
+let append_internal_comments comments layouts =
+  match internal_comments comments with
+  | None -> layouts
+  | Some comments -> layouts @ [comments]
+
 let identifier_with_comments current_loc name comments =
   let node = Identifier (current_loc, name) in
   match comments with
@@ -843,6 +848,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           else
             [fuse props; if_break (Atom ",") Empty]
         in
+        let props = append_internal_comments comments props in
         (* If first prop is on a different line then pretty print with line breaks *)
         let break =
           match properties with
@@ -1274,36 +1280,41 @@ and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t)
   source_location_with_comments
     ( loc,
       match pat with
-      | P.Object { P.Object.properties; annot } ->
-        group
-          [
-            new_list
-              ~wrap:(Atom "{", Atom "}")
-              ~sep:
-                (Atom ",")
-                (* Object rest can have comma but most tooling still apply old
+      | P.Object { P.Object.properties; annot; comments } ->
+        let props =
+          List.map
+            (function
+              | P.Object.Property (loc, { P.Object.Property.key; pattern = pat; default; shorthand })
+                ->
+                let prop = pattern_object_property_key key in
+                let prop =
+                  match shorthand with
+                  | false -> fuse [prop; Atom ":"; pretty_space; pattern pat]
+                  | true -> prop
+                in
+                let prop =
+                  match default with
+                  | Some expr -> fuse_with_default prop expr
+                  | None -> prop
+                in
+                source_location_with_comments (loc, prop)
+              | P.Object.RestElement (loc, el) -> rest_element loc el)
+            properties
+        in
+        let props = append_internal_comments comments props in
+        layout_node_with_comments_opt loc comments
+        @@ group
+             [
+               new_list
+                 ~wrap:(Atom "{", Atom "}")
+                 ~sep:
+                   (Atom ",")
+                   (* Object rest can have comma but most tooling still apply old
           pre-spec rules that disallow it so omit it to be safe *)
-              ~trailing_sep:false
-              (List.map
-                 (function
-                   | P.Object.Property
-                       (loc, { P.Object.Property.key; pattern = pat; default; shorthand }) ->
-                     let prop = pattern_object_property_key key in
-                     let prop =
-                       match shorthand with
-                       | false -> fuse [prop; Atom ":"; pretty_space; pattern pat]
-                       | true -> prop
-                     in
-                     let prop =
-                       match default with
-                       | Some expr -> fuse_with_default prop expr
-                       | None -> prop
-                     in
-                     source_location_with_comments (loc, prop)
-                   | P.Object.RestElement (loc, el) -> rest_element loc el)
-                 properties);
-            hint type_annotation annot;
-          ]
+                 ~trailing_sep:false
+                 props;
+               hint type_annotation annot;
+             ]
       | P.Array { P.Array.elements; annot; comments } ->
         layout_node_with_comments_opt
           loc
@@ -2960,6 +2971,7 @@ and type_object ?(sep = Atom ",") loc { Ast.Type.Object.exact; properties; inexa
     else
       [fuse props; if_break sep Empty]
   in
+  let props = append_internal_comments comments props in
   (* If first prop is on a different line then pretty print with line breaks *)
   let break =
     match properties with

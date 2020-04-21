@@ -374,7 +374,7 @@ module T = struct
              Ast.Type.Object.exact = true;
              inexact = false;
              properties = List.map (type_of_object_property outlined) (pt :: pts);
-             comments = Flow_ast_utils.mk_comments_opt ();
+             comments = None;
            })
     | (loc, ObjectLiteral { frozen = false; properties = (pt, pts) }) ->
       temporary_type
@@ -385,7 +385,7 @@ module T = struct
              Ast.Type.Object.exact = true;
              inexact = false;
              properties = Base.List.map ~f:(type_of_object_property outlined) (pt :: pts);
-             comments = Flow_ast_utils.mk_comments_opt ();
+             comments = None;
            })
     | (loc, ArrayLiteral ets) ->
       temporary_type
@@ -698,6 +698,7 @@ module T = struct
                       } );
                 ];
               annot = Ast.Type.Missing (fst name);
+              comments = None;
             } )
       in
       wrap_name_pattern pattern names
@@ -723,6 +724,7 @@ module T = struct
                       } );
                 ];
               annot = Ast.Type.Missing (fst name);
+              comments = None;
             } )
       in
       wrap_name_pattern pattern names
@@ -776,7 +778,7 @@ module T = struct
             inexact = false;
             properties =
               Base.List.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
       in
       let mixins = [] in
@@ -837,14 +839,7 @@ module T = struct
                 } ))
           statics
       in
-      let ot =
-        {
-          Ast.Type.Object.exact = false;
-          inexact = true;
-          properties;
-          comments = Flow_ast_utils.mk_comments_opt ();
-        }
-      in
+      let ot = { Ast.Type.Object.exact = false; inexact = true; properties; comments = None } in
       let assign = (decl_loc, Ast.Type.Object ot) in
       let t =
         let name = "$TEMPORARY$function" in
@@ -1112,7 +1107,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     match patt with
     | (loc, Identifier { Identifier.annot; name; optional }) ->
       (loc, Some name, default || optional, annotated_type annot)
-    | (loc, Object { Object.annot; properties = _ }) ->
+    | (loc, Object { Object.annot; properties = _; comments = _ }) ->
       if default then
         (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
       else
@@ -1892,14 +1887,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
             } )
       else
         let properties = additional_properties_of_module_exports outlined add_module_exports_list in
-        let ot =
-          {
-            Ast.Type.Object.exact = false;
-            inexact = true;
-            properties;
-            comments = Flow_ast_utils.mk_comments_opt ();
-          }
-        in
+        let ot = { Ast.Type.Object.exact = false; inexact = true; properties; comments = None } in
         let assign = (mod_exp_loc, Ast.Type.Object ot) in
         let t =
           let name = "$TEMPORARY$module$exports$assign" in
@@ -1930,14 +1918,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     in
     let add_module_exports mod_exp_loc outlined add_module_exports_list =
       let properties = additional_properties_of_module_exports outlined add_module_exports_list in
-      let ot =
-        {
-          Ast.Type.Object.exact = true;
-          inexact = false;
-          properties;
-          comments = Flow_ast_utils.mk_comments_opt ();
-        }
-      in
+      let ot = { Ast.Type.Object.exact = true; inexact = false; properties; comments = None } in
       let t = (mod_exp_loc, Ast.Type.Object ot) in
       [
         ( mod_exp_loc,

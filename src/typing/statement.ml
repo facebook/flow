@@ -254,6 +254,7 @@ module Func_stmt_config = struct
     | Object of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
         properties: (ALoc.t, ALoc.t) Ast.Pattern.Object.property list;
+        comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
       }
     | Array of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
@@ -362,7 +363,7 @@ module Func_stmt_config = struct
         bind cx name t loc
       in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
-    | Object { annot; properties } ->
+    | Object { annot; properties; comments } ->
       let default = eval_default cx ~expr default in
       let properties =
         let default = Base.Option.map default (fun ((_, t), _) -> Default.expr t) in
@@ -381,7 +382,7 @@ module Func_stmt_config = struct
       ( loc,
         {
           Ast.Function.Param.argument =
-            ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot });
+            ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
           default;
         } )
     | Array { annot; elements; comments } ->
@@ -7888,10 +7889,10 @@ and mk_func_sig =
           id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
         in
         (t, Func_stmt_config.Id id)
-      | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties } ->
+      | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
         let reason = mk_reason RDestructuring ploc in
         let (t, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
-        (t, Func_stmt_config.Object { annot; properties })
+        (t, Func_stmt_config.Object { annot; properties; comments })
       | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
         let reason = mk_reason RDestructuring ploc in
         let (t, annot) = Anno.mk_type_annotation cx tparams_map reason annot in

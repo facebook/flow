@@ -136,6 +136,9 @@ let tests =
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
       assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
+    ("object" >:: fun ctxt -> assert_expression_string ~ctxt "{/*I*/}");
+    ("object_pattern" >:: fun ctxt -> assert_statement_string ~ctxt "var{/*I*/};");
+    ("object_type" >:: fun ctxt -> assert_statement_string ~ctxt "type T={/*I*/};");
     ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
     ("throw" >:: fun ctxt -> assert_statement_string ~ctxt "throw A;/*T*/");
     ("variable_declaration" >:: fun ctxt -> assert_statement_string ~ctxt "let A=B;/*T*/");

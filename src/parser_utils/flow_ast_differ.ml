@@ -1924,23 +1924,25 @@ let program
       match (p1, p2) with
       | ((_, Ast.Pattern.Identifier i1), (_, Ast.Pattern.Identifier i2)) -> pattern_identifier i1 i2
       | ((loc, Ast.Pattern.Array a1), (_, Ast.Pattern.Array a2)) -> pattern_array loc a1 a2
-      | ((_, Ast.Pattern.Object o1), (_, Ast.Pattern.Object o2)) -> pattern_object o1 o2
+      | ((loc, Ast.Pattern.Object o1), (_, Ast.Pattern.Object o2)) -> pattern_object loc o1 o2
       | ((_, Ast.Pattern.Expression e1), (_, Ast.Pattern.Expression e2)) -> Some (expression e1 e2)
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_pattern p1 in
     Base.Option.value changes ~default:[(old_loc, Replace (Pattern p1, Pattern p2))]
   and pattern_object
-      (o1 : (Loc.t, Loc.t) Ast.Pattern.Object.t) (o2 : (Loc.t, Loc.t) Ast.Pattern.Object.t) :
-      node change list option =
+      (loc : Loc.t)
+      (o1 : (Loc.t, Loc.t) Ast.Pattern.Object.t)
+      (o2 : (Loc.t, Loc.t) Ast.Pattern.Object.t) : node change list option =
     let open Ast.Pattern.Object in
-    let { properties = properties1; annot = annot1 } = o1 in
-    let { properties = properties2; annot = annot2 } = o2 in
+    let { properties = properties1; annot = annot1; comments = comments1 } = o1 in
+    let { properties = properties2; annot = annot2; comments = comments2 } = o2 in
     let properties_diff =
       diff_and_recurse_no_trivial pattern_object_property properties1 properties2
     in
     let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
-    join_diff_list [properties_diff; annot_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [properties_diff; annot_diff; comments_diff]
   and pattern_object_property
       (p1 : (Loc.t, Loc.t) Ast.Pattern.Object.property)
       (p2 : (Loc.t, Loc.t) Ast.Pattern.Object.property) : node change list option =

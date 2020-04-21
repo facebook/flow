@@ -1003,6 +1003,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             let env = with_no_anon_function_type false env in
             properties ~is_class ~allow_inexact ~exact ~allow_spread env ([], false)
           in
+          let internal =
+            if properties = [] then
+              Peek.comments env
+            else
+              []
+          in
           Expect.token
             env
             ( if exact then
@@ -1016,7 +1022,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             Type.Object.exact;
             properties;
             inexact;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
           })
         env
 
@@ -1193,6 +1199,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ~inner
         ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
     in
+    let merge_comments_with_internal inner =
+      Flow_ast_utils.merge_comments_with_internal
+        ~inner
+        ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
+    in
     let open Ast.Type in
     ( loc,
       match t with
@@ -1212,7 +1223,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | Function ({ Function.comments; _ } as t) ->
         Function { t with Function.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as t) ->
-        Object { t with Object.comments = merge_comments comments }
+        Object { t with Object.comments = merge_comments_with_internal comments }
       | Interface ({ Interface.comments; _ } as t) ->
         Interface { t with Interface.comments = merge_comments comments }
       | Array ({ Array.comments; _ } as t) ->

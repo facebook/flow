@@ -1950,13 +1950,14 @@ class ['loc] mapper =
       let (loc, patt) = expr in
       let patt' =
         match patt with
-        | Object { Object.properties; annot } ->
+        | Object { Object.properties; annot; comments } ->
           let properties' = map_list (this#pattern_object_p ?kind) properties in
           let annot' = this#type_annotation_hint annot in
-          if properties' == properties && annot' == annot then
+          let comments' = this#syntax_opt comments in
+          if properties' == properties && annot' == annot && comments' == comments then
             patt
           else
-            Object { Object.properties = properties'; annot = annot' }
+            Object { Object.properties = properties'; annot = annot'; comments = comments' }
         | Array { Array.elements; annot; comments } ->
           let elements' = map_list (map_opt (this#pattern_array_e ?kind)) elements in
           let annot' = this#type_annotation_hint annot in
