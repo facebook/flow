@@ -42,6 +42,7 @@ end = struct
 
   let end_of_member_init env =
     match Peek.token env with
+    | T_SEMICOLON
     | T_COMMA
     | T_RCURLY ->
       true
@@ -191,7 +192,12 @@ end = struct
       }
     | _ ->
       let acc = enum_member ~enum_name ~explicit_type acc env in
-      if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
+      (match Peek.token env with
+      | T_RCURLY -> ()
+      | T_SEMICOLON ->
+        error env Parse_error.EnumInvalidMemberSeparator;
+        Expect.token env T_SEMICOLON
+      | _ -> Expect.token env T_COMMA);
       enum_members ~enum_name ~explicit_type acc env
 
   let string_body ~env ~enum_name ~is_explicit string_members defaulted_members comments =

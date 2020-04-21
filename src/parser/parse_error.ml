@@ -30,6 +30,7 @@ type t =
       enum_name: string;
       member_name: string;
     }
+  | EnumInvalidMemberSeparator
   | EnumNumberMemberNotInitialized of {
       enum_name: string;
       member_name: string;
@@ -225,6 +226,7 @@ module PP = struct
         member_name
         suggestion
         enum_name
+    | EnumInvalidMemberSeparator -> "Enum members are separated with `,`. Replace `;` with `,`."
     | EnumNumberMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
