@@ -431,7 +431,11 @@ module Object
             Some (Peek.loc env)
           | _ -> None
         in
-        if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
+        (match Peek.token env with
+        | T_RCURLY
+        | T_EOF ->
+          ()
+        | _ -> Expect.token env T_COMMA);
         let errs = Pattern_cover.rev_append_errors new_errs errs in
         properties env ~rest_trailing_comma (prop :: props, errs)
     in

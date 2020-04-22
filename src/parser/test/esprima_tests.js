@@ -218,7 +218,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected end of input',
-              actual: 'Unexpected end of input, expected the token `,`'
+              actual: 'Unexpected end of input, expected the token `}`'
             }
           }
         },
