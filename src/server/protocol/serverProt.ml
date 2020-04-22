@@ -232,6 +232,7 @@ module Response = struct
     res_name: string;
     res_insert_text: string option;
     rank: int;
+    res_preselect: bool;
   }
 
   type autocomplete_response = (complete_autocomplete_result list, string) result

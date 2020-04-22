@@ -681,6 +681,7 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       inlineDetail = Jget.string_opt params "inlineDetail";
       itemType = Jget.string_opt params "itemType";
       documentation = None;
+      preselect = Jget.bool_d params "preselect" ~default:false;
       sortText = Jget.string_opt params "sortText";
       filterText = Jget.string_opt params "filterText";
       insertText = Jget.string_opt params "insertText";
@@ -713,6 +714,11 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
                   ( "value",
                     JSON_String (String.trim (List.fold doc ~init:"" ~f:string_of_markedString)) );
                 ]) );
+        ( "preselect",
+          if item.preselect then
+            Some (JSON_Bool true)
+          else
+            None );
         ("sortText", Base.Option.map item.sortText string_);
         ("filterText", Base.Option.map item.filterText string_);
         ("insertText", Base.Option.map item.insertText string_);
@@ -992,7 +998,10 @@ let parse_initialize (params : json option) : Initialize.params =
     and parse_completion json =
       { completionItem = Jget.obj_opt json "completionItem" |> parse_completionItem }
     and parse_completionItem json =
-      { snippetSupport = Jget.bool_d json "snippetSupport" ~default:false }
+      {
+        snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
+        preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
+      }
     and parse_codeAction json =
       {
         codeAction_dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false;

@@ -265,6 +265,9 @@ let supports_status (p : Lsp.Initialize.params) : bool =
 let supports_snippets (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.textDocument.completion.completionItem.snippetSupport)
 
+let supports_preselect (p : Lsp.Initialize.params) : bool =
+  Lsp.Initialize.(p.client_capabilities.textDocument.completion.completionItem.preselectSupport)
+
 let supports_connectionStatus (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.telemetry.connectionStatus)
 

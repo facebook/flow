@@ -423,7 +423,10 @@ module Initialize = struct
 
   and completion = { completionItem: completionItem }
 
-  and completionItem = { snippetSupport: bool (* client can do snippets as insert text *) }
+  and completionItem = {
+    snippetSupport: bool;  (** client can do snippets as insert text *)
+    preselectSupport: bool;  (** client supports the preselect property *)
+  }
 
   and codeAction = {
     (* Whether code action supports dynamic registration. *)
@@ -821,6 +824,8 @@ module Completion = struct
     (* nuclide-specific, left column *)
     documentation: markedString list option;
     (* human-readable doc-comment *)
+    preselect: bool;
+    (* select this item when showing *)
     sortText: string option;
     (* used for sorting; if absent, uses label *)
     filterText: string option;

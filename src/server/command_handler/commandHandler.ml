@@ -1515,7 +1515,9 @@ let handle_persistent_code_action_request
 
 let handle_persistent_autocomplete_lsp
     ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
-  let is_snippet_supported = Persistent_connection.client_snippet_support client in
+  let lsp_init_params = Persistent_connection.lsp_initialize_params client in
+  let is_snippet_supported = Lsp_helpers.supports_snippets lsp_init_params in
+  let is_preselect_supported = Lsp_helpers.supports_preselect lsp_init_params in
   Completion.(
     let (file, line, char) =
       match loc with
@@ -1560,7 +1562,10 @@ let handle_persistent_autocomplete_lsp
         | Ok items ->
           let items =
             Base.List.map
-              ~f:(Flow_lsp_conversions.flow_completion_to_lsp is_snippet_supported)
+              ~f:
+                (Flow_lsp_conversions.flow_completion_to_lsp
+                   ~is_snippet_supported
+                   ~is_preselect_supported)
               items
           in
           let r = CompletionResult { Lsp.Completion.isIncomplete = false; items } in

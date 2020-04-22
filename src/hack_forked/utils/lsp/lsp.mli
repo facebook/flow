@@ -277,7 +277,10 @@ module Initialize : sig
 
   and completion = { completionItem: completionItem }
 
-  and completionItem = { snippetSupport: bool }
+  and completionItem = {
+    snippetSupport: bool;
+    preselectSupport: bool;
+  }
 
   and codeAction = {
     codeAction_dynamicRegistration: bool;
@@ -602,6 +605,8 @@ module Completion : sig
     (* nuclide-specific, left column *)
     documentation: markedString list option;
     (* human-readable doc-comment *)
+    preselect: bool;
+    (* select this item when showing *)
     sortText: string option;
     (* used for sorting; if absent, uses label *)
     filterText: string option;

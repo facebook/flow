@@ -76,7 +76,7 @@ val get_client : LspProt.client_id -> single_client option
 
 val get_id : single_client -> LspProt.client_id
 
-val client_snippet_support : single_client -> bool
+val lsp_initialize_params : single_client -> Lsp.Initialize.params
 
 type type_contents_artifacts =
   Context.t

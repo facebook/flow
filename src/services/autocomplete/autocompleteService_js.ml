@@ -98,12 +98,20 @@ let lsp_completion_of_decl =
   | EnumDecl _ -> Lsp.Completion.Enum
   | ModuleDecl _ -> Lsp.Completion.Module
 
-let autocomplete_create_result ?insert_text ?(rank = 0) (name, loc) ty =
+let autocomplete_create_result ?insert_text ?(rank = 0) ?(preselect = false) (name, loc) ty =
   let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
-  { res_loc = loc; res_kind; res_name = name; res_insert_text = insert_text; res_ty; rank }
+  {
+    res_loc = loc;
+    res_kind;
+    res_name = name;
+    res_insert_text = insert_text;
+    res_ty;
+    rank;
+    res_preselect = preselect;
+  }
 
-let autocomplete_create_result_decl ?insert_text:_ ~rank (name, loc) d =
+let autocomplete_create_result_decl ?insert_text:_ ~rank ?(preselect = false) (name, loc) d =
   let open Ty in
   match d with
   | ModuleDecl _ ->
@@ -114,6 +122,7 @@ let autocomplete_create_result_decl ?insert_text:_ ~rank (name, loc) d =
       res_insert_text = None;
       res_ty = "module " ^ name;
       rank;
+      res_preselect = preselect;
     }
   | Ty.VariableDecl (_, ty) ->
     {
@@ -123,6 +132,7 @@ let autocomplete_create_result_decl ?insert_text:_ ~rank (name, loc) d =
       res_insert_text = None;
       res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty;
       rank;
+      res_preselect = preselect;
     }
   | d ->
     {
@@ -132,12 +142,13 @@ let autocomplete_create_result_decl ?insert_text:_ ~rank (name, loc) d =
       res_insert_text = None;
       res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false d;
       rank;
+      res_preselect = preselect;
     }
 
-let autocomplete_create_result_elt ?insert_text ?(rank = 0) (name, loc) elt =
+let autocomplete_create_result_elt ?insert_text ?(rank = 0) ?preselect (name, loc) elt =
   match elt with
-  | Ty.Type t -> autocomplete_create_result ?insert_text ~rank (name, loc) t
-  | Ty.Decl d -> autocomplete_create_result_decl ?insert_text ~rank (name, loc) d
+  | Ty.Type t -> autocomplete_create_result ?insert_text ~rank ?preselect (name, loc) t
+  | Ty.Decl d -> autocomplete_create_result_decl ?insert_text ~rank ?preselect (name, loc) d
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -561,6 +572,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
         res_ty = "this";
         res_insert_text = Some "this";
         rank = 0;
+        res_preselect = false;
       }
       :: results
     else
@@ -576,6 +588,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
         res_ty = "super";
         res_insert_text = Some "super";
         rank = 0;
+        res_preselect = false;
       }
       :: results
     else
@@ -699,6 +712,7 @@ let type_exports_of_module_ty ~ac_loc =
               res_insert_text = None;
               res_ty = Ty_printer.string_of_decl_single_line d;
               rank = 0;
+              res_preselect = false;
             }
         | InterfaceDecl (name, _) as d ->
           Some
@@ -709,6 +723,7 @@ let type_exports_of_module_ty ~ac_loc =
               res_insert_text = None;
               res_ty = Ty_printer.string_of_decl_single_line d;
               rank = 0;
+              res_preselect = false;
             }
         | ClassDecl (name, _) as d ->
           Some
@@ -719,6 +734,7 @@ let type_exports_of_module_ty ~ac_loc =
               res_insert_text = None;
               res_ty = Ty_printer.string_of_decl_single_line d;
               rank = 0;
+              res_preselect = false;
             }
         | _ -> None)
       exports
@@ -739,6 +755,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
           res_ty = name;
           res_insert_text = None;
           rank = 0;
+          res_preselect = false;
         })
       tparams
   in

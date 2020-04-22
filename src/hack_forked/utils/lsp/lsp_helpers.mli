@@ -73,6 +73,8 @@ val supports_status : Lsp.Initialize.params -> bool
 
 val supports_snippets : Lsp.Initialize.params -> bool
 
+val supports_preselect : Lsp.Initialize.params -> bool
+
 val supports_connectionStatus : Lsp.Initialize.params -> bool
 
 val telemetry : Jsonrpc.writer -> Lsp.MessageType.t -> string -> unit

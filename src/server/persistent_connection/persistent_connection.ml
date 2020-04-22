@@ -235,10 +235,7 @@ let get_opened_files (clients : t) : SSet.t =
 
 let get_id client = client.client_id
 
-let client_snippet_support (client : single_client) =
-  Lsp.Initialize.(
-    client.lsp_initialize_params.client_capabilities.textDocument.completion.completionItem
-      .snippetSupport)
+let lsp_initialize_params (client : single_client) = client.lsp_initialize_params
 
 let type_contents_cache client = client.type_contents_cache
 

@@ -67,8 +67,9 @@ let flow_signature_help_to_lsp
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
 let flow_completion_to_lsp
-    (_is_snippet_supported : bool) (item : ServerProt.Response.complete_autocomplete_result) :
-    Lsp.Completion.completionItem =
+    ~is_snippet_supported:(_ : bool)
+    ~(is_preselect_supported : bool)
+    (item : ServerProt.Response.complete_autocomplete_result) : Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
       let insert_text = Base.Option.value item.res_insert_text ~default:item.res_name in
@@ -104,6 +105,7 @@ let flow_completion_to_lsp
         itemType;
         documentation = None;
         (* This will be filled in by completionItem/resolve. *)
+        preselect = is_preselect_supported && item.res_preselect;
         sortText;
         filterText = None;
         (* deprecated and should not be used *)
