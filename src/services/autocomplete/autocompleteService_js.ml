@@ -544,7 +544,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
          (fun (results, errors_to_log) (name, elt_result) ->
            match elt_result with
            | Ok elt ->
-             let result = autocomplete_create_result_elt (name, ac_loc) elt in
+             let result = autocomplete_create_result_elt ~insert_text:name (name, ac_loc) elt in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -559,7 +559,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
         res_kind = Some Lsp.Completion.Variable;
         res_name = "this";
         res_ty = "this";
-        res_insert_text = None;
+        res_insert_text = Some "this";
         rank = 0;
       }
       :: results
@@ -574,7 +574,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
         res_kind = Some Lsp.Completion.Variable;
         res_name = "super";
         res_ty = "super";
-        res_insert_text = None;
+        res_insert_text = Some "super";
         rank = 0;
       }
       :: results

@@ -33,35 +33,75 @@ export default suite(
                   kind: 6,
                   detail: 'this',
                   inlineDetail: 'this',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
+                    },
+                    newText: 'this',
+                  },
                 },
                 {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
                   inlineDetail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
+                    },
+                    newText: 'x',
+                  },
                 },
                 {
                   label: 'fred',
                   kind: 3,
                   detail: '(a: number, b: string) => number',
                   inlineDetail: '(a: number, b: string) => number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
+                    },
+                    newText: 'fred',
+                  },
                 },
                 {
                   label: 'b',
                   kind: 6,
                   detail: 'string',
                   inlineDetail: 'string',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
+                    },
+                    newText: 'b',
+                  },
                 },
                 {
                   label: 'a',
                   kind: 6,
                   detail: 'number',
                   inlineDetail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
+                    },
+                    newText: 'a',
+                  },
                 },
               ],
             }),
@@ -166,28 +206,60 @@ export default suite(
                   kind: 6,
                   detail: 'this',
                   inlineDetail: 'this',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
+                    },
+                    newText: 'this',
+                  },
                 },
                 {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
                   inlineDetail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
+                    },
+                    newText: 'x',
+                  },
                 },
                 {
                   label: 'foo',
                   kind: 3,
                   detail: '() => void',
                   inlineDetail: '() => void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
+                    },
+                    newText: 'foo',
+                  },
                 },
                 {
                   label: 'aFunction',
                   kind: 3,
                   detail: '(arg1: number, arg2: string) => null',
                   inlineDetail: '(arg1: number, arg2: string) => null',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
+                    },
+                    newText: 'aFunction',
+                  },
                 },
               ],
             }),
