@@ -66,6 +66,10 @@ function g(g: G) {
   }
 }
 
+switch (x)  {
+  case E.isValid: // Error
+}
+
 // Duplicate check
 switch (x)  {
   case E.A:
