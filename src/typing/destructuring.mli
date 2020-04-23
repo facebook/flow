@@ -34,8 +34,8 @@ val array_elements :
   expr:expr ->
   f:callback ->
   state ->
-  (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element option list ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Array.element option list
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element list ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Array.element list
 
 val object_properties :
   Context.t ->

@@ -89,9 +89,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     and array_element check_env =
       let open Pattern.Array in
       function
-      | None -> check_env
-      | Some (Element (_, { Element.argument; default = _ })) -> pattern check_env argument
-      | Some (RestElement (_, { Pattern.RestElement.argument; comments = _ })) ->
+      | Hole _ -> check_env
+      | Element (_, { Element.argument; default = _ }) -> pattern check_env argument
+      | RestElement (_, { Pattern.RestElement.argument; comments = _ }) ->
         pattern check_env argument
     and identifier_pattern check_env { Pattern.Identifier.name = id; _ } = identifier check_env id
     and identifier (env, param_names) ((loc, { Identifier.name; comments = _ }) as id) =

@@ -747,12 +747,11 @@ module Eval (Env : EvalEnv) = struct
 
   and array_ =
     let array_element tps loc expr_or_spread_opt =
-      let open Ast.Expression in
+      let open Ast.Expression.Array in
       match expr_or_spread_opt with
-      | None -> Deps.top (Error.UnexpectedArrayHole loc)
-      | Some (Expression expr) -> literal_expr tps expr
-      | Some (Spread (spread_loc, _spread)) ->
-        Deps.top (Error.UnexpectedArraySpread (loc, spread_loc))
+      | Hole _ -> Deps.top (Error.UnexpectedArrayHole loc)
+      | Expression expr -> literal_expr tps expr
+      | Spread (spread_loc, _spread) -> Deps.top (Error.UnexpectedArraySpread (loc, spread_loc))
     in
     fun tps loc elements ->
       Nel.fold_left (Deps.reduce_join (array_element tps loc)) Deps.bot elements

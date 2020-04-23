@@ -284,16 +284,17 @@ let rec pattern cx ~expr ~f acc (loc, p) =
 and array_elements cx ~expr ~f acc =
   let open Ast.Pattern.Array in
   Base.List.mapi ~f:(fun i ->
-      Base.Option.map ~f:(function
-          | Element (loc, { Element.argument = p; default = d }) ->
-            let acc = array_element cx acc i loc in
-            let (acc, d) = pattern_default cx ~expr acc d in
-            let p = pattern cx ~expr ~f acc p in
-            Element (loc, { Element.argument = p; default = d })
-          | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
-            let acc = array_rest_element cx acc i loc in
-            let p = pattern cx ~expr ~f acc p in
-            RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments })))
+    function
+    | Hole loc -> Hole loc
+    | Element (loc, { Element.argument = p; default = d }) ->
+      let acc = array_element cx acc i loc in
+      let (acc, d) = pattern_default cx ~expr acc d in
+      let p = pattern cx ~expr ~f acc p in
+      Element (loc, { Element.argument = p; default = d })
+    | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
+      let acc = array_rest_element cx acc i loc in
+      let p = pattern cx ~expr ~f acc p in
+      RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }))
 
 and object_properties =
   let open Ast.Pattern.Object in

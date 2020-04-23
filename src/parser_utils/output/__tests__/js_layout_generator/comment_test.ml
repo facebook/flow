@@ -108,6 +108,14 @@ let tests =
       assert_program_string ~ctxt ~pretty:true "A;\n/*L1*/\n/*L2*/\nB;";
       assert_program_string ~ctxt ~pretty:true "A; //L\nB;";
       assert_program_string ~ctxt ~pretty:true "A; /*T1\nT2*/\nB;" );
+    ( "array" >:: fun ctxt ->
+      assert_expression_string ~ctxt "[/*I*/]";
+      assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  /*I*/\n]";
+      assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  /*I*/\n]" );
+    ( "array_pattern" >:: fun ctxt ->
+      assert_statement_string ~ctxt "var[/*I*/];";
+      assert_statement_string ~ctxt ~pretty:true "var [\n  a\n  /*I*/\n];";
+      assert_statement_string ~ctxt ~pretty:true "var [\n  a\n  \n  /*I*/\n];" );
     ( "arrow_function_body" >:: fun ctxt ->
       (* Body without leading comment separated by space *)
       assert_expression_string ~ctxt ~pretty:true "() => <A />";

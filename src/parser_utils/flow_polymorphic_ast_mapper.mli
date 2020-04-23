@@ -13,6 +13,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method array : ('M, 'T) Ast.Expression.Array.t -> ('N, 'U) Ast.Expression.Array.t
 
+    method array_element :
+      ('M, 'T) Ast.Expression.Array.element -> ('N, 'U) Ast.Expression.Array.element
+
     method arrow_function : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
     method array_type : ('M, 'T) Ast.Type.Array.t -> ('N, 'U) Ast.Type.Array.t

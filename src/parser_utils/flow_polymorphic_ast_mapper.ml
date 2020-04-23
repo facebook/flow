@@ -139,9 +139,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
       let open Ast.Expression in
       let { Array.elements; Array.comments } = expr in
-      let elements' = Base.List.map ~f:(Base.Option.map ~f:this#expression_or_spread) elements in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let elements' = Base.List.map ~f:this#array_element elements in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { Array.elements = elements'; comments = comments' }
+
+    method array_element (element : ('M, 'T) Ast.Expression.Array.element)
+        : ('N, 'U) Ast.Expression.Array.element =
+      let open Ast.Expression.Array in
+      match element with
+      | Hole loc -> Hole (this#on_loc_annot loc)
+      | Expression expr -> Expression (this#expression expr)
+      | Spread spread -> Spread (this#spread_element spread)
 
     method arrow_function (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       this#function_ expr
@@ -1574,11 +1582,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
           Object { Object.properties = properties'; annot = annot'; comments = comments' }
         | Array { Array.elements; annot; comments } ->
-          let elements' =
-            Base.List.map ~f:(Base.Option.map ~f:(this#pattern_array_e ?kind)) elements
-          in
+          let elements' = Base.List.map ~f:(this#pattern_array_e ?kind) elements in
           let annot' = this#type_annotation_hint annot in
-          let comments' = Base.Option.map ~f:this#syntax comments in
+          let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
           Array { Array.elements = elements'; annot = annot'; comments = comments' }
         | Identifier { Identifier.name; annot; optional } ->
           let name' = this#t_pattern_identifier ?kind name in
@@ -1653,6 +1659,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Pattern.Array.element =
       let open Ast.Pattern.Array in
       match e with
+      | Hole loc -> Hole (this#on_loc_annot loc)
       | Element (annot, elem) ->
         Element (this#on_loc_annot annot, this#pattern_array_element ?kind elem)
       | RestElement (annot, elem) ->

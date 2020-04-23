@@ -1682,6 +1682,15 @@ let program
     | (Ast.Expression.Spread spread1, Ast.Expression.Spread spread2) ->
       diff_if_changed_ret_opt spread_element spread1 spread2
     | (_, _) -> None
+  and array_element
+      (element1 : (Loc.t, Loc.t) Ast.Expression.Array.element)
+      (element2 : (Loc.t, Loc.t) Ast.Expression.Array.element) : node change list option =
+    let open Ast.Expression in
+    match (element1, element2) with
+    | (Array.Hole _, Array.Hole _) -> Some []
+    | (Array.Expression e1, Array.Expression e2) -> Some (diff_if_changed expression e1 e2)
+    | (Array.Spread s1, Array.Spread s2) -> diff_if_changed_ret_opt spread_element s1 s2
+    | _ -> None
   and spread_element
       (spread1 : (Loc.t, Loc.t) Ast.Expression.SpreadElement.t)
       (spread2 : (Loc.t, Loc.t) Ast.Expression.SpreadElement.t) : node change list option =
@@ -1707,9 +1716,7 @@ let program
     let { elements = elems1; comments = comments1 } = arr1 in
     let { elements = elems2; comments = comments2 } = arr2 in
     let comments = syntax_opt loc comments1 comments2 in
-    let elements =
-      diff_and_recurse_no_trivial (diff_if_changed_opt expression_or_spread) elems1 elems2
-    in
+    let elements = diff_and_recurse_no_trivial array_element elems1 elems2 in
     join_diff_list [comments; elements]
   and sequence loc seq1 seq2 : node change list option =
     let open Ast.Expression.Sequence in
@@ -1983,13 +1990,13 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [comments_diff; elements_diff; annot_diff]
   and pattern_array_e
-      (eo1 : (Loc.t, Loc.t) Ast.Pattern.Array.element option)
-      (eo2 : (Loc.t, Loc.t) Ast.Pattern.Array.element option) : node change list option =
+      (eo1 : (Loc.t, Loc.t) Ast.Pattern.Array.element)
+      (eo2 : (Loc.t, Loc.t) Ast.Pattern.Array.element) : node change list option =
     let open Ast.Pattern.Array in
     match (eo1, eo2) with
-    | (Some (Element p1), Some (Element p2)) -> pattern_array_element p1 p2
-    | (Some (RestElement re1), Some (RestElement re2)) -> pattern_rest_element re1 re2
-    | (None, None) -> Some [] (* Both elements elided *)
+    | (Element p1, Element p2) -> pattern_array_element p1 p2
+    | (RestElement re1, RestElement re2) -> pattern_rest_element re1 re2
+    | (Hole _, Hole _) -> Some [] (* Both elements elided *)
     | (_, _) -> None
   (* one element is elided and another is not *)
   and pattern_array_element

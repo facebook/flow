@@ -45,10 +45,9 @@ let rec pattern loc ?annot_path ?init_path (p : (Loc.t, Loc.t) Ast.Pattern.t) =
     Array.(
       List.fold_left
         (fun acc -> function
-          | None -> acc
-          | Some (Element (_, { Element.argument = p; default = _ })) -> acc @ pattern loc p
-          | Some (RestElement (_, { RestElement.argument = p; comments = _ })) ->
-            acc @ pattern loc p)
+          | Hole _ -> acc
+          | Element (_, { Element.argument = p; default = _ }) -> acc @ pattern loc p
+          | RestElement (_, { RestElement.argument = p; comments = _ }) -> acc @ pattern loc p)
         []
         elements)
   | (_, Expression _) -> []

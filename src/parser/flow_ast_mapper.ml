@@ -217,12 +217,19 @@ class ['loc] mapper =
     method array _loc (expr : ('loc, 'loc) Ast.Expression.Array.t) =
       let open Ast.Expression in
       let { Array.elements; comments } = expr in
-      let elements' = map_list (map_opt this#expression_or_spread) elements in
+      let elements' = map_list this#array_element elements in
       let comments' = this#syntax_opt comments in
       if elements == elements' && comments == comments' then
         expr
       else
         { Array.elements = elements'; comments = comments' }
+
+    method array_element element =
+      let open Ast.Expression.Array in
+      match element with
+      | Expression expr -> id this#expression expr element (fun expr -> Expression expr)
+      | Spread spread -> id this#spread_element spread element (fun spread -> Spread spread)
+      | Hole _ -> element
 
     method arrow_function loc (expr : ('loc, 'loc) Ast.Function.t) = this#function_ loc expr
 
@@ -1960,7 +1967,7 @@ class ['loc] mapper =
           else
             Object { Object.properties = properties'; annot = annot'; comments = comments' }
         | Array { Array.elements; annot; comments } ->
-          let elements' = map_list (map_opt (this#pattern_array_e ?kind)) elements in
+          let elements' = map_list (this#pattern_array_e ?kind) elements in
           let annot' = this#type_annotation_hint annot in
           let comments' = this#syntax_opt comments in
           if comments == comments' && elements' == elements && annot' == annot then
@@ -2049,6 +2056,7 @@ class ['loc] mapper =
     method pattern_array_e ?kind (e : ('loc, 'loc) Ast.Pattern.Array.element) =
       let open Ast.Pattern.Array in
       match e with
+      | Hole _ -> e
       | Element (loc, elem) ->
         id (this#pattern_array_element ?kind) elem e (fun elem -> Element (loc, elem))
       | RestElement (loc, elem) ->

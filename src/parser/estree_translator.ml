@@ -396,10 +396,10 @@ with type t = Impl.t = struct
       | (loc, Super { Super.comments }) -> node ?comments "Super" loc []
       | (loc, Array { Array.elements; comments }) ->
         node
-          ?comments
+          ?comments:(format_internal_comments comments)
           "ArrayExpression"
           loc
-          [("elements", array_of_list (option expression_or_spread) elements)]
+          [("elements", array_of_list array_element elements)]
       | (loc, Object { Object.properties; comments }) ->
         node
           ?comments:(format_internal_comments comments)
@@ -1122,11 +1122,11 @@ with type t = Impl.t = struct
             ]
         | (loc, Array { Array.elements; annot; comments }) ->
           node
-            ?comments
+            ?comments:(format_internal_comments comments)
             "ArrayPattern"
             loc
             [
-              ("elements", array_of_list (option array_pattern_element) elements);
+              ("elements", array_of_list array_pattern_element elements);
               ("typeAnnotation", hint type_annotation annot);
             ]
         | (loc, Identifier pattern_id) -> pattern_identifier loc pattern_id
@@ -1155,6 +1155,7 @@ with type t = Impl.t = struct
     and array_pattern_element =
       let open Pattern.Array in
       function
+      | Hole _ -> null
       | Element (loc, { Element.argument; default = Some default }) ->
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | Element (_loc, { Element.argument; default = None }) -> pattern argument
@@ -1230,12 +1231,19 @@ with type t = Impl.t = struct
             ("computed", bool computed);
           ]
       | RestElement (loc, el) -> rest_element loc el
+    and spread_element (loc, { Expression.SpreadElement.argument; comments }) =
+      node ?comments "SpreadElement" loc [("argument", expression argument)]
     and expression_or_spread =
       let open Expression in
       function
       | Expression expr -> expression expr
-      | Spread (loc, { SpreadElement.argument; comments }) ->
-        node ?comments "SpreadElement" loc [("argument", expression argument)]
+      | Spread spread -> spread_element spread
+    and array_element =
+      let open Expression.Array in
+      function
+      | Hole _ -> null
+      | Expression expr -> expression expr
+      | Spread spread -> spread_element spread
     and comprehension_block (loc, { Expression.Comprehension.Block.left; right; each }) =
       node
         "ComprehensionBlock"

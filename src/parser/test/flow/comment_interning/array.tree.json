@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":8,"column":64}},
-  "range":[1,198],
+  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":12,"column":23}},
+  "range":[1,245],
   "body":[
     {
       "type":"VariableDeclaration",
@@ -229,6 +229,54 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":10,"column":20}},
+      "range":[200,220],
+      "expression":{
+        "type":"ArrayExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":10,"column":1},"end":{"line":10,"column":18}},
+            "range":[201,218],
+            "value":" 5.1 I array "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":10,"column":19}},
+        "range":[200,219],
+        "elements":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":12,"column":23}},
+      "range":[222,245],
+      "expression":{
+        "type":"ArrayExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":21}},
+            "range":[226,243],
+            "value":" 6.1 I array "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":12,"column":22}},
+        "range":[222,244],
+        "elements":[
+          {
+            "type":"Literal",
+            "loc":{"source":null,"start":{"line":12,"column":1},"end":{"line":12,"column":2}},
+            "range":[223,224],
+            "value":1,
+            "raw":"1"
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -273,6 +321,18 @@
       "loc":{"source":null,"start":{"line":8,"column":45},"end":{"line":8,"column":62}},
       "range":[179,196],
       "value":" 4.3 T array "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":10,"column":1},"end":{"line":10,"column":18}},
+      "range":[201,218],
+      "value":" 5.1 I array "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":21}},
+      "range":[226,243],
+      "value":" 6.1 I array "
     }
   ]
 }

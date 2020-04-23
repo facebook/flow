@@ -1329,7 +1329,7 @@ module Expression
     ( loc,
       match expression with
       | Array ({ Array.comments; _ } as e) ->
-        Array { e with Array.comments = merge_comments comments }
+        Array { e with Array.comments = merge_comments_with_internal comments }
       | ArrowFunction ({ Function.comments; _ } as e) ->
         ArrowFunction { e with Function.comments = merge_comments comments }
       | Assignment ({ Assignment.comments; _ } as e) ->
@@ -1401,8 +1401,9 @@ module Expression
       | T_RBRACKET ->
         (List.rev acc, Pattern_cover.rev_errors errs)
       | T_COMMA ->
+        let loc = Peek.loc env in
         Eat.token env;
-        elements env (None :: acc, errs)
+        elements env (Expression.Array.Hole loc :: acc, errs)
       | T_ELLIPSIS ->
         let leading = Peek.comments env in
         let (loc, (argument, new_errs)) =
@@ -1416,7 +1417,7 @@ module Expression
         in
         let elem =
           Expression.(
-            Spread
+            Array.Spread
               ( loc,
                 SpreadElement.{ argument; comments = Flow_ast_utils.mk_comments_opt ~leading () } ))
         in
@@ -1433,7 +1434,7 @@ module Expression
             new_errs
         in
         if not is_last then Expect.token env T_COMMA;
-        let acc = Some elem :: acc in
+        let acc = elem :: acc in
         let errs = Pattern_cover.rev_append_errors new_errs errs in
         elements env (acc, errs)
       | _ ->
@@ -1443,7 +1444,7 @@ module Expression
           | Cover_patt (elem, new_errs) -> (elem, new_errs)
         in
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-        let acc = Some (Expression.Expression elem) :: acc in
+        let acc = Expression.Array.Expression elem :: acc in
         let errs = Pattern_cover.rev_append_errors new_errs errs in
         elements env (acc, errs)
     in
@@ -1451,11 +1452,12 @@ module Expression
       let leading = Peek.comments env in
       Expect.token env T_LBRACKET;
       let (elems, errs) = elements env ([], Pattern_cover.empty_errors) in
+      let internal = Peek.comments env in
       Expect.token env T_RBRACKET;
       let trailing = Eat.trailing_comments env in
       ( {
           Ast.Expression.Array.elements = elems;
-          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
         },
         errs )
 

@@ -1361,10 +1361,10 @@ module Statement
         List.fold_left
           (fun acc elem ->
             match elem with
-            | Some (Array.Element (_, { Array.Element.argument = pattern; default = _ }))
-            | Some (Array.RestElement (_, { RestElement.argument = pattern; comments = _ })) ->
+            | Array.Element (_, { Array.Element.argument = pattern; default = _ })
+            | Array.RestElement (_, { RestElement.argument = pattern; comments = _ }) ->
               fold acc pattern
-            | None -> acc)
+            | Array.Hole _ -> acc)
           acc
           elements
       | (_, Identifier { Pattern.Identifier.name; _ }) -> name :: acc

@@ -88,33 +88,30 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       let open Ast.Expression in
       function
       | [] -> List.rev acc
-      | [Some (Spread (loc, { SpreadElement.argument; comments }))] ->
+      | [Array.Spread (loc, { SpreadElement.argument; comments })] ->
         (* AssignmentRestElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentRestElement *)
         let acc =
           match assignment_target env argument with
           | Some argument ->
-            Some (Pattern.Array.RestElement (loc, { Pattern.RestElement.argument; comments }))
-            :: acc
+            Pattern.Array.RestElement (loc, { Pattern.RestElement.argument; comments }) :: acc
           | None -> acc
         in
         elements env acc []
-      | Some (Spread (loc, _)) :: remaining ->
+      | Array.Spread (loc, _) :: remaining ->
         error_at env (loc, Parse_error.ElementAfterRestElement);
         elements env acc remaining
-      | Some
-          (Expression (loc, Assignment { Assignment.operator = None; left; right; comments = _ }))
+      | Array.Expression (loc, Assignment { Assignment.operator = None; left; right; comments = _ })
         :: remaining ->
         (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
              #prod-AssignmentElement *)
         let acc =
-          Some
-            (Pattern.Array.Element
-               (loc, { Pattern.Array.Element.argument = left; default = Some right }))
+          Pattern.Array.Element
+            (loc, { Pattern.Array.Element.argument = left; default = Some right })
           :: acc
         in
         elements env acc remaining
-      | Some (Expression expr) :: remaining ->
+      | Array.Expression expr :: remaining ->
         (* AssignmentElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentElement *)
         let acc =
@@ -123,11 +120,11 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             let element =
               Pattern.Array.Element (loc, { Pattern.Array.Element.argument = expr; default = None })
             in
-            Some element :: acc
+            element :: acc
           | None -> acc
         in
         elements env acc remaining
-      | None :: remaining -> elements env (None :: acc) remaining
+      | Array.Hole loc :: remaining -> elements env (Pattern.Array.Hole loc :: acc) remaining
     in
     fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       ( loc,
@@ -314,8 +311,9 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       | T_RBRACKET ->
         List.rev acc
       | T_COMMA ->
+        let loc = Peek.loc env in
         Expect.token env T_COMMA;
-        elements env (None :: acc)
+        elements env (Pattern.Array.Hole loc :: acc)
       | T_ELLIPSIS ->
         let leading = Peek.comments env in
         let (loc, argument) =
@@ -340,7 +338,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
           error_at env (loc, Parse_error.ElementAfterRestElement);
           if Peek.token env = T_COMMA then Eat.token env
         );
-        elements env (Some element :: acc)
+        elements env (element :: acc)
       | _ ->
         let (loc, (pattern, default)) =
           with_loc
@@ -358,12 +356,13 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         in
         let element = Pattern.Array.(Element (loc, { Element.argument = pattern; default })) in
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-        elements env (Some element :: acc)
+        elements env (element :: acc)
     in
     with_loc (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_LBRACKET;
         let elements = elements env [] in
+        let internal = Peek.comments env in
         Expect.token env T_RBRACKET;
         let annot =
           if Peek.token env = T_COLON then
@@ -372,7 +371,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             missing_annot env
         in
         let trailing = Eat.trailing_comments env in
-        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal in
         Pattern.Array { Pattern.Array.elements; annot; comments })
 
   and pattern env restricted_error =

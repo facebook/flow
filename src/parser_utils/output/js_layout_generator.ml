@@ -802,29 +802,42 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.This { E.This.comments } -> layout_node_with_comments_opt loc comments (Atom "this")
       | E.Super { E.Super.comments } -> layout_node_with_comments_opt loc comments (Atom "super")
       | E.Array { E.Array.elements; comments } ->
-        let rev_elements =
-          List.rev_map
-            (function
-              | Some expr -> expression_or_spread ~ctxt:normal_context expr
-              | None -> Empty)
+        let element_loc = function
+          | E.Array.Hole loc -> loc
+          | E.Array.Expression (loc, _) -> loc
+          | E.Array.Spread (loc, _) -> loc
+        in
+        let has_trailing_hole =
+          match List.rev elements with
+          | E.Array.Hole _ :: _ -> true
+          | _ -> false
+        in
+        let elements =
+          List.map
+            (fun element ->
+              let loc = element_loc element in
+              ( loc,
+                Comment_attachment.array_element_comment_bounds loc element,
+                array_element ~ctxt:normal_context element ))
             elements
         in
-        (* if the last element is a hole, then we need to manually insert a trailing `,`, even in
-         ugly mode, and disable automatic trailing separators. *)
-        let (trailing_sep, rev_elements) =
-          match rev_elements with
-          | Empty :: tl -> (false, Atom "," :: tl)
-          | _ -> (true, rev_elements)
+        let elements_layout =
+          list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line ~skip_empty:false elements
         in
+        (* If the last element is a hole, then we need to manually insert a trailing `,` even in
+           ugly mode. Otherwise add a trailing comma only in pretty mode. *)
+        let trailing_comma =
+          if has_trailing_hole then
+            Atom ","
+          else if elements <> [] then
+            if_break (Atom ",") Empty
+          else
+            Empty
+        in
+        let elements_layout = elements_layout @ [trailing_comma] in
+        let elements_layout = list_add_internal_comments elements elements_layout comments in
         layout_node_with_comments_opt loc comments
-        @@ group
-             [
-               new_list
-                 ~wrap:(Atom "[", Atom "]")
-                 ~sep:(Atom ",")
-                 ~trailing_sep
-                 (List.rev rev_elements);
-             ]
+        @@ group [wrap_and_indent (Atom "[", Atom "]") elements_layout]
       | E.Object { E.Object.properties; comments } ->
         let prop_loc = function
           | E.Object.Property (loc, _) -> loc
@@ -1132,6 +1145,11 @@ and expression_with_parens ~precedence ~(ctxt : expression_context) expr =
   else
     expression ~ctxt expr
 
+and spread_element ~precedence ~ctxt (loc, { Ast.Expression.SpreadElement.argument; comments }) =
+  source_location_with_comments
+    ?comments
+    (loc, fuse [Atom "..."; expression_with_parens ~precedence ~ctxt argument])
+
 and expression_or_spread ?(ctxt = normal_context) expr_or_spread =
   (* min_precedence causes operators that should always be parenthesized
      (they have precedence = 0) to be parenthesized. one notable example is
@@ -1140,10 +1158,15 @@ and expression_or_spread ?(ctxt = normal_context) expr_or_spread =
   let precedence = min_precedence in
   match expr_or_spread with
   | Ast.Expression.Expression expr -> expression_with_parens ~precedence ~ctxt expr
-  | Ast.Expression.Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
-    source_location_with_comments
-      ?comments
-      (loc, fuse [Atom "..."; expression_with_parens ~precedence ~ctxt argument])
+  | Ast.Expression.Spread spread -> spread_element ~precedence ~ctxt spread
+
+and array_element ~ctxt element =
+  let open Ast.Expression.Array in
+  let precedence = min_precedence in
+  match element with
+  | Hole _ -> Empty
+  | Expression expr -> expression_with_parens ~precedence ~ctxt expr
+  | Spread spread -> spread_element ~precedence ~ctxt spread
 
 and identifier (loc, { Ast.Identifier.name; comments }) = identifier_with_comments loc name comments
 
@@ -1274,11 +1297,25 @@ and pattern_object_property_key =
     layout_node_with_comments_opt loc comments
     @@ fuse [Atom "["; Sequence ({ seq with break = Break_if_needed }, [expression expr]); Atom "]"]
 
+and rest_element loc { Ast.Pattern.RestElement.argument; comments } =
+  source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern argument])
+
+and pattern_array_element =
+  let open Ast.Pattern.Array in
+  function
+  | Hole _ -> Empty
+  | Element (loc, { Element.argument; default }) ->
+    let elem = pattern argument in
+    let elem =
+      match default with
+      | Some expr -> fuse_with_default elem expr
+      | None -> elem
+    in
+    source_location_with_comments (loc, elem)
+  | RestElement (loc, rest) -> rest_element loc rest
+
 and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t) =
   let module P = Ast.Pattern in
-  let rest_element loc { P.RestElement.argument; comments } =
-    source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern argument])
-  in
   source_location_with_comments
     ( loc,
       match pat with
@@ -1323,30 +1360,26 @@ and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t)
                hint type_annotation annot;
              ]
       | P.Array { P.Array.elements; annot; comments } ->
-        layout_node_with_comments_opt
-          loc
-          comments
-          (group
-             [
-               new_list
-                 ~wrap:(Atom "[", Atom "]")
-                 ~sep:(Atom ",")
-                 ~trailing_sep:false (* Array rest cannot have trailing *)
-                 (List.map
-                    (function
-                      | None -> Empty
-                      | Some (P.Array.Element (loc, { P.Array.Element.argument; default })) ->
-                        let elem = pattern argument in
-                        let elem =
-                          match default with
-                          | Some expr -> fuse_with_default elem expr
-                          | None -> elem
-                        in
-                        source_location_with_comments (loc, elem)
-                      | Some (P.Array.RestElement (loc, el)) -> rest_element loc el)
-                    elements);
-               hint type_annotation annot;
-             ])
+        let element_loc = function
+          | P.Array.Hole loc -> loc
+          | P.Array.Element (loc, _) -> loc
+          | P.Array.RestElement (loc, _) -> loc
+        in
+        let elements =
+          List.map
+            (fun element ->
+              let loc = element_loc element in
+              ( loc,
+                Comment_attachment.array_pattern_element_comment_bounds loc element,
+                pattern_array_element element ))
+            elements
+        in
+        let elements_layout =
+          list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line ~skip_empty:false elements
+        in
+        let elements_layout = list_add_internal_comments elements elements_layout comments in
+        layout_node_with_comments_opt loc comments
+        @@ group [wrap_and_indent (Atom "[", Atom "]") elements_layout; hint type_annotation annot]
       | P.Identifier { P.Identifier.name; annot; optional } ->
         fuse
           [
@@ -2032,6 +2065,7 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
 and list_with_newlines
     ?(sep = Empty)
     ?(sep_linebreak = pretty_hardline)
+    ?(skip_empty = true)
     (nodes :
       (Loc.t * (Loc.t Ast.Comment.t option * Loc.t Ast.Comment.t option) * Layout.layout_node) list)
     =
@@ -2071,7 +2105,7 @@ and list_with_newlines
       let acc =
         match (prev_loc, node) with
         (* empty line, don't add anything *)
-        | (_, Empty) -> acc
+        | (_, Empty) when skip_empty -> acc
         (* Lines are offset by more than one, let's add a line break. *)
         | (Some { Loc._end; _ }, node) when _end.line + 1 < loc.start.line ->
           fuse [pretty_hardline; node; sep] :: acc

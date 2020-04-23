@@ -1645,11 +1645,11 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and array_ =
     let array_element expr_or_spread_opt =
-      let open Ast.Expression in
+      let open Ast.Expression.Array in
       match expr_or_spread_opt with
-      | None -> assert false
-      | Some (Expression expr) -> T.AInit (literal_expr expr)
-      | Some (Spread _spread) -> assert false
+      | Hole _ -> assert false
+      | Expression expr -> T.AInit (literal_expr expr)
+      | Spread _spread -> assert false
     in
     function
     | [] -> None

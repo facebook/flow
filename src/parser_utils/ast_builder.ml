@@ -110,18 +110,11 @@ module Patterns = struct
     let elements =
       Base.List.map
         ~f:(function
-          | Some i ->
-            Some (Array.Element (Loc.none, { Array.Element.argument = i; default = None }))
-          | None -> None)
+          | Some i -> Array.Element (Loc.none, { Array.Element.argument = i; default = None })
+          | None -> Array.Hole Loc.none)
         elements
     in
-    ( Loc.none,
-      Array
-        {
-          Array.elements;
-          annot = Ast.Type.Missing Loc.none;
-          comments = Flow_ast_utils.mk_comments_opt ();
-        } )
+    (Loc.none, Array { Array.elements; annot = Ast.Type.Missing Loc.none; comments = None })
 
   let object_ str =
     Object.
@@ -356,6 +349,10 @@ module Expressions = struct
     (loc, Identifier (loc, { Ast.Identifier.name; comments }))
 
   let array ?comments elements = (Loc.none, Array { Array.elements; comments })
+
+  let array_expression expr = Array.Expression expr
+
+  let array_hole ?(loc = Loc.none) () = Array.Hole loc
 
   let arg_list ?(loc = Loc.none) ?comments arguments : (Loc.t, 'a) ArgList.t =
     (loc, { Ast.Expression.ArgList.arguments; comments })

@@ -1120,7 +1120,7 @@ let tests =
            let layout =
              Js_layout_generator.expression
                (E.array
-                  [Some (E.expression (E.identifier a80)); Some (E.expression (E.identifier a80))])
+                  [E.array_expression (E.identifier a80); E.array_expression (E.identifier a80)])
            in
            assert_layout
              ~ctxt
@@ -1151,7 +1151,8 @@ let tests =
              layout );
          ( "array_with_trailing_hole" >:: fun ctxt ->
            let layout =
-             Js_layout_generator.expression (E.array [Some (E.expression (E.identifier "a")); None])
+             Js_layout_generator.expression
+               (E.array [E.array_expression (E.identifier "a"); E.array_hole ()])
            in
            assert_layout
              ~ctxt
@@ -1170,7 +1171,8 @@ let tests =
 
            let a80 = String.make 80 'a' in
            let layout =
-             Js_layout_generator.expression (E.array [Some (E.expression (E.identifier a80)); None])
+             Js_layout_generator.expression
+               (E.array [E.array_expression (E.identifier a80); E.array_hole ()])
            in
            assert_output ~ctxt ("[" ^ a80 ^ ",,]") layout;
            assert_output ~ctxt ~pretty:true ("[\n" ^ "  " ^ a80 ^ ",\n" ^ "  ,\n" ^ "]") layout );
@@ -2357,4 +2359,33 @@ let tests =
              (statement_of_string "type T = (\n  a,\n  \n  \n  b\n) => c;");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  //L\n  b\n) => c;" );
+         ( "array_preserve_blank_lines_between_elements" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  b,\n]";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "[\n  a,\n  \n  b,\n]"
+             (expression_of_string "[\n  a,\n  \n  \n  b,\n]");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  //L\n  b,\n]";
+           (* Blank lines between holes are preserved *)
+           assert_expression_string ~ctxt ~pretty:true "[\n  ,\n  \n  ,\n]";
+           assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  ,\n]";
+           assert_expression_string ~ctxt ~pretty:true "[\n  ,\n  \n  a,\n]" );
+         ( "array_pattern_preserve_blank_lines_between_elements" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  b\n];";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "var [\n  a,\n  \n  b\n];"
+             (statement_of_string "var [\n  a,\n  \n  \n  b\n];");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  //L\n  b\n];";
+           (* Blank lines between holes are preserved *)
+           assert_statement_string ~ctxt ~pretty:true "var [\n  ,\n  \n  ,\n  a\n];";
+           assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  ,\n  \n  b\n];" );
        ]

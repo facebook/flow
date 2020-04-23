@@ -315,7 +315,7 @@ end = struct
               let path = Index i :: path in
               let acc =
                 match expected with
-                | Some (Expression expr) -> test_tree path actual expr acc
+                | Array.Expression expr -> test_tree path actual expr acc
                 | _ -> spf "%s: invalid JSON" (string_of_path path) :: acc
               in
               (i + 1, acc))
@@ -477,7 +477,7 @@ end = struct
                     (* append the diff *)
                     (* TODO: this should insert gaps, but I don't expect people to
                  write diffs that have gaps. *)
-                    List.rev (Some (Expression diff_value) :: List.rev elems)
+                    List.rev (Array.Expression diff_value :: List.rev elems)
                   else
                     (* apply the diff *)
                     Base.List.mapi
@@ -486,14 +486,14 @@ end = struct
                           elem
                         else
                           match elem with
-                          | None -> Some (Expression diff_value)
-                          | Some (Expression exp_value) ->
+                          | Array.Hole _ -> Array.Expression diff_value
+                          | Array.Expression exp_value ->
                             begin
                               match apply_diff diff_value exp_value with
-                              | Some value -> Some (Expression value)
-                              | None -> None
+                              | Some value -> Array.Expression value
+                              | None -> Array.Hole Loc.none
                             end
-                          | Some (Spread _) -> failwith "Invalid JSON")
+                          | Array.Spread _ -> failwith "Invalid JSON")
                       elems
                 | _ -> failwith "Invalid JSON")
               expected_elems

@@ -1003,9 +1003,8 @@ struct
                   comments = _;
                 } ) ) ->
             let element = function
-              | Some
-                  (Expression
-                    (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
+              | Array.Expression
+                  (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ }) ->
                 if not (Scope_api.is_local_use scope_info loc) then
                   this#add_require
                     (Require { source = (source_loc, name); require_loc = call_loc; bindings })

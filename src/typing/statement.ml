@@ -258,8 +258,8 @@ module Func_stmt_config = struct
       }
     | Array of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
-        elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element option list;
-        comments: (ALoc.t, unit) Ast.Syntax.t option;
+        elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element list;
+        comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
       }
 
   type param =
@@ -3043,18 +3043,18 @@ and expression_or_spread cx =
     let (((_, t), _) as e') = expression cx argument in
     (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
-and expression_or_spread_list cx undef_loc =
-  let open Ast.Expression in
+and array_elements cx undef_loc =
+  let open Ast.Expression.Array in
   Fn.compose
     List.split
     (Base.List.map ~f:(function
-        | Some (Expression e) ->
+        | Expression e ->
           let (((_, t), _) as e) = expression cx e in
-          (UnresolvedArg t, Some (Expression e))
-        | None -> (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust), None)
-        | Some (Spread (loc, { SpreadElement.argument; comments })) ->
+          (UnresolvedArg t, Expression e)
+        | Hole loc -> (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust), Hole loc)
+        | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
           let (((_, t), _) as argument) = expression cx argument in
-          (UnresolvedSpreadArg t, Some (Spread (loc, { SpreadElement.argument; comments })))))
+          (UnresolvedSpreadArg t, Spread (loc, { Ast.Expression.SpreadElement.argument; comments }))))
 
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and expression ?cond cx (loc, e) = expression_ ~cond cx loc e
@@ -3122,7 +3122,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
         Array { Array.elements = []; comments } )
     | elems ->
-      let (elem_spread_list, elements) = expression_or_spread_list cx loc elems in
+      let (elem_spread_list, elements) = array_elements cx loc elems in
       ( ( loc,
           Tvar.mk_where cx reason (fun tout ->
               let reason_op = reason in
@@ -3892,11 +3892,10 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
            *       generalize or toggle this only for the FB environment.
            *)
           let element_to_module_tvar tvars = function
-            | Some
-                (Expression
-                  ( source_loc,
-                    Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String module_name; _ }
-                  )) ->
+            | Array.Expression
+                ( source_loc,
+                  Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String module_name; _ }
+                ) ->
               let module_tvar = Import_export.require cx (source_loc, module_name) loc in
               module_tvar :: tvars
             | _ ->

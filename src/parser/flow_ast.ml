@@ -1003,15 +1003,16 @@ and Expression : sig
     [@@deriving show]
   end
 
-  type ('M, 'T) expression_or_spread =
-    | Expression of ('M, 'T) Expression.t
-    | Spread of ('M, 'T) SpreadElement.t
-  [@@deriving show]
-
   module Array : sig
+    type ('M, 'T) element =
+      | Expression of ('M, 'T) Expression.t
+      | Spread of ('M, 'T) SpreadElement.t
+      | Hole of 'M
+    [@@deriving show]
+
     type ('M, 'T) t = {
-      elements: ('M, 'T) expression_or_spread option list;
-      comments: ('M, unit) Syntax.t option;
+      elements: ('M, 'T) element list;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1226,6 +1227,11 @@ and Expression : sig
     }
     [@@deriving show]
   end
+
+  type ('M, 'T) expression_or_spread =
+    | Expression of ('M, 'T) Expression.t
+    | Spread of ('M, 'T) SpreadElement.t
+  [@@deriving show]
 
   module ArgList : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -1594,11 +1600,12 @@ and Pattern : sig
     type ('M, 'T) element =
       | Element of ('M, 'T) Element.t
       | RestElement of ('M, 'T) RestElement.t
+      | Hole of 'M
 
     and ('M, 'T) t = {
-      elements: ('M, 'T) element option list;
+      elements: ('M, 'T) element list;
       annot: ('M, 'T) Type.annotation_or_hint;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end

@@ -25,9 +25,9 @@ let rec fold_bindings_of_pattern =
     let element f acc =
       Array.(
         function
-        | None -> acc
-        | Some (Element (_, { Element.argument = p; default = _ }))
-        | Some (RestElement (_, { RestElement.argument = p; comments = _ })) ->
+        | Hole _ -> acc
+        | Element (_, { Element.argument = p; default = _ })
+        | RestElement (_, { RestElement.argument = p; comments = _ }) ->
           fold_bindings_of_pattern f acc p)
     in
     fun f acc -> function
