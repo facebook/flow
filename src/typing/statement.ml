@@ -1300,10 +1300,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                               {
                                 _object;
                                 property = PropertyIdentifier (_, { Ast.Identifier.name; _ });
-                                comments = _;
+                                _;
                               } );
                     _;
-                  } ) ->
+                  } )
+                when is_valid_enum_member_name name ->
                 let case_reason = mk_reason (RCustom "case") case_loc in
                 (invalid_checks, (case_reason, name, t) :: checks, default_case)
               | (default_case_loc, { Switch.Case.test = None; _ }) ->
@@ -8378,6 +8379,9 @@ and warn_or_ignore_optional_chaining optional cx loc =
       Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else
     ()
+
+and is_valid_enum_member_name name =
+  (not @@ Base.String.is_empty name) && (not @@ Base.Char.is_lowercase name.[0])
 
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
