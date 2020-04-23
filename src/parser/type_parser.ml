@@ -967,6 +967,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               | T_PLING ->
                 init_property env start_loc ~variance ~static ~proto ~leading key
               | _ ->
+                ignore (object_key_remove_trailing env key);
                 let key = object_key env in
                 let is_getter = name = "get" in
                 let leading = leading @ leading_key in

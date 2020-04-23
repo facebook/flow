@@ -392,7 +392,9 @@ module Object
             | T_COMMA
             | T_RCURLY ->
               init env start_loc key false false leading
-            | _ -> (get env start_loc leading, Pattern_cover.empty_errors)
+            | _ ->
+              ignore (Comment_attachment.object_key_remove_trailing env key);
+              (get env start_loc leading, Pattern_cover.empty_errors)
           end
         | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
           let leading = Peek.comments env in
@@ -406,7 +408,9 @@ module Object
             | T_COMMA
             | T_RCURLY ->
               init env start_loc key false false leading
-            | _ -> (set env start_loc leading, Pattern_cover.empty_errors)
+            | _ ->
+              ignore (Comment_attachment.object_key_remove_trailing env key);
+              (set env start_loc leading, Pattern_cover.empty_errors)
           end
         | (async, generator, _) ->
           let (_, key) = key env in
@@ -855,6 +859,7 @@ module Object
         else (
           error_unsupported_declare env declare;
           error_unsupported_variance env variance;
+          ignore (object_key_remove_trailing env key);
           get env start_loc decorators static (leading @ leading_get)
         )
       | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
@@ -865,6 +870,7 @@ module Object
         else (
           error_unsupported_declare env declare;
           error_unsupported_variance env variance;
+          ignore (object_key_remove_trailing env key);
           set env start_loc decorators static (leading @ leading_set)
         )
       | (_, _, _) ->

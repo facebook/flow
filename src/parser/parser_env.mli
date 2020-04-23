@@ -131,6 +131,8 @@ val add_declared_private : env -> string -> unit
 
 val add_used_private : env -> string -> Loc.t -> unit
 
+val consume_comments_until : env -> Loc.position -> unit
+
 (* functional operations -- these return shallow copies, so future mutations to
  * the returned env will also affect the original: *)
 val with_strict : bool -> env -> env
@@ -197,6 +199,8 @@ module Peek : sig
   val errors : env -> (Loc.t * Parse_error.t) list
 
   val comments : env -> Loc.t Flow_ast.Comment.t list
+
+  val has_eaten_comments : env -> bool
 
   val is_line_terminator : env -> bool
 

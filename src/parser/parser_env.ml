@@ -354,6 +354,8 @@ let add_used_private env name loc =
   | [] -> error_at env (loc, Parse_error.PrivateNotInClass)
   | (declared, used) :: xs -> env.privates := (declared, (name, loc) :: used) :: xs
 
+let consume_comments_until env pos = env.consumed_comments_pos := pos
+
 (* lookahead: *)
 let lookahead ~i env =
   assert (i < maximum_lookahead);
@@ -635,6 +637,12 @@ module Peek = struct
   let errors env = ith_errors ~i:0 env
 
   let comments env = ith_comments ~i:0 env
+
+  let has_eaten_comments env =
+    let comments = Lex_result.comments (lookahead ~i:0 env) in
+    List.exists
+      (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp start !(env.consumed_comments_pos) < 0)
+      comments
 
   let lex_env env = ith_lex_env ~i:0 env
 
@@ -961,28 +969,30 @@ module Eat = struct
 
   let trailing_comments env =
     let open Loc in
+    let loc = Peek.loc env in
     if Peek.token env = Token.T_COMMA && Peek.ith_is_line_terminator ~i:1 env then (
-      let loc = Peek.loc env in
-      let trailing_before_comma = Lex_result.comments (lookahead ~i:0 env) in
+      let trailing_before_comma = Peek.comments env in
       let trailing_after_comma =
         List.filter
           (fun (comment_loc, _) -> comment_loc.start.line <= loc._end.line)
           (Lex_result.comments (lookahead ~i:1 env))
       in
       let trailing = trailing_before_comma @ trailing_after_comma in
-      env.consumed_comments_pos := { Loc.line = loc._end.line + 1; column = 0 };
+      consume_comments_until env { Loc.line = loc._end.line + 1; column = 0 };
       trailing
     ) else
-      Lex_result.comments (lookahead ~i:0 env)
+      let trailing = Peek.comments env in
+      consume_comments_until env loc._end;
+      trailing
 
   let comments_until_next_line env =
     let open Loc in
     match !(env.last_lex_result) with
     | None -> []
     | Some { Lex_result.lex_loc = last_loc; _ } ->
-      let comments = Lex_result.comments (lookahead ~i:0 env) in
+      let comments = Peek.comments env in
       let comments = List.filter (fun (loc, _) -> loc.start.line <= last_loc._end.line) comments in
-      env.consumed_comments_pos := { line = last_loc._end.line + 1; column = 0 };
+      consume_comments_until env { line = last_loc._end.line + 1; column = 0 };
       comments
 end
 

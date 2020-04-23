@@ -307,7 +307,12 @@ module Statement
         Expect.token env T_LPAREN;
         let test = Parse.expression env in
         Expect.token env T_RPAREN;
-        let past_cond_trailing = Eat.trailing_comments env in
+        let past_cond_trailing =
+          if Peek.token env = T_SEMICOLON then
+            Eat.trailing_comments env
+          else
+            []
+        in
         (* The rules of automatic semicolon insertion in ES5 don't mention this,
          * but the semicolon after a do-while loop is optional. This is properly
          * specified in ES6 *)
@@ -629,7 +634,13 @@ module Statement
     with_loc (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_TRY;
-        let block = Parse.block_body env in
+        let block =
+          let block = Parse.block_body env in
+          if Peek.token env = T_CATCH then
+            block_remove_trailing env block
+          else
+            block
+        in
         let handler =
           match Peek.token env with
           | T_CATCH ->

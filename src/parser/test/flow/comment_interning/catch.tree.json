@@ -63,20 +63,6 @@
             "range":[64,194],
             "block":{
               "type":"BlockStatement",
-              "trailingComments":[
-                {
-                  "type":"Line",
-                  "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":18}},
-                  "range":[117,133],
-                  "value":" 1.1 Leading A"
-                },
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":21}},
-                  "range":[136,155],
-                  "value":" 1.2 Leading B "
-                }
-              ],
               "loc":{"source":null,"start":{"line":4,"column":6},"end":{"line":7,"column":3}},
               "range":[68,114],
               "body":[
@@ -393,14 +379,6 @@
             "range":[421,573],
             "block":{
               "type":"BlockStatement",
-              "trailingComments":[
-                {
-                  "type":"Line",
-                  "loc":{"source":null,"start":{"line":29,"column":2},"end":{"line":29,"column":16}},
-                  "range":[450,464],
-                  "value":" 3.1 Leading"
-                }
-              ],
               "loc":{"source":null,"start":{"line":26,"column":6},"end":{"line":28,"column":3}},
               "range":[425,447],
               "body":[
