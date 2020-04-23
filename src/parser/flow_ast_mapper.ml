@@ -941,10 +941,11 @@ class ['loc] mapper =
       let open Ast.Type.Function.Param in
       let (loc, { annot; name; optional }) = fpt in
       let annot' = this#type_ annot in
-      if annot' == annot then
+      let name' = map_opt this#identifier name in
+      if annot' == annot && name' == name then
         fpt
       else
-        (loc, { annot = annot'; name; optional })
+        (loc, { annot = annot'; name = name'; optional })
 
     method function_rest_param_type (frpt : ('loc, 'loc) Ast.Type.Function.RestParam.t) =
       let open Ast.Type.Function.RestParam in

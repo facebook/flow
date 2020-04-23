@@ -743,7 +743,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let rpo' = Base.Option.map ~f:this#function_rest_param_type rpo in
           let return' = this#type_ return in
           let func_comments' = Base.Option.map ~f:this#syntax func_comments in
-          let params_comments' = Base.Option.map ~f:this#syntax params_comments in
+          let params_comments' = Base.Option.map ~f:this#syntax_with_internal params_comments in
           {
             params =
               ( this#on_loc_annot params_annot,
@@ -1077,7 +1077,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { Ast.Function.Params.params = params_list; rest; comments }) = params in
       let params_list' = Base.List.map ~f:this#function_param params_list in
       let rest' = Base.Option.map ~f:this#function_rest_param rest in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       ( this#on_loc_annot annot,
         { Ast.Function.Params.params = params_list'; rest = rest'; comments = comments' } )
 

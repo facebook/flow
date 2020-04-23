@@ -165,7 +165,7 @@ and function_ f =
 and fun_params params rest_param =
   mapM fun_param params >>= fun params ->
   opt fun_rest_param rest_param >>| fun rest ->
-  (Loc.none, { T.Function.Params.params; rest; comments = Flow_ast_utils.mk_comments_opt () })
+  (Loc.none, { T.Function.Params.params; rest; comments = None })
 
 and fun_param (name, t, { prm_optional }) =
   let name = Base.Option.map ~f:id_from_string name in

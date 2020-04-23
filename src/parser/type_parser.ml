@@ -154,12 +154,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let param = anonymous_function_param env param in
         ( fst param,
           None,
-          ( fst param,
-            {
-              Ast.Type.Function.Params.params = [param];
-              rest = None;
-              comments = Flow_ast_utils.mk_comments_opt ();
-            } ) )
+          (fst param, { Ast.Type.Function.Params.params = [param]; rest = None; comments = None })
+        )
       in
       function_with_params env start_loc tparams params
     | _ -> param
@@ -438,11 +434,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let leading = Peek.comments env in
         Expect.token env T_LPAREN;
         let params = function_param_list_without_parens env [] in
+        let internal = Peek.comments env in
         Expect.token env T_RPAREN;
         let trailing = Eat.trailing_comments env in
         {
           params with
-          Ast.Type.Function.Params.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          Ast.Type.Function.Params.comments =
+            Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
         })
       env
 
@@ -498,6 +496,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ParamList (function_param_list_without_parens env [param])
         | _ -> ret)
     in
+    let internal = Peek.comments env in
     Expect.token env T_RPAREN;
     let trailing = Eat.trailing_comments env in
     let ret =
@@ -506,7 +505,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ParamList
           {
             params with
-            Ast.Type.Function.Params.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            Ast.Type.Function.Params.comments =
+              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
           }
       | Type t -> Type (add_comments t leading trailing)
     in

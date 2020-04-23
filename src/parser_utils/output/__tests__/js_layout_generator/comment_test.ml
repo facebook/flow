@@ -130,7 +130,14 @@ let tests =
     ("function_body" >:: fun ctxt -> assert_statement_string ~ctxt "function foo(){/*I*/}");
     ( "function_params" >:: fun ctxt ->
       let ast = expression_of_string "function foo/*L*/()/*T*/\n{}" in
-      assert_expression ~ctxt "function foo/*L*/()/*T*/{}" ast );
+      assert_expression ~ctxt "function foo/*L*/()/*T*/{}" ast;
+      assert_expression_string ~ctxt "(/*I*/)=>{}";
+      assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  /*I*/\n) => {}";
+      assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  \n  /*I*/\n) => {}" );
+    ( "function_type_params" >:: fun ctxt ->
+      assert_statement_string ~ctxt "type T=(/*I*/)=>a;";
+      assert_statement_string ~ctxt ~pretty:true "type T = (\n  a\n  /*I*/\n) => b;";
+      assert_statement_string ~ctxt ~pretty:true "type T = (\n  a\n  \n  /*I*/\n) => b;" );
     ("jsx_expression_container" >:: fun ctxt -> assert_expression_string ~ctxt "<A>{/*I*/}</A>");
     ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
     ("tagged_template" >:: fun ctxt -> assert_expression_string ~ctxt "/*L1*/A/*L2*/`B`/*T*/");

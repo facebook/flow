@@ -8204,13 +8204,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
           ( Ast.Statement.FunctionDeclaration
               {
                 Ast.Function.id = Some id;
-                params =
-                  ( params_loc,
-                    {
-                      Ast.Function.Params.params;
-                      rest;
-                      comments = Flow_ast_utils.mk_comments_opt ();
-                    } );
+                params = (params_loc, { Ast.Function.Params.params; rest; comments = None });
                 body;
                 async = false;
                 generator = false;

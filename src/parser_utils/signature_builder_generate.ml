@@ -651,7 +651,7 @@ module T = struct
                           Ast.Type.Function.RestParam.argument = param_of_type rest;
                           comments = Flow_ast_utils.mk_comments_opt ();
                         } ));
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } );
           return = type_of_little_annotation outlined return;
           comments = Flow_ast_utils.mk_comments_opt ();

@@ -432,7 +432,11 @@ with type t = Impl.t = struct
           | Ast.Type.Missing _ -> None
           | Ast.Type.Available t -> Some t
         in
-        let comments = Flow_ast_utils.merge_comments ~outer:func_comments ~inner:params_comments in
+        let comments =
+          Flow_ast_utils.merge_comments
+            ~outer:func_comments
+            ~inner:(format_internal_comments params_comments)
+        in
         node
           ?comments
           "ArrowFunctionExpression"
@@ -649,7 +653,11 @@ with type t = Impl.t = struct
         | Ast.Type.Missing _ -> None
         | Ast.Type.Available t -> Some t
       in
-      let comments = Flow_ast_utils.merge_comments ~outer:func_comments ~inner:params_comments in
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~outer:func_comments
+          ~inner:(format_internal_comments params_comments)
+      in
       node
         ?comments
         "FunctionDeclaration"
@@ -692,7 +700,11 @@ with type t = Impl.t = struct
         | Ast.Type.Missing _ -> None
         | Ast.Type.Available t -> Some t
       in
-      let comments = Flow_ast_utils.merge_comments ~outer:func_comments ~inner:params_comments in
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~outer:func_comments
+          ~inner:(format_internal_comments params_comments)
+      in
       node
         ?comments
         "FunctionExpression"
@@ -1348,7 +1360,11 @@ with type t = Impl.t = struct
             tparams;
             comments = func_comments;
           } ) =
-      let comments = Flow_ast_utils.merge_comments ~inner:params_comments ~outer:func_comments in
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~inner:(format_internal_comments params_comments)
+          ~outer:func_comments
+      in
       node
         ?comments
         "FunctionTypeAnnotation"

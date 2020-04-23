@@ -1486,7 +1486,8 @@ and arrow_function
                 } );
             ];
           rest = None;
-          comments = _;
+          (* We must wrap the single param in parentheses if there are internal comments *)
+          comments = None | Some { Ast.Syntax.internal = []; _ };
         } ) ->
       true
     | _ -> false
@@ -1494,13 +1495,14 @@ and arrow_function
   let params_and_stuff =
     match (is_single_simple_param, return, predicate, tparams) with
     | (true, Ast.Type.Missing _, None, None) ->
+      let (_, { Ast.Function.Params.params; _ }) = params in
       layout_node_with_comments_opt
         params_loc
         params_comments
-        (List.hd (function_params ~ctxt params))
+        (function_param ~ctxt (List.hd params))
     | (_, _, _, _) ->
       let params =
-        layout_node_with_comments_opt params_loc params_comments (arrow_function_params params)
+        layout_node_with_comments_opt params_loc params_comments (function_params ~ctxt params)
       in
       fuse [option type_parameter tparams; params; function_return ~arrow:true return predicate]
   in
@@ -1548,20 +1550,6 @@ and arrow_function
          end;
        ]
 
-and has_rest_param = function
-  | (_, { Ast.Function.Params.rest = Some _; _ }) -> true
-  | _ -> false
-
-and arrow_function_params params =
-  group
-    [
-      new_list
-        ~wrap:(Atom "(", Atom ")")
-        ~sep:(Atom ",")
-        ~trailing_sep:(not (has_rest_param params))
-        (function_params ~ctxt:normal_context params);
-    ]
-
 and function_ loc func =
   let {
     Ast.Function.id;
@@ -1607,12 +1595,10 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~commen
        [
          prefix;
          option type_parameter tparams;
-         layout_node_with_comments_opt params_loc params_comments
-         @@ list
-              ~wrap:(Atom "(", Atom ")")
-              ~sep:(Atom ",")
-              ~trailing:(not (has_rest_param params))
-              (function_params ~ctxt:normal_context params);
+         layout_node_with_comments_opt
+           params_loc
+           params_comments
+           (function_params ~ctxt:normal_context params);
          function_return ~arrow:false return predicate;
          pretty_space;
          begin
@@ -1622,26 +1608,60 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~commen
          end;
        ]
 
-and function_params ~ctxt (_, { Ast.Function.Params.params; rest; comments = _ }) =
-  let s_params =
+and function_param ~ctxt (loc, { Ast.Function.Param.argument; default }) : Layout.layout_node =
+  let node = pattern ~ctxt argument in
+  let node =
+    match default with
+    | Some expr -> fuse_with_default node expr
+    | None -> node
+  in
+  source_location_with_comments (loc, node)
+
+and list_add_internal_comments list list_layout comments =
+  match internal_comments comments with
+  | None -> list_layout
+  | Some (comments_loc, _, comments_layout) ->
+    (match List.rev list with
+    | [] -> list_layout @ [comments_layout]
+    | (last_item_loc, _, _) :: _ ->
+      (* Preserve newlines between internal comments and last item in the list *)
+      if is_single_linebreak last_item_loc comments_loc then
+        list_layout @ [pretty_hardline; comments_layout]
+      else if is_multi_linebreak last_item_loc comments_loc then
+        list_layout @ [pretty_hardline; pretty_hardline; comments_layout]
+      else
+        list_layout @ [comments_layout])
+
+and function_params ?(ctxt = normal_context) (_, { Ast.Function.Params.params; rest; comments }) =
+  let params =
     Base.List.map
-      ~f:(fun (loc, { Ast.Function.Param.argument; default }) ->
-        let node = pattern ~ctxt argument in
-        let node =
-          match default with
-          | Some expr -> fuse_with_default node expr
-          | None -> node
-        in
-        source_location_with_comments (loc, node))
+      ~f:(fun ((loc, _) as param) ->
+        (loc, Comment_attachment.function_param_comment_bounds param, function_param ~ctxt param))
       params
   in
-  match rest with
-  | Some (loc, { Ast.Function.RestParam.argument; comments }) ->
-    let s_rest =
-      source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern ~ctxt argument])
-    in
-    List.append s_params [s_rest]
-  | None -> s_params
+  (* Add rest param *)
+  let params =
+    match rest with
+    | Some ((loc, { Ast.Function.RestParam.argument; comments }) as rest) ->
+      let rest_layout =
+        source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern ~ctxt argument])
+      in
+      let rest_param =
+        (loc, Comment_attachment.function_rest_param_comment_bounds rest, rest_layout)
+      in
+      params @ [rest_param]
+    | None -> params
+  in
+  let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
+  (* Add trailing comma *)
+  let params_layout =
+    if params <> [] && rest = None then
+      params_layout @ [if_break (Atom ",") Empty]
+    else
+      params_layout
+  in
+  let params_layout = list_add_internal_comments params params_layout comments in
+  group [wrap_and_indent (Atom "(", Atom ")") params_layout]
 
 and function_return ~arrow return predicate =
   (* Function return types in arrow functions must be wrapped in parens or else arrow
@@ -2784,46 +2804,37 @@ and type_function_param (loc, { Ast.Type.Function.Param.name; annot; optional })
           type_ annot;
         ] )
 
-and type_function
-    ~sep
-    loc
-    {
-      Ast.Type.Function.params =
-        ( params_loc,
-          { Ast.Type.Function.Params.params; rest = restParams; comments = params_comments } );
-      return;
-      tparams;
-      comments = func_comments;
-    } =
-  let params = Base.List.map ~f:type_function_param params in
+and type_function_params (loc, { Ast.Type.Function.Params.params; rest; comments }) =
   let params =
-    match restParams with
-    | Some (loc, { Ast.Type.Function.RestParam.argument; comments }) ->
+    Base.List.map
+      ~f:(fun ((loc, _) as param) ->
+        (loc, Comment_attachment.function_type_param_comment_bounds param, type_function_param param))
       params
-      @ [
-          source_location_with_comments
-            ?comments
-            (loc, fuse [Atom "..."; type_function_param argument]);
-        ]
+  in
+  (* Add rest param *)
+  let params =
+    match rest with
+    | Some ((loc, { Ast.Type.Function.RestParam.argument; comments }) as rest) ->
+      let rest_layout =
+        source_location_with_comments
+          ?comments
+          (loc, fuse [Atom "..."; type_function_param argument])
+      in
+      let rest_param =
+        (loc, Comment_attachment.function_type_rest_param_comment_bounds rest, rest_layout)
+      in
+      params @ [rest_param]
     | None -> params
   in
+  let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
+  let params_layout = list_add_internal_comments params params_layout comments in
+  layout_node_with_comments_opt loc comments
+  @@ group [wrap_and_indent (Atom "(", Atom ")") params_layout]
+
+and type_function ~sep loc { Ast.Type.Function.params; return; tparams; comments = func_comments } =
   layout_node_with_comments_opt loc func_comments
   @@ fuse
-       [
-         option type_parameter tparams;
-         layout_node_with_comments_opt params_loc params_comments
-         @@ group
-              [
-                new_list (* Calls should not allow a trailing comma *)
-                  ~trailing_sep:false
-                  ~wrap:(Atom "(", Atom ")")
-                  ~sep:(Atom ",")
-                  params;
-              ];
-         sep;
-         pretty_space;
-         type_ return;
-       ]
+       [option type_parameter tparams; type_function_params params; sep; pretty_space; type_ return]
 
 and type_object_property =
   let open Ast.Type.Object in

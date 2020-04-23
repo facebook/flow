@@ -75,7 +75,8 @@ val jsx_identifier : (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t -> Layout.layout_n
 
 val jsx_child : (Loc.t, Loc.t) Flow_ast.JSX.child -> (Loc.t * Layout.layout_node) option
 
-val arrow_function_params : (Loc.t, Loc.t) Flow_ast.Function.Params.t -> Layout.layout_node
+val function_params :
+  ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Function.Params.t -> Layout.layout_node
 
 val better_quote : string -> string
 

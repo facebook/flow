@@ -193,12 +193,13 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           let leading = Peek.comments env in
           Expect.token env T_LPAREN;
           let (params, rest) = param_list env [] in
+          let internal = Peek.comments env in
           Expect.token env T_RPAREN;
           let trailing = Eat.trailing_comments env in
           {
             Ast.Function.Params.params;
             rest;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
           })
 
   let function_body env ~async ~generator ~expression =

@@ -8,3 +8,7 @@ type Test4 = (/* 4.1 L rest param */ ... /* 4.2 L id */ X /* 4.3 T id */) => voi
 
 type Test5 = <T> /* 5.1 T tparams */
   /* 5.2 L params */ () => void;
+
+type Test6 = (/* 6.1 I params */) => void;
+
+type Test7 = (any, /* 7.1 I params */) => void;

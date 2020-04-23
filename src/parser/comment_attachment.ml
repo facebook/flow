@@ -661,3 +661,23 @@ let switch_case_comment_bounds (loc, case) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#switch_case loc case);
   collector#comment_bounds
+
+let function_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#function_param (loc, param));
+  collector#comment_bounds
+
+let function_rest_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#function_rest_param (loc, param));
+  collector#comment_bounds
+
+let function_type_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#function_param_type (loc, param));
+  collector#comment_bounds
+
+let function_type_rest_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#function_rest_param_type (loc, param));
+  collector#comment_bounds

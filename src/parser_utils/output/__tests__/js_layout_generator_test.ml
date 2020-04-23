@@ -2335,4 +2335,26 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type T = {a: 1};";
            (* Object type that fits on single line but wraps is printed as wrapping *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n};" );
+         ( "function_params_preserve_blank_lines_between_params" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  \n  b,\n) => {}";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "(\n  a,\n  \n  b,\n) => {}"
+             (expression_of_string "(\n  a,\n  \n  \n  b,\n) => {}");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  //L\n  b,\n) => {}" );
+         ( "function_type_params_preserve_blank_lines_between_params" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  \n  b\n) => c;";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "type T = (\n  a,\n  \n  b\n) => c;"
+             (statement_of_string "type T = (\n  a,\n  \n  \n  b\n) => c;");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  //L\n  b\n) => c;" );
        ]

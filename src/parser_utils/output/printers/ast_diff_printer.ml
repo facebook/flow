@@ -24,7 +24,7 @@ let layout_of_node = function
      * actually needed. *)
     Layout.fuse [Layout.Atom "("; Js_layout_generator.expression expr; Layout.Atom ")"]
   | Pattern pat -> Js_layout_generator.pattern pat
-  | Params params -> Js_layout_generator.arrow_function_params params
+  | Params params -> Js_layout_generator.function_params params
   | Variance var -> Js_layout_generator.variance var
   | Type typ -> Js_layout_generator.type_ typ
   | TypeParam t_param -> Js_layout_generator.type_param t_param

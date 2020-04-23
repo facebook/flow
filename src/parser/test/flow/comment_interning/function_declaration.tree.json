@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":43,"column":37}},
-  "range":[17,1611],
+  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":47,"column":39}},
+  "range":[17,1690],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -1063,6 +1063,83 @@
       "expression":false,
       "returnType":null,
       "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "trailingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":45,"column":13},"end":{"line":45,"column":32}},
+          "range":[1626,1645],
+          "value":" 16.1 I params "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":45,"column":0},"end":{"line":45,"column":36}},
+      "range":[1613,1649],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":45,"column":9},"end":{"line":45,"column":12}},
+        "range":[1622,1625],
+        "name":"foo",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":45,"column":34},"end":{"line":45,"column":36}},
+        "range":[1647,1649],
+        "body":[]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"FunctionDeclaration",
+      "trailingComments":[
+        {
+          "type":"Block",
+          "loc":{"source":null,"start":{"line":47,"column":16},"end":{"line":47,"column":35}},
+          "range":[1667,1686],
+          "value":" 17.1 I params "
+        }
+      ],
+      "loc":{"source":null,"start":{"line":47,"column":0},"end":{"line":47,"column":39}},
+      "range":[1651,1690],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":47,"column":9},"end":{"line":47,"column":12}},
+        "range":[1660,1663],
+        "name":"foo",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[
+        {
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":47,"column":13},"end":{"line":47,"column":14}},
+          "range":[1664,1665],
+          "name":"a",
+          "typeAnnotation":null,
+          "optional":false
+        }
+      ],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":47,"column":37},"end":{"line":47,"column":39}},
+        "range":[1688,1690],
+        "body":[]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
     }
   ],
   "comments":[
@@ -1437,6 +1514,18 @@
       "loc":{"source":null,"start":{"line":43,"column":17},"end":{"line":43,"column":35}},
       "range":[1591,1609],
       "value":" 15.1 I block "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":45,"column":13},"end":{"line":45,"column":32}},
+      "range":[1626,1645],
+      "value":" 16.1 I params "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":47,"column":16},"end":{"line":47,"column":35}},
+      "range":[1667,1686],
+      "value":" 17.1 I params "
     }
   ]
 }
