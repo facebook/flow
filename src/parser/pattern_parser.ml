@@ -290,12 +290,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         let leading = Peek.comments env in
         Expect.token env T_LCURLY;
         let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
-        let internal =
-          if properties = [] then
-            Peek.comments env
-          else
-            []
-        in
+        let internal = Peek.comments env in
         Expect.token env T_RCURLY;
         let trailing = Eat.trailing_comments env in
         let annot =

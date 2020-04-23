@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":38,"column":23}},
-  "range":[0,1299],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":40,"column":26}},
+  "range":[0,1327],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -1042,6 +1042,52 @@
         "properties":[]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":40,"column":0},"end":{"line":40,"column":26}},
+      "range":[1301,1327],
+      "expression":{
+        "type":"ObjectExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":40,"column":6},"end":{"line":40,"column":22}},
+            "range":[1307,1323],
+            "value":" 15.1 I obj "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":40,"column":1},"end":{"line":40,"column":24}},
+        "range":[1302,1325],
+        "properties":[
+          {
+            "type":"Property",
+            "loc":{"source":null,"start":{"line":40,"column":3},"end":{"line":40,"column":4}},
+            "range":[1304,1305],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":40,"column":3},"end":{"line":40,"column":4}},
+              "range":[1304,1305],
+              "name":"a",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":40,"column":3},"end":{"line":40,"column":4}},
+              "range":[1304,1305],
+              "name":"a",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "kind":"init",
+            "method":false,
+            "shorthand":true,
+            "computed":false
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -1368,6 +1414,12 @@
       "loc":{"source":null,"start":{"line":38,"column":3},"end":{"line":38,"column":19}},
       "range":[1279,1295],
       "value":" 14.1 I obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":40,"column":6},"end":{"line":40,"column":22}},
+      "range":[1307,1323],
+      "value":" 15.1 I obj "
     }
   ]
 }

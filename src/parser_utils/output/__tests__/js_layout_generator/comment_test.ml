@@ -137,9 +137,29 @@ let tests =
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
       assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
-    ("object" >:: fun ctxt -> assert_expression_string ~ctxt "{/*I*/}");
-    ("object_pattern" >:: fun ctxt -> assert_statement_string ~ctxt "var{/*I*/};");
-    ("object_type" >:: fun ctxt -> assert_statement_string ~ctxt "type T={/*I*/};");
+    ( "object" >:: fun ctxt ->
+      assert_expression_string ~ctxt "{/*I*/}";
+      assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  /*I*/\n}";
+      assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  \n  /*I*/\n}" );
+    ( "object_pattern" >:: fun ctxt ->
+      assert_statement_string ~ctxt "var{/*I*/};";
+      assert_statement_string ~ctxt "var{a,/*I*/};" );
+    ( "object_type" >:: fun ctxt ->
+      assert_statement_string ~ctxt "type T={/*I*/};";
+      assert_statement_string ~ctxt "type T={a:any,/*I*/};";
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "type T = {\n  a: any,\n  /*I1*/\n  /*I2*/\n  ...,\n};";
+      assert_statement
+        ~ctxt
+        ~pretty:true
+        "type T = {\n  a: any,\n  \n  /*I1*/\n  /*I2*/\n  ...,\n};"
+        (statement_of_string "type T = {\n  a: any,\n  ...,\n  /*I1*/\n  /*I2*/\n};");
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...,\n};" );
     ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
     ( "switch_case" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );

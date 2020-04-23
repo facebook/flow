@@ -774,7 +774,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           (loc, Parse_error.InvalidFieldName { name; static = is_static; private_ = false })
       | _ -> ()
     in
-    let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact) as acc) =
+    let rec properties
+        ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact, internal) as acc) =
       (* no `static ...A` *)
       assert (not (is_class && allow_spread));
 
@@ -783,9 +784,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
       let start_loc = Peek.loc env in
       match Peek.token env with
-      | T_EOF -> (List.rev props, inexact)
-      | T_RCURLYBAR when exact -> (List.rev props, inexact)
-      | T_RCURLY when not exact -> (List.rev props, inexact)
+      | T_EOF -> (List.rev props, inexact, internal)
+      | T_RCURLYBAR when exact -> (List.rev props, inexact, internal)
+      | T_RCURLY when not exact -> (List.rev props, inexact, internal)
       | T_ELLIPSIS when allow_spread ->
         let leading = Peek.comments env in
         Eat.token env;
@@ -798,10 +799,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             semicolon exact env;
             begin
               match Peek.token env with
-              | T_RCURLY when allow_inexact -> (List.rev props, true)
+              | T_RCURLY when allow_inexact -> (List.rev props, true, leading)
               | T_RCURLYBAR ->
                 error_at env (start_loc, Parse_error.InexactInsideExact);
-                (List.rev props, inexact)
+                (List.rev props, inexact, internal)
               | _ ->
                 error_at env (start_loc, Parse_error.UnexpectedExplicitInexactInObject);
                 properties ~is_class ~allow_inexact ~allow_spread ~exact env acc
@@ -809,7 +810,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           | _ ->
             let prop = spread_property env start_loc leading in
             semicolon exact env;
-            properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop :: props, inexact)
+            properties
+              ~is_class
+              ~allow_inexact
+              ~allow_spread
+              ~exact
+              env
+              (prop :: props, inexact, internal)
         end
       (* In this case, allow_spread is false, so we may assume allow_inexact is false based on our
        * assertion at the top of this function. Thus, any T_ELLIPSIS here is not allowed.
@@ -851,7 +858,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             ~leading:[]
         in
         semicolon exact env;
-        properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop :: props, inexact)
+        properties
+          ~is_class
+          ~allow_inexact
+          ~allow_spread
+          ~exact
+          env
+          (prop :: props, inexact, internal)
     and property
         env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto ~leading start_loc =
       match Peek.token env with
@@ -1000,16 +1013,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               T_LCURLYBAR
             else
               T_LCURLY );
-          let (properties, inexact) =
+          let (properties, inexact, internal) =
             let env = with_no_anon_function_type false env in
-            properties ~is_class ~allow_inexact ~exact ~allow_spread env ([], false)
+            properties ~is_class ~allow_inexact ~exact ~allow_spread env ([], false, [])
           in
-          let internal =
-            if properties = [] then
-              Peek.comments env
-            else
-              []
-          in
+          let internal = internal @ Peek.comments env in
           Expect.token
             env
             ( if exact then

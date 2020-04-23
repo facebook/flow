@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":61,"column":33}},
-  "range":[0,2099],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":65,"column":62}},
+  "range":[0,2206],
   "body":[
     {
       "type":"TypeAlias",
@@ -1665,6 +1665,128 @@
         "callProperties":[],
         "internalSlots":[]
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":63,"column":0},"end":{"line":63,"column":41}},
+      "range":[2101,2142],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":63,"column":5},"end":{"line":63,"column":9}},
+        "range":[2106,2110],
+        "name":"Test",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":63,"column":22},"end":{"line":63,"column":38}},
+            "range":[2123,2139],
+            "value":" 27.1 I obj "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":63,"column":12},"end":{"line":63,"column":40}},
+        "range":[2113,2141],
+        "inexact":false,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":63,"column":14},"end":{"line":63,"column":20}},
+            "range":[2115,2121],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":63,"column":14},"end":{"line":63,"column":15}},
+              "range":[2115,2116],
+              "name":"a",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":63,"column":17},"end":{"line":63,"column":20}},
+              "range":[2118,2121]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":65,"column":0},"end":{"line":65,"column":62}},
+      "range":[2144,2206],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":65,"column":5},"end":{"line":65,"column":9}},
+        "range":[2149,2153],
+        "name":"Test",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":65,"column":22},"end":{"line":65,"column":38}},
+            "range":[2166,2182],
+            "value":" 28.1 I obj "
+          },
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":65,"column":43},"end":{"line":65,"column":59}},
+            "range":[2187,2203],
+            "value":" 28.2 I obj "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":65,"column":12},"end":{"line":65,"column":61}},
+        "range":[2156,2205],
+        "inexact":true,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":65,"column":14},"end":{"line":65,"column":20}},
+            "range":[2158,2164],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":65,"column":14},"end":{"line":65,"column":15}},
+              "range":[2158,2159],
+              "name":"a",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":65,"column":17},"end":{"line":65,"column":20}},
+              "range":[2161,2164]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
+      }
     }
   ],
   "comments":[
@@ -2111,6 +2233,24 @@
       "loc":{"source":null,"start":{"line":61,"column":14},"end":{"line":61,"column":30}},
       "range":[2080,2096],
       "value":" 26.1 I obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":63,"column":22},"end":{"line":63,"column":38}},
+      "range":[2123,2139],
+      "value":" 27.1 I obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":65,"column":22},"end":{"line":65,"column":38}},
+      "range":[2166,2182],
+      "value":" 28.1 I obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":65,"column":43},"end":{"line":65,"column":59}},
+      "range":[2187,2203],
+      "value":" 28.2 I obj "
     }
   ]
 }

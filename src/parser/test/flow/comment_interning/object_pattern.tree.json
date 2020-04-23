@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":63}},
-  "range":[0,134],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":34}},
+  "range":[0,170],
   "body":[
     {
       "type":"VariableDeclaration",
@@ -114,6 +114,66 @@
         }
       ],
       "kind":"const"
+    },
+    {
+      "type":"VariableDeclaration",
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":34}},
+      "range":[136,170],
+      "declarations":[
+        {
+          "type":"VariableDeclarator",
+          "loc":{"source":null,"start":{"line":5,"column":6},"end":{"line":5,"column":33}},
+          "range":[142,169],
+          "id":{
+            "type":"ObjectPattern",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":26}},
+                "range":[147,162],
+                "value":" 3.1 I obj "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":5,"column":6},"end":{"line":5,"column":28}},
+            "range":[142,164],
+            "properties":[
+              {
+                "type":"Property",
+                "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
+                "range":[144,145],
+                "key":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
+                  "range":[144,145],
+                  "name":"a",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "value":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
+                  "range":[144,145],
+                  "name":"a",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "kind":"init",
+                "method":false,
+                "shorthand":true,
+                "computed":false
+              }
+            ],
+            "typeAnnotation":null
+          },
+          "init":{
+            "type":"ObjectExpression",
+            "loc":{"source":null,"start":{"line":5,"column":31},"end":{"line":5,"column":33}},
+            "range":[167,169],
+            "properties":[]
+          }
+        }
+      ],
+      "kind":"const"
     }
   ],
   "comments":[
@@ -152,6 +212,12 @@
       "loc":{"source":null,"start":{"line":3,"column":42},"end":{"line":3,"column":57}},
       "range":[113,128],
       "value":" 2.3 T obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":26}},
+      "range":[147,162],
+      "value":" 3.1 I obj "
     }
   ]
 }

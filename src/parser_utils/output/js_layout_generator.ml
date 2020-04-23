@@ -381,15 +381,18 @@ let layout_comment loc comment =
 
 let layout_from_leading_comment (loc, comment) next_loc =
   let open Ast.Comment in
-  let is_single_linebreak = is_single_linebreak loc next_loc in
-  let is_multi_linebreak = is_multi_linebreak loc next_loc in
   let layout_comment = layout_comment loc comment in
-  match comment with
-  | Line _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline]
-  | Line _ -> layout_comment
-  | Block _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline; pretty_hardline]
-  | Block _ when is_single_linebreak -> fuse [layout_comment; pretty_hardline]
-  | Block _ -> fuse [layout_comment; pretty_space]
+  match next_loc with
+  | None -> layout_comment
+  | Some next_loc ->
+    let is_single_linebreak = is_single_linebreak loc next_loc in
+    let is_multi_linebreak = is_multi_linebreak loc next_loc in
+    (match comment with
+    | Line _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline]
+    | Line _ -> layout_comment
+    | Block _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline; pretty_hardline]
+    | Block _ when is_single_linebreak -> fuse [layout_comment; pretty_hardline]
+    | Block _ -> fuse [layout_comment; pretty_space])
 
 let layout_from_trailing_comment (loc, comment) (prev_loc, prev_comment) =
   let open Ast.Comment in
@@ -412,7 +415,7 @@ let layout_from_leading_comments comments node_loc =
     | [] -> []
     | [comment] -> [layout_from_leading_comment comment node_loc]
     | comment :: ((next_loc, _) :: _ as rest) ->
-      layout_from_leading_comment comment next_loc :: inner rest
+      layout_from_leading_comment comment (Some next_loc) :: inner rest
   in
   inner comments
 
@@ -426,7 +429,7 @@ let layout_from_trailing_comments comments node_loc =
 
 let layout_node_with_comments current_loc comments layout_node =
   let { Ast.Syntax.leading; trailing; _ } = comments in
-  let preceding = layout_from_leading_comments leading current_loc in
+  let preceding = layout_from_leading_comments leading (Some current_loc) in
   let following = layout_from_trailing_comments trailing (current_loc, None) in
   Concat (List.concat [preceding; [layout_node]; following])
 
@@ -446,12 +449,7 @@ let internal_comments = function
   | Some { Ast.Syntax.internal = []; _ } ->
     None
   | Some { Ast.Syntax.internal = (first_loc, _) :: _ as internal; _ } ->
-    Some (Concat (layout_from_trailing_comments internal (first_loc, None)))
-
-let append_internal_comments comments layouts =
-  match internal_comments comments with
-  | None -> layouts
-  | Some comments -> layouts @ [comments]
+    Some (first_loc, (None, None), Concat (layout_from_leading_comments internal None))
 
 let identifier_with_comments current_loc name comments =
   let node = Identifier (current_loc, name) in
@@ -832,23 +830,27 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           | E.Object.Property (loc, _) -> loc
           | E.Object.SpreadProperty (loc, _) -> loc
         in
+        let num_props = List.length properties in
+        let internal_comments =
+          match internal_comments comments with
+          | None -> []
+          | Some comments -> [comments]
+        in
         let props =
-          Base.List.map
-            ~f:(fun prop ->
-              ( prop_loc prop,
-                Comment_attachment.object_property_comment_bounds prop,
-                object_property prop ))
+          Base.List.mapi
+            ~f:(fun i prop ->
+              (* Add trailing comma to last property *)
+              let prop_layout =
+                if i = num_props - 1 && internal_comments = [] then
+                  fuse [object_property prop; if_break (Atom ",") Empty]
+                else
+                  object_property prop
+              in
+              (prop_loc prop, Comment_attachment.object_property_comment_bounds prop, prop_layout))
             properties
-          |> list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line
         in
-        (* Add trailing comma to last property *)
-        let props =
-          if props = [] then
-            props
-          else
-            [fuse props; if_break (Atom ",") Empty]
-        in
-        let props = append_internal_comments comments props in
+        let props = props @ internal_comments in
+        let props = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line props in
         (* If first prop is on a different line then pretty print with line breaks *)
         let break =
           match properties with
@@ -1301,7 +1303,12 @@ and pattern ?(ctxt = normal_context) ((loc, pat) : (Loc.t, Loc.t) Ast.Pattern.t)
               | P.Object.RestElement (loc, el) -> rest_element loc el)
             properties
         in
-        let props = append_internal_comments comments props in
+        (* Add internal comments *)
+        let props =
+          match internal_comments comments with
+          | None -> props
+          | Some (_, _, comments) -> props @ [comments]
+        in
         layout_node_with_comments_opt loc comments
         @@ group
              [
@@ -1666,7 +1673,7 @@ and block (loc, { Ast.Statement.Block.body; comments }) =
       else
         match internal_comments comments with
         | None -> Atom "{}"
-        | Some comments -> fuse [Atom "{"; comments; Atom "}"] )
+        | Some (_, _, comments) -> fuse [Atom "{"; comments; Atom "}"] )
 
 and decorators_list decorators =
   if List.length decorators > 0 then
@@ -2269,7 +2276,11 @@ and jsx_member_expression (loc, { Ast.JSX.MemberExpression._object; property }) 
         ] )
 
 and jsx_expression_container loc { Ast.JSX.ExpressionContainer.expression = expr; comments } =
-  let internal_comments = Base.Option.value (internal_comments comments) ~default:Empty in
+  let internal_comments =
+    match internal_comments comments with
+    | None -> Empty
+    | Some (_, _, comments) -> comments
+  in
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
@@ -2947,35 +2958,42 @@ and type_object ?(sep = Atom ",") loc { Ast.Type.Object.exact; properties; inexa
     | InternalSlot (loc, _) ->
       loc
   in
+  let num_props = List.length properties in
+  let internal_comments =
+    match internal_comments comments with
+    | None -> []
+    | Some comments -> [comments]
+  in
   let props =
-    Base.List.map
-      ~f:(fun property ->
+    Base.List.mapi
+      ~f:(fun i property ->
+        let prop_layout =
+          (* Add trailing comma to last property *)
+          if i = num_props - 1 && internal_comments = [] then
+            let sep =
+              if inexact then
+                sep
+              else
+                if_break sep Empty
+            in
+            fuse [type_object_property property; sep]
+          else
+            type_object_property property
+        in
         ( prop_loc property,
           Comment_attachment.object_type_property_comment_bounds property,
-          type_object_property property ))
+          prop_layout ))
       properties
-    |> list_with_newlines ~sep ~sep_linebreak
   in
+  (* Add internal comments *)
+  let props = props @ internal_comments in
+  let props = list_with_newlines ~sep ~sep_linebreak props in
   let props =
     if inexact then
-      let sep =
-        if props = [] then
-          Empty
-        else
-          fuse [sep; sep_linebreak]
-      in
-      props @ [sep; Atom "..."]
+      props @ [if_break sep_linebreak Empty; Atom "..."; if_break sep Empty]
     else
       props
   in
-  (* Add trailing comma to last property *)
-  let props =
-    if props = [] then
-      props
-    else
-      [fuse props; if_break sep Empty]
-  in
-  let props = append_internal_comments comments props in
   (* If first prop is on a different line then pretty print with line breaks *)
   let break =
     match properties with

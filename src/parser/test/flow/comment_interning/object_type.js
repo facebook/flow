@@ -59,3 +59,7 @@ type Test = {
 };
 
 type Test = { /* 26.1 I obj */ };
+
+type Test = { a: any, /* 27.1 I obj */ };
+
+type Test = { a: any, /* 28.1 I obj */ ... /* 28.2 I obj */ };

@@ -452,12 +452,7 @@ module Object
             let (props, errs) =
               properties env ~rest_trailing_comma:None ([], Pattern_cover.empty_errors)
             in
-            let internal =
-              if props = [] then
-                Peek.comments env
-              else
-                []
-            in
+            let internal = Peek.comments env in
             Expect.token env T_RCURLY;
             let trailing = Eat.trailing_comments env in
             ( {
