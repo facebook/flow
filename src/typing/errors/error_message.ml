@@ -3045,8 +3045,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       [
         text "Invalid enum member check at ";
         desc reason;
-        text ". Check must be in the form ";
-        code (spf "case %s.%s" enum_name example_member);
+        text ". Check must be dot-access of a member of ";
+        code enum_name;
+        text ", for example ";
+        code (spf "case %s.%s:" enum_name example_member);
         text ".";
       ]
     in
