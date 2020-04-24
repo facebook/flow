@@ -30,9 +30,7 @@ let main config codemod_flags () =
         {
           options_flags = option_values;
           shm_flags;
-          info;
-          verbose;
-          dry_run;
+          write;
           repeat;
           log_level;
           root;
@@ -84,16 +82,7 @@ let main config codemod_flags () =
       roots
       Utils_js.FilenameSet.empty
   in
-  Codemod_utils.mk_main
-    config
-    ~options
-    ~info
-    ~verbose
-    ~dry_run
-    ~repeat
-    ~log_level
-    ~shared_mem_config
-    roots
+  Codemod_utils.mk_main config ~options ~write ~repeat ~log_level ~shared_mem_config roots
 
 (***********************)
 (* Codemod subcommands *)

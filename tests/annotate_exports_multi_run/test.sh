@@ -6,7 +6,7 @@
 
 assert_ok "$FLOW" stop
 
-assert_ok "$FLOW" codemod annotate-exports --strip-root --repeat ./*.js 2> /dev/null
+assert_ok "$FLOW" codemod annotate-exports --strip-root --repeat --write ./*.js 2> /dev/null
 
 printf "\n=== codemodded files ===\n\n"
 

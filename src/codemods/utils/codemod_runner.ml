@@ -53,7 +53,6 @@ module type StepRunnerT = sig
 
   val init_run :
     ServerEnv.genv ->
-    info:bool ->
     visit:'a visitor ->
     FilenameSet.t ->
     (Profiling_js.finished * (env * 'a unit_result Utils_js.FilenameMap.t)) Lwt.t
@@ -62,7 +61,6 @@ module type StepRunnerT = sig
     ServerEnv.genv ->
     env ->
     iteration:int ->
-    info:bool ->
     visit:'a visitor ->
     FilenameSet.t ->
     (Profiling_js.finished * (env * 'a unit_result Utils_js.FilenameMap.t)) Lwt.t
@@ -122,7 +120,7 @@ module TypedRunner :
 
   (* As we merge, we will process the target files in Classic mode. These are
      included in roots set. *)
-  let merge_job ~visit ~roots ~info ~iteration ~worker_mutator ~options ~reader component =
+  let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader component =
     let leader = Nel.hd component in
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let result =
@@ -148,7 +146,6 @@ module TypedRunner :
         | Options.Classic ->
           Nel.fold_left
             (fun acc file ->
-              if info then Hh_logger.print_with_newline "Processing %s" (File_key.to_string file);
               (* Merge will have potentially merged more that the target files (roots).
                  To avoid processing all those files, we pick the ones in the roots set. *)
               if FilenameSet.mem file roots then
@@ -174,10 +171,9 @@ module TypedRunner :
   (* The processing step in Types-First needs to happen right after the check phase.
      We have already merged any necessary dependencies, so now we only check the
      target files for processing. *)
-  let check_job ~visit ~info ~iteration ~reader ~options acc roots =
+  let check_job ~visit ~iteration ~reader ~options acc roots =
     List.fold_left
       (fun acc file ->
-        if info then Hh_logger.print_with_newline "Processing %s" (File_key.to_string file);
         match Merge_service.check options ~reader file with
         | (file, Ok (Some (full_cx, file_sigs, typed_asts), _)) ->
           let file_sig = FilenameMap.find file file_sigs in
@@ -195,7 +191,7 @@ module TypedRunner :
       acc
       roots
 
-  let merge_and_check env workers options profiling roots ~visit ~info ~iteration =
+  let merge_and_check env workers options profiling roots ~visit ~iteration =
     Transaction.with_transaction (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
@@ -209,7 +205,7 @@ module TypedRunner :
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt (merge_result, _) =
           Merge_service.merge_runner
-            ~job:(merge_job ~visit ~roots ~info ~iteration)
+            ~job:(merge_job ~visit ~roots ~iteration)
             ~master_mutator
             ~worker_mutator
             ~reader
@@ -239,7 +235,7 @@ module TypedRunner :
           let%lwt result =
             MultiWorkerLwt.call
               workers
-              ~job:(check_job ~visit ~info ~iteration ~reader ~options)
+              ~job:(check_job ~visit ~iteration ~reader ~options)
               ~neutral:FilenameMap.empty
               ~merge:FilenameMap.union
               ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
@@ -247,7 +243,7 @@ module TypedRunner :
           Hh_logger.info "Done";
           Lwt.return result)
 
-  let init_run genv ~info ~visit roots =
+  let init_run genv ~visit roots =
     let { ServerEnv.options; workers } = genv in
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
@@ -263,13 +259,11 @@ module TypedRunner :
         (* Discard uparseable files *)
         let roots = FilenameSet.inter roots env.ServerEnv.files in
         log_input_files roots;
-        let%lwt results =
-          merge_and_check env workers options profiling roots ~visit ~info ~iteration:0
-        in
+        let%lwt results = merge_and_check env workers options profiling roots ~visit ~iteration:0 in
         Lwt.return (env, results))
 
   (* The roots that are passed in here have already been filtered by earlier iterations. *)
-  let recheck_run genv env ~iteration ~info ~visit roots =
+  let recheck_run genv env ~iteration ~visit roots =
     let { ServerEnv.workers; options } = genv in
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
@@ -289,9 +283,7 @@ module TypedRunner :
             ~will_be_checked_files:(ref CheckedSet.empty)
         in
         log_input_files roots;
-        let%lwt results =
-          merge_and_check env workers options profiling roots ~visit ~info ~iteration
-        in
+        let%lwt results = merge_and_check env workers options profiling roots ~visit ~iteration in
         Lwt.return (env, results))
 
   let digest ~reporter results =
@@ -382,9 +374,9 @@ module UntypedRunner :
 
   let digest = untyped_digest
 
-  let init_run genv ~info:_ ~visit roots = run genv ~visit roots
+  let init_run genv ~visit roots = run genv ~visit roots
 
-  let recheck_run genv _env ~iteration:_ ~info:_ ~visit roots = run genv ~visit roots
+  let recheck_run genv _env ~iteration:_ ~visit roots = run genv ~visit roots
 end
 
 (* UntypedFlowInitRunner - This runner calls `Types_js.init` which results in the full
@@ -440,9 +432,9 @@ module UntypedFlowInitRunner :
 
   let digest = untyped_digest
 
-  let init_run genv ~info:_ ~visit roots = run genv ~visit roots
+  let init_run genv ~visit roots = run genv ~visit roots
 
-  let recheck_run genv _env ~iteration:_ ~info:_ ~visit roots = run genv ~visit roots
+  let recheck_run genv _env ~iteration:_ ~visit roots = run genv ~visit roots
 end
 
 (* When the '--repeat' flag is passed, then the entire codemod will be run until
@@ -453,9 +445,8 @@ end
 module RepeatRunner (StepRunner : StepRunnerT) : sig
   val run :
     genv:ServerEnv.genv ->
-    dry_run:bool ->
+    write:bool ->
     repeat:bool ->
-    info:bool ->
     reporter:'a Codemod_report.t ->
     visit:'a StepRunner.visitor ->
     Utils_js.FilenameSet.t ->
@@ -468,7 +459,7 @@ end = struct
     Utils_js.print_endlinef ">>> Iteration: %d" (iteration + 1);
     Utils_js.print_endlinef ">>> Running codemod on %d files..." (FilenameSet.cardinal filenames)
 
-  let post_run options ~dry_run ~info ~reporter results =
+  let post_run options ~write ~reporter results =
     let strip_root =
       if Options.should_strip_root options then
         Some (Options.root options)
@@ -477,11 +468,11 @@ end = struct
     in
     (* post-process *)
     let (files, report) = StepRunner.digest ~reporter results in
-    let%lwt changed_files = Codemod_printer.print_asts ~strip_root ~info ~dry_run files in
+    let%lwt changed_files = Codemod_printer.print_asts ~strip_root ~write files in
     Codemod_printer.print_results ~strip_root ~report:reporter.Codemod_report.report report;
     Lwt.return (Base.Option.map ~f:FilenameSet.of_list changed_files)
 
-  let rec loop_run genv env iteration ~dry_run ~info ~visit ~reporter changed_files =
+  let rec loop_run genv env iteration ~write ~visit ~reporter changed_files =
     if iteration > max_number_of_iterations then begin
       Utils_js.print_endlinef ">>> Reached maximum number of iterations (10). Exiting...";
       Lwt.return ()
@@ -491,18 +482,16 @@ end = struct
       | Some set when FilenameSet.is_empty set -> Lwt.return ()
       | Some roots ->
         header iteration roots;
-        let%lwt (_, (env, results)) =
-          StepRunner.recheck_run genv env ~iteration ~info ~visit roots
-        in
-        let%lwt changed_files = post_run genv.ServerEnv.options ~dry_run ~info ~reporter results in
-        loop_run genv env (iteration + 1) ~dry_run ~info ~visit ~reporter changed_files
+        let%lwt (_, (env, results)) = StepRunner.recheck_run genv env ~iteration ~visit roots in
+        let%lwt changed_files = post_run genv.ServerEnv.options ~write ~reporter results in
+        loop_run genv env (iteration + 1) ~write ~visit ~reporter changed_files
 
-  let run ~genv ~dry_run ~repeat ~info ~reporter ~visit roots =
+  let run ~genv ~write ~repeat ~reporter ~visit roots =
     if repeat then header (* iteration *) 0 roots;
-    let%lwt (_prof, (env, results)) = StepRunner.init_run genv ~info ~visit roots in
-    let%lwt changed_files = post_run genv.ServerEnv.options ~dry_run ~reporter ~info results in
+    let%lwt (_prof, (env, results)) = StepRunner.init_run genv ~visit roots in
+    let%lwt changed_files = post_run genv.ServerEnv.options ~write ~reporter results in
     if repeat then
-      loop_run genv env 1 ~dry_run ~info ~visit ~reporter changed_files
+      loop_run genv env 1 ~write ~visit ~reporter changed_files
     else
       Lwt.return ()
 end
@@ -516,11 +505,11 @@ module RR_TypedRunner = RepeatRunner (TypedRunner)
 module RR_UntypedRunner = RepeatRunner (UntypedRunner)
 module RR_UntypedFlowInitRunner = RepeatRunner (UntypedFlowInitRunner)
 
-let run ~genv ~info ~dry_run ~repeat ~visitor ~reporter roots =
+let run ~genv ~write ~repeat ~visitor ~reporter roots =
   let run =
     match visitor with
     | Typed_visitor v -> RR_TypedRunner.run ~visit:v
     | UntypedFlowInitRunner_visitor v -> RR_UntypedFlowInitRunner.run ~visit:v
     | Untyped_visitor v -> RR_UntypedRunner.run ~visit:v
   in
-  run ~genv ~dry_run ~repeat ~info ~reporter roots
+  run ~genv ~write ~repeat ~reporter roots

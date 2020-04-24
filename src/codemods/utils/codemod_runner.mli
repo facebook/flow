@@ -21,8 +21,7 @@ type 'a visitor =
 
 val run :
   genv:ServerEnv.genv ->
-  info:bool ->
-  dry_run:bool ->
+  write:bool ->
   repeat:bool ->
   visitor:'a visitor ->
   reporter:'a Codemod_report.t ->

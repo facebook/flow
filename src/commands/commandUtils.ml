@@ -1695,9 +1695,7 @@ type codemod_params =
   | Codemod_params of {
       options_flags: Options_flags.t;
       shm_flags: shared_mem_params;
-      info: bool;
-      verbose: bool;
-      dry_run: bool;
+      write: bool;
       repeat: bool;
       log_level: Hh_logger.Level.t option;
       root: string option;
@@ -1707,63 +1705,41 @@ type codemod_params =
     }
 
 let collect_codemod_flags
-    main
-    options_flags
-    shm_flags
-    info
-    verbose
-    dry_run
-    repeat
-    log_level
-    root
-    input_file
-    base_flag
-    anon =
-  ( if dry_run && repeat then
-    let msg = "Error: cannot run codemod with both --dry-run and --repeat flags" in
+    main options_flags shm_flags write repeat log_level root input_file base_flag anon =
+  ( if (not write) && repeat then
+    let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
     FlowExitStatus.(exit ~msg Commandline_usage_error) );
   let codemod_flags =
     Codemod_params
-      {
-        options_flags;
-        shm_flags;
-        info;
-        verbose;
-        dry_run;
-        repeat;
-        log_level;
-        root;
-        input_file;
-        base_flag;
-        anon;
-      }
+      { options_flags; shm_flags; write; repeat; log_level; root; input_file; base_flag; anon }
   in
   main codemod_flags
 
 let codemod_flags prev =
+  let log_level_enum =
+    [
+      ("off", Hh_logger.Level.Off);
+      ("fatal", Hh_logger.Level.Fatal);
+      ("error", Hh_logger.Level.Error);
+      ("warn", Hh_logger.Level.Warn);
+      ("info", Hh_logger.Level.Info);
+      ("debug", Hh_logger.Level.Debug);
+    ]
+  in
+  let log_levels = List.map fst log_level_enum in
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_codemod_flags
     |> options_flags
     |> shm_flags
     |> from_flag
-    |> flag "--info" no_arg ~doc:"Verbose transformation status"
-    |> flag "--verbose" no_arg ~doc:"Verbose progress status"
-    |> flag "--dry-run" no_arg ~doc:"Outputs the modifications to stdout"
+    |> flag "--write" no_arg ~doc:"Edit files in place"
     |> flag "--repeat" no_arg ~doc:"Run this codemod repeatedly until no more files change"
     |> flag
          "--log-level"
-         (enum
-            [
-              ("off", Hh_logger.Level.Off);
-              ("fatal", Hh_logger.Level.Fatal);
-              ("error", Hh_logger.Level.Error);
-              ("warn", Hh_logger.Level.Warn);
-              ("info", Hh_logger.Level.Info);
-              ("debug", Hh_logger.Level.Debug);
-            ])
+         (enum log_level_enum)
          ~env:"FLOW_LOG_LEVEL"
-         ~doc:"Verbosity of logging"
+         ~doc:(Utils_js.spf "Verbosity of logging (%s)" (String.concat "|" log_levels))
     |> root_flag
     |> input_file_flag
          "File containing a list of paths to transform. Incompatible with stdin and FILE..."

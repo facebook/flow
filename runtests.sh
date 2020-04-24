@@ -593,7 +593,6 @@ runtest() {
               ${cmd_args[*]} \
               $types_first_flag \
               --strip-root \
-              --dry-run \
               --quiet \
               . \
               1>> "$abs_out_file" \

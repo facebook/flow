@@ -15,7 +15,7 @@ let print_results ~strip_root ~report result : unit =
     Utils_js.print_endlinef ">>> Launching report...";
     r ~strip_root result
 
-let print_ast_file_dry ~strip_root ~info file =
+let print_ast_file_dry ~strip_root file =
   let file_path = File_key.to_string file in
   let file_input = File_input.FileName file_path in
   match Diff_heaps.get_diff file with
@@ -26,17 +26,14 @@ let print_ast_file_dry ~strip_root ~info file =
     Utils_js.print_endlinef "%s" source
   | Some []
   | None ->
-    if info then
-      let file_path = Reason.string_of_source ~strip_root file in
-      Utils_js.print_endlinef ">>> %s (no changes)" file_path
+    ()
 
-let print_ast_file_real ~info file =
+let print_ast_file_real file =
   let file_path = File_key.to_string file in
   let file_input = File_input.FileName file_path in
   match Diff_heaps.get_diff file with
   | Some (_x :: _xs as diff) ->
     let source = Replacement_printer.print_unsafe diff file_input in
-    if info then Hh_logger.info "Applying changes to %s" file_path;
     let%lwt chan = Lwt_io.open_file ~mode:Lwt_io.output file_path in
     let%lwt () = Lwt_io.fprint chan source in
     let%lwt () = Lwt_io.close chan in
@@ -49,9 +46,9 @@ let max_files_open = 1024
 
 (* Returns None Lwt.t if called in dry_run mode. Otherwise, returns (Some list) Lwt.t
    where list contains the files that were changed. *)
-let print_asts ~strip_root ~info ~dry_run files : File_key.t list option Lwt.t =
+let print_asts ~strip_root ~write files : File_key.t list option Lwt.t =
   let print_dry () =
-    files |> List.sort File_key.compare |> List.iter (print_ast_file_dry ~strip_root ~info);
+    files |> List.sort File_key.compare |> List.iter (print_ast_file_dry ~strip_root);
     Lwt.return None
   in
   let print_real () =
@@ -59,14 +56,14 @@ let print_asts ~strip_root ~info ~dry_run files : File_key.t list option Lwt.t =
     let%lwt changed_files =
       Lwt_list.fold_left_s
         (fun acc files ->
-          let%lwt changed_files = Lwt_list.filter_map_p (print_ast_file_real ~info) files in
+          let%lwt changed_files = Lwt_list.filter_map_p print_ast_file_real files in
           Lwt.return (List.rev_append changed_files acc))
         []
         buckets
     in
     Lwt.return (Some changed_files)
   in
-  if dry_run then
-    print_dry ()
-  else
+  if write then
     print_real ()
+  else
+    print_dry ()
