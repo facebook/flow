@@ -370,101 +370,107 @@ let show_status
     ~(progress : int option)
     ~(total : int option)
     (ienv : initialized_env) : initialized_env =
-  ShowStatus.(
-    ShowMessageRequest.(
-      MessageType.(
-        let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
-        let actions = List.map titles ~f:(fun title -> { title }) in
-        let params = { request = { type_; message; actions }; shortMessage; progress; total } in
-        (* What should we display/hide? It's a tricky question... *)
-        let (will_dismiss_old, will_show_new) =
-          match (use_status, ienv.i_status, params) with
-          (* If the new status is identical to the old, then no-op *)
-          | (_, Shown (_, existingParams), params) when existingParams = params -> (false, false)
-          (* If the client supports status reporting, then we'll blindly send everything *)
-          | (true, _, _) -> (false, true)
-          (* If the client only supports dialog boxes, then we'll be very limited:  *)
-          (* only every display failures; and if there was already an error up even *)
-          (* a different one then leave it undisturbed. *)
-          | ( false,
-              Shown (_, { request = { type_ = ErrorMessage; _ }; _ }),
-              { request = { type_ = ErrorMessage; _ }; _ } ) ->
-            (false, false)
-          | (false, Shown (id, _), { request = { type_ = ErrorMessage; _ }; _ }) ->
-            (Base.Option.is_some id, true)
-          | (false, Shown (id, _), _) -> (Base.Option.is_some id, false)
-          | (false, Never_shown, { request = { type_ = ErrorMessage; _ }; _ }) -> (false, true)
-          | (false, Never_shown, _) -> (false, false)
-        in
-        (* dismiss the old one *)
-        let ienv =
-          match (will_dismiss_old, ienv.i_status) with
-          | (true, Shown (id, existingParams)) ->
-            let id = Base.Option.value_exn id in
-            let notification = CancelRequestNotification { CancelRequest.id } in
-            let json =
-              let key = command_key_of_path ienv.i_root in
-              Lsp_fmt.print_lsp ~key (NotificationMessage notification)
-            in
-            to_stdout json;
-            { ienv with i_status = Shown (None, existingParams) }
-          | (_, _) -> ienv
-        in
-        (* show the new one *)
-        if not will_show_new then
-          ienv
-        else
-          let id = NumberId (Jsonrpc.get_next_request_id ()) in
-          let request =
-            if use_status then
-              ShowStatusRequest params
-            else
-              ShowMessageRequestRequest params.request
-          in
-          let json =
-            let key = command_key_of_path ienv.i_root in
-            Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
-          in
-          to_stdout json;
+  let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
+  let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title }) in
+  let params =
+    {
+      ShowStatus.request = { ShowMessageRequest.type_; message; actions };
+      shortMessage;
+      progress;
+      total;
+    }
+  in
+  (* What should we display/hide? It's a tricky question... *)
+  let (will_dismiss_old, will_show_new) =
+    match (use_status, ienv.i_status, params) with
+    (* If the new status is identical to the old, then no-op *)
+    | (_, Shown (_, existingParams), params) when existingParams = params -> (false, false)
+    (* If the client supports status reporting, then we'll blindly send everything *)
+    | (true, _, _) -> (false, true)
+    (* If the client only supports dialog boxes, then we'll be very limited:  *)
+    (* only every display failures; and if there was already an error up even *)
+    (* a different one then leave it undisturbed. *)
+    | ( false,
+        Shown
+          (_, { ShowStatus.request = { ShowMessageRequest.type_ = MessageType.ErrorMessage; _ }; _ }),
+        { ShowStatus.request = { ShowMessageRequest.type_ = MessageType.ErrorMessage; _ }; _ } ) ->
+      (false, false)
+    | ( false,
+        Shown (id, _),
+        { ShowStatus.request = { ShowMessageRequest.type_ = MessageType.ErrorMessage; _ }; _ } ) ->
+      (Base.Option.is_some id, true)
+    | (false, Shown (id, _), _) -> (Base.Option.is_some id, false)
+    | ( false,
+        Never_shown,
+        { ShowStatus.request = { ShowMessageRequest.type_ = MessageType.ErrorMessage; _ }; _ } ) ->
+      (false, true)
+    | (false, Never_shown, _) -> (false, false)
+  in
+  (* dismiss the old one *)
+  let ienv =
+    match (will_dismiss_old, ienv.i_status) with
+    | (true, Shown (id, existingParams)) ->
+      let id = Base.Option.value_exn id in
+      let notification = CancelRequestNotification { CancelRequest.id } in
+      let json =
+        let key = command_key_of_path ienv.i_root in
+        Lsp_fmt.print_lsp ~key (NotificationMessage notification)
+      in
+      to_stdout json;
+      { ienv with i_status = Shown (None, existingParams) }
+    | (_, _) -> ienv
+  in
+  (* show the new one *)
+  if not will_show_new then
+    ienv
+  else
+    let id = NumberId (Jsonrpc.get_next_request_id ()) in
+    let request =
+      if use_status then
+        ShowStatusRequest params
+      else
+        ShowMessageRequestRequest params.ShowStatus.request
+    in
+    let json =
+      let key = command_key_of_path ienv.i_root in
+      Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
+    in
+    to_stdout json;
 
-          let mark_ienv_shown future_ienv =
-            match future_ienv.i_status with
-            | Shown (Some future_id, future_params) when future_id = id ->
-              { future_ienv with i_status = Shown (None, future_params) }
-            | _ -> future_ienv
-          in
-          let mark_state_shown state =
-            match state with
-            | Connected cenv -> Connected { cenv with c_ienv = mark_ienv_shown cenv.c_ienv }
-            | Disconnected denv -> Disconnected { denv with d_ienv = mark_ienv_shown denv.d_ienv }
-            | _ -> state
-          in
-          let handle_error _e state = mark_state_shown state in
-          let handle_result (r : ShowMessageRequest.result) state =
-            let state = mark_state_shown state in
-            match r with
-            | Some { ShowMessageRequest.title } -> handler title state
-            | None -> state
-          in
-          let handle_result =
-            if use_status then
-              ShowStatusHandler handle_result
-            else
-              ShowMessageHandler handle_result
-          in
-          let handlers = (handle_result, handle_error) in
-          let i_outstanding_local_requests =
-            IdMap.add id request ienv.i_outstanding_local_requests
-          in
-          let i_outstanding_local_handlers =
-            IdMap.add id handlers ienv.i_outstanding_local_handlers
-          in
-          {
-            ienv with
-            i_status = Shown (Some id, params);
-            i_outstanding_local_requests;
-            i_outstanding_local_handlers;
-          })))
+    let mark_ienv_shown future_ienv =
+      match future_ienv.i_status with
+      | Shown (Some future_id, future_params) when future_id = id ->
+        { future_ienv with i_status = Shown (None, future_params) }
+      | _ -> future_ienv
+    in
+    let mark_state_shown state =
+      match state with
+      | Connected cenv -> Connected { cenv with c_ienv = mark_ienv_shown cenv.c_ienv }
+      | Disconnected denv -> Disconnected { denv with d_ienv = mark_ienv_shown denv.d_ienv }
+      | _ -> state
+    in
+    let handle_error _e state = mark_state_shown state in
+    let handle_result (r : ShowMessageRequest.result) state =
+      let state = mark_state_shown state in
+      match r with
+      | Some { ShowMessageRequest.title } -> handler title state
+      | None -> state
+    in
+    let handle_result =
+      if use_status then
+        ShowStatusHandler handle_result
+      else
+        ShowMessageHandler handle_result
+    in
+    let handlers = (handle_result, handle_error) in
+    let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
+    let i_outstanding_local_handlers = IdMap.add id handlers ienv.i_outstanding_local_handlers in
+    {
+      ienv with
+      i_status = Shown (Some id, params);
+      i_outstanding_local_requests;
+      i_outstanding_local_handlers;
+    }
 
 let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata) :
     unit =
@@ -577,18 +583,10 @@ let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_en
       else
         ("Flow: " ^ FileWatcherStatus.string_of_status watcher_status, None, None, None)
   in
-  Disconnected
-    {
-      env with
-      d_ienv =
-        show_status
-          ~type_:MessageType.WarningMessage
-          ~message
-          ~shortMessage
-          ~progress
-          ~total
-          env.d_ienv;
-    }
+  let d_ienv =
+    show_status ~type_:MessageType.WarningMessage ~message ~shortMessage ~progress ~total env.d_ienv
+  in
+  Disconnected { env with d_ienv }
 
 let show_disconnected
     (code : FlowExitStatus.t option) (message : string option) (env : disconnected_env) : state =
@@ -613,20 +611,18 @@ let show_disconnected
     | (Disconnected e, "Restart") -> Disconnected { e with d_autostart = true }
     | _ -> state
   in
-  Disconnected
-    {
-      env with
-      d_ienv =
-        show_status
-          ~handler
-          ~titles:["Restart"]
-          ~type_:MessageType.ErrorMessage
-          ~message
-          ~shortMessage:None
-          ~progress:None
-          ~total:None
-          env.d_ienv;
-    }
+  let d_ienv =
+    show_status
+      ~handler
+      ~titles:["Restart"]
+      ~type_:MessageType.ErrorMessage
+      ~message
+      ~shortMessage:None
+      ~progress:None
+      ~total:None
+      env.d_ienv
+  in
+  Disconnected { env with d_ienv }
 
 let close_conn (env : connected_env) : unit =
   try Timeout.shutdown_connection env.c_conn.ic
@@ -961,8 +957,8 @@ let show_recheck_progress (cenv : connected_env) : state =
       (MessageType.InfoMessage, message, None, None, None)
     | (false, _, _) -> (MessageType.InfoMessage, "Flow: done recheck", None, None, None)
   in
-  Connected
-    { cenv with c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv }
+  let c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv in
+  Connected { cenv with c_ienv }
 
 let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params)
     : state =
