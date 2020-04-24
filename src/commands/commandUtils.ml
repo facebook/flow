@@ -1698,6 +1698,7 @@ type codemod_params =
       info: bool;
       verbose: bool;
       dry_run: bool;
+      repeat: bool;
       log_level: Hh_logger.Level.t option;
       root: string option;
       input_file: string option;
@@ -1706,7 +1707,21 @@ type codemod_params =
     }
 
 let collect_codemod_flags
-    main options_flags shm_flags info verbose dry_run log_level root input_file base_flag anon =
+    main
+    options_flags
+    shm_flags
+    info
+    verbose
+    dry_run
+    repeat
+    log_level
+    root
+    input_file
+    base_flag
+    anon =
+  ( if dry_run && repeat then
+    let msg = "Error: cannot run codemod with both --dry-run and --repeat flags" in
+    FlowExitStatus.(exit ~msg Commandline_usage_error) );
   let codemod_flags =
     Codemod_params
       {
@@ -1715,6 +1730,7 @@ let collect_codemod_flags
         info;
         verbose;
         dry_run;
+        repeat;
         log_level;
         root;
         input_file;
@@ -1734,6 +1750,7 @@ let codemod_flags prev =
     |> flag "--info" no_arg ~doc:"Verbose transformation status"
     |> flag "--verbose" no_arg ~doc:"Verbose progress status"
     |> flag "--dry-run" no_arg ~doc:"Outputs the modifications to stdout"
+    |> flag "--repeat" no_arg ~doc:"Run this codemod repeatedly until no more files change"
     |> flag
          "--log-level"
          (enum

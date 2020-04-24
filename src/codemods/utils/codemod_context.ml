@@ -12,6 +12,7 @@ module Typed = struct
     metadata: Context.metadata;
     full_cx: Context.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
+    iteration: int;
   }
 
   type error =

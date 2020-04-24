@@ -26,3 +26,5 @@ module DiffPatchHeap =
 let set_diff = Expensive.wrap DiffPatchHeap.add
 
 let get_diff = DiffPatchHeap.get
+
+let remove_batch = DiffPatchHeap.remove_batch

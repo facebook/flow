@@ -23,24 +23,65 @@ let log_input_files fileset =
 
    (iii) library files.
  *)
-let get_target_filename_set ~options ~libs ~all file_set =
-  SSet.fold
-    (fun f acc ->
-      if
-        Files.is_valid_path ~options f
-        && (all || not (Files.is_ignored options f))
-        && not (SSet.mem f libs)
-      then
-        FilenameSet.add (Files.filename_from_string ~options f) acc
-      else
-        acc)
-    file_set
-    FilenameSet.empty
+let get_target_filename_set ~options ~libs ~all filename_set =
+  FilenameSet.filter
+    (fun f ->
+      let s = File_key.to_string f in
+      Files.is_valid_path ~options s
+      && (all || not (Files.is_ignored options s))
+      && not (SSet.mem s libs))
+    filename_set
+
+type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
+
+type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
+
+(* A runner needs to specify two main things, in order to be used in repeat mode:
+ *
+ * (i) An initializing routine for the first time the codemod is applied.
+ *
+ * (ii) A "re-checking" routine for every successive time the codemod is run.
+ *
+ * The difference between the two is that (i) produces an initial "environment"
+ * (in the case of typed codemods this is a ServerEnv.env), whereas (ii) takes an
+ * env as argument and returns an output env.
+ *)
+module type StepRunnerT = sig
+  type env
+
+  type 'a visitor
+
+  val init_run :
+    ServerEnv.genv ->
+    info:bool ->
+    visit:'a visitor ->
+    FilenameSet.t ->
+    (Profiling_js.finished * (env * 'a unit_result Utils_js.FilenameMap.t)) Lwt.t
+
+  val recheck_run :
+    ServerEnv.genv ->
+    env ->
+    iteration:int ->
+    info:bool ->
+    visit:'a visitor ->
+    FilenameSet.t ->
+    (Profiling_js.finished * (env * 'a unit_result Utils_js.FilenameMap.t)) Lwt.t
+
+  val digest :
+    reporter:'a Codemod_report.t ->
+    'a unit_result Utils_js.FilenameMap.t ->
+    Utils_js.FilenameMap.key list * 'a
+end
 
 (* TypedRunner - This runner does a full local typecheck and makes available the
  * typed AST as well as the full CX to each job. This runner is needed for any type
  * based transforms. It runs a full local typecheck so can be slow on large codebases. *)
-module TypedRunner = struct
+module TypedRunner :
+  StepRunnerT with type 'a visitor = ('a, Codemod_context.Typed.t) abstract_visitor = struct
+  type env = ServerEnv.env
+
+  type 'a visitor = (Loc.t, Loc.t) Flow_ast.program -> Codemod_context.Typed.t -> 'a
+
   (* We calculate the files that need to be merged in the same way that recheck
      would, but making the following assumptions:
 
@@ -81,7 +122,7 @@ module TypedRunner = struct
 
   (* As we merge, we will process the target files in Classic mode. These are
      included in roots set. *)
-  let merge_job ~f ~roots ~info ~worker_mutator ~options ~reader component =
+  let merge_job ~visit ~roots ~info ~iteration ~worker_mutator ~options ~reader component =
     let leader = Nel.hd component in
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let result =
@@ -115,8 +156,10 @@ module TypedRunner = struct
                 let typed_ast = FilenameMap.find file typed_asts in
                 let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
                 let metadata = Context.metadata full_cx in
-                let ccx = { Codemod_context.Typed.file; file_sig; metadata; full_cx; typed_ast } in
-                let result = f ast ccx in
+                let ccx =
+                  { Codemod_context.Typed.file; file_sig; metadata; full_cx; typed_ast; iteration }
+                in
+                let result = visit ast ccx in
                 FilenameMap.add file (Ok result) acc
               else
                 acc)
@@ -131,7 +174,7 @@ module TypedRunner = struct
   (* The processing step in Types-First needs to happen right after the check phase.
      We have already merged any necessary dependencies, so now we only check the
      target files for processing. *)
-  let check_job ~f ~info ~reader ~options acc roots =
+  let check_job ~visit ~info ~iteration ~reader ~options acc roots =
     List.fold_left
       (fun acc file ->
         if info then Hh_logger.print_with_newline "Processing %s" (File_key.to_string file);
@@ -142,23 +185,73 @@ module TypedRunner = struct
           let reader = Abstract_state_reader.Mutator_state_reader reader in
           let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
           let metadata = Context.metadata full_cx in
-          let ccx = { Codemod_context.Typed.file; file_sig; metadata; full_cx; typed_ast } in
-          let result = f ast ccx in
+          let ccx =
+            { Codemod_context.Typed.file; file_sig; metadata; full_cx; typed_ast; iteration }
+          in
+          let result = visit ast ccx in
           FilenameMap.add file (Ok result) acc
         | (_, Ok (None, _)) -> acc
         | (_, Error e) -> FilenameMap.add file (Error e) acc)
       acc
       roots
 
-  let run ~genv ~should_print_summary ~info ~f options roots =
-    PidLog.disable ();
-    (* Disable monitor updates as this is a single-use tool *)
-    MonitorRPC.disable ();
-    let workers = genv.ServerEnv.workers in
+  let merge_and_check env workers options profiling roots ~visit ~info ~iteration =
+    Transaction.with_transaction (fun transaction ->
+        let reader = Mutator_state_reader.create transaction in
 
+        (* Calculate dependencies that need to be merged *)
+        let%lwt (sig_dependency_graph, component_map, files_to_merge) =
+          merge_targets ~env ~options ~profiling roots
+        in
+        let (master_mutator, worker_mutator) =
+          Context_heaps.Merge_context_mutator.create transaction files_to_merge
+        in
+        Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
+        let%lwt (merge_result, _) =
+          Merge_service.merge_runner
+            ~job:(merge_job ~visit ~roots ~info ~iteration)
+            ~master_mutator
+            ~worker_mutator
+            ~reader
+            ~intermediate_result_callback:(fun _ -> ())
+            ~options
+            ~workers
+            ~sig_dependency_graph
+            ~component_map
+            ~recheck_set:files_to_merge
+        in
+        Hh_logger.info "Merging done.";
+        let merge_result =
+          List.fold_left
+            (fun acc (file, result) ->
+              match result with
+              | Ok result -> FilenameMap.union result acc
+              | Error e -> FilenameMap.add file (Error e) acc)
+            FilenameMap.empty
+            merge_result
+        in
+        match Options.arch options with
+        | Options.Classic ->
+          (* Nothing to do here *)
+          Lwt.return merge_result
+        | Options.TypesFirst ->
+          Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
+          let%lwt result =
+            MultiWorkerLwt.call
+              workers
+              ~job:(check_job ~visit ~info ~iteration ~reader ~options)
+              ~neutral:FilenameMap.empty
+              ~merge:FilenameMap.union
+              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
+          in
+          Hh_logger.info "Done";
+          Lwt.return result)
+
+  let init_run genv ~info ~visit roots =
+    let { ServerEnv.options; workers } = genv in
+    let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
-
         (* Create roots set based on file list *)
         let roots =
           get_target_filename_set
@@ -170,60 +263,36 @@ module TypedRunner = struct
         (* Discard uparseable files *)
         let roots = FilenameSet.inter roots env.ServerEnv.files in
         log_input_files roots;
-
         let%lwt results =
-          Transaction.with_transaction (fun transaction ->
-              let reader = Mutator_state_reader.create transaction in
-
-              (* Calculate dependencies that need to be merged *)
-              let%lwt (sig_dependency_graph, component_map, files_to_merge) =
-                merge_targets ~env ~options ~profiling roots
-              in
-              let (master_mutator, worker_mutator) =
-                Context_heaps.Merge_context_mutator.create transaction files_to_merge
-              in
-              Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
-              let%lwt (merge_result, _) =
-                Merge_service.merge_runner
-                  ~job:(merge_job ~f ~roots ~info)
-                  ~master_mutator
-                  ~worker_mutator
-                  ~reader
-                  ~intermediate_result_callback:(fun _ -> ())
-                  ~options
-                  ~workers
-                  ~sig_dependency_graph
-                  ~component_map
-                  ~recheck_set:files_to_merge
-              in
-              Hh_logger.info "Merging done.";
-              let merge_result =
-                List.fold_left
-                  (fun acc (file, result) ->
-                    match result with
-                    | Ok result -> FilenameMap.union result acc
-                    | Error e -> FilenameMap.add file (Error e) acc)
-                  FilenameMap.empty
-                  merge_result
-              in
-              match Options.arch options with
-              | Options.Classic ->
-                (* Nothing to do here *)
-                Lwt.return merge_result
-              | Options.TypesFirst ->
-                Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
-                let%lwt result =
-                  MultiWorkerLwt.call
-                    workers
-                    ~job:(check_job ~f ~info ~reader ~options)
-                    ~neutral:FilenameMap.empty
-                    ~merge:FilenameMap.union
-                    ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
-                in
-                Hh_logger.info "Done";
-                Lwt.return result)
+          merge_and_check env workers options profiling roots ~visit ~info ~iteration:0
         in
-        Lwt.return results)
+        Lwt.return (env, results))
+
+  (* The roots that are passed in here have already been filtered by earlier iterations. *)
+  let recheck_run genv env ~iteration ~info ~visit roots =
+    let { ServerEnv.workers; options } = genv in
+    let should_print_summary = Options.should_profile options in
+    Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
+        (* Diff heaps are not cleared like the rest of the heaps during recheck
+           so we clear them here, before moving further into recheck. *)
+        Diff_heaps.remove_batch roots;
+        let%lwt (_, _, env) =
+          Types_js.recheck
+            ~profiling
+            ~options
+            ~workers
+            ~updates:roots
+            env
+            ~files_to_force:CheckedSet.empty
+            ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+            ~recheck_reasons:[]
+            ~will_be_checked_files:(ref CheckedSet.empty)
+        in
+        log_input_files roots;
+        let%lwt results =
+          merge_and_check env workers options profiling roots ~visit ~info ~iteration
+        in
+        Lwt.return (env, results))
 
   let digest ~reporter results =
     FilenameMap.fold
@@ -240,20 +309,16 @@ module TypedRunner = struct
           acc)
       results
       ([], reporter.Codemod_report.empty)
-
-  let run_and_digest ~genv ~should_print_summary ~info ~f ~reporter options roots =
-    let%lwt (_, results) = run ~genv ~should_print_summary ~info ~f options roots in
-    Lwt.return (digest ~reporter results)
 end
 
-let untyped_runner_job ~mk_ccx ~f ~abstract_reader file_list =
+let untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_list =
   List.fold_left
     (fun results file ->
       let file_sig =
         Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader:abstract_reader file
       in
       let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader:abstract_reader file in
-      FilenameMap.add file (Some (f ast (mk_ccx file file_sig))) results)
+      FilenameMap.add file (Ok (visit ast (mk_ccx file file_sig))) results)
     FilenameMap.empty
     file_list
 
@@ -261,8 +326,8 @@ let untyped_digest ~reporter results =
   FilenameMap.fold
     (fun file_key r acc ->
       match r with
-      | None -> acc
-      | Some result ->
+      | Error _ -> acc
+      | Ok result ->
         let (acc_files, acc_result) = acc in
         (file_key :: acc_files, reporter.Codemod_report.combine result acc_result))
     results
@@ -270,9 +335,15 @@ let untyped_digest ~reporter results =
 
 (* UntypedRunner - This runner just parses the specified roots, this means no addition
  * info other than what is passed to the job is available but means this runner is fast. *)
-module UntypedRunner = struct
-  let run ~genv ~should_print_summary ~f options roots =
-    let workers = genv.ServerEnv.workers in
+module UntypedRunner :
+  StepRunnerT with type 'a visitor = ('a, Codemod_context.Untyped.t) abstract_visitor = struct
+  type env = unit
+
+  type 'a visitor = (Loc.t, Loc.t) Flow_ast.program -> Codemod_context.Untyped.t -> 'a
+
+  let run genv ~visit roots =
+    let { ServerEnv.workers; options } = genv in
+    let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun _profiling ->
         let file_options = Options.file_options options in
         let all = Options.all options in
@@ -298,16 +369,22 @@ module UntypedRunner = struct
             let next = Parsing_service_js.next_of_filename_set workers roots in
             let mk_ccx file file_sig = { Codemod_context.Untyped.file; file_sig } in
             let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
-            MultiWorkerLwt.call
-              workers
-              ~job:(fun _c file_key -> untyped_runner_job ~mk_ccx ~f ~abstract_reader file_key)
-              ~neutral:FilenameMap.empty
-              ~merge:FilenameMap.union
-              ~next))
+            let%lwt result =
+              MultiWorkerLwt.call
+                workers
+                ~job:(fun _c file_key ->
+                  untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_key)
+                ~neutral:FilenameMap.empty
+                ~merge:FilenameMap.union
+                ~next
+            in
+            Lwt.return ((), result)))
 
-  let run_and_digest ~genv ~should_print_summary ~info:_ ~f ~reporter options roots =
-    let%lwt (_, results) = run ~genv ~should_print_summary ~f options roots in
-    Lwt.return (untyped_digest ~reporter results)
+  let digest = untyped_digest
+
+  let init_run genv ~info:_ ~visit roots = run genv ~visit roots
+
+  let recheck_run genv _env ~iteration:_ ~info:_ ~visit roots = run genv ~visit roots
 end
 
 (* UntypedFlowInitRunner - This runner calls `Types_js.init` which results in the full
@@ -315,14 +392,25 @@ end
  * graph. This info is available inside each job via the different Heap API's. This
  * runner is useful if you need access to do transforms that require context outside
  * of a single file e.g. looking up the exports of a module your file is importing.
- * For large codebases this runner can be slow. *)
-module UntypedFlowInitRunner = struct
-  type init = reader:State_reader.t -> unit
+ * For large codebases this runner can be slow.
+ *)
+type 'a untyped_flow_init_runner_visitor = {
+  (* Runner init function which is called after Types_js.init but before any of the
+   * jobs. This is useful to setup/populate any shared memory for the jobs. *)
+  init: reader:State_reader.t -> unit;
+  visit: ('a, Codemod_context.UntypedFlowInit.t) abstract_visitor;
+}
 
-  let unit_init ~reader:_ = ()
+module UntypedFlowInitRunner :
+  StepRunnerT with type 'a visitor = 'a untyped_flow_init_runner_visitor = struct
+  type env = unit
 
-  let run ~genv ~should_print_summary ~init ~f options roots =
-    let workers = genv.ServerEnv.workers in
+  type 'a visitor = 'a untyped_flow_init_runner_visitor
+
+  let run genv ~visit roots =
+    let { visit; init } = visit in
+    let { ServerEnv.workers; options } = genv in
+    let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
 
@@ -340,33 +428,99 @@ module UntypedFlowInitRunner = struct
         init ~reader;
         let mk_ccx file file_sig = { Codemod_context.UntypedFlowInit.file; reader; file_sig } in
         let abstract_reader = Abstract_state_reader.State_reader reader in
-        MultiWorkerLwt.call
-          workers
-          ~job:(fun _c file_key -> untyped_runner_job ~f ~mk_ccx ~abstract_reader file_key)
-          ~neutral:FilenameMap.empty
-          ~merge:FilenameMap.union
-          ~next)
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~job:(fun _c file_key -> untyped_runner_job ~visit ~mk_ccx ~abstract_reader file_key)
+            ~neutral:FilenameMap.empty
+            ~merge:FilenameMap.union
+            ~next
+        in
+        Lwt.return ((), result))
 
-  let run_and_digest ~genv ~should_print_summary ~info:_ ~init ~f ~reporter options roots =
-    let%lwt (_, results) = run ~genv ~should_print_summary ~init ~f options roots in
-    Lwt.return (untyped_digest ~reporter results)
+  let digest = untyped_digest
+
+  let init_run genv ~info:_ ~visit roots = run genv ~visit roots
+
+  let recheck_run genv _env ~iteration:_ ~info:_ ~visit roots = run genv ~visit roots
 end
 
-type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
+(* When the '--repeat' flag is passed, then the entire codemod will be run until
+ * the targeted files stabilize. This function will run the codemod configuration
+ * described by StepRunner multiple times until we reach this fixpoint. StepRunner
+ * can be a typed or untyped codemod configuration.
+ *)
+module RepeatRunner (StepRunner : StepRunnerT) : sig
+  val run :
+    genv:ServerEnv.genv ->
+    dry_run:bool ->
+    repeat:bool ->
+    info:bool ->
+    reporter:'a Codemod_report.t ->
+    visit:'a StepRunner.visitor ->
+    Utils_js.FilenameSet.t ->
+    unit Lwt.t
+end = struct
+  let max_number_of_iterations = 10
+
+  let header iteration filenames =
+    (* Use natural counting starting from 1. *)
+    Utils_js.print_endlinef ">>> Iteration: %d" (iteration + 1);
+    Utils_js.print_endlinef ">>> Running codemod on %d files..." (FilenameSet.cardinal filenames)
+
+  let post_run options ~dry_run ~info ~reporter results =
+    let strip_root =
+      if Options.should_strip_root options then
+        Some (Options.root options)
+      else
+        None
+    in
+    (* post-process *)
+    let (files, report) = StepRunner.digest ~reporter results in
+    let%lwt changed_files = Codemod_printer.print_asts ~strip_root ~info ~dry_run files in
+    Codemod_printer.print_results ~strip_root ~report:reporter.Codemod_report.report report;
+    Lwt.return (Base.Option.map ~f:FilenameSet.of_list changed_files)
+
+  let rec loop_run genv env iteration ~dry_run ~info ~visit ~reporter changed_files =
+    if iteration > max_number_of_iterations then begin
+      Utils_js.print_endlinef ">>> Reached maximum number of iterations (10). Exiting...";
+      Lwt.return ()
+    end else
+      match changed_files with
+      | None -> Lwt.return ()
+      | Some set when FilenameSet.is_empty set -> Lwt.return ()
+      | Some roots ->
+        header iteration roots;
+        let%lwt (_, (env, results)) =
+          StepRunner.recheck_run genv env ~iteration ~info ~visit roots
+        in
+        let%lwt changed_files = post_run genv.ServerEnv.options ~dry_run ~info ~reporter results in
+        loop_run genv env (iteration + 1) ~dry_run ~info ~visit ~reporter changed_files
+
+  let run ~genv ~dry_run ~repeat ~info ~reporter ~visit roots =
+    if repeat then header (* iteration *) 0 roots;
+    let%lwt (_prof, (env, results)) = StepRunner.init_run genv ~info ~visit roots in
+    let%lwt changed_files = post_run genv.ServerEnv.options ~dry_run ~reporter ~info results in
+    if repeat then
+      loop_run genv env 1 ~dry_run ~info ~visit ~reporter changed_files
+    else
+      Lwt.return ()
+end
 
 type 'a visitor =
   | Typed_visitor of ('a, Codemod_context.Typed.t) abstract_visitor
-  | UntypedFlowInitRunner_visitor of
-      (* Runner init function which is called after Types_js.init but before any of the
-       * jobs. This is useful to setup/populate any shared memory for the jobs. *)
-      (UntypedFlowInitRunner.init * ('a, Codemod_context.UntypedFlowInit.t) abstract_visitor)
+  | UntypedFlowInitRunner_visitor of 'a untyped_flow_init_runner_visitor
   | Untyped_visitor of ('a, Codemod_context.Untyped.t) abstract_visitor
 
-let run_and_digest ~genv ~should_print_summary ~info ~visitor ~reporter options roots =
+module RR_TypedRunner = RepeatRunner (TypedRunner)
+module RR_UntypedRunner = RepeatRunner (UntypedRunner)
+module RR_UntypedFlowInitRunner = RepeatRunner (UntypedFlowInitRunner)
+
+let run ~genv ~info ~dry_run ~repeat ~visitor ~reporter roots =
   let run =
     match visitor with
-    | Typed_visitor f -> TypedRunner.run_and_digest ~f
-    | UntypedFlowInitRunner_visitor (init, f) -> UntypedFlowInitRunner.run_and_digest ~init ~f
-    | Untyped_visitor f -> UntypedRunner.run_and_digest ~f
+    | Typed_visitor v -> RR_TypedRunner.run ~visit:v
+    | UntypedFlowInitRunner_visitor v -> RR_UntypedFlowInitRunner.run ~visit:v
+    | Untyped_visitor v -> RR_UntypedRunner.run ~visit:v
   in
-  run ~genv ~should_print_summary ~info ~reporter options roots
+  run ~genv ~dry_run ~repeat ~info ~reporter roots

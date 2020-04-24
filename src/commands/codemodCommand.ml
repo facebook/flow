@@ -33,6 +33,7 @@ let main config codemod_flags () =
           info;
           verbose;
           dry_run;
+          repeat;
           log_level;
           root;
           input_file;
@@ -76,7 +77,23 @@ let main config codemod_flags () =
   let file_options = Options.file_options options in
 
   let roots = CommandUtils.expand_file_list ~options:file_options filenames in
-  Codemod_utils.mk_main config ~options ~info ~verbose ~dry_run ~log_level ~shared_mem_config roots
+  let roots =
+    SSet.fold
+      (fun f acc ->
+        Utils_js.FilenameSet.add (Files.filename_from_string ~options:file_options f) acc)
+      roots
+      Utils_js.FilenameSet.empty
+  in
+  Codemod_utils.mk_main
+    config
+    ~options
+    ~info
+    ~verbose
+    ~dry_run
+    ~repeat
+    ~log_level
+    ~shared_mem_config
+    roots
 
 (***********************)
 (* Codemod subcommands *)
@@ -104,27 +121,22 @@ module Annotate_exports_command = struct
                no_arg
                ~doc:
                  ( "Always add precise literal types for string and numeric literals. "
-                 ^ "If not set the codemod uses a heuristic to widen to the respective general type."
+                 ^ "If not set the codemod uses a heuristic to widen to the respective general type"
                  )
-          |> flag
-               "--iteration"
-               (required ~default:0 int)
-               ~doc:"Include this number in imported names if greater than 0."
           |> flag
                "--max-type-size"
                (required ~default:100 int)
-               ~doc:"The maximum number of nodes allows in a single type annotation. (default: 100)"
+               ~doc:"The maximum number of nodes allows in a single type annotation (default: 100)"
           |> flag
                "--default-any"
                no_arg
                ~doc:"Adds 'any' to all locations where normalization or validation fails");
     }
 
-  let config preserve_literals iteration max_type_size default_any =
+  let config preserve_literals max_type_size default_any =
     let open Codemod_utils in
     let runner =
-      TypedRunner
-        (Mapper (Annotate_exports.mapper ~preserve_literals ~iteration ~max_type_size ~default_any))
+      TypedRunner (Mapper (Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any))
     in
     let reporter =
       let open Annotate_exports_utils in
@@ -136,8 +148,8 @@ module Annotate_exports_command = struct
     in
     { reporter; runner }
 
-  let main codemod_flags preserve_literals iteration max_type_size default_any () =
-    let config = config preserve_literals iteration max_type_size default_any in
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let config = config preserve_literals max_type_size default_any in
     main config codemod_flags ()
 
   let command = CommandSpec.command spec main

@@ -199,8 +199,7 @@ module HardCodedImportMap = struct
                } ))
 end
 
-let mapper
-    ~preserve_literals ~iteration ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let { Codemod_context.Typed.file; file_sig; metadata; _ } = cctx in
   let imports_react = Annotate_exports_imports.ImportsHelper.imports_react file_sig in
   let (total_errors, sig_verification_loc_tys) =
@@ -572,7 +571,7 @@ let mapper
         remote_converter <-
           Some
             (new Annotate_exports_imports.ImportsHelper.remote_converter
-               ~iteration
+               ~iteration:cctx.Codemod_context.Typed.iteration
                ~file
                ~reserved_names);
 
