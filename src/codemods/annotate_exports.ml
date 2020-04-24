@@ -466,7 +466,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
             (loc, Identifier { id with Identifier.annot })
         else (
           (* These will most likely be reported by the missing input annotation check *)
-          wont_annotate_locs <- LSet.add loc wont_annotate_locs;
+          if LMap.mem loc sig_verification_loc_tys then
+            wont_annotate_locs <- LSet.add loc wont_annotate_locs;
           super#function_param_pattern expr
         )
       | _ -> super#function_param_pattern expr
@@ -614,14 +615,14 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           LMap.fold
             (fun loc _ acc ->
               if LMap.mem loc added_annotations_locmap then
+                (* we added an annot *)
                 acc
-              (* we added an annot *)
               else if LSet.mem loc wont_annotate_locs then
+                (* we are explicitly avoiding it *)
                 acc
-              (* we are explicitly avoiding it *)
               else if LSet.mem loc codemod_error_locs then
+                (* codemod error *)
                 acc
-              (* codemod error *)
               else
                 loc :: acc)
             sig_verification_loc_tys
