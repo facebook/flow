@@ -391,7 +391,7 @@ module Object
             | T_LPAREN
             | T_COMMA
             | T_RCURLY ->
-              init env start_loc key false false leading
+              init env start_loc key false false []
             | _ ->
               ignore (Comment_attachment.object_key_remove_trailing env key);
               (get env start_loc leading, Pattern_cover.empty_errors)
@@ -407,7 +407,7 @@ module Object
             | T_LPAREN
             | T_COMMA
             | T_RCURLY ->
-              init env start_loc key false false leading
+              init env start_loc key false false []
             | _ ->
               ignore (Comment_attachment.object_key_remove_trailing env key);
               (set env start_loc leading, Pattern_cover.empty_errors)

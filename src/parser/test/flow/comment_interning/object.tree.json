@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":40,"column":26}},
-  "range":[0,1327],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":44,"column":30}},
+  "range":[0,1391],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -1088,6 +1088,120 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":42,"column":0},"end":{"line":42,"column":30}},
+      "range":[1329,1359],
+      "expression":{
+        "type":"ObjectExpression",
+        "loc":{"source":null,"start":{"line":42,"column":1},"end":{"line":42,"column":28}},
+        "range":[1330,1357],
+        "properties":[
+          {
+            "type":"Property",
+            "loc":{"source":null,"start":{"line":42,"column":19},"end":{"line":42,"column":26}},
+            "range":[1348,1355],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":42,"column":3},"end":{"line":42,"column":18}},
+                  "range":[1332,1347],
+                  "value":" 16.1 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":42,"column":19},"end":{"line":42,"column":22}},
+              "range":[1348,1351],
+              "name":"get",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionExpression",
+              "loc":{"source":null,"start":{"line":42,"column":22},"end":{"line":42,"column":26}},
+              "range":[1351,1355],
+              "id":null,
+              "params":[],
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":42,"column":24},"end":{"line":42,"column":26}},
+                "range":[1353,1355],
+                "body":[]
+              },
+              "async":false,
+              "generator":false,
+              "predicate":null,
+              "expression":false,
+              "returnType":null,
+              "typeParameters":null
+            },
+            "kind":"init",
+            "method":true,
+            "shorthand":false,
+            "computed":false
+          }
+        ]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":44,"column":0},"end":{"line":44,"column":30}},
+      "range":[1361,1391],
+      "expression":{
+        "type":"ObjectExpression",
+        "loc":{"source":null,"start":{"line":44,"column":1},"end":{"line":44,"column":28}},
+        "range":[1362,1389],
+        "properties":[
+          {
+            "type":"Property",
+            "loc":{"source":null,"start":{"line":44,"column":19},"end":{"line":44,"column":26}},
+            "range":[1380,1387],
+            "key":{
+              "type":"Identifier",
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":44,"column":3},"end":{"line":44,"column":18}},
+                  "range":[1364,1379],
+                  "value":" 17.1 L id "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":44,"column":19},"end":{"line":44,"column":22}},
+              "range":[1380,1383],
+              "name":"set",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionExpression",
+              "loc":{"source":null,"start":{"line":44,"column":22},"end":{"line":44,"column":26}},
+              "range":[1383,1387],
+              "id":null,
+              "params":[],
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":44,"column":24},"end":{"line":44,"column":26}},
+                "range":[1385,1387],
+                "body":[]
+              },
+              "async":false,
+              "generator":false,
+              "predicate":null,
+              "expression":false,
+              "returnType":null,
+              "typeParameters":null
+            },
+            "kind":"init",
+            "method":true,
+            "shorthand":false,
+            "computed":false
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -1420,6 +1534,18 @@
       "loc":{"source":null,"start":{"line":40,"column":6},"end":{"line":40,"column":22}},
       "range":[1307,1323],
       "value":" 15.1 I obj "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":42,"column":3},"end":{"line":42,"column":18}},
+      "range":[1332,1347],
+      "value":" 16.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":44,"column":3},"end":{"line":44,"column":18}},
+      "range":[1364,1379],
+      "value":" 17.1 L id "
     }
   ]
 }
