@@ -4,7 +4,7 @@
 class C {}
 // XYZXYZ
 export default class {
-  array: Array<$FlowFixMeEmpty> = [];
+  array: Array<any> = [];
   num: number = 1;
 }
 

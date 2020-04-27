@@ -10,6 +10,7 @@ module Typed = struct
     file: File_key.t;
     file_sig: File_sig.With_ALoc.t;
     metadata: Context.metadata;
+    options: Options.t;
     full_cx: Context.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
     iteration: int;

@@ -154,7 +154,15 @@ module TypedRunner :
                 let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
                 let metadata = Context.metadata full_cx in
                 let ccx =
-                  { Codemod_context.Typed.file; file_sig; metadata; full_cx; typed_ast; iteration }
+                  {
+                    Codemod_context.Typed.file;
+                    file_sig;
+                    metadata;
+                    options;
+                    full_cx;
+                    typed_ast;
+                    iteration;
+                  }
                 in
                 let result = visit ast ccx in
                 FilenameMap.add file (Ok result) acc
@@ -182,7 +190,15 @@ module TypedRunner :
           let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
           let metadata = Context.metadata full_cx in
           let ccx =
-            { Codemod_context.Typed.file; file_sig; metadata; full_cx; typed_ast; iteration }
+            {
+              Codemod_context.Typed.file;
+              file_sig;
+              metadata;
+              options;
+              full_cx;
+              typed_ast;
+              iteration;
+            }
           in
           let result = visit ast ccx in
           FilenameMap.add file (Ok result) acc

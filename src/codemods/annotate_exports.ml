@@ -200,13 +200,24 @@ module HardCodedImportMap = struct
 end
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
-  let { Codemod_context.Typed.file; file_sig; metadata; _ } = cctx in
+  let { Codemod_context.Typed.file; file_sig; metadata; options; _ } = cctx in
   let imports_react = Annotate_exports_imports.ImportsHelper.imports_react file_sig in
   let (total_errors, sig_verification_loc_tys) =
     SignatureVerification.collect_annotations cctx ~default_any ~max_type_size file_sig
   in
   let { Context.strict; strict_local; _ } = metadata in
-  let strict = strict || strict_local in
+  let lint_severities =
+    if strict || strict_local then
+      StrictModeSettings.fold
+        (fun lint_kind lint_severities ->
+          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
+        (Options.strict_mode options)
+        (Options.lint_severities options)
+    else
+      Options.lint_severities options
+  in
+  let suppress_types = Options.suppress_types options in
+  let flowfixme_ast = Builtins.flowfixme_ast lint_severities suppress_types in
   object (this)
     inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
 
@@ -233,7 +244,15 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           ('a, Error.kind) result =
       let run loc ty =
         let (acc', ty) =
-          Hardcoded_Ty_Fixes.run ~cctx ~strict ~imports_react ~preserve_literals acc loc ty
+          Hardcoded_Ty_Fixes.run
+            ~cctx
+            ~lint_severities
+            ~suppress_types
+            ~imports_react
+            ~preserve_literals
+            acc
+            loc
+            ty
         in
         this#set_acc acc';
         let%bind ty = this#get_remote_converter#type_ ty in
@@ -368,15 +387,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         when LMap.mem eloc sig_verification_loc_tys ->
         let ty = LMap.find eloc sig_verification_loc_tys in
         let f loc _annot ty = this#with_serial loc ty (fun a -> Ast.Type.Available a) in
-        let error _ =
-          let any =
-            if strict then
-              Builtins.flowfixme_ast
-            else
-              (Loc.none, Ast.Type.Any None)
-          in
-          Ast.Type.Available (Loc.none, any)
-        in
+        let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
         let annot' = this#opt_annotate ~f ~error ~expr:init eloc ty annot in
         (* A toplevel annotation has been added. No need to descend into init. *)
         if annot == annot' then
@@ -402,18 +413,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         let f = this#annotate_expr in
         let error e =
           let (loc, _) = e in
-          let any =
-            if strict then
-              Builtins.flowfixme_ast
-            else
-              (Loc.none, Ast.Type.Any None)
-          in
           ( loc,
             Ast.Expression.TypeCast
               Ast.Expression.TypeCast.
                 {
                   expression = e;
-                  annot = (Loc.none, any);
+                  annot = (Loc.none, flowfixme_ast);
                   comments = Flow_ast_utils.mk_comments_opt ();
                 } )
         in
@@ -433,15 +438,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         =
       let open Ast.Type in
       let f loc _annot ty = this#with_serial loc ty (fun a -> Available a) in
-      let error _ =
-        let any =
-          if strict then
-            Builtins.flowfixme_ast
-          else
-            (Loc.none, Ast.Type.Any None)
-        in
-        Available (Loc.none, any)
-      in
+      let error _ = Available (Loc.none, flowfixme_ast) in
       this#opt_annotate ~f ~error ~expr:None loc ty return
 
     method! class_extends loc (extends : ('loc, 'loc) Ast.Class.Extends.t') =
@@ -483,13 +480,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         | Some ty ->
           let f = this#annotate_class_prop in
           let error p =
-            let any =
-              if strict then
-                Builtins.flowfixme_ast
-              else
-                (Loc.none, Ast.Type.Any None)
-            in
-            { p with Ast.Class.Property.annot = Ast.Type.Available (Loc.none, any) }
+            { p with Ast.Class.Property.annot = Ast.Type.Available (Loc.none, flowfixme_ast) }
           in
           let prop' = this#opt_annotate ~f ~error ~expr:None loc ty prop in
           if prop == prop' then

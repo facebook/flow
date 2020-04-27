@@ -1,9 +1,9 @@
 >>> a.js (#changes: 3)
-// @flow
+// @flow strict
 
 const a0: Array<$FlowFixMeEmpty> = [];
 
-const a1: Array<any | number> = [];
+const a1: Array<$FlowFixMe | number> = [];
 a1.push(1);
 
 const a2: Array<number> = [];

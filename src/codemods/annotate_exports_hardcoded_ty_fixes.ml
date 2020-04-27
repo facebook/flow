@@ -20,7 +20,8 @@ let maybe_string_literal_tag =
   let re = Str.regexp "^[a-zA-Z0-9-_]+$" in
   (fun s -> Str.string_match re s 0)
 
-let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~preserve_literals acc =
+let mapper_type_normalization_hardcoded_fixes
+    ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals acc =
   object (this)
     inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
 
@@ -28,11 +29,7 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
 
     method acc () = acc
 
-    val inferred_any =
-      if strict then
-        Builtins.flowfixme
-      else
-        Ty.explicit_any
+    val sanitized_any = Builtins.flowfixme_ty lint_severities suppress_types
 
     method! on_t env t =
       let loc = env in
@@ -41,7 +38,7 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
        * `empty` remain as is. *)
       | Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper) ->
         acc <- Acc.warn acc loc Warning.Empty_NoUpper;
-        Builtins.flowfixme_empty
+        Builtins.flowfixme_empty_ty lint_severities suppress_types
       | Ty.Bot Ty.EmptyType ->
         (* `empty` annotations remain *)
         t
@@ -95,8 +92,8 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
       (* The following moves the `any` component of a union to the beginning of the
        * union. This is a heuristic that helps union resolution later on. *)
       | Ty.Union (Ty.Any _, _, _) -> super#on_t env t
-      | Ty.Union (first, (Ty.Any _ as any), rest) ->
-        let t = Ty.Union (any, first, rest) in
+      | Ty.Union (first, Ty.Any _, rest) ->
+        let t = Ty.Union (sanitized_any, first, rest) in
         super#on_t env t
       | Ty.Union (first, second, rest) when List.exists Ty.is_dynamic rest ->
         let rest' = List.filter Utils_js.(Ty.is_dynamic %> not) rest in
@@ -104,7 +101,7 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
           if rest == rest' then
             t
           else
-            Ty.mk_union (Ty.explicit_any, first :: second :: rest')
+            Ty.mk_union (sanitized_any, first :: second :: rest')
         in
         super#on_t env t
       (*
@@ -131,13 +128,19 @@ let mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~pres
       (* All any's that have reached this point will be serialized. By making them
        * all of the same kind we enable type simplification (which depends on
        * structural equality). *)
-      | Ty.Any _ -> inferred_any
+      | Ty.Any _ -> sanitized_any
       | _ -> super#on_t env t
   end
 
-let run ~cctx ~strict ~imports_react ~preserve_literals acc loc t =
+let run ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals acc loc t =
   let mapper =
-    mapper_type_normalization_hardcoded_fixes ~cctx ~strict ~imports_react ~preserve_literals acc
+    mapper_type_normalization_hardcoded_fixes
+      ~cctx
+      ~lint_severities
+      ~suppress_types
+      ~imports_react
+      ~preserve_literals
+      acc
   in
   let t' = mapper#on_t loc t in
   let t'' =

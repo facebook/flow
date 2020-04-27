@@ -27,13 +27,13 @@ module.exports = (): any | {f: number} => x1;
 // @flow strict-local
 
 declare var x1: { f: number } | any;
-module.exports = (): $FlowFixMe | {f: number} => x1;
+module.exports = (): any | {f: number} => x1;
 
 >>> any-to-flowfixme-strict.js (#changes: 1)
 // @flow strict
 
 declare var x1: { f: number } | any;
-module.exports = (): $FlowFixMe | {f: number} => x1;
+module.exports = (): any | {f: number} => x1;
 
 >>> Launching report...
 

@@ -407,15 +407,26 @@ end
 (* Builtin types *)
 
 module Builtins = struct
-  let flowfixme = Ty.Generic (Ty_symbol.builtin_symbol "$FlowFixMe", Ty.TypeAliasKind, None)
+  let suppress_name lint_severities suppress_types preference =
+    if LintSettings.get_value Lints.UnclearType lint_severities = Severity.Err then
+      if SSet.mem preference suppress_types then
+        Some preference
+      else
+        SSet.choose_opt suppress_types
+    else
+      None
 
-  let flowfixme_ast =
-    match Ty_serializer.type_ flowfixme with
-    | Ok ast -> ast
-    | Error e -> failwith e
+  let flowfixme_generic_ty ~preference lint_severities suppress_types =
+    match suppress_name lint_severities suppress_types preference with
+    | Some name -> Ty.Generic (Ty_symbol.builtin_symbol name, Ty.TypeAliasKind, None)
+    | None -> Ty.Any Ty.Annotated
 
-  let flowfixme_empty =
-    Ty.Generic (Ty_symbol.builtin_symbol "$FlowFixMeEmpty", Ty.TypeAliasKind, None)
+  let flowfixme_ty = flowfixme_generic_ty ~preference:"$FlowFixMe"
+
+  let flowfixme_empty_ty = flowfixme_generic_ty ~preference:"$FlowFixMeEmpty"
 
   let empty = Ty.Bot Ty.EmptyType
+
+  let flowfixme_ast lint_severities suppress_types =
+    flowfixme_ty lint_severities suppress_types |> Ty_serializer.type_ |> Base.Result.ok_or_failwith
 end
