@@ -128,7 +128,7 @@ module Annotate_exports_command = struct
       TypedRunner (Mapper (Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any))
     in
     let reporter =
-      let open Annotate_exports_utils in
+      let open Insert_type_utils in
       {
         Codemod_report.report = Codemod_report.StringReporter Acc.report;
         combine = Acc.combine;

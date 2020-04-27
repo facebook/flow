@@ -30,7 +30,7 @@ type expected =
       specialized: (Loc.t, Loc.t) Flow_ast.Type.t;
     }
   | FailedToValidateType of {
-      error: Utils.validation_error;
+      error: Utils.Error.validation_error;
       error_message: string;
     }
   | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
@@ -66,7 +66,8 @@ class allow_temporary_types_mapper =
     method! on_Arr () t =
       function
       | Ty.{ arr_literal = true; arr_elt_t; _ } ->
-        Ty.Generic (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
+        Ty.Generic
+          (Utils.Builtins.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
@@ -74,7 +75,7 @@ class allow_temporary_types_mapper =
       | Ty.{ obj_literal = true; _ } as obj ->
         let obj = { obj with Ty.obj_literal = false } in
         Ty.Generic
-          ( Utils.temporary_objectlit_symbol,
+          ( Utils.Builtins.temporary_objectlit_symbol,
             Ty.TypeAliasKind,
             Some [super#on_Obj () (Ty.Obj obj) obj] )
       | o -> super#on_Obj () t o
@@ -157,7 +158,8 @@ class allow_temporary_arr_and_obj_types_mapper =
     method! on_Arr () t =
       function
       | Ty.{ arr_literal = true; arr_elt_t; _ } ->
-        Ty.Generic (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
+        Ty.Generic
+          (Utils.Builtins.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
@@ -165,7 +167,7 @@ class allow_temporary_arr_and_obj_types_mapper =
       | Ty.{ obj_literal = true; _ } as obj ->
         let obj = { obj with Ty.obj_literal = false } in
         Ty.Generic
-          ( Utils.temporary_objectlit_symbol,
+          ( Utils.Builtins.temporary_objectlit_symbol,
             Ty.TypeAliasKind,
             Some [super#on_Obj () (Ty.Obj obj) obj] )
       | o -> super#on_Obj () t o
@@ -201,27 +203,27 @@ class fixme_ambiguous_types_mapper =
 
     method! on_Num () t =
       function
-      | Some _ -> Utils.Builtins.flowfixme
+      | Some _ -> Utils.Builtins.flowfixme_ty_default
       | n -> super#on_Num () t n
 
     method! on_Bool () t =
       function
-      | Some _ -> Utils.Builtins.flowfixme
+      | Some _ -> Utils.Builtins.flowfixme_ty_default
       | n -> super#on_Bool () t n
 
     method! on_Str () t =
       function
-      | Some _ -> Utils.Builtins.flowfixme
+      | Some _ -> Utils.Builtins.flowfixme_ty_default
       | n -> super#on_Str () t n
 
     method! on_Arr () t =
       function
-      | Ty.{ arr_literal = true; _ } -> Utils.Builtins.flowfixme
+      | Ty.{ arr_literal = true; _ } -> Utils.Builtins.flowfixme_ty_default
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
       function
-      | Ty.{ obj_literal = true; _ } -> Utils.Builtins.flowfixme
+      | Ty.{ obj_literal = true; _ } -> Utils.Builtins.flowfixme_ty_default
       | obj -> super#on_Obj () t obj
   end
 
@@ -237,25 +239,25 @@ let serialize ?(imports_react = false) loc ty =
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
 
 let remove_ambiguous_types ~ambiguity_strategy ty loc =
-  Autofix_options.(
-    match ambiguity_strategy with
-    | Fail ->
-      begin
-        try fail_on_ambiguity ty
-        with FoundAmbiguousType ->
-          raise
-          @@ expected
-          @@ MulipleTypesPossibleAtPoint
-               {
-                 specialized = specialize_temporary_types ty |> serialize loc;
-                 generalized = generalize_temporary_types ty |> serialize loc;
-               }
-      end
-    | Temporary -> allow_temporary_arr_and_obj_types ty
-    | Generalize -> generalize_temporary_types ty
-    | Specialize -> specialize_temporary_types ty
-    | Fixme -> fixme_ambiguous_types ty
-    | Suppress -> Utils.Builtins.flowfixme)
+  let open Autofix_options in
+  match ambiguity_strategy with
+  | Fail ->
+    begin
+      try fail_on_ambiguity ty
+      with FoundAmbiguousType ->
+        raise
+        @@ expected
+        @@ MulipleTypesPossibleAtPoint
+             {
+               specialized = specialize_temporary_types ty |> serialize loc;
+               generalized = generalize_temporary_types ty |> serialize loc;
+             }
+    end
+  | Temporary -> allow_temporary_arr_and_obj_types ty
+  | Generalize -> generalize_temporary_types ty
+  | Specialize -> specialize_temporary_types ty
+  | Fixme -> fixme_ambiguous_types ty
+  | Suppress -> Utils.Builtins.flowfixme_ty_default
 
 (* This class maps each node that contains the target until a node is contained
    by the target *)
@@ -276,12 +278,11 @@ class mapper ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_looku
       let scheme = ty_lookup location in
       let process ty =
         let () =
-          match Utils.validate_type ~size_limit ty with
+          match Utils.Validator.validate_type ~size_limit ty with
           | (_, error :: _) ->
             (* TODO surface all errors *)
-            let err =
-              FailedToValidateType { error; error_message = Utils.serialize_validation_error error }
-            in
+            let error_message = Utils.Error.serialize_validation_error error in
+            let err = FailedToValidateType { error; error_message } in
             raise (expected err)
           | (_, []) -> ()
         in
@@ -477,12 +478,12 @@ let expected_error_to_string = function
     ^ "    specialized type: "
     ^ type_to_string specialized
     ^ "\n"
-  | FailedToValidateType { error = Utils.TooBig { size_limit; size }; _ } ->
+  | FailedToValidateType { error = Utils.Error.TooBig { size_limit; size }; _ } ->
     "The type that would be generated (size: "
     ^ begin
         match size with
         | Some size -> string_of_int size
-        | None -> ">" ^ string_of_int Utils.validate_type_too_big_max
+        | None -> ">" ^ string_of_int Utils.Validator.validate_type_too_big_max
       end
     ^ ") exceeds the size limit ("
     ^ string_of_int size_limit

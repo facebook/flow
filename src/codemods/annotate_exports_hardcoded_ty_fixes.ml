@@ -12,7 +12,7 @@
  * provenance)
  *)
 
-open Annotate_exports_utils
+open Insert_type_utils
 
 (* A string literal that contains alphabetic characters of underscores is likely
  * to be a tag *)
@@ -53,11 +53,12 @@ let mapper_type_normalization_hardcoded_fixes
         Ty.Str None
       | Ty.Arr { Ty.arr_literal = true; arr_elt_t; _ } ->
         let arr_elt_t = this#on_t env arr_elt_t in
-        Ty.Generic (Insert_type_utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [arr_elt_t])
+        Ty.Generic
+          (Insert_type_utils.Builtins.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [arr_elt_t])
       | Ty.Obj ({ Ty.obj_literal = true; _ } as obj) ->
         let obj = this#on_obj_t env obj in
         Ty.Generic
-          ( Insert_type_utils.temporary_objectlit_symbol,
+          ( Insert_type_utils.Builtins.temporary_objectlit_symbol,
             Ty.TypeAliasKind,
             Some [Ty.Obj { obj with Ty.obj_literal = false }] )
       (* E.g. React$Element<'div'> will become React.Element<'div'> *)

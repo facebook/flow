@@ -9,9 +9,9 @@ module Ast = Flow_ast
 module LSet = Loc_collections.LocSet
 module ALSet = Loc_collections.ALocSet
 module LMap = Loc_collections.LocMap
-module ExportsHelper = Annotate_exports_imports
+module ExportsHelper = Insert_type_imports
 module Hardcoded_Ty_Fixes = Annotate_exports_hardcoded_ty_fixes
-open Annotate_exports_utils
+open Insert_type_utils
 
 (*
  * Codemod that annotates parts of a file that are visible from the exports
@@ -88,7 +88,7 @@ module SignatureVerification = struct
        * might lead to unsound types.
        *)
       let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
-      match Insert_type_utils.validate_type ~size_limit:max_type_size ty with
+      match Validator.validate_type ~size_limit:max_type_size ty with
       | (ty, []) -> NoErrors ty
       | (ty, errs) ->
         let errs = List.map (fun e -> Error.Validation_error e) errs in
@@ -178,7 +178,7 @@ end)
 
 module HardCodedImportMap = struct
   include WrappedMap.Make (struct
-    type t = Loc.t * Loc.t Annotate_exports_utils.Ast.StringLiteral.t
+    type t = Loc.t * Loc.t Ast.StringLiteral.t
 
     let compare = Pervasives.compare
   end)
@@ -201,7 +201,7 @@ end
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let { Codemod_context.Typed.file; file_sig; metadata; options; _ } = cctx in
-  let imports_react = Annotate_exports_imports.ImportsHelper.imports_react file_sig in
+  let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let (total_errors, sig_verification_loc_tys) =
     SignatureVerification.collect_annotations cctx ~default_any ~max_type_size file_sig
   in
@@ -562,7 +562,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         let reserved_names = Queries.used_names prog in
         remote_converter <-
           Some
-            (new Annotate_exports_imports.ImportsHelper.remote_converter
+            (new Insert_type_imports.ImportsHelper.remote_converter
                ~iteration:cctx.Codemod_context.Typed.iteration
                ~file
                ~reserved_names);

@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-open Annotate_exports_utils
+open Insert_type_utils
 
 type import_declaration = {
   importKind: Ast.Statement.ImportDeclaration.importKind;
