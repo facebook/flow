@@ -515,7 +515,7 @@ indirect_array.js:5:3 = {
       "name":"?.findIndex",
       "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number)"
     },
-    {"name":"?.flat","type":"void | ((depth?: number) => Array<mixed>)"},
+    {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
       "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>)"
@@ -607,7 +607,7 @@ indirect_array.js:10:3 = {
       "name":"findIndex",
       "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number"
     },
-    {"name":"flat","type":"(depth?: number) => Array<mixed>"},
+    {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {
       "name":"flatMap",
       "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>"

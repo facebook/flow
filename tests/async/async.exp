@@ -10,8 +10,8 @@ References:
    async.js:11:30
     11| async function f1(): Promise<bool> {
                                      ^^^^ [2]
-   <BUILTINS>/core.js:666:24
-   666| declare class Promise<+R> {
+   <BUILTINS>/core.js:667:24
+   667| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -30,8 +30,8 @@ References:
    async.js:30:48
     30| async function f4(p: Promise<number>): Promise<bool> {
                                                        ^^^^ [2]
-   <BUILTINS>/core.js:666:24
-   666| declare class Promise<+R> {
+   <BUILTINS>/core.js:667:24
+   667| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -97,8 +97,8 @@ undefined in type argument `R` [2].
                     ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:666:24
-   666| declare class Promise<+R> {
+   <BUILTINS>/core.js:667:24
+   667| declare class Promise<+R> {
                                ^ [2]
 
 
@@ -131,8 +131,8 @@ References:
    async_return_void.js:3:32
      3| async function foo1(): Promise<string> {
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:666:24
-   666| declare class Promise<+R> {
+   <BUILTINS>/core.js:667:24
+   667| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -148,8 +148,8 @@ References:
    async_return_void.js:7:32
      7| async function foo2(): Promise<string> {
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:666:24
-   666| declare class Promise<+R> {
+   <BUILTINS>/core.js:667:24
+   667| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -168,8 +168,8 @@ References:
    async_return_void.js:11:32
     11| async function foo3(): Promise<string> {
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:666:24
-   666| declare class Promise<+R> {
+   <BUILTINS>/core.js:667:24
+   667| declare class Promise<+R> {
                                ^ [3]
 
 

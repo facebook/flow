@@ -134,8 +134,8 @@ Cannot return `x.length` because number [1] is incompatible with string [2].
                  ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:296:13
-   296|     length: number;
+   <BUILTINS>/core.js:297:13
+   297|     length: number;
                     ^^^^^^ [1]
    F.js:4:33
      4| function foo(x: Array<number>): string {
@@ -179,8 +179,8 @@ Cannot assign `"duck"` to `b.length` because string [1] is incompatible with num
                    ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:296:13
-   296|     length: number;
+   <BUILTINS>/core.js:297:13
+   297|     length: number;
                     ^^^^^^ [2]
 
 

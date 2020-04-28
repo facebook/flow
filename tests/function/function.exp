@@ -7,13 +7,13 @@ string [1] is incompatible with `$ArrayLike` [2].
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:308:22
+   <BUILTINS>/core.js:309:22
                              v
-   308| type $ArrayLike<T> = {
-   309|   [indexer: number]: T,
-   310|   length: number,
-   311|   ...
-   312| }
+   309| type $ArrayLike<T> = {
+   310|   [indexer: number]: T,
+   311|   length: number,
+   312|   ...
+   313| }
         ^ [2]
 
 
@@ -29,13 +29,13 @@ References:
    apply-array-like.js:15:17
     15| function * gen() {
                         ^ [1]
-   <BUILTINS>/core.js:308:22
+   <BUILTINS>/core.js:309:22
                              v
-   308| type $ArrayLike<T> = {
-   309|   [indexer: number]: T,
-   310|   length: number,
-   311|   ...
-   312| }
+   309| type $ArrayLike<T> = {
+   310|   [indexer: number]: T,
+   311|   length: number,
+   312|   ...
+   313| }
         ^ [2]
 
 
@@ -174,13 +174,13 @@ string [1] is incompatible with `$ArrayLike` [2].
                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:308:22
+   <BUILTINS>/core.js:309:22
                              v
-   308| type $ArrayLike<T> = {
-   309|   [indexer: number]: T,
-   310|   length: number,
-   311|   ...
-   312| }
+   309| type $ArrayLike<T> = {
+   310|   [indexer: number]: T,
+   311|   length: number,
+   312|   ...
+   313| }
         ^ [2]
 
 
