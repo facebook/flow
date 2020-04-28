@@ -354,7 +354,10 @@ class ['a] t =
       | EnumExhaustiveCheckT (_, exhaustive_check) ->
         (match exhaustive_check with
         | EnumExhaustiveCheckPossiblyValid { checks; _ } ->
-          List.fold_left (fun acc (_, _, check_t) -> self#type_ cx pole_TODO acc check_t) acc checks
+          List.fold_left
+            (fun acc (EnumCheck { obj_t; _ }) -> self#type_ cx pole_TODO acc obj_t)
+            acc
+            checks
         | EnumExhaustiveCheckInvalid _ -> acc)
       | FilterOptionalT (_, t) -> self#type_ cx pole_TODO acc t
       | FilterMaybeT (_, t) -> self#type_ cx pole_TODO acc t

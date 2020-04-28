@@ -1093,13 +1093,12 @@ class virtual ['a] t_with_uses =
       | EnumExhaustiveCheckT (r, exhaustive_check) ->
         (match exhaustive_check with
         | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
-          let map_check check =
-            let (reason, name, check_t) = check in
-            let check_t' = self#type_ cx map_cx check_t in
-            if check_t' == check_t then
+          let map_check (EnumCheck { reason; member_name; obj_t } as check) =
+            let obj_t' = self#type_ cx map_cx obj_t in
+            if obj_t' == obj_t then
               check
             else
-              (reason, name, check_t')
+              EnumCheck { reason; member_name; obj_t = obj_t' }
           in
           let checks' = ListUtils.ident_map map_check checks in
           if checks' == checks then

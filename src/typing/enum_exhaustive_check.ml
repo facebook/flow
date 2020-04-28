@@ -44,20 +44,15 @@ let detect_invalid_check
       enum = { members; enum_id; _ };
       exhaustive_check = { checks; default_case };
     } =
-  let check_member (members_remaining, seen) (case_reason, member_name, check_t) =
-    match search_for_enum_object_type cx check_t with
+  let check_member (members_remaining, seen) (EnumCheck { reason; member_name; obj_t }) =
+    match search_for_enum_object_type cx obj_t with
     | SingleEnum (_, { enum_id = check_enum_id; _ }) when ALoc.equal_id enum_id check_enum_id ->
       if not @@ SMap.mem member_name members_remaining then
         Flow_js.add_output
           cx
           (Error_message.EEnumMemberAlreadyChecked
-             {
-               reason = case_reason;
-               prev_check_reason = SMap.find member_name seen;
-               enum_reason;
-               member_name;
-             });
-      (SMap.remove member_name members_remaining, SMap.add member_name case_reason seen)
+             { reason; prev_check_reason = SMap.find member_name seen; enum_reason; member_name });
+      (SMap.remove member_name members_remaining, SMap.add member_name reason seen)
     | _ -> (members_remaining, seen)
   in
   let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in

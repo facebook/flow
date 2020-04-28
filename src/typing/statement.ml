@@ -8358,7 +8358,7 @@ and enum_exhaustive_check_of_switch_cases cases_ast =
                     Expression.Member
                       Expression.Member.
                         {
-                          _object = ((_, t), _);
+                          _object = ((_, obj_t), _);
                           property = PropertyIdentifier (_, { Identifier.name; _ });
                           _;
                         } );
@@ -8368,11 +8368,9 @@ and enum_exhaustive_check_of_switch_cases cases_ast =
           (match acc with
           | EnumExhaustiveCheckInvalid _ -> acc
           | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
-            EnumExhaustiveCheckPossiblyValid
-              {
-                checks = (mk_reason (RCustom "case") case_test_loc, name, t) :: checks;
-                default_case;
-              })
+            let reason = mk_reason (RCustom "case") case_test_loc in
+            let check = EnumCheck { reason; member_name = name; obj_t } in
+            EnumExhaustiveCheckPossiblyValid { checks = check :: checks; default_case })
         | (default_case_loc, { Case.test = None; _ }) ->
           (match acc with
           | EnumExhaustiveCheckInvalid _ -> acc

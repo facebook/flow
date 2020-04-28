@@ -774,8 +774,15 @@ module rec TypeTerm : sig
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
 
+  and enum_check_t =
+    | EnumCheck of {
+        reason: Reason.t;
+        member_name: string;
+        obj_t: t;
+      }
+
   and enum_exhaustive_check_t = {
-    checks: (reason * name * t) list;
+    checks: enum_check_t list;
     default_case: reason option;
   }
 
