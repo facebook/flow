@@ -13,11 +13,14 @@ module E = Ast_builder.Expressions
 module P = Ast_builder.Patterns
 module L = Layout_builder
 
+let opts = Js_layout_generator.default_opts
+
 let tests =
   [
     ( "let_simple_assign" >:: fun ctxt ->
       let mk_layout a =
         Js_layout_generator.statement
+          ~opts
           (S.let_declaration [S.variable_declarator a ~init:(E.identifier "a")])
       in
       let layout = mk_layout "a" in
@@ -44,6 +47,7 @@ let tests =
     ( "let_simple_object_assign" >:: fun ctxt ->
       let mk_layout a =
         Js_layout_generator.statement
+          ~opts
           (S.let_declaration
              [S.variable_declarator_generic (P.object_ a) (Some (E.identifier "a"))])
       in
@@ -120,6 +124,7 @@ let tests =
     ( "let_array_single_item" >:: fun ctxt ->
       let mk_layout a =
         Js_layout_generator.statement
+          ~opts
           (S.let_declaration
              [
                S.variable_declarator_generic

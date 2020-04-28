@@ -450,7 +450,7 @@ let normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults 
     | Success (_, ty) -> ty)
 
 let type_to_string t =
-  Js_layout_generator.type_ t
+  Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts t
   |> Pretty_printer.print ~source_maps:None ~skip_endline:true
   |> Source.contents
 

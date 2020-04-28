@@ -14,6 +14,8 @@ module J = Ast_builder.JSXs
 module S = Ast_builder.Statements
 module L = Layout_builder
 
+let opts = Js_layout_generator.default_opts
+
 let make_loc start_line end_line =
   Loc.
     {
@@ -129,7 +131,7 @@ let tests =
                ]
              ~children:[J.child_element ~loc:f_loc (J.identifier "f") ~selfclosing:true])
       in
-      let layout = Js_layout_generator.expression ast in
+      let layout = Js_layout_generator.expression ~opts ast in
       assert_layout
         ~ctxt
         L.(
@@ -196,7 +198,7 @@ let tests =
         ^ {|</aaaaaaaaaaaaa>|} )
         layout;
 
-      let block_layout = Js_layout_generator.statement (S.block [S.expression ast]) in
+      let block_layout = Js_layout_generator.statement ~opts (S.block [S.expression ast]) in
       assert_output
         ~ctxt
         ( "{"

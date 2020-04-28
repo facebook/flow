@@ -12,9 +12,11 @@ module S = Ast_builder.Statements
 module E = Ast_builder.Expressions
 module L = Layout_builder
 
+let opts = Js_layout_generator.default_opts
+
 let expected_object2_layout prop1 prop2 =
-  let prop1_layout = Js_layout_generator.object_property prop1 in
-  let prop2_layout = Js_layout_generator.object_property prop2 in
+  let prop1_layout = Js_layout_generator.object_property ~opts prop1 in
+  let prop2_layout = Js_layout_generator.object_property ~opts prop2 in
   L.(
     loc
       (group
@@ -38,7 +40,7 @@ let tests =
   [
     ( "empty_object" >:: fun ctxt ->
       let ast = E.object_ [] in
-      let layout = Js_layout_generator.expression ast in
+      let layout = Js_layout_generator.expression ~opts ast in
       assert_layout ~ctxt L.(loc (group [atom "{"; atom "}"])) layout;
       assert_output ~ctxt "{}" layout;
       assert_output ~ctxt ~pretty:true "{}" layout );
@@ -47,7 +49,7 @@ let tests =
       let prop1 = E.object_property (E.object_property_key "foo") (E.identifier "x") in
       let prop2 = E.object_property (E.object_property_key "bar") (E.identifier "y") in
       let ast = E.object_ [prop1; prop2] in
-      let layout = Js_layout_generator.expression ast in
+      let layout = Js_layout_generator.expression ~opts ast in
       assert_layout ~ctxt (expected_object2_layout prop1 prop2) layout;
       assert_output ~ctxt "{foo:x,bar:y}" layout;
       assert_output ~ctxt ~pretty:true "{ foo: x, bar: y }" layout );
@@ -57,7 +59,7 @@ let tests =
       let prop1 = E.object_property (E.object_property_key "foo") (E.identifier x40) in
       let prop2 = E.object_property (E.object_property_key "bar") (E.identifier x40) in
       let ast = E.object_ [prop1; prop2] in
-      let layout = Js_layout_generator.expression ast in
+      let layout = Js_layout_generator.expression ~opts ast in
       assert_layout ~ctxt (expected_object2_layout prop1 prop2) layout;
       assert_output ~ctxt ("{foo:" ^ x40 ^ ",bar:" ^ x40 ^ "}") layout;
       assert_output ~ctxt ~pretty:true ("{\n  foo: " ^ x40 ^ ",\n  bar: " ^ x40 ^ ",\n}") layout );
@@ -66,10 +68,10 @@ let tests =
       let prop2 = E.object_property (E.object_property_key "bar") (E.function_ ()) in
       let prop3 = E.object_property (E.object_property_key "baz") (E.identifier "y") in
       let ast = E.object_ [prop1; prop2; prop3] in
-      let layout = Js_layout_generator.expression ast in
-      let prop1_layout = Js_layout_generator.object_property prop1 in
-      let prop2_layout = Js_layout_generator.object_property prop2 in
-      let prop3_layout = Js_layout_generator.object_property prop3 in
+      let layout = Js_layout_generator.expression ~opts ast in
+      let prop1_layout = Js_layout_generator.object_property ~opts prop1 in
+      let prop2_layout = Js_layout_generator.object_property ~opts prop2 in
+      let prop3_layout = Js_layout_generator.object_property ~opts prop3 in
       assert_layout
         ~ctxt
         L.(
@@ -98,13 +100,16 @@ let tests =
       assert_output ~ctxt ~pretty:true "{ foo: x, bar: function() {}, baz: y }" layout );
     ( "object_property_is_method" >:: fun ctxt ->
       let layout =
-        Js_layout_generator.expression (E.object_ [E.object_method (E.object_property_key "foo")])
+        Js_layout_generator.expression
+          ~opts
+          (E.object_ [E.object_method (E.object_property_key "foo")])
       in
       assert_output ~ctxt "{foo(){}}" layout;
       assert_output ~ctxt ~pretty:true "{ foo() {} }" layout );
     ( "object_property_is_generator_method" >:: fun ctxt ->
       let layout =
         Js_layout_generator.expression
+          ~opts
           (E.object_ [E.object_method ~generator:true (E.object_property_key "foo")])
       in
       assert_output ~ctxt "{*foo(){}}" layout;
@@ -112,6 +117,7 @@ let tests =
     ( "object_property_is_sequence" >:: fun ctxt ->
       let layout =
         Js_layout_generator.expression
+          ~opts
           (E.object_
              [
                E.object_property
@@ -124,6 +130,7 @@ let tests =
     ( "object_property_key_is_literal" >:: fun ctxt ->
       let layout =
         Js_layout_generator.expression
+          ~opts
           (E.object_
              [
                E.object_property_with_literal
@@ -148,7 +155,7 @@ let tests =
               (E.literal (Ast_builder.Literals.number 123. "123"));
           ]
       in
-      let layout = Js_layout_generator.expression ast in
+      let layout = Js_layout_generator.expression ~opts ast in
       assert_layout
         ~ctxt
         L.(
@@ -193,7 +200,7 @@ let tests =
               (E.literal (Ast_builder.Literals.number 123. "123"));
           ]
       in
-      let layout = Js_layout_generator.expression ast in
+      let layout = Js_layout_generator.expression ~opts ast in
       assert_layout
         ~ctxt
         L.(

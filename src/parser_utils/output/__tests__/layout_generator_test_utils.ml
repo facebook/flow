@@ -31,21 +31,29 @@ let assert_output ~ctxt ?msg ?(pretty = false) expected_str layout =
   assert_equal ~ctxt ?msg ~printer expected_str out
 
 let assert_expression
-    ~ctxt ?msg ?pretty ?(expr_ctxt = Js_layout_generator.normal_context) expected_str ast =
-  let layout = Js_layout_generator.expression ~ctxt:expr_ctxt ast in
+    ~ctxt
+    ?msg
+    ?pretty
+    ?(expr_ctxt = Js_layout_generator.normal_context)
+    ?(opts = Js_layout_generator.default_opts)
+    expected_str
+    ast =
+  let layout = Js_layout_generator.expression ~ctxt:expr_ctxt ~opts ast in
   assert_output ~ctxt ?msg ?pretty expected_str layout
 
-let assert_expression_string ~ctxt ?msg ?pretty ?expr_ctxt str =
+let assert_expression_string
+    ~ctxt ?msg ?pretty ?expr_ctxt ?(opts = Js_layout_generator.default_opts) str =
   let ast = expression_of_string str in
-  assert_expression ~ctxt ?msg ?pretty ?expr_ctxt str ast
+  assert_expression ~ctxt ~opts ?msg ?pretty ?expr_ctxt str ast
 
-let assert_statement ~ctxt ?msg ?pretty expected_str ast =
-  let layout = Js_layout_generator.statement ast in
+let assert_statement ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opts) expected_str ast
+    =
+  let layout = Js_layout_generator.statement ~opts ast in
   assert_output ~ctxt ?msg ?pretty expected_str layout
 
-let assert_statement_string ~ctxt ?msg ?pretty str =
+let assert_statement_string ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opts) str =
   let ast = statement_of_string str in
-  let layout = Js_layout_generator.statement ast in
+  let layout = Js_layout_generator.statement ~opts ast in
   assert_output ~ctxt ?msg ?pretty str layout
 
 let assert_program_string ~ctxt ?msg ?pretty str =

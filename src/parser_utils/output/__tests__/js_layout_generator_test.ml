@@ -16,6 +16,10 @@ module F = Ast_builder.Functions
 module J = Ast_builder.JSXs
 module L = Layout_builder
 
+let opts = Js_layout_generator.default_opts
+
+let preserve_formatting_opts = { Js_layout_generator.preserve_formatting = true }
+
 let tests =
   "js_layout_generator"
   >::: [
@@ -71,7 +75,7 @@ let tests =
            let decr_y = E.decrement ~prefix:true y in
            begin
              let ast = E.plus x incr_y in
-             let layout = Js_layout_generator.expression ast in
+             let layout = Js_layout_generator.expression ~opts ast in
              assert_layout
                ~ctxt
                L.(
@@ -114,6 +118,7 @@ let tests =
            (* do { x } while (y) *)
            let layout =
              Js_layout_generator.statement
+               ~opts
                (let body = S.block [S.expression (E.identifier "x")] in
                 let test = E.identifier "y" in
                 S.do_while body test)
@@ -126,6 +131,7 @@ let tests =
            let y80 = String.make 80 'y' in
            let layout =
              Js_layout_generator.statement
+               ~opts
                (let body = S.block [S.expression (E.identifier x80)] in
                 let test = E.identifier y80 in
                 S.do_while body test)
@@ -140,6 +146,7 @@ let tests =
            (* do x; while (y) *)
            let layout =
              Js_layout_generator.statement
+               ~opts
                (let body = S.expression (E.identifier "x") in
                 let test = E.identifier "y" in
                 S.do_while body test)
@@ -152,6 +159,7 @@ let tests =
            let y80 = String.make 80 'y' in
            let layout =
              Js_layout_generator.statement
+               ~opts
                (let body = S.expression (E.identifier x80) in
                 let test = E.identifier y80 in
                 S.do_while body test)
@@ -166,6 +174,7 @@ let tests =
            (* do ; while (y) *)
            let layout =
              Js_layout_generator.statement
+               ~opts
                (let body = S.empty () in
                 let test = E.identifier "y" in
                 S.do_while body test)
@@ -176,6 +185,7 @@ let tests =
          ( "conditionals" >:: fun ctxt ->
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.conditional (E.identifier "a") (E.identifier "b") (E.identifier "c"))
            in
            assert_layout
@@ -205,6 +215,7 @@ let tests =
            let a80 = String.make 80 'a' in
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.conditional (E.identifier a80) (E.identifier "b") (E.identifier "c"))
            in
            assert_output ~ctxt (a80 ^ "?b:c") layout;
@@ -213,6 +224,7 @@ let tests =
            let b80 = String.make 80 'b' in
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.conditional (E.identifier "a") (E.identifier b80) (E.identifier "c"))
            in
            assert_output ~ctxt ("a?" ^ b80 ^ ":c") layout;
@@ -377,7 +389,7 @@ let tests =
            (* `new xxxxxxx....()` *)
            let x80 = String.make 80 'x' in
            let layout =
-             Js_layout_generator.expression (E.new_ ~args:(E.arg_list []) (E.identifier x80))
+             Js_layout_generator.expression ~opts (E.new_ ~args:(E.arg_list []) (E.identifier x80))
            in
            assert_layout
              ~ctxt
@@ -389,6 +401,7 @@ let tests =
            (* `new Foo(x, y)` *)
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.new_
                   (E.identifier "Foo")
                   ~args:
@@ -429,6 +442,7 @@ let tests =
            let x80 = String.make 80 'x' in
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.new_ (E.identifier "Foo") ~args:(E.arg_list [E.expression (E.identifier x80)]))
            in
            assert_layout
@@ -462,6 +476,7 @@ let tests =
            begin
              let layout =
                Js_layout_generator.expression
+                 ~opts
                  (E.new_ (E.increment ~prefix:false x) ~args:(E.arg_list []))
              in
              assert_layout
@@ -647,7 +662,7 @@ let tests =
          ( "binary_instanceof_space" >:: fun ctxt ->
            begin
              let ast = E.instanceof (E.literal (Literals.string "foo")) (E.object_ []) in
-             let layout = Js_layout_generator.expression ast in
+             let layout = Js_layout_generator.expression ~opts ast in
              assert_layout
                ~ctxt
                L.(
@@ -667,7 +682,7 @@ let tests =
 
            begin
              let ast = E.instanceof (E.literal (Literals.string "foo")) (E.identifier "bar") in
-             let layout = Js_layout_generator.expression ast in
+             let layout = Js_layout_generator.expression ~opts ast in
              assert_layout
                ~ctxt
                L.(
@@ -686,7 +701,7 @@ let tests =
            end;
 
            let ast = E.instanceof (E.identifier "foo") (E.object_ []) in
-           let layout = Js_layout_generator.expression ast in
+           let layout = Js_layout_generator.expression ~opts ast in
            assert_layout
              ~ctxt
              L.(
@@ -705,7 +720,7 @@ let tests =
          ( "logical_wrapping" >:: fun ctxt ->
            let x40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" in
            let ast = E.logical_and (E.identifier x40) (E.identifier x40) in
-           let layout = Js_layout_generator.expression ast in
+           let layout = Js_layout_generator.expression ~opts ast in
            assert_layout
              ~ctxt
              L.(
@@ -913,7 +928,7 @@ let tests =
          ( "for_loop" >:: fun ctxt ->
            let x80 = String.make 80 'x' in
            let layout =
-             Js_layout_generator.statement (S.for_ (E.identifier x80) None None (S.empty ()))
+             Js_layout_generator.statement ~opts (S.for_ (E.identifier x80) None None (S.empty ()))
            in
            assert_layout
              ~ctxt
@@ -1001,7 +1016,7 @@ let tests =
            assert_statement ~ctxt ~pretty:true ("{\n" ^ "  if (x) y;\n" ^ "  z;\n" ^ "}") ast );
          ( "if_statement_with_empty_consequent" >:: fun ctxt ->
            let layout =
-             Js_layout_generator.statement (S.if_ (E.identifier "x") (S.empty ()) None)
+             Js_layout_generator.statement ~opts (S.if_ (E.identifier "x") (S.empty ()) None)
            in
            assert_output ~ctxt "if(x);" layout;
            assert_output ~ctxt ~pretty:true "if (x);" layout );
@@ -1047,6 +1062,7 @@ let tests =
          ( "if_else_statement_with_empty_consequent" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.if_
                   (E.identifier "x")
                   (S.empty ())
@@ -1057,6 +1073,7 @@ let tests =
          ( "if_else_statement_with_empty_alternate" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.if_
                   (E.identifier "x")
                   (S.expression (E.identifier "y"))
@@ -1068,6 +1085,7 @@ let tests =
          ( "if_else_statement_with_empty_consequent_and_alternate" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.if_ (E.identifier "x") (S.empty ()) (Some (S.if_alternate (S.empty ()))))
            in
            assert_output ~ctxt "if(x);else;" layout;
@@ -1099,7 +1117,9 @@ let tests =
            in
            assert_statement ~ctxt "do++x;while(y);" ast );
          ( "labeled_empty_statement" >:: fun ctxt ->
-           let layout = Js_layout_generator.statement (S.labeled (I.identifier "x") (S.empty ())) in
+           let layout =
+             Js_layout_generator.statement ~opts (S.labeled (I.identifier "x") (S.empty ()))
+           in
            assert_output ~ctxt "x:;" layout;
            assert_output ~ctxt ~pretty:true "x: ;" layout );
          ( "array_expressions" >:: fun ctxt ->
@@ -1119,6 +1139,7 @@ let tests =
            let a80 = String.make 80 'a' in
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.array
                   [E.array_expression (E.identifier a80); E.array_expression (E.identifier a80)])
            in
@@ -1152,6 +1173,7 @@ let tests =
          ( "array_with_trailing_hole" >:: fun ctxt ->
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.array [E.array_expression (E.identifier "a"); E.array_hole ()])
            in
            assert_layout
@@ -1172,6 +1194,7 @@ let tests =
            let a80 = String.make 80 'a' in
            let layout =
              Js_layout_generator.expression
+               ~opts
                (E.array [E.array_expression (E.identifier a80); E.array_hole ()])
            in
            assert_output ~ctxt ("[" ^ a80 ^ ",,]") layout;
@@ -1277,7 +1300,7 @@ let tests =
                  ~implements:[Ast_builder.Classes.implements (I.identifier "c")]
                  []
              in
-             let layout = Js_layout_generator.statement ast in
+             let layout = Js_layout_generator.statement ~opts ast in
              assert_layout
                ~ctxt
                L.(
@@ -1312,7 +1335,7 @@ let tests =
              let y29 = String.make 29 'y' in
              let c2 = S.class_declaration ~id:(I.identifier x35) ~super:(E.identifier y29) [] in
              let ast = S.block [c2] in
-             let layout = Js_layout_generator.statement ast in
+             let layout = Js_layout_generator.statement ~opts ast in
              assert_layout
                ~ctxt
                L.(
@@ -1436,6 +1459,7 @@ let tests =
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
+               ~opts
                (S.for_in
                   (S.for_in_declarator [S.variable_declarator a])
                   (E.identifier b)
@@ -1494,6 +1518,7 @@ let tests =
          ( "forin_statement_pattern_identifier" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
+               ~opts
                (S.for_in (S.for_in_pattern (Patterns.identifier a)) (E.identifier b) (S.block []))
            in
            begin
@@ -1526,6 +1551,7 @@ let tests =
          ( "forin_empty_body" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.for_in
                   (S.for_in_pattern (Patterns.identifier "a"))
                   (E.identifier "b")
@@ -1536,6 +1562,7 @@ let tests =
          ( "forof_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
+               ~opts
                (S.for_of
                   (S.for_of_declarator [S.variable_declarator a])
                   (E.identifier b)
@@ -1594,6 +1621,7 @@ let tests =
          ( "forof_statement_pattern_identifier" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
+               ~opts
                (S.for_of (S.for_of_pattern (Patterns.identifier a)) (E.identifier b) (S.block []))
            in
            begin
@@ -1628,6 +1656,7 @@ let tests =
          ( "forof_empty_body" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.for_of
                   (S.for_of_pattern (Patterns.identifier "a"))
                   (E.identifier "b")
@@ -1755,7 +1784,7 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "declare export opaque type a: b;" );
          ( "type_cast_expression" >:: fun ctxt ->
            let layout =
-             Js_layout_generator.expression (E.typecast (E.identifier "a") Types.mixed)
+             Js_layout_generator.expression ~opts (E.typecast (E.identifier "a") Types.mixed)
            in
            assert_layout
              ~ctxt
@@ -1774,7 +1803,7 @@ let tests =
 
            let a80 = String.make 80 'a' in
            let layout =
-             Js_layout_generator.expression (E.typecast (E.identifier a80) Types.mixed)
+             Js_layout_generator.expression ~opts (E.typecast (E.identifier a80) Types.mixed)
            in
            assert_output ~ctxt ("(" ^ a80 ^ ":mixed)") layout;
            assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout );
@@ -1967,6 +1996,7 @@ let tests =
            in
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.switch
                   (E.identifier "x")
                   [
@@ -2078,6 +2108,7 @@ let tests =
          ( "switch_case_empty" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
+               ~opts
                (S.switch
                   (E.identifier "x")
                   [S.switch_case ~test:(E.literal (Literals.string "a")) [S.empty ()]])
@@ -2106,7 +2137,7 @@ let tests =
            assert_statement_string ~ctxt "throw new Error();" );
          ( "string_literal" >:: fun ctxt ->
            let ast = E.literal (Literals.string "a") in
-           let layout = Js_layout_generator.expression ast in
+           let layout = Js_layout_generator.expression ~opts ast in
            assert_layout ~ctxt L.(loc (fused [atom "\""; atom "a"; atom "\""])) layout;
            assert_output ~ctxt {|"a"|} layout;
            assert_output ~ctxt ~pretty:true {|"a"|} layout );
@@ -2114,6 +2145,9 @@ let tests =
            (* escaped using Unicode codepoint *)
            let ast = expression_of_string {|"\u{1F4A9}"|} in
            assert_expression ~ctxt {|"\ud83d\udca9"|} ast;
+
+           (* not escaped when formatting is preserved *)
+           assert_expression ~ctxt ~opts:preserve_formatting_opts {|"\u{1F4A9}"|} ast;
 
            (* escaped using UTF-16 (hex get lowercased) *)
            let ast = expression_of_string {|"\uD83D\uDCA9"|} in
@@ -2155,18 +2189,20 @@ let tests =
          ( "sequence_long" >:: fun ctxt ->
            let x80 = String.make 80 'x' in
            let layout =
-             Js_layout_generator.expression (E.sequence [E.identifier x80; E.identifier x80])
+             Js_layout_generator.expression ~opts (E.sequence [E.identifier x80; E.identifier x80])
            in
            assert_output ~ctxt (x80 ^ "," ^ x80) layout;
            assert_output ~ctxt ~pretty:true (x80 ^ ",\n" ^ x80) layout );
          ( "with_statement_with_empty_body" >:: fun ctxt ->
-           let layout = Js_layout_generator.statement (S.with_ (E.identifier "x") (S.empty ())) in
+           let layout =
+             Js_layout_generator.statement ~opts (S.with_ (E.identifier "x") (S.empty ()))
+           in
            assert_output ~ctxt "with(x);" layout;
            assert_output ~ctxt ~pretty:true "with (x);" layout );
          ( "enum_of_boolean" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
-               Js_layout_generator.statement
+               Js_layout_generator.statement ~opts
                @@ S.enum_declaration
                     (I.identifier "E")
                     (boolean_body
@@ -2192,7 +2228,7 @@ let tests =
          ( "enum_of_number" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
-               Js_layout_generator.statement
+               Js_layout_generator.statement ~opts
                @@ S.enum_declaration
                     (I.identifier "E")
                     (number_body
@@ -2218,7 +2254,7 @@ let tests =
          ( "enum_of_string_initialized" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
-               Js_layout_generator.statement
+               Js_layout_generator.statement ~opts
                @@ S.enum_declaration
                     (I.identifier "E")
                     (string_initialized_body
@@ -2244,7 +2280,7 @@ let tests =
          ( "enum_of_string_defaulted" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
-               Js_layout_generator.statement
+               Js_layout_generator.statement ~opts
                @@ S.enum_declaration
                     (I.identifier "E")
                     (string_defaulted_body
@@ -2265,7 +2301,7 @@ let tests =
          ( "enum_of_symbol" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout =
-               Js_layout_generator.statement
+               Js_layout_generator.statement ~opts
                @@ S.enum_declaration
                     (I.identifier "E")
                     (symbol_body
