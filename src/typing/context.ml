@@ -82,6 +82,13 @@ type computed_property_state =
   | ResolvedOnce of Reason.t
   | ResolvedMultipleTimes
 
+type enum_exhaustive_check_with_context = {
+  check_reason: Reason.t;
+  enum_reason: Reason.t;
+  enum: Type.enum_t;
+  exhaustive_check: Type.enum_exhaustive_check_t;
+}
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -147,7 +154,7 @@ type sig_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
-  mutable enum_exhaustive_checks: (Type.t * Type.enum_exhaustive_check_t) list;
+  mutable enum_exhaustive_checks: enum_exhaustive_check_with_context list;
   mutable openness_graph: Openness.graph;
 }
 

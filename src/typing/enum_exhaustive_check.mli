@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val detect_invalid_check : Context.t -> Type.t * Type.enum_exhaustive_check_t -> unit
+val detect_invalid_check : Context.t -> Context.enum_exhaustive_check_with_context -> unit

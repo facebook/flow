@@ -70,6 +70,7 @@ type hash =
   | TypeAppH
   | TypeCastH
   | EnumCastH
+  | EnumExhaustiveCheckH
   | ThisClassH
   | ThisTypeAppH
   | BoundH
@@ -370,6 +371,7 @@ let hash_of_use_ctor =
     | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
     | TypeCastT _ -> TypeCastH
     | EnumCastT _ -> EnumCastH
+    | EnumExhaustiveCheckT _ -> EnumExhaustiveCheckH
     | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH

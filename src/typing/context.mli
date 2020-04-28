@@ -23,6 +23,13 @@ type t
 
 type sig_t
 
+type enum_exhaustive_check_with_context = {
+  check_reason: Reason.t;
+  enum_reason: Reason.t;
+  enum: Type.enum_t;
+  exhaustive_check: Type.enum_exhaustive_check_t;
+}
+
 type metadata = {
   (* local *)
   checked: bool;
@@ -391,9 +398,9 @@ val mark_invariant : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_invariants : t -> (ALoc.t * Reason.t) list
 
-val add_enum_exhaustive_check : t -> Type.t * Type.enum_exhaustive_check_t -> unit
+val add_enum_exhaustive_check : t -> enum_exhaustive_check_with_context -> unit
 
-val enum_exhaustive_checks : t -> (Type.t * Type.enum_exhaustive_check_t) list
+val enum_exhaustive_checks : t -> enum_exhaustive_check_with_context list
 
 (* utils *)
 val iter_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit

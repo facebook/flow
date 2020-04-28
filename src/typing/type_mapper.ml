@@ -1090,6 +1090,24 @@ class virtual ['a] t_with_uses =
           t
         else
           EnumCastT { use_op; enum = (reason, trust, enum') }
+      | EnumExhaustiveCheckT (r, exhaustive_check) ->
+        (match exhaustive_check with
+        | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
+          let map_check check =
+            let (reason, name, check_t) = check in
+            let check_t' = self#type_ cx map_cx check_t in
+            if check_t' == check_t then
+              check
+            else
+              (reason, name, check_t')
+          in
+          let checks' = ListUtils.ident_map map_check checks in
+          if checks' == checks then
+            t
+          else
+            EnumExhaustiveCheckT
+              (r, EnumExhaustiveCheckPossiblyValid { checks = checks'; default_case })
+        | EnumExhaustiveCheckInvalid _ -> t)
       | FilterOptionalT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

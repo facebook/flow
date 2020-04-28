@@ -1316,13 +1316,15 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             ([], [], None)
             cases_ast
         in
-        Context.add_enum_exhaustive_check
+        let exhaustive_check =
+          if List.length invalid_checks = 0 then
+            EnumExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
+          else
+            EnumExhaustiveCheckInvalid (List.rev invalid_checks)
+        in
+        Flow.flow
           cx
-          ( discriminant_t,
-            if List.length invalid_checks = 0 then
-              EnumExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
-            else
-              EnumExhaustiveCheckInvalid (List.rev invalid_checks) );
+          (discriminant_t, EnumExhaustiveCheckT (reason_of_t discriminant_t, exhaustive_check));
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )

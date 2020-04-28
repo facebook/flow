@@ -6464,6 +6464,20 @@ struct
             UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
           when ALoc.equal_id id1 id2 ->
           ()
+        | ( DefT (enum_reason, _, EnumT enum),
+            EnumExhaustiveCheckT (check_reason, EnumExhaustiveCheckPossiblyValid exhaustive_check)
+          ) ->
+          Context.add_enum_exhaustive_check
+            cx
+            { Context.check_reason; enum_reason; enum; exhaustive_check }
+        | ( DefT (_, _, EnumT { enum_name; members; _ }),
+            EnumExhaustiveCheckT (_, EnumExhaustiveCheckInvalid reasons) ) ->
+          let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
+          List.iter
+            (fun reason ->
+              add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
+            reasons
+        | (_, EnumExhaustiveCheckT _) -> () (* ignore non-enum exhaustive checks *)
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
@@ -7565,6 +7579,7 @@ struct
     | (_, TypeAppVarianceCheckT _)
     | (_, TypeCastT _)
     | (_, EnumCastT _)
+    | (_, EnumExhaustiveCheckT _)
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
     | (_, ModuleExportsAssignT _)
@@ -7777,6 +7792,7 @@ struct
     | TypeAppVarianceCheckT _
     | TypeCastT _
     | EnumCastT _
+    | EnumExhaustiveCheckT _
     | FilterOptionalT _
     | FilterMaybeT _
     | VarianceCheckT _

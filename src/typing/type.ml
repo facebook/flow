@@ -770,14 +770,17 @@ module rec TypeTerm : sig
         use_op: use_op;
         enum: reason * Trust.trust_rep * enum_t;
       }
+    | EnumExhaustiveCheckT of reason * enum_possible_exhaustive_check_t
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
 
-  and enum_exhaustive_check_t =
-    | EnumExhaustiveCheckPossiblyValid of {
-        checks: (reason * name * t) list;
-        default_case: reason option;
-      }
+  and enum_exhaustive_check_t = {
+    checks: (reason * name * t) list;
+    default_case: reason option;
+  }
+
+  and enum_possible_exhaustive_check_t =
+    | EnumExhaustiveCheckPossiblyValid of enum_exhaustive_check_t
     | EnumExhaustiveCheckInvalid of reason list
 
   and cond_context =
@@ -2593,6 +2596,7 @@ end = struct
     | DebugSleepT reason -> reason
     | ElemT (_, reason, _, _) -> reason
     | EnumCastT { enum = (reason, _, _); _ } -> reason
+    | EnumExhaustiveCheckT (reason, _) -> reason
     | EqT { reason; _ } -> reason
     | ExportNamedT (reason, _, _, _) -> reason
     | ExportTypeT (reason, _, _, _) -> reason
@@ -2763,6 +2767,7 @@ end = struct
     | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
     | EnumCastT { use_op; enum = (reason, trust, enum) } ->
       EnumCastT { use_op; enum = (f reason, trust, enum) }
+    | EnumExhaustiveCheckT (reason, check) -> EnumExhaustiveCheckT (f reason, check)
     | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
     | ExportNamedT (reason, tmap, export_kind, t_out) ->
       ExportNamedT (f reason, tmap, export_kind, t_out)
@@ -2984,7 +2989,8 @@ end = struct
     | DestructuringT _
     | ModuleExportsAssignT _
     | CreateObjWithComputedPropT _
-    | ResolveUnionT _ ->
+    | ResolveUnionT _
+    | EnumExhaustiveCheckT _ ->
       nope u
 
   let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)
@@ -3713,6 +3719,7 @@ let string_of_use_ctor = function
   | DebugSleepT _ -> "DebugSleepT"
   | ElemT _ -> "ElemT"
   | EnumCastT _ -> "EnumCastT"
+  | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
