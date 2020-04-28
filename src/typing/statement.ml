@@ -1290,11 +1290,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         let (invalid_checks, checks, default_case) =
           List.fold_left
             (fun (invalid_checks, checks, default_case) -> function
-              | ( case_loc,
+              | ( _,
                   {
                     Switch.Case.test =
                       Some
-                        ( _,
+                        ( (case_test_loc, _),
                           Ast.Expression.Member
                             Ast.Expression.Member.
                               {
@@ -1305,13 +1305,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                     _;
                   } )
                 when is_valid_enum_member_name name ->
-                let case_reason = mk_reason (RCustom "case") case_loc in
+                let case_reason = mk_reason (RCustom "case") case_test_loc in
                 (invalid_checks, (case_reason, name, t) :: checks, default_case)
               | (default_case_loc, { Switch.Case.test = None; _ }) ->
                 let default_case_reason = mk_reason (RCustom "default case") default_case_loc in
                 (invalid_checks, checks, Some default_case_reason)
-              | (case_loc, _) ->
-                let case_reason = mk_reason (RCustom "case") case_loc in
+              | (_, { Switch.Case.test = Some ((case_test_loc, _), _); _ }) ->
+                let case_reason = mk_reason (RCustom "case") case_test_loc in
                 (case_reason :: invalid_checks, checks, default_case))
             ([], [], None)
             cases_ast

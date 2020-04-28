@@ -1127,28 +1127,20 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:45:3
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:45:8
 
 Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
 
    45|   case x: // Error
-         ^^^^^^^
+              ^
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:5
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:51:10
 
 Invalid enum member check at case. Check must be dot-access of a member of `G`, for example `case G.A:`.
 
    51|     case g: break; // Error
-           ^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:56:3
-
-Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
-
-   56|   case E.isValid: break; // Error
-         ^^^^^^^^^^^^^^^^^^^^^^
+                ^
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:56:8
@@ -1175,6 +1167,14 @@ References:
         ^ [3]
 
 
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:56:8
+
+Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
+
+   56|   case E.isValid: break; // Error
+              ^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:65:9
 
 Invalid exhaustive check: 2 members of `E` [1] have not been considered in check of `x`. For example, the member `A`.
@@ -1193,13 +1193,13 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:74:3
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:74:8
 
 Invalid exhaustive check: case checks for enum member `A` of `E` [1], but member `A` was already checked at case [2].
 
-   exhaustive-check.js:74:3
+   exhaustive-check.js:74:8
    74|   case E.A: break; // Error
-         ^^^^^^^^^^^^^^^^
+              ^^^
 
 References:
    exhaustive-check.js:3:1
@@ -1209,9 +1209,9 @@ References:
     5|   B,
     6| }
        ^ [1]
-   exhaustive-check.js:72:3
+   exhaustive-check.js:72:8
    72|   case E.A: break;
-         ^^^^^^^^^^^^^^^^ [2]
+              ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:3
