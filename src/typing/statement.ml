@@ -1286,45 +1286,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           in
           loop (None, false, case_exits)
         in
+        let enum_exhaustive_check = enum_exhaustive_check_of_switch_cases cases_ast in
         let ((_, discriminant_t), _) = discriminant_ast in
-        let (invalid_checks, checks, default_case) =
-          List.fold_left
-            (fun (invalid_checks, checks, default_case) -> function
-              | ( _,
-                  {
-                    Switch.Case.test =
-                      Some
-                        ( (case_test_loc, _),
-                          Ast.Expression.Member
-                            Ast.Expression.Member.
-                              {
-                                _object = ((_, t), _);
-                                property = PropertyIdentifier (_, { Ast.Identifier.name; _ });
-                                _;
-                              } );
-                    _;
-                  } )
-                when is_valid_enum_member_name name ->
-                let case_reason = mk_reason (RCustom "case") case_test_loc in
-                (invalid_checks, (case_reason, name, t) :: checks, default_case)
-              | (default_case_loc, { Switch.Case.test = None; _ }) ->
-                let default_case_reason = mk_reason (RCustom "default case") default_case_loc in
-                (invalid_checks, checks, Some default_case_reason)
-              | (_, { Switch.Case.test = Some ((case_test_loc, _), _); _ }) ->
-                let case_reason = mk_reason (RCustom "case") case_test_loc in
-                (case_reason :: invalid_checks, checks, default_case))
-            ([], [], None)
-            cases_ast
-        in
-        let exhaustive_check =
-          if List.length invalid_checks = 0 then
-            EnumExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
-          else
-            EnumExhaustiveCheckInvalid (List.rev invalid_checks)
-        in
         Flow.flow
           cx
-          (discriminant_t, EnumExhaustiveCheckT (reason_of_t discriminant_t, exhaustive_check));
+          (discriminant_t, EnumExhaustiveCheckT (reason_of_t discriminant_t, enum_exhaustive_check));
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )
@@ -8377,6 +8343,56 @@ and warn_or_ignore_optional_chaining optional cx loc =
 
 and is_valid_enum_member_name name =
   (not @@ Base.String.is_empty name) && (not @@ Base.Char.is_lowercase name.[0])
+
+and enum_exhaustive_check_of_switch_cases cases_ast =
+  let open Flow_ast in
+  let open Flow_ast.Statement.Switch in
+  let exhaustive_check =
+    List.fold_left
+      (fun acc -> function
+        | ( _,
+            {
+              Case.test =
+                Some
+                  ( (case_test_loc, _),
+                    Expression.Member
+                      Expression.Member.
+                        {
+                          _object = ((_, t), _);
+                          property = PropertyIdentifier (_, { Identifier.name; _ });
+                          _;
+                        } );
+              _;
+            } )
+          when is_valid_enum_member_name name ->
+          (match acc with
+          | EnumExhaustiveCheckInvalid _ -> acc
+          | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
+            EnumExhaustiveCheckPossiblyValid
+              {
+                checks = (mk_reason (RCustom "case") case_test_loc, name, t) :: checks;
+                default_case;
+              })
+        | (default_case_loc, { Case.test = None; _ }) ->
+          (match acc with
+          | EnumExhaustiveCheckInvalid _ -> acc
+          | EnumExhaustiveCheckPossiblyValid { checks; default_case = _ } ->
+            EnumExhaustiveCheckPossiblyValid
+              { checks; default_case = Some (mk_reason (RCustom "default case") default_case_loc) })
+        | (_, { Case.test = Some ((case_test_loc, _), _); _ }) ->
+          let case_reason = Reason.mk_reason (Reason.RCustom "case") case_test_loc in
+          (match acc with
+          | EnumExhaustiveCheckInvalid invalid_checks ->
+            EnumExhaustiveCheckInvalid (case_reason :: invalid_checks)
+          | EnumExhaustiveCheckPossiblyValid _ -> EnumExhaustiveCheckInvalid [case_reason]))
+      (EnumExhaustiveCheckPossiblyValid { checks = []; default_case = None })
+      cases_ast
+  in
+  match exhaustive_check with
+  | EnumExhaustiveCheckInvalid invalid_checks ->
+    EnumExhaustiveCheckInvalid (List.rev invalid_checks)
+  | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
+    EnumExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
 
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
