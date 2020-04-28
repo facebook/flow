@@ -40,6 +40,30 @@ switch (x)  { // Error
   case E.A: break;
 }
 
+enum Five {
+  Apple,
+  Banana,
+  Cherry,
+  Date,
+  Elderberry,
+}
+declare var five: Five;
+switch (five) {} // Error
+
+enum Six {
+  Apple,
+  Banana,
+  Cherry,
+  Date,
+  Elderberry,
+  Fig,
+}
+declare var six: Six;
+switch (six) {} // Error
+switch (six) { // Error
+  case Six.Date: break;
+}
+
 // Invalid check
 switch (x)  {
   case x: // Error

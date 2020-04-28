@@ -1111,7 +1111,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:39:9
 
-Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
 
    exhaustive-check.js:39:9
    39| switch (x)  { // Error
@@ -1127,33 +1127,78 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:45:8
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:9
+
+Incomplete exhaustive check: the members `Elderberry`, `Date`, `Cherry`, `Banana`, and `Apple` of enum `Five` [1] have
+not been considered in check of `five`.
+
+   exhaustive-check.js:51:9
+   51| switch (five) {} // Error
+               ^^^^
+
+References:
+   exhaustive-check.js:50:19
+   50| declare var five: Five;
+                         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:62:9
+
+Incomplete exhaustive check: the members `Fig`, `Elderberry`, `Date`, `Cherry`, and 2 others of enum `Six` [1] have not
+been considered in check of `six`.
+
+   exhaustive-check.js:62:9
+   62| switch (six) {} // Error
+               ^^^
+
+References:
+   exhaustive-check.js:61:18
+   61| declare var six: Six;
+                        ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:63:9
+
+Incomplete exhaustive check: the members `Fig`, `Elderberry`, `Cherry`, `Banana`, and `Apple` of enum `Six` [1] have not
+been considered in check of `six`.
+
+   exhaustive-check.js:63:9
+   63| switch (six) { // Error
+               ^^^
+
+References:
+   exhaustive-check.js:61:18
+   61| declare var six: Six;
+                        ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:69:8
 
 Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
 
-   45|   case x: // Error
+   69|   case x: // Error
               ^
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:51:10
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:75:10
 
 Invalid enum member check at case. Check must be dot-access of a member of `G`, for example `case G.A:`.
 
-   51|     case g: break; // Error
+   75|     case g: break; // Error
                 ^
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:56:8
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:8
 
 Invalid check of case test against switch discriminant [1] because function type [2] is incompatible with `E` [3].
 
-   exhaustive-check.js:56:8
-    56|   case E.isValid: break; // Error
+   exhaustive-check.js:80:8
+    80|   case E.isValid: break; // Error
                ^^^^^^^^^
 
 References:
-   exhaustive-check.js:55:9
-    55| switch (x)  {
+   exhaustive-check.js:79:9
+    79| switch (x)  {
                 ^ [1]
    <BUILTINS>/core.js:941:3
    941|   isValid(input: TRepresentation): boolean,
@@ -1167,20 +1212,20 @@ References:
         ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:56:8
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:8
 
 Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
 
-   56|   case E.isValid: break; // Error
+   80|   case E.isValid: break; // Error
               ^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:65:9
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:89:9
 
-Invalid exhaustive check: 2 members of `E` [1] have not been considered in check of `x`. For example, the member `A`.
+Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not been considered in check of `x`.
 
-   exhaustive-check.js:65:9
-   65| switch (x) { // Error - two cases below don't count as checks
+   exhaustive-check.js:89:9
+   89| switch (x) { // Error - two cases below don't count as checks
                ^
 
 References:
@@ -1193,12 +1238,12 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:74:8
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:8
 
 Invalid exhaustive check: case checks for enum member `A` of `E` [1], but member `A` was already checked at case [2].
 
-   exhaustive-check.js:74:8
-   74|   case E.A: break; // Error
+   exhaustive-check.js:98:8
+   98|   case E.A: break; // Error
               ^^^
 
 References:
@@ -1209,402 +1254,36 @@ References:
     5|   B,
     6| }
        ^ [1]
-   exhaustive-check.js:72:8
-   72|   case E.A: break;
+   exhaustive-check.js:96:8
+   96|   case E.A: break;
               ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:3
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:104:3
 
 Invalid exhaustive check: default case checks for additional enum members of `E` [1], but all of its members have
 already been checked.
 
-   exhaustive-check.js:80:3
-   80|   default: // Error
-         ^^^^^^^^
+   exhaustive-check.js:104:3
+   104|   default: // Error
+          ^^^^^^^^
 
 References:
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:84:9
-
-Invalid exhaustive check: 2 members of `E` [1] have not been considered in check of `x`. For example, the member `A`.
-
-   exhaustive-check.js:84:9
-   84| switch (x)  { // Error
-               ^
-
-References:
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:85:8
-
-Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
-
-   exhaustive-check.js:85:8
-   85|   case F.A: break; // Error
-              ^^^
-
-References:
-   exhaustive-check.js:84:9
-   84| switch (x)  { // Error
-               ^ [1]
-   exhaustive-check.js:8:1
-       v-------
-    8| enum F {
-    9|   A,
-   10|   B,
-   11| }
-       ^ [2]
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [3]
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:86:8
-
-Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
-
-   exhaustive-check.js:86:8
-   86|   case F.B: break;
-              ^^^
-
-References:
-   exhaustive-check.js:84:9
-   84| switch (x)  { // Error
-               ^ [1]
-   exhaustive-check.js:8:1
-       v-------
-    8| enum F {
-    9|   A,
-   10|   B,
-   11| }
-       ^ [2]
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [3]
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:91:8
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
-
-   exhaustive-check.js:91:8
-   91|   case E.A: break; // Error
-              ^^^
-
-References:
-   exhaustive-check.js:90:9
-   90| switch (s)  {
-               ^ [1]
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
-   exhaustive-check.js:89:16
-   89| declare var s: string;
-                      ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:92:8
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
-
-   exhaustive-check.js:92:8
-   92|   case E.B: break; // Error
-              ^^^
-
-References:
-   exhaustive-check.js:90:9
-   90| switch (s)  {
-               ^ [1]
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
-   exhaustive-check.js:89:16
-   89| declare var s: string;
-                      ^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:98:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
-
-   exhaustive-check.js:98:10
-   98|     case E.A: break; // Error
-                ^^^
-
-References:
-   exhaustive-check.js:97:11
-   97|   switch (x)  {
-                 ^ [1]
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
-   exhaustive-check.js:96:17
-   96| function f1(x?: E) {
-                       ^ [3]
-
-
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:99:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
-
-   exhaustive-check.js:99:10
-   99|     case E.B: break; // Error
-                ^^^
-
-References:
-   exhaustive-check.js:97:11
-   97|   switch (x)  {
-                 ^ [1]
-   exhaustive-check.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
-   exhaustive-check.js:96:17
-   96| function f1(x?: E) {
-                       ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:105:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
-
-   exhaustive-check.js:105:10
-   105|     case E.A: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:104:11
-   104|   switch (x)  {
-                  ^ [1]
    exhaustive-check.js:3:1
         v-------
      3| enum E {
      4|   A,
      5|   B,
      6| }
-        ^ [2]
-   exhaustive-check.js:103:16
-   103| function f2(x: ?E) {
-                       ^^ [3]
+        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:106:10
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:108:9
 
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
+Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not been considered in check of `x`.
 
-   exhaustive-check.js:106:10
-   106|     case E.B: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:104:11
-   104|   switch (x)  {
-                  ^ [1]
-   exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:103:16
-   103| function f2(x: ?E) {
-                       ^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:111:11
-
-Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
-
-   exhaustive-check.js:111:11
-   111|   switch (x)  { // Error
-                  ^
-
-References:
-   exhaustive-check.js:110:17
-   110| function f3(x: ?E) {
-                        ^ [1]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:112:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
-
-   exhaustive-check.js:112:10
-   112|     case E.A: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:111:11
-   111|   switch (x)  { // Error
-                  ^ [1]
-   exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:110:16
-   110| function f3(x: ?E) {
-                       ^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:117:11
-
-Invalid exhaustive check: 2 members of `F` [1] have not been considered in check of `x`. For example, the member `A`.
-
-   exhaustive-check.js:117:11
-   117|   switch (x)  { // Error
-                  ^
-
-References:
-   exhaustive-check.js:116:20
-   116| function f4(x: E | F) {
-                           ^ [1]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:118:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
-
-   exhaustive-check.js:118:10
-   118|     case E.A: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:117:11
-   117|   switch (x)  { // Error
-                  ^ [1]
-   exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:116:20
-   116| function f4(x: E | F) {
-                           ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:119:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
-
-   exhaustive-check.js:119:10
-   119|     case E.B: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:117:11
-   117|   switch (x)  { // Error
-                  ^ [1]
-   exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:116:20
-   116| function f4(x: E | F) {
-                           ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:125:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
-
-   exhaustive-check.js:125:10
-   125|     case E.A: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:124:11
-   124|   switch (x)  {
-                  ^ [1]
-   exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:123:20
-   123| function f5(x: E | string) {
-                           ^^^^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:126:10
-
-Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
-
-   exhaustive-check.js:126:10
-   126|     case E.B: break; // Error
-                 ^^^
-
-References:
-   exhaustive-check.js:124:11
-   124|   switch (x)  {
-                  ^ [1]
-   exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:123:20
-   123| function f5(x: E | string) {
-                           ^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:130:9
-
-Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
-
-   exhaustive-check.js:130:9
-   130| switch (x) { // Error
+   exhaustive-check.js:108:9
+   108| switch (x)  { // Error
                 ^
 
 References:
@@ -1617,17 +1296,17 @@ References:
         ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:132:8
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:109:8
 
 Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
 
-   exhaustive-check.js:132:8
-   132|   case F.A: break; // Error
+   exhaustive-check.js:109:8
+   109|   case F.A: break; // Error
                ^^^
 
 References:
-   exhaustive-check.js:130:9
-   130| switch (x) { // Error
+   exhaustive-check.js:108:9
+   108| switch (x)  { // Error
                 ^ [1]
    exhaustive-check.js:8:1
         v-------
@@ -1645,45 +1324,411 @@ References:
         ^ [3]
 
 
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:141:11
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:110:8
 
-Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
 
-   exhaustive-check.js:141:11
-   141|   switch (x) { // Error
+   exhaustive-check.js:110:8
+   110|   case F.B: break;
+               ^^^
+
+References:
+   exhaustive-check.js:108:9
+   108| switch (x)  { // Error
+                ^ [1]
+   exhaustive-check.js:8:1
+        v-------
+     8| enum F {
+     9|   A,
+    10|   B,
+    11| }
+        ^ [2]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:115:8
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:115:8
+   115|   case E.A: break; // Error
+               ^^^
+
+References:
+   exhaustive-check.js:114:9
+   114| switch (s)  {
+                ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:113:16
+   113| declare var s: string;
+                       ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:116:8
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:116:8
+   116|   case E.B: break; // Error
+               ^^^
+
+References:
+   exhaustive-check.js:114:9
+   114| switch (s)  {
+                ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:113:16
+   113| declare var s: string;
+                       ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:122:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
+
+   exhaustive-check.js:122:10
+   122|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:121:11
+   121|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:120:17
+   120| function f1(x?: E) {
+                        ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:123:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with undefined [3].
+
+   exhaustive-check.js:123:10
+   123|     case E.B: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:121:11
+   121|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:120:17
+   120| function f1(x?: E) {
+                        ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:129:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
+
+   exhaustive-check.js:129:10
+   129|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:128:11
+   128|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:127:16
+   127| function f2(x: ?E) {
+                       ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:130:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
+
+   exhaustive-check.js:130:10
+   130|     case E.B: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:128:11
+   128|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:127:16
+   127| function f2(x: ?E) {
+                       ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:135:11
+
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+
+   exhaustive-check.js:135:11
+   135|   switch (x)  { // Error
                   ^
 
 References:
-   exhaustive-check.js:135:16
-   135| function f6(x: E | E) {
-                       ^ [1]
+   exhaustive-check.js:134:17
+   134| function f3(x: ?E) {
+                        ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:136:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with null or undefined [3].
+
+   exhaustive-check.js:136:10
+   136|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:135:11
+   135|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:134:16
+   134| function f3(x: ?E) {
+                       ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:141:11
 
-Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
+Incomplete exhaustive check: the members `B` and `A` of enum `F` [1] have not been considered in check of `x`.
 
    exhaustive-check.js:141:11
-   141|   switch (x) { // Error
+   141|   switch (x)  { // Error
                   ^
 
 References:
-   exhaustive-check.js:135:20
-   135| function f6(x: E | E) {
+   exhaustive-check.js:140:20
+   140| function f4(x: E | F) {
                            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:152:11
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:142:10
 
-Invalid exhaustive check: the member `B` of `E` [1] has not been considered in check of `x`.
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
 
-   exhaustive-check.js:152:11
-   152|   switch (x) { // Error
+   exhaustive-check.js:142:10
+   142|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:141:11
+   141|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:140:20
+   140| function f4(x: E | F) {
+                           ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:143:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with `F` [3].
+
+   exhaustive-check.js:143:10
+   143|     case E.B: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:141:11
+   141|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:140:20
+   140| function f4(x: E | F) {
+                           ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:149:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:149:10
+   149|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:148:11
+   148|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:147:20
+   147| function f5(x: E | string) {
+                           ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:150:10
+
+Invalid check of case test against switch discriminant [1] because `E` [2] is incompatible with string [3].
+
+   exhaustive-check.js:150:10
+   150|     case E.B: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:148:11
+   148|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [2]
+   exhaustive-check.js:147:20
+   147| function f5(x: E | string) {
+                           ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:154:9
+
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+
+   exhaustive-check.js:154:9
+   154| switch (x) { // Error
+                ^
+
+References:
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:156:8
+
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
+
+   exhaustive-check.js:156:8
+   156|   case F.A: break; // Error
+               ^^^
+
+References:
+   exhaustive-check.js:154:9
+   154| switch (x) { // Error
+                ^ [1]
+   exhaustive-check.js:8:1
+        v-------
+     8| enum F {
+     9|   A,
+    10|   B,
+    11| }
+        ^ [2]
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:165:11
+
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+
+   exhaustive-check.js:165:11
+   165|   switch (x) { // Error
                   ^
 
 References:
-   exhaustive-check.js:146:16
-   146| function f7(x: E & E) {
+   exhaustive-check.js:159:16
+   159| function f6(x: E | E) {
+                       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:165:11
+
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+
+   exhaustive-check.js:165:11
+   165|   switch (x) { // Error
+                  ^
+
+References:
+   exhaustive-check.js:159:20
+   159| function f6(x: E | E) {
+                           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:176:11
+
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+
+   exhaustive-check.js:176:11
+   176|   switch (x) { // Error
+                  ^
+
+References:
+   exhaustive-check.js:170:16
+   170| function f7(x: E & E) {
                        ^ [1]
 
 
@@ -3194,4 +3239,4 @@ References:
 
 
 
-Found 174 errors
+Found 177 errors

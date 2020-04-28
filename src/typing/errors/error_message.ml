@@ -347,8 +347,7 @@ and 'loc t' =
   | EEnumNotAllChecked of {
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
-      remaining_member_to_check: string;
-      number_remaining_members_to_check: int;
+      left_to_check: string list;
     }
   | EEnumInvalidCheck of {
       reason: 'loc virtual_reason;
@@ -856,15 +855,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
     EEnumAllMembersAlreadyChecked
       { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumNotAllChecked
-      { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+  | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
     EEnumNotAllChecked
-      {
-        reason = map_reason reason;
-        enum_reason = map_reason enum_reason;
-        remaining_member_to_check;
-        number_remaining_members_to_check;
-      }
+      { reason = map_reason reason; enum_reason = map_reason enum_reason; left_to_check }
   | EEnumInvalidCheck { reason; enum_name; example_member } ->
     EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
@@ -3011,32 +3004,29 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumNotAllChecked
-      { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+  | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
+    let left_to_check_features =
+      match left_to_check with
+      | [member_to_check] ->
+        [text "the member "; code member_to_check; text " of enum "; ref enum_reason; text " has"]
+      | _ ->
+        let number_to_check = List.length left_to_check in
+        let members_features =
+          if number_to_check > 5 then
+            let max_display_amount = 4 in
+            ( Base.List.take left_to_check max_display_amount
+            |> Base.List.bind ~f:(fun member -> [code member; text ", "]) )
+            @ [text (spf "and %d others" (number_to_check - max_display_amount))]
+          else
+            Friendly.conjunction_concat
+              (Base.List.map ~f:(fun member -> [code member]) left_to_check)
+        in
+        (text "the members " :: members_features)
+        @ [text " of enum "; ref enum_reason; text " have"]
+    in
     let features =
-      if number_remaining_members_to_check > 1 then
-        [
-          text "Invalid exhaustive check: ";
-          text (string_of_int number_remaining_members_to_check);
-          text " members of ";
-          ref enum_reason;
-          text " have not been considered in check of ";
-          desc reason;
-          text ". For example, the member ";
-          code remaining_member_to_check;
-          text ".";
-        ]
-      else
-        [
-          text "Invalid exhaustive check: ";
-          text "the member ";
-          code remaining_member_to_check;
-          text " of ";
-          ref enum_reason;
-          text " has not been considered in check of ";
-          desc reason;
-          text ".";
-        ]
+      (text "Incomplete exhaustive check: " :: left_to_check_features)
+      @ [text " not been considered in check of "; desc reason; text "."]
     in
     Normal { features }
   | EEnumInvalidCheck { reason; enum_name; example_member } ->

@@ -1593,14 +1593,12 @@ let dump_error_message =
         "EEnumAllMembersAlreadyChecked (%s) (%s)"
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
-    | EEnumNotAllChecked
-        { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+    | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
       spf
-        "EEnumNotAllChecked (%s) (%s) (%s) (%s)"
+        "EEnumNotAllChecked (%s) (%s) (%s)"
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
-        remaining_member_to_check
-        (string_of_int number_remaining_members_to_check)
+        (String.concat ", " left_to_check)
     | EEnumInvalidCheck { reason; enum_name; example_member } ->
       spf
         "EEnumInvalidCheck (%s) (%s) (%s)"

@@ -56,18 +56,13 @@ let detect_invalid_check
     | _ -> (members_remaining, seen)
   in
   let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
-  match (SMap.choose_opt left_over, default_case) with
-  | (Some (remaining_member_to_check, _), None) ->
+  match (SMap.is_empty left_over, default_case) with
+  | (false, None) ->
     Flow_js.add_output
       cx
       (Error_message.EEnumNotAllChecked
-         {
-           reason = check_reason;
-           enum_reason;
-           remaining_member_to_check;
-           number_remaining_members_to_check = SMap.cardinal left_over;
-         })
-  | (None, Some default_case_reason) ->
+         { reason = check_reason; enum_reason; left_to_check = SMap.keys left_over })
+  | (true, Some default_case_reason) ->
     Flow_js.add_output
       cx
       (Error_message.EEnumAllMembersAlreadyChecked { reason = default_case_reason; enum_reason })
