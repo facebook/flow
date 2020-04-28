@@ -201,8 +201,8 @@ let detect_unnecessary_invariants cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
-let detect_invalid_exhaustive_checks cx =
-  List.iter (Enum_exhaustive_check.detect_invalid_check cx) (Context.possible_exhaustive_checks cx)
+let detect_invalid_enum_exhaustive_checks cx =
+  List.iter (Enum_exhaustive_check.detect_invalid_check cx) (Context.enum_exhaustive_checks cx)
 
 let force_annotations leader_cx other_cxs =
   Base.List.iter
@@ -437,7 +437,7 @@ let merge_component
     detect_unnecessary_optional_chains cx;
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
-    detect_invalid_exhaustive_checks cx;
+    detect_invalid_enum_exhaustive_checks cx;
 
     force_annotations cx other_cxs;
 

@@ -773,12 +773,12 @@ module rec TypeTerm : sig
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
 
-  and exhaustive_check_t =
-    | ExhaustiveCheckPossiblyValid of {
+  and enum_exhaustive_check_t =
+    | EnumExhaustiveCheckPossiblyValid of {
         checks: (reason * name * t) list;
         default_case: reason option;
       }
-    | ExhaustiveCheckInvalid of reason list
+    | EnumExhaustiveCheckInvalid of reason list
 
   and cond_context =
     | SwitchTest of {

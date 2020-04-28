@@ -1316,13 +1316,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             ([], [], None)
             cases_ast
         in
-        Context.add_possible_exhaustive_check
+        Context.add_enum_exhaustive_check
           cx
-          discriminant_t
-          ( if List.length invalid_checks = 0 then
-            ExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
-          else
-            ExhaustiveCheckInvalid (List.rev invalid_checks) );
+          ( discriminant_t,
+            if List.length invalid_checks = 0 then
+              EnumExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
+            else
+              EnumExhaustiveCheckInvalid (List.rev invalid_checks) );
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )

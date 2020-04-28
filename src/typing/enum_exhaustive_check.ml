@@ -44,7 +44,7 @@ let detect_invalid_check cx (t, check) =
   | SingleEnum (enum_reason, { members; enum_name; enum_id; _ }) ->
     begin
       match check with
-      | ExhaustiveCheckPossiblyValid { checks; default_case } ->
+      | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
         let check_member (members_remaining, seen) (case_reason, member_name, check_t) =
           match search_for_enum_type cx check_t with
           | SingleEnum (_, { enum_id = check_enum_id; _ }) when ALoc.equal_id enum_id check_enum_id
@@ -82,7 +82,7 @@ let detect_invalid_check cx (t, check) =
                  { reason = default_case_reason; enum_reason })
           | _ -> ()
         end
-      | ExhaustiveCheckInvalid reasons ->
+      | EnumExhaustiveCheckInvalid reasons ->
         let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
         List.iter
           (fun reason ->
