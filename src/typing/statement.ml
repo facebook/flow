@@ -1294,11 +1294,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                   {
                     Switch.Case.test =
                       Some
-                        ( (_, t),
+                        ( _,
                           Ast.Expression.Member
                             Ast.Expression.Member.
                               {
-                                _object;
+                                _object = ((_, t), _);
                                 property = PropertyIdentifier (_, { Ast.Identifier.name; _ });
                                 _;
                               } );

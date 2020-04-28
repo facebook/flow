@@ -12,9 +12,9 @@ type enum_search_result =
   | SingleEnum of (Reason.t * enum_t)
   | Other
 
-let search_for_enum_type cx t =
+let search_for_enum_object_type cx t =
   let rec f ((seen_ids, result) as acc) = function
-    | DefT (reason, _, EnumT enum) ->
+    | DefT (reason, _, EnumObjectT enum) ->
       let result =
         match result with
         | Empty -> SingleEnum (reason, enum)
@@ -45,7 +45,7 @@ let detect_invalid_check
       exhaustive_check = { checks; default_case };
     } =
   let check_member (members_remaining, seen) (case_reason, member_name, check_t) =
-    match search_for_enum_type cx check_t with
+    match search_for_enum_object_type cx check_t with
     | SingleEnum (_, { enum_id = check_enum_id; _ }) when ALoc.equal_id enum_id check_enum_id ->
       if not @@ SMap.mem member_name members_remaining then
         Flow_js.add_output

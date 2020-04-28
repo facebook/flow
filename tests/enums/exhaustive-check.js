@@ -56,6 +56,17 @@ switch (x)  {
   case E.isValid: break; // Error
 }
 
+// Enum object is a different object
+const Fake = {
+  A: E.B,
+  B: E.A,
+}
+
+switch (x) { // Error - two cases below don't count as checks
+  case Fake.A: 'actually B!'; break;
+  case Fake.B: 'actually A!'; break;
+}
+
 // Duplicate check
 switch (x)  {
   case E.A: break;
