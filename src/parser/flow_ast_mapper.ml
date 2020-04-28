@@ -453,15 +453,29 @@ class ['loc] mapper =
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance = _; comments } = prop in
+      let { key; value; annot; static = _; variance; comments } = prop in
       let key' = this#object_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
+      let variance' = this#variance variance in
       let comments' = this#syntax_opt comments in
-      if key == key' && value == value' && annot' == annot && comments' == comments then
+      if
+        key == key'
+        && value == value'
+        && annot' == annot
+        && variance' == variance
+        && comments' == comments
+      then
         prop
       else
-        { prop with key = key'; value = value'; annot = annot'; comments = comments' }
+        {
+          prop with
+          key = key';
+          value = value';
+          annot = annot';
+          variance = variance';
+          comments = comments';
+        }
 
     method class_property_value (value : ('loc, 'loc) Ast.Class.Property.value) =
       let open Ast.Class.Property in
@@ -477,15 +491,29 @@ class ['loc] mapper =
 
     method class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance = _; comments } = prop in
+      let { key; value; annot; static = _; variance; comments } = prop in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
+      let variance' = this#variance variance in
       let comments' = this#syntax_opt comments in
-      if key == key' && value == value' && annot' == annot && comments' == comments then
+      if
+        key == key'
+        && value == value'
+        && annot' == annot
+        && variance' == variance
+        && comments' == comments
+      then
         prop
       else
-        { prop with key = key'; value = value'; annot = annot'; comments = comments' }
+        {
+          prop with
+          key = key';
+          value = value';
+          annot = annot';
+          variance = variance';
+          comments = comments';
+        }
 
     (* TODO *)
     method comprehension _loc (expr : ('loc, 'loc) Ast.Expression.Comprehension.t) = expr
@@ -1011,8 +1039,9 @@ class ['loc] mapper =
       let (loc, { key; value; optional; static; proto; _method; variance; comments }) = opt in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
+      let variance' = this#variance variance in
       let comments' = this#syntax_opt comments in
-      if key' == key && value' == value && comments' == comments then
+      if key' == key && value' == value && variance' == variance && comments' == comments then
         opt
       else
         ( loc,
@@ -1023,7 +1052,7 @@ class ['loc] mapper =
             static;
             proto;
             _method;
-            variance;
+            variance = variance';
             comments = comments';
           } )
 
@@ -1115,7 +1144,15 @@ class ['loc] mapper =
         else
           Qualified (loc, { qualification = qualification'; id = id' })
 
-    method variance (variance : 'loc Ast.Variance.t option) = variance
+    method variance (variance : 'loc Ast.Variance.t option) =
+      match variance with
+      | None -> None
+      | Some (loc, { Ast.Variance.kind; comments }) ->
+        let comments' = this#syntax_opt comments in
+        if comments == comments' then
+          variance
+        else
+          Some (loc, { Ast.Variance.kind; comments = comments' })
 
     method type_args (targs : ('loc, 'loc) Ast.Type.TypeArgs.t) =
       let open Ast.Type.TypeArgs in

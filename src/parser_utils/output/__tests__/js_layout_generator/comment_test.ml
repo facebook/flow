@@ -174,7 +174,9 @@ let tests =
       assert_statement_string
         ~ctxt
         ~pretty:true
-        "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...,\n};" );
+        "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...,\n};";
+      (* Leading comments on variance nodes are included in comment bounds of property *)
+      assert_statement_string ~ctxt ~pretty:true "type T = {\n  +a: any,\n  //L\n  +b: any,\n};" );
     ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
     ( "switch_case" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );
