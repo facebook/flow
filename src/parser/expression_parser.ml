@@ -1466,13 +1466,13 @@ module Expression
     let loc = Peek.loc env in
     let leading = Peek.comments env in
     let tkn = Peek.token env in
-    let trailing = Eat.trailing_comments env in
-    let (raw, pattern, raw_flags) =
+    let (raw, pattern, raw_flags, trailing) =
       match tkn with
       | T_REGEXP (_, pattern, flags) ->
         Eat.token env;
+        let trailing = Eat.trailing_comments env in
         let raw = "/" ^ pattern ^ "/" ^ flags in
-        (raw, pattern, flags)
+        (raw, pattern, flags, trailing)
       | _ -> assert false
     in
     Eat.pop_lex_mode env;
