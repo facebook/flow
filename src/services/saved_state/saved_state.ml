@@ -132,7 +132,7 @@ end = struct
     }
 
   (* Collect all the data for a single parsed file *)
-  let collect_normalized_data_for_parsed_file ~root ~reader parsed_heaps fn =
+  let collect_normalized_data_for_parsed_file ~root ~reader fn parsed_heaps =
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
@@ -156,7 +156,7 @@ end = struct
     FilenameMap.add relative_fn relative_file_data parsed_heaps
 
   (* Collect all the data for a single unparsed file *)
-  let collect_normalized_data_for_unparsed_file ~root ~reader unparsed_heaps fn =
+  let collect_normalized_data_for_unparsed_file ~root ~reader fn unparsed_heaps =
     let relative_file_data =
       {
         unparsed_info =
@@ -179,27 +179,23 @@ end = struct
   let normalize_error_set ~root = Flow_error.ErrorSet.map (normalize_error ~root)
 
   (* Collect all the data for all the files *)
-  let collect_data ~workers ~genv ~env ~profiling =
+  let collect_data ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
     let root = Options.root options |> Path.to_string in
     let reader = State_reader.create () in
-    let%lwt parsed_heaps =
-      Profiling_js.with_timer_lwt profiling ~timer:"CollectParsed" ~f:(fun () ->
-          MultiWorkerLwt.call
-            workers
-            ~job:(List.fold_left (collect_normalized_data_for_parsed_file ~root ~reader))
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.files)))
+    let parsed_heaps =
+      Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
+          FilenameSet.fold
+            (collect_normalized_data_for_parsed_file ~root ~reader)
+            env.ServerEnv.files
+            FilenameMap.empty)
     in
-    let%lwt unparsed_heaps =
-      Profiling_js.with_timer_lwt profiling ~timer:"CollectUnparsed" ~f:(fun () ->
-          MultiWorkerLwt.call
-            workers
-            ~job:(List.fold_left (collect_normalized_data_for_unparsed_file ~root ~reader))
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.unparsed)))
+    let unparsed_heaps =
+      Profiling_js.with_timer profiling ~timer:"CollectUnparsed" ~f:(fun () ->
+          FilenameSet.fold
+            (collect_normalized_data_for_unparsed_file ~root ~reader)
+            env.ServerEnv.unparsed
+            FilenameMap.empty)
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
@@ -252,8 +248,7 @@ end = struct
   let save ~saved_state_filename ~genv ~env ~profiling =
     Hh_logger.info "Collecting data for saved state";
 
-    let workers = genv.ServerEnv.workers in
-    let%lwt data = collect_data ~workers ~genv ~env ~profiling in
+    let%lwt data = collect_data ~genv ~env ~profiling in
     let filename = Path.to_string saved_state_filename in
     let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
     let%lwt header_bytes_written = write_version fd in
