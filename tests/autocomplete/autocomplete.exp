@@ -497,7 +497,7 @@ indirect_array.js:5:3 = {
     {"name":"?.entries","type":"void | (() => Iterator<[number, T]>)"},
     {
       "name":"?.every",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean)"
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean)"
     },
     {
       "name":"?.fill",
@@ -505,24 +505,24 @@ indirect_array.js:5:3 = {
     },
     {
       "name":"?.filter",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => Array<T>)"
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => Array<T>)"
     },
     {
       "name":"?.find",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => (T | void))"
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => (T | void))"
     },
     {
       "name":"?.findIndex",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number)"
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => number)"
     },
     {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
-      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>)"
+      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: mixed) => Array<U>)"
     },
     {
       "name":"?.forEach",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => void)"
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => void)"
     },
     {"name":"?.hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
     {
@@ -543,7 +543,7 @@ indirect_array.js:5:3 = {
     {"name":"?.length","type":"void | number"},
     {
       "name":"?.map",
-      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any) => Array<U>)"
+      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: mixed) => Array<U>)"
     },
     {"name":"?.pop","type":"void | (() => T)"},
     {"name":"?.propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"},
@@ -561,7 +561,7 @@ indirect_array.js:5:3 = {
     {"name":"?.slice","type":"void | ((start?: number, end?: number) => Array<T>)"},
     {
       "name":"?.some",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean)"
+      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean)"
     },
     {
       "name":"?.sort",
@@ -592,29 +592,29 @@ indirect_array.js:10:3 = {
     {"name":"entries","type":"() => Iterator<[number, T]>"},
     {
       "name":"every",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean"
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean"
     },
     {"name":"fill","type":"(value: T, begin?: number, end?: number) => Array<T>"},
     {
       "name":"filter",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => Array<T>"
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => Array<T>"
     },
     {
       "name":"find",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => (T | void)"
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => (T | void)"
     },
     {
       "name":"findIndex",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => number"
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => number"
     },
     {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {
       "name":"flatMap",
-      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>"
+      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: mixed) => Array<U>"
     },
     {
       "name":"forEach",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => void"
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => void"
     },
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {
@@ -635,7 +635,7 @@ indirect_array.js:10:3 = {
     {"name":"length","type":"number"},
     {
       "name":"map",
-      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any) => Array<U>"
+      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: mixed) => Array<U>"
     },
     {"name":"pop","type":"() => T"},
     {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
@@ -653,7 +653,7 @@ indirect_array.js:10:3 = {
     {"name":"slice","type":"(start?: number, end?: number) => Array<T>"},
     {
       "name":"some",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: any) => boolean"
+      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean"
     },
     {"name":"sort","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
     {
