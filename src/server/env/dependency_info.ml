@@ -54,6 +54,15 @@ let sig_dependency_graph = function
   | Classic graph -> graph
   | TypesFirst { sig_dependency_graph; _ } -> sig_dependency_graph
 
+let map_filenames f = function
+  | Classic graph -> Classic (FilenameGraph.map f graph)
+  | TypesFirst { sig_dependency_graph; implementation_dependency_graph } ->
+    TypesFirst
+      {
+        sig_dependency_graph = FilenameGraph.map f sig_dependency_graph;
+        implementation_dependency_graph = FilenameGraph.map f implementation_dependency_graph;
+      }
+
 let debug_to_string = function
   | Classic graph ->
     let map = FilenameGraph.to_map graph in

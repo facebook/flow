@@ -18,4 +18,6 @@ val implementation_dependency_graph : t -> Utils_js.FilenameGraph.t
 
 val sig_dependency_graph : t -> Utils_js.FilenameGraph.t
 
+val map_filenames : (File_key.t -> File_key.t) -> t -> t
+
 val debug_to_string : t -> string
