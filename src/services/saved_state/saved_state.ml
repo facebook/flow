@@ -76,13 +76,48 @@ module Save : sig
     profiling:Profiling_js.running ->
     unit Lwt.t
 end = struct
-  let normalize_file_key ~root = File_key.map (Files.relative_path root)
+  module FileNormalizer : sig
+    type t
 
-  let normalize_dependency_info ~root = Dependency_info.map_filenames (normalize_file_key ~root)
+    val make : root:string -> t
+
+    val normalize_path : t -> string -> string
+
+    val normalize_file_key : t -> File_key.t -> File_key.t
+  end = struct
+    type t = {
+      root: string;
+      file_key_cache: (File_key.t, File_key.t) Hashtbl.t;
+    }
+
+    let make ~root = { root; file_key_cache = Hashtbl.create 16 }
+
+    let with_cache tbl key f =
+      match Hashtbl.find_opt tbl key with
+      | Some result -> result
+      | None ->
+        let result = f key in
+        Hashtbl.add tbl key result;
+        result
+
+    (* We could also add a cache for this call, to improve sharing of the underlying strings
+     * between file keys and the places that deal with raw paths. Unfortunately, an April 2020 test
+     * of the saved state size of Facebook's largest JS codebase showed that while adding this
+     * cache decreased the pre-compression size, it actually increased the post-compression size.
+     * *)
+    let normalize_path { root; _ } path = Files.relative_path root path
+
+    let normalize_file_key ({ file_key_cache; _ } as normalizer) file_key =
+      with_cache file_key_cache file_key (File_key.map (normalize_path normalizer))
+  end
+
+  let normalize_dependency_info ~normalizer =
+    Dependency_info.map_filenames (FileNormalizer.normalize_file_key normalizer)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
-  let normalize_error ~root =
-    Flow_error.map_loc_of_error (ALoc.update_source (Base.Option.map ~f:(normalize_file_key ~root)))
+  let normalize_error ~normalizer =
+    Flow_error.map_loc_of_error
+      (ALoc.update_source (Base.Option.map ~f:(FileNormalizer.normalize_file_key normalizer)))
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -103,22 +138,28 @@ end = struct
     in
     loop 0 version_length
 
-  let normalize_info ~root info =
+  let normalize_info ~normalizer info =
     let module_name =
-      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_heaps.module_name
+      modulename_map_fn
+        ~f:(FileNormalizer.normalize_file_key normalizer)
+        info.Module_heaps.module_name
     in
     { info with Module_heaps.module_name }
 
-  let normalize_parsed_data ~root parsed_file_data =
+  let normalize_parsed_data ~normalizer parsed_file_data =
     (* info *)
-    let info = normalize_info ~root parsed_file_data.info in
+    let info = normalize_info ~normalizer parsed_file_data.info in
     (* resolved_requires *)
     let { Module_heaps.resolved_modules; phantom_dependents; hash } =
       parsed_file_data.normalized_file_data.resolved_requires
     in
-    let phantom_dependents = SSet.map (Files.relative_path root) phantom_dependents in
+    let phantom_dependents =
+      SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
+    in
     let resolved_modules =
-      SMap.map (modulename_map_fn ~f:(normalize_file_key ~root)) resolved_modules
+      SMap.map
+        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
+        resolved_modules
     in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
     {
@@ -132,7 +173,7 @@ end = struct
     }
 
   (* Collect all the data for a single parsed file *)
-  let collect_normalized_data_for_parsed_file ~root ~reader fn parsed_heaps =
+  let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
@@ -151,20 +192,21 @@ end = struct
           };
       }
     in
-    let relative_fn = normalize_file_key ~root fn in
-    let relative_file_data = normalize_parsed_data ~root file_data in
+    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
+    let relative_file_data = normalize_parsed_data ~normalizer file_data in
     FilenameMap.add relative_fn relative_file_data parsed_heaps
 
   (* Collect all the data for a single unparsed file *)
-  let collect_normalized_data_for_unparsed_file ~root ~reader fn unparsed_heaps =
+  let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
     let relative_file_data =
       {
         unparsed_info =
-          normalize_info ~root @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+          normalize_info ~normalizer
+          @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in
-    let relative_fn = normalize_file_key ~root fn in
+    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
     FilenameMap.add relative_fn relative_file_data unparsed_heaps
 
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
@@ -176,37 +218,40 @@ end = struct
       let root_str = Path.to_string root in
       (fun f -> not (Files.is_prefix root_str f))
 
-  let normalize_error_set ~root = Flow_error.ErrorSet.map (normalize_error ~root)
+  let normalize_error_set ~normalizer = Flow_error.ErrorSet.map (normalize_error ~normalizer)
 
   (* Collect all the data for all the files *)
   let collect_data ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
-    let root = Options.root options |> Path.to_string in
     let reader = State_reader.create () in
+    let normalizer =
+      let root = Options.root options |> Path.to_string in
+      FileNormalizer.make ~root
+    in
     let parsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
           FilenameSet.fold
-            (collect_normalized_data_for_parsed_file ~root ~reader)
+            (collect_normalized_data_for_parsed_file ~normalizer ~reader)
             env.ServerEnv.files
             FilenameMap.empty)
     in
     let unparsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectUnparsed" ~f:(fun () ->
           FilenameSet.fold
-            (collect_normalized_data_for_unparsed_file ~root ~reader)
+            (collect_normalized_data_for_unparsed_file ~normalizer ~reader)
             env.ServerEnv.unparsed
             FilenameMap.empty)
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
       |> List.filter (is_not_in_flowlib ~options)
-      |> Base.List.map ~f:(Files.relative_path root)
+      |> Base.List.map ~f:(FileNormalizer.normalize_path normalizer)
     in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->
-          let normalized_fn = normalize_file_key ~root fn in
-          let normalized_error_set = normalize_error_set ~root error_set in
+          let normalized_fn = FileNormalizer.normalize_file_key normalizer fn in
+          let normalized_error_set = normalize_error_set ~normalizer error_set in
           FilenameMap.add normalized_fn normalized_error_set acc)
         env.ServerEnv.errors.ServerEnv.local_errors
         FilenameMap.empty
@@ -214,19 +259,19 @@ end = struct
     let warnings =
       FilenameMap.fold
         (fun fn warning_set acc ->
-          let normalized_fn = normalize_file_key ~root fn in
-          let normalized_error_set = normalize_error_set ~root warning_set in
+          let normalized_fn = FileNormalizer.normalize_file_key normalizer fn in
+          let normalized_error_set = normalize_error_set ~normalizer warning_set in
           FilenameMap.add normalized_fn normalized_error_set acc)
         env.ServerEnv.errors.ServerEnv.warnings
         FilenameMap.empty
     in
     let node_modules_containers =
       SMap.fold
-        (fun key value acc -> SMap.add (Files.relative_path root key) value acc)
+        (fun key value acc -> SMap.add (FileNormalizer.normalize_path normalizer key) value acc)
         !Files.node_modules_containers
         SMap.empty
     in
-    let dependency_info = normalize_dependency_info ~root env.ServerEnv.dependency_info in
+    let dependency_info = normalize_dependency_info ~normalizer env.ServerEnv.dependency_info in
     let flowconfig_hash =
       FlowConfig.get_hash
       @@ Server_files_js.config_file (Options.flowconfig_name options)
