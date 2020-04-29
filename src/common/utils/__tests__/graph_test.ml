@@ -150,4 +150,16 @@ let tests =
            in
            assert_smaps_equal ~ctxt expected_forward_map result_forward_map;
            assert_smaps_equal ~ctxt expected_backward_map result_backward_map );
+         ( "map" >:: fun ctxt ->
+           let mapped_graph = StringGraph.map (fun x -> "foo_" ^ x) graph in
+           let result_forward_map = StringGraph.to_map mapped_graph in
+           let expected_forward_map =
+             SMap.of_list
+               [
+                 ("foo_foo", SSet.of_list ["foo_bar"; "foo_baz"]);
+                 ("foo_bar", SSet.of_list ["foo_baz"]);
+                 ("foo_baz", SSet.of_list []);
+               ]
+           in
+           assert_smaps_equal ~ctxt expected_forward_map result_forward_map );
        ]

@@ -157,4 +157,19 @@ module Make (Set : Set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
     | Some { backward; _ } -> Some backward
 
   let fold f graph init = Map.fold (fun elt { forward; _ } acc -> f elt forward acc) graph init
+
+  let map f graph =
+    Map.fold
+      (fun elt { forward; backward } new_map ->
+        let elt = f elt in
+        let forward = Set.map f forward in
+        let backward = Set.map f backward in
+        Map.update
+          elt
+          (function
+            | None -> Some { forward; backward }
+            | Some _ -> invalid_arg "Duplicate keys created by function passed to Graph.map")
+          new_map)
+      graph
+      Map.empty
 end

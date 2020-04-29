@@ -35,4 +35,7 @@ module type S = sig
 
   (* Fold over forward edges *)
   val fold : (elt -> set -> 'a -> 'a) -> t -> 'a -> 'a
+
+  (* The map function must be injective, otherwise the results are undefined. *)
+  val map : (elt -> elt) -> t -> t
 end
