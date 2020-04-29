@@ -1122,7 +1122,7 @@ end
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
       let%lwt parse_hash_mismatch_skips =
-        Parsing_service_js.ensure_parsed ~reader options workers (CheckedSet.all files)
+        Parsing_service_js.ensure_parsed ~reader options workers files
       in
       if FilenameSet.is_empty parse_hash_mismatch_skips then
         Lwt.return_unit
@@ -2231,7 +2231,9 @@ end = struct
     let%lwt estimates =
       restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata
     in
-    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge_or_check in
+    let%lwt () =
+      ensure_parsed ~options ~profiling ~workers ~reader (CheckedSet.all to_merge_or_check)
+    in
     (* recheck *)
     let%lwt ( updated_errors,
               coverage,
@@ -3005,7 +3007,9 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
-      let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge_or_check in
+      let%lwt () =
+        ensure_parsed ~options ~profiling ~workers ~reader (CheckedSet.all to_merge_or_check)
+      in
       let recheck_reasons = [LspProt.Full_init] in
       let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
         merge
