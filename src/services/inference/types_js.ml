@@ -1960,6 +1960,7 @@ end = struct
                    ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)) ))
     in
     Hh_logger.info "Re-resolving directly dependent files";
+    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
 
     let node_modules_containers = !Files.node_modules_containers in
     (* requires in direct_dependent_files must be re-resolved before merging. *)
@@ -2546,6 +2547,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       warnings;
       coverage;
       node_modules_containers;
+      dependency_info;
     } =
       saved_state
     in
@@ -2560,7 +2562,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               workers
               ~job:
                 (List.fold_left (fun () (fn, parsed_file_data) ->
-                     let { Saved_state.package; file_sig; hash; resolved_requires } =
+                     let { Saved_state.package; hash; resolved_requires } =
                        Saved_state.denormalize_parsed_data
                          ~root
                          parsed_file_data.Saved_state.normalized_file_data
@@ -2581,9 +2583,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                          end
                        | _ -> ()
                      end;
-
-                     (* Restore the FileSigHeap *)
-                     Parsing_heaps.From_saved_state.add_file_sig fn file_sig;
 
                      (* Restore the FileHashHeap *)
                      Parsing_heaps.From_saved_state.add_file_hash fn hash;
@@ -2672,10 +2671,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     in
     let errors =
       { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
-    in
-    let%lwt dependency_info =
-      with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-          Dep_service.calc_dependency_info ~options ~reader workers ~parsed:parsed_set)
     in
     let env =
       mk_init_env

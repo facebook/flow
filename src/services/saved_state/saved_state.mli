@@ -8,7 +8,6 @@
 type denormalized_file_data = {
   package: (Package_json.t, unit) result option;
   (* Only package.json files have this *)
-  file_sig: File_sig.With_Loc.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }
@@ -34,6 +33,7 @@ type saved_state_data = {
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
+  dependency_info: Dependency_info.t;
 }
 
 type invalid_reason =

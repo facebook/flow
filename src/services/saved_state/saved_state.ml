@@ -6,12 +6,10 @@
  *)
 
 open Utils_js
-module File_sig = File_sig.With_Loc
 
 type denormalized_file_data = {
   (* Only package.json files have this *)
   package: (Package_json.t, unit) result option;
-  file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }
@@ -52,6 +50,7 @@ type saved_state_data = {
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
+  dependency_info: Dependency_info.t;
 }
 
 let modulename_map_fn ~f = function
@@ -79,15 +78,7 @@ module Save : sig
 end = struct
   let normalize_file_key ~root = File_key.map (Files.relative_path root)
 
-  (* A File_sig.t is a complicated data structure with Loc.t's hidden everywhere. The easiest way to
-   * make sure we get them all is with a mapper *)
-  class file_sig_normalizer root =
-    object
-      inherit File_sig.mapper
-
-      method! loc (loc : Loc.t) =
-        { loc with Loc.source = Base.Option.map ~f:(normalize_file_key ~root) loc.Loc.source }
-    end
+  let normalize_dependency_info ~root = Dependency_info.map_filenames (normalize_file_key ~root)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error ~root =
@@ -121,10 +112,6 @@ end = struct
   let normalize_parsed_data ~root parsed_file_data =
     (* info *)
     let info = normalize_info ~root parsed_file_data.info in
-    (* file_sig *)
-    let file_sig =
-      (new file_sig_normalizer root)#file_sig parsed_file_data.normalized_file_data.file_sig
-    in
     (* resolved_requires *)
     let { Module_heaps.resolved_modules; phantom_dependents; hash } =
       parsed_file_data.normalized_file_data.resolved_requires
@@ -139,7 +126,6 @@ end = struct
       normalized_file_data =
         {
           package = parsed_file_data.normalized_file_data.package;
-          file_sig;
           resolved_requires;
           hash = parsed_file_data.normalized_file_data.hash;
         };
@@ -159,7 +145,6 @@ end = struct
         normalized_file_data =
           {
             package;
-            file_sig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader fn;
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
             hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
@@ -245,6 +230,7 @@ end = struct
         !Files.node_modules_containers
         SMap.empty
     in
+    let dependency_info = normalize_dependency_info ~root env.ServerEnv.dependency_info in
     let flowconfig_hash =
       FlowConfig.get_hash
       @@ Server_files_js.config_file (Options.flowconfig_name options)
@@ -260,6 +246,7 @@ end = struct
         warnings;
         coverage = env.ServerEnv.coverage;
         node_modules_containers;
+        dependency_info;
       }
 
   let save ~saved_state_filename ~genv ~env ~profiling =
@@ -340,13 +327,7 @@ module Load : sig
 end = struct
   let denormalize_file_key ~root fn = File_key.map (Files.absolute_path root) fn
 
-  class file_sig_denormalizer root =
-    object
-      inherit File_sig.mapper
-
-      method! loc (loc : Loc.t) =
-        { loc with Loc.source = Base.Option.map ~f:(denormalize_file_key ~root) loc.Loc.source }
-    end
+  let denormalize_dependency_info ~root = Dependency_info.map_filenames (denormalize_file_key ~root)
 
   let denormalize_error ~root =
     Flow_error.map_loc_of_error
@@ -392,8 +373,6 @@ end = struct
    *
    * We do our best to avoid reading the file system (which Path.make will do) *)
   let denormalize_parsed_data ~root file_data =
-    (* file_sig *)
-    let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
     (* resolved_requires *)
     let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
@@ -401,7 +380,7 @@ end = struct
       SMap.map (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules
     in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    { package = file_data.package; file_sig; resolved_requires; hash = file_data.hash }
+    { package = file_data.package; resolved_requires; hash = file_data.hash }
 
   let partially_denormalize_parsed_data ~root { info; normalized_file_data } =
     let info = denormalize_info ~root info in
@@ -454,6 +433,7 @@ end = struct
       warnings;
       coverage;
       node_modules_containers;
+      dependency_info;
     } =
       data
     in
@@ -501,6 +481,7 @@ end = struct
         node_modules_containers
         SMap.empty
     in
+    let dependency_info = denormalize_dependency_info ~root dependency_info in
     Lwt.return
       {
         flowconfig_hash;
@@ -511,6 +492,7 @@ end = struct
         warnings;
         coverage;
         node_modules_containers;
+        dependency_info;
       }
 
   let load ~workers ~saved_state_filename ~options ~profiling =
