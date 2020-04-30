@@ -119,14 +119,20 @@ module Expression
    *)
   let rec assignment_cover =
     let assignment_but_not_arrow_function_cover env =
+      let start_loc = Peek.loc env in
       let expr_or_pattern = conditional_cover env in
       match assignment_op env with
       | Some operator ->
-        let left = as_pattern env expr_or_pattern in
-        let right = assignment env in
-        let loc = Loc.btwn (fst left) (fst right) in
-        Cover_expr
-          (loc, Expression.(Assignment { Assignment.operator; left; right; comments = None }))
+        let expr =
+          with_loc
+            ~start_loc
+            (fun env ->
+              let left = as_pattern env expr_or_pattern in
+              let right = assignment env in
+              Expression.(Assignment { Assignment.operator; left; right; comments = None }))
+            env
+        in
+        Cover_expr expr
       | _ -> expr_or_pattern
     in
     let error_callback _ = function

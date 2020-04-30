@@ -1680,22 +1680,7 @@ module.exports = {
 
     'Harmony: Destructuring': [
         '[a, b] = [b, a]',
-        {
-          content: '({ responseText: text }) = res',
-          explanation: "Esprima counts the parens in the loc, flow doesn't.",
-          expected_differences: {
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-            'root.body.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-          }
-        },
+        '({ responseText: text }) = res',
         'const {a} = {}',
         'const [a] = []',
         'let {a} = {}',
