@@ -660,13 +660,15 @@ module Peek = struct
 
   let is_line_terminator env = ith_is_line_terminator ~i:0 env
 
-  let is_implicit_semicolon env =
-    match token env with
+  let ith_is_implicit_semicolon ~i env =
+    match ith_token ~i env with
     | T_EOF
     | T_RCURLY ->
       true
     | T_SEMICOLON -> false
-    | _ -> is_line_terminator env
+    | _ -> ith_is_line_terminator ~i env
+
+  let is_implicit_semicolon env = ith_is_implicit_semicolon ~i:0 env
 
   let ith_is_identifier ~i env =
     match ith_token ~i env with

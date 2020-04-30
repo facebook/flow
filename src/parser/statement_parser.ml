@@ -880,8 +880,12 @@ module Statement
         Statement.DeclareTypeAlias type_alias)
       env
 
+  (** Type aliases squeeze into an unambiguous unused portion of the grammar: `type` is not a
+    reserved word, so `type T` is otherwise two identifiers in a row and that's never valid JS.
+    However, if there's a line separator between the two, ASI makes it valid JS, so line
+    separators are disallowed. *)
   and type_alias env =
-    if Peek.ith_is_identifier ~i:1 env then
+    if Peek.ith_is_identifier ~i:1 env && not (Peek.ith_is_implicit_semicolon ~i:1 env) then
       let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
       (loc, Statement.TypeAlias type_alias)
     else

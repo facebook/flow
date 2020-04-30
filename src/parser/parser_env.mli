@@ -226,6 +226,8 @@ module Peek : sig
 
   val ith_is_line_terminator : i:int -> env -> bool
 
+  val ith_is_implicit_semicolon : i:int -> env -> bool
+
   val ith_is_identifier : i:int -> env -> bool
 
   val ith_is_identifier_name : i:int -> env -> bool
