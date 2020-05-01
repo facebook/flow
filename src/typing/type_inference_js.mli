@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val scan_for_suppressions :
+  Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
+
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast :
   lint_severities:Severity.severity LintSettings.t ->

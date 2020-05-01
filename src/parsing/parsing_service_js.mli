@@ -123,6 +123,14 @@ val parse_docblock :
 val parse_json_file :
   fail:bool -> string -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program * parse_error list
 
+val parse_source_file :
+  fail:bool ->
+  types:bool ->
+  use_strict:bool ->
+  string ->
+  File_key.t ->
+  (Loc.t, Loc.t) Flow_ast.program * parse_error list
+
 (* parse contents of a file *)
 val do_parse :
   parse_options:parse_options ->

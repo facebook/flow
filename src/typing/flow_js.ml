@@ -347,7 +347,12 @@ let with_evaluated_cache cx id evaluated f tvar =
 let not_expect_bound cx t =
   match t with
   | BoundT _ when not (Context.in_normalizer_mode cx) ->
-    raise (Not_expect_bound (spf "Did not expect %s" (string_of_ctor t)))
+    raise
+      (Not_expect_bound
+         (spf
+            "Did not expect %s : %s"
+            (string_of_ctor t)
+            (Debug_js.string_of_reason cx (reason_of_t t))))
   | _ -> ()
 
 let not_expect_bound_use cx t = lift_to_use (not_expect_bound cx) t
