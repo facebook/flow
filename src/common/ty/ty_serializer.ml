@@ -189,8 +189,9 @@ and obj_prop = function
 and obj_named_prop =
   let to_key x =
     if Ty_printer.property_key_quotes_needed x then
-      let raw = x in
-      let value = Ast.Literal.String raw in
+      let quote = Js_layout_generator.better_quote x in
+      let raw = quote ^ Js_layout_generator.utf8_escape ~quote x ^ quote in
+      let value = Ast.Literal.String x in
       Ast.Expression.Object.Property.Literal
         (Loc.none, { Ast.Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt () })
     else
