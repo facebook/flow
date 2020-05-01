@@ -37,22 +37,6 @@ type autocomplete_type =
   (* JSX text child *)
   | Acjsxtext
 
-let autocomplete_suffix = "AUTO332"
-
-let suffix_len = String.length autocomplete_suffix
-
-let is_autocomplete x =
-  String.length x >= suffix_len
-  &&
-  let suffix = String.sub x (String.length x - suffix_len) suffix_len in
-  suffix = autocomplete_suffix
-
-let identifier_is_autocomplete ((loc, _), { Flow_ast.Identifier.name; _ }) =
-  if is_autocomplete name then
-    Some loc
-  else
-    None
-
 let type_of_jsx_name =
   let open Flow_ast.JSX in
   function
@@ -68,13 +52,15 @@ let type_of_qualification =
   | Qualified (_, { id = ((_, t), _); _ }) ->
     t
 
+let covers_target cursor loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
+
 exception Found of (ALoc.t * string) list * ALoc.t * autocomplete_type
 
 class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
 
-    method covers_target loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
+    method covers_target loc = covers_target cursor loc
 
     method find : 'a. ALoc.t -> autocomplete_type -> 'a =
       fun loc x ->
@@ -95,13 +81,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       else
         super#comment c
 
-    method! t_identifier ident =
-      match identifier_is_autocomplete ident with
-      | Some loc -> this#find loc (Acid { include_super = false; include_this = false })
-      | None -> ident
+    method! t_identifier (((loc, _), _) as ident) =
+      if this#covers_target loc then
+        this#find loc (Acid { include_super = false; include_this = false })
+      else
+        super#t_identifier ident
 
-    method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then
+    method! jsx_identifier (((ac_loc, _), _) as ident) =
+      if this#covers_target ac_loc then
         this#find ac_loc (Acid { include_super = false; include_this = false });
       ident
 
@@ -110,8 +97,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let { _object = ((_, obj_type), _); property; comments = _ } = expr in
       begin
         match property with
-        | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
-          when is_autocomplete name ->
+        | PropertyIdentifier ((prop_loc, _), _) when this#covers_target prop_loc ->
           this#find prop_loc (Acmem { obj_type; in_optional_chain = false })
         | _ -> ()
       end;
@@ -125,8 +111,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       in
       begin
         match property with
-        | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
-          when is_autocomplete name ->
+        | PropertyIdentifier ((prop_loc, _), _) when this#covers_target prop_loc ->
           this#find prop_loc (Acmem { obj_type; in_optional_chain = true })
         | _ -> ()
       end;
@@ -141,15 +126,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         | ((_, obj_type), Object { Object.properties; _ }) ->
           List.iter
             (function
-              | Object.(
-                  Property
-                    ( _,
-                      {
-                        Property.key =
-                          Property.Identifier ((prop_loc, _), Flow_ast.Identifier.{ name; _ });
-                        _;
-                      } ))
-                when is_autocomplete name ->
+              | Object.(Property (_, { Property.key = Property.Identifier ((prop_loc, _), _); _ }))
+                when this#covers_target prop_loc ->
                 this#find prop_loc (Acmem { obj_type; in_optional_chain = false })
               | _ -> ())
             properties
@@ -157,17 +135,17 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       end;
       super#pattern ?kind pat
 
-    method! t_pattern_identifier ?kind ident =
+    method! t_pattern_identifier ?kind (((loc, _), _) as ident) =
       match kind with
       | None -> super#t_pattern_identifier ?kind ident
       | Some _ ->
         (* binding identifiers *)
-        (match identifier_is_autocomplete ident with
-        | Some loc ->
+        if this#covers_target loc then
           (* don't offer suggestions for bindings, because this is where names are created,
              so existing names aren't useful. *)
           this#find loc Acbinding
-        | None -> ident)
+        else
+          ident
 
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
@@ -186,7 +164,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
               let found' =
                 match found with
                 | Some _ -> found
-                | None when is_autocomplete attribute_name ->
+                | None when this#covers_target loc ->
                   Some (attribute_name, loc, type_of_jsx_name component_name)
                 | None -> None
               in
@@ -225,10 +203,11 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | _ -> super#object_key key
 
     (* we don't currently autocomplete object keys *)
-    method! object_key_identifier x =
-      match identifier_is_autocomplete x with
-      | Some loc -> this#find loc Ackey
-      | None -> x
+    method! object_key_identifier (((loc, _), _) as ident) =
+      if this#covers_target loc then
+        this#find loc Ackey
+      else
+        ident
 
     method! class_body x =
       try super#class_body x
@@ -249,10 +228,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Type.Generic.Identifier in
       begin
         match id with
-        | Unqualified ((loc, _), { Flow_ast.Identifier.name; _ }) when is_autocomplete name ->
-          this#find loc Actype
-        | Qualified (_, { qualification; id = ((loc, _), { Flow_ast.Identifier.name; _ }) })
-          when is_autocomplete name ->
+        | Unqualified ((loc, _), _) when this#covers_target loc -> this#find loc Actype
+        | Qualified (_, { qualification; id = ((loc, _), _) }) when this#covers_target loc ->
           let qualification_type = type_of_qualification qualification in
           this#find loc (Acqualifiedtype qualification_type)
         | _ -> ()
@@ -285,15 +262,15 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | _ -> super#type_ t
   end
 
-let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
-  is_autocomplete ac_name && not from_trigger_character
+let autocomplete_id from_trigger_character ~cursor _cx _ac_name ac_loc =
+  covers_target cursor ac_loc && not from_trigger_character
 
-let autocomplete_object_key from_trigger_character _cx ac_name _ac_loc =
-  is_autocomplete ac_name && not from_trigger_character
+let autocomplete_object_key from_trigger_character ~cursor _cx _ac_name ac_loc =
+  covers_target cursor ac_loc && not from_trigger_character
 
-let autocomplete_member _cx ac_name _ac_loc _this_t = is_autocomplete ac_name
+let autocomplete_member ~cursor _cx _ac_name ac_loc _this_t = covers_target cursor ac_loc
 
-let autocomplete_jsx _cx ac_name _ac_loc _class_t = is_autocomplete ac_name
+let autocomplete_jsx ~cursor _cx _ac_name ac_loc _class_t = covers_target cursor ac_loc
 
 let process_location ~trigger_character ~cursor ~typed_ast =
   try
@@ -301,11 +278,11 @@ let process_location ~trigger_character ~cursor ~typed_ast =
     None
   with Found (tparams, loc, res) -> Some (tparams, loc, res)
 
-let autocomplete_set_hooks ~trigger_character =
-  Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None));
+let autocomplete_set_hooks ~trigger_character ~cursor =
+  Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None) ~cursor);
   Type_inference_hooks_js.set_obj_prop_decl_hook
-    (autocomplete_object_key (trigger_character <> None));
-  Type_inference_hooks_js.set_member_hook autocomplete_member;
-  Type_inference_hooks_js.set_jsx_hook autocomplete_jsx
+    (autocomplete_object_key (trigger_character <> None) ~cursor);
+  Type_inference_hooks_js.set_member_hook (autocomplete_member ~cursor);
+  Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx ~cursor)
 
 let autocomplete_unset_hooks () = Type_inference_hooks_js.reset_hooks ()

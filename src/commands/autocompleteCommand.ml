@@ -45,7 +45,7 @@ let spec =
    cursor location. this function finds the first occurrence of "AUTO332" and returns the
    contents with the token removed, along with the (line, column) cursor position. *)
 let extract_cursor contents =
-  let regexp = Str.regexp_string Autocomplete_js.autocomplete_suffix in
+  let regexp = Str.regexp_string AutocompleteService_js.autocomplete_suffix in
   try
     let offset = Str.search_forward regexp contents 0 in
     let cursor = Line.position_of_offset contents offset in
@@ -54,7 +54,7 @@ let extract_cursor contents =
       let suffix =
         String.sub
           contents
-          (offset + Autocomplete_js.suffix_len)
+          (offset + AutocompleteService_js.suffix_len)
           (String.length contents - (offset + 7))
       in
       prefix ^ suffix

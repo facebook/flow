@@ -105,11 +105,15 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
     | None -> "-"
   in
   let path = File_key.SourceFile path in
+  let cursor_loc =
+    let (line, column) = cursor in
+    Loc.make path line column
+  in
   let (contents, broader_context) =
     let (line, column) = cursor in
     AutocompleteService_js.add_autocomplete_token contents line column
   in
-  Autocomplete_js.autocomplete_set_hooks trigger_character;
+  Autocomplete_js.autocomplete_set_hooks ~trigger_character ~cursor:cursor_loc;
   let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
   Autocomplete_js.autocomplete_unset_hooks ();
   let initial_json_props =
@@ -135,10 +139,6 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
             let (ac_type_string, results_res) =
-              let cursor_loc =
-                let (line, column) = cursor in
-                Loc.make path line column
-              in
               autocomplete_get_results ~reader cx file_sig tast trigger_character cursor_loc
             in
             let json_props_to_log =

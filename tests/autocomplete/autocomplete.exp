@@ -426,6 +426,34 @@ member_class_static.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
+member_middle.js:5:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"foobar","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
+optional_chaining_middle.js:9:16
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"void | number"},
+    {"name":"hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
+    {"name":"isPrototypeOf","type":"void | ((o: mixed) => boolean)"},
+    {"name":"propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"},
+    {"name":"toLocaleString","type":"void | (() => string)"},
+    {"name":"toString","type":"void | (() => string)"},
+    {"name":"valueOf","type":"void | (() => mixed)"}
+  ]
+}
+
 optional_chaining_new.js = {
   "result":[
     {"name":"bar","type":"void | number"},
@@ -735,6 +763,12 @@ identifier.js = {
     {"name":"bartender","type":"number"}
   ]
 }
+identifier_middle.js:6:4
+Flags: --pretty
+{
+  "result":[{"name":"foobaz","type":"number"},{"name":"foobarbaz","type":"number"}]
+}
+
 super.js = {
   "result":[
     {"name":"super","type":"super"},
@@ -1333,3 +1367,17 @@ enums.js = {
   "insertTextFormat":1
 }
 class_declaration_name.js = {"result":[]}
+pattern_object_key_middle.js:6:12
+Flags: --pretty
+{
+  "result":[
+    {"name":"foobar","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+

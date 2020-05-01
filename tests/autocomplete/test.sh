@@ -134,6 +134,9 @@ printf "member_class_static.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty member_class_static.js 7 5 < member_class_static.js
 
+queries_in_file "autocomplete" "member_middle.js" --pretty
+queries_in_file "autocomplete" "optional_chaining_middle.js" --pretty
+
 printf "optional_chaining_new.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty optional_chaining_new.js 9 15 < optional_chaining_new.js
@@ -193,6 +196,8 @@ assert_ok \
 printf "identifier.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty identifier.js 10 18 < identifier.js
+
+queries_in_file "autocomplete" "identifier_middle.js" --pretty
 
 printf "super.js = "
 assert_ok \
@@ -322,3 +327,5 @@ assert_ok "$FLOW" autocomplete --lsp enums.js 10 3 < enums.js
 printf "class_declaration_name.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty class_declaration_name.js 5 8 < class_declaration_name.js
+
+queries_in_file "autocomplete" "pattern_object_key_middle.js" --pretty

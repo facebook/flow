@@ -11,6 +11,10 @@ open ServerProt.Response
 open Parsing_heaps_utils
 open Loc_collections
 
+let autocomplete_suffix = "AUTO332"
+
+let suffix_len = String.length autocomplete_suffix
+
 let add_autocomplete_token contents line column =
   let line = line - 1 in
   let contents_with_token =
@@ -19,7 +23,7 @@ let add_autocomplete_token contents line column =
         if length >= column then
           let start = String.sub line_str 0 column in
           let end_ = String.sub line_str column (length - column) in
-          start ^ Autocomplete_js.autocomplete_suffix ^ end_
+          start ^ autocomplete_suffix ^ end_
         else
           line_str)
   in
@@ -34,7 +38,7 @@ let add_autocomplete_token contents line column =
  * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before
  * showing `ac_loc` to the client. *)
 let remove_autocomplete_token_from_loc loc =
-  Loc.{ loc with _end = { loc._end with column = loc._end.column - Autocomplete_js.suffix_len } }
+  Loc.{ loc with _end = { loc._end with column = loc._end.column - suffix_len } }
 
 let autocomplete_result_to_json ~strip_root result =
   let name = result.res_name in

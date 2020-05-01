@@ -22,6 +22,10 @@ val autocomplete_get_results :
   Loc.t ->
   string * autocomplete_service_result
 
+val autocomplete_suffix : string
+
+val suffix_len : int
+
 val add_autocomplete_token : string -> int -> int -> string * string
 
 val autocomplete_response_to_json :

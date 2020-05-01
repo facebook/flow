@@ -57,7 +57,8 @@ query_at_pos() {
 
   printf "%s:%s:%s\n" "$file" "$line" "$col"
   echo "Flags:" "${flags[@]}"
-  assert_ok "$FLOW" "$query" "$file" "$line" "$col" --strip-root "${flags[@]}"
+  # shellcheck disable=SC2094
+  assert_ok "$FLOW" "$query" "$file" "$line" "$col" --strip-root "${flags[@]}" < "$file"
   printf "\n"
 }
 
