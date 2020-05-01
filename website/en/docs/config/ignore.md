@@ -50,3 +50,11 @@ Which would ignore any file or directory under the directory named `__tests__/`
 within the project root. However, unlike the previous example's
 `.*/__tests__/.*`, it would NOT ignore files or directories under other
 directories named `__tests__/`, like `src/__tests__/`.
+
+Sometimes you may want to exclude all files inside a directory with the exception of a few. An optional prefix "!" which negates the pattern may help. With this, any matching file excluded by a previous pattern will become included again.
+
+```
+[ignore]
+<PROJECT_ROOT>/node_modules/.*
+!<PROJECT_ROOT>/node_modules/not-excluded-package/.*
+```
