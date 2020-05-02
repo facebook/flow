@@ -2,7 +2,7 @@
 // @flow
 
 module.exports = {
-  a: (): {x: string} => {
+  a: (): {x: string,...} => {
   return {
     x:
       // comment
@@ -13,7 +13,7 @@ module.exports = {
 > cat b.js
 // @flow
 
-function foo(): {f: number, g: number, h: string} {
+function foo(): {f: number, g: number, h: string,...} {
   // Comment 0
   const x = {
     // Comment 1

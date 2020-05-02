@@ -5,14 +5,16 @@ type BinaryExpression = {
   leadingComments: ?Array<Comment>,
   left: Expression,
   loc: {
-    end: {column: number, line: number},
-    start: {column: number, line: number}
+    end: {column: number, line: number, ...},
+    start: {column: number, line: number, ...},
+    ...
   },
   operator: BinaryOperator,
   right: Expression,
   start: number,
   trailingComments: ?Array<Comment>,
-  type: "BinaryExpression"
+  type: "BinaryExpression",
+  ...
 }
 printBinaryExpression.js:15:9,15:24
 BinaryExpression

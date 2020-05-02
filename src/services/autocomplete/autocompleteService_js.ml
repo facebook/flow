@@ -102,8 +102,9 @@ let lsp_completion_of_decl =
   | EnumDecl _ -> Lsp.Completion.Enum
   | ModuleDecl _ -> Lsp.Completion.Module
 
-let autocomplete_create_result ?insert_text ?(rank = 0) ?(preselect = false) (name, loc) ty =
-  let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty in
+let autocomplete_create_result
+    ?insert_text ?(rank = 0) ?(preselect = false) ~exact_by_default (name, loc) ty =
+  let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let res_kind = lsp_completion_of_type ty in
   {
     res_loc = loc;
@@ -115,7 +116,8 @@ let autocomplete_create_result ?insert_text ?(rank = 0) ?(preselect = false) (na
     res_preselect = preselect;
   }
 
-let autocomplete_create_result_decl ?insert_text:_ ~rank ?(preselect = false) (name, loc) d =
+let autocomplete_create_result_decl
+    ?insert_text:_ ~rank ?(preselect = false) ~exact_by_default (name, loc) d =
   let open Ty in
   match d with
   | ModuleDecl _ ->
@@ -134,7 +136,7 @@ let autocomplete_create_result_decl ?insert_text:_ ~rank ?(preselect = false) (n
       res_kind = Some Lsp.Completion.Variable;
       res_name = name;
       res_insert_text = None;
-      res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ty;
+      res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty;
       rank;
       res_preselect = preselect;
     }
@@ -144,15 +146,18 @@ let autocomplete_create_result_decl ?insert_text:_ ~rank ?(preselect = false) (n
       res_kind = Some (lsp_completion_of_decl d);
       res_name = name;
       res_insert_text = None;
-      res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false d;
+      res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d;
       rank;
       res_preselect = preselect;
     }
 
-let autocomplete_create_result_elt ?insert_text ?(rank = 0) ?preselect (name, loc) elt =
+let autocomplete_create_result_elt
+    ?insert_text ?(rank = 0) ?preselect ~exact_by_default (name, loc) elt =
   match elt with
-  | Ty.Type t -> autocomplete_create_result ?insert_text ~rank ?preselect (name, loc) t
-  | Ty.Decl d -> autocomplete_create_result_decl ?insert_text ~rank ?preselect (name, loc) d
+  | Ty.Type t ->
+    autocomplete_create_result ?insert_text ~rank ?preselect ~exact_by_default (name, loc) t
+  | Ty.Decl d ->
+    autocomplete_create_result_decl ?insert_text ~rank ?preselect ~exact_by_default (name, loc) d
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -416,6 +421,7 @@ let autocomplete_member
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let in_idx = ref false in
   let idx_hook () = in_idx := true in
+  let exact_by_default = Context.exact_by_default cx in
   match
     members_of_type
       ~exclude_proto_members
@@ -444,16 +450,18 @@ let autocomplete_member
              match (from_nullable, in_optional_chain, !in_idx) with
              | (false, _, _)
              | (_, _, true) ->
-               autocomplete_create_result ~rank (name, ac_loc) ty
+               autocomplete_create_result ~rank ~exact_by_default (name, ac_loc) ty
              | (true, false, false) ->
                let opt_chain_name = "?." ^ name in
                let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
                autocomplete_create_result
                  ~insert_text:opt_chain_name
                  ~rank
+                 ~exact_by_default
                  (opt_chain_name, opt_chain_ac_loc)
                  opt_chain_ty
-             | (true, true, false) -> autocomplete_create_result ~rank (name, ac_loc) opt_chain_ty)
+             | (true, true, false) ->
+               autocomplete_create_result ~rank ~exact_by_default (name, ac_loc) opt_chain_ty)
     in
     AcResult { results; errors_to_log }
 
@@ -553,13 +561,16 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
 (* env is all visible bound names at cursor *)
 let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~include_this ~tparams =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let exact_by_default = Context.exact_by_default cx in
   let (results, errors_to_log) =
     local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     |> List.fold_left
          (fun (results, errors_to_log) (name, elt_result) ->
            match elt_result with
            | Ok elt ->
-             let result = autocomplete_create_result_elt ~insert_text:name (name, ac_loc) elt in
+             let result =
+               autocomplete_create_result_elt ~insert_text:name ~exact_by_default (name, ac_loc) elt
+             in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -612,6 +623,7 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
         let use_op = Type.Op Type.UnknownUse in
         flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
   in
+  let exact_by_default = Context.exact_by_default cx in
   (* The `children` prop (if it exists) is set with the contents between the opening and closing
    * elements, rather than through an explicit `children={...}` attribute, so we should exclude
    * it from the autocomplete results, along with already used attribute names. *)
@@ -634,7 +646,11 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
     let results =
       mems
       |> Base.List.map ~f:(fun (name, MemberInfo.{ ty; _ }) ->
-             autocomplete_create_result ~insert_text:(name ^ "=") (name, ac_loc) ty)
+             autocomplete_create_result
+               ~insert_text:(name ^ "=")
+               ~exact_by_default
+               (name, ac_loc)
+               ty)
     in
     AcResult { results; errors_to_log }
 
@@ -701,7 +717,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
-let type_exports_of_module_ty ~ac_loc =
+let type_exports_of_module_ty ~ac_loc ~exact_by_default =
   let open Ty in
   function
   | Decl (ModuleDecl { exports; _ }) ->
@@ -714,7 +730,7 @@ let type_exports_of_module_ty ~ac_loc =
               res_kind = lsp_completion_of_type t;
               res_name = name.Ty.sym_name;
               res_insert_text = None;
-              res_ty = Ty_printer.string_of_decl_single_line d;
+              res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
             }
@@ -725,7 +741,7 @@ let type_exports_of_module_ty ~ac_loc =
               res_kind = Some Lsp.Completion.Interface;
               res_name = name.Ty.sym_name;
               res_insert_text = None;
-              res_ty = Ty_printer.string_of_decl_single_line d;
+              res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
             }
@@ -736,7 +752,7 @@ let type_exports_of_module_ty ~ac_loc =
               res_kind = Some Lsp.Completion.Class;
               res_name = name.Ty.sym_name;
               res_insert_text = None;
-              res_ty = Ty_printer.string_of_decl_single_line d;
+              res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
             }
@@ -749,6 +765,7 @@ let type_exports_of_module_ty ~ac_loc =
 
 let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let exact_by_default = Context.exact_by_default cx in
   let tparam_results =
     Base.List.map
       ~f:(fun (_, name) ->
@@ -769,7 +786,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
          (fun (results, errors_to_log) (name, ty_result) ->
            match ty_result with
            | Ok elt ->
-             let result = autocomplete_create_result_elt (name, ac_loc) elt in
+             let result = autocomplete_create_result_elt ~exact_by_default (name, ac_loc) elt in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -788,11 +805,15 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
              let error_to_log = Ty_normalizer.error_to_string err in
              (results, error_to_log :: errors_to_log)
            | Ok (Ty.Decl (Ty.ClassDecl _) as elt) ->
-             let result = autocomplete_create_result_elt (name, ac_loc) elt in
+             let result = autocomplete_create_result_elt ~exact_by_default (name, ac_loc) elt in
              (result :: results, errors_to_log)
-           | Ok elt when type_exports_of_module_ty ~ac_loc elt <> [] ->
+           | Ok elt when type_exports_of_module_ty ~ac_loc ~exact_by_default elt <> [] ->
              let result =
-               autocomplete_create_result_elt (name, ac_loc) elt ~insert_text:(name ^ ".")
+               autocomplete_create_result_elt
+                 ~exact_by_default
+                 (name, ac_loc)
+                 elt
+                 ~insert_text:(name ^ ".")
              in
              (result :: results, errors_to_log)
            | Ok _ -> (results, errors_to_log))
@@ -803,6 +824,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
 let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let qtype_scheme = Type.TypeScheme.{ tparams; type_ = qtype } in
+  let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
     Ty_normalizer.from_scheme
       ~options:ty_normalizer_options
@@ -812,7 +834,11 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
   match module_ty_res with
   | Error err -> AcResult { results = []; errors_to_log = [Ty_normalizer.error_to_string err] }
   | Ok module_ty ->
-    AcResult { results = type_exports_of_module_ty ~ac_loc module_ty; errors_to_log = [] }
+    AcResult
+      {
+        results = type_exports_of_module_ty ~ac_loc ~exact_by_default module_ty;
+        errors_to_log = [];
+      }
 
 let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in

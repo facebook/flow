@@ -23,7 +23,7 @@ let warning_desc_to_string = function
   | SkipEmpty -> Utils_js.spf "Inferred type is empty."
   | NonTypeAnnotation -> Utils_js.spf "Not a type."
 
-class visitor ~ty_query =
+class visitor ~exact_by_default ~ty_query =
   object (this)
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
@@ -42,7 +42,7 @@ class visitor ~ty_query =
       let open Ty in
       let blame_loc = Base.Option.value ~default:loc blame_loc in
       let serialize ty =
-        match Ty_serializer.type_ () ty with
+        match Ty_serializer.(type_ { exact_by_default } ty) with
         | Ok type_ast -> Some (Loc.none, type_ast)
         | Error desc -> this#warn blame_loc (Serializer desc)
       in

@@ -628,7 +628,7 @@ import-star.js:5:7 = {
   "end":23
 }
 import-star.js:5:31 = {
-  "type":"module \"./exports-type\" {declare var foo: () => MyUnionType; type MyUnionType = \"A\" | \"B\" | \"C\"; type MyStringType = \"A\"; type MyPolyType<T> = {f: T}; }",
+  "type":"module \"./exports-type\" {declare var foo: () => MyUnionType; type MyUnionType = \"A\" | \"B\" | \"C\"; type MyStringType = \"A\"; type MyPolyType<T> = {f: T, ...}; }",
   "reasons":[],
   "loc":{
     "source":"import-star.js",

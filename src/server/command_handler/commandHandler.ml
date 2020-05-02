@@ -215,7 +215,7 @@ let infer_type
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_contents_cache
-    input : ((Loc.t * Ty.elt option, string) result * Hh_json.json option) Lwt.t =
+    input : (ServerProt.Response.infer_type_response * Hh_json.json option) Lwt.t =
   let {
     file_input;
     query_position = { Loc.line; column };
@@ -245,7 +245,7 @@ let infer_type
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
               Error (str, Some (Hh_json.JSON_Object json_props))
             | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
-              let (result, json_props) =
+              let ((loc, ty), json_props) =
                 Type_info_service.type_at_pos
                   ~cx
                   ~file_sig
@@ -260,7 +260,11 @@ let infer_type
                   column
               in
               let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
-              Ok (result, Some (Hh_json.JSON_Object json_props))
+              let exact_by_default = Options.exact_by_default options in
+              let response =
+                ServerProt.Response.Infer_type_response { loc; ty; exact_by_default }
+              in
+              Ok (response, Some (Hh_json.JSON_Object json_props))
           in
           Lwt.return result)
     in
@@ -1469,7 +1473,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
     let%lwt (result, extra_data) = infer_type ~options ~env ~profiling ~type_contents_cache input in
     let metadata = with_data ~extra_data metadata in
     match result with
-    | Ok (loc, content) ->
+    | Ok (ServerProt.Response.Infer_type_response { loc; ty = content; exact_by_default }) ->
       (* loc may be the 'none' location; content may be None. *)
       (* If both are none then we'll return null; otherwise we'll return a hover *)
       let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
@@ -1483,7 +1487,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
       let contents =
         match content with
         | None -> [MarkedString "?"]
-        | Some content -> [MarkedCode ("flow", Ty_printer.string_of_elt content)]
+        | Some content -> [MarkedCode ("flow", Ty_printer.string_of_elt ~exact_by_default content)]
       in
       let r =
         match (range, content) with

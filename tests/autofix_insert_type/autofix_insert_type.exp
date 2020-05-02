@@ -274,7 +274,7 @@ react-0.js 5 21
 
 import React from "react";
 
-function Clock(props: {date: Date}) {
+function Clock(props: {date: Date,...}) {
   return (
     <div>
       <h1>Hello, world!</h1>
@@ -358,6 +358,7 @@ replacement-dictionary.js 3 3 --strategy=generalize
   ab: null,
   get x(): null,
   set y(string): void,
+  ...,
 } => ({
   ab: null, "a b": null, "a'b": null,
   "1": null, "'": null, " ": null,
@@ -504,7 +505,7 @@ type MyObject = {
   baz: string,
 };
 
-function f(x: MyObject): {bar: boolean, baz: string, foo: number} {
+function f(x: MyObject): {bar: boolean, baz: string, foo: number,...} {
   return x;
 };
 
@@ -538,11 +539,11 @@ function f(x: MyObject) {
   return x;
 };
 
-(f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number});
+(f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number,...});
 No errors!
 replacement-object.js 2 5 --strategy=generalize
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -568,7 +569,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 7 --strategy=temporary
 // @flow
-var obj: $TEMPORARY$object<{m: (x: number) => string, n: (y: number) => string}> = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: $TEMPORARY$object<{m: (x: number) => string, n: (y: number) => string,...}> = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -594,7 +595,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 5 2 8 --strategy=generalize
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 

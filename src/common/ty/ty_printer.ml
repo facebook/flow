@@ -48,7 +48,7 @@ let variance_ = function
 (* Main Transformation   *)
 (*************************)
 
-let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
+let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
   let env_map : Layout.layout_node IMap.t ref = ref IMap.empty in
   let size = ref size in
   (* util to limit the number of calls to a (usually recursive) function *)
@@ -279,18 +279,22 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
         type_ ~depth arr_elt_t;
         Atom ">";
       ]
-  and type_object ~depth ?(sep = Atom ",") { obj_exact; obj_props; _ } =
+  and type_object ~depth ?(sep = Atom ",") obj =
+    let { obj_exact; obj_props; _ } = obj in
     let s_exact =
-      if obj_exact then
+      if obj_exact && not exact_by_default then
         Atom "|"
       else
         Empty
     in
-    list
-      ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
-      ~sep
-      ~trailing:false
-      (counted_map (type_object_property ~depth) obj_props)
+    let props = counted_map (type_object_property ~depth) obj_props in
+    let props =
+      if obj_exact then
+        props
+      else
+        props @ [Atom "..."]
+    in
+    list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
   and type_union ~depth ts =
     let (prefix, ts) =
       if List.mem Null ts && List.mem Void ts then
@@ -431,17 +435,21 @@ let print_single_line ~source_maps node =
 
 let print_pretty ~source_maps node = Pretty_printer.print ~source_maps ~skip_endline:true node
 
-let string_of_elt ?(with_comments = true) (elt : Ty.elt) : string =
-  layout_of_elt ~with_comments elt |> print_pretty ~source_maps:None |> Source.contents
+let string_of_elt ?(with_comments = true) (elt : Ty.elt) ~exact_by_default : string =
+  layout_of_elt ~with_comments ~exact_by_default elt
+  |> print_pretty ~source_maps:None
+  |> Source.contents
 
-let string_of_elt_single_line ?(with_comments = true) (elt : Ty.elt) : string =
-  layout_of_elt ~with_comments elt |> print_single_line ~source_maps:None |> Source.contents
+let string_of_elt_single_line ?(with_comments = true) (elt : Ty.elt) ~exact_by_default : string =
+  layout_of_elt ~with_comments ~exact_by_default elt
+  |> print_single_line ~source_maps:None
+  |> Source.contents
 
-let string_of_t ?(with_comments = true) (ty : Ty.t) : string =
-  string_of_elt ~with_comments (Ty.Type ty)
+let string_of_t ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+  string_of_elt ~with_comments ~exact_by_default (Ty.Type ty)
 
-let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) : string =
-  string_of_elt_single_line ~with_comments (Ty.Type ty)
+let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+  string_of_elt_single_line ~with_comments ~exact_by_default (Ty.Type ty)
 
-let string_of_decl_single_line ?(with_comments = true) (d : Ty.decl) : string =
-  string_of_elt_single_line ~with_comments (Ty.Decl d)
+let string_of_decl_single_line ?(with_comments = true) (d : Ty.decl) ~exact_by_default : string =
+  string_of_elt_single_line ~with_comments ~exact_by_default (Ty.Decl d)

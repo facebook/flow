@@ -7,6 +7,6 @@ declare opaque type Val;
 declare var key: Key;
 declare var val: Val
 
-module.exports = ({ [key]: val }: {A: Val});
+module.exports = ({ [key]: val }: {A: Val,...});
 > flow status
 No errors!

@@ -482,10 +482,13 @@ end = struct
       else
         None
     in
+    let reporter_options =
+      { Codemod_report.strip_root; exact_by_default = Options.exact_by_default options }
+    in
     (* post-process *)
     let (files, report) = StepRunner.digest ~reporter results in
     let%lwt changed_files = Codemod_printer.print_asts ~strip_root ~write files in
-    Codemod_printer.print_results ~strip_root ~report:reporter.Codemod_report.report report;
+    Codemod_printer.print_results ~reporter_options ~report:reporter.Codemod_report.report report;
     Lwt.return (Base.Option.map ~f:FilenameSet.of_list changed_files)
 
   let rec loop_run genv env iteration ~write ~visit ~reporter changed_files =

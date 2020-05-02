@@ -16,7 +16,7 @@ module Let_syntax = struct
   let map x ~f = x >>| f
 end
 
-type options = unit
+type options = { exact_by_default: bool }
 
 let mapM f ts = all (Base.List.map ~f ts)
 
@@ -63,7 +63,7 @@ let variance_ = function
       ( Loc.none,
         { Ast.Variance.kind = Ast.Variance.Minus; comments = Flow_ast_utils.mk_comments_opt () } )
 
-let type_ _opts =
+let type_ options =
   let rec type_ t =
     let just t = return (Loc.none, t) in
     let just' t = (Loc.none, t) in
@@ -183,8 +183,14 @@ let type_ _opts =
     (Loc.none, { T.Function.RestParam.argument; comments = Flow_ast_utils.mk_comments_opt () })
   and obj_ o =
     let%map properties = mapM obj_prop o.obj_props in
-    ( Loc.none,
-      T.Object { T.Object.exact = o.obj_exact; inexact = false; properties; comments = None } )
+    let exact =
+      if options.exact_by_default then
+        false
+      else
+        o.obj_exact
+    in
+    let inexact = not o.obj_exact in
+    (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None })
   and obj_prop = function
     | NamedProp { name; prop; _ } ->
       let%map p = obj_named_prop name prop in

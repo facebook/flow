@@ -255,7 +255,14 @@ module Response = struct
 
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
 
-  type infer_type_response = (Loc.t * Ty.elt option, string) result
+  type infer_type_response_ok =
+    | Infer_type_response of {
+        loc: Loc.t;
+        ty: Ty.elt option;
+        exact_by_default: bool;
+      }
+
+  type infer_type_response = (infer_type_response_ok, string) result
 
   type insert_type_response = (Replacement_printer.patch, string) result
 

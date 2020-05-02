@@ -232,13 +232,15 @@ let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
-let serialize ?(imports_react = false) loc ty =
-  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty |> simplify |> Ty_serializer.type_ ()
+let serialize ?(imports_react = false) ~exact_by_default loc ty =
+  ( (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty
+  |> simplify
+  |> Ty_serializer.(type_ { exact_by_default }) )
   |> function
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
 
-let remove_ambiguous_types ~ambiguity_strategy ty loc =
+let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
   let open Autofix_options in
   match ambiguity_strategy with
   | Fail ->
@@ -249,8 +251,8 @@ let remove_ambiguous_types ~ambiguity_strategy ty loc =
         @@ expected
         @@ MulipleTypesPossibleAtPoint
              {
-               specialized = specialize_temporary_types ty |> serialize loc;
-               generalized = generalize_temporary_types ty |> serialize loc;
+               specialized = specialize_temporary_types ty |> serialize ~exact_by_default loc;
+               generalized = generalize_temporary_types ty |> serialize ~exact_by_default loc;
              }
     end
   | Temporary -> allow_temporary_arr_and_obj_types ty
@@ -261,7 +263,8 @@ let remove_ambiguous_types ~ambiguity_strategy ty loc =
 
 (* This class maps each node that contains the target until a node is contained
    by the target *)
-class mapper ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_lookup target =
+class mapper
+  ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_lookup ~exact_by_default target =
   let target_is_point = Utils.is_point target in
   object (this)
     inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
@@ -286,7 +289,7 @@ class mapper ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_looku
             raise (expected err)
           | (_, []) -> ()
         in
-        remove_ambiguous_types ~ambiguity_strategy ty location
+        remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty location
       in
       let ty =
         match normalize location scheme with
@@ -298,7 +301,7 @@ class mapper ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_looku
           let err = FailedToNormalize (location, "Non-type") in
           raise (expected err)
       in
-      (location, serialize ~imports_react:true location ty)
+      (location, serialize ~imports_react:true ~exact_by_default location ty)
 
     method private synth_type_annotation_hint loc = Flow_ast.Type.Available (this#synth_type loc)
 
@@ -506,9 +509,11 @@ let insert_type
     ast
     target =
   let file_sig = File_sig.abstractify_locs file_sig in
+  let exact_by_default = Context.exact_by_default full_cx in
   let ty_lookup = type_lookup_at_location typed_ast in
   let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
-  (new mapper ~normalize ~ty_lookup ~strict ~ambiguity_strategy target)#program ast
+  (new mapper ~normalize ~ty_lookup ~strict ~ambiguity_strategy ~exact_by_default target)#program
+    ast
 
 let mk_diff ast new_ast = Flow_ast_differ.(program Standard ast new_ast)
 

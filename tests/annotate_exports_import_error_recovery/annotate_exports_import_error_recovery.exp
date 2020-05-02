@@ -6,7 +6,7 @@ import type {OK} from "./lib.js";import { foo, bar } from './lib';
 import { props } from './props';
 
 const f = foo();
-const g: {ok: OK} = bar();
+const g: {ok: OK,...} = bar();
 
 module.exports = {
   f,

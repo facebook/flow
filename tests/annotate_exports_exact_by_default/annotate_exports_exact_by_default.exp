@@ -1,0 +1,92 @@
+
+exact_by_default=false (should print: {|f: number|} for exact)
+
+>>> exact.js (#changes: 2)
+// @flow
+
+declare function foo(): {| f: number |};
+
+module.exports = (foo(): {|f: number|});
+
+>>> inexact.js (#changes: 2)
+// @flow
+
+declare function foo(): { f: number; ... };
+
+module.exports = (foo(): {f: number,...});
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
+  Number of annotations added:              2
+  Total size of annotations:                4
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+    Unrecognizable module error:            0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+exact_by_default=true (should print: {f: number, ...} for inexact)
+
+>>> exact.js (#changes: 2)
+// @flow
+
+declare function foo(): {| f: number |};
+
+module.exports = (foo(): {f: number});
+
+>>> inexact.js (#changes: 2)
+// @flow
+
+declare function foo(): { f: number; ... };
+
+module.exports = (foo(): {f: number,...});
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
+  Number of annotations added:              2
+  Total size of annotations:                4
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+    Unrecognizable module error:            0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

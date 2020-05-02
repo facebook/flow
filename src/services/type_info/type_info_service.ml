@@ -53,7 +53,8 @@ let type_at_pos
       | Success (loc, ty) ->
         (* TODO use Ty_debug.json_of_t after making it faster using
              count_calls *)
-        let json = Hh_json.JSON_String (Ty_printer.string_of_elt ty) in
+        let exact_by_default = Context.exact_by_default cx in
+        let json = Hh_json.JSON_String (Ty_printer.string_of_elt ~exact_by_default ty) in
         (mk_data "SUCCESS" loc json, loc, Some ty))
   in
   ((loc, ty), json_data)
@@ -103,7 +104,8 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
 
 let dump_types ~expand_aliases ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
-  let printer = Ty_printer.string_of_elt_single_line in
+  let exact_by_default = Context.exact_by_default cx in
+  let printer = Ty_printer.string_of_elt_single_line ~exact_by_default in
   let abs_file_sig = File_sig.abstractify_locs file_sig in
   Query_types.dump_types
     ~printer
@@ -131,7 +133,8 @@ let suggest ~options ~env ~profiling file_key file_content =
   | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query = Query_types.suggest_types cx file_sig tast in
-    let visitor = new Suggest.visitor ~ty_query in
+    let exact_by_default = Options.exact_by_default options in
+    let visitor = new Suggest.visitor ~exact_by_default ~ty_query in
     let ast_with_suggestions = visitor#program ast in
     let suggest_warnings = visitor#warnings () in
     let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in

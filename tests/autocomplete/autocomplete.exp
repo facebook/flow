@@ -211,7 +211,7 @@ optional.js = {
     {"name":"f","type":"(x?: string) => void"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"o","type":"{x?: string}"},
+    {"name":"o","type":"{x?: string, ...}"},
     {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
     {"name":"toLocaleString","type":"() => string"},
     {"name":"toString","type":"() => string"},
@@ -826,9 +826,9 @@ normalize-1.js = {
 normalize-2.js = {
   "result":[
     {"name":"this","type":"this"},
-    {"name":"foo","type":"<T>(a: {b: T}) => any"},
+    {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
     {"name":"c","type":"T"},
-    {"name":"a","type":"{b: T}"}
+    {"name":"a","type":"{b: T, ...}"}
   ]
 }
 unqualified-type-annotation.js = {

@@ -422,7 +422,7 @@ let dump_types js_file js_content =
   | Ok (ast, file_sig) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
-    let printer = Ty_printer.string_of_elt_single_line in
+    let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
     let types =
       Query_types.dump_types
         ~printer

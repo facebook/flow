@@ -693,7 +693,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "o",
-               "type": "{x?: string}"
+               "type": "{x?: string, ...}"
              },
              {
                "name": "propertyIsEnumerable",

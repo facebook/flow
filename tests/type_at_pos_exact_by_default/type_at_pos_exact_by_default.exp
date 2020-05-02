@@ -1,0 +1,36 @@
+
+exact_by_default=false
+
+file.js:3:13
+Flags:
+{|f: number|}
+file.js:3:13,3:14
+
+file.js:5:13
+Flags:
+{f: number, ...}
+file.js:5:13,5:14
+
+file.js:7:13
+Flags:
+{f: number, ...}
+file.js:7:13,7:14
+
+
+exact_by_default=true
+
+file.js:3:13
+Flags:
+{f: number}
+file.js:3:13,3:14
+
+file.js:5:13
+Flags:
+{f: number}
+file.js:5:13,5:14
+
+file.js:7:13
+Flags:
+{f: number, ...}
+file.js:7:13,7:14
+

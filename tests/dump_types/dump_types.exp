@@ -1410,7 +1410,7 @@
     "end":33
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1425,7 +1425,7 @@
     "end":15
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1440,7 +1440,7 @@
     "end":52
   },
   {
-    "type":"void | {b: ?{c: (null | {d: number})}}",
+    "type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1455,7 +1455,7 @@
     "end":19
   },
   {
-    "type":"{b: ?{c: (null | {d: number})}}",
+    "type":"{b: ?{c: (null | {d: number, ...}), ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1470,7 +1470,7 @@
     "end":51
   },
   {
-    "type":"?{c: (null | {d: number})}",
+    "type":"?{c: (null | {d: number, ...}), ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1485,7 +1485,7 @@
     "end":24
   },
   {
-    "type":"?{c: (null | {d: number})}",
+    "type":"?{c: (null | {d: number, ...}), ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1500,7 +1500,7 @@
     "end":50
   },
   {
-    "type":"{c: (null | {d: number})}",
+    "type":"{c: (null | {d: number, ...}), ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1515,7 +1515,7 @@
     "end":50
   },
   {
-    "type":"null | {d: number}",
+    "type":"null | {d: number, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1545,7 +1545,7 @@
     "end":35
   },
   {
-    "type":"null | {d: number}",
+    "type":"null | {d: number, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1560,7 +1560,7 @@
     "end":49
   },
   {
-    "type":"{d: number}",
+    "type":"{d: number, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1695,7 +1695,7 @@
     "end":46
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1710,7 +1710,7 @@
     "end":25
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1725,7 +1725,7 @@
     "end":25
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1740,7 +1740,7 @@
     "end":30
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1755,7 +1755,7 @@
     "end":30
   },
   {
-    "type":"(obj: {a?: {b: ?{c: (null | {d: number})}}}) => number",
+    "type":"(obj: {a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}) => number",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1785,7 +1785,7 @@
     "end":30
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1800,7 +1800,7 @@
     "end":30
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1815,7 +1815,7 @@
     "end":37
   },
   {
-    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1830,7 +1830,7 @@
     "end":37
   },
   {
-    "type":"void | {b: ?{c: (null | {d: number})}}",
+    "type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1845,7 +1845,7 @@
     "end":39
   },
   {
-    "type":"?{c: (null | {d: number})}",
+    "type":"?{c: (null | {d: number, ...}), ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1860,7 +1860,7 @@
     "end":41
   },
   {
-    "type":"null | {d: number}",
+    "type":"null | {d: number, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1890,7 +1890,7 @@
     "end":45
   },
   {
-    "type":"void | {b: ?{c: (null | {d: number})}}",
+    "type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1905,7 +1905,7 @@
     "end":39
   },
   {
-    "type":"?{c: (null | {d: number})}",
+    "type":"?{c: (null | {d: number, ...}), ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1920,7 +1920,7 @@
     "end":41
   },
   {
-    "type":"null | {d: number}",
+    "type":"null | {d: number, ...}",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -2618,22 +2618,22 @@ type-destructors.js:7:13-16: $Diff<Props, DefaultProps>
 type-destructors.js:7:19-23: $Diff<Props, DefaultProps>
 type-destructors.js:7:19-44: $Diff<Props, DefaultProps>
 type-destructors.js:7:25-29: Props
-type-destructors.js:7:25-29: type Props = {age: number, name: string}
+type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
 type-destructors.js:7:32-43: DefaultProps
-type-destructors.js:7:32-43: type DefaultProps = {age: number}
+type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}
 === type-destructors.js (--evaluate-type-destructors) ===
-type-destructors.js:7:13-16: {name: string}
-type-destructors.js:7:19-23: {name: string}
-type-destructors.js:7:19-44: {name: string}
+type-destructors.js:7:13-16: {name: string, ...}
+type-destructors.js:7:19-23: {name: string, ...}
+type-destructors.js:7:19-44: {name: string, ...}
 type-destructors.js:7:25-29: Props
-type-destructors.js:7:25-29: type Props = {age: number, name: string}
+type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
 type-destructors.js:7:32-43: DefaultProps
-type-destructors.js:7:32-43: type DefaultProps = {age: number}
+type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}
 === type-destructors.js (--expand-type-aliases --evaluate-type-destructors) ===
-type-destructors.js:7:13-16: {name: string}
-type-destructors.js:7:19-23: {name: string}
-type-destructors.js:7:19-44: {name: string}
-type-destructors.js:7:25-29: {age: number, name: string}
-type-destructors.js:7:25-29: type Props = {age: number, name: string}
-type-destructors.js:7:32-43: {age: number}
-type-destructors.js:7:32-43: type DefaultProps = {age: number}
+type-destructors.js:7:13-16: {name: string, ...}
+type-destructors.js:7:19-23: {name: string, ...}
+type-destructors.js:7:19-44: {name: string, ...}
+type-destructors.js:7:25-29: {age: number, name: string, ...}
+type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
+type-destructors.js:7:32-43: {age: number, ...}
+type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}

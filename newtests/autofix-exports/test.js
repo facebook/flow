@@ -163,7 +163,7 @@ export default suite(
                           },
                         },
                         newText:
-                          ': {a: number, b: (a: any, b: string) => number}',
+                          ': {a: number, b: (a: any, b: string) => number,...}',
                       },
                     ],
                   },

@@ -71,14 +71,6 @@ module SignatureVerification = struct
     | NoErrors of Ty.t
     | WithErrors of Error.kind list * Ty.t
 
-  let string_of_type_entry = function
-    | NoErrors t -> Utils_js.spf "NoError (%s)" (Ty_printer.string_of_t t)
-    | WithErrors (errs, t) ->
-      Utils_js.spf
-        "WithErrors ([%s], %s)"
-        (List.map Error.serialize errs |> String.concat ",")
-        (Ty_printer.string_of_t t)
-
   let supported_error_kind cctx ~max_type_size acc loc =
     let loc = ALoc.to_loc_exn loc in
     let add_ty ty =
@@ -217,7 +209,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       Options.lint_severities options
   in
   let suppress_types = Options.suppress_types options in
-  let flowfixme_ast = Builtins.flowfixme_ast lint_severities suppress_types in
+  let exact_by_default = Options.exact_by_default options in
+  let flowfixme_ast = Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default in
   object (this)
     inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
 
@@ -234,7 +227,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method private get_remote_converter = Base.Option.value_exn remote_converter
 
     method private serialize t =
-      match Ty_serializer.type_ () t with
+      match Ty_serializer.(type_ { exact_by_default } t) with
       | Error e -> Error (Error.Serializer_error e)
       | Ok t -> Ok t
 

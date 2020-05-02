@@ -408,7 +408,7 @@ module Acc = struct
     Hh_logger.error "%s %s" (Error.serialize x) (Reason.string_of_loc loc);
     { c with errors = Error.add c.errors x }
 
-  let report ~strip_root:_ c =
+  let report _ c =
     let sep = "" in
     let rows =
       [
@@ -451,9 +451,9 @@ module Builtins = struct
 
   let flowfixme_ty_default = flowfixme_ty LintSettings.empty_severities SSet.empty
 
-  let flowfixme_ast lint_severities suppress_types =
+  let flowfixme_ast ~exact_by_default ~lint_severities ~suppress_types =
     flowfixme_ty lint_severities suppress_types
-    |> Ty_serializer.type_ ()
+    |> Ty_serializer.type_ { Ty_serializer.exact_by_default }
     |> Base.Result.ok_or_failwith
 
   let temporary_objectlit_symbol =

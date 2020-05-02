@@ -3,7 +3,7 @@
 
 var React = require('react');
 
-const Comp: Class<React$Component<any, {}>> & {defaultProps: void} = React.createClass(Object.freeze({}));
+const Comp: Class<React$Component<any, {...}>> & {defaultProps: void,...} = React.createClass(Object.freeze({}));
 
 module.exports = Comp;
 
@@ -57,10 +57,10 @@ const XShape = {
   x: PropTypes.number.isRequired
 };
 const FooShape = {
-  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number}>)
+  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number,...}>)
 };
 
-const Bar: React$PropType$Primitive<{foo: {x: number}}> = PropTypes.shape(FooShape);
+const Bar: React$PropType$Primitive<{foo: {x: number,...},...}> = PropTypes.shape(FooShape);
 
 module.exports = {
   FooShape,

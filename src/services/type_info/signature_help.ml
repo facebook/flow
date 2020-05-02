@@ -16,12 +16,12 @@ let parameter_name is_opt name =
 
 let string_of_ty = Ty_printer.string_of_t_single_line ~with_comments:false
 
-let func_details params rest_param return =
+let func_details ~exact_by_default params rest_param return =
   let param_tys =
     Base.List.map
       ~f:(fun (n, t, fp) ->
         let param_name = parameter_name fp.Ty.prm_optional n in
-        let param_ty = string_of_ty t in
+        let param_ty = string_of_ty ~exact_by_default t in
         { ServerProt.Response.param_name; param_ty })
       params
   in
@@ -30,10 +30,10 @@ let func_details params rest_param return =
     | None -> param_tys
     | Some (name, t) ->
       let param_name = "..." ^ parameter_name false name in
-      let param_ty = string_of_ty t in
+      let param_ty = string_of_ty ~exact_by_default t in
       param_tys @ [{ ServerProt.Response.param_name; param_ty }]
   in
-  let return_ty = string_of_ty return in
+  let return_ty = string_of_ty ~exact_by_default return in
   { ServerProt.Response.param_tys; return_ty }
 
 (* given a Loc.t within a function call, returns the type of the function being called *)
@@ -154,11 +154,12 @@ let ty_normalizer_options =
       max_depth = Some 50;
     }
 
-let rec collect_functions acc = function
+let rec collect_functions ~exact_by_default acc = function
   | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->
-    let details = func_details fun_params fun_rest_param fun_return in
+    let details = func_details ~exact_by_default fun_params fun_rest_param fun_return in
     details :: acc
-  | Ty.Inter (t1, t2, ts) -> Base.List.fold_left ~init:acc ~f:collect_functions (t1 :: t2 :: ts)
+  | Ty.Inter (t1, t2, ts) ->
+    Base.List.fold_left ~init:acc ~f:(collect_functions ~exact_by_default) (t1 :: t2 :: ts)
   | _ -> acc
 
 let find_signatures ~cx ~file_sig ~typed_ast loc =
@@ -172,7 +173,8 @@ let find_signatures ~cx ~file_sig ~typed_ast loc =
     in
     (match ty with
     | Ok (Ty.Type ty) ->
-      (match collect_functions [] ty with
+      let exact_by_default = Context.exact_by_default cx in
+      (match collect_functions ~exact_by_default [] ty with
       | [] -> Ok None
       | funs -> Ok (Some (funs, active_parameter)))
     | Ok _ -> Ok None
