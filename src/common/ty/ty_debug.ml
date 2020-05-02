@@ -226,11 +226,11 @@ and dump_t ?(depth = 10) t =
     | Union (t1, t2, ts) ->
       spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1 :: t2 :: ts)))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
-    | InlineInterface { if_extends; if_body } ->
+    | InlineInterface { if_extends; if_props } ->
       spf
         "InlineInterface (%s, %s)"
         (dump_list (dump_generic ~depth) if_extends)
-        (dump_obj ~depth if_body)
+        (spf "{ %s }" (dump_list (dump_prop ~depth) if_props))
     | TypeOf v -> spf "Typeof (%s)" (builtin_value v)
     | Utility u -> dump_utility ~depth u
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
@@ -377,10 +377,13 @@ let json_of_elt ~strip_root =
       | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
       | Union (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
       | Inter (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
-      | InlineInterface { if_extends; if_body } ->
+      | InlineInterface { if_extends; if_props } ->
         Hh_json.(
           let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
-          [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
+          [
+            ("extends", JSON_Array extends);
+            ("body", JSON_Array (Base.List.map ~f:json_of_prop if_props));
+          ])
       | TypeOf b -> [("name", json_of_builtin_value b)]
       | Utility u -> json_of_utility u
       | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]

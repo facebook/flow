@@ -121,7 +121,7 @@ and arr_t = {
 
 and interface_t = {
   if_extends: generic_t list;
-  if_body: obj_t;
+  if_props: prop list;
 }
 
 and fun_param = { prm_optional: bool }

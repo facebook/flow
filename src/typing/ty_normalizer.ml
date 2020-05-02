@@ -1261,9 +1261,8 @@ end = struct
       let%bind super = type__ ~env super in
       let%bind if_extends = extends super in
       let%map obj_props = obj_props_t ~env own_props inst_call_t None in
-      let obj_props = fix_dict_props obj_props in
-      let if_body = { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props } in
-      Ty.InlineInterface { Ty.if_extends; if_body }
+      let if_props = fix_dict_props obj_props in
+      Ty.InlineInterface { Ty.if_extends; if_props }
 
   (* The Class<T> utility type *)
   and class_t ~env t =

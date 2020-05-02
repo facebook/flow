@@ -111,7 +111,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
           "true"
         else
           "false" )
-    | InlineInterface { if_extends; if_body } -> type_interface ~depth if_extends if_body
+    | InlineInterface { if_extends; if_props } -> type_interface ~depth if_extends if_props
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
@@ -143,7 +143,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
         else
           Empty );
       ]
-  and type_interface ~depth extends body =
+  and type_interface ~depth extends props =
     let extends =
       match extends with
       | [] -> Empty
@@ -151,7 +151,13 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
         fuse_with_space
           [Atom "extends"; list ~sep:(Atom ",") (Base.List.map ~f:(type_generic ~depth) extends)]
     in
-    let body = type_object ~depth body in
+    let body =
+      list
+        ~wrap:(Atom "{", Atom "}")
+        ~sep:(Atom ";")
+        ~trailing:false
+        (counted_map (type_object_property ~depth) props)
+    in
     fuse_with_space [Atom "interface"; extends; body]
   and type_function
       ~depth ~sep { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _ } =

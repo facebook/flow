@@ -339,10 +339,9 @@ let type_ _opts =
     let%map gen = generic x ts in
     (Loc.none, gen)
   and inline_interface i =
-    let { if_extends; if_body } = i in
-    let { obj_props; _ } = if_body in
+    let { if_extends; if_props } = i in
     let%bind extends = mapM interface_extends if_extends in
-    let%map properties = mapM obj_prop obj_props in
+    let%map properties = mapM obj_prop if_props in
     let body =
       (Loc.none, { T.Object.exact = false; inexact = false; properties; comments = None })
     in
