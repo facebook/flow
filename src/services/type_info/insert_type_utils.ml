@@ -452,7 +452,9 @@ module Builtins = struct
   let flowfixme_ty_default = flowfixme_ty LintSettings.empty_severities SSet.empty
 
   let flowfixme_ast lint_severities suppress_types =
-    flowfixme_ty lint_severities suppress_types |> Ty_serializer.type_ |> Base.Result.ok_or_failwith
+    flowfixme_ty lint_severities suppress_types
+    |> Ty_serializer.type_ ()
+    |> Base.Result.ok_or_failwith
 
   let temporary_objectlit_symbol =
     {

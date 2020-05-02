@@ -42,7 +42,7 @@ class visitor ~ty_query =
       let open Ty in
       let blame_loc = Base.Option.value ~default:loc blame_loc in
       let serialize ty =
-        match Ty_serializer.type_ ty with
+        match Ty_serializer.type_ () ty with
         | Ok type_ast -> Some (Loc.none, type_ast)
         | Error desc -> this#warn blame_loc (Serializer desc)
       in

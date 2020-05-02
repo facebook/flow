@@ -234,7 +234,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method private get_remote_converter = Base.Option.value_exn remote_converter
 
     method private serialize t =
-      match Ty_serializer.type_ t with
+      match Ty_serializer.type_ () t with
       | Error e -> Error (Error.Serializer_error e)
       | Ok t -> Ok t
 

@@ -233,7 +233,7 @@ let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
 let serialize ?(imports_react = false) loc ty =
-  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty |> simplify |> Ty_serializer.type_
+  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty |> simplify |> Ty_serializer.type_ ()
   |> function
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
