@@ -120,7 +120,7 @@ module Opts = struct
     Ok (config, warnings)
 
   let module_file_exts =
-    SSet.empty |> SSet.add ".js" |> SSet.add ".jsx" |> SSet.add ".json" |> SSet.add ".mjs"
+    SSet.empty |> SSet.add ".js" |> SSet.add ".jsx" |> SSet.add ".json" |> SSet.add ".mjs" |> SSet.add ".cjs"
 
   let module_resource_exts =
     SSet.empty
