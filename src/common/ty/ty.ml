@@ -109,13 +109,19 @@ and fun_t = {
 and obj_t = {
   obj_exact: bool;
   obj_frozen: bool;
-  obj_literal: bool;
+  (* `None` means that this field was not computed, because the normalizer config
+     option preserve_inferred_literal_types was set to false. `Some b` means that
+     it was computed and `b` is true iff this is a literal type. *)
+  obj_literal: bool option;
   obj_props: prop list;
 }
 
 and arr_t = {
   arr_readonly: bool;
-  arr_literal: bool;
+  (* `None` means that this field was not computed, because the normalizer config
+     option preserve_inferred_literal_types was set to false. `Some b` means that
+     it was computed and `b` is true iff this is a literal type. *)
+  arr_literal: bool option;
   arr_elt_t: t;
 }
 
@@ -540,7 +546,7 @@ let mk_field_props prop_list =
         { name = id; prop = Field { t; polarity = Neutral; optional = opt }; from_proto = false })
     prop_list
 
-let mk_object ?(obj_exact = false) ?(obj_frozen = false) ?(obj_literal = false) obj_props =
+let mk_object ?(obj_exact = false) ?(obj_frozen = false) ?obj_literal obj_props =
   Obj { obj_exact; obj_frozen; obj_literal; obj_props }
 
 let mk_generic_class symbol targs = Generic (symbol, ClassKind, targs)

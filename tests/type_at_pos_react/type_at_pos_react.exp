@@ -178,7 +178,7 @@ react_component.js:3:9 = module "react" {
 react_component.js:3:7,3:11
 react_component.js:13:33 = class React$Component<Props, State = void>
 react_component.js:13:29,13:37
-react_component.js:18:17 = {|enabled: boolean|} | {|enabled: boolean|}
+react_component.js:18:17 = {|enabled: boolean|}
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
   "expanded_type":{
@@ -189,7 +189,7 @@ react_component.js:31:7 = {
         "kind":"Obj",
         "exact":false,
         "frozen":false,
-        "literal":false,
+        "literal":null,
         "props":[
           {
             "kind":"NamedProp",
@@ -224,7 +224,7 @@ react_component.js:31:7 = {
       },
       "kind":"type alias"
     },
-    "staticType":{"kind":"Obj","exact":false,"frozen":false,"literal":false,"props":[]}
+    "staticType":{"kind":"Obj","exact":false,"frozen":false,"literal":null,"props":[]}
   },
   "type":"({children?: React$Node, ...}) => React$Node",
   "reasons":[],

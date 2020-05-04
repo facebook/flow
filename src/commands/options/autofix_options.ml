@@ -7,7 +7,6 @@
 
 type ambiguity_strategy =
   | Fail
-  | Temporary
   | Generalize
   | Specialize
   | Fixme
@@ -16,7 +15,6 @@ type ambiguity_strategy =
 let ambiguity_strategies =
   [
     ("fail", Fail);
-    ("temporary", Temporary);
     ("generalize", Generalize);
     ("specialize", Specialize);
     ("fixme", Fixme);

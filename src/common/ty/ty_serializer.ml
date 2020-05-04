@@ -190,7 +190,12 @@ let type_ options =
         o.obj_exact
     in
     let inexact = not o.obj_exact in
-    (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None })
+    let t = (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None }) in
+    match o.obj_literal with
+    | Some true -> mk_generic_type (id_from_string "$TEMPORARY$object") (Some (mk_targs [t]))
+    | None
+    | Some false ->
+      t
   and obj_prop = function
     | NamedProp { name; prop; _ } ->
       let%map p = obj_named_prop name prop in
@@ -284,12 +289,16 @@ let type_ options =
     let%map t = type_ t in
     ( Loc.none,
       { T.Object.SpreadProperty.argument = t; comments = Flow_ast_utils.mk_comments_opt () } )
-  and arr { arr_readonly; arr_elt_t; _ } =
+  and arr { arr_readonly; arr_elt_t; arr_literal; _ } =
     let%map t = type_ arr_elt_t in
     if arr_readonly then
       builtin_from_string "$ReadOnlyArray" ~targs:(mk_targs [t])
     else
-      builtin_from_string "Array" ~targs:(mk_targs [t])
+      match arr_literal with
+      | Some true -> mk_generic_type (id_from_string "$TEMPORARY$array") (Some (mk_targs [t]))
+      | None
+      | Some false ->
+        builtin_from_string "Array" ~targs:(mk_targs [t])
   and type_params ts =
     let%map ts = mapM type_param ts in
     (Loc.none, { T.TypeParams.params = ts; comments = Flow_ast_utils.mk_comments_opt () })

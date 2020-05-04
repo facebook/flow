@@ -1,7 +1,7 @@
 array.js 3 15 --strategy=specialize
 // @flow
 
-function foo(): Array<1 | 2> {
+function foo(): Array<number> {
   return [1, 2];
 }
 No errors!
@@ -556,7 +556,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 6 --strategy=specialize
 // @flow
-var obj: {|m: (x: 0) => "", n: (y: 0) => ""|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -567,9 +567,8 @@ obj.n(0)
 
 // This is kinda trailing whitespace
 No errors!
-replacement-object.js 2 7 --strategy=temporary
 // @flow
-var obj: $TEMPORARY$object<{m: (x: number) => string, n: (y: number) => string,...}> = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -579,10 +578,9 @@ obj.n(0)
 
 
 // This is kinda trailing whitespace
-No errors!
 replacement-object.js 2 8 --strategy=fixme
 // @flow
-var obj: any = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -658,7 +656,7 @@ insert-type array.js 3:15
 cat array.js 3:15
 // @flow
 
-function foo(): Array<1 | 2> {
+function foo(): Array<number> {
   return [1, 2];
 }
 insert-type arrow-0.js 3:11-3:23

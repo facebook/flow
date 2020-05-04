@@ -26,8 +26,6 @@ test_file "$UNKNOWN" annotated.js 3 6
 # No perfect solution errors
 # Type size bigger than expected
 test_file "$UNKNOWN" big-type.js 3 6
-# Fails because the user could want an exact object or the general object
-test_file "$UNKNOWN" object.js 4 8 --strategy=fail
 
 test_file "$UNKNOWN" empty-array.js 3 12 3 14
 

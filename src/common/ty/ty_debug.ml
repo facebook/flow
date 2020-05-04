@@ -371,7 +371,7 @@ let json_of_elt ~strip_root =
       | Arr { arr_readonly; arr_literal; arr_elt_t } ->
         [
           ("readonly", JSON_Bool arr_readonly);
-          ("literal", JSON_Bool arr_literal);
+          ("literal", Base.Option.value_map arr_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
           ("type", json_of_t arr_elt_t);
         ]
       | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
@@ -425,7 +425,7 @@ let json_of_elt ~strip_root =
       [
         ("exact", JSON_Bool obj_exact);
         ("frozen", JSON_Bool obj_frozen);
-        ("literal", JSON_Bool obj_literal);
+        ("literal", Base.Option.value_map obj_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
         ("props", JSON_Array (Base.List.map ~f:json_of_prop obj_props));
       ])
   and json_of_type_params ps =

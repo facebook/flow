@@ -267,20 +267,20 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
             ]
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t])
-  and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
-    fuse
-      [
-        Atom
-          ( if arr_readonly then
-            "$ReadOnlyArray"
-          else
-            "Array" );
-        Atom "<";
-        type_ ~depth arr_elt_t;
-        Atom ">";
-      ]
+  and type_array ~depth { arr_readonly; arr_literal; arr_elt_t } =
+    let arr =
+      if arr_readonly then
+        "$ReadOnlyArray"
+      else
+        match arr_literal with
+        | Some true -> "$TEMPORARY$array"
+        | Some false
+        | None ->
+          "Array"
+    in
+    fuse [Atom arr; Atom "<"; type_ ~depth arr_elt_t; Atom ">"]
   and type_object ~depth ?(sep = Atom ",") obj =
-    let { obj_exact; obj_props; _ } = obj in
+    let { obj_exact; obj_props; obj_literal; _ } = obj in
     let s_exact =
       if obj_exact && not exact_by_default then
         Atom "|"
@@ -294,7 +294,14 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
       else
         props @ [Atom "..."]
     in
-    list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
+    let o =
+      list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
+    in
+    match obj_literal with
+    | Some true -> fuse [Atom "$TEMPORARY$object"; Atom "<"; o; Atom ">"]
+    | Some false
+    | None ->
+      o
   and type_union ~depth ts =
     let (prefix, ts) =
       if List.mem Null ts && List.mem Void ts then

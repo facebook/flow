@@ -78,9 +78,8 @@ do_file "alias-0.js" 13 1 13 32 --expand-type-aliases
 # Test pointing to identifiers
 do_file "replacement-object.js" 2 5 --strategy=generalize
 do_file "replacement-object.js" 2 6 --strategy=specialize
-do_file "replacement-object.js" 2 7 --strategy=temporary
-assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet \
-    "replacement-object.js" 2 7 --strategy=fail
+assert_ok "$FLOW" autofix insert-type --strip-root --quiet \
+    "replacement-object.js" 2 7
 do_file "replacement-object.js" 2 8 --strategy=fixme
 do_file "replacement-object.js" 2 5 2 8 --strategy=generalize
 do_file "func-2.js" 3 14

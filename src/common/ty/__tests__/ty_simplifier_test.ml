@@ -24,7 +24,7 @@ module UnionSimplification = struct
                 {
                   Ty.obj_exact = false;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -40,7 +40,7 @@ module UnionSimplification = struct
                 {
                   Ty.obj_exact = false;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -60,7 +60,7 @@ module UnionSimplification = struct
             {
               Ty.obj_exact = false;
               obj_frozen = false;
-              obj_literal = false;
+              obj_literal = None;
               obj_props =
                 [
                   Ty.NamedProp
@@ -85,7 +85,7 @@ module UnionSimplification = struct
                 {
                   Ty.obj_exact = false;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -101,7 +101,7 @@ module UnionSimplification = struct
                 {
                   Ty.obj_exact = false;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -138,7 +138,7 @@ module BotAndTopSimplification = struct
                 {
                   Ty.obj_exact = false;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -155,7 +155,7 @@ module BotAndTopSimplification = struct
                 {
                   Ty.obj_exact = false;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -180,7 +180,7 @@ module BotAndTopSimplification = struct
             {
               Ty.obj_exact = false;
               obj_frozen = false;
-              obj_literal = false;
+              obj_literal = None;
               obj_props =
                 [
                   Ty.NamedProp

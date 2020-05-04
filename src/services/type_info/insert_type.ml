@@ -59,30 +59,6 @@ class use_upper_bound_mapper =
         | b -> super#on_Bot () t b)
   end
 
-class allow_temporary_types_mapper =
-  object (this)
-    inherit use_upper_bound_mapper as super
-
-    method! on_Arr () t =
-      function
-      | Ty.{ arr_literal = true; arr_elt_t; _ } ->
-        Ty.Generic
-          (Utils.Builtins.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
-      | arr -> super#on_Arr () t arr
-
-    method! on_Obj () t =
-      function
-      | Ty.{ obj_literal = true; _ } as obj ->
-        let obj = { obj with Ty.obj_literal = false } in
-        Ty.Generic
-          ( Utils.Builtins.temporary_objectlit_symbol,
-            Ty.TypeAliasKind,
-            Some [super#on_Obj () (Ty.Obj obj) obj] )
-      | o -> super#on_Obj () t o
-  end
-
-let allow_temporary_types = (new allow_temporary_types_mapper)#on_t ()
-
 class fail_on_ambiguity_mapper =
   object
     inherit use_upper_bound_mapper as super
@@ -104,12 +80,12 @@ class fail_on_ambiguity_mapper =
 
     method! on_Arr () t =
       function
-      | Ty.{ arr_literal = true; _ } -> raise FoundAmbiguousType
+      | Ty.{ arr_literal = Some true; _ } -> raise FoundAmbiguousType
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
       function
-      | Ty.{ obj_literal = true; _ } -> raise FoundAmbiguousType
+      | Ty.{ obj_literal = Some true; _ } -> raise FoundAmbiguousType
       | obj -> super#on_Obj () t obj
   end
 
@@ -136,8 +112,8 @@ class generalize_temporary_types_mapper =
 
     method! on_Arr () t =
       function
-      | Ty.{ arr_literal = true; _ } as arr ->
-        let arr = Ty.{ arr with arr_literal = false } in
+      | Ty.{ arr_literal = Some true; _ } as arr ->
+        let arr = Ty.{ arr with arr_literal = Some false } in
         super#on_Arr () (Ty.Arr arr) arr
       | arr -> super#on_Arr () t arr
 
@@ -150,30 +126,6 @@ class generalize_temporary_types_mapper =
   end
 
 let generalize_temporary_types = (new generalize_temporary_types_mapper)#on_t ()
-
-class allow_temporary_arr_and_obj_types_mapper =
-  object (this)
-    inherit generalize_temporary_types_mapper as super
-
-    method! on_Arr () t =
-      function
-      | Ty.{ arr_literal = true; arr_elt_t; _ } ->
-        Ty.Generic
-          (Utils.Builtins.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
-      | arr -> super#on_Arr () t arr
-
-    method! on_Obj () t =
-      function
-      | Ty.{ obj_literal = true; _ } as obj ->
-        let obj = { obj with Ty.obj_literal = false } in
-        Ty.Generic
-          ( Utils.Builtins.temporary_objectlit_symbol,
-            Ty.TypeAliasKind,
-            Some [super#on_Obj () (Ty.Obj obj) obj] )
-      | o -> super#on_Obj () t o
-  end
-
-let allow_temporary_arr_and_obj_types = (new allow_temporary_arr_and_obj_types_mapper)#on_t ()
 
 class specialize_temporary_types_mapper =
   object
@@ -218,12 +170,12 @@ class fixme_ambiguous_types_mapper =
 
     method! on_Arr () t =
       function
-      | Ty.{ arr_literal = true; _ } -> Utils.Builtins.flowfixme_ty_default
+      | Ty.{ arr_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
       function
-      | Ty.{ obj_literal = true; _ } -> Utils.Builtins.flowfixme_ty_default
+      | Ty.{ obj_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
       | obj -> super#on_Obj () t obj
   end
 
@@ -255,7 +207,6 @@ let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
                generalized = generalize_temporary_types ty |> serialize ~exact_by_default loc;
              }
     end
-  | Temporary -> allow_temporary_arr_and_obj_types ty
   | Generalize -> generalize_temporary_types ty
   | Specialize -> specialize_temporary_types ty
   | Fixme -> fixme_ambiguous_types ty

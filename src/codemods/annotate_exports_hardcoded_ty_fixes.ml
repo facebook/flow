@@ -51,16 +51,6 @@ let mapper_type_normalization_hardcoded_fixes
       | Ty.Bool (Some _) when not preserve_literals -> Ty.Bool None
       | Ty.Str (Some s) when (not preserve_literals) && not (maybe_string_literal_tag s) ->
         Ty.Str None
-      | Ty.Arr { Ty.arr_literal = true; arr_elt_t; _ } ->
-        let arr_elt_t = this#on_t env arr_elt_t in
-        Ty.Generic
-          (Insert_type_utils.Builtins.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [arr_elt_t])
-      | Ty.Obj ({ Ty.obj_literal = true; _ } as obj) ->
-        let obj = this#on_obj_t env obj in
-        Ty.Generic
-          ( Insert_type_utils.Builtins.temporary_objectlit_symbol,
-            Ty.TypeAliasKind,
-            Some [Ty.Obj { obj with Ty.obj_literal = false }] )
       (* E.g. React$Element<'div'> will become React.Element<'div'> *)
       | Ty.Generic
           ( ( { Ty.sym_name = "React$Element"; sym_provenance = Ty_symbol.Library _; sym_def_loc; _ }

@@ -1,11 +1,11 @@
-> insert-type a.js 6 15 --strategy=temporary
+> insert-type a.js 6 15
 > cat a.js
 // @flow
 
 type Inexact = { data: string; type: string; }
 type Exact = {| data: string; type: string; |}
 
-function foo(): $TEMPORARY$array<$TEMPORARY$object<{data: string, type: string,...}>> {
+function foo(): Array<{data: string, type: string,...}> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -51,4 +51,23 @@ function foo(): Array<{|data: string, type: string|}> {
 
 module.exports = foo;
 > flow status
-No errors!
+Error -------------------------------------------------------------------------------------------------------- a.js:14:2
+
+Cannot cast `foo()` to array type because inexact object type [1] is incompatible with exact `Exact` [2] in array
+element.
+
+   a.js:14:2
+   14| (foo(): Array<Exact>);
+        ^^^^^
+
+References:
+   a.js:6:23
+    6| function foo(): Array<{data: string, type: string,...}> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:14:15
+   14| (foo(): Array<Exact>);
+                     ^^^^^ [2]
+
+
+
+Found 1 error

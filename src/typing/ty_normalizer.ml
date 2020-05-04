@@ -857,7 +857,7 @@ end = struct
               ~params:[(Some "thisArg", explicit_any, non_opt_param)]
               ~rest:
                 ( Some "argArray",
-                  Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
+                  Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any } )
               explicit_any)
       else
         return Ty.(TypeOf FunProtoBind)
@@ -870,7 +870,7 @@ end = struct
               ~params:[(Some "thisArg", explicit_any, non_opt_param)]
               ~rest:
                 ( Some "argArray",
-                  Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
+                  Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any } )
               explicit_any)
       else
         return Ty.(TypeOf FunProtoCall)
@@ -982,9 +982,13 @@ end = struct
     let { T.flags; props_tmap; call_t; dict_t; proto_t } = o in
     let { T.exact = obj_exact; T.frozen = obj_frozen; _ } = flags in
     let obj_literal =
-      match Reason.desc_of_reason reason with
-      | Reason.RObjectLit -> true
-      | _ -> false
+      if Env.(env.options.preserve_inferred_literal_types) then
+        Some
+          (match Reason.desc_of_reason reason with
+          | Reason.RObjectLit -> true
+          | _ -> false)
+      else
+        None
     in
     let%map obj_props =
       match Env.get_member_expansion_info env with
@@ -1078,9 +1082,13 @@ end = struct
 
   and arr_ty ~env reason elt_t =
     let arr_literal =
-      match Reason.desc_of_reason reason with
-      | Reason.RArrayLit -> true
-      | _ -> false
+      if Env.(env.options.preserve_inferred_literal_types) then
+        Some
+          (match Reason.desc_of_reason reason with
+          | Reason.RArrayLit -> true
+          | _ -> false)
+      else
+        None
     in
     match (elt_t, Env.get_member_expansion_info env) with
     | (T.ArrayAT (t, _), None) ->
@@ -1152,7 +1160,7 @@ end = struct
        *)
       let props_obj =
         Ty.Obj
-          { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props = static_flds }
+          { Ty.obj_exact = false; obj_frozen = false; obj_literal = None; obj_props = static_flds }
       in
       return (Ty.mk_inter (parent_class, [props_obj]))
 
@@ -1191,7 +1199,7 @@ end = struct
       else
         return (own_ty_props @ proto_ty_props)
     in
-    Ty.Obj { Ty.obj_exact = true; obj_frozen = false; obj_literal = false; obj_props }
+    Ty.Obj { Ty.obj_exact = true; obj_frozen = false; obj_literal = None; obj_props }
 
   and instance_t =
     let to_generic ~env kind r inst =
@@ -1479,7 +1487,7 @@ end = struct
               ~params:[(Some "target", explicit_any, non_opt_param)]
               ~rest:
                 ( Some "sources",
-                  Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any } )
+                  Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any } )
               explicit_any)
       (* Object.getPrototypeOf: (o: any): any *)
       | ObjectGetPrototypeOf ->
@@ -1545,7 +1553,7 @@ end = struct
               ~params:
                 [
                   ( Some "_",
-                    Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any },
+                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any },
                     non_opt_param );
                 ]
               Void)
@@ -1735,13 +1743,13 @@ end = struct
         | Some obj -> obj_props @ spread_of_ty obj
       in
       let%map obj_exact = obj_exact target in
-      Ty.Obj { Ty.obj_props; obj_exact; obj_literal = false; obj_frozen = false (* default *) }
+      Ty.Obj { Ty.obj_props; obj_exact; obj_literal = None; obj_frozen = false (* default *) }
     in
     let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict } =
       Type.TypeTerm.(
         let obj_exact = true in
         let obj_frozen = false in
-        let obj_literal = false in
+        let obj_literal = None in
         let props = SMap.fold (fun k p acc -> (k, p) :: acc) prop_map [] in
         let%bind obj_props = concat_fold_m (obj_prop_t ~env) props in
         let%bind obj_props =
