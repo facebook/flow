@@ -177,3 +177,10 @@ function f7(x: E & E) {
     case E.A:
   }
 }
+
+// Invalid enum member
+switch (x) {
+  case E.A: break;
+  case E.XXX: break; // Error
+  case E.B: break;
+}

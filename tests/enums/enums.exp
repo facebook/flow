@@ -1732,6 +1732,24 @@ References:
                        ^ [1]
 
 
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:184:10
+
+Cannot access `XXX` because `XXX` is not a member of enum `E` [1].
+
+   exhaustive-check.js:184:10
+   184|   case E.XXX: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:3:1
+        v-------
+     3| enum E {
+     4|   A,
+     5|   B,
+     6| }
+        ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- import-type.js:10:2
 
 Cannot cast `b` to `C` because `B` [1] is incompatible with `C` [2].
@@ -3239,4 +3257,4 @@ References:
 
 
 
-Found 177 errors
+Found 178 errors

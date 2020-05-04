@@ -46,7 +46,8 @@ let detect_invalid_check
     } =
   let check_member (members_remaining, seen) (EnumCheck { reason; member_name; obj_t }) =
     match search_for_enum_object_type cx obj_t with
-    | SingleEnum (_, { enum_id = check_enum_id; _ }) when ALoc.equal_id enum_id check_enum_id ->
+    | SingleEnum (_, { enum_id = check_enum_id; _ })
+      when ALoc.equal_id enum_id check_enum_id && SMap.mem member_name members ->
       if not @@ SMap.mem member_name members_remaining then
         Flow_js.add_output
           cx
