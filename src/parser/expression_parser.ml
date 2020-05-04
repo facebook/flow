@@ -28,7 +28,8 @@ module type EXPRESSION = sig
 
   val number : env -> number_type -> string -> float
 
-  val sequence : env -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
+  val sequence :
+    env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
 end
 
 module Expression
@@ -1299,13 +1300,14 @@ module Expression
       with_loc
         (fun env ->
           Expect.token env T_LPAREN;
+          let expr_start_loc = Peek.loc env in
           let expression = assignment env in
           let ret =
             match Peek.token env with
             | T_COLON ->
               let annot = Type.annotation env in
               Group_typecast Expression.TypeCast.{ expression; annot; comments = None }
-            | T_COMMA -> Group_expr (sequence env [expression])
+            | T_COMMA -> Group_expr (sequence env ~start_loc:expr_start_loc [expression])
             | _ -> Group_expr expression
           in
           Expect.token env T_RPAREN;
@@ -1617,17 +1619,18 @@ module Expression
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             } )
 
-  and sequence env acc =
-    match Peek.token env with
-    | T_COMMA ->
-      Eat.token env;
-      let expr = assignment env in
-      sequence env (expr :: acc)
-    | _ ->
-      let (last_loc, _) = List.hd acc in
-      let expressions = List.rev acc in
-      let (first_loc, _) = List.hd expressions in
-      (Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.{ expressions; comments = None }))
+  and sequence =
+    let rec helper acc env =
+      match Peek.token env with
+      | T_COMMA ->
+        Eat.token env;
+        let expr = assignment env in
+        helper (expr :: acc) env
+      | _ ->
+        let expressions = List.rev acc in
+        Expression.(Sequence Sequence.{ expressions; comments = None })
+    in
+    (fun env ~start_loc acc -> with_loc ~start_loc (helper acc) env)
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in

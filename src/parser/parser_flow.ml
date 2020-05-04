@@ -256,17 +256,19 @@ module rec Parse : PARSER = struct
     | _ -> Statement.expression env
 
   and expression env =
+    let start_loc = Peek.loc env in
     let expr = Expression.assignment env in
     match Peek.token env with
-    | T_COMMA -> Expression.sequence env [expr]
+    | T_COMMA -> Expression.sequence env ~start_loc [expr]
     | _ -> expr
 
   and expression_or_pattern env =
+    let start_loc = Peek.loc env in
     let expr_or_pattern = Expression.assignment_cover env in
     match Peek.token env with
     | T_COMMA ->
       let expr = Pattern_cover.as_expression env expr_or_pattern in
-      let seq = Expression.sequence env [expr] in
+      let seq = Expression.sequence env ~start_loc [expr] in
       Cover_expr seq
     | _ -> expr_or_pattern
 

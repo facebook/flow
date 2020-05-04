@@ -52,8 +52,8 @@
           },
           "init":{
             "type":"SequenceExpression",
-            "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":15}},
-            "range":[9,15],
+            "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":11}},
+            "range":[9,11],
             "expressions":[
               {
                 "type":"Identifier",
@@ -82,8 +82,8 @@
       "range":[15,17],
       "expression":{
         "type":"SequenceExpression",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
-        "range":[15,18],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":17}},
+        "range":[15,17],
         "expressions":[
           {
             "type":"Identifier",
