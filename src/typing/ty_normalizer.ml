@@ -980,15 +980,21 @@ end = struct
 
   and obj_ty ~env reason o =
     let { T.flags; props_tmap; call_t; dict_t; proto_t } = o in
-    let { T.exact = obj_exact; T.frozen = obj_frozen; _ } = flags in
+    let { T.exact; T.frozen = obj_frozen; _ } = flags in
+    let literal = Reason.is_literal_object_reason reason in
     let obj_literal =
       if Env.(env.options.preserve_inferred_literal_types) then
-        Some
-          (match Reason.desc_of_reason reason with
-          | Reason.RObjectLit -> true
-          | _ -> false)
+        Some literal
       else
         None
+    in
+    let obj_exact =
+      (* Object literals will be inferred as exact by default, with the exception
+         of the empty object literal, since it is incompatible with the {||} type. *)
+      if literal && SMap.is_empty (Context.find_props (Env.get_cx env) props_tmap) then
+        false
+      else
+        exact
     in
     let%map obj_props =
       match Env.get_member_expansion_info env with

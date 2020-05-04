@@ -1,17 +1,17 @@
 >>> a.js (#changes: 2)
 // @flow
 
-module.exports = ({}: $TEMPORARY$object<{||}>);
+module.exports = ({}: $TEMPORARY$object<{...}>);
 
 >>> b.js (#changes: 2)
 // @flow
 
-module.exports = { f: ({}: $TEMPORARY$object<{||}>) };
+module.exports = { f: ({}: $TEMPORARY$object<{...}>) };
 
 >>> c.js (#changes: 2)
 // @flow
 
-const obj = { f: ({}: $TEMPORARY$object<{||}>) };
+const obj = { f: ({}: $TEMPORARY$object<{...}>) };
 
 obj.f = { x: 1 };
 obj.f = { x: "a" };
