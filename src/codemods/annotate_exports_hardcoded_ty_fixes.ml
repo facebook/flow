@@ -14,11 +14,47 @@
 
 open Insert_type_utils
 
-(* A string literal that contains alphabetic characters of underscores is likely
- * to be a tag *)
-let maybe_string_literal_tag =
-  let re = Str.regexp "^[a-zA-Z0-9-_]+$" in
-  (fun s -> Str.string_match re s 0)
+module PreserveLiterals = struct
+  type mode =
+    | Always
+    | Never
+    | Auto
+
+  (* A string literal that contains alphabetic characters of underscores is likely
+   * to be a tag *)
+  let tag_like_regex = Str.regexp "^[a-zA-Z0-9-_]+$"
+
+  let enforce ~mode t =
+    let enforce_string s =
+      match mode with
+      | Always -> t
+      | Never -> Ty.Str None
+      | Auto ->
+        if Str.string_match tag_like_regex s 0 then
+          t
+        else
+          Ty.Str None
+    in
+    let enforce_number =
+      match mode with
+      | Always -> t
+      | Never
+      | Auto ->
+        Ty.Num None
+    in
+    let enforce_bool =
+      match mode with
+      | Always -> t
+      | Never
+      | Auto ->
+        Ty.Bool None
+    in
+    match t with
+    | Ty.Str (Some s) -> enforce_string s
+    | Ty.Num (Some _) -> enforce_number
+    | Ty.Bool (Some _) -> enforce_bool
+    | _ -> t
+end
 
 let mapper_type_normalization_hardcoded_fixes
     ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals acc =
@@ -47,10 +83,10 @@ let mapper_type_normalization_hardcoded_fixes
         acc <- Acc.warn acc loc Warning.Empty_SomeKnownUpper;
         this#on_t env ub
       (* Heuristic: These are rarely useful as full precision literal types *)
-      | Ty.Num (Some _) when not preserve_literals -> Ty.Num None
-      | Ty.Bool (Some _) when not preserve_literals -> Ty.Bool None
-      | Ty.Str (Some s) when (not preserve_literals) && not (maybe_string_literal_tag s) ->
-        Ty.Str None
+      | Ty.Num _
+      | Ty.Bool _
+      | Ty.Str _ ->
+        PreserveLiterals.enforce ~mode:preserve_literals t
       (* E.g. React$Element<'div'> will become React.Element<'div'> *)
       | Ty.Generic
           ( ( { Ty.sym_name = "React$Element"; sym_provenance = Ty_symbol.Library _; sym_def_loc; _ }

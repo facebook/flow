@@ -93,6 +93,10 @@ module Annotate_exports_command = struct
     "Annotates parts of input that are visible from the exports as required by Flow types-first mode."
 
   let spec =
+    let module Literals = Annotate_exports_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
     {
       CommandSpec.name = "annotate-exports";
       doc;
@@ -107,11 +111,8 @@ module Annotate_exports_command = struct
           |> CommandUtils.codemod_flags
           |> flag
                "--preserve-literals"
-               no_arg
-               ~doc:
-                 ( "Always add precise literal types for string and numeric literals. "
-                 ^ "If not set the codemod uses a heuristic to widen to the respective general type"
-                 )
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
           |> flag
                "--max-type-size"
                (required ~default:100 int)

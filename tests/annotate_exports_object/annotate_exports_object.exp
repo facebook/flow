@@ -2,7 +2,7 @@
 // @flow
 
 module.exports = {
-  a: (): $TEMPORARY$object<{|x: $TEMPORARY$string<"blah">|}> => {
+  a: (): {|x: string|} => {
   return {
     x:
       // comment
@@ -14,7 +14,7 @@ module.exports = {
 >>> b.js (#changes: 1)
 // @flow
 
-function foo(): $TEMPORARY$object<{|f: number, g: number, h: $TEMPORARY$string<"blah">|}> {
+function foo(): {|f: number, g: number, h: string|} {
   // Comment 0
   const x = {
     // Comment 1
@@ -52,7 +52,7 @@ function foo() {
   };
 }
 
-export const foo_: $TEMPORARY$object<{|"": number, "-": number, "\ud83d\ude0a": number|}> = foo();
+export const foo_: {|"": number, "-": number, "\ud83d\ude0a": number|} = foo();
 
 declare var b: {
   '-': 1,

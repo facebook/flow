@@ -1,18 +1,38 @@
->>> a.js (#changes: 1)
+>>> file.js (#changes: 4)
 // @flow
 
-declare var cond: boolean;
+export function tag_like_values(): $TEMPORARY$object<
+  {|non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like">|},
+> {
+  return {
+    tag_like: 'tag_like', // should print '$TEMPORARY$string<"tag_like">'
+    non_tag_like: 'non_tag_like!', // should print 'string'
+  };
+}
 
-module.exports = (): boolean => (cond ? true : false);
+// should print '$TEMPORARY$array<...>'
+export function array_literal(x: string, y: number): $TEMPORARY$array<number | string> {
+  return [x, y];
+}
+
+// should print 'boolean'
+export function bool_literal(): boolean {
+  return true;
+}
+
+// should print 'number
+export function number_literal(): number {
+  return 1;
+}
 
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
-  Number of annotations added:              1
-  Total size of annotations:                1
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
+  Number of annotations added:              4
+  Total size of annotations:                9
   Number of annotations skipped:            0
 
 Errors:

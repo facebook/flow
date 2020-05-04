@@ -7,7 +7,7 @@ declare opaque type Val;
 declare var key: Key;
 declare var val: Val
 
-module.exports = ({ [key]: val }: $TEMPORARY$object<{|A: Val|}>);
+module.exports = ({ [key]: val }: {|A: Val|});
 
 >>> Launching report...
 

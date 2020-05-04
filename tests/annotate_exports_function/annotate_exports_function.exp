@@ -15,7 +15,7 @@ module.exports = f;
 >>> b.js (#changes: 1)
 // @flow
 
-const functionArray = (): $TEMPORARY$array<(x: number) => number> => ([(x: number) => x])
+const functionArray = (): Array<(x: number) => number> => ([(x: number) => x])
 
 module.exports = functionArray;
 

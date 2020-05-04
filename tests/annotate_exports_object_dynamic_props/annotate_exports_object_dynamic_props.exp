@@ -11,7 +11,7 @@ const FIELDS = {
   keyAny: keyAny(),
 }
 
-const dict: $TEMPORARY$object<{|keyA: number, keyB: number|}> = {
+const dict: {|keyA: number, keyB: number|} = {
   [FIELDS.A]: 1,
   [FIELDS.B]: 2,
   [FIELDS.keyAny]: 3,

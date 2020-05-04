@@ -50,28 +50,12 @@ end
 (* Types with more nodes than this number will cause a warning. *)
 let type_size_warning_threshold = 30
 
-let norm_opts =
-  {
-    Ty_normalizer_env.fall_through_merged = false;
-    expand_internal_types = false;
-    expand_type_aliases = false;
-    flag_shadowed_type_params = false;
-    preserve_inferred_literal_types = true;
-    evaluate_type_destructors = false;
-    optimize_types = false;
-    omit_targ_defaults = true;
-    merge_bot_and_any_kinds = false;
-    verbose_normalizer = false;
-    expand_toplevel_members = None;
-    max_depth = None;
-  }
-
 module SignatureVerification = struct
   type type_entry =
     | NoErrors of Ty.t
     | WithErrors of Error.kind list * Ty.t
 
-  let supported_error_kind cctx ~max_type_size acc loc =
+  let supported_error_kind cctx norm_opts ~max_type_size acc loc =
     let loc = ALoc.to_loc_exn loc in
     let add_ty ty =
       (* NOTE simplify before validating to avoid flagging spurious empty's,
@@ -109,7 +93,31 @@ module SignatureVerification = struct
     else
       acc
 
-  let collect_annotations cctx ~default_any ~max_type_size file_sig =
+  let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size file_sig =
+    let preserve_inferred_literal_types =
+      Hardcoded_Ty_Fixes.PreserveLiterals.(
+        match preserve_literals with
+        | Always
+        | Auto ->
+          true
+        | Never -> false)
+    in
+    let norm_opts =
+      {
+        Ty_normalizer_env.fall_through_merged = false;
+        expand_internal_types = false;
+        expand_type_aliases = false;
+        flag_shadowed_type_params = false;
+        preserve_inferred_literal_types;
+        evaluate_type_destructors = false;
+        optimize_types = false;
+        omit_targ_defaults = true;
+        merge_bot_and_any_kinds = false;
+        verbose_normalizer = false;
+        expand_toplevel_members = None;
+        max_depth = None;
+      }
+    in
     let tolerable_errors = file_sig.File_sig.With_ALoc.tolerable_errors in
     let (total_errors, ty_map) =
       List.fold_left
@@ -125,7 +133,7 @@ module SignatureVerification = struct
               | EmptyArray loc
               | EmptyObject loc
               | UnexpectedArraySpread (loc, _) ->
-                (tot_errors + 1, supported_error_kind cctx ~max_type_size acc loc)
+                (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
               | ExpectedSort (_, _, loc)
               | InvalidTypeParamUse loc
               | SketchyToplevelDef loc
@@ -195,7 +203,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
   let { Codemod_context.Typed.file; file_sig; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let (total_errors, sig_verification_loc_tys) =
-    SignatureVerification.collect_annotations cctx ~default_any ~max_type_size file_sig
+    SignatureVerification.collect_annotations
+      cctx
+      ~preserve_literals
+      ~default_any
+      ~max_type_size
+      file_sig
   in
   let { Context.strict; strict_local; _ } = metadata in
   let lint_severities =

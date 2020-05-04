@@ -76,14 +76,12 @@ declare var componentType_2: React.ComponentType<React.ComponentType<number>>;
 declare var elementRef: React.ElementRef<number>;
 declare var elementConfig: React.ElementConfig<number>;
 
-module.exports = (): $TEMPORARY$object<
-  {|
-    componentType_1: React.ComponentType<number>,
-    componentType_2: React.ComponentType<React.ComponentType<number>>,
-    elementConfig: React.ElementConfig<number>,
-    elementRef: React.ElementRef<number>,
-  |},
-> => ({
+module.exports = (): {|
+  componentType_1: React.ComponentType<number>,
+  componentType_2: React.ComponentType<React.ComponentType<number>>,
+  elementConfig: React.ElementConfig<number>,
+  elementRef: React.ElementRef<number>,
+|} => ({
   componentType_1,
   componentType_2,
   elementRef,

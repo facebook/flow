@@ -4,7 +4,7 @@
 type Inexact = { data: string; type: string; }
 type Exact = {| data: string; type: string; |}
 
-function foo(): $TEMPORARY$array<$TEMPORARY$object<{|data: string, type: string|}>> {
+function foo(): Array<{|data: string, type: string|}> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
