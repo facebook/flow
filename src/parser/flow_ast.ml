@@ -423,7 +423,7 @@ and Type : sig
 
     and ('M, 'T) t' = {
       arguments: ('M, 'T) Type.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -988,7 +988,7 @@ and Expression : sig
 
     and ('M, 'T) t' = {
       arguments: ('M, 'T) CallTypeArg.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end

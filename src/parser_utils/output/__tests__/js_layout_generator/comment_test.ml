@@ -131,6 +131,11 @@ let tests =
       assert_expression_string ~ctxt "foo(/*I*/)";
       assert_expression_string ~ctxt ~pretty:true ("foo(\n  " ^ a80 ^ ",\n  /*I*/\n)");
       assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  \n  /*I*/\n)" );
+    ( "call_type_args" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt "foo</*I*/>()";
+      assert_expression_string ~ctxt ~pretty:true ("foo<\n  " ^ a80 ^ ",\n  /*I*/\n>()");
+      assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  \n  /*I*/\n>()" );
     ("class_private_field" >:: fun ctxt -> assert_expression_string ~ctxt "class C{/*L*/#A/*T*/;}");
     ("continue" >:: fun ctxt -> assert_statement_string ~ctxt "continue;/*T*/");
     ("debugger" >:: fun ctxt -> assert_statement_string ~ctxt "debugger;/*T*/");
@@ -191,5 +196,10 @@ let tests =
     ( "switch_case" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );
     ("throw" >:: fun ctxt -> assert_statement_string ~ctxt "throw A;/*T*/");
+    ( "type_args" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_statement_string ~ctxt "type Foo=Bar</*I*/>;";
+      assert_statement_string ~ctxt ~pretty:true ("type Foo = Bar<\n  " ^ a80 ^ ",\n  /*I*/\n>;");
+      assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  /*I*/\n>;" );
     ("variable_declaration" >:: fun ctxt -> assert_statement_string ~ctxt "let A=B;/*T*/");
   ]

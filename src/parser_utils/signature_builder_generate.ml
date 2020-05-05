@@ -353,13 +353,7 @@ module T = struct
         {
           Ast.Type.Generic.id =
             Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
-          targs =
-            Some
-              ( loc,
-                {
-                  Ast.Type.TypeArgs.arguments = [(loc, t)];
-                  comments = Flow_ast_utils.mk_comments_opt ();
-                } );
+          targs = Some (loc, { Ast.Type.TypeArgs.arguments = [(loc, t)]; comments = None });
           comments = Flow_ast_utils.mk_comments_opt ();
         } )
 
@@ -434,10 +428,8 @@ module T = struct
             targs =
               Some
                 ( loc,
-                  {
-                    Ast.Type.TypeArgs.arguments = [type_of_expr_type outlined t];
-                    comments = Flow_ast_utils.mk_comments_opt ();
-                  } );
+                  { Ast.Type.TypeArgs.arguments = [type_of_expr_type outlined t]; comments = None }
+                );
             comments = Flow_ast_utils.mk_comments_opt ();
           } )
     | (loc, Null) -> (loc, Ast.Type.Null (Flow_ast_utils.mk_comments_opt ()))
@@ -851,12 +843,7 @@ module T = struct
             {
               Ast.Type.Generic.id;
               targs =
-                Some
-                  ( decl_loc,
-                    {
-                      Ast.Type.TypeArgs.arguments = [annot; assign];
-                      comments = Flow_ast_utils.mk_comments_opt ();
-                    } );
+                Some (decl_loc, { Ast.Type.TypeArgs.arguments = [annot; assign]; comments = None });
               comments = Flow_ast_utils.mk_comments_opt ();
             } )
       in
@@ -1901,11 +1888,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                 Ast.Type.Generic.id;
                 targs =
                   Some
-                    ( mod_exp_loc,
-                      {
-                        Ast.Type.TypeArgs.arguments = [annot; assign];
-                        comments = Flow_ast_utils.mk_comments_opt ();
-                      } );
+                    (mod_exp_loc, { Ast.Type.TypeArgs.arguments = [annot; assign]; comments = None });
                 comments = Flow_ast_utils.mk_comments_opt ();
               } )
         in

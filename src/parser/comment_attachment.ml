@@ -610,6 +610,11 @@ let expression_comment_bounds ((loc, _) as expr) =
   ignore (collector#expression expr);
   collector#comment_bounds
 
+let type_comment_bounds ((loc, _) as ty) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#type_ ty);
+  collector#comment_bounds
+
 let block_comment_bounds (loc, block) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#block loc block);
@@ -695,4 +700,9 @@ let array_pattern_element_comment_bounds loc element =
 let expression_or_spread_comment_bounds loc expr_or_spread =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#expression_or_spread expr_or_spread);
+  collector#comment_bounds
+
+let call_type_arg_comment_bounds loc arg =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#call_type_arg arg);
   collector#comment_bounds

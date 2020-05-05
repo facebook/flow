@@ -2446,4 +2446,26 @@ let tests =
              (expression_of_string "new Foo(\n  a,\n  \n  \n  b,\n)");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  //L\n  b,\n)" );
+         ( "type_args_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  b,\n>;";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "type Foo = Bar<\n  a,\n  \n  b,\n>;"
+             (statement_of_string "type Foo = Bar<\n  a,\n  \n  \n  b,\n>;");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  //L\n  b,\n>;" );
+         ( "call_type_args_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  \n  b,\n>()";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "foo<\n  a,\n  \n  b,\n>()"
+             (expression_of_string "foo<\n  a,\n  \n  \n  b,\n>()");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  //L\n  b,\n>()" );
        ]

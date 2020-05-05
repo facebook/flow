@@ -829,6 +829,7 @@ module Expression
         let leading = Peek.comments env in
         Expect.token env T_LESS_THAN;
         let arguments = args_helper env [] in
+        let internal = Peek.comments env in
         Expect.token env T_GREATER_THAN;
         let trailing =
           if Peek.token env = T_LPAREN then
@@ -839,7 +840,7 @@ module Expression
         in
         {
           Expression.CallTypeArgs.arguments;
-          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
         }
     in
     fun env ->

@@ -47,3 +47,7 @@ type Test15 = /* 15.1 L id */ Foo /* 15.2 L targs */ <T> /* 15.3 T targs */;
 
 type Test16 = Foo /* 16.1 T id */
   /* 16.2 L targs */ <T>;
+
+type Test17 = Foo</* 17.1 I targs */>;
+
+type Test18 = Foo<a, /* 18.1 I targs */>;

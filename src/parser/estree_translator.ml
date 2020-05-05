@@ -1622,10 +1622,14 @@ with type t = Impl.t = struct
           ("default", option _type default);
         ]
     and type_args (loc, { Type.TypeArgs.arguments; comments }) =
-      node ?comments "TypeParameterInstantiation" loc [("params", array_of_list _type arguments)]
+      node
+        ?comments:(format_internal_comments comments)
+        "TypeParameterInstantiation"
+        loc
+        [("params", array_of_list _type arguments)]
     and call_type_args (loc, { Expression.CallTypeArgs.arguments; comments }) =
       node
-        ?comments
+        ?comments:(format_internal_comments comments)
         "TypeParameterInstantiation"
         loc
         [("params", array_of_list call_type_arg arguments)]

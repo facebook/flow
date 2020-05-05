@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":14,"column":25}},
-  "range":[15,442],
+  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":18,"column":28}},
+  "range":[15,499],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -386,6 +386,89 @@
         ]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":16,"column":0},"end":{"line":16,"column":25}},
+      "range":[444,469],
+      "expression":{
+        "type":"CallExpression",
+        "loc":{"source":null,"start":{"line":16,"column":0},"end":{"line":16,"column":24}},
+        "range":[444,468],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":16,"column":0},"end":{"line":16,"column":3}},
+          "range":[444,447],
+          "name":"foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":{
+          "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":16,"column":4},"end":{"line":16,"column":21}},
+              "range":[448,465],
+              "value":" 7.1 I targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":16,"column":3},"end":{"line":16,"column":22}},
+          "range":[447,466],
+          "params":[]
+        },
+        "arguments":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":18,"column":0},"end":{"line":18,"column":28}},
+      "range":[471,499],
+      "expression":{
+        "type":"CallExpression",
+        "loc":{"source":null,"start":{"line":18,"column":0},"end":{"line":18,"column":27}},
+        "range":[471,498],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":18,"column":0},"end":{"line":18,"column":3}},
+          "range":[471,474],
+          "name":"foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":{
+          "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":18,"column":7},"end":{"line":18,"column":24}},
+              "range":[478,495],
+              "value":" 8.1 I targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":18,"column":3},"end":{"line":18,"column":25}},
+          "range":[474,496],
+          "params":[
+            {
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":18,"column":4},"end":{"line":18,"column":5}},
+              "range":[475,476],
+              "id":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":18,"column":4},"end":{"line":18,"column":5}},
+                "range":[475,476],
+                "name":"a",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
+            }
+          ]
+        },
+        "arguments":[]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -520,6 +603,18 @@
       "loc":{"source":null,"start":{"line":14,"column":7},"end":{"line":14,"column":23}},
       "range":[424,440],
       "value":" 6.1 I args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":16,"column":4},"end":{"line":16,"column":21}},
+      "range":[448,465],
+      "value":" 7.1 I targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":18,"column":7},"end":{"line":18,"column":24}},
+      "range":[478,495],
+      "value":" 8.1 I targs "
     }
   ]
 }

@@ -207,7 +207,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { arguments; comments }) = pi in
       let annot' = this#on_loc_annot annot in
       let arguments' = Base.List.map ~f:this#call_type_arg arguments in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method call_type_arg (x : ('M, 'T) Ast.Expression.CallTypeArg.t)
@@ -863,7 +863,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { arguments; comments }) = targs in
       let annot' = this#on_loc_annot annot in
       let arguments' = Base.List.map ~f:this#type_ arguments in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method type_params_opt

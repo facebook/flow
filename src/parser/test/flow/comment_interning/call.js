@@ -12,3 +12,7 @@ foo</* 2.1 L any */ any /* 2.2 T any */, /* 2.3 L implicit */ _ /* 2.4 T implici
 foo(/* 5.1 I args */);
 
 foo(a, /* 6.1 I args */);
+
+foo</* 7.1 I targs */>();
+
+foo<a, /* 8.1 I targs */>();

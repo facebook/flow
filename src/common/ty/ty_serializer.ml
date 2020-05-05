@@ -41,8 +41,7 @@ let mk_generic x targs =
     comments = Flow_ast_utils.mk_comments_opt ();
   }
 
-let mk_targs arguments =
-  (Loc.none, { T.TypeArgs.arguments; comments = Flow_ast_utils.mk_comments_opt () })
+let mk_targs arguments = (Loc.none, { T.TypeArgs.arguments; comments = None })
 
 let mk_generic_type x targs = (Loc.none, T.Generic (mk_generic x targs))
 
