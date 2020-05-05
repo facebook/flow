@@ -221,10 +221,16 @@ let tests =
       assert_statement_string ~ctxt ~pretty:true "type T = {\n  +a: any,\n  //L\n  +b: any,\n};" );
     ( "parenthesized_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt ~pretty:true "(\n  //L\n  a + b\n) * c" );
-    ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
+    ( "return" >:: fun ctxt ->
+      assert_statement_string ~ctxt "return;/*T*/";
+      assert_statement_string ~ctxt ~pretty:true "return (\n  //L\n  x\n);";
+      assert_statement_string ~ctxt ~pretty:true "return /*L*/ x;" );
     ( "switch_case" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );
-    ("throw" >:: fun ctxt -> assert_statement_string ~ctxt "throw A;/*T*/");
+    ( "throw" >:: fun ctxt ->
+      assert_statement_string ~ctxt "throw A;/*T*/";
+      assert_statement_string ~ctxt ~pretty:true "throw (\n  //L\n  x\n);";
+      assert_statement_string ~ctxt ~pretty:true "throw /*L*/ x;" );
     ( "type_alias" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "type A = //L\nB;";
       assert_statement_string ~ctxt ~pretty:true "type A =\n//L\nB;" );

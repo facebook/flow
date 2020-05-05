@@ -59,7 +59,7 @@ let wrap_in_parens ?(with_break = false) item =
     group [Atom "("; item; Atom ")"]
 
 let wrap_in_parens_on_break item =
-  wrap_and_indent (IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [item]
+  group [wrap_and_indent (IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [item]]
 
 let option f = function
   | Some v -> f v
@@ -665,16 +665,24 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                  | (_, E.Binary _)
                  | (_, E.Sequence _)
                  | (_, E.JSXElement _) ->
-                   group [wrap_in_parens_on_break (expression ~opts arg)]
-                 | _ -> expression ~opts arg
+                   wrap_in_parens_on_break (expression ~opts arg)
+                 | _ ->
+                   (* If the return argument has a leading comment then we must wrap the argument
+                     and its comments in parens. Otherwise, the comments could push the argument
+                     to the next line, meaning the return would be parsed without an argument. *)
+                   let (leading, _) = Comment_attachment.expression_comment_bounds arg in
+                   let arg = expression ~opts arg in
+                   if leading = None then
+                     arg
+                   else
+                     wrap_in_parens_on_break arg
                in
                fuse_with_space [s_return; arg]
              | None -> s_return)
       | S.Throw { S.Throw.argument; comments } ->
         layout_node_with_comments_opt loc comments
         @@ with_semicolon
-             (fuse_with_space
-                [Atom "throw"; group [wrap_in_parens_on_break (expression ~opts argument)]])
+             (fuse_with_space [Atom "throw"; wrap_in_parens_on_break (expression ~opts argument)])
       | S.Try { S.Try.block = b; handler; finalizer; comments } ->
         layout_node_with_comments_opt
           loc
