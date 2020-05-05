@@ -126,7 +126,9 @@ let tests =
       assert_expression_string ~ctxt ~pretty:true "() =>\n//L\n<A />" );
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
-      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );
+      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}");
+      assert_expression_string ~ctxt "(/*L*/A/*T*/)=>{}";
+      assert_expression_string ~ctxt "//L\nA=>{}" );
     ("block" >:: fun ctxt -> assert_statement_string ~ctxt "{/*I*/}");
     ("break" >:: fun ctxt -> assert_statement_string ~ctxt "break;/*T*/");
     ( "binary_expression" >:: fun ctxt ->

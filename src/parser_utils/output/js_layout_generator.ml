@@ -1595,8 +1595,11 @@ and arrow_function
                   Ast.Function.Param.argument =
                     ( _,
                       Ast.Pattern.Identifier
-                        { Ast.Pattern.Identifier.optional = false; annot = Ast.Type.Missing _; _ }
-                    );
+                        {
+                          Ast.Pattern.Identifier.optional = false;
+                          annot = Ast.Type.Missing _;
+                          name = (id_loc, { Ast.Identifier.comments = id_comments; _ });
+                        } );
                   default = None;
                 } );
             ];
@@ -1604,7 +1607,15 @@ and arrow_function
           (* We must wrap the single param in parentheses if there are internal comments *)
           comments = None | Some { Ast.Syntax.internal = []; _ };
         } ) ->
-      true
+      (* We must wrap the single param in parentheses if it has any attached comments on
+         the same line as the param. *)
+      (match id_comments with
+      | None -> true
+      | Some { Ast.Syntax.leading; trailing; _ } ->
+        let on_same_line comments =
+          List.exists (fun (loc, _) -> Loc.lines_intersect loc id_loc) comments
+        in
+        (not (on_same_line leading)) && not (on_same_line trailing))
     | _ -> false
   in
   let params_and_stuff =
