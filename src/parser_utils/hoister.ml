@@ -148,6 +148,21 @@ class ['loc] hoister =
         | None -> ()
       end;
       expr
+
+    method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
+      let open Ast.Statement.TypeAlias in
+      this#add_binding alias.id;
+      super#type_alias loc alias
+
+    method! opaque_type loc (alias : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
+      let open Ast.Statement.OpaqueType in
+      this#add_binding alias.id;
+      super#opaque_type loc alias
+
+    method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
+      let open Ast.Statement.Interface in
+      this#add_binding interface.id;
+      super#interface loc interface
   end
 
 class ['loc] lexical_hoister =
