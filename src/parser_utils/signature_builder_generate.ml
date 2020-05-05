@@ -159,7 +159,7 @@ module T = struct
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "$FlowFixMe"));
             targs = None;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
 
     let mk_little_annotation loc = TYPE (mk_type loc)
@@ -180,7 +180,7 @@ module T = struct
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "$TEMPORARY$Super$FlowFixMe"));
             targs = None;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
 
     let mk_decl loc = VariableDecl (mk_little_annotation loc)
@@ -344,8 +344,7 @@ module T = struct
 
   let type_of_generic (loc, gt) = (loc, Ast.Type.Generic gt)
 
-  let source_of_source (loc, x) =
-    (loc, { Ast.StringLiteral.value = x; raw = x; comments = Flow_ast_utils.mk_comments_opt () })
+  let source_of_source (loc, x) = (loc, { Ast.StringLiteral.value = x; raw = x; comments = None })
 
   let temporary_type name loc t =
     ( loc,
@@ -354,7 +353,7 @@ module T = struct
           Ast.Type.Generic.id =
             Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
           targs = Some (loc, { Ast.Type.TypeArgs.arguments = [(loc, t)]; comments = None });
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
 
   let rec type_of_expr_type outlined = function
@@ -394,7 +393,7 @@ module T = struct
                 ( type_of_array_element outlined et1,
                   type_of_array_element outlined et2,
                   Base.List.map ~f:(type_of_array_element outlined) ets );
-              comments = Flow_ast_utils.mk_comments_opt ();
+              comments = None;
             })
     | (loc, ValueRef reference) ->
       ( loc,
@@ -406,18 +405,18 @@ module T = struct
                   {
                     Ast.Type.Generic.id = generic_id_of_reference reference;
                     targs = None;
-                    comments = Flow_ast_utils.mk_comments_opt ();
+                    comments = None;
                   } );
             internal = true;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
     | (loc, StringLiteral st) -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
     | (loc, BooleanLiteral b) -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
-    | (loc, Number) -> (loc, Ast.Type.Number (Flow_ast_utils.mk_comments_opt ()))
-    | (loc, String) -> (loc, Ast.Type.String (Flow_ast_utils.mk_comments_opt ()))
-    | (loc, Boolean) -> (loc, Ast.Type.Boolean (Flow_ast_utils.mk_comments_opt ()))
-    | (loc, Void) -> (loc, Ast.Type.Void (Flow_ast_utils.mk_comments_opt ()))
+    | (loc, Number) -> (loc, Ast.Type.Number None)
+    | (loc, String) -> (loc, Ast.Type.String None)
+    | (loc, Boolean) -> (loc, Ast.Type.Boolean None)
+    | (loc, Void) -> (loc, Ast.Type.Void None)
     | (loc, Promise t) ->
       ( loc,
         Ast.Type.Generic
@@ -430,9 +429,9 @@ module T = struct
                 ( loc,
                   { Ast.Type.TypeArgs.arguments = [type_of_expr_type outlined t]; comments = None }
                 );
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
-    | (loc, Null) -> (loc, Ast.Type.Null (Flow_ast_utils.mk_comments_opt ()))
+    | (loc, Null) -> (loc, Ast.Type.Null None)
     | (_loc, JSXLiteral g) -> type_of_generic g
     | (_loc, TypeCast t) -> t
     | (loc, Outline ht) ->
@@ -448,10 +447,10 @@ module T = struct
                     Ast.Type.Generic.id =
                       Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
                     targs = None;
-                    comments = Flow_ast_utils.mk_comments_opt ();
+                    comments = None;
                   } );
             internal = true;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | (loc, ObjectDestruct (annot_or_init, prop)) ->
       let t = type_of_little_annotation outlined annot_or_init in
@@ -462,7 +461,7 @@ module T = struct
               {
                 Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
                 annot = Ast.Type.Available (fst t, t);
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } ) )
       in
       let id = Outlined.next outlined loc f in
@@ -483,10 +482,10 @@ module T = struct
                             id = Flow_ast_utils.ident_of_source prop;
                           } );
                     targs = None;
-                    comments = Flow_ast_utils.mk_comments_opt ();
+                    comments = None;
                   } );
             internal = true;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | (loc, FixMe) -> FixMe.mk_type loc
 
@@ -528,7 +527,7 @@ module T = struct
               source;
               default;
               specifiers;
-              comments = Flow_ast_utils.mk_comments_opt ();
+              comments = None;
             } ) )
     | DynamicRequire require ->
       ( None,
@@ -550,7 +549,7 @@ module T = struct
             {
               Ast.Statement.VariableDeclaration.kind;
               declarations = [(decl_loc, declaration)];
-              comments = Flow_ast_utils.mk_comments_opt ();
+              comments = None;
             } ) )
 
   and type_of_array_element outlined = function
@@ -614,7 +613,7 @@ module T = struct
         ( loc,
           {
             Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
 
   and type_of_function_t outlined = function
@@ -641,12 +640,12 @@ module T = struct
                       ( loc,
                         {
                           Ast.Type.Function.RestParam.argument = param_of_type rest;
-                          comments = Flow_ast_utils.mk_comments_opt ();
+                          comments = None;
                         } ));
                 comments = None;
               } );
           return = type_of_little_annotation outlined return;
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
 
   and type_of_function outlined function_t =
@@ -726,33 +725,15 @@ module T = struct
     match decl with
     | Type { tparams; right } ->
       ( decl_loc,
-        Ast.Statement.TypeAlias
-          {
-            Ast.Statement.TypeAlias.id;
-            tparams;
-            right;
-            comments = Flow_ast_utils.mk_comments_opt ();
-          } )
+        Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right; comments = None } )
     | OpaqueType { tparams; impltype; supertype } ->
       ( decl_loc,
         Ast.Statement.OpaqueType
-          {
-            Ast.Statement.OpaqueType.id;
-            tparams;
-            impltype;
-            supertype;
-            comments = Flow_ast_utils.mk_comments_opt ();
-          } )
+          { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments = None } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
         Ast.Statement.InterfaceDeclaration
-          {
-            Ast.Statement.Interface.id;
-            tparams;
-            extends;
-            body;
-            comments = Flow_ast_utils.mk_comments_opt ();
-          } )
+          { Ast.Statement.Interface.id; tparams; extends; body; comments = None } )
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =
@@ -783,7 +764,7 @@ module T = struct
             implements;
             mixins;
             body;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | ClassDecl (DECLARE_CLASS { tparams; extends; mixins; implements; body }) ->
       ( decl_loc,
@@ -795,12 +776,11 @@ module T = struct
             implements;
             mixins;
             body;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | EnumDecl { body } ->
       let open Ast.Statement.EnumDeclaration in
-      ( decl_loc,
-        Ast.Statement.EnumDeclaration { id; body; comments = Flow_ast_utils.mk_comments_opt () } )
+      (decl_loc, Ast.Statement.EnumDeclaration { id; body; comments = None })
     | FunctionDecl { annot = little_annotation; predicate } ->
       ( decl_loc,
         Ast.Statement.DeclareFunction
@@ -808,7 +788,7 @@ module T = struct
             Ast.Statement.DeclareFunction.id;
             annot = annot_of_little_annotation outlined little_annotation;
             predicate;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | FunctionWithStaticsDecl { base; statics } ->
       let annot = type_of_expr_type outlined base in
@@ -844,7 +824,7 @@ module T = struct
               Ast.Type.Generic.id;
               targs =
                 Some (decl_loc, { Ast.Type.TypeArgs.arguments = [annot; assign]; comments = None });
-              comments = Flow_ast_utils.mk_comments_opt ();
+              comments = None;
             } )
       in
       ( decl_loc,
@@ -852,7 +832,7 @@ module T = struct
           {
             Ast.Statement.DeclareVariable.id;
             annot = Ast.Type.Available (fst annot, t);
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | VariableDecl little_annotation ->
       ( decl_loc,
@@ -860,7 +840,7 @@ module T = struct
           {
             Ast.Statement.DeclareVariable.id;
             annot = Ast.Type.Available (annot_of_little_annotation outlined little_annotation);
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | ImportNamed { kind; source; name } ->
       let importKind = kind in
@@ -897,7 +877,7 @@ module T = struct
             source;
             default;
             specifiers;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | ImportStar { kind; source } ->
       let importKind = kind in
@@ -913,7 +893,7 @@ module T = struct
             source;
             default;
             specifiers;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
     | Require { source; name } ->
       let kind = Ast.Statement.VariableDeclaration.Const in
@@ -936,15 +916,12 @@ module T = struct
                         Ast.Expression.Expression
                           ( loc,
                             Ast.Expression.Literal
-                              {
-                                Ast.Literal.value = Ast.Literal.String x;
-                                raw = x;
-                                comments = Flow_ast_utils.mk_comments_opt ();
-                              } );
+                              { Ast.Literal.value = Ast.Literal.String x; raw = x; comments = None }
+                          );
                       ];
                     comments = None;
                   } );
-              comments = Flow_ast_utils.mk_comments_opt ();
+              comments = None;
             } )
       in
       let declaration =
@@ -955,7 +932,7 @@ module T = struct
           {
             Ast.Statement.VariableDeclaration.kind;
             declarations = [(decl_loc, declaration)];
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
 
   and object_type_property_of_class_element outlined = function
@@ -1236,10 +1213,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             comments = _;
           } ) ->
       ( loc,
-        T.Outline
-          (T.DynamicImport
-             ( source_loc,
-               { Ast.StringLiteral.value; raw; comments = Flow_ast_utils.mk_comments_opt () } )) )
+        T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw; comments = None }))
+      )
     | ( loc,
         Call
           {
@@ -1345,7 +1320,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                     Ast.Type.Generic.Identifier.Unqualified
                       (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
                   targs = None;
-                  comments = Flow_ast_utils.mk_comments_opt ();
+                  comments = None;
                 } ) )
         | _ -> T.FixMe.mk_expr_type loc
       end
@@ -1622,7 +1597,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                   {
                     Ast.Type.Generic.id = T.generic_id_of_reference reference;
                     targs = type_args super_targs;
-                    comments = Flow_ast_utils.mk_comments_opt ();
+                    comments = None;
                   } )
             | None -> T.FixMe.mk_extends (fst expr)
           end
@@ -1838,10 +1813,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     let declare_module_exports mod_exp_loc loc t =
       ( mod_exp_loc,
         Ast.Statement.DeclareModuleExports
-          {
-            Ast.Statement.DeclareModuleExports.annot = (loc, t);
-            comments = Flow_ast_utils.mk_comments_opt ();
-          } )
+          { Ast.Statement.DeclareModuleExports.annot = (loc, t); comments = None } )
     in
     let additional_properties_of_module_exports outlined add_module_exports_list =
       Base.List.rev_map
@@ -1868,10 +1840,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       if ListUtils.is_empty add_module_exports_list then
         ( mod_exp_loc,
           Ast.Statement.DeclareModuleExports
-            {
-              Ast.Statement.DeclareModuleExports.annot = (fst annot, annot);
-              comments = Flow_ast_utils.mk_comments_opt ();
-            } )
+            { Ast.Statement.DeclareModuleExports.annot = (fst annot, annot); comments = None } )
       else
         let properties = additional_properties_of_module_exports outlined add_module_exports_list in
         let ot = { Ast.Type.Object.exact = false; inexact = true; properties; comments = None } in
@@ -1889,15 +1858,12 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                 targs =
                   Some
                     (mod_exp_loc, { Ast.Type.TypeArgs.arguments = [annot; assign]; comments = None });
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } )
         in
         ( mod_exp_loc,
           Ast.Statement.DeclareModuleExports
-            {
-              Ast.Statement.DeclareModuleExports.annot = (fst annot, t);
-              comments = Flow_ast_utils.mk_comments_opt ();
-            } )
+            { Ast.Statement.DeclareModuleExports.annot = (fst annot, t); comments = None } )
     in
     let add_module_exports mod_exp_loc outlined add_module_exports_list =
       let properties = additional_properties_of_module_exports outlined add_module_exports_list in
@@ -1906,10 +1872,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       [
         ( mod_exp_loc,
           Ast.Statement.DeclareModuleExports
-            {
-              Ast.Statement.DeclareModuleExports.annot = (mod_exp_loc, t);
-              comments = Flow_ast_utils.mk_comments_opt ();
-            } );
+            { Ast.Statement.DeclareModuleExports.annot = (mod_exp_loc, t); comments = None } );
       ]
     in
     fun outlined -> function
@@ -2013,7 +1976,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                  ]);
           source;
           exportKind;
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
 
   let export_named_specifier export_loc local remote source exportKind =
@@ -2041,7 +2004,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                  (star_loc, Base.Option.map ~f:Flow_ast_utils.ident_of_source remote));
           source = Some (T.source_of_source source);
           exportKind;
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
 
   let declare_export_default_declaration export_loc default_loc declaration =
@@ -2052,7 +2015,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           Ast.Statement.DeclareExportDeclaration.declaration = Some declaration;
           specifiers = None;
           source = None;
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
 
   let export_value_named_declaration export_loc local =

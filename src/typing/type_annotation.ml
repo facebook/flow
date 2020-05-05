@@ -113,7 +113,7 @@ let mk_custom_fun cx loc t_ast targs (id_loc, name, comments) kind =
             Generic.id =
               Generic.Identifier.Unqualified ((id_loc, t), { Ast.Identifier.name; comments });
             targs = None;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } ))
 
 let mk_eval_id cx loc =
@@ -1545,7 +1545,7 @@ and mk_func_sig =
         Ast.Type.Function.tparams = tparams_ast;
         params = params_ast;
         return = return_ast;
-        comments = Flow_ast_utils.mk_comments_opt ();
+        comments = None;
       } )
 
 and mk_type cx tparams_map reason = function

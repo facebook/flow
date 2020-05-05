@@ -689,7 +689,7 @@ end = struct
                     source;
                     default;
                     specifiers;
-                    comments = Flow_ast_utils.mk_comments_opt ();
+                    comments = None;
                   } ))
             default_list
         in
@@ -707,7 +707,7 @@ end = struct
                       source;
                       default = None;
                       specifiers;
-                      comments = Flow_ast_utils.mk_comments_opt ();
+                      comments = None;
                     } )
               in
               import_stmt :: acc)

@@ -35,11 +35,7 @@ let id_from_symbol x =
     Ok (id_from_string sym_name)
 
 let mk_generic x targs =
-  {
-    T.Generic.id = T.Generic.Identifier.Unqualified x;
-    targs;
-    comments = Flow_ast_utils.mk_comments_opt ();
-  }
+  { T.Generic.id = T.Generic.Identifier.Unqualified x; targs; comments = None }
 
 let mk_targs arguments = (Loc.none, { T.TypeArgs.arguments; comments = None })
 
@@ -53,14 +49,8 @@ let tvar (RVar _) = Error "Unsupported recursive variables."
 
 let variance_ = function
   | Neutral -> None
-  | Positive ->
-    Some
-      ( Loc.none,
-        { Ast.Variance.kind = Ast.Variance.Plus; comments = Flow_ast_utils.mk_comments_opt () } )
-  | Negative ->
-    Some
-      ( Loc.none,
-        { Ast.Variance.kind = Ast.Variance.Minus; comments = Flow_ast_utils.mk_comments_opt () } )
+  | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Plus; comments = None })
+  | Negative -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Minus; comments = None })
 
 let type_ options =
   let rec type_ t =
@@ -70,30 +60,30 @@ let type_ options =
     | TVar (v, _) -> tvar v
     | Bound (_, name) -> Ok (builtin_from_string name)
     | Generic (x, _, ts) -> generic_type x ts
-    | Any _ -> just (T.Any (Flow_ast_utils.mk_comments_opt ()))
-    | Top -> just (T.Mixed (Flow_ast_utils.mk_comments_opt ()))
-    | Bot _ -> just (T.Empty (Flow_ast_utils.mk_comments_opt ()))
-    | Void -> just (T.Void (Flow_ast_utils.mk_comments_opt ()))
-    | Null -> just (T.Null (Flow_ast_utils.mk_comments_opt ()))
-    | Symbol -> just (T.Symbol (Flow_ast_utils.mk_comments_opt ()))
+    | Any _ -> just (T.Any None)
+    | Top -> just (T.Mixed None)
+    | Bot _ -> just (T.Empty None)
+    | Void -> just (T.Void None)
+    | Null -> just (T.Null None)
+    | Symbol -> just (T.Symbol None)
     | Num (Some lit) ->
       return
         (builtin_from_string
            "$TEMPORARY$number"
            ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))]))
-    | Num None -> just (T.Number (Flow_ast_utils.mk_comments_opt ()))
+    | Num None -> just (T.Number None)
     | Str (Some lit) ->
       return
         (builtin_from_string
            "$TEMPORARY$string"
            ~targs:(mk_targs [(Loc.none, T.StringLiteral (str_lit lit))]))
-    | Str None -> just (T.String (Flow_ast_utils.mk_comments_opt ()))
+    | Str None -> just (T.String None)
     | Bool (Some lit) ->
       return
         (builtin_from_string
            "$TEMPORARY$boolean"
            ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
-    | Bool None -> just (T.Boolean (Flow_ast_utils.mk_comments_opt ()))
+    | Bool None -> just (T.Boolean None)
     | NumLit lit -> just (T.NumberLiteral (num_lit lit))
     | StrLit lit -> just (T.StringLiteral (str_lit lit))
     | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
@@ -104,7 +94,7 @@ let type_ options =
     | Arr a -> arr a
     | Tup ts ->
       let%map ts = mapM type_ ts in
-      (Loc.none, T.Tuple { T.Tuple.types = ts; comments = Flow_ast_utils.mk_comments_opt () })
+      (Loc.none, T.Tuple { T.Tuple.types = ts; comments = None })
     | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
     | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
     | Utility s -> utility s
@@ -115,12 +105,7 @@ let type_ options =
     | TypeOf (TSymbol name) ->
       let%map id = id_from_symbol name in
       just'
-        (T.Typeof
-           {
-             T.Typeof.argument = mk_generic_type id None;
-             internal = false;
-             comments = Flow_ast_utils.mk_comments_opt ();
-           })
+        (T.Typeof { T.Typeof.argument = mk_generic_type id None; internal = false; comments = None })
     | TypeOf _
     | Mu _ ->
       Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
@@ -141,34 +126,27 @@ let type_ options =
           ( Loc.none,
             T.Union
               {
-                T.Union.types =
-                  ( (Loc.none, T.Null (Flow_ast_utils.mk_comments_opt ())),
-                    (Loc.none, T.Void (Flow_ast_utils.mk_comments_opt ())),
-                    [] );
-                comments = Flow_ast_utils.mk_comments_opt ();
+                T.Union.types = ((Loc.none, T.Null None), (Loc.none, T.Void None), []);
+                comments = None;
               } )
       | hd :: tl ->
         let%map ts = type_ (mk_union (hd, tl)) in
-        ( Loc.none,
-          T.Nullable { T.Nullable.argument = ts; comments = Flow_ast_utils.mk_comments_opt () } )
+        (Loc.none, T.Nullable { T.Nullable.argument = ts; comments = None })
     else
       let%bind t0 = type_ t0 in
       let%bind t1 = type_ t1 in
       let%map rest = mapM type_ rest in
-      ( Loc.none,
-        T.Union { T.Union.types = (t0, t1, rest); comments = Flow_ast_utils.mk_comments_opt () } )
+      (Loc.none, T.Union { T.Union.types = (t0, t1, rest); comments = None })
   and intersection (t0, t1, rest) =
     let%bind t0 = type_ t0 in
     let%bind t1 = type_ t1 in
     let%map rest = mapM type_ rest in
-    ( Loc.none,
-      T.Intersection
-        { T.Intersection.types = (t0, t1, rest); comments = Flow_ast_utils.mk_comments_opt () } )
+    (Loc.none, T.Intersection { T.Intersection.types = (t0, t1, rest); comments = None })
   and function_ f =
     let%bind return = type_ f.fun_return in
     let%bind params = fun_params f.fun_params f.fun_rest_param in
     let%map tparams = opt type_params f.fun_type_params in
-    { T.Function.params; return; tparams; comments = Flow_ast_utils.mk_comments_opt () }
+    { T.Function.params; return; tparams; comments = None }
   and fun_params params rest_param =
     let%bind params = mapM fun_param params in
     let%map rest = opt fun_rest_param rest_param in
@@ -179,7 +157,7 @@ let type_ options =
     (Loc.none, { T.Function.Param.name; annot; optional = prm_optional })
   and fun_rest_param (name, t) =
     let%map argument = fun_param (name, t, { prm_optional = false }) in
-    (Loc.none, { T.Function.RestParam.argument; comments = Flow_ast_utils.mk_comments_opt () })
+    (Loc.none, { T.Function.RestParam.argument; comments = None })
   and obj_ o =
     let%map properties = mapM obj_prop o.obj_props in
     let exact =
@@ -215,7 +193,7 @@ let type_ options =
         let raw = quote ^ Js_layout_generator.utf8_escape ~quote x ^ quote in
         let value = Ast.Literal.String x in
         Ast.Expression.Object.Property.Literal
-          (Loc.none, { Ast.Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt () })
+          (Loc.none, { Ast.Literal.value; raw; comments = None })
       else
         Ast.Expression.Object.Property.Identifier (id_from_string x)
     in
@@ -279,15 +257,14 @@ let type_ options =
       value;
       static = false;
       variance = variance_ d.dict_polarity;
-      comments = Flow_ast_utils.mk_comments_opt ();
+      comments = None;
     }
   and obj_call_prop f =
     let%map value = function_ f in
     { T.Object.CallProperty.value = (Loc.none, value); static = false; comments = None }
   and obj_spread_prop t =
     let%map t = type_ t in
-    ( Loc.none,
-      { T.Object.SpreadProperty.argument = t; comments = Flow_ast_utils.mk_comments_opt () } )
+    (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
   and arr { arr_readonly; arr_elt_t; arr_literal; _ } =
     let%map t = type_ arr_elt_t in
     if arr_readonly then
@@ -300,7 +277,7 @@ let type_ options =
         builtin_from_string "Array" ~targs:(mk_targs [t])
   and type_params ts =
     let%map ts = mapM type_param ts in
-    (Loc.none, { T.TypeParams.params = ts; comments = Flow_ast_utils.mk_comments_opt () })
+    (Loc.none, { T.TypeParams.params = ts; comments = None })
   and type_param tp =
     let%bind bound = opt annotation tp.tp_bound in
     let%map default = opt type_ tp.tp_default in
@@ -321,15 +298,14 @@ let type_ options =
     let quote = Js_layout_generator.better_quote lit in
     let raw_lit = Js_layout_generator.utf8_escape ~quote lit in
     let raw = quote ^ raw_lit ^ quote in
-    { Ast.StringLiteral.value = lit; raw; comments = Flow_ast_utils.mk_comments_opt () }
+    { Ast.StringLiteral.value = lit; raw; comments = None }
   and num_lit lit =
     {
       Ast.NumberLiteral.value = (try Pervasives.float_of_string lit with Failure _ -> 0.);
       raw = lit;
-      comments = Flow_ast_utils.mk_comments_opt ();
+      comments = None;
     }
-  and bool_lit lit =
-    { Ast.BooleanLiteral.value = lit; comments = Flow_ast_utils.mk_comments_opt () }
+  and bool_lit lit = { Ast.BooleanLiteral.value = lit; comments = None }
   and getter t =
     function_
       {
@@ -359,8 +335,7 @@ let type_ options =
     let body =
       (Loc.none, { T.Object.exact = false; inexact = false; properties; comments = None })
     in
-    ( Loc.none,
-      T.Interface { T.Interface.body; extends; comments = Flow_ast_utils.mk_comments_opt () } )
+    (Loc.none, T.Interface { T.Interface.body; extends; comments = None })
   and utility u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in

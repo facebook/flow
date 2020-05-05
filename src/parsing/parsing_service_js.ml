@@ -149,7 +149,7 @@ let parse_json_file ~fail content file =
             (loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module")));
           property =
             Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
   in
   let loc = fst expr in
@@ -164,10 +164,10 @@ let parse_json_file ~fail content file =
                   Expression.Assignment.operator = None;
                   left = (loc_none, Pattern.Expression module_exports);
                   right = expr;
-                  comments = Flow_ast_utils.mk_comments_opt ();
+                  comments = None;
                 } );
           directive = None;
-          comments = Flow_ast_utils.mk_comments_opt ();
+          comments = None;
         } )
   in
   let comments = ([] : Loc.t Comment.t list) in

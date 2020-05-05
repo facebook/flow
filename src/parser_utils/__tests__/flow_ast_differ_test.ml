@@ -33,8 +33,7 @@ class useless_mapper =
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
-      | Number 4.0 ->
-        { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
+      | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
       | _ -> expr
 
     method! string_literal_type _loc (lit : Loc.t Ast.StringLiteral.t) =
@@ -246,18 +245,10 @@ class literal_mapper =
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
-      | String "rename" ->
-        {
-          value = String "gotRenamed";
-          raw = "gotRenamed";
-          comments = Flow_ast_utils.mk_comments_opt ();
-        }
-      | Boolean false ->
-        { value = Boolean true; raw = "true"; comments = Flow_ast_utils.mk_comments_opt () }
-      | Null ->
-        { value = String "wasNull"; raw = "wasNull"; comments = Flow_ast_utils.mk_comments_opt () }
-      | Number 4.0 ->
-        { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
+      | String "rename" -> { value = String "gotRenamed"; raw = "gotRenamed"; comments = None }
+      | Boolean false -> { value = Boolean true; raw = "true"; comments = None }
+      | Null -> { value = String "wasNull"; raw = "wasNull"; comments = None }
+      | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
       (* TODO: add test for RegExp case? *)
       | _ -> expr
   end
@@ -437,15 +428,15 @@ class insert_second_cjsimport_mapper =
                                         {
                                           value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
-                                          comments = Flow_ast_utils.mk_comments_opt ();
+                                          comments = None;
                                         } );
                                 ];
                               comments = None;
                             } );
-                        comments = Flow_ast_utils.mk_comments_opt ();
+                        comments = None;
                       } );
                 directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } )
         in
         List.hd stmts :: imp :: List.tl stmts
@@ -488,15 +479,15 @@ class add_body_mapper =
                                         {
                                           value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
-                                          comments = Flow_ast_utils.mk_comments_opt ();
+                                          comments = None;
                                         } );
                                 ];
                               comments = None;
                             } );
-                        comments = Flow_ast_utils.mk_comments_opt ();
+                        comments = None;
                       } );
                 directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } )
         in
         stmts @ [imp]
@@ -651,7 +642,7 @@ class insert_typecast_mapper =
           {
             Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any None));
             expression;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
   end
 
@@ -694,8 +685,7 @@ class true_to_false_mapper =
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
-      | Boolean true ->
-        { value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt () }
+      | Boolean true -> { value = Boolean false; raw = "false"; comments = None }
       | _ -> expr
 
     method! type_annotation (annot : (Loc.t, Loc.t) Ast.Type.annotation) =

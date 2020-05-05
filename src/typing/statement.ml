@@ -414,10 +414,8 @@ module Func_stmt_config = struct
       bind cx name t loc
     in
     ( loc,
-      {
-        Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id);
-        comments = Flow_ast_utils.mk_comments_opt ();
-      } )
+      { Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id); comments = None }
+    )
 end
 
 module Func_stmt_params = Func_params.Make (Func_stmt_config)
@@ -1158,7 +1156,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                              Binary.operator = Binary.StrictEqual;
                              left = discriminant;
                              right = expr;
-                             comments = Flow_ast_utils.mk_comments_opt ();
+                             comments = None;
                            } )
                      in
                      let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
@@ -3410,13 +3408,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               { TemplateLiteral.Element.value = { TemplateLiteral.Element.raw; cooked }; _ } ) =
           head
         in
-        let lit =
-          {
-            Ast.Literal.value = Ast.Literal.String cooked;
-            raw;
-            comments = Flow_ast_utils.mk_comments_opt ();
-          }
-        in
+        let lit = { Ast.Literal.value = Ast.Literal.String cooked; raw; comments = None } in
         (literal cx elem_loc lit, [])
       | _ ->
         let t_out = StrT.at loc |> with_trust bogus_trust in
@@ -6336,12 +6328,7 @@ and jsx_title_member_to_expression member =
   in
   Ast.Expression.Member.
     ( mloc,
-      Ast.Expression.Member
-        {
-          _object;
-          property = PropertyIdentifier property;
-          comments = Flow_ast_utils.mk_comments_opt ();
-        } )
+      Ast.Expression.Member { _object; property = PropertyIdentifier property; comments = None } )
 
 (* reverses jsx_title_member_to_expression *)
 and expression_to_jsx_title_member loc member =
@@ -8158,10 +8145,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   [
                     ( loc,
                       Ast.Statement.Return
-                        {
-                          Ast.Statement.Return.argument = Some e;
-                          comments = Flow_ast_utils.mk_comments_opt ();
-                        } );
+                        { Ast.Statement.Return.argument = Some e; comments = None } );
                   ];
                 comments = None;
               } )
@@ -8177,15 +8161,11 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                 generator = false;
                 predicate =
                   Some
-                    ( loc,
-                      {
-                        Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred;
-                        comments = Flow_ast_utils.mk_comments_opt ();
-                      } );
+                    (loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = None });
                 return;
                 tparams;
                 sig_loc = declare_loc;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               },
             function
             | ( _,

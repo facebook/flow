@@ -363,14 +363,7 @@ class mapper
       let open Flow_ast.Expression in
       if this#target_contained_by l then
         if this#is_target l then
-          ( l,
-            TypeCast
-              TypeCast.
-                {
-                  expression = e;
-                  annot = this#synth_type l;
-                  comments = Flow_ast_utils.mk_comments_opt ();
-                } )
+          (l, TypeCast TypeCast.{ expression = e; annot = this#synth_type l; comments = None })
         else
           super#expression e
       else

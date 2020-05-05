@@ -285,7 +285,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | Some t -> (loc, t)
       | None ->
         error_unexpected env;
-        (loc, Type.Any (Flow_ast_utils.mk_comments_opt ())))
+        (loc, Type.Any None))
 
   and is_primitive = function
     | T_ANY_TYPE

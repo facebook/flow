@@ -195,7 +195,7 @@ module HardCodedImportMap = struct
                  source;
                  default = None;
                  specifiers = Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers nspecs);
-                 comments = Flow_ast_utils.mk_comments_opt ();
+                 comments = None;
                } ))
 end
 
@@ -302,9 +302,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | (expr_loc, _) ->
         Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
         this#with_serial loc ty (fun annot ->
-            ( expr_loc,
-              TypeCast TypeCast.{ expression; annot; comments = Flow_ast_utils.mk_comments_opt () }
-            ))
+            (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None }))
 
     method private annotate_class_prop loc prop ty =
       let open Ast.Class.Property in
@@ -422,11 +420,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           ( loc,
             Ast.Expression.TypeCast
               Ast.Expression.TypeCast.
-                {
-                  expression = e;
-                  annot = (Loc.none, flowfixme_ast);
-                  comments = Flow_ast_utils.mk_comments_opt ();
-                } )
+                { expression = e; annot = (Loc.none, flowfixme_ast); comments = None } )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr
       | None -> expr

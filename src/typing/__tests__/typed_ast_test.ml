@@ -148,7 +148,7 @@ let before_and_after_stmts file_name =
               {
                 Flow_ast.Statement.Expression.expression = t_expr;
                 directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } );
         ]
       | e ->

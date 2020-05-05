@@ -172,7 +172,7 @@ module Functions = struct
       return = Ast.Type.Missing Loc.none;
       tparams = None;
       sig_loc = Loc.none;
-      comments = Flow_ast_utils.mk_comments_opt ();
+      comments = None;
     }
 end
 
