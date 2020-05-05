@@ -483,6 +483,8 @@ jobs:
   flow_bin_deploy:
     executor: linux-node
     steps:
+    - attach_workspace:
+        at: ~/flow
     - run:
         name: Deploy flow-bin
         command: .circleci/deploy_flow_bin.sh
