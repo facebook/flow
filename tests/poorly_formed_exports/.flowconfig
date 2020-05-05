@@ -2,4 +2,4 @@
 libs/
 
 [options]
-experimental.well_formed_exports=true
+well_formed_exports=true

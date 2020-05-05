@@ -7,6 +7,6 @@ nonstrict-import
 
 [options]
 no_flowlib=true
-experimental.well_formed_exports=true
-experimental.types_first=true
+well_formed_exports=true
+types_first=true
 experimental.abstract_locations=true

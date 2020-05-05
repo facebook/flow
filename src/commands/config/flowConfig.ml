@@ -120,7 +120,12 @@ module Opts = struct
     Ok (config, warnings)
 
   let module_file_exts =
-    SSet.empty |> SSet.add ".js" |> SSet.add ".jsx" |> SSet.add ".json" |> SSet.add ".mjs" |> SSet.add ".cjs"
+    SSet.empty
+    |> SSet.add ".js"
+    |> SSet.add ".jsx"
+    |> SSet.add ".json"
+    |> SSet.add ".mjs"
+    |> SSet.add ".cjs"
 
   let module_resource_exts =
     SSet.empty
@@ -336,6 +341,40 @@ module Opts = struct
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
+  let well_formed_exports_parser =
+    boolean (fun opts v -> Ok { opts with enforce_well_formed_exports = Some v })
+
+  let well_formed_exports_whitelist_parser =
+    string
+      ~init:(fun opts -> { opts with enforce_well_formed_exports_whitelist = [] })
+      ~multiple:true
+      (fun opts v ->
+        if Base.Option.value ~default:false opts.enforce_well_formed_exports then
+          Ok
+            {
+              opts with
+              enforce_well_formed_exports_whitelist =
+                v :: opts.enforce_well_formed_exports_whitelist;
+            }
+        else
+          Error "This option requires \"well_formed_exports\" set to \"true\".")
+
+  let types_first_parser =
+    boolean (fun opts v ->
+        if v && opts.enforce_well_formed_exports = Some false then
+          Error "Cannot set it to \"true\" when \"well_formed_exports\" is set to \"false\"."
+        else
+          Ok { opts with types_first = v })
+
+  let types_first_max_files_checked_per_worker_parser =
+    uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
+
+  let types_first_max_seconds_for_check_per_worker_parser =
+    uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
+
+  let types_first_max_rss_bytes_for_check_per_worker_parser =
+    uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
+
   let parsers =
     [
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
@@ -525,30 +564,13 @@ module Opts = struct
       ("experimental.autofix_exports", boolean (fun opts v -> Ok { opts with autofix_exports = v }));
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
-      ( "experimental.well_formed_exports",
-        boolean (fun opts v -> Ok { opts with enforce_well_formed_exports = Some v }) );
-      ( "experimental.well_formed_exports.whitelist",
-        string
-          ~init:(fun opts -> { opts with enforce_well_formed_exports_whitelist = [] })
-          ~multiple:true
-          (fun opts v ->
-            if Base.Option.value ~default:false opts.enforce_well_formed_exports then
-              Ok
-                {
-                  opts with
-                  enforce_well_formed_exports_whitelist =
-                    v :: opts.enforce_well_formed_exports_whitelist;
-                }
-            else
-              Error "This option requires \"experimental.well_formed_exports\" set to \"true\".") );
+      ("well_formed_exports", well_formed_exports_parser);
+      ("experimental.well_formed_exports", well_formed_exports_parser);
+      ("well_formed_exports.whitelist", well_formed_exports_whitelist_parser);
+      ("experimental.well_formed_exports.whitelist", well_formed_exports_whitelist_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
-      ( "experimental.types_first",
-        boolean (fun opts v ->
-            if v && opts.enforce_well_formed_exports = Some false then
-              Error
-                "Cannot set it to \"true\" when \"experimental.well_formed_exports\" is set to \"false\"."
-            else
-              Ok { opts with types_first = v }) );
+      ("types_first", types_first_parser);
+      ("experimental.types_first", types_first_parser);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -565,12 +587,17 @@ module Opts = struct
           [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
           (fun opts react_runtime -> Ok { opts with react_runtime }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
+      ("types_first.max_files_checked_per_worker", types_first_max_files_checked_per_worker_parser);
       ( "experimental.types_first.max_files_checked_per_worker",
-        uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) );
+        types_first_max_files_checked_per_worker_parser );
+      ( "types_first.max_seconds_for_check_per_worker",
+        types_first_max_seconds_for_check_per_worker_parser );
       ( "experimental.types_first.max_seconds_for_check_per_worker",
-        uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v }) );
+        types_first_max_seconds_for_check_per_worker_parser );
+      ( "types_first.max_rss_bytes_for_check_per_worker",
+        types_first_max_rss_bytes_for_check_per_worker_parser );
       ( "experimental.types_first.max_rss_bytes_for_check_per_worker",
-        uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v }) );
+        types_first_max_rss_bytes_for_check_per_worker_parser );
     ]
 
   let parse =

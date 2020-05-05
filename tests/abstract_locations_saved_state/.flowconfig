@@ -1,7 +1,7 @@
 [options]
 
-experimental.well_formed_exports=true
-experimental.types_first=true
+well_formed_exports=true
+types_first=true
 experimental.abstract_locations=true
 
 ; Since we run all tests with saved state as well, we don't need any specific

@@ -2,5 +2,5 @@
 <PROJECT_ROOT>/tmp
 
 [options]
-experimental.types_first=false
+types_first=false
 module.system=haste

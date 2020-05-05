@@ -1232,8 +1232,7 @@ let make_options
         then
           FlowExitStatus.(
             exit
-              ~msg:
-                "Cannot start in types-first mode when \"experimental.well_formed_exports\" is set to false."
+              ~msg:"Cannot start in types-first mode when \"well_formed_exports\" is set to false."
               Commandline_usage_error)
         else
           options_flags.types_first || FlowConfig.enforce_well_formed_exports flowconfig );
