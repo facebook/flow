@@ -440,7 +440,7 @@ class insert_second_cjsimport_mapper =
                                           comments = Flow_ast_utils.mk_comments_opt ();
                                         } );
                                 ];
-                              comments = Flow_ast_utils.mk_comments_opt ();
+                              comments = None;
                             } );
                         comments = Flow_ast_utils.mk_comments_opt ();
                       } );
@@ -491,7 +491,7 @@ class add_body_mapper =
                                           comments = Flow_ast_utils.mk_comments_opt ();
                                         } );
                                 ];
-                              comments = Flow_ast_utils.mk_comments_opt ();
+                              comments = None;
                             } );
                         comments = Flow_ast_utils.mk_comments_opt ();
                       } );

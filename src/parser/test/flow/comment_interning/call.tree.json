@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":10,"column":21}},
-  "range":[15,374],
+  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":14,"column":25}},
+  "range":[15,442],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -319,6 +319,73 @@
         "arguments":[]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":12,"column":22}},
+      "range":[393,415],
+      "expression":{
+        "type":"CallExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":20}},
+            "range":[397,413],
+            "value":" 5.1 I args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":12,"column":21}},
+        "range":[393,414],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":12,"column":3}},
+          "range":[393,396],
+          "name":"foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":14,"column":0},"end":{"line":14,"column":25}},
+      "range":[417,442],
+      "expression":{
+        "type":"CallExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":14,"column":7},"end":{"line":14,"column":23}},
+            "range":[424,440],
+            "value":" 6.1 I args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":14,"column":0},"end":{"line":14,"column":24}},
+        "range":[417,441],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":14,"column":0},"end":{"line":14,"column":3}},
+          "range":[417,420],
+          "name":"foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[
+          {
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":14,"column":4},"end":{"line":14,"column":5}},
+            "range":[421,422],
+            "name":"a",
+            "typeAnnotation":null,
+            "optional":false
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -441,6 +508,18 @@
       "loc":{"source":null,"start":{"line":10,"column":22},"end":{"line":10,"column":38}},
       "range":[375,391],
       "value":" 4.6 T args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":20}},
+      "range":[397,413],
+      "value":" 5.1 I args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":14,"column":7},"end":{"line":14,"column":23}},
+      "range":[424,440],
+      "value":" 6.1 I args "
     }
   ]
 }

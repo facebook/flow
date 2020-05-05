@@ -1027,7 +1027,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
              [
                fuse_with_space [Atom "new"; callee_layout];
                option (call_type_args ~opts) targs;
-               option (call_args ~opts) arguments;
+               option (call_args ~opts ~lparen:"(") arguments;
              ]
       | E.Unary { E.Unary.operator; argument; comments } ->
         let (s_operator, needs_space) =
@@ -1167,7 +1167,7 @@ and call ?(optional = false) ~precedence ~ctxt ~opts call_node loc =
        [
          expression_with_parens ~precedence ~ctxt ~opts callee;
          targs;
-         call_args ~lparen ~opts arguments;
+         call_args ~opts ~lparen arguments;
        ])
 
 and expression_with_parens ~opts ~precedence ~(ctxt : expression_context) expr =
@@ -2792,17 +2792,39 @@ and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
             (Base.List.map ~f:(type_param ~opts) params);
         ] )
 
-and call_args ?(lparen = "(") ~opts (loc, { Ast.Expression.ArgList.arguments; comments }) =
+and call_args ~opts ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }) =
+  let arg_loc = function
+    | Ast.Expression.Expression (loc, _) -> loc
+    | Ast.Expression.Spread (loc, _) -> loc
+  in
+  let num_args = List.length arguments in
+  let internal_comments =
+    match internal_comments comments with
+    | None -> []
+    | Some comments -> [comments]
+  in
+  let args =
+    Base.List.mapi
+      ~f:(fun i arg ->
+        let loc = arg_loc arg in
+        let comment_bounds = Comment_attachment.expression_or_spread_comment_bounds loc arg in
+        (* Add trailing comma to last argument *)
+        let arg_layout = expression_or_spread ~opts arg in
+        let arg_layout =
+          if i = num_args - 1 && internal_comments = [] then
+            fuse [arg_layout; if_break (Atom ",") Empty]
+          else
+            arg_layout
+        in
+        (loc, comment_bounds, arg_layout))
+      arguments
+  in
+  (* Add internal comments *)
+  let args = args @ internal_comments in
+  let args_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line args in
   source_location_with_comments
     ?comments
-    ( loc,
-      group
-        [
-          new_list
-            ~wrap:(Atom lparen, Atom ")")
-            ~sep:(Atom ",")
-            (Base.List.map ~f:(expression_or_spread ~opts) arguments);
-        ] )
+    (loc, group [wrap_and_indent (Atom lparen, Atom ")") args_layout])
 
 and call_type_args ~opts (loc, { Ast.Expression.CallTypeArgs.arguments = args; comments }) =
   source_location_with_comments

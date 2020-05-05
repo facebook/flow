@@ -691,3 +691,8 @@ let array_pattern_element_comment_bounds loc element =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#pattern_array_e element);
   collector#comment_bounds
+
+let expression_or_spread_comment_bounds loc expr_or_spread =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#expression_or_spread expr_or_spread);
+  collector#comment_bounds

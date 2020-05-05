@@ -1238,7 +1238,7 @@ and Expression : sig
 
     and ('M, 'T) t' = {
       arguments: ('M, 'T) expression_or_spread list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end

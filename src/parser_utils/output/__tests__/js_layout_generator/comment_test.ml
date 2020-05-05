@@ -126,6 +126,11 @@ let tests =
       assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );
     ("block" >:: fun ctxt -> assert_statement_string ~ctxt "{/*I*/}");
     ("break" >:: fun ctxt -> assert_statement_string ~ctxt "break;/*T*/");
+    ( "call" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt "foo(/*I*/)";
+      assert_expression_string ~ctxt ~pretty:true ("foo(\n  " ^ a80 ^ ",\n  /*I*/\n)");
+      assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  \n  /*I*/\n)" );
     ("class_private_field" >:: fun ctxt -> assert_expression_string ~ctxt "class C{/*L*/#A/*T*/;}");
     ("continue" >:: fun ctxt -> assert_statement_string ~ctxt "continue;/*T*/");
     ("debugger" >:: fun ctxt -> assert_statement_string ~ctxt "debugger;/*T*/");
@@ -152,6 +157,11 @@ let tests =
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
       assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
+    ( "new" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt "new Foo(/*I*/)";
+      assert_expression_string ~ctxt ~pretty:true ("new Foo(\n  " ^ a80 ^ ",\n  /*I*/\n)");
+      assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  /*I*/\n)" );
     ( "object" >:: fun ctxt ->
       assert_expression_string ~ctxt "{/*I*/}";
       assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  /*I*/\n}";

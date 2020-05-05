@@ -2424,4 +2424,26 @@ let tests =
            (* Blank lines between holes are preserved *)
            assert_statement_string ~ctxt ~pretty:true "var [\n  ,\n  \n  ,\n  a\n];";
            assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  ,\n  \n  b\n];" );
+         ( "call_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  \n  b,\n)";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "foo(\n  a,\n  \n  b,\n)"
+             (expression_of_string "foo(\n  a,\n  \n  \n  b,\n)");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  //L\n  b,\n)" );
+         ( "new_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  b,\n)";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "new Foo(\n  a,\n  \n  b,\n)"
+             (expression_of_string "new Foo(\n  a,\n  \n  \n  b,\n)");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  //L\n  b,\n)" );
        ]

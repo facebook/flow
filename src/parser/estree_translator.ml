@@ -549,7 +549,10 @@ with type t = Impl.t = struct
         let (arguments, comments) =
           match arguments with
           | Some ((_, { ArgList.comments = args_comments; _ }) as arguments) ->
-            (arg_list arguments, Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments)
+            ( arg_list arguments,
+              Flow_ast_utils.merge_comments
+                ~inner:(format_internal_comments args_comments)
+                ~outer:comments )
           | None -> (array [], comments)
         in
         node
@@ -565,7 +568,11 @@ with type t = Impl.t = struct
           Call
             ({ Call.comments; arguments = (_, { ArgList.comments = args_comments; _ }); _ } as call)
         ) ->
-        let comments = Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments in
+        let comments =
+          Flow_ast_utils.merge_comments
+            ~inner:(format_internal_comments args_comments)
+            ~outer:comments
+        in
         node ?comments "CallExpression" loc (call_node_properties call)
       | ( loc,
           OptionalCall
@@ -575,7 +582,11 @@ with type t = Impl.t = struct
                 call;
               optional;
             } ) ->
-        let comments = Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments in
+        let comments =
+          Flow_ast_utils.merge_comments
+            ~inner:(format_internal_comments args_comments)
+            ~outer:comments
+        in
         node
           ?comments
           "OptionalCallExpression"

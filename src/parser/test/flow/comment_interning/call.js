@@ -8,3 +8,7 @@ foo</* 2.1 L any */ any /* 2.2 T any */, /* 2.3 L implicit */ _ /* 2.4 T implici
 /* 4.1 L id */ foo /* 4.2 T id */
   /* 4.3 L targs */ <T> /* 4.4 T targs */
   /* 4.5 L args */ () /* 4.6 T args */
+
+foo(/* 5.1 I args */);
+
+foo(a, /* 6.1 I args */);

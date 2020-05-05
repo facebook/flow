@@ -133,7 +133,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { arguments; comments } = args in
       let annot' = this#on_loc_annot annot in
       let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =

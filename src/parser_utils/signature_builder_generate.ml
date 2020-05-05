@@ -955,7 +955,7 @@ module T = struct
                                 comments = Flow_ast_utils.mk_comments_opt ();
                               } );
                       ];
-                    comments = Flow_ast_utils.mk_comments_opt ();
+                    comments = None;
                   } );
               comments = Flow_ast_utils.mk_comments_opt ();
             } )
