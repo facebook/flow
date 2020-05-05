@@ -1633,9 +1633,15 @@ end =
 and Comment : sig
   type 'M t = 'M * t'
 
-  and t' =
-    | Block of string
-    | Line of string
+  and kind =
+    | Block
+    | Line
+
+  and t' = {
+    kind: kind;
+    text: string;
+    on_newline: bool;
+  }
   [@@deriving show]
 end =
   Comment

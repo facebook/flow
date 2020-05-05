@@ -508,9 +508,13 @@ module Expressions = struct
 end
 
 module Comments = struct
-  let block ?(loc = Loc.none) txt = (loc, Ast.Comment.Block txt)
+  let block ?(loc = Loc.none) ?(on_newline = false) text =
+    let open Ast.Comment in
+    (loc, { kind = Block; text; on_newline })
 
-  let line ?(loc = Loc.none) txt = (loc, Ast.Comment.Line txt)
+  let line ?(loc = Loc.none) ?(on_newline = false) text =
+    let open Ast.Comment in
+    (loc, { kind = Line; text; on_newline })
 end
 
 let mk_program ?(comments = []) stmts = (Loc.none, stmts, comments)

@@ -380,8 +380,8 @@ let layout_comment loc comment =
   SourceLocation
     ( loc,
       match comment with
-      | Line text -> fuse [Atom "//"; Atom text; hardline]
-      | Block text -> fuse [Atom "/*"; Atom text; Atom "*/"] )
+      | { kind = Line; text; _ } -> fuse [Atom "//"; Atom text; hardline]
+      | { kind = Block; text; _ } -> fuse [Atom "/*"; Atom text; Atom "*/"] )
 
 let layout_from_leading_comment (loc, comment) next_loc =
   let open Ast.Comment in
@@ -392,11 +392,12 @@ let layout_from_leading_comment (loc, comment) next_loc =
     let is_single_linebreak = is_single_linebreak loc next_loc in
     let is_multi_linebreak = is_multi_linebreak loc next_loc in
     (match comment with
-    | Line _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline]
-    | Line _ -> layout_comment
-    | Block _ when is_multi_linebreak -> fuse [layout_comment; pretty_hardline; pretty_hardline]
-    | Block _ when is_single_linebreak -> fuse [layout_comment; pretty_hardline]
-    | Block _ -> fuse [layout_comment; pretty_space])
+    | { kind = Line; _ } when is_multi_linebreak -> fuse [layout_comment; pretty_hardline]
+    | { kind = Line; _ } -> layout_comment
+    | { kind = Block; _ } when is_multi_linebreak ->
+      fuse [layout_comment; pretty_hardline; pretty_hardline]
+    | { kind = Block; _ } when is_single_linebreak -> fuse [layout_comment; pretty_hardline]
+    | { kind = Block; _ } -> fuse [layout_comment; pretty_space])
 
 let layout_from_trailing_comment (loc, comment) (prev_loc, prev_comment) =
   let open Ast.Comment in
@@ -404,12 +405,12 @@ let layout_from_trailing_comment (loc, comment) (prev_loc, prev_comment) =
   let is_multi_linebreak = is_multi_linebreak prev_loc loc in
   let layout_comment = layout_comment loc comment in
   match prev_comment with
-  | Some (Line _) when is_multi_linebreak -> fuse [pretty_hardline; layout_comment]
-  | Some (Line _) -> layout_comment
-  | Some (Block _) when is_multi_linebreak ->
+  | Some { kind = Line; _ } when is_multi_linebreak -> fuse [pretty_hardline; layout_comment]
+  | Some { kind = Line; _ } -> layout_comment
+  | Some { kind = Block; _ } when is_multi_linebreak ->
     fuse [pretty_hardline; pretty_hardline; layout_comment]
-  | Some (Block _) when is_single_linebreak -> fuse [pretty_hardline; layout_comment]
-  | Some (Block _) -> fuse [pretty_space; layout_comment]
+  | Some { kind = Block; _ } when is_single_linebreak -> fuse [pretty_hardline; layout_comment]
+  | Some { kind = Block; _ } -> fuse [pretty_space; layout_comment]
   | None when is_multi_linebreak -> fuse [pretty_hardline; pretty_hardline; layout_comment]
   | None when is_single_linebreak -> fuse [pretty_hardline; layout_comment]
   | None -> fuse [pretty_space; layout_comment]
@@ -510,12 +511,12 @@ and maybe_embed_checksum nodes checksum =
   | None -> nodes
 
 and comment (loc, comment) =
-  let module C = Ast.Comment in
+  let open Ast.Comment in
   source_location_with_comments
     ( loc,
       match comment with
-      | C.Block txt -> fuse [Atom "/*"; Atom txt; Atom "*/"]
-      | C.Line txt -> fuse [Atom "//"; Atom txt; Newline] )
+      | { kind = Block; text; _ } -> fuse [Atom "/*"; Atom text; Atom "*/"]
+      | { kind = Line; text; _ } -> fuse [Atom "//"; Atom text; Newline] )
 
 (**
  * Renders a statement
@@ -2156,7 +2157,7 @@ and list_with_newlines
       in
       let has_trailing_line_comment =
         match last_trailing with
-        | Some (_, Ast.Comment.Line _) -> true
+        | Some (_, { Ast.Comment.kind = Ast.Comment.Line; _ }) -> true
         | _ -> false
       in
       let sep =

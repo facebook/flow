@@ -186,16 +186,16 @@ let loc_of_lexbuf env (lexbuf : Sedlexing.lexbuf) =
   let end_offset = Sedlexing.lexeme_end lexbuf in
   loc_of_offsets env start_offset end_offset
 
-let get_result_and_clear_state (env, lex_token, lex_comments) =
+let loc_of_token env lex_token =
+  match lex_token with
+  | T_STRING (loc, _, _, _) -> loc
+  | T_JSX_TEXT (loc, _, _) -> loc
+  | T_TEMPLATE_PART (loc, _, _) -> loc
+  | T_REGEXP (loc, _, _) -> loc
+  | _ -> loc_of_lexbuf env env.lex_lb
+
+let get_result_and_clear_state (env, lex_token, lex_loc, lex_comments) =
   let (env, { lex_errors_acc }) = get_and_clear_state env in
-  let lex_loc =
-    match lex_token with
-    | T_STRING (loc, _, _, _) -> loc
-    | T_JSX_TEXT (loc, _, _) -> loc
-    | T_TEMPLATE_PART (loc, _, _) -> loc
-    | T_REGEXP (loc, _, _) -> loc
-    | _ -> loc_of_lexbuf env env.lex_lb
-  in
   (env, { Lex_result.lex_token; lex_loc; lex_errors = List.rev lex_errors_acc; lex_comments })
 
 let lex_error (env : Lex_env.t) loc err : Lex_env.t =
@@ -234,13 +234,15 @@ let mk_comment
     (multiline : bool) : Loc.t Flow_ast.Comment.t =
   let open Flow_ast.Comment in
   let loc = { Loc.source = Lex_env.source env; start; _end } in
-  let s = Buffer.contents buf in
-  let c =
+  let text = Buffer.contents buf in
+  let kind =
     if multiline then
-      Block s
+      Block
     else
-      Line s
+      Line
   in
+  let on_newline = Loc.(env.lex_last_loc._end.Loc.line < loc.start.Loc.line) in
+  let c = { kind; text; on_newline } in
   (loc, c)
 
 let mk_num_singleton number_type raw =
@@ -1761,13 +1763,19 @@ let jsx_child env =
   let buf = Buffer.create 127 in
   let raw = Buffer.create 127 in
   let (env, child) = jsx_child env start buf raw env.lex_lb in
-  get_result_and_clear_state (env, child, [])
+  let loc = loc_of_token env child in
+  get_result_and_clear_state (env, child, loc, [])
 
 let wrap f =
   let rec helper comments env =
     match f env env.lex_lb with
-    | Token (env, t) -> (env, t, List.rev comments)
-    | Comment (env, comment) -> helper (comment :: comments) env
+    | Token (env, t) ->
+      let loc = loc_of_token env t in
+      let env = { env with lex_last_loc = loc } in
+      (env, t, loc, List.rev comments)
+    | Comment (env, ((loc, _) as comment)) ->
+      let env = { env with lex_last_loc = loc } in
+      helper (comment :: comments) env
     | Continue env -> helper comments env
   in
   (fun env -> get_result_and_clear_state (helper [] env))

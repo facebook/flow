@@ -301,9 +301,7 @@ let extract_docblock =
       |> List.rev
     in
     let string_of_comment = function
-      | (loc, Ast.Comment.Block s)
-      | (loc, Ast.Comment.Line s) ->
-        (loc, s)
+      | (loc, { Ast.Comment.text; _ }) -> (loc, text)
     in
     let map_n =
       let rec helper f remaining acc = function

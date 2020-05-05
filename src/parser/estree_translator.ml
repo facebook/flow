@@ -1799,8 +1799,8 @@ with type t = Impl.t = struct
       Comment.(
         let (_type, value) =
           match c with
-          | Line s -> ("Line", s)
-          | Block s -> ("Block", s)
+          | { kind = Line; text = s; _ } -> ("Line", s)
+          | { kind = Block; text = s; _ } -> ("Block", s)
         in
         node _type loc [("value", string value)])
     and predicate (loc, { Ast.Type.Predicate.kind; comments }) =

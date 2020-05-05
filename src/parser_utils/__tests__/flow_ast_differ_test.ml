@@ -680,8 +680,8 @@ class add_comment_mapper =
             Flow_ast.Identifier.comments =
               Some
                 {
-                  leading = [(Loc.none, Flow_ast.Comment.Block "hello")];
-                  trailing = [(Loc.none, Flow_ast.Comment.Block "bye")];
+                  leading = [Ast_builder.Comments.block "hello"];
+                  trailing = [Ast_builder.Comments.block "bye"];
                   internal = ();
                 };
           } )

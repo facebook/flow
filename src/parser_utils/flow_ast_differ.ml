@@ -447,10 +447,12 @@ let program
       ((_loc2, comment2) as cmt2 : Loc.t Ast.Comment.t) =
     let open Ast.Comment in
     match (comment1, comment2) with
-    | (Line _, Block _) -> Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
-    | (Block _, Line _) -> Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
-    | (Line c1, Line c2)
-    | (Block c1, Block c2)
+    | ({ kind = Line; _ }, { kind = Block; _ }) ->
+      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+    | ({ kind = Block; _ }, { kind = Line; _ }) ->
+      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+    | ({ kind = Line; text = c1; _ }, { kind = Line; text = c2; _ })
+    | ({ kind = Block; text = c1; _ }, { kind = Block; text = c2; _ })
       when not (String.equal c1 c2) ->
       Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
     | _ -> None

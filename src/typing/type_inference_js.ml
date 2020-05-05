@@ -46,9 +46,7 @@ let scan_for_error_suppressions =
     if suppress_comments <> [] then
       List.iter
         (function
-          | (loc, Ast.Comment.Block comment)
-          | (loc, Ast.Comment.Line comment)
-            when should_suppress comment ->
+          | (loc, { Ast.Comment.text; _ }) when should_suppress text ->
             Context.add_error_suppression cx loc
           | _ -> ())
         comments
@@ -231,12 +229,12 @@ let scan_for_lint_suppressions =
      * Trim the locs to line up with the contents of the comment. *)
     Loc.(
       match comment with
-      | Ast.Comment.Block s ->
+      | { Ast.Comment.kind = Ast.Comment.Block; text = s; _ } ->
         let new_start = { loc.start with column = loc.start.column + 2 } in
         let new_end = { loc._end with column = loc._end.column - 2 } in
         let new_loc = { loc with start = new_start; _end = new_end } in
         { loc = new_loc; value = s }
-      | Ast.Comment.Line s ->
+      | { Ast.Comment.kind = Ast.Comment.Line; text = s; _ } ->
         let new_start = { loc.start with column = loc.start.column + 2 } in
         let new_loc = { loc with start = new_start } in
         { loc = new_loc; value = s })
