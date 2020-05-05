@@ -1,3 +1,26 @@
+### 0.124.0
+
+Library Definitions:
+
+* Add `StorageEvent` overloads.
+
+Misc:
+
+* Use `textEdit` in identifier completion item responses over the LSP, to avoid possible behavior differences with different LSP clients.
+* Various improvements to the pretty-printer.
+* A small improvement in completeness when handling the "not" operation in the presence of unions of literal types.
+* Wrap the usage message to 100 chars.
+* Fix a poorly-positioned error related to polymorphic function types.
+
+Parser:
+
+* Improved some parser error messages by treating the end of file as a valid end of object property.
+* Updated ESTree output for import expressions to match the spec.
+
+`flow-dev-tools`:
+
+* Add the `update-suppressions` subcommand.
+
 ### 0.123.0
 
 New Features:
