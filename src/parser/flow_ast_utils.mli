@@ -69,6 +69,10 @@ val merge_comments_with_internal :
   outer:('M, 'a) Flow_ast.Syntax.t option ->
   ('M, 'loc Flow_ast.Comment.t list) Flow_ast.Syntax.t option
 
+val split_comments :
+  ('loc, unit) Flow_ast.Syntax.t option ->
+  ('loc, unit) Flow_ast.Syntax.t option * ('loc, unit) Flow_ast.Syntax.t option
+
 module ExpressionSort : sig
   type t =
     | Array
