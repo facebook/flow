@@ -1295,12 +1295,12 @@ and boolean_literal_type loc { Ast.BooleanLiteral.value; comments } =
 
 and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
   let { Ast.Expression.Member._object; property; comments } = member_node in
-  let computed =
+  let (computed, property_loc) =
     match property with
-    | Ast.Expression.Member.PropertyExpression _ -> true
-    | Ast.Expression.Member.PropertyIdentifier _
-    | Ast.Expression.Member.PropertyPrivateName _ ->
-      false
+    | Ast.Expression.Member.PropertyExpression (loc, _) -> (true, loc)
+    | Ast.Expression.Member.PropertyIdentifier (loc, _)
+    | Ast.Expression.Member.PropertyPrivateName (loc, _) ->
+      (false, loc)
   in
   let (ldelim, rdelim) =
     match (computed, optional) with
@@ -1324,6 +1324,16 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
                ?comments
                (loc, number_literal ~in_member_object:true raw num)
            | _ -> expression_with_parens ~opts ~precedence ~ctxt _object
+         end;
+         (* If this is a non-computed member expression where the object has a trailing block
+            comment on a line before the property, insert a line break after the comment so that
+            the dot and property are printed on the line below the comment. *)
+         begin
+           match Comment_attachment.expression_comment_bounds _object with
+           | (_, Some (comment_loc, { Ast.Comment.kind = Ast.Comment.Block; _ }))
+             when (not computed) && Loc.(comment_loc._end.line < property_loc.start.line) ->
+             pretty_hardline
+           | _ -> Empty
          end;
          ldelim;
          begin

@@ -177,7 +177,13 @@ let tests =
     ("tagged_template" >:: fun ctxt -> assert_expression_string ~ctxt "/*L1*/A/*L2*/`B`/*T*/");
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
-      assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
+      assert_expression_string ~ctxt "A./*L*/#B/*T*/";
+      assert_expression_string ~ctxt ~pretty:true "foo //C\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo /*C*/\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo /*C*/.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo\n//C\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/.bar" );
     ( "new" >:: fun ctxt ->
       let a80 = String.make 80 'a' in
       assert_expression_string ~ctxt "new Foo(/*I*/)";
