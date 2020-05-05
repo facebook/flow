@@ -456,6 +456,23 @@ let internal_comments = function
   | Some { Ast.Syntax.internal = (first_loc, _) :: _ as internal; _ } ->
     Some (first_loc, (None, None), Concat (layout_from_leading_comments internal None))
 
+(* Given a set of comment bounds, determine what separator should be inserted before the
+   comments to preserve whether the first comment starts on a new line.
+   
+   - If there are no leading comments return the specified separator.
+   - If the first leading comment starts on a new line, ignore the specified separator and
+     return a hard line break.
+   - If the first leading comment does not start on a new line, return the optional same_line
+     separator, otherwise return the no_comment separator. *)
+let comment_aware_separator ?(same_line = None) ~no_comment comment_bounds =
+  match comment_bounds with
+  | (Some (_, { Ast.Comment.on_newline = true; _ }), _) -> pretty_hardline
+  | (Some (_, { Ast.Comment.on_newline = false; _ }), _) ->
+    (match same_line with
+    | None -> no_comment
+    | Some sep -> sep)
+  | _ -> no_comment
+
 let identifier_with_comments current_loc name comments =
   let node = Identifier (current_loc, name) in
   match comments with
@@ -926,7 +943,9 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                  | None -> Atom "="
                  | Some op -> Atom (Flow_ast_utils.string_of_assignment_operator op)
                end;
-               pretty_space;
+               comment_aware_separator
+                 ~no_comment:pretty_space
+                 (Comment_attachment.expression_comment_bounds right);
                begin
                  let ctxt = context_after_token ctxt in
                  expression_with_parens ~precedence ~ctxt ~opts right
@@ -948,7 +967,12 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                  | ( E.Binary.Minus,
                      (_, E.Update { E.Update.prefix = true; operator = E.Update.Decrement; _ }) ) ->
                    let ctxt = context_after_token ctxt in
-                   fuse [ugly_space; expression ~ctxt ~opts right]
+                   let right_separator =
+                     comment_aware_separator
+                       ~no_comment:ugly_space
+                       (Comment_attachment.expression_comment_bounds right)
+                   in
+                   fuse [right_separator; expression ~ctxt ~opts right]
                  | _ ->
                    (* to get an AST like `x + (y - z)`, then there must've been parens
              around the right side. we can force that by bumping the minimum
@@ -964,7 +988,12 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                          | _ -> Normal_left);
                      }
                    in
-                   expression_with_parens ~precedence ~ctxt ~opts right
+                   let right_separator =
+                     comment_aware_separator
+                       ~no_comment:Empty
+                       (Comment_attachment.expression_comment_bounds right)
+                   in
+                   fuse [right_separator; expression_with_parens ~opts ~precedence ~ctxt right]
                end;
              ]
       | E.Call c -> call ~precedence ~ctxt ~opts c loc
@@ -1008,11 +1037,17 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
           | E.Logical.And -> Atom "&&"
           | E.Logical.NullishCoalesce -> Atom "??"
         in
+        let right_separator =
+          comment_aware_separator
+            ~no_comment:pretty_line
+            ~same_line:(Some pretty_space)
+            (Comment_attachment.expression_comment_bounds right)
+        in
         let right = expression_with_parens ~precedence:(precedence + 1) ~ctxt ~opts right in
         (* if we need to wrap, the op stays on the first line, with the RHS on a
          new line and indented by 2 spaces *)
         layout_node_with_comments_opt loc comments
-        @@ Group [left; pretty_space; operator; Indent (fuse [pretty_line; right])]
+        @@ Group [left; pretty_space; operator; Indent (fuse [right_separator; right])]
       | E.Member m -> member ~precedence ~ctxt ~opts m loc
       | E.OptionalMember { E.OptionalMember.member = m; optional } ->
         member ~optional ~precedence ~ctxt ~opts m loc
@@ -1511,12 +1546,17 @@ and variable_declarator ~ctxt ~opts (loc, { Ast.Statement.VariableDeclaration.De
     ( loc,
       match init with
       | Some expr ->
+        let init_separator =
+          comment_aware_separator
+            ~no_comment:pretty_space
+            (Comment_attachment.expression_comment_bounds expr)
+        in
         fuse
           [
             pattern ~ctxt ~opts id;
             pretty_space;
             Atom "=";
-            pretty_space;
+            init_separator;
             expression_with_parens ~opts ~precedence:precedence_of_assignment ~ctxt expr;
           ]
       | None -> pattern ~ctxt ~opts id )
@@ -1585,18 +1625,9 @@ and arrow_function
         ]
   in
   let body_separator =
-    let open Comment_attachment in
-    let (first_leading, _) =
-      match body with
-      | Ast.Function.BodyBlock block -> block_comment_bounds block
-      | Ast.Function.BodyExpression expr -> expression_comment_bounds expr
-    in
-    (* If the body begins with a comment we must insert a newline before the body
-       to ensure that comment will be attached to body after formatting. *)
-    if first_leading = None then
-      pretty_space
-    else
-      pretty_hardline
+    comment_aware_separator
+      ~no_comment:pretty_space
+      (Comment_attachment.function_body_comment_bounds body)
   in
   layout_node_with_comments_opt loc comments
   @@ fuse
@@ -2212,6 +2243,11 @@ and object_property ~opts property =
   let module O = Ast.Expression.Object in
   match property with
   | O.Property (loc, O.Property.Init { key; value; shorthand }) ->
+    let value_separator =
+      comment_aware_separator
+        ~no_comment:pretty_space
+        (Comment_attachment.expression_comment_bounds value)
+    in
     source_location_with_comments
       ( loc,
         let s_key = object_property_key ~opts key in
@@ -2222,7 +2258,7 @@ and object_property ~opts property =
             [
               s_key;
               Atom ":";
-              pretty_space;
+              value_separator;
               expression_with_parens ~precedence:min_precedence ~ctxt:normal_context ~opts value;
             ] )
   | O.Property (loc, O.Property.Method { key; value = (fn_loc, func) }) ->
@@ -2902,6 +2938,9 @@ and type_args ~opts (loc, { Ast.Type.TypeArgs.arguments; comments }) =
     (loc, group [wrap_and_indent (Atom "<", Atom ">") args_layout])
 
 and type_alias ~opts ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; comments } =
+  let right_separator =
+    comment_aware_separator ~no_comment:pretty_space (Comment_attachment.type_comment_bounds right)
+  in
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
@@ -2916,7 +2955,7 @@ and type_alias ~opts ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; 
             option (type_parameter ~opts) tparams;
             pretty_space;
             Atom "=";
-            pretty_space;
+            right_separator;
             type_ ~opts right;
           ])
 

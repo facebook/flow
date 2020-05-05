@@ -706,3 +706,13 @@ let call_type_arg_comment_bounds loc arg =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#call_type_arg arg);
   collector#comment_bounds
+
+let function_body_comment_bounds body =
+  let loc =
+    match body with
+    | Ast.Function.BodyBlock (loc, _) -> loc
+    | Ast.Function.BodyExpression (loc, _) -> loc
+  in
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#function_body_any body);
+  collector#comment_bounds
