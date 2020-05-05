@@ -3876,6 +3876,23 @@ References:
                         ^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- union_enum.js:12:4
+
+Cannot cast `E.A` to number because string [1] is incompatible with number [2].
+
+   union_enum.js:12:4
+   12|   (E.A: number); // Error expected
+          ^^^
+
+References:
+   union_enum.js:6:15
+    6| const E = {A: 'A', B: 'B'};
+                     ^^^ [1]
+   union_enum.js:12:9
+   12|   (E.A: number); // Error expected
+               ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- void.js:31:13
 
 Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -4005,4 +4022,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 265 errors
+Found 266 errors

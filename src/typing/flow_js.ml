@@ -6289,73 +6289,8 @@ struct
         (**************************************)
         | (_, PredicateT (p, t)) -> predicate cx trace t l p
         | (_, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
-        | ( DefT (_, _, StrT lit),
-            SentinelPropTestT (reason, l, key, sense, UnionEnum.(One (Str sentinel)), result) ) ->
-          begin
-            match lit with
-            | Literal (_, value) when value = sentinel != sense ->
-              if not sense then
-                ()
-              (* provably unreachable, so prune *)
-              else
-                let l = matching_sentinel_prop reason key (SingletonStrT sentinel) in
-                rec_flow_t cx trace ~use_op:unknown_use (l, result)
-            | _ -> rec_flow_t cx trace ~use_op:unknown_use (l, result)
-          end
-        | ( DefT (_, _, NumT lit),
-            SentinelPropTestT (reason, l, key, sense, UnionEnum.(One (Num sentinel_lit)), result) )
-          ->
-          let (sentinel, _) = sentinel_lit in
-          begin
-            match lit with
-            | Literal (_, (value, _)) when value = sentinel != sense ->
-              if not sense then
-                ()
-              (* provably unreachable, so prune *)
-              else
-                let l = matching_sentinel_prop reason key (SingletonNumT sentinel_lit) in
-                rec_flow_t cx trace ~use_op:unknown_use (l, result)
-            | _ -> rec_flow_t cx trace ~use_op:unknown_use (l, result)
-          end
-        | ( DefT (_, _, BoolT lit),
-            SentinelPropTestT (reason, l, key, sense, UnionEnum.(One (Bool sentinel)), result) ) ->
-          begin
-            match lit with
-            | Some value when value = sentinel != sense ->
-              if not sense then
-                ()
-              (* provably unreachable, so prune *)
-              else
-                let l = matching_sentinel_prop reason key (SingletonBoolT sentinel) in
-                rec_flow_t cx trace ~use_op:unknown_use (l, result)
-            | _ -> rec_flow_t cx trace ~use_op:unknown_use (l, result)
-          end
-        | ( DefT (_, _, NullT),
-            SentinelPropTestT (_reason, l, _key, sense, UnionEnum.(One Null), result) ) ->
-          if not sense then
-            ()
-          else
-            rec_flow_t cx trace ~use_op:unknown_use (l, result)
-        | ( DefT (_, _, VoidT),
-            SentinelPropTestT (_reason, l, _key, sense, UnionEnum.(One Void), result) ) ->
-          if not sense then
-            ()
-          else
-            rec_flow_t cx trace ~use_op:unknown_use (l, result)
-        | ( DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
-            SentinelPropTestT (_reason, l, _key, sense, _, result) ) ->
-          (* types don't match (would've been matched above) *)
-          (* we don't prune other types like objects or instances, even though
-           a test like `if (ObjT === StrT)` seems obviously unreachable, but
-           we have to be wary of toString and valueOf on objects/instances. *)
-          if sense then
-            ()
-          (* provably unreachable, so prune *)
-          else
-            rec_flow_t cx trace ~use_op:unknown_use (l, result)
-        | (_, SentinelPropTestT (_, l, _, _, _, result)) ->
-          (* property exists, but is not something we can use for refinement *)
-          rec_flow_t cx trace ~use_op:unknown_use (l, result)
+        | (_, SentinelPropTestT (reason, obj, key, sense, enum, result)) ->
+          sentinel_refinement cx trace l reason obj key sense enum result
         (*********************)
         (* functions statics *)
         (*********************)
@@ -10247,6 +10182,55 @@ struct
       | None ->
         (* not enough info to refine *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, result)
+
+  and sentinel_refinement =
+    let open UnionEnum in
+    let enum_match sense = function
+      | (DefT (_, _, StrT (Literal (_, value))), Str sentinel) when value = sentinel != sense ->
+        true
+      | (DefT (_, _, NumT (Literal (_, (value, _)))), Num (sentinel, _))
+        when value = sentinel != sense ->
+        true
+      | (DefT (_, _, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
+      | (DefT (_, _, NullT), Null)
+      | (DefT (_, _, VoidT), Void) ->
+        true
+      | _ -> false
+    in
+    fun cx trace v reason l key sense enum result ->
+      match (v, enum) with
+      | (_, One e) when enum_match sense (v, e) && not sense -> ()
+      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) ->
+        let l = matching_sentinel_prop reason key (SingletonStrT sentinel) in
+        rec_flow_t cx trace ~use_op:unknown_use (l, result)
+      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) ->
+        let l = matching_sentinel_prop reason key (SingletonNumT sentinel) in
+        rec_flow_t cx trace ~use_op:unknown_use (l, result)
+      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) ->
+        let l = matching_sentinel_prop reason key (SingletonBoolT sentinel) in
+        rec_flow_t cx trace ~use_op:unknown_use (l, result)
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), Many enums) when sense ->
+        UnionEnumSet.iter
+          (fun enum ->
+            if enum_match sense (v, enum) |> not then
+              sentinel_refinement cx trace v reason l key sense (One enum) result)
+          enums
+      | (DefT (_, _, StrT _), One (Str _))
+      | (DefT (_, _, NumT _), One (Num _))
+      | (DefT (_, _, BoolT _), One (Bool _))
+      | (DefT (_, _, NullT), One Null)
+      | (DefT (_, _, VoidT), One Void)
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), Many _) ->
+        rec_flow_t cx trace ~use_op:unknown_use (l, result)
+      (* types don't match (would've been matched above) *)
+      (* we don't prune other types like objects or instances, even though
+           a test like `if (ObjT === StrT)` seems obviously unreachable, but
+           we have to be wary of toString and valueOf on objects/instances. *)
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), _) when sense -> ()
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), _)
+      | _ ->
+        (* property exists, but is not something we can use for refinement *)
+        rec_flow_t cx trace ~use_op:unknown_use (l, result)
 
   (*******************************************************************)
   (* /predicate *)
