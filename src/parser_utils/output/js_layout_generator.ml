@@ -2812,9 +2812,23 @@ and call_args ~opts ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }
   (* Add internal comments *)
   let args = args @ internal_comments in
   let args_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line args in
+  (* Match prettier's behavior by preserving whether a single template argument begins on new line *)
+  let break =
+    match arguments with
+    | [
+     Ast.Expression.Expression
+       (arg_loc, (Ast.Expression.TemplateLiteral _ | Ast.Expression.TaggedTemplate _));
+    ]
+      when internal_comments = [] ->
+      if Loc.(loc.start.line = arg_loc.start.line) then
+        Some Empty
+      else
+        Some pretty_hardline
+    | _ -> Some softline
+  in
   source_location_with_comments
     ?comments
-    (loc, group [wrap_and_indent (Atom lparen, Atom ")") args_layout])
+    (loc, group [wrap_and_indent ?break (Atom lparen, Atom ")") args_layout])
 
 and call_type_args ~opts ~less_than (loc, { Ast.Expression.CallTypeArgs.arguments = args; comments })
     =

@@ -2468,4 +2468,7 @@ let tests =
              (expression_of_string "foo<\n  a,\n  \n  \n  b,\n>()");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  //L\n  b,\n>()" );
+         ( "call_template_wrapping" >:: fun ctxt ->
+           assert_expression_string ~ctxt ~pretty:true "foo(`a\nb`)";
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  `a\nb`,\n)" );
        ]
