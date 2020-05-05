@@ -436,6 +436,7 @@ module UntypedFlowInitRunner :
         init ~reader;
         let mk_ccx file file_sig = { Codemod_context.UntypedFlowInit.file; reader; file_sig } in
         let abstract_reader = Abstract_state_reader.State_reader reader in
+        log_input_files filename_set;
         let%lwt result =
           MultiWorkerLwt.call
             workers
