@@ -1607,7 +1607,6 @@ let dump_error_message =
         (Base.Option.value ~default:"<None>" example_member)
     | EEnumMemberUsedAsType { reason; enum_name } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
-    | EEnumCheckedInIf reason -> spf "EEnumCheckedInIf (%s)" (dump_reason cx reason)
     | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
       spf
         "EAssignExportedConstLikeBinding (%s) (%s) (%s)"

@@ -627,60 +627,6 @@ References:
                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ equality.js:47:11
-
-Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
-
-   equality.js:47:11
-   47| if (e === E.A) { } // Error
-                 ^^^
-
-References:
-   equality.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- equality.js:48:5
-
-Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
-
-   equality.js:48:5
-   48| if (E.A === e) { } // Error
-           ^^^
-
-References:
-   equality.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ equality.js:49:27
-
-Invalid check of an enum in an if statement. Please use a switch statement to exhaustively check `E` [1] instead.
-
-   equality.js:49:27
-   49| if (s.length > 0 && e === E.A) { } // Error
-                                 ^^^
-
-References:
-   equality.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------- equality.js:58:8
 
 Cannot compare string [1] to `E` [2].
@@ -3257,4 +3203,4 @@ References:
 
 
 
-Found 178 errors
+Found 175 errors

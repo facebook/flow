@@ -44,9 +44,9 @@ e !== s; // Error
 e === E.A; // OK
 e === e; // OK
 
-if (e === E.A) { } // Error
-if (E.A === e) { } // Error
-if (s.length > 0 && e === E.A) { } // Error
+if (e === E.A) { } // OK
+if (E.A === e) { } // OK
+if (s.length > 0 && e === E.A) { } // OK
 
 while (e === E.A) { } // OK
 do {} while (e === E.A) // OK

@@ -676,14 +676,10 @@ let strict_equatable_error cond_context (l, r) =
   | (DefT (_, _, EnumObjectT _), _)
   | (_, DefT (_, _, EnumObjectT _)) ->
     Some (Lazy.force comparison_error)
-  (* We don't allow for the comparison of enums in if statements. *)
+  (* We allow comparison between enums of the same type. *)
   | (DefT (_, _, EnumT { enum_id = id1; _ }), DefT (_, _, EnumT { enum_id = id2; _ }))
     when ALoc.equal_id id1 id2 ->
-    begin
-      match cond_context with
-      | Some IfTest -> Some (Error_message.EEnumCheckedInIf (reason_of_t l))
-      | _ -> None
-    end
+    None
   (* We allow the comparison of enums to null and void outside of switches. *)
   | (DefT (_, _, EnumT _), DefT (_, _, (NullT | VoidT)))
   | (DefT (_, _, (NullT | VoidT)), DefT (_, _, EnumT _)) ->
