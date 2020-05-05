@@ -100,6 +100,6 @@ val better_quote : string -> string
 
 val utf8_escape : quote:string -> string -> string
 
-val wrap_in_parens : Layout.layout_node -> Layout.layout_node
+val wrap_in_parens : ?with_break:bool -> Layout.layout_node -> Layout.layout_node
 
 val with_semicolon : Layout.layout_node -> Layout.layout_node

@@ -52,7 +52,11 @@ let with_semicolon node = fuse [node; Atom ";"]
 
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
 
-let wrap_in_parens item = group [Atom "("; item; Atom ")"]
+let wrap_in_parens ?(with_break = false) item =
+  if with_break then
+    group [wrap_and_indent ?break:(Some pretty_hardline) (Atom "(", Atom ")") [item]]
+  else
+    group [Atom "("; item; Atom ")"]
 
 let wrap_in_parens_on_break item =
   wrap_and_indent (IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [item]
@@ -1032,7 +1036,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
           (* Logical expressions inside a nullish coalese expression must be wrapped in parens *)
           | ( E.Logical.NullishCoalesce,
               (_, E.Logical { E.Logical.operator = E.Logical.And | E.Logical.Or; _ }) ) ->
-            wrap_in_parens (expression ~opts expr)
+            let (leading, _) = Comment_attachment.expression_comment_bounds expr in
+            wrap_in_parens ~with_break:(leading <> None) (expression ~opts expr)
           | _ -> expression_with_parens ~precedence ~ctxt ~opts expr
         in
         let left = expression_with_parens ~precedence ~ctxt ~opts left in
@@ -1059,7 +1064,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.New { E.New.callee; targs; arguments; comments } ->
         let callee_layout =
           if definitely_needs_parens ~precedence ctxt callee || contains_call_expression callee then
-            wrap_in_parens (expression ~ctxt ~opts callee)
+            let (leading, _) = Comment_attachment.expression_comment_bounds callee in
+            wrap_in_parens ~with_break:(leading <> None) (expression ~ctxt ~opts callee)
           else
             expression ~ctxt ~opts callee
         in
@@ -1203,7 +1209,8 @@ and call ?(optional = false) ~precedence ~ctxt ~opts call_node loc =
 
 and expression_with_parens ~opts ~precedence ~(ctxt : expression_context) expr =
   if definitely_needs_parens ~precedence ctxt expr then
-    wrap_in_parens (expression ~ctxt:normal_context ~opts expr)
+    let (leading, _) = Comment_attachment.expression_comment_bounds expr in
+    wrap_in_parens ~with_break:(leading <> None) (expression ~ctxt:normal_context ~opts expr)
   else
     expression ~ctxt ~opts expr
 

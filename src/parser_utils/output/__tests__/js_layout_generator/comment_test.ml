@@ -174,7 +174,8 @@ let tests =
     ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
     ( "logical_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt ~pretty:true "a && //L\n  b";
-      assert_expression_string ~ctxt ~pretty:true "a &&\n  //L\n  b" );
+      assert_expression_string ~ctxt ~pretty:true "a &&\n  //L\n  b";
+      assert_expression_string ~ctxt ~pretty:true "(\n  //L\n  a &&\n    b\n) ??\n  c" );
     ("tagged_template" >:: fun ctxt -> assert_expression_string ~ctxt "/*L1*/A/*L2*/`B`/*T*/");
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
@@ -189,7 +190,8 @@ let tests =
       let a80 = String.make 80 'a' in
       assert_expression_string ~ctxt "new Foo(/*I*/)";
       assert_expression_string ~ctxt ~pretty:true ("new Foo(\n  " ^ a80 ^ ",\n  /*I*/\n)");
-      assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  /*I*/\n)" );
+      assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  /*I*/\n)";
+      assert_expression_string ~ctxt ~pretty:true "new (\n  //L\n  A ||\n    B\n)" );
     ( "object" >:: fun ctxt ->
       assert_expression_string ~ctxt "{/*I*/}";
       assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  /*I*/\n}";
@@ -217,6 +219,8 @@ let tests =
         "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...,\n};";
       (* Leading comments on variance nodes are included in comment bounds of property *)
       assert_statement_string ~ctxt ~pretty:true "type T = {\n  +a: any,\n  //L\n  +b: any,\n};" );
+    ( "parenthesized_expression" >:: fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true "(\n  //L\n  a + b\n) * c" );
     ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
     ( "switch_case" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );
