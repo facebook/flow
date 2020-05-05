@@ -3024,12 +3024,27 @@ and type_predicate ~opts (loc, { Ast.Type.Predicate.kind; comments }) =
           | Inferred -> Empty);
         ] )
 
-and type_union_or_intersection ~opts ~sep ts =
-  let sep = fuse [sep; pretty_space] in
+and type_union_or_intersection ~opts ~sep loc ts comments =
+  (* Do not break at the start if the last leading comment is on an earlier line,
+     as a line break will already have been inserted. *)
+  let inline_start =
+    match comments with
+    | None -> false
+    | Some { Ast.Syntax.leading; _ } ->
+      (match List.rev leading with
+      | (last_leading_loc, _) :: _ when Loc.(last_leading_loc._end.line < loc.start.line) -> true
+      | _ -> false)
+  in
   list
-    ~inline:(false, true)
+    ~inline:(inline_start, true)
     (List.mapi
        (fun i t ->
+         let type_separator =
+           comment_aware_separator
+             ~no_comment:pretty_space
+             (Comment_attachment.type_comment_bounds t)
+         in
+         let sep = fuse [sep; type_separator] in
          fuse
            [
              ( if i = 0 then
@@ -3362,13 +3377,13 @@ and type_union ~opts loc { Ast.Type.Union.types = (t0, t1, ts); comments } =
   layout_node_with_comments_opt
     loc
     comments
-    (type_union_or_intersection ~opts ~sep:(Atom "|") (t0 :: t1 :: ts))
+    (type_union_or_intersection ~opts ~sep:(Atom "|") loc (t0 :: t1 :: ts) comments)
 
 and type_intersection ~opts loc { Ast.Type.Intersection.types = (t0, t1, ts); comments } =
   layout_node_with_comments_opt
     loc
     comments
-    (type_union_or_intersection ~opts ~sep:(Atom "&") (t0 :: t1 :: ts))
+    (type_union_or_intersection ~opts ~sep:(Atom "&") loc (t0 :: t1 :: ts) comments)
 
 and type_with_parens ~opts t =
   let module T = Ast.Type in

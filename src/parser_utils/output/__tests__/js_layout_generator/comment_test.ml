@@ -222,6 +222,12 @@ let tests =
       assert_statement_string ~ctxt "type Foo=Bar</*I*/>;";
       assert_statement_string ~ctxt ~pretty:true ("type Foo = Bar<\n  " ^ a80 ^ ",\n  /*I*/\n>;");
       assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  /*I*/\n>;" );
+    ( "union_type" >:: fun ctxt ->
+      let b80 = String.make 80 'b' in
+      assert_statement_string ~ctxt ~pretty:true ("type Foo =\n//L\n| a\n  | " ^ b80 ^ ";");
+      assert_statement_string ~ctxt ~pretty:true ("type Foo = \n  | a\n  | //L\n  " ^ b80 ^ ";");
+      assert_statement_string ~ctxt ~pretty:true ("type Foo = \n  | a\n  |\n  //L\n  " ^ b80 ^ ";")
+    );
     ( "variable_declaration" >:: fun ctxt ->
       assert_statement_string ~ctxt "let A=B;/*T*/";
       assert_statement_string ~ctxt ~pretty:true "let A = //L\nB;";
