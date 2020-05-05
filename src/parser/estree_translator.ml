@@ -144,7 +144,7 @@ with type t = Impl.t = struct
         let alternate =
           match alternate with
           | None -> null
-          | Some { If.Alternate.body; comments = alternate_comments } ->
+          | Some (_, { If.Alternate.body; comments = alternate_comments }) ->
             statement (Comment_attachment.statement_add_comments body alternate_comments)
         in
         node

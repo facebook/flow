@@ -164,6 +164,9 @@ let tests =
       assert_statement_string ~ctxt "type T=(/*I*/)=>a;";
       assert_statement_string ~ctxt ~pretty:true "type T = (\n  a\n  /*I*/\n) => b;";
       assert_statement_string ~ctxt ~pretty:true "type T = (\n  a\n  \n  /*I*/\n) => b;" );
+    ( "if_statement" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "if (true) {} //L\n else {}";
+      assert_statement_string ~ctxt ~pretty:true "if (true) {}\n//L\nelse {}" );
     ("jsx_expression_container" >:: fun ctxt -> assert_expression_string ~ctxt "<A>{/*I*/}</A>");
     ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
     ( "logical_expression" >:: fun ctxt ->

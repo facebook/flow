@@ -294,7 +294,7 @@ module Statements = struct
   let if_ ?comments test consequent alternate =
     (Loc.none, If { If.test; consequent; alternate; comments })
 
-  let if_alternate ?comments body = { If.Alternate.body; comments }
+  let if_alternate ?(loc = Loc.none) ?comments body = (loc, { If.Alternate.body; comments })
 
   let return ?(loc = Loc.none) ?comments expr = (loc, Return { Return.argument = expr; comments })
 

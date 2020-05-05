@@ -848,8 +848,8 @@ let program
       | (Some _, None)
       | (None, Some _) ->
         None
-      | ( Some { Alternate.body = body1; comments = comments1 },
-          Some { Alternate.body = body2; comments = comments2 } ) ->
+      | ( Some (loc, { Alternate.body = body1; comments = comments1 }),
+          Some (_, { Alternate.body = body2; comments = comments2 }) ) ->
         let body_diff = Some (diff_if_changed statement body1 body2) in
         let comments_diff = syntax_opt loc comments1 comments2 in
         join_diff_list [body_diff; comments_diff]

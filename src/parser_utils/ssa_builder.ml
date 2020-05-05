@@ -585,8 +585,8 @@ struct
           this#run_to_completion (fun () ->
               ignore
               @@ Flow_ast_mapper.map_opt
-                   (fun { Alternate.body; comments } ->
-                     { Alternate.body = this#statement body; comments })
+                   (fun (loc, { Alternate.body; comments }) ->
+                     (loc, { Alternate.body = this#statement body; comments }))
                    alternate)
         in
         (* merge environments *)

@@ -569,7 +569,12 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
           comments
           begin
             match alternate with
-            | Some { S.If.Alternate.body; comments } ->
+            | Some (loc, ({ S.If.Alternate.body; comments } as alternate)) ->
+              let alternate_separator =
+                comment_aware_separator
+                  ~no_comment:pretty_space
+                  (Comment_attachment.if_alternate_statement_comment_bounds loc alternate)
+              in
               fuse
                 [
                   group
@@ -577,7 +582,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                       statement_with_test "if" (expression ~opts test);
                       statement_after_test ~opts consequent;
                     ];
-                  pretty_space;
+                  alternate_separator;
                   layout_node_with_comments_opt loc comments
                   @@ fuse_with_space [Atom "else"; statement ~opts ~pretty_semicolon body];
                 ]

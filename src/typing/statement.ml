@@ -466,7 +466,7 @@ and statement_decl cx =
     statement_decl cx consequent;
     (match alternate with
     | None -> ()
-    | Some { If.Alternate.body; comments = _ } -> statement_decl cx body)
+    | Some (_, { If.Alternate.body; comments = _ }) -> statement_decl cx body)
   | (_, Labeled { Labeled.body; _ }) -> statement_decl cx body
   | (_, Break _) -> ()
   | (_, Continue _) -> ()
@@ -856,11 +856,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let (else_ast, else_abnormal) =
       match alternate with
       | None -> (None, None)
-      | Some { If.Alternate.body; comments } ->
+      | Some (loc, { If.Alternate.body; comments }) ->
         let (body_ast, else_abnormal) =
           Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
         in
-        (Some { If.Alternate.body = body_ast; comments }, else_abnormal)
+        (Some (loc, { If.Alternate.body = body_ast; comments }), else_abnormal)
     in
     (* grab a reference to env after else branch *)
     let else_env = Env.peek_env () in

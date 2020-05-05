@@ -455,7 +455,9 @@ and Statement : sig
 
   module If : sig
     module Alternate : sig
-      type ('M, 'T) t = {
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
         body: ('M, 'T) Statement.t;
         comments: ('M, unit) Syntax.t option;
       }
