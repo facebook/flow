@@ -2944,7 +2944,10 @@ and type_args ~opts (loc, { Ast.Type.TypeArgs.arguments; comments }) =
   let args =
     Base.List.mapi
       ~f:(fun i ((loc, _) as arg) ->
-        let comment_bounds = Comment_attachment.type_comment_bounds arg in
+        let comment_bounds =
+          Comment_attachment.comment_bounds_without_trailing_line_comment
+            (Comment_attachment.type_comment_bounds arg)
+        in
         (* Add trailing comma to last argument *)
         let arg_layout = type_ ~opts arg in
         let arg_layout =

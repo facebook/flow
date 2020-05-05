@@ -598,6 +598,15 @@ let comment_bounds loc node f =
   ignore (f collector node);
   collector#comment_bounds
 
+(* Remove the trailing comment bound if it is a line comment *)
+let comment_bounds_without_trailing_line_comment (leading, trailing) =
+  match trailing with
+  | Some (_, { Ast.Comment.kind = Ast.Comment.Line; _ }) -> (leading, None)
+  | _ -> (leading, trailing)
+
+let collect_without_trailing_line_comment collector =
+  comment_bounds_without_trailing_line_comment collector#comment_bounds
+
 (* Return the first leading and last trailing comment of a statement *)
 let statement_comment_bounds ((loc, _) as stmt : (Loc.t, Loc.t) Statement.t) :
     Loc.t Comment.t option * Loc.t Comment.t option =
@@ -633,7 +642,7 @@ let object_property_comment_bounds property =
       ignore (collector#spread_property p);
       collector
   in
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let object_type_property_comment_bounds property =
   let open Ast.Type.Object in
@@ -660,7 +669,7 @@ let object_type_property_comment_bounds property =
       ignore (collector#object_call_property_type p);
       collector
   in
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let switch_case_comment_bounds (loc, case) =
   let collector = new comment_bounds_collector ~loc in
@@ -670,42 +679,42 @@ let switch_case_comment_bounds (loc, case) =
 let function_param_comment_bounds (loc, param) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#function_param (loc, param));
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let function_rest_param_comment_bounds (loc, param) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#function_rest_param (loc, param));
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let function_type_param_comment_bounds (loc, param) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#function_param_type (loc, param));
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let function_type_rest_param_comment_bounds (loc, param) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#function_rest_param_type (loc, param));
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let array_element_comment_bounds loc element =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#array_element element);
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let array_pattern_element_comment_bounds loc element =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#pattern_array_e element);
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let expression_or_spread_comment_bounds loc expr_or_spread =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#expression_or_spread expr_or_spread);
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let call_type_arg_comment_bounds loc arg =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#call_type_arg arg);
-  collector#comment_bounds
+  collect_without_trailing_line_comment collector
 
 let function_body_comment_bounds body =
   let loc =

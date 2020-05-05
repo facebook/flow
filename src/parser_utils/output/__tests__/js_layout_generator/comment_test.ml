@@ -114,7 +114,8 @@ let tests =
     ( "array" >:: fun ctxt ->
       assert_expression_string ~ctxt "[/*I*/]";
       assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  /*I*/\n]";
-      assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  /*I*/\n]" );
+      assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  /*I*/\n]";
+      assert_expression_string ~ctxt ~pretty:true "[\n  a //T\n  ,\n  \n  //L\n  b,\n]" );
     ( "array_pattern" >:: fun ctxt ->
       assert_statement_string ~ctxt "var[/*I*/];";
       assert_statement_string ~ctxt ~pretty:true "var [\n  a\n  /*I*/\n];";
