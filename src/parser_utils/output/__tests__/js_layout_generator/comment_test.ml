@@ -185,7 +185,8 @@ let tests =
       assert_expression_string ~ctxt ~pretty:true "foo /*C*/.bar";
       assert_expression_string ~ctxt ~pretty:true "foo\n//C\n.bar";
       assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/\n.bar";
-      assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/.bar" );
+      assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo[\n  //L\n  a\n]" );
     ( "new" >:: fun ctxt ->
       let a80 = String.make 80 'a' in
       assert_expression_string ~ctxt "new Foo(/*I*/)";

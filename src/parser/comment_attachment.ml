@@ -735,3 +735,8 @@ let if_alternate_statement_comment_bounds loc alternate =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#if_alternate_statement loc alternate);
   collector#comment_bounds
+
+let member_property_comment_bounds loc property =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#member_property property);
+  collector#comment_bounds

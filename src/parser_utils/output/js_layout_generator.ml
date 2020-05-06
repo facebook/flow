@@ -1324,6 +1324,31 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
     | (true, false) -> (Atom "[", Atom "]")
     | (true, true) -> (Atom "?.[", Atom "]")
   in
+  let property_layout =
+    match property with
+    | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name = id; comments }) ->
+      source_location_with_comments ?comments (loc, Atom id)
+    | Ast.Expression.Member.PropertyPrivateName
+        ( loc,
+          {
+            Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = id_comments });
+            comments = private_comments;
+          } ) ->
+      let comments = Flow_ast_utils.merge_comments ~inner:id_comments ~outer:private_comments in
+      source_location_with_comments ?comments (loc, Atom ("#" ^ id))
+    | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt ~opts expr
+  in
+  (* If this is a computed property with leading comments we must break and indent so that
+     comments begin on the line after the left delimiter. *)
+  let (leading_property, _) =
+    Comment_attachment.member_property_comment_bounds property_loc property
+  in
+  let property_layout_with_delims =
+    if computed && leading_property <> None then
+      group [wrap_and_indent ?break:(Some pretty_hardline) (ldelim, rdelim) [property_layout]]
+    else
+      fuse [ldelim; property_layout; rdelim]
+  in
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
@@ -1350,25 +1375,7 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
              pretty_hardline
            | _ -> Empty
          end;
-         ldelim;
-         begin
-           match property with
-           | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name = id; comments })
-             ->
-             source_location_with_comments ?comments (loc, Atom id)
-           | Ast.Expression.Member.PropertyPrivateName
-               ( loc,
-                 {
-                   Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = id_comments });
-                   comments = private_comments;
-                 } ) ->
-             let comments =
-               Flow_ast_utils.merge_comments ~inner:id_comments ~outer:private_comments
-             in
-             source_location_with_comments ?comments (loc, Atom ("#" ^ id))
-           | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt ~opts expr
-         end;
-         rdelim;
+         property_layout_with_delims;
        ]
 
 and string_literal (loc, { Ast.StringLiteral.value; comments; _ }) =
