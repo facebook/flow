@@ -1670,8 +1670,7 @@ and arrow_function
       fuse
         [
           option (type_parameter ~opts) tparams;
-          params;
-          function_return ~opts ~arrow:true return predicate;
+          group [params; function_return ~opts ~arrow:true return predicate];
         ]
   in
   let body_separator =
@@ -1754,11 +1753,14 @@ and function_base ~opts ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~
        [
          prefix;
          option (type_parameter ~opts) tparams;
-         layout_node_with_comments_opt
-           params_loc
-           params_comments
-           (function_params ~ctxt:normal_context ~opts params);
-         function_return ~opts ~arrow:false return predicate;
+         group
+           [
+             layout_node_with_comments_opt
+               params_loc
+               params_comments
+               (function_params ~ctxt:normal_context ~opts params);
+             function_return ~opts ~arrow:false return predicate;
+           ];
          pretty_space;
          begin
            match body with
@@ -1826,7 +1828,7 @@ and function_params
       params_layout
   in
   let params_layout = list_add_internal_comments params params_layout comments in
-  group [wrap_and_indent (Atom "(", Atom ")") params_layout]
+  wrap_and_indent (Atom "(", Atom ")") params_layout
 
 and function_return ~opts ~arrow return predicate =
   (* Function return types in arrow functions must be wrapped in parens or else arrow
@@ -3158,12 +3160,12 @@ and type_function_params ~opts (loc, { Ast.Type.Function.Params.params; rest; co
   let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
   let params_layout = list_add_internal_comments params params_layout comments in
   layout_node_with_comments_opt loc comments
-  @@ group [wrap_and_indent (Atom "(", Atom ")") params_layout]
+  @@ fuse [wrap_and_indent (Atom "(", Atom ")") params_layout]
 
 and type_function
     ~opts ~sep loc { Ast.Type.Function.params; return; tparams; comments = func_comments } =
   layout_node_with_comments_opt loc func_comments
-  @@ fuse
+  @@ group
        [
          option (type_parameter ~opts) tparams;
          type_function_params ~opts params;

@@ -2493,4 +2493,24 @@ let tests =
              (expression_of_string "<\n  a,\n  \n  \n  b,\n>() => {}");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  //L\n  b,\n>() => {}" );
+         ( "function_params_break_before_return_type" >:: fun ctxt ->
+           (* If both function params and return type can break, params should break first *)
+           let a20 = String.make 20 'a' in
+           let b20 = String.make 20 'b' in
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             ("function f(\n  " ^ a20 ^ ",\n  " ^ b20 ^ ",\n): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")
+             (statement_of_string
+                ("function f(" ^ a20 ^ ", " ^ b20 ^ "): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")) );
+         ( "function_type_params_break_before_return_type" >:: fun ctxt ->
+           (* If both function param types and return type can break, params should break first *)
+           let a20 = String.make 20 'a' in
+           let b20 = String.make 20 'b' in
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             ("type T = (\n  " ^ a20 ^ ",\n  " ^ b20 ^ "\n) => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")
+             (statement_of_string
+                ("type T = (" ^ a20 ^ ", " ^ b20 ^ ") => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")) );
        ]
