@@ -2350,6 +2350,17 @@ let tests =
              (statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};" );
+         ( "object_pattern_preserve_blank_lines_between_properties" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  \n  b\n};";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "var {\n  a,\n  \n  b\n};"
+             (statement_of_string "var {\n  a,\n  \n  \n b\n};");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  //L\n  b\n};" );
          ( "switch_preserve_blank_lines_between_cases" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string

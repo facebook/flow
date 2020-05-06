@@ -1423,7 +1423,8 @@ and pattern ?(ctxt = normal_context) ~opts ((loc, pat) : (Loc.t, Loc.t) Ast.Patt
       | P.Object { P.Object.properties; annot; comments } ->
         let props =
           List.map
-            (function
+            (fun property ->
+              match property with
               | P.Object.Property (loc, { P.Object.Property.key; pattern = pat; default; shorthand })
                 ->
                 let prop = pattern_object_property_key ~opts key in
@@ -1437,29 +1438,25 @@ and pattern ?(ctxt = normal_context) ~opts ((loc, pat) : (Loc.t, Loc.t) Ast.Patt
                   | Some expr -> fuse_with_default ~opts prop expr
                   | None -> prop
                 in
-                source_location_with_comments (loc, prop)
-              | P.Object.RestElement (loc, el) -> rest_element ~opts loc el)
+                let prop_layout = source_location_with_comments (loc, prop) in
+                let comment_bounds =
+                  Comment_attachment.object_pattern_property_comment_bounds loc property
+                in
+                (loc, comment_bounds, prop_layout)
+              | P.Object.RestElement (loc, el) ->
+                let prop_layout = rest_element ~opts loc el in
+                let comment_bounds =
+                  Comment_attachment.object_pattern_property_comment_bounds loc property
+                in
+                (loc, comment_bounds, prop_layout))
             properties
         in
+        let props_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line props in
         (* Add internal comments *)
-        let props =
-          match internal_comments comments with
-          | None -> props
-          | Some (_, _, comments) -> props @ [comments]
-        in
+        let props_layout = list_add_internal_comments props props_layout comments in
         layout_node_with_comments_opt loc comments
         @@ group
-             [
-               new_list
-                 ~wrap:(Atom "{", Atom "}")
-                 ~sep:
-                   (Atom ",")
-                   (* Object rest can have comma but most tooling still apply old
-          pre-spec rules that disallow it so omit it to be safe *)
-                 ~trailing_sep:false
-                 props;
-               hint (type_annotation ~opts) annot;
-             ]
+             [wrap_and_indent (Atom "{", Atom "}") props_layout; hint (type_annotation ~opts) annot]
       | P.Array { P.Array.elements; annot; comments } ->
         let element_loc = function
           | P.Array.Hole loc -> loc

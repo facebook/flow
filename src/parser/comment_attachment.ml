@@ -671,6 +671,11 @@ let object_type_property_comment_bounds property =
   in
   collect_without_trailing_line_comment collector
 
+let object_pattern_property_comment_bounds loc property =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#pattern_object_p property);
+  collect_without_trailing_line_comment collector
+
 let switch_case_comment_bounds (loc, case) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#switch_case loc case);

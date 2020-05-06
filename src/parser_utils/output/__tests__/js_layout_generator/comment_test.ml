@@ -200,8 +200,10 @@ let tests =
       assert_expression_string ~ctxt ~pretty:true "{\n  a: //L\n  b,\n}";
       assert_expression_string ~ctxt ~pretty:true "{\n  a:\n  //L\n  b,\n}" );
     ( "object_pattern" >:: fun ctxt ->
+      let b80 = String.make 80 'b' in
       assert_statement_string ~ctxt "var{/*I*/};";
-      assert_statement_string ~ctxt "var{a,/*I*/};" );
+      assert_statement_string ~ctxt ~pretty:true ("var {\n  a,\n  " ^ b80 ^ "\n  /*I*/\n};");
+      assert_statement_string ~ctxt ~pretty:true ("var {\n  a,\n  " ^ b80 ^ "\n  \n  /*I*/\n};") );
     ( "object_type" >:: fun ctxt ->
       assert_statement_string ~ctxt "type T={/*I*/};";
       assert_statement_string ~ctxt "type T={a:any,/*I*/};";
