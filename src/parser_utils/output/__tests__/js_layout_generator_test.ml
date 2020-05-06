@@ -18,7 +18,7 @@ module L = Layout_builder
 
 let opts = Js_layout_generator.default_opts
 
-let preserve_formatting_opts = { Js_layout_generator.preserve_formatting = true }
+let preserve_formatting_opts = Js_layout_generator.{ default_opts with preserve_formatting = true }
 
 let tests =
   "js_layout_generator"

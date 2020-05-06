@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type opts = { preserve_formatting: bool }
+type opts = {
+  preserve_formatting: bool;
+  bracket_spacing: bool;
+}
 
 type expression_context = {
   left: expression_context_left;

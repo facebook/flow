@@ -8,7 +8,10 @@
 module Ast = Flow_ast
 open Layout
 
-type opts = { preserve_formatting: bool }
+type opts = {
+  preserve_formatting: bool;
+  bracket_spacing: bool;
+}
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
    ambiguity. We pass whether we're in one of these special cases down through
@@ -35,7 +38,7 @@ and expression_context_group =
 
 (* `for ((x in y);;);` would become a for-in *)
 
-let default_opts = { preserve_formatting = false }
+let default_opts = { preserve_formatting = false; bracket_spacing = true }
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
@@ -930,8 +933,10 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
           | first_prop :: _ ->
             if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
               Some pretty_hardline
-            else
+            else if opts.bracket_spacing then
               Some pretty_line
+            else
+              Some softline
         in
         let props_layout = wrap_and_indent ?break (Atom "{", Atom "}") props in
         layout_node_with_comments_opt loc comments @@ group [props_layout]

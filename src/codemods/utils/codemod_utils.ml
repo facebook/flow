@@ -32,7 +32,7 @@ let save_ast_diff file_key ast ast' =
   else
     let file_path = File_key.to_string file_key in
     let file_input = File_input.FileName file_path in
-    let layout_opts = { Js_layout_generator.preserve_formatting = true } in
+    let layout_opts = { Js_layout_generator.preserve_formatting = true; bracket_spacing = false } in
     let patch = Replacement_printer.mk_patch_ast_differ_unsafe ~opts:layout_opts diff file_input in
     Diff_heaps.set_diff ~audit:Expensive.ok file_key patch
 

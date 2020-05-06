@@ -266,4 +266,11 @@ let tests =
       assert_expression_string ~ctxt ~pretty:true "{ a: 1 }";
       (* Object that fits on single line but wraps is printed as wrapping *)
       assert_expression_string ~ctxt ~pretty:true "{\n  a: 1,\n}" );
+    ( "bracket_spacing" >:: fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true "{ a: 1 }";
+      assert_expression_string
+        ~ctxt
+        ~pretty:true
+        ~opts:Js_layout_generator.{ default_opts with bracket_spacing = false }
+        "{a: 1}" );
   ]
