@@ -48,6 +48,11 @@ CAMLprim value marshal_and_compress_stub(value data) {
     compressed_value,
     uncompressed_size,
     max_compression_size);
+  if (compressed_size == 0) {
+    caml_raise_with_string(
+      *caml_named_value("c_assertion_failure"),
+      "LZ4 failed to compress");
+  }
   // It's unfortunate we need to copy. But we don't know how large the OCaml
   // string will be until after we compress.
   // TODO: When we're >= OCaml 4.06, switch to caml_alloc_initialized_string
