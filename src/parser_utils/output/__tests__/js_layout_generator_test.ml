@@ -2513,4 +2513,27 @@ let tests =
              ("type T = (\n  " ^ a20 ^ ",\n  " ^ b20 ^ "\n) => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")
              (statement_of_string
                 ("type T = (" ^ a20 ^ ", " ^ b20 ^ ") => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")) );
+         ( "jsx_in_new_expression" >:: fun ctxt ->
+           (* Verify that JSX wrapped in parens is not reprinted with extra blank lines before and after *)
+           let a80 = String.make 80 'a' in
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             ( "new Foo(\n"
+             ^ "  a,\n"
+             ^ "  <jsx>\n"
+             ^ ("    " ^ a80 ^ "\n")
+             ^ "  </jsx>,\n"
+             ^ "  b,\n"
+             ^ ")" )
+             (expression_of_string
+                ( "new Foo(\n"
+                ^ "  a,\n"
+                ^ "  (\n"
+                ^ "    <jsx>\n"
+                ^ ("  " ^ a80 ^ "\n")
+                ^ "    </jsx>\n"
+                ^ "  ),\n"
+                ^ "  b,\n"
+                ^ ")" )) );
        ]

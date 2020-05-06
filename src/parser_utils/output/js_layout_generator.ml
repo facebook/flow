@@ -1087,7 +1087,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
              [
                fuse_with_space [Atom "new"; callee_layout];
                option (call_type_args ~opts ~less_than:"<") targs;
-               option (call_args ~opts ~lparen:"(") arguments;
+               option (call_args ~opts ~is_new:true ~lparen:"(") arguments;
              ]
       | E.Unary { E.Unary.operator; argument; comments } ->
         let (s_operator, needs_space) =
@@ -1217,7 +1217,7 @@ and call ?(optional = false) ~precedence ~ctxt ~opts call_node loc =
        [
          expression_with_parens ~precedence ~ctxt ~opts callee;
          targs;
-         call_args ~opts ~lparen arguments;
+         call_args ~opts ~is_new:false ~lparen arguments;
        ])
 
 and expression_with_parens ~opts ~precedence ~(ctxt : expression_context) expr =
@@ -2887,7 +2887,7 @@ and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
     ?comments
     (loc, group [wrap_and_indent (Atom "<", Atom ">") params_layout])
 
-and call_args ~opts ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }) =
+and call_args ~opts ~is_new ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }) =
   let arg_loc = function
     | Ast.Expression.Expression (loc, _) -> loc
     | Ast.Expression.Spread (loc, _) -> loc
@@ -2897,6 +2897,21 @@ and call_args ~opts ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }
     match internal_comments comments with
     | None -> []
     | Some comments -> [comments]
+  in
+  (* Multiline JSX expression in new expressions are wrapped in parentheses by prettier. If we
+     encounter a multiline JSX expression in a new expression, expand its loc by one line in both
+     directions when determining adjacent whitespace to account for where the parentheses would be .*)
+  let expand_arg_loc loc arg =
+    let open Loc in
+    match arg with
+    | Ast.Expression.Expression (loc, (Ast.Expression.JSXElement _ | Ast.Expression.JSXFragment _))
+      when is_new && loc.start.line < loc._end.line ->
+      {
+        loc with
+        start = { loc.start with line = loc.start.line - 1 };
+        _end = { loc._end with line = loc._end.line + 1 };
+      }
+    | _ -> loc
   in
   let args =
     Base.List.mapi
@@ -2911,7 +2926,7 @@ and call_args ~opts ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }
           else
             arg_layout
         in
-        (loc, comment_bounds, arg_layout))
+        (expand_arg_loc loc arg, comment_bounds, arg_layout))
       arguments
   in
   (* Add internal comments *)
