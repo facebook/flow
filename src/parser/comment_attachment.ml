@@ -716,6 +716,11 @@ let call_type_arg_comment_bounds loc arg =
   ignore (collector#call_type_arg arg);
   collect_without_trailing_line_comment collector
 
+let type_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#type_param (loc, param));
+  collect_without_trailing_line_comment collector
+
 let function_body_comment_bounds body =
   let loc =
     match body with

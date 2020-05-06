@@ -877,7 +877,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               let (annot, { params = tps; comments }) = tparams in
               let annot' = this#on_loc_annot annot in
               let tps' = Base.List.map ~f:this#type_param tps in
-              let comments' = Base.Option.map ~f:this#syntax comments in
+              let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
               (annot', { params = tps'; comments = comments' }))
             tparams
         in

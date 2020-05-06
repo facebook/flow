@@ -413,7 +413,7 @@ and Type : sig
 
     and ('M, 'T) t' = {
       params: ('M, 'T) TypeParam.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end

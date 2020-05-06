@@ -239,6 +239,10 @@ let tests =
       assert_statement_string ~ctxt "type Foo=Bar</*I*/>;";
       assert_statement_string ~ctxt ~pretty:true ("type Foo = Bar<\n  " ^ a80 ^ ",\n  /*I*/\n>;");
       assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  /*I*/\n>;" );
+    ( "type_params" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt ~pretty:true ("<\n  " ^ a80 ^ ",\n  /*I*/\n>() => {}");
+      assert_expression_string ~ctxt ~pretty:true ("<\n  " ^ a80 ^ ",\n  \n  /*I*/\n>() => {}") );
     ( "union_type" >:: fun ctxt ->
       let b80 = String.make 80 'b' in
       assert_statement_string ~ctxt ~pretty:true ("type Foo =\n//L\n| a\n  | " ^ b80 ^ ";");

@@ -2849,16 +2849,32 @@ and type_param
     ]
 
 and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
+  let num_params = List.length params in
+  let internal_comments =
+    match internal_comments comments with
+    | None -> []
+    | Some comments -> [comments]
+  in
+  let params =
+    Base.List.mapi
+      ~f:(fun i ((loc, _) as param) ->
+        let param_layout = type_param ~opts param in
+        (* Add trailing comma to last parameter *)
+        let param_layout =
+          if i = num_params - 1 && internal_comments = [] then
+            fuse [param_layout; if_break (Atom ",") Empty]
+          else
+            param_layout
+        in
+        let comment_bounds = Comment_attachment.type_param_comment_bounds param in
+        (loc, comment_bounds, param_layout))
+      params
+  in
+  let params = params @ internal_comments in
+  let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
   source_location_with_comments
     ?comments
-    ( loc,
-      group
-        [
-          new_list
-            ~wrap:(Atom "<", Atom ">")
-            ~sep:(Atom ",")
-            (Base.List.map ~f:(type_param ~opts) params);
-        ] )
+    (loc, group [wrap_and_indent (Atom "<", Atom ">") params_layout])
 
 and call_args ~opts ~lparen (loc, { Ast.Expression.ArgList.arguments; comments }) =
   let arg_loc = function

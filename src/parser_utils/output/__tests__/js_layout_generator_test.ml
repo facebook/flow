@@ -2471,4 +2471,15 @@ let tests =
          ( "call_template_wrapping" >:: fun ctxt ->
            assert_expression_string ~ctxt ~pretty:true "foo(`a\nb`)";
            assert_expression_string ~ctxt ~pretty:true "foo(\n  `a\nb`,\n)" );
+         ( "type_params_preserve_blank_lines_between_params" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  \n  b,\n>() => {}";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "<\n  a,\n  \n  b,\n>() => {}"
+             (expression_of_string "<\n  a,\n  \n  \n  b,\n>() => {}");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  //L\n  b,\n>() => {}" );
        ]

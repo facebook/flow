@@ -1117,11 +1117,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                let leading = Peek.comments env in
                Expect.token env T_LESS_THAN;
                let params = params env ~require_default:false [] in
+               let internal = Peek.comments env in
                Expect.token env T_GREATER_THAN;
                let trailing = Eat.trailing_comments env in
                {
                  Type.TypeParams.params;
-                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                 comments =
+                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
                })
              env)
       ) else
