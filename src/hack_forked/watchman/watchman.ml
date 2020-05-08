@@ -68,14 +68,10 @@ module Watchman_process_helpers = struct
 end
 
 module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
-  Watchman_sig.S
-    with type 'a result = 'a Watchman_process.result
-     and type conn = Watchman_process.conn = struct
+  Watchman_sig.S with type conn = Watchman_process.conn = struct
   let ( >>= ) = Watchman_process.( >>= )
 
   let ( >|= ) = Watchman_process.( >|= )
-
-  type 'a result = 'a Watchman_process.result
 
   type conn = Watchman_process.conn
 
@@ -545,8 +541,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       watchman_instance ->
       string ->
       on_dead:(dead_env -> 'a) ->
-      on_alive:(env -> (env * 'a) Watchman_process.result) ->
-      (watchman_instance * 'a) Watchman_process.result =
+      on_alive:(env -> (env * 'a) Lwt.t) ->
+      (watchman_instance * 'a) Lwt.t =
     let on_dead' f dead_env = Watchman_process.return (Watchman_dead dead_env, f dead_env) in
     let on_alive' ~on_dead source f env =
       Watchman_process.catch

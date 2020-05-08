@@ -5,11 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS with type 'a result = 'a Lwt.t = struct
+module Lwt_watchman_process : Watchman_sig.WATCHMAN_PROCESS = struct
   include Watchman_sig.Types
   include Watchman.Watchman_process_helpers
-
-  type 'a result = 'a Lwt.t
 
   type conn = Buffered_line_reader_lwt.t * Lwt_io.output_channel
 
@@ -182,8 +180,6 @@ end
 module Watchman_mock = struct
   exception Not_available_in_mocking
 
-  type 'a result = 'a Lwt.t
-
   type conn
 
   include Watchman_sig.Types
@@ -248,7 +244,7 @@ module Watchman_mock = struct
 end
 
 module type S = sig
-  include Watchman_sig.S with type 'a result = 'a Lwt.t
+  include Watchman_sig.S
 end
 
 include ( val if Injector_config.use_test_stubbing then

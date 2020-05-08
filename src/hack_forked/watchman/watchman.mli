@@ -17,5 +17,4 @@ module Watchman_process_helpers : sig
   val sanitize_watchman_response : debug_logging:bool -> string -> Hh_json.json
 end
 
-module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
-  Watchman_sig.S with type 'a result = 'a Watchman_process.result
+module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) : Watchman_sig.S

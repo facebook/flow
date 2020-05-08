@@ -85,39 +85,37 @@ module Abstract_types = struct
 end
 
 module type WATCHMAN_PROCESS = sig
-  type 'a result
-
   type conn
 
   exception Read_payload_too_long
 
-  val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
+  val ( >>= ) : 'a Lwt.t -> ('a -> 'b Lwt.t) -> 'b Lwt.t
 
-  val ( >|= ) : 'a result -> ('a -> 'b) -> 'b result
+  val ( >|= ) : 'a Lwt.t -> ('a -> 'b) -> 'b Lwt.t
 
-  val return : 'a -> 'a result
+  val return : 'a -> 'a Lwt.t
 
-  val catch : f:(unit -> 'b result) -> catch:(Exception.t -> 'b result) -> 'b result
+  val catch : f:(unit -> 'b Lwt.t) -> catch:(Exception.t -> 'b Lwt.t) -> 'b Lwt.t
 
-  val list_fold_values : 'a list -> init:'b -> f:('b -> 'a -> 'b result) -> 'b result
+  val list_fold_values : 'a list -> init:'b -> f:('b -> 'a -> 'b Lwt.t) -> 'b Lwt.t
 
-  val with_timeout : Types.timeout -> (unit -> 'a result) -> 'a result
+  val with_timeout : Types.timeout -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 
-  val open_connection : unit -> conn result
+  val open_connection : unit -> conn Lwt.t
 
   val request :
-    debug_logging:bool -> ?conn:conn -> timeout:Types.timeout -> Hh_json.json -> Hh_json.json result
+    debug_logging:bool -> ?conn:conn -> timeout:Types.timeout -> Hh_json.json -> Hh_json.json Lwt.t
 
   val send_request_and_do_not_wait_for_response :
-    debug_logging:bool -> conn:conn -> Hh_json.json -> unit result
+    debug_logging:bool -> conn:conn -> Hh_json.json -> unit Lwt.t
 
   val blocking_read :
-    debug_logging:bool -> timeout:Types.timeout -> conn:conn -> Hh_json.json option result
+    debug_logging:bool -> timeout:Types.timeout -> conn:conn -> Hh_json.json option Lwt.t
 
-  val close_connection : conn -> unit result
+  val close_connection : conn -> unit Lwt.t
 
   module Testing : sig
-    val get_test_conn : unit -> conn result
+    val get_test_conn : unit -> conn Lwt.t
   end
 end
 
@@ -126,35 +124,33 @@ module type S = sig
 
   include module type of Abstract_types
 
-  type 'a result
-
   type conn
 
-  val init : ?since_clockspec:string -> init_settings -> unit -> env option result
+  val init : ?since_clockspec:string -> init_settings -> unit -> env option Lwt.t
 
-  val get_changes_since_mergebase : timeout:timeout -> env -> string list result
+  val get_changes_since_mergebase : timeout:timeout -> env -> string list Lwt.t
 
   val get_mergebase :
     timeout:timeout ->
     watchman_instance ->
-    (watchman_instance * (string, string) Pervasives.result) result
+    (watchman_instance * (string, string) Pervasives.result) Lwt.t
 
-  val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) result
+  val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) Lwt.t
 
   val conn_of_instance : watchman_instance -> conn option
 
-  val close : env -> unit result
+  val close : env -> unit Lwt.t
 
   val with_instance :
     watchman_instance ->
     try_to_restart:bool ->
-    on_alive:(env -> 'a result) ->
-    on_dead:(dead_env -> 'a result) ->
-    'a result
+    on_alive:(env -> 'a Lwt.t) ->
+    on_dead:(dead_env -> 'a Lwt.t) ->
+    'a Lwt.t
 
   (* Expose some things for testing. *)
   module Testing : sig
-    val get_test_env : unit -> env result
+    val get_test_env : unit -> env Lwt.t
 
     val test_settings : init_settings
 

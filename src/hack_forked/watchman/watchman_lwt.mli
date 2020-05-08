@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include Watchman_sig.S with type 'a result = 'a Lwt.t
+include Watchman_sig.S
