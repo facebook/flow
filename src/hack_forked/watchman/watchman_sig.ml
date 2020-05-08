@@ -122,12 +122,4 @@ module type S = sig
     val transform_asynchronous_get_changes_response :
       env -> Hh_json.json option -> env * pushed_changes
   end
-
-  module Mocking : sig
-    val print_env : env -> string
-
-    val init_returns : string option -> unit
-
-    val get_changes_returns : changes -> unit
-  end
 end
