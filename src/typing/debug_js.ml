@@ -56,7 +56,7 @@ let string_of_destruct_kind = function
   | DestructInfer -> "Infer"
 
 let bool_of_sealtype = function
-  | Sealed -> true
+  | Object.Spread.Sealed -> true
   | _ -> false
 
 (*****************************************************************)
@@ -414,7 +414,7 @@ and dump_use_t_ (depth, tvars) cx t =
   in
   let react_kit =
     React.(
-      let resolved_object (_, pmap, _, _) = props pmap in
+      let resolved_object (_, pmap, _) = props pmap in
       let resolve_array = function
         | ResolveArray -> "ResolveArray"
         | ResolveElem (todo, done_rev) -> spf "ResolveElem (%s, %s)" (tlist todo) (tlist done_rev)
@@ -481,11 +481,14 @@ and dump_use_t_ (depth, tvars) cx t =
       | CreateClass (tool, knot, tout) ->
         spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout))
   in
-  let slice { Object.reason = _; props; dict; flags = { exact; _ } } =
+  let slice { Object.reason = _; props; flags = { obj_kind; _ } } =
     let xs =
-      match dict with
-      | Some { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
-      | None -> []
+      match obj_kind with
+      | Indexed { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
+      | Exact
+      | Inexact
+      | UnsealedInFile _ ->
+        []
     in
     let xs =
       SMap.fold
@@ -500,10 +503,9 @@ and dump_use_t_ (depth, tvars) cx t =
         xs
     in
     let xs = String.concat "; " xs in
-    if exact then
-      spf "{|%s|}" xs
-    else
-      spf "{%s}" xs
+    match obj_kind with
+    | Exact -> spf "{|%s|}" xs
+    | _ -> spf "{%s}" xs
   in
   let operand_slice reason prop_map dict =
     let props =
@@ -517,8 +519,13 @@ and dump_use_t_ (depth, tvars) cx t =
         prop_map
         SMap.empty
     in
-    let flags = { exact = true; sealed = Sealed; frozen = false } in
-    slice { Object.reason; props; dict; flags }
+    let obj_kind =
+      match dict with
+      | None -> Exact
+      | Some d -> Indexed d
+    in
+    let flags = { obj_kind; frozen = false } in
+    slice { Object.reason; props; flags }
   in
   let object_kit =
     Object.(
@@ -1273,7 +1280,7 @@ let dump_error_message =
         (dump_reason cx reason_op)
     | ESpeculationAmbiguous { reason; _ } ->
       spf "ESpeculationAmbiguous { reason = %s; _ }" (dump_reason cx reason)
-    | EIncompatibleWithExact ((reason1, reason2), use_op) ->
+    | EIncompatibleWithExact ((reason1, reason2), use_op, _) ->
       spf
         "EIncompatibleWithExact ((%s, %s), %s)"
         (dump_reason cx reason1)

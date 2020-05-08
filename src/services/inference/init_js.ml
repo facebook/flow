@@ -179,7 +179,7 @@ let init ~options ~reader lib_files =
   let%lwt result = load_lib_files ~sig_cx ~options ~reader lib_files in
   Flow.Cache.clear ();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Obj_type.mk master_cx reason in
+  let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 

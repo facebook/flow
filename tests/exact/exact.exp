@@ -168,6 +168,23 @@ References:
                                                            ^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- exact_lower_indexer.js:5:2
+
+Cannot cast `a` to `A` because indexed `A` [1] is incompatible with exact `A` [2].
+
+   exact_lower_indexer.js:5:2
+   5| (a: $Exact<A>);
+       ^
+
+References:
+   exact_lower_indexer.js:4:16
+   4| declare var a: A;
+                     ^ [1]
+   exact_lower_indexer.js:5:5
+   5| (a: $Exact<A>);
+          ^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- objmap.js:11:36
 
 Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
@@ -355,4 +372,4 @@ References:
 
 
 
-Found 22 errors
+Found 23 errors

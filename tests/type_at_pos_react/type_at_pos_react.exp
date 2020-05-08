@@ -187,7 +187,7 @@ react_component.js:31:7 = {
     "paramTypes":[
       {
         "kind":"Obj",
-        "exact":false,
+        "obj_kind":"Inexact",
         "frozen":false,
         "literal":null,
         "props":[
@@ -224,7 +224,7 @@ react_component.js:31:7 = {
       },
       "kind":"type alias"
     },
-    "staticType":{"kind":"Obj","exact":false,"frozen":false,"literal":null,"props":[]}
+    "staticType":{"kind":"Obj","obj_kind":"Inexact","frozen":false,"literal":null,"props":[]}
   },
   "type":"({children?: React$Node, ...}) => React$Node",
   "reasons":[],

@@ -64,7 +64,7 @@ function bar() {
   return b;
 }
 
-export const bar_: {"": 2, "-": 1, "\ud83d\ude0a": 3, [1]: 4,...} = bar();
+export const bar_: {[1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3} = bar();
 
 >>> Launching report...
 

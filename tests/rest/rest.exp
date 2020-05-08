@@ -1318,6 +1318,57 @@ References:
                                               ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- type_dict.js:102:2
+
+Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+
+   type_dict.js:102:2
+   102| (o17: {|[string]: Y | void|}); // OK
+         ^^^
+
+References:
+   type_dict.js:100:23
+   100| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
+                              ^ [1]
+   type_dict.js:102:19
+   102| (o17: {|[string]: Y | void|}); // OK
+                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:102:2
+
+Cannot cast `o17` to object type because `X` [1] is incompatible with undefined [2] in property `x`.
+
+   type_dict.js:102:2
+   102| (o17: {|[string]: Y | void|}); // OK
+         ^^^
+
+References:
+   type_dict.js:100:23
+   100| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
+                              ^ [1]
+   type_dict.js:102:23
+   102| (o17: {|[string]: Y | void|}); // OK
+                              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:102:2
+
+Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+
+   type_dict.js:102:2
+   102| (o17: {|[string]: Y | void|}); // OK
+         ^^^
+
+References:
+   type_dict.js:100:23
+   100| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
+                              ^ [1]
+   type_dict.js:102:19
+   102| (o17: {|[string]: Y | void|}); // OK
+                          ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- type_generic.js:1:37
 
 Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2].
@@ -1681,4 +1732,7 @@ References:
 
 
 
-Found 103 errors
+Found 106 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

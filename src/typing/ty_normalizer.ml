@@ -979,8 +979,8 @@ end = struct
     | _ -> return None
 
   and obj_ty ~env reason o =
-    let { T.flags; props_tmap; call_t; dict_t; proto_t } = o in
-    let { T.exact; T.frozen = obj_frozen; _ } = flags in
+    let { T.flags; props_tmap; call_t; proto_t } = o in
+    let { T.obj_kind; T.frozen = obj_frozen; _ } = flags in
     let literal = Reason.is_literal_object_reason reason in
     let obj_literal =
       if Env.(env.options.preserve_inferred_literal_types) then
@@ -988,25 +988,35 @@ end = struct
       else
         None
     in
-    let obj_exact =
-      (* Object literals will be inferred as exact by default, with the exception
-         of the empty object literal, since it is incompatible with the {||} type. *)
-      if literal && SMap.is_empty (Context.find_props (Env.get_cx env) props_tmap) then
-        false
-      else
-        exact
-    in
-    let%map obj_props =
+    let%bind obj_props =
       match Env.get_member_expansion_info env with
-      | None -> obj_props_t ~env props_tmap call_t dict_t
+      | None -> obj_props_t ~env props_tmap call_t
       | Some (Env.{ member_expansion_options = { include_proto_members = false; _ }; _ }, env) ->
-        obj_props_t ~env props_tmap call_t dict_t
+        obj_props_t ~env props_tmap call_t
       | Some (Env.{ member_expansion_options = { include_proto_members = true; _ }; _ }, env) ->
         let%bind proto = type__ ~env:(Env.continue_expanding_members env) proto_t in
-        let%map obj_props = obj_props_t ~env props_tmap call_t dict_t in
+        let%map obj_props = obj_props_t ~env props_tmap call_t in
         Ty.SpreadProp proto :: obj_props
     in
-    Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
+    let%bind obj_kind =
+      match obj_kind with
+      | T.UnsealedInFile _
+      | T.Exact
+        when not (obj_props = []) ->
+        return Ty.ExactObj
+      | T.Indexed d ->
+        let { T.dict_polarity; dict_name; key; value } = d in
+        let dict_polarity = type_polarity dict_polarity in
+        let%bind dict_key = type__ ~env key in
+        let%bind dict_value = type__ ~env value in
+        return (Ty.IndexedObj { Ty.dict_polarity; dict_name; dict_key; dict_value })
+      | T.Exact
+      | T.UnsealedInFile _
+      | T.Inexact ->
+        return Ty.InexactObj
+    in
+
+    return @@ Ty.Obj { Ty.obj_kind; obj_frozen; obj_literal; obj_props }
 
   and obj_prop_t =
     (* Value-level object types should not have properties of type type alias. For
@@ -1069,22 +1079,12 @@ end = struct
       | None -> return []
     in
     let do_props ~env props = concat_fold_m (obj_prop_t ~env) props in
-    let do_dict ~env = function
-      | Some d ->
-        let { T.dict_polarity; dict_name; key; value } = d in
-        let dict_polarity = type_polarity dict_polarity in
-        let%bind dict_key = type__ ~env key in
-        let%map dict_value = type__ ~env value in
-        [Ty.IndexProp { Ty.dict_polarity; dict_name; dict_key; dict_value }]
-      | None -> return []
-    in
-    fun ~env props_id call_id_opt dict ->
+    fun ~env props_id call_id_opt ->
       let cx = Env.get_cx env in
       let props = SMap.bindings (Context.find_props cx props_id) in
       let%bind call_props = do_calls ~env call_id_opt in
-      let%bind props = do_props ~env props in
-      let%map dict = do_dict ~env dict in
-      call_props @ props @ dict
+      let%map props = do_props ~env props in
+      call_props @ props
 
   and arr_ty ~env reason elt_t =
     let arr_literal =
@@ -1125,7 +1125,8 @@ end = struct
       | _ -> return default
     in
     let inexactify = function
-      | Ty.Obj ({ Ty.obj_exact = true; _ } as obj) -> Ty.Obj { obj with Ty.obj_exact = false }
+      | Ty.Obj ({ Ty.obj_kind = Ty.ExactObj; _ } as obj) ->
+        Ty.Obj { obj with Ty.obj_kind = Ty.InexactObj }
       | ty -> ty
     in
     fun ~env own_props ->
@@ -1166,7 +1167,12 @@ end = struct
        *)
       let props_obj =
         Ty.Obj
-          { Ty.obj_exact = false; obj_frozen = false; obj_literal = None; obj_props = static_flds }
+          {
+            Ty.obj_kind = Ty.InexactObj;
+            obj_frozen = false;
+            obj_literal = None;
+            obj_props = static_flds;
+          }
       in
       return (Ty.mk_inter (parent_class, [props_obj]))
 
@@ -1196,8 +1202,8 @@ end = struct
 
   and member_expand_object ~env member_expansion_info super inst =
     let { T.own_props; proto_props; _ } = inst in
-    let%bind own_ty_props = obj_props_t ~env own_props None None in
-    let%bind proto_ty_props = obj_props_t ~env proto_props None None in
+    let%bind own_ty_props = obj_props_t ~env own_props None in
+    let%bind proto_ty_props = obj_props_t ~env proto_props None in
     let%map obj_props =
       if Env.(member_expansion_info.member_expansion_options.include_proto_members) then
         let%map super_ty = type__ ~env:(Env.expand_instance_members env) super in
@@ -1205,7 +1211,7 @@ end = struct
       else
         return (own_ty_props @ proto_ty_props)
     in
-    Ty.Obj { Ty.obj_exact = true; obj_frozen = false; obj_literal = None; obj_props }
+    Ty.Obj { Ty.obj_kind = Ty.ExactObj; obj_frozen = false; obj_literal = None; obj_props }
 
   and instance_t =
     let to_generic ~env kind r inst =
@@ -1263,20 +1269,15 @@ end = struct
       let props = List.rev props in
       match (key, value, pole) with
       | (Some dict_key, Some dict_value, Some dict_polarity) ->
-        let ind_prop =
-          Ty.IndexProp
-            { Ty.dict_polarity; dict_name = None; (* This seems to be lost *)
-                                                  dict_key; dict_value }
-        in
-        ind_prop :: props
-      | (_, _, _) -> props
+        (props, Some { Ty.dict_polarity; dict_name = None; dict_key; dict_value })
+      | (_, _, _) -> (props, None)
     in
     fun ~env super own_props inst_call_t ->
       let%bind super = type__ ~env super in
       let%bind if_extends = extends super in
-      let%map obj_props = obj_props_t ~env own_props inst_call_t None in
-      let if_props = fix_dict_props obj_props in
-      Ty.InlineInterface { Ty.if_extends; if_props }
+      let%map if_props = obj_props_t ~env own_props inst_call_t in
+      let (if_props, if_dict) = fix_dict_props if_props in
+      Ty.InlineInterface { Ty.if_extends; if_props; if_dict }
 
   (* The Class<T> utility type *)
   and class_t ~env t =
@@ -1749,32 +1750,31 @@ end = struct
         | Some obj -> obj_props @ spread_of_ty obj
       in
       let%map obj_exact = obj_exact target in
-      Ty.Obj { Ty.obj_props; obj_exact; obj_literal = None; obj_frozen = false (* default *) }
+      let obj_kind =
+        if obj_exact then
+          Ty.ExactObj
+        else
+          Ty.InexactObj
+      in
+      Ty.Obj { Ty.obj_props; obj_kind; obj_literal = None; obj_frozen = false (* default *) }
     in
     let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict } =
       Type.TypeTerm.(
-        let obj_exact = true in
         let obj_frozen = false in
         let obj_literal = None in
         let props = SMap.fold (fun k p acc -> (k, p) :: acc) prop_map [] in
         let%bind obj_props = concat_fold_m (obj_prop_t ~env) props in
-        let%bind obj_props =
+        let%bind obj_kind =
           match dict with
           | Some { key; value; dict_name; dict_polarity } ->
             let%bind dict_key = type__ ~env key in
             let%bind dict_value = type__ ~env value in
             return
-              ( Ty.IndexProp
-                  {
-                    Ty.dict_polarity = type_polarity dict_polarity;
-                    dict_name;
-                    dict_key;
-                    dict_value;
-                  }
-              :: obj_props )
-          | None -> return obj_props
+              (Ty.IndexedObj
+                 { Ty.dict_polarity = type_polarity dict_polarity; dict_name; dict_key; dict_value })
+          | None -> return Ty.ExactObj
         in
-        return (Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }))
+        return (Ty.Obj { Ty.obj_kind; obj_frozen; obj_literal; obj_props }))
     in
     let spread_operand ~env = function
       | T.Object.Spread.Type t -> type__ ~env t

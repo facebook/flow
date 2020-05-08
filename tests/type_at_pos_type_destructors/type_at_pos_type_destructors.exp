@@ -264,7 +264,7 @@ type-destructor.js:55:6,55:28
 
 type-destructor.js:57:6
 Flags:
-type DiffObjPoly<X> = $Diff<{|y: X|}, {|[string]: X|}>
+type DiffObjPoly<X> = $Diff<{|y: X|}, {[string]: X}>
 type-destructor.js:57:6,57:16
 
 type-destructor.js:59:6
@@ -289,12 +289,12 @@ type-destructor.js:67:6,67:14
 
 type-destructor.js:70:6
 Flags:
-type RestObj = $Rest<{|y: O1|}, {|[string]: O2|}>
+type RestObj = $Rest<{|y: O1|}, {[string]: O2}>
 type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
 Flags:
-type RestObjPoly<X> = $Rest<{|y: X|}, {|[string]: X|}>
+type RestObjPoly<X> = $Rest<{|y: X|}, {[string]: X}>
 type-destructor.js:72:6,72:16
 
 type-destructor.js:74:6
@@ -489,7 +489,7 @@ type-destructor.js:55:6,55:28
 
 type-destructor.js:57:6
 Flags: --evaluate-type-destructors
-type DiffObjPoly<X> = $Diff<{|y: X|}, {|[string]: X|}>
+type DiffObjPoly<X> = $Diff<{|y: X|}, {[string]: X}>
 type-destructor.js:57:6,57:16
 
 type-destructor.js:59:6
@@ -519,7 +519,7 @@ type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
 Flags: --evaluate-type-destructors
-type RestObjPoly<X> = $Rest<{|y: X|}, {|[string]: X|}>
+type RestObjPoly<X> = $Rest<{|y: X|}, {[string]: X}>
 type-destructor.js:72:6,72:16
 
 type-destructor.js:74:6

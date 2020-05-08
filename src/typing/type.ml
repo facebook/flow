@@ -973,7 +973,6 @@ module rec TypeTerm : sig
 
   and objtype = {
     flags: flags;
-    dict_t: dicttype option;
     props_tmap: Properties.id;
     proto_t: prototype;
     call_t: int option;
@@ -1099,14 +1098,15 @@ module rec TypeTerm : sig
     | Named of reason * name
     | Computed of t
 
-  and sealtype =
+  and obj_kind =
+    | Exact
+    | Inexact
+    | Indexed of dicttype
     | UnsealedInFile of File_key.t option
-    | Sealed
 
   and flags = {
     frozen: bool;
-    sealed: sealtype;
-    exact: bool;
+    obj_kind: obj_kind;
   }
 
   and dicttype = {
@@ -2290,7 +2290,6 @@ and Object : sig
   and slice = {
     reason: reason;
     props: props;
-    dict: dict;
     flags: TypeTerm.flags;
   }
 
@@ -2327,10 +2326,14 @@ and Object : sig
       curr_resolve_idx: int;
     }
 
+    type sealtype =
+      | UnsealedInFile of File_key.t option
+      | Sealed
+
     type target =
       (* When spreading values, the result is exact if all of the input types are
          also exact. If any input type is inexact, the output is inexact. *)
-      | Value of { make_seal: TypeTerm.sealtype }
+      | Value of { make_seal: sealtype }
       (* It's more flexible to allow annotations to specify whether they should be
          exact or not. If the spread type is annotated to be exact, any inexact
          input types will cause a type error. *)
@@ -2387,7 +2390,7 @@ and React : sig
       | Shape
   end
 
-  type resolved_object = reason * Properties.t * TypeTerm.dicttype option * TypeTerm.flags
+  type resolved_object = reason * Properties.t * TypeTerm.flags
 
   type resolve_object =
     | ResolveObject
@@ -4084,14 +4087,14 @@ let mk_opt_methodcalltype this targs args clos strict = (this, targs, args, clos
    Types of object literals are exact, but can be sealed or unsealed. Object
    type annotations are sealed but not exact. *)
 
-let default_flags = { sealed = UnsealedInFile None; exact = true; frozen = false }
+let default_flags = { obj_kind = Exact; frozen = false }
 
-let mk_objecttype ?(flags = default_flags) ~dict ~call pmap proto =
-  { flags; proto_t = proto; props_tmap = pmap; dict_t = dict; call_t = call }
+let mk_objecttype ?(flags = default_flags) ~call pmap proto =
+  { flags; proto_t = proto; props_tmap = pmap; call_t = call }
 
-let mk_object_def_type ~reason ?(flags = default_flags) ~dict ~call pmap proto =
+let mk_object_def_type ~reason ?(flags = default_flags) ~call pmap proto =
   let reason = update_desc_reason invalidate_rtype_alias reason in
-  DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
+  DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call pmap proto))
 
 let apply_opt_funcalltype (this, targs, args, clos, strict) t_out =
   {

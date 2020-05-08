@@ -81,7 +81,13 @@ module ObjectExpressionAcc = struct
 
   let mk_object_from_spread_acc cx acc reason ~default_proto ~empty_unsealed =
     let mk_object reason ?(proto = default_proto) ?(sealed = false) props =
-      Obj_type.mk_with_proto cx reason ~sealed ~props proto
+      let obj_kind =
+        if sealed then
+          Exact
+        else
+          UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
+      in
+      Obj_type.mk_with_proto cx reason ~obj_kind ~props proto
     in
     let sealed = sealed acc in
     match elements_rev acc with
@@ -2109,7 +2115,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                     SMap.empty
                 in
                 let proto = ObjProtoT reason in
-                let t = Obj_type.mk_with_proto cx reason ~props proto in
+                let t = Obj_type.mk_unsealed cx reason ~props ~proto in
                 Import_export.set_module_exports cx loc t
             in
             SMap.iter
@@ -2803,7 +2809,7 @@ and object_ cx reason ?(allow_sealed = true) props =
           let (((_, spread), _) as argument) = expression cx argument in
           let not_empty_object_literal_argument =
             match spread with
-            | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
+            | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.obj_kind
             | _ -> true
           in
           let acc =
@@ -7147,7 +7153,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       let reason = mk_reason RPrototype (fst e) in
       Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
     in
-    ( Obj_type.mk_with_proto cx reason proto,
+    ( Obj_type.mk_unsealed cx reason ~proto,
       None,
       (args_loc, { ArgList.arguments = [Expression e_ast]; comments }) )
   | ( "create",
@@ -7197,7 +7203,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         pmap
         SMap.empty
     in
-    ( Obj_type.mk_with_proto cx reason ~props proto,
+    ( Obj_type.mk_unsealed cx reason ~props ~proto,
       None,
       ( args_loc,
         {

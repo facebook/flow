@@ -124,7 +124,7 @@ let rec merge_type cx =
            * sufficient. *)
           | (Some _, None)
           | (None, Some _) ->
-            Some (o1.flags.exact || o2.flags.exact)
+            Some (Obj_type.is_exact o1.flags.obj_kind || Obj_type.is_exact o2.flags.obj_kind)
           (* Covariant fields can be merged. *)
           | (Some (Field (_, _, Polarity.Positive)), Some (Field (_, _, Polarity.Positive))) ->
             Some true
@@ -135,36 +135,39 @@ let rec merge_type cx =
         map1
         map2
     in
-    let merge_dict =
-      match (o1.dict_t, o2.dict_t) with
-      (* If neither object has an indexer, neither will the merged object. *)
-      | (None, None) -> Some None
-      (* If both objects covariant indexers, we can merge them. However, if the
-       * key types are disjoint, the resulting dictionary is not useful. *)
-      | ( Some { key = k1; value = v1; dict_polarity = Polarity.Positive; _ },
-          Some { key = k2; value = v2; dict_polarity = Polarity.Positive; _ } ) ->
-        (* TODO: How to merge indexer names? *)
-        Some
-          (Some
-             {
-               dict_name = None;
-               key = create_intersection (InterRep.make k1 k2 []);
-               value = merge_type cx (v1, v2);
-               dict_polarity = Polarity.Positive;
-             })
-      (* Don't merge objects with possibly incompatible indexers. *)
-      | _ -> None
+    let obj_kind =
+      match (o1.flags.obj_kind, o2.flags.obj_kind) with
+      | (UnsealedInFile s1, UnsealedInFile s2) when s1 = s2 -> UnsealedInFile s1
+      | (UnsealedInFile _, _)
+      | (_, UnsealedInFile _) ->
+        UnsealedInFile None
+      | ( Indexed { key = k1; value = v1; dict_polarity = Polarity.Positive; _ },
+          Indexed { key = k2; value = v2; dict_polarity = Polarity.Positive; _ } ) ->
+        Indexed
+          {
+            dict_name = None;
+            key = create_intersection (InterRep.make k1 k2 []);
+            value = merge_type cx (v1, v2);
+            dict_polarity = Polarity.Positive;
+          }
+      | (Indexed d, _)
+      | (_, Indexed d) ->
+        Indexed d
+      | (Inexact, _)
+      | (_, Inexact) ->
+        Inexact
+      | (Exact, Exact) -> Exact
     in
     let merge_call =
       match (o1.call_t, o2.call_t) with
       | (None, None) -> Some None
       | (Some _, None) ->
-        if o2.flags.exact then
+        if Obj_type.is_exact o2.flags.obj_kind then
           Some o1.call_t
         else
           None
       | (None, Some _) ->
-        if o1.flags.exact then
+        if Obj_type.is_exact o1.flags.obj_kind then
           Some o2.call_t
         else
           None
@@ -178,8 +181,8 @@ let rec merge_type cx =
     let should_merge = SMap.for_all (fun _ x -> x) merge_map in
     (* Don't merge objects with different prototypes. *)
     let should_merge = should_merge && o1.proto_t = o2.proto_t in
-    (match (should_merge, merge_dict, merge_call) with
-    | (true, Some dict, Some call) ->
+    (match (should_merge, obj_kind, merge_call) with
+    | (true, Indexed _, Some call) ->
       let map =
         SMap.merge
           (fun _ p1_opt p2_opt ->
@@ -194,21 +197,9 @@ let rec merge_type cx =
           map2
       in
       let id = Context.generate_property_map cx map in
-      let sealed =
-        match (o1.flags.sealed, o2.flags.sealed) with
-        | (Sealed, Sealed) -> Sealed
-        | (UnsealedInFile s1, UnsealedInFile s2) when s1 = s2 -> UnsealedInFile s1
-        | _ -> UnsealedInFile None
-      in
-      let flags =
-        {
-          sealed;
-          exact = o1.flags.exact && o2.flags.exact;
-          frozen = o1.flags.frozen && o2.flags.frozen;
-        }
-      in
+      let flags = { frozen = o1.flags.frozen && o2.flags.frozen; obj_kind } in
       let reason = locationless_reason (RCustom "object") in
-      mk_object_def_type ~reason ~flags ~dict ~call id o1.proto_t
+      mk_object_def_type ~reason ~flags ~call id o1.proto_t
     | _ -> create_union (UnionRep.make t1 t2 []))
   | (DefT (_, _, ArrT (ArrayAT (t1, ts1))), DefT (_, _, ArrT (ArrayAT (t2, ts2)))) ->
     let tuple_types =

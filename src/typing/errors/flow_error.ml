@@ -197,7 +197,7 @@ let score_of_msg msg =
       match msg with
       | EIncompatibleDefs { reason_lower = rl; reason_upper = ru; branches = []; use_op = _ }
       | EIncompatibleWithUseOp (rl, ru, _)
-      | EIncompatibleWithExact ((rl, ru), _) ->
+      | EIncompatibleWithExact ((rl, ru), _, _) ->
         Some (rl, ru)
       | _ -> None
     in

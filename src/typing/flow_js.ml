@@ -1592,7 +1592,7 @@ struct
               let props =
                 SMap.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
               in
-              Obj_type.mk_with_proto cx reason ~sealed:true ~frozen:true ~props proto
+              Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
           in
           rec_flow_t ~use_op:unknown_use cx trace (cjs_exports, t)
         (* import * as X from 'SomeModule'; *)
@@ -1608,9 +1608,9 @@ struct
               SMap.add "default" p props
             | None -> props
           in
-          let dict =
+          let obj_kind =
             if exports.has_every_named_export then
-              Some
+              Indexed
                 {
                   key = StrT.why reason |> with_trust bogus_trust;
                   value = AnyT.untyped reason;
@@ -1618,12 +1618,10 @@ struct
                   dict_polarity = Polarity.Neutral;
                 }
             else
-              None
+              Exact
           in
           let proto = ObjProtoT reason in
-          let ns_obj =
-            Obj_type.mk_with_proto cx reason ~sealed:true ~frozen:true ?dict ~props proto
-          in
+          let ns_obj = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props proto in
           rec_flow_t ~use_op:unknown_use cx trace (ns_obj, t)
         (* import [type] X from 'SomeModule'; *)
         | ( ModuleT (module_reason, exports, imported_is_strict),
@@ -2031,8 +2029,8 @@ struct
                   in
                   let reason = mk_reason (RCustom "Result<T>") fun_loc in
                   let (obj_fail, obj_succ) =
-                    ( mk_object_def_type ~reason ~dict:None ~call:None id_fail dummy_prototype,
-                      mk_object_def_type ~reason ~dict:None ~call:None id_succ dummy_prototype )
+                    ( mk_object_def_type ~reason ~call:None id_fail dummy_prototype,
+                      mk_object_def_type ~reason ~call:None id_succ dummy_prototype )
                   in
                   ( Context.Wraps,
                     UnionT (mk_reason RUnion fun_loc, UnionRep.make obj_fail obj_succ []) )
@@ -2568,13 +2566,13 @@ struct
           (* flow all keys of o1 to u *)
           rec_flow cx trace (o1, GetKeysT (reason1, u))
         (* helpers *)
-        | ( DefT (reason_o, _, ObjT { props_tmap = mapr; dict_t; _ }),
+        | ( DefT (reason_o, _, ObjT { props_tmap = mapr; flags; _ }),
             HasOwnPropT (use_op, reason_op, x) ) ->
-          (match (x, dict_t) with
+          (match (x, flags.obj_kind) with
           (* If we have a literal string and that property exists *)
           | (Literal (_, x), _) when Context.has_prop cx mapr x -> ()
           (* If we have a dictionary, try that next *)
-          | (_, Some { key; _ }) ->
+          | (_, Indexed { key; _ }) ->
             rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), StrT x), key)
           | _ ->
             let (prop, suggestion) =
@@ -2626,10 +2624,13 @@ struct
           add_output cx ~trace err
         (* AnyT has every prop *)
         | (AnyT _, HasOwnPropT _) -> ()
-        | (DefT (_, _, ObjT { flags; props_tmap; dict_t; _ }), GetKeysT (reason_op, keys)) ->
+        | (DefT (_, _, ObjT { flags; props_tmap; _ }), GetKeysT (reason_op, keys)) ->
           begin
-            match flags.sealed with
-            | Sealed ->
+            match flags.obj_kind with
+            | UnsealedInFile _ ->
+              rec_flow cx trace (StrT.why reason_op |> with_trust bogus_trust, keys)
+            | _ ->
+              let dict_t = Obj_type.get_dict_opt flags.obj_kind in
               (* flow the union of keys of l to keys *)
               let keylist =
                 SMap.fold
@@ -2642,7 +2643,6 @@ struct
               rec_flow cx trace (union_of_ts reason_op keylist, keys);
               Base.Option.iter dict_t (fun { key; _ } ->
                   rec_flow cx trace (key, ToStringT (reason_op, keys)))
-            | _ -> rec_flow cx trace (StrT.why reason_op |> with_trust bogus_trust, keys)
           end
         | (DefT (_, _, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys)) ->
           (* methods are not enumerable, so only walk fields *)
@@ -2676,7 +2676,6 @@ struct
             flags;
             proto_t = _;
             props_tmap = tmap;
-            dict_t;
             call_t = _ (* call props excluded from values *);
           } =
             o
@@ -2712,9 +2711,9 @@ struct
           in
           (* If the object has a dictionary value then add that to our types. *)
           let ts =
-            match dict_t with
-            | Some { value; _ } -> value :: ts
-            | None -> ts
+            match flags.obj_kind with
+            | Indexed { value; _ } -> value :: ts
+            | _ -> ts
           in
           (* Create a union type from all our selected types. *)
           let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
@@ -3100,13 +3099,12 @@ struct
         Note: should be able to do this with LookupT rather than
         slices, but that approach behaves in nonobvious ways. TODO why?
       *)
-        | ( IntersectionT _,
-            UseT (use_op, DefT (r, _, ObjT { flags; props_tmap; proto_t; dict_t; call_t })) )
+        | (IntersectionT _, UseT (use_op, DefT (r, _, ObjT { flags; props_tmap; proto_t; call_t })))
           when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
           Context.iter_real_props cx props_tmap (fun x p ->
               let pmap = SMap.singleton x p in
               let id = Context.generate_property_map cx pmap in
-              let obj = mk_objecttype ~flags ~dict:dict_t ~call:call_t id dummy_prototype in
+              let obj = mk_objecttype ~flags ~call:call_t id dummy_prototype in
               rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), ObjT obj))));
           rec_flow cx trace (l, UseT (use_op, proto_t))
         (* predicates: prevent a predicate upper bound from prematurely decomposing
@@ -3427,12 +3425,20 @@ struct
           rec_flow cx trace (t, MakeExactT (r, Upper u))
         (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
         | (DefT (_, _, ObjT { flags; _ }), UseT (use_op, ExactT (r, t))) ->
-          if flags.exact && Obj_type.sealed_in_op r flags.sealed then
+          if Obj_type.is_exact_or_sealed r flags.obj_kind then
             let t = push_type_alias_reason r t in
             rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
           else
+            let error_kind =
+              match flags.obj_kind with
+              | Indexed _ -> Error_message.Indexer
+              | _ -> Error_message.Inexact
+            in
             let reasons = FlowError.ordered_reasons (reason_of_t l, r) in
-            add_output cx ~trace (Error_message.EIncompatibleWithExact (reasons, use_op));
+            add_output
+              cx
+              ~trace
+              (Error_message.EIncompatibleWithExact (reasons, use_op, error_kind));
 
             (* Continue the Flow even after we've errored. Often, there is more that
              * is different then just the fact that the upper bound is exact and the
@@ -3449,18 +3455,31 @@ struct
         (* inexact LB ~> $Exact<UB>. error *)
         | (_, UseT (use_op, ExactT (ru, _))) ->
           let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
-          add_output cx ~trace (Error_message.EIncompatibleWithExact (reasons, use_op))
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
         (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
 
         (* exactify incoming LB object type, flow to UB *)
         | (DefT (r, trust, ObjT obj), MakeExactT (_, Upper u)) ->
-          let exactobj = { obj with flags = { obj.flags with exact = true } } in
+          let obj_kind =
+            match obj.flags.obj_kind with
+            | Inexact -> Exact
+            | k -> k
+          in
+          let exactobj = { obj with flags = { obj.flags with obj_kind } } in
           rec_flow cx trace (DefT (r, trust, ObjT exactobj), u)
         (* exactify incoming UB object type, flow to LB *)
         | (DefT (ru, trust, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, l))) ->
           (* forward to standard obj ~> obj *)
           let ru = repos_reason (aloc_of_reason reason_op) ru in
-          let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
+          let obj_kind =
+            match obj_u.flags.obj_kind with
+            | Inexact -> Exact
+            | k -> k
+          in
+          let xu = { obj_u with flags = { obj_u.flags with obj_kind } } in
           rec_flow cx trace (l, UseT (use_op, DefT (ru, trust, ObjT xu)))
         | (AnyT (_, src), MakeExactT (reason_op, k)) -> continue cx trace (AnyT.why src reason_op) k
         | (DefT (_, trust, VoidT), MakeExactT (reason_op, k)) ->
@@ -4110,7 +4129,7 @@ struct
             ReactPropsToOut (_, props) ) ->
           (* Contravariance *)
           Base.List.hd params
-          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
+          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
         | ( DefT
               ( reason,
@@ -4119,7 +4138,7 @@ struct
             ReactInToProps (reason_op, props) ) ->
           (* Contravariance *)
           Base.List.hd params
-          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
+          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t ->
           rec_flow_t ~use_op:unknown_use cx trace (props, t);
           rec_flow_t
@@ -4863,12 +4882,11 @@ struct
           (* create new object **)
           let reason_c = replace_desc_reason RNewObject reason_op in
           let objtype =
-            let sealed = UnsealedInFile (ALoc.source (loc_of_t proto)) in
-            let flags = { default_flags with sealed } in
-            let dict = None in
+            let obj_kind = UnsealedInFile (ALoc.source (loc_of_t proto)) in
+            let flags = { default_flags with obj_kind } in
             let call = None in
             let pmap = Context.generate_property_map cx SMap.empty in
-            mk_objecttype ~flags ~dict ~call pmap proto
+            mk_objecttype ~flags ~call pmap proto
           in
           let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
           (* error if type arguments are provided to non-polymorphic constructor **)
@@ -5273,7 +5291,7 @@ struct
         with reads of those properties through X as soon as O2 is resolved. To
         avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,ObjAssign);
         when O2 is resolved, we make the switch. **)
-        | ( DefT (lreason, _, ObjT { props_tmap = mapr; dict_t; _ }),
+        | ( DefT (lreason, _, ObjT { props_tmap = mapr; flags; _ }),
             ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _) ) ->
           Context.iter_props cx mapr (fun x p ->
               (* move the reason to the call site instead of the definition, so
@@ -5297,10 +5315,12 @@ struct
                   cx
                   ~trace
                   (Error_message.EPropNotReadable { reason_prop; prop_name = Some x; use_op }));
-          if dict_t <> None then
-            rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
-          else
-            rec_flow_t cx trace ~use_op (to_obj, t)
+          (match flags.obj_kind with
+          | Indexed _ -> rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
+          | Exact
+          | Inexact
+          | UnsealedInFile _ ->
+            rec_flow_t cx trace ~use_op (to_obj, t))
         | ( DefT (lreason, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
             ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _) ) ->
           let own_props = Context.find_props cx own_props in
@@ -5346,9 +5366,7 @@ struct
               dict_polarity = Polarity.Neutral;
             }
           in
-          let o =
-            Obj_type.mk_with_proto cx reason (ObjProtoT reason) ~dict ~sealed:true ~exact:true
-          in
+          let o = Obj_type.mk_with_proto cx reason (ObjProtoT reason) ~obj_kind:(Indexed dict) in
           rec_flow cx trace (o, u)
         | (DefT (_, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
           begin
@@ -5379,11 +5397,18 @@ struct
           (* Remove shadow properties from rest result *)
           let props = SMap.filter (fun x _ -> not (is_internal_name x)) props in
           let proto = ObjProtoT reason in
-          let sealed = Obj_type.sealed_in_op reason flags.sealed in
           (* A rest result can not be exact if the source object is unsealed,
          because we may not have seen all the writes yet. *)
-          let exact = sealed && flags.exact in
-          let o = Obj_type.mk_with_proto cx reason ~props proto ~sealed ~exact in
+          let obj_kind =
+            match flags.obj_kind with
+            | UnsealedInFile _ when not (Obj_type.sealed_in_op reason flags.obj_kind) ->
+              UnsealedInFile (ALoc.source (aloc_of_reason reason))
+            | UnsealedInFile _
+            | Exact ->
+              Exact
+            | _ -> Inexact
+          in
+          let o = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind in
           rec_flow_t cx trace ~use_op:unknown_use (o, t)
         | (DefT (reason, _, InstanceT (_, super, _, insttype)), ObjRestT (reason_op, xs, t)) ->
           (* Spread fields from super into an object *)
@@ -5396,7 +5421,7 @@ struct
           let props = Context.find_props cx insttype.own_props in
           let props = List.fold_left (fun props x -> SMap.remove x props) props xs in
           let proto = ObjProtoT reason_op in
-          let obj_inst = Obj_type.mk_with_proto cx reason_op ~props proto in
+          let obj_inst = Obj_type.mk_unsealed cx reason_op ~props ~proto in
           (* ObjAssign the inst-generated obj into the super-generated obj *)
           let use_op = Op (ObjectSpread { op = reason_op }) in
           let o =
@@ -5411,18 +5436,18 @@ struct
         | (AnyT (_, src), ObjRestT (reason, _, t)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, t)
         | (ObjProtoT _, ObjRestT (reason, _, t)) ->
-          let obj = Obj_type.mk_with_proto cx reason l in
+          let obj = Obj_type.mk_unsealed cx reason ~proto:l in
           rec_flow_t cx trace ~use_op:unknown_use (obj, t)
         | (DefT (_, _, (NullT | VoidT)), ObjRestT (reason, _, t)) ->
           (* mirroring Object.assign semantics, treat null/void as empty objects *)
-          let o = Obj_type.mk cx reason in
+          let o = Obj_type.mk_unsealed cx reason in
           rec_flow_t cx trace ~use_op:unknown_use (o, t)
         (*************************************)
         (* objects can be copied-then-sealed *)
         (*************************************)
         | (DefT (_, _, ObjT { props_tmap = mapr; _ }), ObjSealT (reason, t)) ->
           let props = Context.find_props cx mapr in
-          let new_obj = Obj_type.mk_with_proto cx reason ~sealed:true ~props l in
+          let new_obj = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props l in
           rec_flow_t cx trace ~use_op:unknown_use (new_obj, t)
         | (AnyT (_, src), ObjSealT (reason, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, tout)
@@ -5434,7 +5459,12 @@ struct
          but point at the entire Object.freeze call. *)
           let desc = RFrozen (desc_of_reason reason_o) in
           let reason = replace_desc_reason desc reason_op in
-          let flags = { frozen = true; sealed = Sealed; exact = true } in
+          let obj_kind =
+            match objtype.flags.obj_kind with
+            | Indexed _ -> objtype.flags.obj_kind
+            | _ -> Exact
+          in
+          let flags = { frozen = true; obj_kind } in
           let new_obj = DefT (reason, trust, ObjT { objtype with flags }) in
           rec_flow_t cx trace ~use_op:unknown_use (new_obj, t)
         | (AnyT (_, src), ObjFreezeT (reason_op, t)) ->
@@ -5460,7 +5490,7 @@ struct
             perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
           | None ->
             let strict =
-              match (Obj_type.sealed_in_op reason_op o.flags.sealed, strict) with
+              match (Obj_type.sealed_in_op reason_op o.flags.obj_kind, strict) with
               | (false, ShadowRead (strict, ids)) -> ShadowRead (strict, Nel.cons o.props_tmap ids)
               | (false, ShadowWrite ids) -> ShadowWrite (Nel.cons o.props_tmap ids)
               | _ -> strict
@@ -5702,7 +5732,12 @@ struct
             | Some Context.ResolvedMultipleTimes -> ()
           in
           let obj =
-            Obj_type.mk_with_proto cx reason ~sealed:false ~props:SMap.empty (ObjProtoT reason)
+            Obj_type.mk_with_proto
+              cx
+              reason
+              ~obj_kind:(UnsealedInFile (ALoc.source (aloc_of_reason reason)))
+              ~props:SMap.empty
+              (ObjProtoT reason)
           in
           elem_action_on_obj
             cx
@@ -5798,17 +5833,21 @@ struct
             |> Properties.map_fields map_t
             |> Context.generate_property_map cx
           in
-          let dict_t =
-            Base.Option.map
-              ~f:(fun dict ->
-                let value = map_t dict.value in
-                { dict with value })
-              o.dict_t
+          let flags =
+            {
+              o.flags with
+              obj_kind =
+                Obj_type.map_dict
+                  (fun dict ->
+                    let value = map_t dict.value in
+                    { dict with value })
+                  o.flags.obj_kind;
+            }
           in
           let mapped_t =
             let reason = replace_desc_reason RObjectType reason_op in
-            let t = DefT (reason, trust, ObjT { o with props_tmap; dict_t }) in
-            if o.flags.exact then
+            let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
+            if Obj_type.is_legacy_exact_DO_NOT_USE o.flags.obj_kind then
               ExactT (reason, t)
             else
               t
@@ -5843,17 +5882,21 @@ struct
             |> Properties.mapi_fields mapi_field
             |> Context.generate_property_map cx
           in
-          let dict_t =
-            Base.Option.map
-              ~f:(fun dict ->
-                let value = mapi_t dict.key dict.value in
-                { dict with value })
-              o.dict_t
+          let flags =
+            {
+              o.flags with
+              obj_kind =
+                Obj_type.map_dict
+                  (fun dict ->
+                    let value = mapi_t dict.key dict.value in
+                    { dict with value })
+                  o.flags.obj_kind;
+            }
           in
           let mapped_t =
             let reason = replace_desc_reason RObjectType reason_op in
-            let t = DefT (reason, trust, ObjT { o with props_tmap; dict_t }) in
-            if o.flags.exact then
+            let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
+            if Obj_type.is_legacy_exact_DO_NOT_USE o.flags.obj_kind then
               ExactT (reason, t)
             else
               t
@@ -6085,7 +6128,8 @@ struct
        egregious to emit this constraint. This only serves to maintain buggy
        behavior, which should be fixed, and this code removed. *)
         | ( DefT (lreason, _, FunT _),
-            UseT (use_op, DefT (ureason, _, ObjT { dict_t = Some udict; _ })) ) ->
+            UseT (use_op, DefT (ureason, _, ObjT { flags = { obj_kind = Indexed udict; _ }; _ })) )
+          ->
           let { value; dict_polarity; _ } = udict in
           let lit = is_literal_object_reason lreason in
           let s = "$call" in
@@ -6452,8 +6496,9 @@ struct
           let test_info = Some (id, (reason_op, reason_of_t l)) in
           let lookup_default =
             match l with
-            | DefT (_, _, ObjT { flags; _ }) when flags.exact ->
-              if Obj_type.sealed_in_op reason_op flags.sealed then
+            | DefT (_, _, ObjT { flags; _ }) when Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind
+              ->
+              if Obj_type.sealed_in_op reason_op flags.obj_kind then
                 let r = replace_desc_reason (RMissingProperty name) reason_op in
                 Some (DefT (r, bogus_trust (), VoidT), lookup_default)
               else
@@ -7099,17 +7144,15 @@ struct
       | None -> ()
 
   and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
-    let { flags = lflags; dict_t = ldict; call_t = lcall; props_tmap = lflds; proto_t = lproto } =
-      l_obj
-    in
-    let { flags = rflags; dict_t = udict; call_t = ucall; props_tmap = uflds; proto_t = uproto } =
-      u_obj
-    in
+    let { flags = lflags; call_t = lcall; props_tmap = lflds; proto_t = lproto } = l_obj in
+    let { flags = rflags; call_t = ucall; props_tmap = uflds; proto_t = uproto } = u_obj in
     (* if inflowing type is literal (thus guaranteed to be
      unaliased), propertywise subtyping is sound *)
     let lit = is_literal_object_reason lreason || lflags.frozen in
     (* If both are dictionaries, ensure the keys and values are compatible
      with each other. *)
+    let ldict = Obj_type.get_dict_opt lflags.obj_kind in
+    let udict = Obj_type.get_dict_opt rflags.obj_kind in
     (match (ldict, udict) with
     | ( Some { key = lk; value = lv; dict_polarity = lpolarity; _ },
         Some { key = uk; value = uv; dict_polarity = upolarity; _ } ) ->
@@ -7135,7 +7178,7 @@ struct
         (Field (None, lv, lpolarity), Field (None, uv, upolarity))
     | _ -> ());
 
-    if rflags.exact && rflags.sealed = Sealed && not (is_literal_object_reason ureason) then (
+    if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
       Context.iter_real_props cx lflds (fun s _ ->
           if not (Context.has_prop cx uflds s) then
             let use_op =
@@ -7256,7 +7299,7 @@ struct
            an optional property *)
             speculative_object_write cx lflds s up
           | Field (_, OptionalT _, Polarity.Positive)
-            when lflags.exact && Obj_type.sealed_in_op ureason lflags.sealed ->
+            when Obj_type.is_exact_or_sealed ureason lflags.obj_kind ->
             rec_flow
               cx
               trace
@@ -7275,12 +7318,12 @@ struct
            of that object type to it as needed. We do this when not speculating, because adding
            properties changes state, and the state change is necessary to enforce
            consistency. *)
-            if not (Obj_type.sealed_in_op ureason lflags.sealed) then
+            if not (Obj_type.sealed_in_op ureason lflags.obj_kind) then
               speculative_object_write cx lflds s up
             else
               (* otherwise, look up the property in the prototype *)
               let strict =
-                match (Obj_type.sealed_in_op ureason lflags.sealed, ldict) with
+                match (Obj_type.sealed_in_op ureason lflags.obj_kind, ldict) with
                 | (false, None) -> ShadowRead (Some lreason, Nel.one lflds)
                 | (true, None) -> Strict lreason
                 | _ -> NonstrictReturning (None, None)
@@ -8054,7 +8097,8 @@ struct
           if has_default then
             match curr_t with
             | DefT (_, _, NullT) -> getprop_ub ()
-            | DefT (_, _, ObjT { flags = { exact = true; _ }; proto_t = ObjProtoT _; _ }) ->
+            | DefT (_, _, ObjT { flags = { obj_kind; _ }; proto_t = ObjProtoT _; _ })
+              when Obj_type.is_legacy_exact_DO_NOT_USE obj_kind ->
               lookup_ub ()
             | _ -> getprop_ub ()
           else
@@ -9391,7 +9435,8 @@ struct
       | Named (_, x) -> Context.get_prop cx o.props_tmap x
       | Computed _ -> None
     in
-    match (propref, named_prop, o.dict_t) with
+    let dict_t = Obj_type.get_dict_opt o.flags.obj_kind in
+    match (propref, named_prop, dict_t) with
     | (_, Some prop, _) ->
       (* Property exists on this property map *)
       Some (prop, PropertyMapProperty)
@@ -9415,7 +9460,7 @@ struct
       (match propref with
       | Named _ ->
         let strict =
-          if Obj_type.sealed_in_op reason_op o.flags.sealed then
+          if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
             Strict reason_obj
           else
             ShadowRead (None, Nel.one o.props_tmap)
@@ -9483,8 +9528,7 @@ struct
     | None ->
       (match propref with
       | Named (reason_prop, prop) ->
-        let sealed = Obj_type.sealed_in_op reason_op o.flags.sealed in
-        if sealed && o.flags.exact then
+        if Obj_type.is_exact_or_sealed reason_op o.flags.obj_kind then
           add_output
             cx
             ~trace
@@ -9497,6 +9541,7 @@ struct
                  suggestion = prop_typo_suggestion cx [o.props_tmap] prop;
                })
         else
+          let sealed = Obj_type.sealed_in_op reason_op o.flags.obj_kind in
           let strict =
             if sealed then
               Strict reason_obj
@@ -9905,7 +9950,7 @@ struct
             ~trace
             (Error_message.EPropNotReadable
                { reason_prop = reason; prop_name = Some key; use_op = unknown_use }))
-      | None when flags.exact && Obj_type.sealed_in_op (reason_of_t result) flags.sealed ->
+      | None when Obj_type.is_exact_or_sealed (reason_of_t result) flags.obj_kind ->
         (* prop is absent from exact object type *)
         if sense then
           ()
@@ -10717,9 +10762,11 @@ struct
               | (Some t1, Some t2) -> rec_unify cx trace ~use_op t1 t2
               | _ -> ())
             (ts1, ts2)
-        | ( DefT (lreason, _, ObjT { props_tmap = lflds; dict_t = ldict; _ }),
-            DefT (ureason, _, ObjT { props_tmap = uflds; dict_t = udict; _ }) ) ->
+        | ( DefT (lreason, _, ObjT { props_tmap = lflds; flags = lflags; _ }),
+            DefT (ureason, _, ObjT { props_tmap = uflds; flags = uflags; _ }) ) ->
           (* ensure the keys and values are compatible with each other. *)
+          let ldict = Obj_type.get_dict_opt lflags.obj_kind in
+          let udict = Obj_type.get_dict_opt uflags.obj_kind in
           begin
             match (ldict, udict) with
             | (Some { key = lk; value = lv; _ }, Some { key = uk; value = uv; _ }) ->

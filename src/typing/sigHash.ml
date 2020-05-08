@@ -50,14 +50,14 @@ type hash =
   | FunProtoApplyH
   | FunProtoBindH
   | FunProtoCallH
-  | ObjFrozenSealedExactH
-  | ObjFrozenSealedNotExactH
-  | ObjFrozenNotSealedExactH
-  | ObjFrozenNotSealedNotExactH
-  | ObjNotFrozenSealedExactH
-  | ObjNotFrozenSealedNotExactH
-  | ObjNotFrozenNotSealedExactH
-  | ObjNotFrozenNotSealedNotExactH
+  | ObjFrozenExactH
+  | ObjFrozenInexactH
+  | ObjFrozenIndexedH
+  | ObjFrozenUnsealedH
+  | ObjNotFrozenExactH
+  | ObjNotFrozenInexactH
+  | ObjNotFrozenIndexedH
+  | ObjNotFrozenUnsealedH
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
@@ -240,17 +240,17 @@ let hash_of_def_ctor =
     | NullT -> NullH
     | NumT _ -> NumH
     | SymbolT -> SymbolH
-    | ObjT { flags = { frozen; sealed; exact }; _ } ->
+    | ObjT { flags = { frozen; obj_kind }; _ } ->
       begin
-        match (frozen, sealed, exact) with
-        | (true, Sealed, true) -> ObjFrozenSealedExactH
-        | (true, Sealed, false) -> ObjFrozenSealedNotExactH
-        | (true, UnsealedInFile _, true) -> ObjFrozenNotSealedExactH
-        | (true, UnsealedInFile _, false) -> ObjFrozenNotSealedNotExactH
-        | (false, Sealed, true) -> ObjNotFrozenSealedExactH
-        | (false, Sealed, false) -> ObjNotFrozenSealedNotExactH
-        | (false, UnsealedInFile _, true) -> ObjNotFrozenNotSealedExactH
-        | (false, UnsealedInFile _, false) -> ObjNotFrozenNotSealedNotExactH
+        match (frozen, obj_kind) with
+        | (true, Exact) -> ObjFrozenExactH
+        | (true, Inexact) -> ObjFrozenInexactH
+        | (true, Indexed _) -> ObjFrozenIndexedH
+        | (true, UnsealedInFile _) -> ObjFrozenUnsealedH
+        | (false, Exact) -> ObjNotFrozenExactH
+        | (false, Inexact) -> ObjNotFrozenInexactH
+        | (false, Indexed _) -> ObjNotFrozenIndexedH
+        | (false, UnsealedInFile _) -> ObjNotFrozenUnsealedH
       end
     | ReactAbstractComponentT _ -> ReactAbstractComponentH
     | SingletonBoolT _ -> SingletonBoolH

@@ -138,7 +138,7 @@ module Kit (Flow : Flow_common.S) = struct
       | [component] ->
         let config =
           let r = replace_desc_reason RReactProps reason_op in
-          Obj_type.mk_with_proto cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
+          Obj_type.mk_with_proto cx r ~obj_kind:Exact ~frozen:true (ObjProtoT r)
         in
         rec_flow
           cx
@@ -201,7 +201,7 @@ module Kit (Flow : Flow_common.S) = struct
       | [] ->
         let config =
           let r = replace_desc_reason RReactProps reason_op in
-          Obj_type.mk_with_proto cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
+          Obj_type.mk_with_proto cx r ~obj_kind:Exact ~frozen:true (ObjProtoT r)
         in
         rec_flow
           cx

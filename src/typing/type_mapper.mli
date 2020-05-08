@@ -39,6 +39,8 @@ class virtual ['a] t :
     method object_kit_spread_operand_slice :
       Context.t -> 'a -> Type.Object.Spread.operand_slice -> Type.Object.Spread.operand_slice
 
+    method obj_flags : Context.t -> 'a -> Type.flags -> Type.flags
+
     method obj_type : Context.t -> 'a -> Type.objtype -> Type.objtype
 
     method predicate : Context.t -> 'a -> Type.predicate -> Type.predicate

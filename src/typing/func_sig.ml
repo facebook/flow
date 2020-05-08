@@ -90,11 +90,11 @@ module Make (F : Func_params.S) = struct
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
-      Obj_type.mk_with_proto cx reason proto
+      Obj_type.mk_unsealed cx reason ~proto
     in
     let prototype =
       let reason = replace_desc_reason RPrototype reason in
-      Obj_type.mk cx reason
+      Obj_type.mk_unsealed cx reason
     in
     let funtype =
       {

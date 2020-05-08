@@ -420,7 +420,12 @@ let rec convert cx tparams_map =
               | ExactT (_, DefT (r, trust, ObjT o))
               | DefT (r, trust, ObjT o) ->
                 let r = replace_desc_reason RObjectLit r in
-                DefT (r, trust, ObjT { o with flags = { o.flags with exact = true } })
+                let obj_kind =
+                  match o.flags.obj_kind with
+                  | Indexed _ -> o.flags.obj_kind
+                  | _ -> Exact
+                in
+                DefT (r, trust, ObjT { o with flags = { o.flags with obj_kind } })
               | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
                 let r = replace_desc_reason RObjectLit r in
                 EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
@@ -1002,7 +1007,7 @@ let rec convert cx tparams_map =
     let (((_, return_t), _) as return_ast) = convert cx tparams_map return in
     let statics_t =
       let reason = update_desc_reason (fun d -> RStatics d) reason in
-      Obj_type.mk_with_proto cx reason (FunProtoT reason) ~sealed:true ~exact:false ?call:None
+      Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
     in
     let ft =
       DefT
@@ -1215,13 +1220,21 @@ and convert_object =
         Context.generate_property_map cx pmap
     in
     let call = Base.Option.map ~f:(Context.make_call_prop cx) call in
-    let flags = { sealed = Sealed; exact; frozen = false } in
+    let obj_kind =
+      match dict with
+      | Some d -> Indexed d
+      | None ->
+        if exact then
+          Exact
+        else
+          Inexact
+    in
+    let flags = { obj_kind; frozen = false } in
     DefT
-      ( mk_annot_reason RObjectType loc,
-        infer_trust cx,
-        ObjT (mk_objecttype ~flags ~dict ~call pmap proto) )
+      (mk_annot_reason RObjectType loc, infer_trust cx, ObjT (mk_objecttype ~flags ~call pmap proto))
   in
   let mk_object_annot cx loc ~exact call dict pmap proto =
+    let exact = exact && dict = None in
     let t = mk_object cx loc ~src_loc:true ~exact call dict pmap proto in
     if exact then
       ExactT (mk_annot_reason (RExactType RObjectType) loc, t)

@@ -237,7 +237,7 @@ let set_libs filenames =
   in
   Flow_js.Cache.clear ();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Obj_type.mk master_cx reason in
+  let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
 

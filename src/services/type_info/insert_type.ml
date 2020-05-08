@@ -119,8 +119,8 @@ class generalize_temporary_types_mapper =
 
     method! on_Obj () t =
       function
-      | Ty.{ obj_exact = true; _ } as obj ->
-        let obj = Ty.{ obj with obj_exact = false } in
+      | Ty.{ obj_kind = Ty.ExactObj; _ } as obj ->
+        let obj = Ty.{ obj with obj_kind = Ty.InexactObj } in
         super#on_Obj () (Ty.Obj obj) obj
       | obj -> super#on_Obj () t obj
   end

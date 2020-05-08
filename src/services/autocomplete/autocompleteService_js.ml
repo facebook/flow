@@ -246,9 +246,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
                    MemberInfo.{ ty = ty_of_named_prop prop; from_proto; from_nullable = false },
                  [] )
              | SpreadProp ty -> members_of_ty ty
-             | IndexProp _
-             | CallProp _ ->
-               (SMap.empty, [])
+             | CallProp _ -> (SMap.empty, [])
            in
            (SMap.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
   in

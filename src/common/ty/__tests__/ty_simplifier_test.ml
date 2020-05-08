@@ -22,7 +22,7 @@ module UnionSimplification = struct
           Ty.Union
             ( Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
                   obj_literal = None;
                   obj_props =
@@ -38,7 +38,7 @@ module UnionSimplification = struct
                 },
               Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
                   obj_literal = None;
                   obj_props =
@@ -58,7 +58,7 @@ module UnionSimplification = struct
         let t_exp =
           Ty.Obj
             {
-              Ty.obj_exact = false;
+              Ty.obj_kind = Ty.InexactObj;
               obj_frozen = false;
               obj_literal = None;
               obj_props =
@@ -83,7 +83,7 @@ module UnionSimplification = struct
           Ty.Union
             ( Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
                   obj_literal = None;
                   obj_props =
@@ -99,7 +99,7 @@ module UnionSimplification = struct
                 },
               Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
                   obj_literal = None;
                   obj_props =
@@ -136,7 +136,7 @@ module BotAndTopSimplification = struct
           Ty.Union
             ( Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
                   obj_literal = None;
                   obj_props =
@@ -153,7 +153,7 @@ module BotAndTopSimplification = struct
                 },
               Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
                   obj_literal = None;
                   obj_props =
@@ -178,7 +178,7 @@ module BotAndTopSimplification = struct
         let t_exp =
           Ty.Obj
             {
-              Ty.obj_exact = false;
+              Ty.obj_kind = Ty.InexactObj;
               obj_frozen = false;
               obj_literal = None;
               obj_props =

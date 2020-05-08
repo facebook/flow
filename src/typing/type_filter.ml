@@ -350,17 +350,15 @@ let object_ cx t =
   | DefT (r, trust, MixedT flavor) ->
     let reason = replace_desc_new_reason RObject r in
     let dict =
-      Some
-        {
-          key = StrT.why r |> with_trust bogus_trust;
-          value =
-            DefT (replace_desc_new_reason MixedT.desc r, bogus_trust (), MixedT Mixed_everything);
-          dict_name = None;
-          dict_polarity = Polarity.Positive;
-        }
+      {
+        key = StrT.why r |> with_trust bogus_trust;
+        value = DefT (replace_desc_new_reason MixedT.desc r, bogus_trust (), MixedT Mixed_everything);
+        dict_name = None;
+        dict_polarity = Polarity.Positive;
+      }
     in
     let proto = ObjProtoT reason in
-    let obj = Obj_type.mk_with_proto cx reason ?dict proto in
+    let obj = Obj_type.mk_with_proto cx reason ~obj_kind:(Indexed dict) proto in
     begin
       match flavor with
       | Mixed_truthy

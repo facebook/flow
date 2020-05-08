@@ -470,7 +470,7 @@ module Make (F : Func_sig.S) = struct
     (* Statics are not exact, because we allow width subtyping between them.
      Specifically, given class A and class B extends A, Class<B> <: Class<A>. *)
     let static =
-      Obj_type.mk_with_proto cx s.reason ~props ?call static_proto ~sealed:true ~exact:false
+      Obj_type.mk_with_proto cx s.reason ~props ?call static_proto ~obj_kind:Type.Inexact
     in
     Type.(
       match static with

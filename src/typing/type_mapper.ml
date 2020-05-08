@@ -622,17 +622,30 @@ class virtual ['a] t =
 
     method virtual exports : Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
 
+    method obj_flags cx map_cx flags =
+      match flags.obj_kind with
+      | Indexed dict ->
+        let dict' = self#dict_type cx map_cx dict in
+        if dict == dict' then
+          flags
+        else
+          { flags with obj_kind = Indexed dict' }
+      | Exact
+      | Inexact
+      | UnsealedInFile _ ->
+        flags
+
     method obj_type cx map_cx t =
-      let { flags; dict_t; props_tmap; proto_t; call_t } = t in
-      let dict_t' = OptionUtils.ident_map (self#dict_type cx map_cx) dict_t in
+      let { flags; props_tmap; proto_t; call_t } = t in
+      let flags' = self#obj_flags cx map_cx flags in
       let props_tmap' = self#props cx map_cx props_tmap in
       let proto_t' = self#type_ cx map_cx proto_t in
       let call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) call_t in
-      if dict_t' == dict_t && props_tmap' == props_tmap && proto_t' == proto_t && call_t' == call_t
+      if flags' == flags && props_tmap' == props_tmap && proto_t' == proto_t && call_t' == call_t
       then
         t
       else
-        { flags; dict_t = dict_t'; props_tmap = props_tmap'; proto_t = proto_t'; call_t = call_t' }
+        { flags = flags'; props_tmap = props_tmap'; proto_t = proto_t'; call_t = call_t' }
 
     method virtual call_prop : Context.t -> 'a -> int -> int
 
@@ -1897,14 +1910,14 @@ class virtual ['a] t_with_uses =
             t
           else
             Resolve r'
-        | Super ({ Object.reason; props; dict; flags }, r) ->
+        | Super ({ Object.reason; props; flags }, r) ->
+          let flags' = self#obj_flags cx map_cx flags in
           let props' = SMap.ident_map (fun (t, b) -> (self#type_ cx map_cx t, b)) props in
-          let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
           let r' = self#resolve cx map_cx r in
-          if r' == r && props' == props then
+          if flags' == flags && r' == r && props' == props then
             t
           else
-            Super ({ reason; Object.props = props'; dict = dict'; flags }, r'))
+            Super ({ reason; Object.props = props'; flags = flags' }, r'))
 
     method object_kit_tool cx map_cx tool =
       Object.(
@@ -2188,13 +2201,13 @@ class virtual ['a] t_with_uses =
       else
         (t', own)
 
-    method object_kit_slice cx map_cx ({ Object.reason = _; props; dict; flags = _ } as slice) =
+    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags } as slice) =
       let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
-      let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
-      if props' == props && dict' == dict then
+      let flags' = self#obj_flags cx map_cx flags in
+      if props' == props && flags' == flags then
         slice
       else
-        { slice with Object.props = props'; dict = dict' }
+        { slice with Object.props = props'; flags = flags' }
 
     method object_kit_acc_element cx map_cx el =
       Object.Spread.(
@@ -2289,13 +2302,13 @@ class virtual ['a] t_with_uses =
     method default_props cx map_cx default_props =
       maybe_known (self#resolved_object cx map_cx) default_props
 
-    method resolved_object cx map_cx ((r, props, dictopt, flags) as t) =
+    method resolved_object cx map_cx ((r, props, flags) as t) =
+      let flags' = self#obj_flags cx map_cx flags in
       let props' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
-      let dictopt' = OptionUtils.ident_map (self#dict_type cx map_cx) dictopt in
-      if props' == props && dictopt' == dictopt then
+      if flags' == flags && props' == props then
         t
       else
-        (r, props', dictopt', flags)
+        (r, props', flags')
 
     method initial_state cx map_cx t =
       React.CreateClass.(

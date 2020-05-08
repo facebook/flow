@@ -111,7 +111,8 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
           "true"
         else
           "false" )
-    | InlineInterface { if_extends; if_props } -> type_interface ~depth if_extends if_props
+    | InlineInterface { if_extends; if_props; if_dict } ->
+      type_interface ~depth if_extends if_props if_dict
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
@@ -143,7 +144,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
         else
           Empty );
       ]
-  and type_interface ~depth extends props =
+  and type_interface ~depth extends props dict =
     let extends =
       match extends with
       | [] -> Empty
@@ -151,13 +152,13 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
         fuse_with_space
           [Atom "extends"; list ~sep:(Atom ",") (Base.List.map ~f:(type_generic ~depth) extends)]
     in
-    let body =
-      list
-        ~wrap:(Atom "{", Atom "}")
-        ~sep:(Atom ";")
-        ~trailing:false
-        (counted_map (type_object_property ~depth) props)
+    let properties = counted_map (type_object_property ~depth) props in
+    let properties =
+      match dict with
+      | Some d -> type_dict ~depth d :: properties
+      | _ -> properties
     in
+    let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") ~trailing:false properties in
     fuse_with_space [Atom "interface"; extends; body]
   and type_function
       ~depth ~sep { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _ } =
@@ -249,22 +250,6 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
                   type_ ~depth Void;
                 ]
           end
-        | IndexProp { dict_polarity; dict_name; dict_key; dict_value } ->
-          fuse
-            [
-              variance_ dict_polarity;
-              Atom "[";
-              begin
-                match dict_name with
-                | Some id -> fuse [identifier id; Atom ":"; pretty_space]
-                | None -> Empty
-              end;
-              type_ ~depth dict_key;
-              Atom "]";
-              Atom ":";
-              pretty_space;
-              type_ ~depth dict_value;
-            ]
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t])
   and type_array ~depth { arr_readonly; arr_literal; arr_elt_t } =
@@ -279,20 +264,36 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
           "Array"
     in
     fuse [Atom arr; Atom "<"; type_ ~depth arr_elt_t; Atom ">"]
+  and type_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
+    fuse
+      [
+        variance_ dict_polarity;
+        Atom "[";
+        begin
+          match dict_name with
+          | Some id -> fuse [identifier id; Atom ":"; pretty_space]
+          | None -> Empty
+        end;
+        type_ ~depth dict_key;
+        Atom "]";
+        Atom ":";
+        pretty_space;
+        type_ ~depth dict_value;
+      ]
   and type_object ~depth ?(sep = Atom ",") obj =
-    let { obj_exact; obj_props; obj_literal; _ } = obj in
+    let { obj_kind; obj_props; obj_literal; _ } = obj in
     let s_exact =
-      if obj_exact && not exact_by_default then
+      if obj_kind = ExactObj && not exact_by_default then
         Atom "|"
       else
         Empty
     in
     let props = counted_map (type_object_property ~depth) obj_props in
     let props =
-      if obj_exact then
-        props
-      else
-        props @ [Atom "..."]
+      match obj_kind with
+      | IndexedObj d -> type_dict ~depth d :: props
+      | InexactObj -> props @ [Atom "..."]
+      | ExactObj -> props
     in
     let o =
       list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props

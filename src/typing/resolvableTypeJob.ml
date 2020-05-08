@@ -114,13 +114,13 @@ and collect_of_type ?log_unresolved cx acc = function
      types. In theory, ignoring them *might* lead to bugs, but we've not seen
      examples of such bugs yet. Leaving further investigation of this point as
      future work. *)
-  | DefT (_, _, ObjT { props_tmap; dict_t; call_t; _ }) ->
+  | DefT (_, _, ObjT { props_tmap; flags; call_t; _ }) ->
     let props_tmap = Context.find_props cx props_tmap in
     let acc = SMap.fold (collect_of_property ?log_unresolved cx) props_tmap acc in
     let ts =
-      match dict_t with
-      | None -> []
-      | Some { key; value; _ } -> [key; value]
+      match flags.obj_kind with
+      | Indexed { key; value; _ } -> [key; value]
+      | _ -> []
     in
     let ts =
       match call_t with

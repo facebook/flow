@@ -704,9 +704,17 @@ class ['a] t =
       let acc = self#type_ cx pole acc return_t in
       acc
 
+    method private obj_flags cx pole acc flags =
+      match flags.obj_kind with
+      | Indexed dict -> self#dict_type cx pole acc dict
+      | Exact
+      | Inexact
+      | UnsealedInFile _ ->
+        acc
+
     method private obj_type cx pole acc o =
-      let { dict_t; props_tmap; proto_t; call_t; flags = _ } = o in
-      let acc = self#opt (self#dict_type cx pole) acc dict_t in
+      let { props_tmap; proto_t; call_t; flags } = o in
+      let acc = self#obj_flags cx pole acc flags in
       let acc = self#props cx pole acc props_tmap in
       let acc = self#type_ cx pole acc proto_t in
       let acc = self#opt (self#call_prop cx pole) acc call_t in
@@ -903,9 +911,9 @@ class ['a] t =
           let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
           acc)
 
-    method private object_kit_slice cx acc { Object.reason = _; props; dict; flags = _ } =
+    method private object_kit_slice cx acc { Object.reason = _; props; flags } =
       let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
-      let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
+      let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 
     method private object_kit_spread_operand_slice
@@ -926,9 +934,9 @@ class ['a] t =
         | Slice operand_slice -> self#object_kit_spread_operand_slice cx acc operand_slice
         | Type t -> self#type_ cx pole_TODO acc t)
 
-    method private react_resolved_object cx acc (_, props, dict, _) =
+    method private react_resolved_object cx acc (_, props, flags) =
       let acc = self#smap (self#prop cx pole_TODO) acc props in
-      let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
+      let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 
     method private react_resolve_object cx acc o =

@@ -113,7 +113,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
             t
         in
-        (t, flags.exact)
+        (t, Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind)
       in
       let read_dict r { value; dict_polarity; _ } =
         if Polarity.compat (dict_polarity, Polarity.Positive) then
@@ -227,16 +227,16 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               trace
               ~use_op
               reason
-              ( _inline1,
-                inexact_reason1,
-                { Object.reason = r1; props = props1; dict = dict1; flags = flags1 } )
-              ( inline2,
-                _inexact_reason2,
-                { Object.reason = r2; props = props2; dict = dict2; flags = flags2 } ) =
+              (_inline1, inexact_reason1, { Object.reason = r1; props = props1; flags = flags1 })
+              (inline2, _inexact_reason2, { Object.reason = r2; props = props2; flags = flags2 }) =
+            let exact1 = Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind in
+            let exact2 = Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind in
+            let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
+            let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
             let dict =
               match (dict1, dict2) with
               | (None, Some _) when inline2 -> Ok dict2
-              | (None, Some _) when SMap.is_empty props1 && flags1.exact -> Ok dict2
+              | (None, Some _) when SMap.is_empty props1 && exact1 -> Ok dict2
               | (Some d1, Some d2) when SMap.is_empty props1 ->
                 rec_flow_t cx trace ~use_op (d2.key, d1.key);
                 rec_unify cx trace ~use_op d1.value d2.value;
@@ -251,7 +251,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                        key_reason = reason_of_t key;
                        use_op;
                      })
-              | (Some { key; value; dict_name = _; dict_polarity = _ }, _) when not flags2.exact ->
+              | (Some { key; value; dict_name = _; dict_polarity = _ }, _)
+                when not (exact2 || inline2) ->
                 Error
                   (Error_message.EInexactMayOverwriteIndexer
                      {
@@ -294,7 +295,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                          | (_, Some p2) when inline2 -> Some (fst p2, true)
                          | (Some p1, Some p2) -> Some (merge_props x p1 p2)
                          | (Some p1, None) ->
-                           if flags2.exact then
+                           if exact2 || inline2 then
                              Some (fst p1, true)
                            else
                              raise
@@ -328,7 +329,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                           *)
                          | (None, Some p2) ->
                            let (_, opt2, _) = type_optionality_and_missing_property p2 in
-                           if (dict1 <> None || not flags1.exact) && opt2 then
+                           (match flags1.obj_kind with
+                           | Indexed _
+                           | Inexact
+                             when opt2 ->
                              let error_kind =
                                if dict1 <> None then
                                  Error_message.Indexer
@@ -354,25 +358,26 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                        error_kind;
                                        use_op;
                                      }))
-                           else
-                             Some (fst p2, true))
+                           | _ -> Some (fst p2, true)))
                        props1
                        props2)
                 with CannotSpreadError e -> Error e
               in
-              let flags =
-                {
-                  frozen = flags1.frozen && flags2.frozen;
-                  sealed = Sealed;
-                  exact =
-                    flags1.exact
-                    && flags2.exact
-                    && Obj_type.sealed_in_op reason flags1.sealed
-                    && Obj_type.sealed_in_op reason flags2.sealed;
-                }
+              let obj_kind =
+                match dict with
+                | Some d -> Indexed d
+                | None ->
+                  if
+                    Obj_type.is_exact_or_sealed reason flags1.obj_kind
+                    && Obj_type.is_exact_or_sealed reason flags2.obj_kind
+                  then
+                    Exact
+                  else
+                    Inexact
               in
+              let flags = { frozen = flags1.frozen && flags2.frozen; obj_kind } in
               let inexact_reason =
-                match (flags1.exact, flags2.exact) with
+                match (exact1, exact2) with
                 (* If the inexact reason is None, that means we still haven't hit an inexact object yet, so we can
                  * take that reason to propagate as the reason for the accumulator's inexactness.
                  *
@@ -388,22 +393,27 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | _ -> inexact_reason1
               in
               (match props with
-              | Ok props -> Ok (false, inexact_reason, { Object.reason; props; dict; flags })
+              | Ok props -> Ok (false, inexact_reason, { Object.reason; props; flags })
               | Error e -> Error e)
           in
           let resolved_of_acc_element = function
             | Object.Spread.ResolvedSlice resolved -> Nel.map (fun x -> (false, None, x)) resolved
             | Object.Spread.InlineSlice { Object.Spread.reason; prop_map; dict } ->
-              let flags = { exact = true; frozen = false; sealed = Sealed } in
+              let obj_kind =
+                match dict with
+                | Some d -> Indexed d
+                | None -> Exact
+              in
+              let flags = { obj_kind; frozen = false } in
               let props = SMap.mapi (read_prop reason flags) prop_map in
-              Nel.one (true, None, { Object.reason; props; dict; flags })
+              Nel.one (true, None, { Object.reason; props; flags })
           in
           let spread cx trace ~use_op reason = function
             | (x, []) -> Ok (resolved_of_acc_element x)
             | (x0, (x1 :: xs : Object.Spread.acc_element list)) ->
               merge_result (spread2 cx trace ~use_op reason) resolved_of_acc_element x0 (x1, xs)
           in
-          let mk_object cx reason target { Object.reason = _; props; dict; flags } =
+          let mk_object cx reason target { Object.reason = _; props; flags } =
             let props = SMap.map (fun (t, _) -> Field (None, t, Polarity.Neutral)) props in
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT reason in
@@ -413,14 +423,23 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (* Type spread result is exact if annotated to be exact *)
                 | Annot { make_exact } -> (make_exact, Sealed)
                 (* Value spread result is exact if all inputs are exact *)
-                | Value { make_seal } -> (flags.exact, make_seal)
+                | Value { make_seal } ->
+                  (Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind, make_seal)
               in
-              { sealed; frozen = false; exact }
+              let dict = Obj_type.get_dict_opt flags.obj_kind in
+              let obj_kind =
+                match (exact, sealed, dict) with
+                | (_, _, Some d) -> Indexed d
+                | (true, Object.Spread.UnsealedInFile x, _) -> UnsealedInFile x
+                | (true, _, _) -> Exact
+                | _ -> Inexact
+              in
+              { obj_kind; frozen = false }
             in
             let call = None in
-            let t = mk_object_def_type ~reason ~flags ~dict ~call id proto in
+            let t = mk_object_def_type ~reason ~flags ~call id proto in
             (* Wrap the final type in an `ExactT` if we have an exact flag *)
-            if flags.exact then
+            if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
               ExactT (reason, t)
             else
               t
@@ -429,10 +448,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let reason = update_desc_reason invalidate_rtype_alias reason in
             let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
             Nel.iter
-              (fun { Object.reason = r; props = _; dict = _; flags = { exact; _ } } ->
+              (fun { Object.reason = r; props = _; flags = { obj_kind; _ } } ->
                 match options with
-                | Annot { make_exact } when make_exact && not exact ->
-                  add_output cx ~trace (Error_message.EIncompatibleWithExact ((r, reason), use_op))
+                | Annot { make_exact } when make_exact && obj_kind = Inexact ->
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.EIncompatibleWithExact
+                       ((r, reason), use_op, Error_message.Inexact))
                 | _ -> ())
               x;
             let resolved = Object.Spread.ResolvedSlice x in
@@ -545,12 +568,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               ~use_op
               reason
               merge_mode
-              { Object.reason = r1; props = props1; dict = dict1; flags = flags1 }
-              { Object.reason = r2; props = props2; dict = dict2; flags = flags2 } =
+              { Object.reason = r1; props = props1; flags = flags1 }
+              { Object.reason = r2; props = props2; flags = flags2 } =
+            let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
+            let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
             let props =
               SMap.merge
                 (fun k p1 p2 ->
-                  match (merge_mode, get_prop r1 p1 dict1, get_prop r2 p2 dict2, flags2.exact) with
+                  match
+                    ( merge_mode,
+                      get_prop r1 p1 dict1,
+                      get_prop r2 p2 dict2,
+                      Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind )
+                  with
                   (* If the object we are using to subtract has an optional property, non-own
                    * property, or is inexact then we should add this prop to our result, but
                    * make it optional as we cannot know for certain whether or not at runtime
@@ -642,7 +672,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * For C there will be no prop. However, if the props object is exact
                    * then we need to throw an error. *)
                   | (ReactConfigMerge _, None, Some (_, _), _) ->
-                    ( if flags1.exact then
+                    ( if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
                       let use_op =
                         Frame
                           ( PropertyCompatibility { prop = Some k; lower = r2; upper = r1 },
@@ -682,19 +712,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     dict_polarity = Polarity.Neutral;
                   }
             in
-            let flags =
-              {
-                frozen = false;
-                sealed = Sealed;
-                exact = flags1.exact && Obj_type.sealed_in_op reason flags1.sealed;
-              }
+            let obj_kind =
+              match (flags1.obj_kind, dict) with
+              | (Exact, _) -> Exact
+              | (Indexed _, Some d) -> Indexed d
+              | (UnsealedInFile _, _) when Obj_type.sealed_in_op reason flags1.obj_kind -> Exact
+              | _ -> Inexact
             in
+            let flags = { frozen = false; obj_kind } in
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT r1 in
             let call = None in
-            let t = mk_object_def_type ~reason:r1 ~flags ~dict ~call id proto in
+            let t = mk_object_def_type ~reason:r1 ~flags ~call id proto in
             (* Wrap the final type in an `ExactT` if we have an exact flag *)
-            if flags.exact then
+            if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
               ExactT (r1, t)
             else
               t
@@ -734,14 +765,22 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let object_read_only =
         let polarity = Polarity.Positive in
         let mk_read_only_object cx reason slice =
-          let { Object.reason = r; props; dict; flags } = slice in
+          let { Object.reason = r; props; flags } = slice in
           let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-          let dict = Base.Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let flags =
+            {
+              flags with
+              obj_kind =
+                Obj_type.map_dict
+                  (fun dict -> { dict with dict_polarity = polarity })
+                  flags.obj_kind;
+            }
+          in
           let call = None in
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
-          let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
-          if flags.exact then
+          let t = mk_object_def_type ~reason:r ~flags ~call id proto in
+          if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
             ExactT (reason, t)
           else
             t
@@ -759,16 +798,24 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       (* Object Rep *)
       (**************)
       let object_rep =
-        let mk_object cx reason { Object.reason = r; props; dict; flags } =
+        let mk_object cx reason { Object.reason = r; props; flags } =
           (* TODO(jmbrown): Add polarity information to props *)
           let polarity = Polarity.Neutral in
           let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-          let dict = Base.Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let flags =
+            {
+              flags with
+              obj_kind =
+                Obj_type.map_dict
+                  (fun dict -> { dict with dict_polarity = polarity })
+                  flags.obj_kind;
+            }
+          in
           let call = None in
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
-          let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
-          if flags.exact then
+          let t = mk_object_def_type ~reason:r ~flags ~call id proto in
+          if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
             ExactT (reason, t)
           else
             t
@@ -785,14 +832,22 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       (* Object Widen *)
       (****************)
       let object_widen =
-        let mk_object cx reason { Object.reason = r; props; dict; flags } =
+        let mk_object cx reason { Object.reason = r; props; flags } =
           let polarity = Polarity.Neutral in
           let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-          let dict = Base.Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let flags =
+            {
+              flags with
+              obj_kind =
+                Obj_type.map_dict
+                  (fun dict -> { dict with dict_polarity = polarity })
+                  flags.obj_kind;
+            }
+          in
           let call = None in
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
-          mk_object_def_type ~reason:r ~flags ~dict ~call id proto
+          mk_object_def_type ~reason:r ~flags ~call id proto
         in
         let widen cx trace ~use_op ~obj_reason ~slice ~widened_id ~tout =
           let rec is_subset (x, y) =
@@ -837,12 +892,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             rec_flow_t cx trace ~use_op (mk_object cx obj_reason slice, tout)
           | Some widest ->
             let widest_pmap = widest.props in
+            let widest_dict = Obj_type.get_dict_opt widest.Object.flags.obj_kind in
+            let slice_dict = Obj_type.get_dict_opt slice.Object.flags.obj_kind in
             let new_pmap = slice.props in
             let pmap_and_changed =
               SMap.merge
                 (fun propname p1 p2 ->
-                  let p1 = get_prop widest.Object.reason p1 widest.Object.dict in
-                  let p2 = get_prop slice.Object.reason p2 slice.Object.dict in
+                  let p1 = get_prop widest.Object.reason p1 widest_dict in
+                  let p2 = get_prop slice.Object.reason p2 slice_dict in
                   match (p1, p2) with
                   | (None, None) -> None
                   | (None, Some t) ->
@@ -891,7 +948,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             (* TODO: (jmbrown) we can be less strict here than unifying. It may be possible to
              * also merge the dictionary types *)
             let (dict, changed) =
-              match (widest.dict, slice.dict) with
+              match (widest_dict, slice_dict) with
               | (Some d1, Some d2) ->
                 rec_unify cx trace ~use_op d1.key d2.key;
                 rec_unify cx trace ~use_op d1.value d2.value;
@@ -900,17 +957,28 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               | _ -> (None, changed)
             in
             let (exact, changed) =
-              if widest.Object.flags.exact && not slice.Object.flags.exact then
+              if
+                Obj_type.is_legacy_exact_DO_NOT_USE widest.Object.flags.obj_kind
+                && not (Obj_type.is_legacy_exact_DO_NOT_USE slice.Object.flags.obj_kind)
+              then
                 (false, true)
               else
-                (widest.Object.flags.exact && slice.Object.flags.exact, changed)
+                ( Obj_type.is_legacy_exact_DO_NOT_USE widest.Object.flags.obj_kind
+                  && Obj_type.is_legacy_exact_DO_NOT_USE slice.Object.flags.obj_kind,
+                  changed )
             in
             if not changed then
               ()
             else
-              let flags = { exact; frozen = false; sealed = Sealed } in
+              let obj_kind =
+                match (exact, dict) with
+                | (_, Some d) -> Indexed d
+                | (true, _) -> Exact
+                | _ -> Inexact
+              in
+              let flags = { obj_kind; frozen = false } in
               let props = SMap.map (fun t -> (t, true)) pmap' in
-              let slice' = { Object.reason = slice.Object.reason; props; flags; dict } in
+              let slice' = { Object.reason = slice.Object.reason; props; flags } in
               Context.spread_widened_types_add_widest cx widened_id slice';
               let obj = mk_object cx slice.Object.reason slice' in
               rec_flow_t cx trace ~use_op (obj, tout)
@@ -933,12 +1001,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            * constant in the future as well. *)
           let prop_polarity = Polarity.Neutral in
           let finish cx trace reason config defaults children =
-            let {
-              Object.reason = config_reason;
-              props = config_props;
-              dict = config_dict;
-              flags = config_flags;
-            } =
+            let { Object.reason = config_reason; props = config_props; flags = config_flags } =
               config
             in
             (* If we have some type for children then we want to add a children prop
@@ -952,11 +1015,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
              * see them. *)
             let config_props = SMap.remove "key" config_props in
             let config_props = SMap.remove "ref" config_props in
+
+            let config_dict = Obj_type.get_dict_opt config_flags.obj_kind in
             (* Create the final props map and dict.
              *
              * NOTE: React will copy any enumerable prop whether or not it
              * is own to the config. *)
-            let (props, dict, flags) =
+            let (props, flags) =
               match defaults with
               (* If we have some default props then we want to add the types for those
                * default props to our final props object. *)
@@ -964,9 +1029,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   {
                     Object.reason = defaults_reason;
                     props = defaults_props;
-                    dict = defaults_dict;
                     flags = defaults_flags;
                   } ->
+                let defaults_dict = Obj_type.get_dict_opt defaults_flags.obj_kind in
                 (* Merge our props and default props. *)
                 let props =
                   SMap.merge
@@ -1016,18 +1081,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (* React freezes the config so we set the frozen flag to true. The
                  * final object is only exact if both the config and defaults objects
                  * are exact. *)
-                let flags =
-                  {
-                    frozen = true;
-                    sealed = Sealed;
-                    exact =
-                      config_flags.exact
-                      && defaults_flags.exact
-                      && Obj_type.sealed_in_op reason config_flags.sealed
-                      && Obj_type.sealed_in_op reason defaults_flags.sealed;
-                  }
+                let obj_kind =
+                  match dict with
+                  | Some d -> Indexed d
+                  | None ->
+                    if
+                      Obj_type.is_exact_or_sealed reason config_flags.obj_kind
+                      && Obj_type.is_exact_or_sealed reason defaults_flags.obj_kind
+                    then
+                      Exact
+                    else
+                      Inexact
                 in
-                (props, dict, flags)
+                let flags = { frozen = true; obj_kind } in
+                (props, flags)
               (* Otherwise turn our slice props map into an object props. *)
               | None ->
                 (* All of the fields are read-only so we create positive fields. *)
@@ -1045,23 +1112,24 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 in
                 (* React freezes the config so we set the frozen flag to true. The
                  * final object is only exact if the config object is exact. *)
-                let flags =
-                  {
-                    frozen = true;
-                    sealed = Sealed;
-                    exact = config_flags.exact && Obj_type.sealed_in_op reason config_flags.sealed;
-                  }
+                let obj_kind =
+                  Obj_type.obj_kind_from_optional_dict
+                    ~dict
+                    ~otherwise:
+                      ( if Obj_type.is_exact_or_sealed reason config_flags.obj_kind then
+                        Exact
+                      else
+                        Inexact )
                 in
-                (props, dict, flags)
+                let flags = { frozen = true; obj_kind } in
+                (props, flags)
             in
             let call = None in
             (* Finish creating our props object. *)
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT reason in
-            let t =
-              DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call id proto))
-            in
-            if flags.exact then
+            let t = DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call id proto)) in
+            if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
               ExactT (reason, t)
             else
               t
@@ -1123,8 +1191,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
        *)
       let intersect2
           reason
-          { Object.reason = r1; props = props1; dict = dict1; flags = flags1 }
-          { Object.reason = r2; props = props2; dict = dict2; flags = flags2 } =
+          { Object.reason = r1; props = props1; flags = flags1 }
+          { Object.reason = r2; props = props2; flags = flags2 } =
+        let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
+        let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
         let intersection t1 t2 =
           if reasonless_compare t1 t2 = 0 then
             t1
@@ -1178,19 +1248,26 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 dict_polarity = Polarity.Neutral;
               })
         in
-        let flags =
-          {
-            frozen = flags1.frozen || flags2.frozen;
-            sealed = Sealed;
-            exact = flags1.exact || flags2.exact;
-          }
+        let obj_kind =
+          Obj_type.obj_kind_from_optional_dict
+            ~dict
+            ~otherwise:
+              ( if
+                (* TODO(jmbrown): Audit this condition. Should this be a conjunction? *)
+                Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind
+                || Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
+              then
+                Exact
+              else
+                Inexact )
         in
-        (props, dict, flags)
+        let flags = { frozen = flags1.frozen || flags2.frozen; obj_kind } in
+        (props, flags)
       in
       let intersect2_with_reason reason intersection_loc x1 x2 =
-        let (props, dict, flags) = intersect2 reason x1 x2 in
+        let (props, flags) = intersect2 reason x1 x2 in
         let reason = mk_reason RObjectType intersection_loc in
-        Object.{ reason; props; dict; flags }
+        Object.{ reason; props; flags }
       in
       let resolved cx trace use_op reason resolve_tool tool tout x =
         match resolve_tool with
@@ -1212,23 +1289,25 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let resolve_tool = Resolve (List (todo, done_rev, join)) in
             rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout)))
       in
-      let object_slice cx r id dict flags =
+      let object_slice cx r id flags =
         let props = Context.find_props cx id in
         let props = SMap.mapi (read_prop r flags) props in
-        let dict =
-          Base.Option.map dict (fun d ->
+        let obj_kind =
+          Obj_type.map_dict
+            (fun dict ->
               {
                 dict_name = None;
-                key = d.key;
-                value = read_dict r d;
+                key = dict.key;
+                value = read_dict r dict;
                 dict_polarity = Polarity.Neutral;
               })
+            flags.obj_kind
         in
-        { Object.reason = r; props; dict; flags }
+        let flags = { flags with obj_kind } in
+        { Object.reason = r; props; flags }
       in
       let interface_slice cx r id =
-        let flags = { frozen = false; exact = false; sealed = Sealed } in
-        let (id, dict) =
+        let (id, obj_kind) =
           let props = Context.find_props cx id in
           match (SMap.find_opt "$key" props, SMap.find_opt "$value" props) with
           | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
@@ -1236,15 +1315,16 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
             let id = Context.generate_property_map cx props in
             let dict = { dict_name = None; key; value; dict_polarity = polarity } in
-            (id, Some dict)
-          | _ -> (id, None)
+            (id, Indexed dict)
+          | _ -> (id, Inexact)
         in
-        object_slice cx r id dict flags
+        let flags = { frozen = false; obj_kind } in
+        object_slice cx r id flags
       in
       let resolve cx trace use_op reason resolve_tool tool tout = function
         (* We extract the props from an ObjT. *)
-        | DefT (r, _, ObjT { props_tmap; dict_t; Type.flags; _ }) ->
-          let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
+        | DefT (r, _, ObjT { props_tmap; Type.flags; _ }) ->
+          let x = Nel.one (object_slice cx r props_tmap flags) in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* We take the fields from an InstanceT excluding methods (because methods
          * are always on the prototype). We also want to resolve fields from the
@@ -1291,8 +1371,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         (* Mirroring Object.assign() and {...null} semantics, treat null/void as
          * empty objects. *)
         | DefT (_, _, (NullT | VoidT)) ->
-          let flags = { frozen = true; sealed = Sealed; exact = true } in
-          let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
+          let flags = { frozen = true; obj_kind = Exact } in
+          let x = Nel.one { Object.reason; props = SMap.empty; flags } in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
          * In principle, we should be able to use it for Rest, but right now
@@ -1305,8 +1385,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                | Spread _ ->
                  true
                | _ -> false ->
-          let flags = { frozen = true; sealed = Sealed; exact = true } in
-          let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
+          let flags = { frozen = true; obj_kind = Exact } in
+          let x = Nel.one { Object.reason; props = SMap.empty; flags } in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* mixed is treated as {[string]: mixed} except in type spread and react config checking, where
          * it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
@@ -1316,29 +1396,30 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * clean up.
          *)
         | DefT (r, _, MixedT _) as t ->
-          let flags = { frozen = true; sealed = Sealed; exact = true } in
+          (* TODO(jmbrown): This should be Inexact *)
+          let flags = { frozen = true; obj_kind = Exact } in
           let x =
             match tool with
             | ObjectWiden _
             | Spread _
             | ObjectRep
             | ReactConfig _ ->
-              Nel.one { Object.reason; props = SMap.empty; dict = None; flags }
+              Nel.one { Object.reason; props = SMap.empty; flags }
             | _ ->
-              Nel.one
+              let flags =
                 {
-                  Object.reason;
-                  props = SMap.empty;
-                  dict =
-                    Some
+                  flags with
+                  obj_kind =
+                    Indexed
                       {
                         dict_name = None;
                         key = StrT.make r |> with_trust bogus_trust;
                         value = t;
                         dict_polarity = Polarity.Neutral;
                       };
-                  flags;
                 }
+              in
+              Nel.one { Object.reason; props = SMap.empty; flags }
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* If we see an empty then propagate empty to tout. *)
@@ -1358,8 +1439,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let slice = interface_slice cx r own_props in
           let acc = intersect2 reason acc slice in
           let acc =
-            let (props, dict, flags) = acc in
-            { Object.reason; props; dict; flags }
+            let (props, flags) = acc in
+            { Object.reason; props; flags }
           in
           let resolve_tool = Super (acc, resolve_tool) in
           rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))

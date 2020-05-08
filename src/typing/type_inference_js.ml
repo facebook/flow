@@ -413,7 +413,7 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
 
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   let reason = Reason.mk_reason Reason.RExports file_loc in
-  let init_exports = Obj_type.mk cx reason in
+  let init_exports = Obj_type.mk_unsealed cx reason in
   ImpExp.set_module_exports cx file_loc init_exports;
 
   (* infer *)

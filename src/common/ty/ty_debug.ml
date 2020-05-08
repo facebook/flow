@@ -139,7 +139,6 @@ and dump_field ~depth x t polarity optional =
 
 and dump_prop ~depth = function
   | NamedProp { name; prop; _ } -> dump_named_prop ~depth name prop
-  | IndexProp d -> dump_dict ~depth d
   | CallProp f -> dump_fun_t ~depth f
   | SpreadProp t -> dump_spread ~depth t
 
@@ -161,11 +160,13 @@ and dump_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
 
 and dump_spread ~depth t = spf "...%s" (dump_t ~depth t)
 
-and dump_obj ~depth { obj_exact; obj_props; _ } =
-  if obj_exact then
-    spf "{|%s|}" (dump_list (dump_prop ~depth) obj_props)
-  else
-    spf "{%s}" (dump_list (dump_prop ~depth) obj_props)
+and dump_obj ~depth { obj_kind; obj_props; _ } =
+  match obj_kind with
+  | ExactObj -> spf "{|%s|}" (dump_list (dump_prop ~depth) obj_props)
+  | InexactObj -> spf "{%s, ...}" (dump_list (dump_prop ~depth) obj_props)
+  | IndexedObj d ->
+    let dict = dump_dict ~depth d in
+    spf "{%s, %s}" (dump_list (dump_prop ~depth) obj_props) dict
 
 and dump_arr ~depth { arr_readonly; arr_elt_t; _ } =
   let ctor =
@@ -226,11 +227,16 @@ and dump_t ?(depth = 10) t =
     | Union (t1, t2, ts) ->
       spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1 :: t2 :: ts)))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
-    | InlineInterface { if_extends; if_props } ->
+    | InlineInterface { if_extends; if_props; if_dict } ->
+      let dict =
+        match if_dict with
+        | None -> ""
+        | Some d -> dump_dict ~depth d
+      in
       spf
         "InlineInterface (%s, %s)"
         (dump_list (dump_generic ~depth) if_extends)
-        (spf "{ %s }" (dump_list (dump_prop ~depth) if_props))
+        (spf "{ %s %s }" (dump_list (dump_prop ~depth) if_props) dict)
     | TypeOf v -> spf "Typeof (%s)" (builtin_value v)
     | Utility u -> dump_utility ~depth u
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
@@ -377,12 +383,13 @@ let json_of_elt ~strip_root =
       | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
       | Union (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
       | Inter (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
-      | InlineInterface { if_extends; if_props } ->
+      | InlineInterface { if_extends; if_props; if_dict } ->
         Hh_json.(
           let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
           [
             ("extends", JSON_Array extends);
             ("body", JSON_Array (Base.List.map ~f:json_of_prop if_props));
+            ("dict", Base.Option.value_map if_dict ~f:(fun d -> json_of_dict d) ~default:JSON_Null);
           ])
       | TypeOf b -> [("name", json_of_builtin_value b)]
       | Utility u -> json_of_utility u
@@ -421,9 +428,15 @@ let json_of_elt ~strip_root =
     ]
   and json_of_obj_t o =
     Hh_json.(
-      let { obj_exact; obj_props; obj_literal; obj_frozen } = o in
+      let { obj_kind; obj_props; obj_literal; obj_frozen } = o in
+      let obj_kind =
+        match obj_kind with
+        | ExactObj -> JSON_String "Exact"
+        | InexactObj -> JSON_String "Inexact"
+        | IndexedObj d -> json_of_dict d
+      in
       [
-        ("exact", JSON_Bool obj_exact);
+        ("obj_kind", obj_kind);
         ("frozen", JSON_Bool obj_frozen);
         ("literal", Base.Option.value_map obj_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
         ("props", JSON_Array (Base.List.map ~f:json_of_prop obj_props));
@@ -464,7 +477,6 @@ let json_of_elt ~strip_root =
                   ("from_proto", JSON_Bool from_proto);
                 ] );
           ]
-        | IndexProp d -> [("kind", JSON_String "IndexProp"); ("prop", json_of_dict d)]
         | CallProp ft ->
           [("kind", JSON_String "NamedProp"); ("prop", JSON_Object (json_of_fun_t ft))]
         | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)]))

@@ -159,14 +159,16 @@ let type_ options =
     let%map argument = fun_param (name, t, { prm_optional = false }) in
     (Loc.none, { T.Function.RestParam.argument; comments = None })
   and obj_ o =
-    let%map properties = mapM obj_prop o.obj_props in
-    let exact =
-      if options.exact_by_default then
-        false
-      else
-        o.obj_exact
+    let%bind properties = mapM obj_prop o.obj_props in
+    let%map (exact, inexact, properties) =
+      match o.obj_kind with
+      | ExactObj -> return (not options.exact_by_default, false, properties)
+      | InexactObj -> return (false, true, properties)
+      | IndexedObj d ->
+        let%map p = obj_index_prop d in
+        let properties = T.Object.Indexer (Loc.none, p) :: properties in
+        (false, false, properties)
     in
-    let inexact = not o.obj_exact in
     let t = (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None }) in
     match o.obj_literal with
     | Some true -> mk_generic_type (id_from_string "$TEMPORARY$object") (Some (mk_targs [t]))
@@ -177,9 +179,6 @@ let type_ options =
     | NamedProp { name; prop; _ } ->
       let%map p = obj_named_prop name prop in
       T.Object.Property (Loc.none, p)
-    | IndexProp d ->
-      let%map p = obj_index_prop d in
-      T.Object.Indexer (Loc.none, p)
     | CallProp f ->
       let%map p = obj_call_prop f in
       T.Object.CallProperty (Loc.none, p)
@@ -329,13 +328,20 @@ let type_ options =
     let%map gen = generic x ts in
     (Loc.none, gen)
   and inline_interface i =
-    let { if_extends; if_props } = i in
+    let { if_extends; if_props; if_dict } = i in
     let%bind extends = mapM interface_extends if_extends in
-    let%map properties = mapM obj_prop if_props in
+    let%bind properties = mapM obj_prop if_props in
+    let%bind properties =
+      match if_dict with
+      | Some d ->
+        let%bind p = obj_index_prop d in
+        return (T.Object.Indexer (Loc.none, p) :: properties)
+      | None -> return properties
+    in
     let body =
       (Loc.none, { T.Object.exact = false; inexact = false; properties; comments = None })
     in
-    (Loc.none, T.Interface { T.Interface.body; extends; comments = None })
+    return (Loc.none, T.Interface { T.Interface.body; extends; comments = None })
   and utility u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in

@@ -106,14 +106,19 @@ and fun_t = {
   fun_static: t;
 }
 
+and obj_kind =
+  | ExactObj
+  | InexactObj
+  | IndexedObj of dict
+
 and obj_t = {
-  obj_exact: bool;
   obj_frozen: bool;
   (* `None` means that this field was not computed, because the normalizer config
      option preserve_inferred_literal_types was set to false. `Some b` means that
      it was computed and `b` is true iff this is a literal type. *)
   obj_literal: bool option;
   obj_props: prop list;
+  obj_kind: obj_kind;
 }
 
 and arr_t = {
@@ -128,6 +133,7 @@ and arr_t = {
 and interface_t = {
   if_extends: generic_t list;
   if_props: prop list;
+  if_dict: dict option;
 }
 
 and fun_param = { prm_optional: bool }
@@ -138,7 +144,6 @@ and prop =
       prop: named_prop;
       from_proto: bool;
     }
-  | IndexProp of dict
   | CallProp of fun_t
   | SpreadProp of t
 
@@ -451,9 +456,8 @@ class ['A] comparator_ty =
     method tag_of_prop _env =
       function
       | NamedProp _ -> 0
-      | IndexProp _ -> 1
-      | CallProp _ -> 2
-      | SpreadProp _ -> 3
+      | CallProp _ -> 1
+      | SpreadProp _ -> 2
 
     method tag_of_named_prop _env =
       function
@@ -546,8 +550,8 @@ let mk_field_props prop_list =
         { name = id; prop = Field { t; polarity = Neutral; optional = opt }; from_proto = false })
     prop_list
 
-let mk_object ?(obj_exact = false) ?(obj_frozen = false) ?obj_literal obj_props =
-  Obj { obj_exact; obj_frozen; obj_literal; obj_props }
+let mk_object ?(obj_kind = InexactObj) ?(obj_frozen = false) ?obj_literal obj_props =
+  Obj { obj_kind; obj_frozen; obj_literal; obj_props }
 
 let mk_generic_class symbol targs = Generic (symbol, ClassKind, targs)
 
@@ -557,7 +561,13 @@ let mk_generic_talias symbol targs = Generic (symbol, TypeAliasKind, targs)
 
 let rec mk_exact ty =
   match ty with
-  | Obj o -> Obj { o with obj_exact = true }
+  | Obj o ->
+    let obj_kind =
+      match o.obj_kind with
+      | InexactObj -> ExactObj
+      | _ -> o.obj_kind
+    in
+    Obj { o with obj_kind }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
   | Any _
