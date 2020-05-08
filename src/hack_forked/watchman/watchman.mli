@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Functor : Watchman_sig.S
+include Watchman_sig.S

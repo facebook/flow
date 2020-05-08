@@ -2869,23 +2869,21 @@ let query_watchman_for_changed_files ~options =
     let init_settings =
       {
         (* We're not setting up a subscription, we're just sending a single query *)
-        Watchman_lwt.subscribe_mode = None;
+        Watchman.subscribe_mode = None;
         expression_terms = Watchman_expression_terms.make ~options;
         subscription_prefix = "flow_server_watcher";
         roots = Files.watched_paths (Options.file_options options);
         debug_logging = Options.is_debug_mode options;
       }
     in
-    let%lwt watchman_env = Watchman_lwt.init init_settings () in
+    let%lwt watchman_env = Watchman.init init_settings () in
     let%lwt changed_files =
       match watchman_env with
       | None -> raise Watchman_init_failed
       | Some watchman_env ->
         (* No timeout. We'll time this out ourselves after init if we need *)
-        let%lwt changed_files =
-          Watchman_lwt.(get_changes_since_mergebase ~timeout:None watchman_env)
-        in
-        let%lwt () = Watchman_lwt.close watchman_env in
+        let%lwt changed_files = Watchman.(get_changes_since_mergebase ~timeout:None watchman_env) in
+        let%lwt () = Watchman.close watchman_env in
         Lwt.return (SSet.of_list changed_files)
     in
     Lwt.return (fun ~libs ->

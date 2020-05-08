@@ -23,7 +23,7 @@
     build_mode ; hack
     cgroup ; hack
     procs_bucket ; hack
-    watchman_lwt ; hack
+    watchman
   )
   (preprocess (pps lwt_ppx))
 )

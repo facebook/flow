@@ -8,10 +8,10 @@
 open Core_kernel
 
 module Watchman_changes_comparator = struct
-  type t = Watchman_lwt.changes
+  type t = Watchman.changes
 
   let to_string changes =
-    Watchman_lwt.(
+    Watchman.(
       let pushed_to_string = function
         | Changed_merge_base (hg_rev, changes, clock) ->
           let changes = String.concat ~sep:", " (SSet.elements changes) in
@@ -38,7 +38,7 @@ module Watchman_changes_comparator = struct
           (String.concat ~sep:", " @@ List.map ~f:pushed_to_string s))
 
   let pushed_is_equal exp actual =
-    Watchman_lwt.(
+    Watchman.(
       match (exp, actual) with
       | (Files_changed exp, Files_changed actual) -> SSet.equal exp actual
       | ( Changed_merge_base (hg_rev_exp, changes_exp, clock_exp),
@@ -53,7 +53,7 @@ module Watchman_changes_comparator = struct
       | (_, _) -> false)
 
   let is_equal exp actual =
-    Watchman_lwt.(
+    Watchman.(
       match (exp, actual) with
       | (Watchman_unavailable, Watchman_unavailable) -> true
       | (Watchman_pushed exp, Watchman_pushed actual) -> pushed_is_equal exp actual
@@ -65,27 +65,27 @@ end
 module Watchman_changes_asserter = Asserter.Make_asserter (Watchman_changes_comparator)
 
 (**
- * Tests for Watchman_lwt.Mocking module.
+ * Tests for Watchman.Mocking module.
  *
  * Tests require Watchman_Mock to be injected.
  *)
 
 let test_mock_basic () =
-  Watchman_lwt.Mocking.init_returns None;
-  let%lwt result = Watchman_lwt.init Watchman_lwt.Testing.test_settings () in
-  let result = Base.Option.map result ~f:Watchman_lwt.Mocking.print_env in
+  Watchman.Mocking.init_returns None;
+  let%lwt result = Watchman.init Watchman.Testing.test_settings () in
+  let result = Base.Option.map result ~f:Watchman.Mocking.print_env in
   Asserter.String_asserter.assert_option_equals None result "init_returns";
-  Watchman_lwt.Mocking.init_returns (Some "hello");
-  let%lwt result = Watchman_lwt.init Watchman_lwt.Testing.test_settings () in
-  let result = Base.Option.map result ~f:Watchman_lwt.Mocking.print_env in
+  Watchman.Mocking.init_returns (Some "hello");
+  let%lwt result = Watchman.init Watchman.Testing.test_settings () in
+  let result = Base.Option.map result ~f:Watchman.Mocking.print_env in
   Asserter.String_asserter.assert_option_equals (Some "hello") result "init_returns";
   let expected_changes =
-    Watchman_lwt.Watchman_synchronous [Watchman_lwt.Files_changed (SSet.singleton "some_file.php")]
+    Watchman.Watchman_synchronous [Watchman.Files_changed (SSet.singleton "some_file.php")]
   in
-  Watchman_lwt.Mocking.get_changes_returns expected_changes;
+  Watchman.Mocking.get_changes_returns expected_changes;
   let%lwt (_, actual_changes) =
-    let%lwt env = Watchman_lwt.Testing.get_test_env () in
-    Watchman_lwt.get_changes (Watchman_lwt.Watchman_alive env)
+    let%lwt env = Watchman.Testing.get_test_env () in
+    Watchman.get_changes (Watchman.Watchman_alive env)
   in
   Watchman_changes_asserter.assert_equals expected_changes actual_changes "get_changes_returns";
   Lwt.return true

@@ -161,14 +161,14 @@ module WatchmanFileWatcher : sig
   class watchman : FlowServerMonitorOptions.t -> watcher
 end = struct
   type env = {
-    mutable instance: Watchman_lwt.watchman_instance;
+    mutable instance: Watchman.watchman_instance;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
     mutable mergebase: string option;
     mutable finished_an_hg_update: bool;
     listening_thread: unit Lwt.t;
     changes_condition: unit Lwt_condition.t;
-    init_settings: Watchman_lwt.init_settings;
+    init_settings: Watchman.init_settings;
     should_track_mergebase: bool;
   }
 
@@ -176,7 +176,7 @@ end = struct
     if env.should_track_mergebase then (
       let%lwt (instance, mergebase) =
         (* callers should provide their own timeout *)
-        Watchman_lwt.(get_mergebase ~timeout:None env.instance)
+        Watchman.(get_mergebase ~timeout:None env.instance)
       in
       env.instance <- instance;
       match mergebase with
@@ -202,13 +202,13 @@ end = struct
 
     let main env =
       let deadline = Unix.time () +. 604800. in
-      let%lwt (instance, result) = Watchman_lwt.get_changes ~deadline env.instance in
+      let%lwt (instance, result) = Watchman.get_changes ~deadline env.instance in
       env.instance <- instance;
       match result with
-      | Watchman_lwt.Watchman_pushed pushed_changes ->
+      | Watchman.Watchman_pushed pushed_changes ->
         begin
           match pushed_changes with
-          | Watchman_lwt.Files_changed new_files ->
+          | Watchman.Files_changed new_files ->
             env.files <- SSet.union env.files new_files;
             let%lwt () =
               (*
@@ -265,7 +265,7 @@ end = struct
             in
             broadcast env;
             Lwt.return env
-          | Watchman_lwt.State_enter (name, metadata) ->
+          | Watchman.State_enter (name, metadata) ->
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
@@ -275,7 +275,7 @@ end = struct
                 rev
             | _ -> ());
             Lwt.return env
-          | Watchman_lwt.State_leave (name, metadata) ->
+          | Watchman.State_leave (name, metadata) ->
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
@@ -293,16 +293,16 @@ end = struct
                 rev;
               Lwt.return env
             | _ -> Lwt.return env)
-          | Watchman_lwt.Changed_merge_base _ ->
+          | Watchman.Changed_merge_base _ ->
             failwith "We're not using an scm aware subscription, so we should never get these"
         end
-      | Watchman_lwt.Watchman_synchronous _ ->
+      | Watchman.Watchman_synchronous _ ->
         failwith "Flow should never use the synchronous watchman API"
-      | Watchman_lwt.Watchman_unavailable ->
+      | Watchman.Watchman_unavailable ->
         (* TODO (glevi) - Should we die if we get this for too long? *)
         Logger.error "Watchman unavailable. Retrying...";
 
-        (* Watchman_lwt.get_changes will restart the connection. However it has some backoff
+        (* Watchman.get_changes will restart the connection. However it has some backoff
          * built in and will do nothing if called too early. That turns this LwtLoop module into a
          * busy wait. So let's add a sleep here to yield and prevent spamming the logs too much. *)
         let%lwt () = Lwt_unix.sleep 1.0 in
@@ -338,7 +338,7 @@ end = struct
         let settings =
           {
             (* Defer updates during `hg.update` *)
-            Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
+            Watchman.subscribe_mode = Some Watchman.Defer_changes;
             expression_terms = watchman_expression_terms;
             subscription_prefix = "flow_watcher";
             roots = Files.watched_paths file_options;
@@ -347,7 +347,7 @@ end = struct
         in
         init_settings <- Some settings;
 
-        init_thread <- Some (Watchman_lwt.init settings ())
+        init_thread <- Some (Watchman.init settings ())
 
       method wait_for_init ~timeout =
         let go () =
@@ -363,7 +363,7 @@ end = struct
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
-                instance = Watchman_lwt.Watchman_alive watchman;
+                instance = Watchman.Watchman_alive watchman;
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
@@ -415,10 +415,10 @@ end = struct
         let env = self#get_env in
         Logger.info "Canceling Watchman listening thread & closing connection";
         Lwt.cancel env.listening_thread;
-        Watchman_lwt.with_instance
+        Watchman.with_instance
           env.instance
           ~try_to_restart:false
-          ~on_alive:Watchman_lwt.close
+          ~on_alive:Watchman.close
           ~on_dead:(fun _ -> Lwt.return_unit)
 
       method waitpid =

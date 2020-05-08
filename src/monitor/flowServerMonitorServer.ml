@@ -622,7 +622,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
   let catch _ exn =
     match Exception.unwrap exn with
-    | Watchman_lwt.Timeout ->
+    | Watchman.Timeout ->
       let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string exn) in
       FlowExitStatus.(exit ~msg Watchman_error)
     | _ ->
