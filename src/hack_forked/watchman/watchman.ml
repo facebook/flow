@@ -22,8 +22,6 @@ module Watchman_process_helpers = struct
   include Watchman_sig.Types
   module J = Hh_json_helpers.AdhocJsonHelpers
 
-  let debug = false
-
   (* Throw this exception when we know there is something to read from
    * the watchman channel, but reading took too long. *)
   exception Read_payload_too_long
@@ -67,13 +65,22 @@ module Watchman_process_helpers = struct
     response
 end
 
-module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
-  Watchman_sig.S with type conn = Watchman_process.conn = struct
-  let ( >>= ) = Watchman_process.( >>= )
+module Functor :
+  Watchman_sig.S with type conn = Buffered_line_reader_lwt.t * Lwt_io.output_channel = struct
+  include Watchman_process_helpers
 
-  let ( >|= ) = Watchman_process.( >|= )
+  let ( >>= ) = Lwt.( >>= )
 
-  type conn = Watchman_process.conn
+  let ( >|= ) = Lwt.( >|= )
+
+  type conn = Buffered_line_reader_lwt.t * Lwt_io.output_channel
+
+  let catch ~f ~catch =
+    Lwt.catch f (fun exn ->
+        let e = Exception.wrap exn in
+        match exn with
+        | Lwt.Canceled -> Exception.reraise e
+        | _ -> catch e)
 
   (**
    * Ocaml module signatures are static. This means since mocking
@@ -102,8 +109,6 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
    *)
   let flush_subscriptions_cmd = "cmd-flush-subscriptions"
 
-  include Watchman_sig.Types
-
   type dead_env = {
     (* Will reuse original settings to reinitializing watchman subscription. *)
     prior_settings: init_settings;
@@ -120,7 +125,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
      *
      * See also assert_no_fresh_instance *)
     mutable clockspec: string;
-    conn: Watchman_process.conn;
+    conn: conn;
     settings: init_settings;
     subscription: string;
     watch_root: string;
@@ -151,8 +156,6 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
      * cases too. *)
     | Watchman_dead of dead_env
     | Watchman_alive of env
-
-  module J = Hh_json_helpers.AdhocJsonHelpers
 
   (****************************************************************************)
   (* JSON methods. *)
@@ -263,16 +266,154 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       ())
 
   (****************************************************************************)
+  (* I/O stuff *)
+  (****************************************************************************)
+
+  let with_timeout timeout f =
+    match timeout with
+    | None -> f ()
+    | Some timeout ->
+      (try%lwt Lwt_unix.with_timeout timeout f with Lwt_unix.Timeout -> raise Timeout)
+
+  (* Send a request to the watchman process *)
+  let send_request ~debug_logging oc json =
+    let json_str = Hh_json.(json_to_string json) in
+    if debug_logging then Hh_logger.info "Watchman request: %s" json_str;
+
+    (* Print the json with a newline and then flush *)
+    let%lwt () = Lwt_io.fprintl oc json_str in
+    Lwt_io.flush oc
+
+  let get_sockname () =
+    let cmd = "watchman" in
+    let args = ["--no-pretty"; "get-sockname"] in
+    let%lwt { LwtSysUtils.status; stdout; stderr } = LwtSysUtils.exec cmd args in
+    match status with
+    | Unix.WEXITED 0 ->
+      let json = Hh_json.json_of_string stdout in
+      Lwt.return @@ J.get_string_val "sockname" json
+    | Unix.WEXITED 127 ->
+      let msg =
+        spf
+          "watchman not found on PATH: %s"
+          (Base.Option.value (Sys_utils.getenv_path ()) ~default:"(not set)")
+      in
+      let () = EventLogger.watchman_error msg in
+      let () = Hh_logger.error "%s" msg in
+      raise (Watchman_error "watchman not found on PATH")
+    | Unix.WEXITED code ->
+      let () =
+        EventLogger.watchman_error (spf "watchman exited code %d, stderr = %S" code stderr)
+      in
+      raise (Watchman_error (spf "watchman exited code %d" code))
+    | Unix.WSIGNALED signal ->
+      let msg = spf "watchman signaled with %s signal" (PrintSignal.string_of_signal signal) in
+      let () = EventLogger.watchman_error msg in
+      raise (Watchman_error msg)
+    | Unix.WSTOPPED signal ->
+      let msg = spf "watchman stopped with %s signal" (PrintSignal.string_of_signal signal) in
+      let () = EventLogger.watchman_error msg in
+      raise (Watchman_error msg)
+
+  (* Opens a connection to the watchman process through the socket *)
+  let open_connection () =
+    let%lwt sockname = get_sockname () in
+    let (ic, oc) =
+      if
+        Sys.os_type = "Unix"
+        (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
+         * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
+         * different fds *)
+      then
+        Unix.open_connection (Unix.ADDR_UNIX sockname)
+      (* On Windows, however, named pipes behave like regular files from the client's perspective.
+       * We just open the file and create in/out channels for it. The file permissions attribute
+       * is not needed because the file should exist already but we have to pass something. *)
+      else
+        let fd = Unix.openfile sockname [Unix.O_RDWR] 0o640 in
+        (Unix.in_channel_of_descr fd, Unix.out_channel_of_descr fd)
+    in
+    let reader =
+      Unix.descr_of_in_channel ic
+      |> Lwt_unix.of_unix_file_descr ~blocking:true
+      |> Buffered_line_reader_lwt.create
+    in
+    let oc =
+      Unix.descr_of_out_channel oc
+      |> Lwt_unix.of_unix_file_descr ~blocking:true
+      |> Lwt_io.of_fd ~mode:Lwt_io.output
+    in
+    Lwt.return (reader, oc)
+
+  let close_connection (reader, oc) =
+    let%lwt () = Lwt_unix.close @@ Buffered_line_reader_lwt.get_fd reader in
+    (* As mention above, if we open the connection with Unix.open_connection, we use a single fd for
+     * both input and output. That means we might be trying to close it twice here. If so, this
+     * second close with throw. So let's catch that exception and ignore it. *)
+    try%lwt Lwt_io.close oc with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+
+  let with_watchman_conn ~timeout f =
+    let%lwt conn = with_timeout timeout open_connection in
+    let%lwt result =
+      try%lwt f conn
+      with e ->
+        let e = Exception.wrap e in
+        let%lwt () = close_connection conn in
+        Exception.reraise e
+    in
+    let%lwt () = close_connection conn in
+    Lwt.return result
+
+  (* Sends a request to watchman and returns the response. If we don't have a connection,
+   * a new connection will be created before the request and destroyed after the response *)
+  let rec request ~debug_logging ?conn ~timeout json =
+    match conn with
+    | None -> with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
+    | Some (reader, oc) ->
+      let%lwt () = send_request ~debug_logging oc json in
+      let%lwt line =
+        with_timeout timeout @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
+      in
+      Lwt.return @@ sanitize_watchman_response ~debug_logging line
+
+  let has_input ~timeout reader =
+    let fd = Buffered_line_reader_lwt.get_fd reader in
+    match timeout with
+    | None -> Lwt.return @@ Lwt_unix.readable fd
+    | Some timeout ->
+      (try%lwt
+         Lwt_unix.with_timeout timeout @@ fun () ->
+         let%lwt () = Lwt_unix.wait_read fd in
+         Lwt.return true
+       with Lwt_unix.Timeout -> Lwt.return false)
+
+  let blocking_read ~debug_logging ~timeout ~conn:(reader, _) =
+    let%lwt ready = has_input ~timeout reader in
+    if not ready then
+      match timeout with
+      | None -> Lwt.return None
+      | _ -> raise Timeout
+    else
+      let%lwt output =
+        try%lwt
+          Lwt_unix.with_timeout 40.0 @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
+        with Lwt_unix.Timeout ->
+          let () = Hh_logger.log "blocking_read timed out" in
+          raise Read_payload_too_long
+      in
+      Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
+
+  (****************************************************************************)
   (* Initialization, reinitialization, and crash-tracking. *)
   (****************************************************************************)
 
   let with_crash_record_exn source f =
-    Watchman_process.catch ~f ~catch:(fun exn ->
+    catch ~f ~catch:(fun exn ->
         Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
         Exception.reraise exn)
 
   let with_crash_record_opt source f =
-    Watchman_process.catch
+    catch
       ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
       ~catch:(fun exn ->
         match Exception.unwrap exn with
@@ -280,7 +421,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         | Exit_status.Exit_with _
         | Watchman_restarted ->
           Exception.reraise exn
-        | _ -> Watchman_process.return None)
+        | _ -> Lwt.return None)
 
   let has_capability name capabilities =
     (* Projects down from the boolean error monad into booleans.
@@ -318,9 +459,9 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
               ];
           ])
     in
-    Watchman_process.request ~debug_logging ~conn ~timeout query >>= fun response ->
+    request ~debug_logging ~conn ~timeout query >>= fun response ->
     match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
-    | Some false -> Watchman_process.return ()
+    | Some false -> Lwt.return ()
     | Some true ->
       Hh_logger.error "Watchman server restarted so we may have missed some updates";
       raise Watchman_restarted
@@ -350,8 +491,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       ?prior_clockspec
       { subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
     with_crash_record_opt "init" @@ fun () ->
-    Watchman_process.open_connection () >>= fun conn ->
-    Watchman_process.request
+    open_connection () >>= fun conn ->
+    request
       ~debug_logging
       ~conn
       ~timeout:None (* the whole init process should be wrapped in a timeout *)
@@ -365,21 +506,19 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       else
         None
     in
-    Watchman_process.list_fold_values
-      roots
-      ~init:(Some [], SSet.empty, SSet.empty)
-      ~f:(fun (terms, watch_roots, failed_paths) path ->
+    Lwt_list.fold_left_s
+      (fun (terms, watch_roots, failed_paths) path ->
         (* Watch this root. If the path doesn't exist, watch_project will throw. In that case catch
          * the error and continue for now. *)
-        Watchman_process.catch
+        catch
           ~f:(fun () ->
-            Watchman_process.request
+            request
               ~debug_logging
               ~conn
               ~timeout:None (* the whole init process should be wrapped in a timeout *)
               (watch_project (Path.to_string path))
             >|= fun response -> Some response)
-          ~catch:(fun _ -> Watchman_process.return None)
+          ~catch:(fun _ -> Lwt.return None)
         >|= fun response ->
         match response with
         | None -> (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
@@ -389,6 +528,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
           let terms = prepend_relative_path_term ~relative_path ~terms in
           let watch_roots = SSet.add watch_root watch_roots in
           (terms, watch_roots, failed_paths))
+      (Some [], SSet.empty, SSet.empty)
+      roots
     >>= fun (watched_path_expression_terms, watch_roots, failed_paths) ->
     (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
      * returned an error. Let's do a best effort attempt to infer the watch root and relative
@@ -425,9 +566,9 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         ~timeout:None (* the whole init process should be wrapped in a timeout *)
         ~watch_root
         ~clockspec
-      >>= fun () -> Watchman_process.return clockspec
+      >>= fun () -> Lwt.return clockspec
     | None ->
-      Watchman_process.request
+      request
         ~debug_logging
         ~conn
         ~timeout:None (* the whole init process should be wrapped in a timeout *)
@@ -448,9 +589,9 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       }
     in
     (match subscribe_mode with
-    | None -> Watchman_process.return ()
+    | None -> Lwt.return ()
     | Some mode ->
-      Watchman_process.request
+      request
         ~debug_logging
         ~conn
         ~timeout:None (* the whole init process should be wrapped in a timeout *)
@@ -493,7 +634,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
 
   let maybe_restart_instance instance =
     match instance with
-    | Watchman_alive _ -> Watchman_process.return instance
+    | Watchman_alive _ -> Lwt.return instance
     | Watchman_dead dead_env ->
       if dead_env.reinit_attempts >= max_reinit_attempts then
         let () = Hh_logger.log "Ran out of watchman reinit attempts. Exiting." in
@@ -501,7 +642,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
         let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
         (* TODO: don't hardcode this timeout *)
-        Watchman_process.with_timeout (Some 120.) @@ fun () ->
+        with_timeout (Some 120.) @@ fun () ->
         re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings >|= function
         | None ->
           Hh_logger.log "Reestablishing watchman subscription failed.";
@@ -512,9 +653,9 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
           EventLogger.watchman_connection_reestablished ();
           Watchman_alive env
       ) else
-        Watchman_process.return instance
+        Lwt.return instance
 
-  let close env = Watchman_process.close_connection env.conn
+  let close env = close_connection env.conn
 
   let close_channel_on_instance env =
     close env >|= fun () ->
@@ -525,7 +666,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     ( if try_to_restart then
       maybe_restart_instance instance
     else
-      Watchman_process.return instance )
+      Lwt.return instance )
     >>= function
     | Watchman_dead dead_env -> on_dead dead_env
     | Watchman_alive env -> on_alive env
@@ -543,9 +684,9 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       on_dead:(dead_env -> 'a) ->
       on_alive:(env -> (env * 'a) Lwt.t) ->
       (watchman_instance * 'a) Lwt.t =
-    let on_dead' f dead_env = Watchman_process.return (Watchman_dead dead_env, f dead_env) in
+    let on_dead' f dead_env = Lwt.return (Watchman_dead dead_env, f dead_env) in
     let on_alive' ~on_dead source f env =
-      Watchman_process.catch
+      catch
         ~f:(fun () ->
           with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
           (Watchman_alive env, result))
@@ -574,7 +715,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
           | End_of_file ->
             Hh_logger.log "Watchman connection End_of_file. Closing channel";
             close_channel_on_instance' env
-          | Watchman_process.Read_payload_too_long ->
+          | Read_payload_too_long ->
             Hh_logger.log "Watchman reading payload too long. Closing channel";
             close_channel_on_instance' env
           | Timeout ->
@@ -650,17 +791,17 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         in
         let debug_logging = env.settings.debug_logging in
         if env.settings.subscribe_mode <> None then
-          Watchman_process.blocking_read ~debug_logging ~timeout ~conn:env.conn >|= fun response ->
+          blocking_read ~debug_logging ~timeout ~conn:env.conn >|= fun response ->
           let (env, result) = transform_asynchronous_get_changes_response env response in
           (env, Watchman_pushed result)
         else
           let query = since_query env in
-          Watchman_process.request ~debug_logging ~conn:env.conn ~timeout query >|= fun response ->
+          request ~debug_logging ~conn:env.conn ~timeout query >|= fun response ->
           let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
           (env, Watchman_synchronous [changes]))
 
   let get_changes_since_mergebase ~timeout env =
-    Watchman_process.request
+    request
       ~timeout
       ~debug_logging:env.settings.debug_logging
       (get_changes_since_mergebase_query env)
@@ -672,7 +813,7 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       "get_mergebase"
       ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
       ~on_alive:(fun env ->
-        Watchman_process.request
+        request
           ~timeout
           ~debug_logging:env.settings.debug_logging
           (get_changes_since_mergebase_query env)
@@ -697,8 +838,13 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
         subscription_prefix = "dummy_prefix";
       }
 
+    let get_test_conn () =
+      let%lwt reader = Buffered_line_reader_lwt.get_null_reader ()
+      and oc = Lwt_io.open_file ~mode:Lwt_io.output "/dev/null" in
+      Lwt.return (reader, oc)
+
     let get_test_env () =
-      Watchman_process.Testing.get_test_conn () >|= fun conn ->
+      get_test_conn () >|= fun conn ->
       {
         settings = test_settings;
         conn;

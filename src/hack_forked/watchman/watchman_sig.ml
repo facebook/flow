@@ -84,41 +84,6 @@ module Abstract_types = struct
     | Watchman_alive of env
 end
 
-module type WATCHMAN_PROCESS = sig
-  type conn
-
-  exception Read_payload_too_long
-
-  val ( >>= ) : 'a Lwt.t -> ('a -> 'b Lwt.t) -> 'b Lwt.t
-
-  val ( >|= ) : 'a Lwt.t -> ('a -> 'b) -> 'b Lwt.t
-
-  val return : 'a -> 'a Lwt.t
-
-  val catch : f:(unit -> 'b Lwt.t) -> catch:(Exception.t -> 'b Lwt.t) -> 'b Lwt.t
-
-  val list_fold_values : 'a list -> init:'b -> f:('b -> 'a -> 'b Lwt.t) -> 'b Lwt.t
-
-  val with_timeout : Types.timeout -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-
-  val open_connection : unit -> conn Lwt.t
-
-  val request :
-    debug_logging:bool -> ?conn:conn -> timeout:Types.timeout -> Hh_json.json -> Hh_json.json Lwt.t
-
-  val send_request_and_do_not_wait_for_response :
-    debug_logging:bool -> conn:conn -> Hh_json.json -> unit Lwt.t
-
-  val blocking_read :
-    debug_logging:bool -> timeout:Types.timeout -> conn:conn -> Hh_json.json option Lwt.t
-
-  val close_connection : conn -> unit Lwt.t
-
-  module Testing : sig
-    val get_test_conn : unit -> conn Lwt.t
-  end
-end
-
 module type S = sig
   include module type of Types
 
