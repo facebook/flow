@@ -1366,6 +1366,10 @@ enums.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
+enum-id.js:9:4
+Flags: --pretty
+{"result":[{"name":"Foo","type":"enum Foo"},{"name":"Fab","type":"enum Fab"}]}
+
 class_declaration_name.js = {"result":[]}
 pattern_object_key_middle.js:6:12
 Flags: --pretty

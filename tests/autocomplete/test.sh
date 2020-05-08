@@ -324,6 +324,8 @@ assert_ok \
 printf "enums.js = "
 assert_ok "$FLOW" autocomplete --lsp enums.js 10 3 < enums.js
 
+queries_in_file autocomplete "enum-id.js" --pretty
+
 printf "class_declaration_name.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty class_declaration_name.js 5 8 < class_declaration_name.js

@@ -207,6 +207,10 @@ let tests =
                  mk_loc (1, 44) (1, 47);
                  mk_loc (1, 51) (1, 52);
                ];
+         "enums"
+         >:: mk_scope_builder_all_uses_test
+               "enum Foo {}\nFoo"
+               [mk_loc (1, 5) (1, 8); mk_loc (2, 0) (2, 3)];
          "switch"
          >:: mk_scope_builder_all_uses_test "switch ('') { case '': const foo = ''; foo; };" [];
          (* TODO this should be the output, but there is a bug:
