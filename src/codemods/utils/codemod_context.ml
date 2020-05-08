@@ -13,6 +13,7 @@ module Typed = struct
     options: Options.t;
     full_cx: Context.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
+    docblock: Docblock.t;
     iteration: int;
   }
 

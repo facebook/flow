@@ -1,0 +1,2 @@
+cmd: codemod annotate-exports
+classic_only: true

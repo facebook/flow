@@ -200,7 +200,7 @@ module HardCodedImportMap = struct
 end
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
-  let { Codemod_context.Typed.file; file_sig; metadata; options; _ } = cctx in
+  let { Codemod_context.Typed.file; file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let (total_errors, sig_verification_loc_tys) =
     SignatureVerification.collect_annotations
@@ -210,6 +210,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       ~max_type_size
       file_sig
   in
+  let metadata = Context.docblock_overrides docblock metadata in
   let { Context.strict; strict_local; _ } = metadata in
   let lint_severities =
     if strict || strict_local then

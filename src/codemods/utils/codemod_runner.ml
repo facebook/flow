@@ -141,7 +141,7 @@ module TypedRunner :
           cx
           component
           md5;
-
+        let metadata = Context.metadata_of_options options in
         match Options.arch options with
         | Options.Classic ->
           Nel.fold_left
@@ -152,7 +152,7 @@ module TypedRunner :
                 let file_sig = FilenameMap.find file file_sigs in
                 let typed_ast = FilenameMap.find file typed_asts in
                 let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-                let metadata = Context.metadata full_cx in
+                let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
                 let ccx =
                   {
                     Codemod_context.Typed.file;
@@ -161,6 +161,7 @@ module TypedRunner :
                     options;
                     full_cx;
                     typed_ast;
+                    docblock;
                     iteration;
                   }
                 in
@@ -180,6 +181,7 @@ module TypedRunner :
      We have already merged any necessary dependencies, so now we only check the
      target files for processing. *)
   let check_job ~visit ~iteration ~reader ~options acc roots =
+    let metadata = Context.metadata_of_options options in
     List.fold_left
       (fun acc file ->
         match Merge_service.check options ~reader file with
@@ -188,7 +190,7 @@ module TypedRunner :
           let typed_ast = FilenameMap.find file typed_asts in
           let reader = Abstract_state_reader.Mutator_state_reader reader in
           let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-          let metadata = Context.metadata full_cx in
+          let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
           let ccx =
             {
               Codemod_context.Typed.file;
@@ -197,6 +199,7 @@ module TypedRunner :
               options;
               full_cx;
               typed_ast;
+              docblock;
               iteration;
             }
           in
