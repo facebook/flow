@@ -73,14 +73,15 @@ let fold f acc checked = FilenameMap.fold (fun k _ acc -> f acc k) checked acc
 
 let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 
-(* Remove from `a` every key which exists in `b` and which has an equal or higher kind in `b` than
- * it does in `a`, where Focused > Dependent > Dependency. So
- *
- * diff
- *  { A: Focused, B: Focused,   C: Dependency, D: Dependent }
- *  { A: Focused, B: Dependent, C: Dependent}
- *
- * = { B: Focused, D: Dependent }
+(** [diff a b] removes from [a] every key which exists in [b] and which has an equal or higher
+  kind in [b] than it does in [a], where Focused > Dependent > Dependency. So
+
+  {[
+    diff
+      { A: Focused, B: Focused,   C: Dependency, D: Dependent }
+      { A: Focused, B: Dependent, C: Dependent}
+    = { B: Focused, D: Dependent }
+  ]}
  *)
 let diff a b =
   FilenameMap.filter

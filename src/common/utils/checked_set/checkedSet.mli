@@ -37,6 +37,16 @@ val fold : ('a -> File_key.t -> 'a) -> 'a -> t -> 'a
 val union : t -> t -> t
 
 val diff : t -> t -> t
+(** [diff a b] removes from [a] every key which exists in [b] and which has an equal or higher
+  kind in [b] than it does in [a], where Focused > Dependent > Dependency. So
+
+  {[
+    diff
+      { A: Focused, B: Focused,   C: Dependency, D: Dependent }
+      { A: Focused, B: Dependent, C: Dependent}
+    = { B: Focused, D: Dependent }
+  ]}
+ *)
 
 val filter : f:(File_key.t -> bool) -> t -> t
 
