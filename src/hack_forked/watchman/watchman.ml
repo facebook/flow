@@ -6,6 +6,7 @@
  *)
 
 open Utils
+module Let_syntax = Lwt.Infix.Let_syntax
 
 (*
  * Module for us to interface with Watchman, a file watching service.
@@ -120,10 +121,6 @@ let sanitize_watchman_response ~debug_logging output =
   in
   assert_no_error response;
   response
-
-let ( >>= ) = Lwt.( >>= )
-
-let ( >|= ) = Lwt.( >|= )
 
 type conn = Buffered_line_reader_lwt.t * Lwt_io.output_channel
 
@@ -445,7 +442,9 @@ let with_crash_record_exn source f =
 
 let with_crash_record_opt source f =
   catch
-    ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
+    ~f:(fun () ->
+      let%map v = with_crash_record_exn source f in
+      Some v)
     ~catch:(fun exn ->
       match Exception.unwrap exn with
       (* Avoid swallowing these *)
@@ -489,7 +488,7 @@ let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~timeout ~watch
             ];
         ])
   in
-  request ~debug_logging ~conn ~timeout query >>= fun response ->
+  let%bind response = request ~debug_logging ~conn ~timeout query in
   match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
   | Some false -> Lwt.return ()
   | Some true ->
@@ -521,13 +520,14 @@ let re_init
     ?prior_clockspec { subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix }
     =
   with_crash_record_opt "init" @@ fun () ->
-  open_connection () >>= fun conn ->
-  request
-    ~debug_logging
-    ~conn
-    ~timeout:None (* the whole init process should be wrapped in a timeout *)
-    (capability_check ~optional:[flush_subscriptions_cmd] ["relative_root"])
-  >>= fun capabilities ->
+  let%bind conn = open_connection () in
+  let%bind capabilities =
+    request
+      ~debug_logging
+      ~conn
+      ~timeout:None (* the whole init process should be wrapped in a timeout *)
+      (capability_check ~optional:[flush_subscriptions_cmd] ["relative_root"])
+  in
   let supports_flush = has_capability flush_subscriptions_cmd capabilities in
   (* Disable subscribe if Watchman flush feature isn't supported. *)
   let subscribe_mode =
@@ -536,31 +536,35 @@ let re_init
     else
       None
   in
-  Lwt_list.fold_left_s
-    (fun (terms, watch_roots, failed_paths) path ->
-      (* Watch this root. If the path doesn't exist, watch_project will throw. In that case catch
-       * the error and continue for now. *)
-      catch
-        ~f:(fun () ->
-          request
-            ~debug_logging
-            ~conn
-            ~timeout:None (* the whole init process should be wrapped in a timeout *)
-            (watch_project (Path.to_string path))
-          >|= fun response -> Some response)
-        ~catch:(fun _ -> Lwt.return None)
-      >|= fun response ->
-      match response with
-      | None -> (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
-      | Some response ->
-        let watch_root = J.get_string_val "watch" response in
-        let relative_path = J.get_string_val "relative_path" ~default:"" response in
-        let terms = prepend_relative_path_term ~relative_path ~terms in
-        let watch_roots = SSet.add watch_root watch_roots in
-        (terms, watch_roots, failed_paths))
-    (Some [], SSet.empty, SSet.empty)
-    roots
-  >>= fun (watched_path_expression_terms, watch_roots, failed_paths) ->
+  let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
+    Lwt_list.fold_left_s
+      (fun (terms, watch_roots, failed_paths) path ->
+        (* Watch this root. If the path doesn't exist, watch_project will throw. In that case catch
+         * the error and continue for now. *)
+        let%map response =
+          catch
+            ~f:(fun () ->
+              let%map response =
+                request
+                  ~debug_logging
+                  ~conn
+                  ~timeout:None (* the whole init process should be wrapped in a timeout *)
+                  (watch_project (Path.to_string path))
+              in
+              Some response)
+            ~catch:(fun _ -> Lwt.return None)
+        in
+        match response with
+        | None -> (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
+        | Some response ->
+          let watch_root = J.get_string_val "watch" response in
+          let relative_path = J.get_string_val "relative_path" ~default:"" response in
+          let terms = prepend_relative_path_term ~relative_path ~terms in
+          let watch_roots = SSet.add watch_root watch_roots in
+          (terms, watch_roots, failed_paths))
+      (Some [], SSet.empty, SSet.empty)
+      roots
+  in
   (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
    * returned an error. Let's do a best effort attempt to infer the watch root and relative
    * path for each bad include *)
@@ -588,23 +592,28 @@ let re_init
            (SSet.cardinal watch_roots))
   in
   (* If we don't have a prior clockspec, grab the current clock *)
-  (match prior_clockspec with
-  | Some clockspec ->
-    assert_watchman_has_not_restarted_since
-      ~debug_logging
-      ~conn
-      ~timeout:None (* the whole init process should be wrapped in a timeout *)
-      ~watch_root
-      ~clockspec
-    >>= fun () -> Lwt.return clockspec
-  | None ->
-    request
-      ~debug_logging
-      ~conn
-      ~timeout:None (* the whole init process should be wrapped in a timeout *)
-      (clock watch_root)
-    >|= J.get_string_val "clock")
-  >>= fun clockspec ->
+  let%bind clockspec =
+    match prior_clockspec with
+    | Some clockspec ->
+      let%bind () =
+        assert_watchman_has_not_restarted_since
+          ~debug_logging
+          ~conn
+          ~timeout:None (* the whole init process should be wrapped in a timeout *)
+          ~watch_root
+          ~clockspec
+      in
+      Lwt.return clockspec
+    | None ->
+      let%map response =
+        request
+          ~debug_logging
+          ~conn
+          ~timeout:None (* the whole init process should be wrapped in a timeout *)
+          (clock watch_root)
+      in
+      J.get_string_val "clock" response
+  in
   let watched_path_expression_terms =
     Base.Option.map watched_path_expression_terms ~f:(J.pred "anyof")
   in
@@ -618,16 +627,20 @@ let re_init
       subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
     }
   in
-  (match subscribe_mode with
-  | None -> Lwt.return ()
-  | Some mode ->
-    request
-      ~debug_logging
-      ~conn
-      ~timeout:None (* the whole init process should be wrapped in a timeout *)
-      (subscribe ~mode env)
-    >|= ignore)
-  >|= fun () -> env
+  let%map () =
+    match subscribe_mode with
+    | None -> Lwt.return ()
+    | Some mode ->
+      let%map response =
+        request
+          ~debug_logging
+          ~conn
+          ~timeout:None (* the whole init process should be wrapped in a timeout *)
+          (subscribe ~mode env)
+      in
+      ignore response
+  in
+  env
 
 let init ?since_clockspec settings () =
   let prior_clockspec = since_clockspec in
@@ -673,7 +686,7 @@ let maybe_restart_instance instance =
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
       (* TODO: don't hardcode this timeout *)
       with_timeout (Some 120.) @@ fun () ->
-      re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings >|= function
+      match%map re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings with
       | None ->
         Hh_logger.log "Reestablishing watchman subscription failed.";
         EventLogger.watchman_connection_reestablishment_failed ();
@@ -688,16 +701,18 @@ let maybe_restart_instance instance =
 let close env = close_connection env.conn
 
 let close_channel_on_instance env =
-  close env >|= fun () ->
+  let%map () = close env in
   EventLogger.watchman_died_caught ();
   dead_env_from_alive env
 
 let with_instance instance ~try_to_restart ~on_alive ~on_dead =
-  ( if try_to_restart then
-    maybe_restart_instance instance
-  else
-    Lwt.return instance )
-  >>= function
+  let%bind instance =
+    if try_to_restart then
+      maybe_restart_instance instance
+    else
+      Lwt.return instance
+  in
+  match instance with
   | Watchman_dead dead_env -> on_dead dead_env
   | Watchman_alive env -> on_alive env
 
@@ -718,10 +733,13 @@ let call_on_instance :
   let on_alive' ~on_dead source f env =
     catch
       ~f:(fun () ->
-        with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
+        let%map (env, result) = with_crash_record_exn source (fun () -> f env) in
         (Watchman_alive env, result))
       ~catch:(fun exn ->
-        let close_channel_on_instance' env = close_channel_on_instance env >>= on_dead' on_dead in
+        let close_channel_on_instance' env =
+          let%bind env = close_channel_on_instance env in
+          on_dead' on_dead env
+        in
         match Exception.unwrap exn with
         | Sys_error msg when msg = "Broken pipe" ->
           Hh_logger.log "Watchman Pipe broken.";
@@ -820,18 +838,23 @@ let get_changes ?deadline instance =
       in
       let debug_logging = env.settings.debug_logging in
       if env.settings.subscribe_mode <> None then
-        blocking_read ~debug_logging ~timeout ~conn:env.conn >|= fun response ->
+        let%map response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
         let (env, result) = transform_asynchronous_get_changes_response env response in
         (env, Watchman_pushed result)
       else
         let query = since_query env in
-        request ~debug_logging ~conn:env.conn ~timeout query >|= fun response ->
+        let%map response = request ~debug_logging ~conn:env.conn ~timeout query in
         let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
         (env, Watchman_synchronous [changes]))
 
 let get_changes_since_mergebase ~timeout env =
-  request ~timeout ~debug_logging:env.settings.debug_logging (get_changes_since_mergebase_query env)
-  >|= extract_file_names env
+  let%map response =
+    request
+      ~timeout
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+  in
+  extract_file_names env response
 
 let get_mergebase ~timeout instance =
   call_on_instance
@@ -839,11 +862,12 @@ let get_mergebase ~timeout instance =
     "get_mergebase"
     ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
     ~on_alive:(fun env ->
-      request
-        ~timeout
-        ~debug_logging:env.settings.debug_logging
-        (get_changes_since_mergebase_query env)
-      >|= fun response ->
+      let%map response =
+        request
+          ~timeout
+          ~debug_logging:env.settings.debug_logging
+          (get_changes_since_mergebase_query env)
+      in
       match extract_mergebase response with
       | Some (_clock, mergebase) -> (env, Ok mergebase)
       | None -> (env, Error "Failed to extract mergebase from response"))
@@ -868,7 +892,7 @@ module Testing = struct
     Lwt.return (reader, oc)
 
   let get_test_env () =
-    get_test_conn () >|= fun conn ->
+    let%map conn = get_test_conn () in
     {
       settings = test_settings;
       conn;
