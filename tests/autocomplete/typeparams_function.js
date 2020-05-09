@@ -1,4 +1,5 @@
 //@flow
 function test<T> () {
-  
+    //
+// ^
 }

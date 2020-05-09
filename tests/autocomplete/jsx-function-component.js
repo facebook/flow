@@ -6,4 +6,5 @@ type Props = $ReadOnly<{x: number, y: string}>;
 
 function C(props: Props) {
 }
-<C // space
+<C  // space
+// ^

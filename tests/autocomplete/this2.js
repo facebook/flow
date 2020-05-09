@@ -3,5 +3,6 @@
 class A {
   constructor() {
     t
+//   ^
   }
 }

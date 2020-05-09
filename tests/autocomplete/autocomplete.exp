@@ -1,12 +1,6 @@
-foo_parse_fail.js = hasOwnProperty (prop: mixed) => boolean
-isPrototypeOf (o: mixed) => boolean
-num number
-propertyIsEnumerable (prop: mixed) => boolean
-str string
-toLocaleString () => string
-toString () => string
-valueOf () => mixed
-foo.js = {
+foo_parse_fail.js:10:17
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -18,8 +12,29 @@ foo.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-bar.js = {"error":"not enough type information to autocomplete","result":[]}
-str.js = {
+
+foo.js:10:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"num","type":"number"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"str","type":"string"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
+bar.js:4:5
+Flags: --pretty
+{"error":"not enough type information to autocomplete","result":[]}
+
+str.js:3:9
+Flags: --pretty
+{
   "result":[
     {"name":"@@iterator","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
@@ -100,7 +115,10 @@ str.js = {
     {"name":"valueOf","type":"() => string"}
   ]
 }
-num.js = {
+
+num.js:4:5
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -116,7 +134,10 @@ num.js = {
     {"name":"valueOf","type":"() => number"}
   ]
 }
-bool.js = {
+
+bool.js:3:6
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -126,7 +147,10 @@ bool.js = {
     {"name":"valueOf","type":"() => boolean"}
   ]
 }
-union.js = {
+
+union.js:10:5
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"string | any"},
     {"name":"hasOwnProperty","type":"((prop: mixed) => boolean) | any"},
@@ -137,9 +161,18 @@ union.js = {
     {"name":"valueOf","type":"(() => mixed) | any"}
   ]
 }
-object_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
-function_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
-fun.js = {
+
+object_builtins.js:4:5
+Flags: --pretty
+{"error":"not enough type information to autocomplete","result":[]}
+
+function_builtins.js:4:5
+Flags: --pretty
+{"error":"not enough type information to autocomplete","result":[]}
+
+fun.js:4:5
+Flags: --pretty
+{
   "result":[
     {"name":"apply","type":"(thisArg: any, argArray?: any) => any"},
     {"name":"arguments","type":"any"},
@@ -156,7 +189,10 @@ fun.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-this.js = {
+
+this.js:8:10
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"() => void"},
     {"name":"baz","type":"string"},
@@ -169,14 +205,20 @@ this.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-this2.js = {
+
+this2.js:5:6
+Flags: --pretty
+{
   "result":[
     {"name":"super","type":"super"},
     {"name":"this","type":"this"},
     {"name":"A","type":"class A"}
   ]
 }
-typeparams.js = {
+
+typeparams.js:6:16
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -192,10 +234,16 @@ typeparams.js = {
     {"name":"valueOf","type":"() => number"}
   ]
 }
-typeparams_function.js = {
+
+typeparams_function.js:3:4
+Flags: --pretty
+{
   "result":[{"name":"this","type":"this"},{"name":"test","type":"<T>() => void"}]
 }
-generics.js = {
+
+generics.js:6:5
+Flags: --pretty
+{
   "result":[
     {"name":"cn","type":"C<number>"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -206,7 +254,10 @@ generics.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-optional.js = {
+
+optional.js:4:14
+Flags: --pretty
+{
   "result":[
     {"name":"f","type":"(x?: string) => void"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -219,23 +270,56 @@ optional.js = {
     {"name":"x","type":"string | void"}
   ]
 }
-jsx1.js = {"result":[{"name":"x","type":"number"}]}
-jsx2.js = {"result":[{"name":"y","type":"string"}]}
-jsx3.js = {"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
-jsx4.js = {
+
+jsx1.js:7:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+jsx2.js:7:9
+Flags: --pretty
+{"result":[{"name":"y","type":"string"}]}
+
+jsx3.js:9:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
+
+jsx4.js:7:3
+Flags: --pretty
+{
   "result":[
     {"name":"Computerization","type":"(props: empty) => void"},
     {"name":"Compressibility","type":"(props: empty) => void"},
     {"name":"Complementarity","type":"class Complementarity"}
   ]
 }
-jsx-function-component.js = {"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
-jsx-function-component-2.js = {"result":[{"name":"x","type":"number"}]}
-jsx-function-component-3.js = {"result":[{"name":"y","type":"string"}]}
-jsx-abstract-component.js = {"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
-jsx-with-children.js = {"result":[{"name":"x","type":"number"}]}
-jsx-text.js = {"result":[]}
-customfun.js = {
+
+jsx-function-component.js:9:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
+
+jsx-function-component-2.js:9:11
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+jsx-function-component-3.js:10:4
+Flags: --pretty
+{"result":[{"name":"y","type":"string"}]}
+
+jsx-abstract-component.js:8:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
+
+jsx-with-children.js:10:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+jsx-text.js:1:11
+Flags: --pretty
+{"result":[]}
+
+customfun.js:6:3
+Flags: --pretty
+{
   "result":[
     {"name":"objectGetPrototypeOf","type":"(o: any) => any"},
     {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
@@ -245,7 +329,10 @@ customfun.js = {
     }
   ]
 }
-issue-1368.js = {
+
+issue-1368.js:20:10
+Flags: --pretty
+{
   "result":[
     {"name":"extended","type":"string"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -258,7 +345,10 @@ issue-1368.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-if.js = {
+
+if.js:3:7
+Flags: --pretty
+{
   "result":[
     {"name":"@@iterator","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
@@ -339,7 +429,10 @@ if.js = {
     {"name":"valueOf","type":"() => string"}
   ]
 }
-override.js = {
+
+override.js:10:16
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"() => void"},
     {"name":"foo","type":"() => string"},
@@ -352,7 +445,10 @@ override.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-member_class_property.js = {
+
+member_class_property.js:8:5
+Flags: --lsp
+{
   "label":"baz",
   "kind":6,
   "detail":"string",
@@ -408,7 +504,10 @@ member_class_property.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
-member_class_static.js = {
+
+member_class_static.js:7:5
+Flags: --pretty
+{
   "result":[
     {"name":"apply","type":"(thisArg: any, argArray?: any) => any"},
     {"name":"arguments","type":"any"},
@@ -426,6 +525,7 @@ member_class_static.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
+
 member_middle.js:5:4
 Flags: --pretty
 {
@@ -454,7 +554,9 @@ Flags: --pretty
   ]
 }
 
-optional_chaining_new.js = {
+optional_chaining_new.js:9:15
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"void | number"},
     {"name":"hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
@@ -465,7 +567,10 @@ optional_chaining_new.js = {
     {"name":"valueOf","type":"void | (() => mixed)"}
   ]
 }
-optional_chaining_continue.js = {
+
+optional_chaining_continue.js:13:19
+Flags: --pretty
+{
   "result":[
     {"name":"baz","type":"void | number"},
     {"name":"hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
@@ -476,7 +581,10 @@ optional_chaining_continue.js = {
     {"name":"valueOf","type":"void | (() => mixed)"}
   ]
 }
-idx.js = {
+
+idx.js:12:28
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"string"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -487,7 +595,10 @@ idx.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-generic_alias.js = {
+
+generic_alias.js:7:5
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -498,9 +609,18 @@ generic_alias.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-object_literal.js:5:16 = {"result":[]}
-object_literal.js:7:17 = {"result":[]}
-optional_object.js = {
+
+object_literal.js:5:16
+Flags: --pretty
+{"result":[]}
+
+object_literal.js:7:17
+Flags: --pretty
+{"result":[]}
+
+optional_object.js:3:5
+Flags: --pretty
+{
   "result":[
     {"name":"?.hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
     {"name":"?.isPrototypeOf","type":"void | ((o: mixed) => boolean)"},
@@ -511,7 +631,10 @@ optional_object.js = {
     {"name":"?.z","type":"void | number"}
   ]
 }
-indirect_array.js:5:3 = {
+
+indirect_array.js:5:3
+Flags: --pretty
+{
   "result":[
     {"name":"?.@@iterator","type":"void | (() => Iterator<T>)"},
     {
@@ -606,7 +729,10 @@ indirect_array.js:5:3 = {
     {"name":"?.values","type":"void | (() => Iterator<T>)"}
   ]
 }
-indirect_array.js:10:3 = {
+
+indirect_array.js:11:3
+Flags: --pretty
+{
   "result":[
     {"name":"@@iterator","type":"() => Iterator<T>"},
     {
@@ -695,7 +821,10 @@ indirect_array.js:10:3 = {
     {"name":"values","type":"() => Iterator<T>"}
   ]
 }
-infer.js = {
+
+infer.js:4:5
+Flags: --pretty
+{
   "result":[
     {"name":"?.b","type":"void | number"},
     {"name":"?.hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
@@ -706,7 +835,10 @@ infer.js = {
     {"name":"?.valueOf","type":"void | (() => mixed)"}
   ]
 }
-eval_predicate.js = {
+
+eval_predicate.js:5:3
+Flags: --pretty
+{
   "result":[
     {"name":"a","type":"number"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -717,7 +849,10 @@ eval_predicate.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-eval_destructor.js = {
+
+eval_destructor.js:5:3
+Flags: --pretty
+{
   "result":[
     {"name":"a","type":"number"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -728,7 +863,10 @@ eval_destructor.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-poly.js = {
+
+poly.js:5:3
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -740,7 +878,10 @@ poly.js = {
     {"name":"y","type":"T"}
   ]
 }
-poly_no_args.js = {
+
+poly_no_args.js:5:3
+Flags: --pretty
+{
   "result":[
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
@@ -751,7 +892,10 @@ poly_no_args.js = {
     {"name":"x","type":"S"}
   ]
 }
-identifier.js = {
+
+identifier.js:10:18
+Flags: --pretty
+{
   "result":[
     {"name":"this","type":"this"},
     {"name":"flowery","type":"number"},
@@ -763,26 +907,35 @@ identifier.js = {
     {"name":"bartender","type":"number"}
   ]
 }
+
 identifier_middle.js:6:4
 Flags: --pretty
 {
   "result":[{"name":"foobaz","type":"number"},{"name":"foobarbaz","type":"number"}]
 }
 
-super.js = {
+super.js:4:8
+Flags: --pretty
+{
   "result":[
     {"name":"super","type":"super"},
     {"name":"this","type":"this"},
     {"name":"Foo","type":"class Foo"}
   ]
 }
-this-2.js = {
+
+this-2.js:5:10
+Flags: --pretty
+{
   "result":[
     {"name":"y","type":"(z: empty) => empty"},
     {"name":"x","type":"any"},
     {"name":"foo","type":"() => void"}
   ]
 }
+
+this-2.js:9:4
+Flags: --pretty
 {
   "result":[
     {"name":"this","type":"this"},
@@ -791,6 +944,9 @@ this-2.js = {
     {"name":"foo","type":"() => void"}
   ]
 }
+
+this-2.js:13:15
+Flags: --pretty
 {
   "result":[
     {"name":"z","type":"empty"},
@@ -799,6 +955,9 @@ this-2.js = {
     {"name":"foo","type":"() => void"}
   ]
 }
+
+this-2.js:17:9
+Flags: --pretty
 {
   "result":[
     {"name":"super","type":"super"},
@@ -809,10 +968,22 @@ this-2.js = {
     {"name":"Bar","type":"class Bar"}
   ]
 }
-pattern.js = {"result":[]}
-{"result":[{"name":"foo","type":"number"},{"name":"bar","type":"() => void"}]}
+
+pattern.js:4:8
+Flags: --pretty
 {"result":[]}
-normalize-1.js = {
+
+pattern.js:8:4
+Flags: --pretty
+{"result":[{"name":"foo","type":"number"},{"name":"bar","type":"() => void"}]}
+
+pattern.js:12:14
+Flags: --pretty
+{"result":[]}
+
+normalize-1.js:4:12
+Flags: --pretty
+{
   "result":[
     {"name":"b","type":"T"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
@@ -823,7 +994,10 @@ normalize-1.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-normalize-2.js = {
+
+normalize-2.js:5:10
+Flags: --pretty
+{
   "result":[
     {"name":"this","type":"this"},
     {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
@@ -831,7 +1005,10 @@ normalize-2.js = {
     {"name":"a","type":"{b: T, ...}"}
   ]
 }
-unqualified-type-annotation.js = {
+
+unqualified-type-annotation.js:28:18
+Flags: --pretty
+{
   "result":[
     {"name":"Typologies","type":"module Typologies"},
     {"name":"Typography","type":"class Typewriter"},
@@ -846,21 +1023,30 @@ unqualified-type-annotation.js = {
     {"name":"Typaram","type":"Typaram"}
   ]
 }
-qualified-type-annotation.js = {
+
+qualified-type-annotation.js:5:23
+Flags: --pretty
+{
   "result":[
     {"name":"Typesafety","type":"interface Typesafety"},
     {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
   ]
 }
-qualified-type-annotation-require.js = {
+
+qualified-type-annotation-require.js:5:23
+Flags: --pretty
+{
   "result":[
     {"name":"Typesafety","type":"interface Typesafety"},
     {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
   ]
 }
-inherited-class-properties.js = {
+
+inherited-class-properties.js:16:13
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"\"bar\""},
     {"name":"baz","type":"\"baz\""},
@@ -873,7 +1059,10 @@ inherited-class-properties.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-function-added-properties.js = {
+
+function-added-properties.js:6:5
+Flags: --pretty
+{
   "result":[
     {"name":"apply","type":"(thisArg: any, argArray?: any) => any"},
     {"name":"arguments","type":"any"},
@@ -891,13 +1080,30 @@ function-added-properties.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-comments.js (line) = {"result":[]}
-comments.js (block) = {"result":[]}
-literal.js (inside string) = {"result":[]}
-literal.js (inside regex) = {"result":[]}
-literal.js (inside template literal) = {"result":[]}
-import_source.js = {"result":[]}
-object-with-prototype.js = {
+
+comments.js:3:8
+Flags: --pretty
+{"result":[]}
+
+comments.js:6:8
+Flags: --pretty
+{"result":[]}
+
+literal.js:3:16
+Flags: --pretty
+{"result":[]}
+
+literal.js:6:16
+Flags: --pretty
+{"result":[]}
+
+literal.js:9:16
+Flags: --pretty
+{"result":[]}
+
+object-with-prototype.js:9:11
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"string"},
     {"name":"baz","type":"string"},
@@ -909,7 +1115,10 @@ object-with-prototype.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-object-spread-1.js = {
+
+object-spread-1.js:9:3
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"B"},
     {"name":"foo","type":"A"},
@@ -921,7 +1130,10 @@ object-spread-1.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-object-spread-2.js = {
+
+object-spread-2.js:9:3
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"C"},
     {"name":"foo","type":"A"},
@@ -933,7 +1145,10 @@ object-spread-2.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-union-2.js = {
+
+union-2.js:4:3
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"\"D\" | \"B\""},
     {"name":"foo","type":"\"A\""},
@@ -945,7 +1160,10 @@ union-2.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-type-alias.js = {
+
+type-alias.js:7:3
+Flags: --pretty
+{
   "result":[
     {"name":"a","type":"number"},
     {"name":"b","type":"string"},
@@ -957,7 +1175,10 @@ type-alias.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-intersection.js = {
+
+intersection.js:4:5
+Flags: --pretty
+{
   "result":[
     {"name":"bar","type":"B"},
     {"name":"baz","type":"D"},
@@ -970,7 +1191,10 @@ intersection.js = {
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
-rank.js = {
+
+rank.js:7:11
+Flags: --lsp
+{
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -1018,7 +1242,10 @@ rank.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
-rank_union.js = {
+
+rank_union.js:8:3
+Flags: --lsp
+{
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -1066,7 +1293,10 @@ rank_union.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
-rank_intersection.js = {
+
+rank_intersection.js:8:3
+Flags: --lsp
+{
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -1114,7 +1344,10 @@ rank_intersection.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
-suggest_optional_chaining_1.js = {
+
+suggest_optional_chaining_1.js:4:3
+Flags: --lsp
+{
   "label":"?.foo",
   "kind":13,
   "detail":"void | string",
@@ -1198,7 +1431,10 @@ suggest_optional_chaining_1.js = {
     "newText":"?.valueOf"
   }
 }
-suggest_optional_chaining_2.js = {
+
+suggest_optional_chaining_2.js:4:3
+Flags: --lsp
+{
   "label":"?.bar",
   "kind":13,
   "detail":"void | number",
@@ -1266,7 +1502,10 @@ suggest_optional_chaining_2.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
-suggest_optional_chaining_3.js = {
+
+suggest_optional_chaining_3.js:4:3
+Flags: --lsp
+{
   "label":"?.foo",
   "kind":13,
   "detail":"void | number | string",
@@ -1326,7 +1565,10 @@ suggest_optional_chaining_3.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
-enums.js = {
+
+enums.js:10:3
+Flags: --lsp
+{
   "label":"Bar",
   "kind":6,
   "detail":"E",
@@ -1366,11 +1608,15 @@ enums.js = {
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
+
 enum-id.js:9:4
 Flags: --pretty
 {"result":[{"name":"Foo","type":"enum Foo"},{"name":"Fab","type":"enum Fab"}]}
 
-class_declaration_name.js = {"result":[]}
+class_declaration_name.js:5:8
+Flags: --pretty
+{"result":[]}
+
 pattern_object_key_middle.js:6:12
 Flags: --pretty
 {

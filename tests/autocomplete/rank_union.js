@@ -5,4 +5,5 @@ class Foo {
 }
 
 declare var x : Foo | {};
-x.  //
+x.
+//^

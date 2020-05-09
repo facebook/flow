@@ -6,4 +6,5 @@ function foo() {
 
 foo.prototype = { baz : 'baz' };
 
-(new foo).  // <-- AUTOCOMPLETE REQUEST HERE
+(new foo).
+//        ^

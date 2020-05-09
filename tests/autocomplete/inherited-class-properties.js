@@ -13,4 +13,5 @@ class Baz extends Bar {
   foo : "oof";
 }
 
-(new Baz()). // <-- AUTOCOMPLETE REQUEST HERE
+(new Baz()).
+//          ^

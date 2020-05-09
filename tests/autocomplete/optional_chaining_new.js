@@ -7,4 +7,5 @@ class Foo {
 
 function callMeMaybe(foo: ?Foo) {
   return foo?.
+//            ^
 }

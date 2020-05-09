@@ -8,6 +8,7 @@ function florescent() {
   var flowery = 0;
 
   let flounder =  // autocomplete shouldn't suggest flounder, flowage, or flounce
+//               ^
 
   var flotsam = 0;
 
