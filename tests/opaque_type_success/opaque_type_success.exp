@@ -7,5 +7,19 @@ module!
        ^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- testimport.js:58:29
 
-Found 1 error
+Cannot instantiate `$PropertyType` because property `__type` is missing in `C` [1].
+
+   testimport.js:58:29
+   58| function t(applicationType: $PropertyType<C, '__type'>): number {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   testimport.js:58:43
+   58| function t(applicationType: $PropertyType<C, '__type'>): number {
+                                                 ^ [1]
+
+
+
+Found 2 errors

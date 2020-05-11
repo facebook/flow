@@ -8163,6 +8163,9 @@ struct
 
   and eval_destructor cx ~trace use_op reason t d tout =
     match t with
+    | OpaqueT (r, { underlying_t = Some t; _ })
+      when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
+      eval_destructor cx ~trace use_op reason t d tout
     (* Specialize TypeAppTs before evaluating them so that we can handle special
    cases. Like the union case below. mk_typeapp_instance will return an AnnotT
    which will be fully resolved using the AnnotT case above. *)
