@@ -120,7 +120,7 @@ module T = struct
   and class_t =
     | CLASS of {
         tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
-        extends: generic option;
+        extends: ((Loc.t * expr_type) * (Loc.t, Loc.t) Ast.Type.TypeArgs.t option) option;
         implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
         body: Loc.t * (Loc.t * class_element_t) list;
       }
@@ -171,17 +171,6 @@ module T = struct
         (loc, None, false, mk_type loc)
 
     let mk_expr_type loc = (loc, FixMe)
-
-    let mk_extends loc =
-      Some
-        ( loc,
-          {
-            Ast.Type.Generic.id =
-              Ast.Type.Generic.Identifier.Unqualified
-                (Flow_ast_utils.ident_of_source (loc, "$TEMPORARY$Super$FlowFixMe"));
-            targs = None;
-            comments = None;
-          } )
 
     let mk_decl loc = VariableDecl (mk_little_annotation loc)
   end
@@ -312,31 +301,29 @@ module T = struct
 
     val create : unit -> 'a t
 
-    val next : 'a t -> Loc.t -> (Loc.t * string -> (Loc.t * string) option * 'a) -> Loc.t * string
+    val next :
+      'a t -> Loc.t -> ((unit -> Loc.t * string) -> (Loc.t * string) * 'a) -> Loc.t * string
 
     val get : 'a t -> 'a list
   end = struct
-    type 'a t = (int * 'a list) ref
+    type 'a t = {
+      mutable n: int;
+      mutable l: 'a list;
+    }
 
-    let create () = ref (0, [])
+    let create () = { n = 0; l = [] }
+
+    let gen_id outlined outlined_loc () =
+      let n = outlined.n + 1 in
+      outlined.n <- n;
+      (outlined_loc, Printf.sprintf "$%d" n)
 
     let next outlined outlined_loc f =
-      let (n, l) = !outlined in
-      let n = n + 1 in
-      let id = (outlined_loc, Printf.sprintf "$%d" n) in
-      let (id_opt, x) = f id in
-      let (n, id) =
-        match id_opt with
-        | None -> (n, id)
-        | Some id -> (n - 1, id)
-      in
-      let l = x :: l in
-      outlined := (n, l);
+      let (id, x) = f (gen_id outlined outlined_loc) in
+      outlined.l <- x :: outlined.l;
       id
 
-    let get outlined =
-      let (_, l) = !outlined in
-      l
+    let get outlined = outlined.l
   end
 
   let param_of_type (loc, name, optional, annot) =
@@ -454,8 +441,9 @@ module T = struct
           } )
     | (loc, ObjectDestruct (annot_or_init, prop)) ->
       let t = type_of_little_annotation outlined annot_or_init in
-      let f id =
-        ( None,
+      let f mk_id =
+        let id = mk_id () in
+        ( id,
           ( fst t,
             Ast.Statement.DeclareVariable
               {
@@ -500,26 +488,26 @@ module T = struct
             id = Flow_ast_utils.ident_of_source (loc, x);
           } )
 
-  and outlining_fun outlined decl_loc ht id =
+  and outlining_fun outlined decl_loc ht mk_id =
     match ht with
     | Class (id_opt, class_t) ->
-      ( id_opt,
-        let id =
-          match id_opt with
-          | None -> id
-          | Some id -> id
-        in
-        stmt_of_decl outlined decl_loc id (ClassDecl class_t) )
+      let id =
+        match id_opt with
+        | None -> mk_id ()
+        | Some id -> id
+      in
+      (id, stmt_of_decl outlined decl_loc id (ClassDecl class_t))
     | DynamicImport (source_loc, source_lit) ->
-      ( None,
-        let importKind = Ast.Statement.ImportDeclaration.ImportValue in
-        let source = (source_loc, source_lit) in
-        let default = None in
-        let specifiers =
-          Some
-            (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
-               (decl_loc, Flow_ast_utils.ident_of_source id))
-        in
+      let id = mk_id () in
+      let importKind = Ast.Statement.ImportDeclaration.ImportValue in
+      let source = (source_loc, source_lit) in
+      let default = None in
+      let specifiers =
+        Some
+          (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
+             (decl_loc, Flow_ast_utils.ident_of_source id))
+      in
+      ( id,
         ( decl_loc,
           Ast.Statement.ImportDeclaration
             {
@@ -530,20 +518,21 @@ module T = struct
               comments = None;
             } ) )
     | DynamicRequire require ->
-      ( None,
-        let kind = Ast.Statement.VariableDeclaration.Const in
-        let pattern =
-          ( decl_loc,
-            Ast.Pattern.Identifier
-              {
-                Ast.Pattern.Identifier.name = Flow_ast_utils.ident_of_source id;
-                annot = Ast.Type.Missing (fst id);
-                optional = false;
-              } )
-        in
-        let declaration =
-          { Ast.Statement.VariableDeclaration.Declarator.id = pattern; init = Some require }
-        in
+      let id = mk_id () in
+      let kind = Ast.Statement.VariableDeclaration.Const in
+      let pattern =
+        ( decl_loc,
+          Ast.Pattern.Identifier
+            {
+              Ast.Pattern.Identifier.name = Flow_ast_utils.ident_of_source id;
+              annot = Ast.Type.Missing (fst id);
+              optional = false;
+            } )
+      in
+      let declaration =
+        { Ast.Statement.VariableDeclaration.Declarator.id = pattern; init = Some require }
+      in
+      ( id,
         ( decl_loc,
           Ast.Statement.VariableDeclaration
             {
@@ -735,6 +724,32 @@ module T = struct
         Ast.Statement.InterfaceDeclaration
           { Ast.Statement.Interface.id; tparams; extends; body; comments = None } )
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
+      let extends =
+        match extends with
+        | None -> None
+        | Some (((loc, _) as expr_type), targs) ->
+          let f mk_id =
+            let id = mk_id () in
+            let t = type_of_expr_type outlined expr_type in
+            ( id,
+              ( fst t,
+                Ast.Statement.DeclareVariable
+                  {
+                    Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
+                    annot = Ast.Type.Available (fst t, t);
+                    comments = Flow_ast_utils.mk_comments_opt ();
+                  } ) )
+          in
+          let id = Outlined.next outlined loc f in
+          Some
+            ( loc,
+              {
+                Ast.Type.Generic.id =
+                  Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
+                targs;
+                comments = Flow_ast_utils.mk_comments_opt ();
+              } )
+      in
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =
         Base.List.filter
@@ -1587,20 +1602,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       let extends =
         match super with
         | None -> None
-        | Some expr ->
-          let ref_expr_opt = ref_expr expr in
-          begin
-            match ref_expr_opt with
-            | Some (loc, reference) ->
-              Some
-                ( loc,
-                  {
-                    Ast.Type.Generic.id = T.generic_id_of_reference reference;
-                    targs = type_args super_targs;
-                    comments = None;
-                  } )
-            | None -> T.FixMe.mk_extends (fst expr)
-          end
+        | Some expr -> Some (literal_expr expr, type_args super_targs)
       in
       let implements = class_implements implements in
       T.CLASS { tparams; extends; implements; body = (body_loc, body) }

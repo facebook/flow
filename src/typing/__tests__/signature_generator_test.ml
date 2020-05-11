@@ -535,10 +535,36 @@ let tests =
                  "}";
                  "export {C};";
                ];
-         "class_extends_error"
+         "class_extends"
          >:: mk_signature_generator_test
-               ["export class C extends (undefined: any) { }"]
-               ["declare class C extends $TEMPORARY$Super$FlowFixMe {}"; "export {C};"];
+               [
+                 "class A<T> {};";
+                 "export class B extends (A: Class<A<null>>) {};";
+                 "export class C extends A<null> {};";
+               ]
+               [
+                 "declare class A<T> {}";
+                 "declare class B extends $1 {}";
+                 "declare var $1: Class<A<null>>;";
+                 "declare class C extends $2<null> {}";
+                 "declare var $2: typeof A;";
+                 "export {B};";
+                 "export {C};";
+               ];
+         "class_extends_reenter"
+         >:: mk_signature_generator_test
+               [
+                 "declare class A<T> {}";
+                 "const B = class extends A<string> {}";
+                 "module.exports = B";
+               ]
+               [
+                 "declare class A<T> {}";
+                 "declare var B: typeof $1;";
+                 "declare class $1 extends $2<string> {}";
+                 "declare var $2: typeof A;";
+                 "declare module.exports: typeof B;";
+               ];
          "function_overloading"
          >:: mk_signature_generator_test
                [
