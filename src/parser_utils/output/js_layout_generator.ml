@@ -104,7 +104,8 @@ let precedence_of_expression expr =
   | (_, E.Object _)
   | (_, E.Super _)
   | (_, E.TemplateLiteral _)
-  | (_, E.This _) ->
+  | (_, E.This _)
+  | (_, E.TypeCast _) ->
     max_precedence
   (* Expressions involving operators *)
   | (_, E.Member _)
@@ -161,8 +162,7 @@ let precedence_of_expression expr =
   | (_, E.Sequence _) -> 0
   (* Expressions that always need parens (probably) *)
   | (_, E.Comprehension _)
-  | (_, E.Generator _)
-  | (_, E.TypeCast _) ->
+  | (_, E.Generator _) ->
     0
 
 let definitely_needs_parens =

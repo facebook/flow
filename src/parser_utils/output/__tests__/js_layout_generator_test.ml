@@ -1806,7 +1806,8 @@ let tests =
              Js_layout_generator.expression ~opts (E.typecast (E.identifier a80) Types.mixed)
            in
            assert_output ~ctxt ("(" ^ a80 ^ ":mixed)") layout;
-           assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout );
+           assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout;
+           assert_statement_string ~ctxt ~pretty:true "var a = (b: mixed);" );
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt "type a<a,b>=a;";
