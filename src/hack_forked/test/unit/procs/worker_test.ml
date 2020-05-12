@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 
 let entry =
   WorkerController.register_entry_point ~restore:(fun () ~(worker_id : int) ->
@@ -19,7 +19,7 @@ let make_worker ?call_wrapper heap_handle =
     ~saved_state:()
     ~entry
     ~nbr_procs:num_workers
-    ~gc_control:(Gc.get ())
+    ~gc_control:(Caml.Gc.get ())
     ~heap_handle
 
 let rec wait_until_ready handle =
@@ -32,13 +32,13 @@ let rec wait_until_ready handle =
 
 (** If "f x" throws, we exit the program with a custom exit code. *)
 let catch_exception_and_custom_exit_wrapper : 'x 'b. ('x -> 'b) -> 'x -> 'b =
- (fun f x -> (try f x with _ -> exit 17))
+ (fun f x -> (try f x with _ -> Caml.exit 17))
 
 let call_and_verify_result worker f x expected =
   let result =
     WorkerController.call worker f x |> wait_until_ready |> WorkerController.get_result
   in
-  result = expected
+  Poly.(result = expected)
 
 (** This is just like the test_worker_uncaught_exception_exits_with_2 test
  * except we add a call_wapper to the worker. It catches all exceptions and
@@ -51,7 +51,7 @@ let test_wrapped_worker_with_custom_exit heap_handle () =
   in
   match workers with
   | [] ->
-    Printf.eprintf "Failed to create workers";
+    Caml.Printf.eprintf "Failed to create workers";
     false
   | worker :: _ ->
     (try call_and_verify_result worker (fun () -> raise (Failure "oops")) () "dummy"
@@ -62,7 +62,7 @@ let test_worker_uncaught_exception_exits_with_2 heap_handle () =
   let workers = make_worker heap_handle in
   match workers with
   | [] ->
-    Printf.eprintf "Failed to create workers";
+    Caml.Printf.eprintf "Failed to create workers";
     false
   | worker :: _ ->
     (try call_and_verify_result worker (fun () -> raise (Failure "oops")) () "dummy"
@@ -73,7 +73,7 @@ let test_simple_worker_spawn heap_handle () =
   let workers = make_worker heap_handle in
   match workers with
   | [] ->
-    Printf.eprintf "Failed to create workers";
+    Caml.Printf.eprintf "Failed to create workers";
     false
   | worker :: _ -> call_and_verify_result worker (fun () -> "hello") () "hello"
 

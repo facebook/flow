@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 
 (****************************************************************************)
 (* Moduling Making buckets.
@@ -73,7 +73,7 @@ let make_n_buckets ~buckets ~split =
   let next_bucket = ref 0 in
   fun () ->
     let current = !next_bucket in
-    incr next_bucket;
+    Int.incr next_bucket;
     if current < buckets then
       Job { work = split ~bucket:current; bucket = current; total = buckets }
     else

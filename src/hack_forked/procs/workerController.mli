@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
-
 (*****************************************************************************)
 (* Module building workers.
  * A worker is a subprocess executing an arbitrary function.
@@ -92,7 +90,7 @@ val make :
   saved_state:'a ->
   entry:'a entry ->
   nbr_procs:int ->
-  gc_control:Gc.control ->
+  gc_control:Caml.Gc.control ->
   heap_handle:SharedMem.handle ->
   worker list
 

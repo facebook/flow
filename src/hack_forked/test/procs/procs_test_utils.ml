@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 
 let entry =
   WorkerController.register_entry_point ~restore:(fun _ ~(worker_id : int) ->
@@ -27,7 +27,7 @@ let make_workers n =
     { SharedMem.heap_size = 20 * gig; hash_table_pow = 18; log_level = 0 }
   in
   let handle = SharedMem.init ~num_workers:n default_sharedmem_config in
-  let workers = MultiWorkerLwt.make handle entry n (Gc.get ()) handle in
+  let workers = MultiWorkerLwt.make handle entry n (Caml.Gc.get ()) handle in
   workers
 
 let cleanup () = WorkerController.killall ()
@@ -40,7 +40,7 @@ let run_interrupter limit =
       Unix.close fd_in;
       let rec aux x =
         match x with
-        | Some 0 -> exit 0
+        | Some 0 -> Caml.exit 0
         | _ ->
           let written = Unix.write fd_out "!" 0 1 in
           assert (written = 1);
@@ -55,4 +55,4 @@ let run_interrupter limit =
 let read_exclamation_mark fd =
   let exclamation_mark = Bytes.create 1 in
   let read = Unix.read fd exclamation_mark 0 1 in
-  assert (read = 1 && exclamation_mark = "!")
+  assert (read = 1 && String.equal exclamation_mark "!")

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 
 (* As for [Daemon.register_entry_point], this should stay
    at toplevel, in order to be executed before
@@ -26,7 +26,7 @@ let entry =
 (* Saves the default GC settings, which are restored by the workers. Workers can
  * have more relaxed GC configs as they are short-lived processes, and this
  * prevents the workers from inheriting GC settings the master needs. *)
-let gc_control = Gc.{ (get ()) with Control.minor_heap_size = 1024 * 1024 * 2 }
+let gc_control = Caml.Gc.{ (get ()) with minor_heap_size = 1024 * 1024 * 2 }
 
 let make ~n heap_handle =
   MultiWorkerLwt.make

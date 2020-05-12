@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 open Worker
 
 (*****************************************************************************
@@ -179,7 +179,7 @@ let spawn w =
   | Some handle -> handle
 
 (* If the worker isn't prespawned, close the worker *)
-let close w h = if w.prespawned = None then Daemon.close h
+let close w h = if Option.is_none w.prespawned then Daemon.close h
 
 (* If there is a call_wrapper, apply it and create the Request *)
 let wrap_request w f x =
@@ -187,18 +187,18 @@ let wrap_request w f x =
   | Some { wrap } -> Request (fun { send } -> send (wrap f x))
   | None -> Request (fun { send } -> send (f x))
 
-type 'a entry_state = 'a * Gc.control * SharedMem.handle * int
+type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int
 
 type 'a entry = ('a entry_state * Unix.file_descr option, request, void) Daemon.entry
 
 let entry_counter = ref 0
 
 let register_entry_point ~restore =
-  incr entry_counter;
+  Int.incr entry_counter;
   let restore (st, gc_control, heap_handle, worker_id) =
     restore st ~worker_id;
     SharedMem.connect heap_handle ~worker_id;
-    Gc.set gc_control
+    Caml.Gc.set gc_control
   in
   let name = Printf.sprintf "slave_%d" !entry_counter in
   Daemon.register_entry_point
@@ -317,7 +317,7 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
     | Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
       raise SharedMem.Out_of_shared_memory
     | Unix.WEXITED i ->
-      Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
+      Caml.Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
       raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
     | Unix.WSTOPPED i -> raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
     | Unix.WSIGNALED i -> raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
@@ -388,7 +388,7 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
   let request = wrap_request w f x in
   (* Send the job to the slave. *)
   let () =
-    try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd request |> ignore
+    try Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request |> ignore
     with e ->
       begin
         match Unix.waitpid [Unix.WNOHANG] slave_pid with
@@ -398,7 +398,7 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
   in
   (* And returned the 'handle'. *)
   let handle = ref ((x, call_id), Processing slave) in
-  w.handle <- Obj.magic (Some handle);
+  w.handle <- Caml.Obj.magic (Some handle);
   handle
 
 (**************************************************************************
@@ -456,12 +456,12 @@ let select ds additional_fds =
   let processing = get_processing ds in
   let fds = List.map ~f:(fun { infd; _ } -> infd) processing in
   let (ready_fds, _, _) =
-    if fds = [] || List.length processing <> List.length ds then
+    if List.is_empty fds || List.length processing <> List.length ds then
       ([], [], [])
     else
       Sys_utils.select_non_intr (fds @ additional_fds) [] [] (-1.)
   in
-  let additional_ready_fds = List.filter ~f:(List.mem ~equal:( = ) ready_fds) additional_fds in
+  let additional_ready_fds = List.filter ~f:(List.mem ~equal:Poly.( = ) ready_fds) additional_fds in
   List.fold_right
     ~f:(fun d acc ->
       match snd !d with
@@ -469,7 +469,7 @@ let select ds additional_fds =
       | Canceled
       | Failed _ ->
         { acc with readys = d :: acc.readys }
-      | Processing s when List.mem ~equal:( = ) ready_fds s.infd ->
+      | Processing s when List.mem ~equal:Poly.( = ) ready_fds s.infd ->
         { acc with readys = d :: acc.readys }
       | Processing _ -> { acc with waiters = d :: acc.waiters })
     ~init:{ readys = []; waiters = []; ready_fds = additional_ready_fds }

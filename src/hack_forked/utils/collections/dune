@@ -2,4 +2,4 @@
   (name collections)
   (wrapped false)
   (libraries
-    core_kernel))
+    base))

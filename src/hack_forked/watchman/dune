@@ -2,9 +2,9 @@
   (name watchman)
   (wrapped false)
   (libraries
+    base
     flow_common_lwt
     buffered_line_reader_lwt
-    core_kernel
     hh_json
     logging_common
     sys_utils

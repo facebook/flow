@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 open Ocaml_overrides
 open Stack_utils
 
@@ -62,7 +62,7 @@ let rec maybe_consume
     ?(max_time : float = 0.0)
     (fd_ref : Unix.file_descr option ref)
     (acc : string Stack_utils.Stack.t) : unit =
-  if max_time < 0.0 then
+  if Float.(max_time < 0.0) then
     ()
   else
     let start_t = Unix.time () in
@@ -161,7 +161,7 @@ let rec read_and_wait_pid ~(retries : int) (process : Process_types.t) :
     | Lifecycle_killed_due_to_overflow_stdin -> Error Overflow_stdin
     | Lifecycle_running { pid } ->
       let fds = List.rev_filter_map ~f:( ! ) [stdout_fd; stderr_fd] in
-      if fds = [] then
+      if List.is_empty fds then
         (* EOF reached for all FDs. Blocking wait. *)
         let (_, status) = Unix.waitpid [] pid in
         let () = lifecycle := Lifecycle_exited status in
@@ -191,7 +191,7 @@ let rec read_and_wait_pid ~(retries : int) (process : Process_types.t) :
           make_result status (Stack.merge_bytes acc) (Stack.merge_bytes acc_err)))
 
 let read_and_wait_pid ~(timeout : int) (process : Process_types.t) : Process_types.process_result =
-  let retries = float_of_int timeout /. sleep_seconds_per_retry |> int_of_float in
+  let retries = Float.of_int timeout /. sleep_seconds_per_retry |> Int.of_float in
   read_and_wait_pid ~retries process
 
 let failure_msg (failure : Process_types.failure) : string =

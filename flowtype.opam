@@ -9,7 +9,7 @@ doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
   "ocaml" {>= "4.07.1"}
-  "base"
+  "base" {= "v0.11.1"}
   "base-unix"
   "base-bytes"
   "dtoa" {>= "0.3.1"}
@@ -17,7 +17,6 @@ depends: [
   "ocamlfind" {build}
   "ocaml-migrate-parsetree" {build}
   "ounit" {with-test}
-  "core_kernel" {= "v0.11.1"}
   "sedlex" {= "2.1"}
   "lwt" {>= "4.5.0" < "5.0.0" & os != "win32"}
   "lwt" {>= "4.4.0" < "5.0.0" & os = "win32"}

@@ -6,7 +6,7 @@
  *)
 
 module List = struct
-  include Core_kernel.List
+  include Base.List
 
   let rec fold_left_env env l ~init ~f =
     match l with
@@ -92,7 +92,7 @@ module List = struct
 end
 
 module Option = struct
-  include Core_kernel.Option
+  include Base.Option
 
   let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
    fun pp_x fmt x_opt ->

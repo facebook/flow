@@ -128,7 +128,7 @@ let slave_main ic oc =
     start_minor_collections := gc.Gc.minor_collections;
     start_major_collections := gc.Gc.major_collections;
     start_wall_time := Unix.gettimeofday ();
-    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Core_kernel.Result.ok;
+    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
     Mem_profile.start ();
     do_process { send = send_result };
     exit 0

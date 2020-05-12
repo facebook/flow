@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include Core_kernel
+include Base
 
 (** The equality function in Pervasives is backed by compiler magic (called
     compare_val), which operates on the memory representation of values to
