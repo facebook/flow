@@ -1963,26 +1963,10 @@ let mk_declare_class_sig =
         let (extends, extends_ast) =
           match extends with
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
-            begin
-              match (id, targs) with
-              | ( Ast.Type.Generic.Identifier.Unqualified
-                    ( id_loc,
-                      ( { Ast.Identifier.name = "$TEMPORARY$Super$FlowFixMe"; comments = _ } as
-                      id_name ) ),
-                  None ) ->
-                let ty = AnyT.at Annotated id_loc in
-                let t = (loc, ty, None) in
-                let id =
-                  let id_loc_ty = (id_loc, ty) in
-                  Ast.Type.Generic.Identifier.Unqualified (id_loc_ty, id_name)
-                in
-                (Some t, Some (loc, { Ast.Type.Generic.id; targs = None; comments }))
-              | _ ->
-                let lookup_mode = Env.LookupMode.ForValue in
-                let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
-                let (t, targs) = mk_super cx tparams_map loc i targs in
-                (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
-            end
+            let lookup_mode = Env.LookupMode.ForValue in
+            let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
+            let (t, targs) = mk_super cx tparams_map loc i targs in
+            (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
           | None -> (None, None)
         in
         let (mixins, mixins_ast) =
