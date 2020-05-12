@@ -6,6 +6,7 @@
  *)
 
 open Type
+open TypeUtil
 open Reason
 
 (*****************)

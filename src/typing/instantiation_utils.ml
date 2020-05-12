@@ -8,6 +8,7 @@
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 
 (***********************)
 (* instantiation utils *)

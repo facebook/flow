@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
+open TypeUtil
 include Func_sig_intf
 
 module Make (F : Func_params.S) = struct

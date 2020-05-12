@@ -10,6 +10,7 @@ module Tast_utils = Typed_ast_utils
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 open Env.LookupMode
 open Trust_helpers
 module Flow = Flow_js
@@ -32,7 +33,7 @@ module Func_type_params = Func_params.Make (struct
     let name = Base.Option.map name ~f:id_name in
     let t =
       if optional then
-        Type.optional t
+        TypeUtil.optional t
       else
         t
     in
@@ -972,7 +973,7 @@ let rec convert cx tparams_map =
           let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
           let t =
             if optional then
-              Type.optional t
+              TypeUtil.optional t
             else
               t
           in
@@ -1285,7 +1286,7 @@ and convert_object =
           else
             let t =
               if optional then
-                Type.optional t
+                TypeUtil.optional t
               else
                 t
             in
@@ -1417,7 +1418,7 @@ and convert_object =
           let (((_, t), _) as value_ast) = convert cx tparams_map value in
           let t =
             if optional then
-              Type.optional t
+              TypeUtil.optional t
             else
               t
           in
@@ -1781,7 +1782,7 @@ and add_interface_properties cx tparams_map properties s =
                     let (((_, t), _) as value_ast) = convert cx tparams_map value in
                     let t =
                       if optional then
-                        Type.optional t
+                        TypeUtil.optional t
                       else
                         t
                     in
@@ -1857,7 +1858,7 @@ and add_interface_properties cx tparams_map properties s =
                 let (((_, t), _) as value) = convert cx tparams_map value in
                 let t =
                   if optional then
-                    Type.optional t
+                    TypeUtil.optional t
                   else
                     t
                 in

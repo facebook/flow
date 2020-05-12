@@ -9,6 +9,7 @@ open Constraint
 open Reason
 open Utils_js
 open Type
+open TypeUtil
 module Marked = Marked.IdMarked
 module FlowError = Flow_error
 

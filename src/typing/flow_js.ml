@@ -23,6 +23,7 @@ open Loc_collections
 open Reason
 open Constraint
 open Type
+open TypeUtil
 open Debug_js.Verbose
 module FlowError = Flow_error
 
@@ -2749,11 +2750,11 @@ struct
         | (_, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (UnionT (reason, rep), FilterMaybeT (use_op, tout)) ->
-          let checked_trust = Context.trust_errors cx in
+          let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
           let void = VoidT.why reason |> with_trust bogus_trust in
           let null = NullT.why reason |> with_trust bogus_trust in
-          let filter_void t = TypeUtil.quick_subtype checked_trust t void in
-          let filter_null t = TypeUtil.quick_subtype checked_trust t null in
+          let filter_void t = quick_subtype t void in
+          let filter_null t = quick_subtype t null in
           let filter_null_and_void t = filter_void t || filter_null t in
           begin
             match UnionRep.check_enum rep with
@@ -2825,19 +2826,19 @@ struct
           if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
         (* Optimization to treat maybe and optional types as special unions for subset comparision *)
         | (UnionT (reason, rep), UseT (use_op, MaybeT (r, maybe))) ->
-          let checked_trust = Context.trust_errors cx in
+          let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
           let void = VoidT.why r |> with_trust bogus_trust in
           let null = NullT.why r |> with_trust bogus_trust in
-          let filter_void t = TypeUtil.quick_subtype checked_trust t void in
-          let filter_null t = TypeUtil.quick_subtype checked_trust t null in
+          let filter_void t = quick_subtype t void in
+          let filter_null t = quick_subtype t null in
           let filter_null_and_void t = filter_void t || filter_null t in
           let maybe = push_type_alias_reason r maybe in
           (* if the union doesn't contain void or null,
          then everything in it must be upper-bounded by maybe *)
           begin
             match
-              ( UnionRep.quick_mem_enum checked_trust void rep,
-                UnionRep.quick_mem_enum checked_trust null rep )
+              ( UnionRep.quick_mem_enum ~quick_subtype void rep,
+                UnionRep.quick_mem_enum ~quick_subtype null rep )
             with
             | (UnionRep.No, UnionRep.No) -> rec_flow_t ~use_op cx trace (l, maybe)
             | (UnionRep.Yes, UnionRep.No) ->
@@ -2861,12 +2862,12 @@ struct
             | _ -> flow_all_in_union cx trace rep u
           end
         | (UnionT (reason, rep), UseT (use_op, OptionalT { reason = r; type_ = opt; use_desc })) ->
-          let checked_trust = Context.trust_errors cx in
+          let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
           let void = VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust in
-          let filter_void t = TypeUtil.quick_subtype checked_trust t void in
+          let filter_void t = quick_subtype t void in
           (* if the union doesn't contain void, then everything in it must be upper-bounded by u *)
           begin
-            match UnionRep.quick_mem_enum checked_trust void rep with
+            match UnionRep.quick_mem_enum ~quick_subtype void rep with
             | UnionRep.No -> rec_flow_t ~use_op cx trace (l, opt)
             | UnionRep.Yes ->
               rec_flow_t
@@ -2905,7 +2906,7 @@ struct
               in
               (match
                  UnionRep.quick_mem_enum
-                   (Context.trust_errors cx)
+                   (TypeUtil.quick_subtype (Context.trust_errors cx))
                    (DefT (r, Trust.bogus_trust (), def))
                    rep
                with
@@ -2930,7 +2931,7 @@ struct
                     UnionRep.join_quick_mem_results
                       ( acc,
                         UnionRep.quick_mem_enum
-                          (Context.trust_errors cx)
+                          (TypeUtil.quick_subtype (Context.trust_errors cx))
                           (DefT (r, Trust.bogus_trust (), def))
                           rep ))
                   enums
@@ -3002,7 +3003,9 @@ struct
                      cx
                      ~trace
                      (Error_message.EIncompatibleWithUseOp
-                        (reason_l, UnionRep.specialized_reason reason_u rep, use_op));
+                        ( reason_l,
+                          UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_u rep,
+                          use_op ));
                  true
                | _ -> false ->
           ()
@@ -9210,6 +9213,7 @@ struct
       if not (UnionRep.is_optimized_finally rep) then
         UnionRep.optimize
           rep
+          ~reasonless_eq:TypeUtil.reasonless_eq
           ~flatten:(Type_mapper.union_flatten cx)
           ~find_resolved:(Context.find_resolved cx)
           ~find_props:(Context.find_props cx);
@@ -9231,13 +9235,14 @@ struct
     | IntersectionCases _ -> false
 
   and shortcut_enum cx trace reason_op use_op l rep =
-    quick_mem_result cx trace reason_op use_op l rep
-    @@ UnionRep.quick_mem_enum (Context.trust_errors cx) l rep
+    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+    quick_mem_result cx trace reason_op use_op l rep @@ UnionRep.quick_mem_enum ~quick_subtype l rep
 
   and shortcut_disjoint_union cx trace reason_op use_op l rep =
+    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
     quick_mem_result cx trace reason_op use_op l rep
     @@ UnionRep.quick_mem_disjoint_union
-         (Context.trust_errors cx)
+         ~quick_subtype
          l
          rep
          ~find_resolved:(Context.find_resolved cx)
@@ -9277,7 +9282,7 @@ struct
     (* Our work here is done, so no need to continue. *)
     | UnionRep.No ->
       (* membership check failed *)
-      let r = UnionRep.specialized_reason reason_op rep in
+      let r = UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep in
       rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), EmptyT Bottom)));
       true
     (* Our work here is done, so no need to continue. *)

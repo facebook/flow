@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 open Utils_js
 
 let string_of_polarity = function

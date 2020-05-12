@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 open React
 
 let err_incompatible
@@ -882,8 +883,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 if required then
                   t
                 else
-                  Type.optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
-              | Error _ -> AnyT.make AnyError reason_op |> Type.optional
+                  optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
+              | Error _ -> AnyT.make AnyError reason_op |> optional
             in
             next todo (add_prop k t shape)))
     in
@@ -1362,8 +1363,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 if required then
                   t
                 else
-                  Type.optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
-              | Error reason -> AnyT.make AnyError reason |> Type.optional
+                  optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
+              | Error reason -> AnyT.make AnyError reason |> optional
             in
             next todo (add_prop k t prop_types))
         | DefaultProps (todo, acc) ->

@@ -698,7 +698,7 @@ end = struct
        is in scope. The reason we need to make this distinction is that bound tests
        may exit the scope of the structure that introduced them, in which case we
        do not perform the substitution. There instead we unfold the underlying type. *)
-    let reason = Type.reason_of_t t in
+    let reason = TypeUtil.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
     | RPolyTest (name, _) ->
       let loc = Reason.def_aloc_of_reason reason in
@@ -708,7 +708,7 @@ end = struct
 
   and type_with_alias_reason ~env t =
     let next = type_after_reason ~cont:type_with_alias_reason in
-    let reason = Type.reason_of_t t in
+    let reason = TypeUtil.reason_of_t t in
     if Env.expand_type_aliases env then
       next ~env t
     else
@@ -2035,7 +2035,7 @@ end = struct
         let r =
           match kind with
           | ImportClassKind -> r
-          | _ -> Type.reason_of_t t
+          | _ -> TypeUtil.reason_of_t t
         in
         type_t ~env r kind t None
       (* Enums *)

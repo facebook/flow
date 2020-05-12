@@ -542,6 +542,7 @@ let merge_trust_var constr =
 module ContextOptimizer = struct
   open Constraint
   open Type
+  open TypeUtil
 
   class context_optimizer =
     object (self)

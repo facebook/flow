@@ -34,7 +34,7 @@ let extract_member_def ~reader cx this name =
     match Members.extract cx this |> Members.to_command_result with
     | Ok result_map ->
       (match SMap.find_opt name result_map with
-      | Some (None, t) -> Def (Type.loc_of_t t |> loc_of_aloc ~reader)
+      | Some (None, t) -> Def (TypeUtil.loc_of_t t |> loc_of_aloc ~reader)
       | Some (Some x, _) -> Def (loc_of_aloc ~reader x)
       | None -> Def_error (spf "failed to find member %s in members map" name))
     | Error msg -> Def_error msg
@@ -180,10 +180,10 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
       match v with
       | Type.OpenT _ ->
         (match Flow_js.possible_types_of_type cx v with
-        | [t] -> Def (Type.def_loc_of_t t |> loc_of_aloc ~reader)
+        | [t] -> Def (TypeUtil.def_loc_of_t t |> loc_of_aloc ~reader)
         | [] -> Def_error "No possible types"
         | _ -> Def_error "More than one possible type")
-      | _ -> Def (Type.def_loc_of_t v |> loc_of_aloc ~reader)
+      | _ -> Def (TypeUtil.def_loc_of_t v |> loc_of_aloc ~reader)
     in
     Done loc
   | Get_def_request.Require ((source_loc, name), require_loc) ->
@@ -214,7 +214,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
            * fall back to just the top of the file *)
           let loc =
             match cjs_export with
-            | Some t -> loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
+            | Some t -> TypeUtil.loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
             | None -> Loc.none
           in
           if loc = Loc.none then

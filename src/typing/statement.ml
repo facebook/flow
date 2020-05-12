@@ -24,6 +24,7 @@ module T = Type
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 open Env.LookupMode
 
 (*************)
@@ -292,7 +293,7 @@ module Func_stmt_config = struct
       let { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); optional; _ } = id in
       let t =
         if optional || default <> None then
-          Type.optional t
+          TypeUtil.optional t
         else
           t
       in
@@ -300,7 +301,7 @@ module Func_stmt_config = struct
     | _ ->
       let t =
         if default <> None then
-          Type.optional t
+          TypeUtil.optional t
         else
           t
       in
@@ -362,7 +363,7 @@ module Func_stmt_config = struct
         in
         let t =
           if optional && default = None then
-            Type.optional t
+            TypeUtil.optional t
           else
             t
         in

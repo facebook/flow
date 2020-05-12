@@ -6,6 +6,7 @@
  *)
 
 open Type
+open TypeUtil
 
 exception UnexpectedType of string
 

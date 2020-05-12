@@ -44,7 +44,7 @@ module Action = struct
     | (Unify (_, t1, t2), Unify (_, t1_, t2_)) -> eq_t (t1, t1_) && eq_t (t2, t2_)
     | _ -> false
 
-  and eq_t (t, t_) = Type.reasonless_compare t t_ = 0
+  and eq_t (t, t_) = TypeUtil.reasonless_compare t t_ = 0
 
   and eq_use_t = function
     | (Type.UseT (_, t), Type.UseT (_, t_)) -> eq_t (t, t_)

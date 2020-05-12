@@ -7,6 +7,7 @@
 
 open Utils_js
 open Type
+open TypeUtil
 open Reason
 open Flow_js
 

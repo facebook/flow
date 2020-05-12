@@ -8,6 +8,7 @@
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 module ImplicitTypeArgument = Instantiation_utils.ImplicitTypeArgument
 
 module FlowSet = struct

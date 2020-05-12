@@ -18,6 +18,7 @@ module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 open Reason
 open Type
+open TypeUtil
 
 type state = {
   parent: Type.t option;

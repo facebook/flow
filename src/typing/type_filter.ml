@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 
 let recurse_into_union filter_fn ((r, ts) : reason * Type.t list) =
   let new_ts =

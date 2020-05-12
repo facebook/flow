@@ -13,6 +13,7 @@
 open Utils_js
 open Loc_collections
 open Type
+open TypeUtil
 open Reason
 open Scope
 module Flow = Flow_js

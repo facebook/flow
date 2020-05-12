@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 module FlowError = Flow_error
 
 module type CUSTOM_FUN = sig

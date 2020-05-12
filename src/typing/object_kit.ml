@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 
 module type OBJECT = sig
   val run :
@@ -544,7 +545,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         Object.Rest.(
           let optional = function
             | OptionalT _ as t -> t
-            | t -> Type.optional t
+            | t -> TypeUtil.optional t
           in
           (* Subtract the second slice from the first slice and return the difference
            * slice. The runtime implementation of this type operation is:

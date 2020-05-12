@@ -81,14 +81,12 @@ end
 (* If the given type refers to an object literal, return the location of the object literal.
  * Otherwise return None *)
 let get_object_literal_loc ~reader ty : Loc.t option =
-  Type.(
-    Reason.(
-      let reason_desc =
-        reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false
-      in
-      match reason_desc with
-      | RObjectLit -> Some (Type.def_loc_of_t ty |> loc_of_aloc ~reader)
-      | _ -> None))
+  let open TypeUtil in
+  let open Reason in
+  let reason_desc = reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false in
+  match reason_desc with
+  | RObjectLit -> Some (def_loc_of_t ty |> loc_of_aloc ~reader)
+  | _ -> None
 
 type def_kind =
   (* Use of a property, e.g. `foo.bar`. Includes type of receiver (`foo`) and name of the property
