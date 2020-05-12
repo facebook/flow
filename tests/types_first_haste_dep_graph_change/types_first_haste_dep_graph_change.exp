@@ -5,6 +5,7 @@ Error should refer to test/node_modules/foo.js
 Error ------------------------------------------------------------------------------------------------------ foo2.js:1:1
 
 Duplicate module provider for `foo`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    foo2.js:1:1
    1| // @flow
@@ -18,7 +19,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `foo()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:5:2
    5| (foo(): empty);
@@ -39,7 +40,7 @@ Found 2 errors
 Removing foo1.js should make error refer to foo2.js
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `foo()` to empty because string [1] is incompatible with empty [2].
+Cannot cast `foo()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:5:2
    5| (foo(): empty);
@@ -61,6 +62,7 @@ Adding foo1.js should make error refer to foo1.js
 Error ------------------------------------------------------------------------------------------------------ foo2.js:1:1
 
 Duplicate module provider for `foo`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    foo2.js:1:1
    1| // @flow
@@ -74,7 +76,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `foo()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:5:2
    5| (foo(): empty);

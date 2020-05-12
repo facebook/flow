@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------- abstractelement.js:13:11
 
-Cannot get `e.props.a` because property `a` is missing in mixed [1].
+Cannot get `e.props.a` because property `a` is missing in mixed [1]. [incompatible-use]
 
    abstractelement.js:13:11
     13|   e.props.a; // error
@@ -15,7 +15,7 @@ References:
 Error ------------------------------------------------------------------------------------------- createContext.js:18:24
 
 Cannot create `Consumer` element because enum [1] is incompatible with string [2] in the first argument of property
-`children`.
+`children`. [incompatible-type]
 
    createContext.js:18:24
    18|                 {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -30,7 +30,7 @@ References:
 Error ------------------------------------------------------------------------------------------- createContext.js:24:22
 
 Cannot create `Consumer` element because enum [1] is incompatible with string [2] in the first argument of property
-`children`.
+`children`. [incompatible-type]
 
    createContext.js:24:22
    24|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -45,6 +45,7 @@ References:
 Error ------------------------------------------------------------------------------------------- createContext.js:33:44
 
 Cannot assign `this.divRef.current` to `image` because `HTMLDivElement` [1] is incompatible with `HTMLImageElement` [2].
+[incompatible-type]
 
    createContext.js:33:44
    33|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
@@ -61,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:55:24
 
-Cannot resolve name `createContext`.
+Cannot resolve name `createContext`. [cannot-resolve-name]
 
    55|   const ThemeContext = createContext("light");
                               ^^^^^^^^^^^^^
@@ -70,6 +71,7 @@ Cannot resolve name `createContext`.
 Error ------------------------------------------------------------------------ createElementRequiredProp_string.js:17:14
 
 Cannot create `Cmp` element because property `test` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    createElementRequiredProp_string.js:17:14
    17|     return (<Cmp/>);
@@ -86,7 +88,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- create_class.js:7:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:7:6
      7|     (this.props.foo: empty); // error: string ~> empty
@@ -103,7 +105,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- create_class.js:8:6
 
-Cannot cast `this.props.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.props.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:8:6
      8|     (this.props.bar: empty); // error: number ~> empty
@@ -120,7 +122,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:15:14
 
-Cannot assign `0` to `this.p` because number [1] is incompatible with string [2].
+Cannot assign `0` to `this.p` because number [1] is incompatible with string [2]. [incompatible-type]
 
    create_class.js:15:14
    15|     this.p = 0; // error: number ~> string
@@ -134,7 +136,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- create_class.js:48:6
 
-Cannot cast `this.foo` to string because number [1] is incompatible with string [2].
+Cannot cast `this.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    create_class.js:48:6
    48|     (this.foo: string); // error: number ~> string
@@ -151,7 +153,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:71:11
 
-Cannot get `this.mixins` because property `mixins` is missing in React component [1].
+Cannot get `this.mixins` because property `mixins` is missing in React component [1]. [prop-missing]
 
    create_class.js:71:11
    71|     (this.mixins: mixed); // error: property `mixins` not found
@@ -175,7 +177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:72:11
 
-Cannot get `this.autobind` because property `autobind` is missing in React component [1].
+Cannot get `this.autobind` because property `autobind` is missing in React component [1]. [prop-missing]
 
    create_class.js:72:11
    72|     (this.autobind: mixed); // error: property `autobind` not found
@@ -200,6 +202,7 @@ References:
 Error -------------------------------------------------------------------------------------------- create_class.js:73:11
 
 Cannot get `this.statics` because property `statics` (did you mean `state`?) is missing in React component [1].
+[prop-missing]
 
    create_class.js:73:11
    73|     (this.statics: mixed); // error: property `statics` not found
@@ -223,7 +226,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- create_class.js:80:6
 
-Cannot cast `this.q` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:80:6
    80|     (this.q: empty); // error: number ~> empty
@@ -240,7 +243,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:104:6
 
-Cannot cast `this.state.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:104:6
    104|     (this.state.foo: empty); // number ~> empty
@@ -257,7 +260,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:117:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:117:6
    117|     (this.props.foo: empty); // string ~> empty
@@ -274,7 +277,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:118:6
 
-Cannot cast `this.state.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.state.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:118:6
    118|     (this.state.foo: empty); // string ~> empty
@@ -291,7 +294,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:133:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:133:6
    133|     (this.props.foo: empty); // string ~> empty
@@ -308,7 +311,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:137:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:137:6
    137|     (this.props.foo: empty); // string ~> empty
@@ -325,7 +328,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:141:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:141:6
    141|     (this.props.foo: empty); // string ~> empty
@@ -342,7 +345,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:142:6
 
-Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:142:6
    142|     (nextProps.foo: empty); // string ~> empty
@@ -359,7 +362,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:146:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:146:6
    146|     (this.props.foo: empty); // string ~> empty
@@ -376,7 +379,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:147:6
 
-Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:147:6
    147|     (this.state.bar: empty); // number ~> empty
@@ -393,7 +396,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:148:6
 
-Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:148:6
    148|     (nextProps.foo: empty); // string ~> empty
@@ -410,7 +413,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:149:6
 
-Cannot cast `nextState.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `nextState.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:149:6
    149|     (nextState.bar: empty); // number ~> empty
@@ -427,7 +430,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_class.js:150:12
 
-Cannot return `0` because number [1] is incompatible with boolean [2].
+Cannot return `0` because number [1] is incompatible with boolean [2]. [incompatible-return]
 
    create_class.js:150:12
    150|     return 0; // number ~> bool
@@ -441,7 +444,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:153:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:153:6
    153|     (this.props.foo: empty); // string ~> empty
@@ -458,7 +461,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:154:6
 
-Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:154:6
    154|     (this.state.bar: empty); // number ~> empty
@@ -475,7 +478,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:155:6
 
-Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:155:6
    155|     (nextProps.foo: empty); // string ~> empty
@@ -492,7 +495,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:156:6
 
-Cannot cast `nextState.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `nextState.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:156:6
    156|     (nextState.bar: empty); // number ~> empty
@@ -509,7 +512,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:160:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:160:6
    160|     (this.props.foo: empty); // string ~> empty
@@ -526,7 +529,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:161:6
 
-Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:161:6
    161|     (this.state.bar: empty); // number ~> empty
@@ -543,7 +546,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:162:6
 
-Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:162:6
    162|     (nextProps.foo: empty); // string ~> empty
@@ -560,7 +563,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:163:6
 
-Cannot cast `nextState.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `nextState.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:163:6
    163|     (nextState.bar: empty); // number ~> empty
@@ -577,7 +580,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:167:6
 
-Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:167:6
    167|     (this.props.foo: empty); // string ~> empty
@@ -594,7 +597,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:168:6
 
-Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:168:6
    168|     (this.state.bar: empty); // number ~> empty
@@ -611,7 +614,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_class.js:173:19
 
-Cannot call `React.createClass` because object literal [1] is not an exact object.
+Cannot call `React.createClass` because object literal [1] is not an exact object. [invalid-react-create-class]
 
    173| React.createClass({}); // error: spec must be [x] exact and [ ] sealed
                           ^^ [1]
@@ -619,7 +622,7 @@ Cannot call `React.createClass` because object literal [1] is not an exact objec
 
 Error ------------------------------------------------------------------------------------------- create_class.js:174:24
 
-Cannot call `React.createClass` because object type [1] is not an exact object.
+Cannot call `React.createClass` because object type [1] is not an exact object. [invalid-react-create-class]
 
    174| React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
                                ^^ [1]
@@ -628,6 +631,7 @@ Cannot call `React.createClass` because object type [1] is not an exact object.
 Error ------------------------------------------------------------------------------------------- create_class.js:181:16
 
 Cannot assign `1` to `M.defaultProps.bar` because property `bar` is missing in default props of React component [1].
+[incompatible-use]
 
    create_class.js:181:16
    181| M.defaultProps.bar = 1; // error cannot update void property
@@ -646,7 +650,7 @@ References:
 
 Error ------------------------------------------------------------------------- create_class_initial_state_sealed.js:9:6
 
-Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_initial_state_sealed.js:9:6
    9|     (this.state.q: empty); // number ~> empty
@@ -663,7 +667,7 @@ References:
 
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:22:6
 
-Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_initial_state_sealed.js:22:6
    22|     (this.state.q: empty); // number ~> empty
@@ -680,7 +684,7 @@ References:
 
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:35:6
 
-Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_initial_state_sealed.js:35:6
    35|     (this.state.q: empty); // number ~> empty
@@ -698,7 +702,7 @@ References:
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:45:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `q` is missing in object
-type [1] in property `q`.
+type [1] in property `q`. [incompatible-type]
 
    create_class_initial_state_sealed.js:45:19
    45|     this.setState({ q: 0 }); // property `q` not found
@@ -712,7 +716,7 @@ References:
 
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:48:17
 
-Cannot get `this.state.q` because property `q` is missing in object type [1].
+Cannot get `this.state.q` because property `q` is missing in object type [1]. [prop-missing]
 
    create_class_initial_state_sealed.js:48:17
    48|     (this.state.q: empty); // property `q` not found
@@ -726,7 +730,7 @@ References:
 
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:66:6
 
-Cannot cast `this.state.baz` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this.state.baz` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_initial_state_sealed.js:66:6
    66|     (this.state.baz: empty); // number ~> empty
@@ -744,7 +748,7 @@ References:
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:81:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `baz` (did you mean `bar`?) is
-missing in object type [1] in property `baz`.
+missing in object type [1] in property `baz`. [incompatible-type]
 
    create_class_initial_state_sealed.js:81:19
    81|     this.setState({ baz: 0 }); // property `baz`  not found
@@ -758,7 +762,7 @@ References:
 
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:84:17
 
-Cannot get `this.state.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
+Cannot get `this.state.baz` because property `baz` (did you mean `bar`?) is missing in object type [1]. [prop-missing]
 
    create_class_initial_state_sealed.js:84:17
    84|     (this.state.baz: empty); // property `baz` not found
@@ -772,7 +776,7 @@ References:
 
 Error ------------------------------------------------------------------------------- create_class_statics_sealed.js:5:2
 
-Cannot cast `A.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `A.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:5:2
    5| (A.bar: empty); // number ~> empty (inflow below)
@@ -789,7 +793,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:12:2
 
-Cannot cast `B.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `B.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:12:2
    12| (B.foo: empty); // number ~> empty
@@ -806,7 +810,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:13:2
 
-Cannot cast `B.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `B.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:13:2
    13| (B.bar: empty); // number ~> empty (inflow below)
@@ -823,7 +827,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:20:2
 
-Cannot cast `C.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `C.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:20:2
    20| (C.foo: empty); // number ~> empty
@@ -840,7 +844,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:21:2
 
-Cannot cast `C.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `C.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:21:2
    21| (C.bar: empty); // number ~> empty (inflow below)
@@ -857,7 +861,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:28:2
 
-Cannot cast `D.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `D.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:28:2
    28| (D.foo: empty); // number ~> empty
@@ -874,7 +878,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:29:4
 
-Cannot get `D.bar` because property `bar` is missing in statics of React class [1].
+Cannot get `D.bar` because property `bar` is missing in statics of React class [1]. [prop-missing]
 
    create_class_statics_sealed.js:29:4
    29| (D.bar: empty); // property `bar` not found
@@ -888,7 +892,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:30:3
 
-Cannot assign `0` to `D.bar` because property `bar` is missing in statics of React class [1].
+Cannot assign `0` to `D.bar` because property `bar` is missing in statics of React class [1]. [prop-missing]
 
    create_class_statics_sealed.js:30:3
    30| D.bar = 0; // property `bar` not found
@@ -902,7 +906,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:39:2
 
-Cannot cast `E.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `E.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:39:2
    39| (E.foo: empty); // number ~> empty
@@ -919,7 +923,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:40:2
 
-Cannot cast `E.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `E.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:40:2
    40| (E.bar: empty); // number ~> empty
@@ -936,7 +940,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:41:2
 
-Cannot cast `E.baz` to empty because number [1] is incompatible with empty [2].
+Cannot cast `E.baz` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:41:2
    41| (E.baz: empty); // number ~> empty (inflow below)
@@ -953,7 +957,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:51:2
 
-Cannot cast `F.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `F.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:51:2
    51| (F.foo: empty); // number ~> empty
@@ -970,7 +974,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:52:2
 
-Cannot cast `F.bar` to empty because number [1] is incompatible with empty [2].
+Cannot cast `F.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class_statics_sealed.js:52:2
    52| (F.bar: empty); // number ~> empty
@@ -987,7 +991,7 @@ References:
 
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:53:4
 
-Cannot get `F.baz` because property `baz` (did you mean `bar`?) is missing in statics of React class [1].
+Cannot get `F.baz` because property `baz` (did you mean `bar`?) is missing in statics of React class [1]. [prop-missing]
 
    create_class_statics_sealed.js:53:4
    53| (F.baz: empty); // number ~> empty (inflow below)
@@ -1002,6 +1006,7 @@ References:
 Error ------------------------------------------------------------------------------ create_class_statics_sealed.js:54:3
 
 Cannot assign `0` to `F.baz` because property `baz` (did you mean `bar`?) is missing in statics of React class [1].
+[prop-missing]
 
    create_class_statics_sealed.js:54:3
    54| F.baz = 0;
@@ -1015,7 +1020,7 @@ References:
 
 Error --------------------------------------------------------------------------------- default_props_undefined.js:10:10
 
-Cannot create `Foo` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `Foo` element because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
 
    default_props_undefined.js:10:10
    10| <Foo bar="42"/>; // Error
@@ -1029,7 +1034,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:15:29
 
-string [1] is incompatible with number [2].
+string [1] is incompatible with number [2]. [incompatible-type]
 
    element_config.js:15:29
    15|   static defaultProps = {p: 'foo'}; // Error: string ~> number
@@ -1043,7 +1048,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:31:25
 
-Property `p` is missing in object literal [1] but exists in object type [2].
+Property `p` is missing in object literal [1] but exists in object type [2]. [prop-missing]
 
    element_config.js:31:25
    31|   static defaultProps = {p: 42}; // Error: extra property `p`
@@ -1057,7 +1062,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:39:29
 
-string [1] is incompatible with number [2].
+string [1] is incompatible with number [2]. [incompatible-type]
 
    element_config.js:39:29
    39|   static defaultProps = {p: 'foo'}; // Error: string ~> number
@@ -1071,7 +1076,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:47:35
 
-string [1] is incompatible with number [2].
+string [1] is incompatible with number [2]. [incompatible-type]
 
    element_config.js:47:35
    47|   static defaultProps = ({}: {p?: string}); // Error: string ~> number
@@ -1086,6 +1091,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:52:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:52:6
    52| ({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
@@ -1100,6 +1106,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:56:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:56:6
    56| ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
@@ -1114,7 +1121,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:58:7
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
-object type [2].
+object type [2]. [prop-missing]
 
    element_config.js:58:7
    58| (({}: {}): React.ElementConfig<typeof C>); // Error: missing property `p`
@@ -1129,6 +1136,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:60:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:60:6
    60| ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
@@ -1143,7 +1151,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:62:7
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
-object type [2].
+object type [2]. [prop-missing]
 
    element_config.js:62:7
    62| (({}: {}): React.ElementConfig<typeof D>); // Error: missing property `p`
@@ -1158,6 +1166,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:64:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:64:6
    64| ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
@@ -1172,7 +1181,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:71:2
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
-object literal [2].
+object literal [2]. [prop-missing]
 
    element_config.js:71:2
    71| ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
@@ -1187,7 +1196,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:72:2
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
-object literal [2].
+object literal [2]. [prop-missing]
 
    element_config.js:72:2
    72| ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
@@ -1202,6 +1211,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:76:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:76:6
    76| ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
@@ -1216,6 +1226,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:80:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:80:6
    80| ({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
@@ -1230,6 +1241,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:84:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:84:6
    84| ({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
@@ -1244,6 +1256,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:88:6
 
 Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    element_config.js:88:6
    88| ({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
@@ -1258,7 +1271,7 @@ References:
 Error ------------------------------------------------------------------------------- element_with_component_type.js:8:2
 
 Cannot cast `<Foo />` to `React.Element` because property `a` is missing in object type [1] but exists in object
-type [2] in property `type`.
+type [2] in property `type`. [prop-missing]
 
    element_with_component_type.js:8:2
    8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
@@ -1276,6 +1289,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:11:8
 
 Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc.js:11:8
    11|       <Component />; // Error: `foo` is required.
@@ -1293,6 +1307,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:11:8
 
 Cannot create `Component` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc.js:11:8
    11|       <Component />; // Error: `foo` is required.
@@ -1310,6 +1325,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:12:8
 
 Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc.js:12:8
    12|       <Component foo={42} />; // Error: `bar` is required.
@@ -1327,7 +1343,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc.js:35:49
 
 Cannot call `myHOC` with `class { ... }` bound to `Component` because string [1] is incompatible with number [2] in
-property `foo`.
+property `foo`. [incompatible-call]
 
    hoc.js:35:49
    35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
@@ -1342,7 +1358,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
 
 Cannot call `myHOC` with function bound to `Component` because number [1] is incompatible with string [2] in property
-`foo`.
+`foo`. [incompatible-call]
 
    hoc.js:36:7
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -1359,7 +1375,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
 
-Cannot call `myHOC` with function bound to `Component` because:
+Cannot call `myHOC` with function bound to `Component` because: [incompatible-type]
  - Either undefined [1] is incompatible with null [2].
  - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
 
@@ -1398,6 +1414,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:41:2
 
 Cannot create `Wrapped` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc.js:41:2
    41| <Wrapped nonsense="what" />; // Error: `foo` is required.
@@ -1415,6 +1432,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:43:2
 
 Cannot create `WrappedFun` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc.js:43:2
    43| <WrappedFun />; // Error: `foo` is required.
@@ -1432,7 +1450,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
 Cannot call `connect` with `MyComponent` bound to `Component` because property `a` is missing in object type [1] but
-exists in object type [2].
+exists in object type [2]. [prop-missing]
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
@@ -1455,7 +1473,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
 Cannot call `connect` with `MyComponent` bound to `Component` because property `b` is missing in object type [1] but
-exists in object type [2].
+exists in object type [2]. [prop-missing]
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
@@ -1478,7 +1496,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
 Cannot call `connect` with `MyComponent` bound to `Component` because number [1] is incompatible with string [2] in
-property `a`.
+property `a`. [incompatible-call]
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
@@ -1496,7 +1514,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because property `a` is missing in props [1] but
-exists in object type [2].
+exists in object type [2]. [prop-missing]
 
    hoc2.js:24:45
    24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
@@ -1519,7 +1537,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because property `b` is missing in props [1] but
-exists in object type [2].
+exists in object type [2]. [prop-missing]
 
    hoc2.js:24:45
    24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
@@ -1542,7 +1560,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because string [1] is incompatible with number [2]
-in property `a`.
+in property `a`. [incompatible-call]
 
    hoc2.js:24:45
    24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
@@ -1560,6 +1578,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:2
 
 Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc3.js:26:2
    26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -1582,6 +1601,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:2
 
 Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc3.js:26:2
    26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -1604,6 +1624,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc3.js:28:24
 
 Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
+[incompatible-type]
 
    hoc3.js:28:24
    28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
@@ -1618,7 +1639,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:30:2
 
 Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object
-type [2].
+type [2]. [prop-missing]
 
    hoc3.js:30:2
    30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -1641,7 +1662,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:30:2
 
 Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object
-type [2].
+type [2]. [prop-missing]
 
    hoc3.js:30:2
    30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -1664,6 +1685,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:32:2
 
 Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
+[incompatible-type]
 
    hoc3.js:32:2
    32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -1681,6 +1703,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:26:2
 
 Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc4.js:26:2
    26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -1703,6 +1726,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:26:2
 
 Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc4.js:26:2
    26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -1725,6 +1749,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:28:24
 
 Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
+[incompatible-type]
 
    hoc4.js:28:24
    28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
@@ -1739,6 +1764,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:26:2
 
 Cannot create `MyComponent1` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc5.js:26:2
    26| <MyComponent1 />; // Error
@@ -1756,6 +1782,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:28:19
 
 Cannot create `MyComponent1` element because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
 
    hoc5.js:28:19
    28| <MyComponent1 bar="nope" />; // Error
@@ -1770,6 +1797,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:30:29
 
 Cannot create `MyComponent1` element because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-type]
 
    hoc5.js:30:29
    30| <MyComponent1 bar={42} foo={100} />; // Error
@@ -1784,6 +1812,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:33:2
 
 Cannot create `MyComponent2` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    hoc5.js:33:2
    33| <MyComponent2 />; // Error
@@ -1801,6 +1830,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:35:19
 
 Cannot create `MyComponent2` element because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
 
    hoc5.js:35:19
    35| <MyComponent2 bar="nope" />; // Error
@@ -1815,6 +1845,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:37:29
 
 Cannot create `MyComponent2` element because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-type]
 
    hoc5.js:37:29
    37| <MyComponent2 bar={42} foo={100} />; // Error
@@ -1829,7 +1860,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:43:2
 
 Cannot create `MyEnhancedComponent1` element because property `bar` is missing in props [1] but exists in object
-type [2].
+type [2]. [prop-missing]
 
    hoc5.js:43:2
    43| <MyEnhancedComponent1 />; // Error
@@ -1847,6 +1878,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:45:27
 
 Cannot create `MyEnhancedComponent1` element because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
 
    hoc5.js:45:27
    45| <MyEnhancedComponent1 bar="nope" />; // Error
@@ -1861,6 +1893,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:47:37
 
 Cannot create `MyEnhancedComponent1` element because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-type]
 
    hoc5.js:47:37
    47| <MyEnhancedComponent1 bar={42} foo={100} />; // Error
@@ -1875,7 +1908,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:50:2
 
 Cannot create `MyEnhancedComponent2` element because property `bar` is missing in props [1] but exists in object
-type [2].
+type [2]. [prop-missing]
 
    hoc5.js:50:2
    50| <MyEnhancedComponent2 />; // Error
@@ -1893,6 +1926,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:52:27
 
 Cannot create `MyEnhancedComponent2` element because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
 
    hoc5.js:52:27
    52| <MyEnhancedComponent2 bar="nope" />; // Error
@@ -1907,6 +1941,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:54:37
 
 Cannot create `MyEnhancedComponent2` element because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-type]
 
    hoc5.js:54:37
    54| <MyEnhancedComponent2 bar={42} foo={100} />; // Error
@@ -1921,6 +1956,7 @@ References:
 Error --------------------------------------------------------------------------------------------- import_react.js:7:17
 
 Cannot assign `new react.Component()` to `b` because `React.Component` [1] is incompatible with number [2].
+[incompatible-type]
 
    import_react.js:7:17
    7| var b: number = new react.Component(); // Error: ReactComponent ~> number
@@ -1935,6 +1971,7 @@ References:
 Error ----------------------------------------------------------------------------- intersection_component_error.js:12:2
 
 Cannot create `MyComponent` element because property `foo` is missing in props [1] but exists in object type [2].
+[incompatible-use]
 
    intersection_component_error.js:12:2
    12| <MyComponent />;
@@ -1951,7 +1988,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_spread.js:11:13
 
-Cannot create `Foo` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `Foo` element because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
 
    jsx_spread.js:11:13
     11| var blah = <Foo {...props} />; // error bar, number given string expected
@@ -1968,7 +2005,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- key.js:12:11
 
-Cannot create `Foo` element because in property `key`:
+Cannot create `Foo` element because in property `key`: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with number [3].
 
@@ -1987,7 +2024,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- key.js:21:16
 
-Cannot create `FooExact` element because in property `key`:
+Cannot create `FooExact` element because in property `key`: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with number [3].
 
@@ -2015,7 +2052,7 @@ Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclos
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:13:21
 
 Cannot create `Example` element because property `arr` is missing in props [1] but exists in propTypes of React
-component [2].
+component [2]. [prop-missing]
 
    proptype_arrayOf.js:13:21
    13| var fail_missing = <Example />
@@ -2036,6 +2073,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:14:36
 
 Cannot create `Example` element because number [1] is incompatible with array type [2] in property `arr`.
+[incompatible-type]
 
    proptype_arrayOf.js:14:36
    14| var fail_not_array = <Example arr={2} />
@@ -2050,6 +2088,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:15:45
 
 Cannot create `Example` element because string [1] is incompatible with number [2] in array element of property `arr`.
+[incompatible-type]
 
    proptype_arrayOf.js:15:45
     15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
@@ -2064,6 +2103,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:20:36
 
 Cannot create `Example` element because null [1] is incompatible with number [2] in array element of property `arr`.
+[incompatible-type]
 
    proptype_arrayOf.js:20:36
     20| var todo_required = <Example arr={[null]} />
@@ -2078,7 +2118,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:30:25
 
 Cannot create `OptionalExample` element because string [1] is incompatible with number [2] in array element of property
-`arr`.
+`arr`. [incompatible-type]
 
    proptype_arrayOf.js:30:25
     30| (<OptionalExample arr={[""]} />); // error: string ~> number
@@ -2092,7 +2132,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:43:34
 
-Cannot call `React.PropTypes.arrayOf` because number [1] is not a React propType.
+Cannot call `React.PropTypes.arrayOf` because number [1] is not a React propType. [invalid-prop-type]
 
    43|     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
                                         ^ [1]
@@ -2100,7 +2140,7 @@ Cannot call `React.PropTypes.arrayOf` because number [1] is not a React propType
 
 Error --------------------------------------------------------------------------------- proptype_custom_validator.js:8:8
 
-Cannot cast `propName` to empty because string [1] is incompatible with empty [2].
+Cannot cast `propName` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    proptype_custom_validator.js:8:8
      8|       (propName: empty); // error: propName is a string
@@ -2117,7 +2157,7 @@ References:
 
 Error --------------------------------------------------------------------------------- proptype_custom_validator.js:9:8
 
-Cannot cast `componentName` to empty because string [1] is incompatible with empty [2].
+Cannot cast `componentName` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    proptype_custom_validator.js:9:8
      9|       (componentName: empty); // error: componentName is a string
@@ -2134,7 +2174,7 @@ References:
 
 Error -------------------------------------------------------------------------------- proptype_custom_validator.js:10:8
 
-Cannot cast `href` to empty because string [1] is incompatible with empty [2].
+Cannot cast `href` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    proptype_custom_validator.js:10:8
     10|       (href: empty); // error: href is an optional string
@@ -2151,7 +2191,7 @@ References:
 
 Error -------------------------------------------------------------------------------- proptype_custom_validator.js:10:8
 
-Cannot cast `href` to empty because undefined [1] is incompatible with empty [2].
+Cannot cast `href` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    proptype_custom_validator.js:10:8
     10|       (href: empty); // error: href is an optional string
@@ -2168,7 +2208,7 @@ References:
 
 Error ------------------------------------------------------------------------------- proptype_custom_validator.js:11:18
 
-Cannot return `0` because mixed [1] is incompatible with `Error` [2].
+Cannot return `0` because mixed [1] is incompatible with `Error` [2]. [incompatible-return]
 
    proptype_custom_validator.js:11:18
     11|       return (0: mixed); // error: should return ?Error
@@ -2182,7 +2222,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ proptype_incompatible.js:5:10
 
-number [1] is not a React propType.
+number [1] is not a React propType. [invalid-react-create-class]
 
    5|     foo: 0, // error: `0` is not a prop type
                ^ [1]
@@ -2190,7 +2230,7 @@ number [1] is not a React propType.
 
 Error ------------------------------------------------------------------------------------- proptype_instanceOf.js:14:14
 
-Cannot create `Example` element because `A` [1] is incompatible with `B` [2] in property `x`.
+Cannot create `Example` element because `A` [1] is incompatible with `B` [2] in property `x`. [incompatible-type]
 
    proptype_instanceOf.js:14:14
    14| (<Example x={new A} />); // error: A ~> B
@@ -2204,7 +2244,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- proptype_instanceOf.js:17:13
 
-Cannot create `Example` element because string [1] is incompatible with `B` [2] in property `x`.
+Cannot create `Example` element because string [1] is incompatible with `B` [2] in property `x`. [incompatible-type]
 
    proptype_instanceOf.js:17:13
    17| (<Example x="wrong" />); // error: string ~> B
@@ -2219,7 +2259,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:13:21
 
 Cannot create `Example` element because property `obj` is missing in props [1] but exists in propTypes of React
-component [2].
+component [2]. [prop-missing]
 
    proptype_objectOf.js:13:21
    13| var fail_missing = <Example />
@@ -2240,6 +2280,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:14:37
 
 Cannot create `Example` element because number [1] is incompatible with object type [2] in property `obj`.
+[incompatible-type]
 
    proptype_objectOf.js:14:37
    14| var fail_not_object = <Example obj={2} />
@@ -2254,6 +2295,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:15:47
 
 Cannot create `Example` element because string [1] is incompatible with number [2] in property `obj.foo`.
+[incompatible-type]
 
    proptype_objectOf.js:15:47
     15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
@@ -2268,6 +2310,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:20:38
 
 Cannot create `Example` element because null [1] is incompatible with number [2] in property `obj.p`.
+[incompatible-type]
 
    proptype_objectOf.js:20:38
     20| var todo_required = <Example obj={{p:null}} />
@@ -2282,6 +2325,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:30:27
 
 Cannot create `OptionalExample` element because string [1] is incompatible with number [2] in property `obj.p`.
+[incompatible-type]
 
    proptype_objectOf.js:30:27
     30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
@@ -2295,7 +2339,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:43:35
 
-Cannot call `React.PropTypes.objectOf` because number [1] is not a React propType.
+Cannot call `React.PropTypes.objectOf` because number [1] is not a React propType. [invalid-prop-type]
 
    43|     obj: React.PropTypes.objectOf(0), // error: number not a prop type
                                          ^ [1]
@@ -2303,7 +2347,7 @@ Cannot call `React.PropTypes.objectOf` because number [1] is not a React propTyp
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:14:15
 
-Cannot create `Example` element because string [1] is incompatible with enum [2] in property `str`.
+Cannot create `Example` element because string [1] is incompatible with enum [2] in property `str`. [incompatible-type]
 
    proptype_oneOf.js:14:15
    14| (<Example str="baz" />); // error: 'baz' not in enum
@@ -2317,7 +2361,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:17:16
 
-Cannot create `Example` element because number [1] is incompatible with enum [2] in property `num`.
+Cannot create `Example` element because number [1] is incompatible with enum [2] in property `num`. [incompatible-type]
 
    proptype_oneOf.js:17:16
    17| (<Example num={3} />); // error: 3 not in enum
@@ -2332,6 +2376,7 @@ References:
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:20:17
 
 Cannot create `Example` element because boolean [1] is incompatible with boolean literal `true` [2] in property `bool`.
+[incompatible-type]
 
    proptype_oneOf.js:20:17
    20| (<Example bool={false} />); // error: false ~> true
@@ -2346,6 +2391,7 @@ References:
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:24:18
 
 Cannot create `Example` element because string [1] is incompatible with enum [2] in property `mixed`.
+[incompatible-type]
 
    proptype_oneOf.js:24:18
    24| (<Example mixed={"baz"} />); // error: 'baz' not in enum
@@ -2360,7 +2406,7 @@ References:
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:32:3
 
 Cannot create `RequiredExample` element because property `p` is missing in props [1] but exists in propTypes of React
-component [2].
+component [2]. [prop-missing]
 
    proptype_oneOf.js:32:3
    32| (<RequiredExample />); // error: `p` not found
@@ -2381,6 +2427,7 @@ References:
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:40:21
 
 Cannot create `EmptyExample` element because number [1] is incompatible with empty [2] in property `nil`.
+[incompatible-type]
 
    proptype_oneOf.js:40:21
    40| (<EmptyExample nil={0} />); // number ~> empty
@@ -2394,7 +2441,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:76:30
 
-Cannot call `React.PropTypes.oneOf` because number [1] is not an array.
+Cannot call `React.PropTypes.oneOf` because number [1] is not an array. [invalid-prop-type]
 
    76|     p: React.PropTypes.oneOf(0), // error: expected array, got 0
                                     ^ [1]
@@ -2403,7 +2450,7 @@ Cannot call `React.PropTypes.oneOf` because number [1] is not an array.
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:23:21
 
 Cannot create `Example` element because property `prop` is missing in props [1] but exists in propTypes of React
-component [2].
+component [2]. [prop-missing]
 
    proptype_oneOfType.js:23:21
    23| var fail_missing = <Example />;
@@ -2426,7 +2473,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:24:32
 
-Cannot create `Example` element because in property `prop`:
+Cannot create `Example` element because in property `prop`: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with number [3].
 
@@ -2445,7 +2492,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:29:36
 
-Cannot create `Example` element because in property `prop`:
+Cannot create `Example` element because in property `prop`: [incompatible-type]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with number [3].
 
@@ -2465,6 +2512,7 @@ References:
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:41:22
 
 Cannot create `OptionalExample` element because number [1] is incompatible with string [2] in property `p`.
+[incompatible-type]
 
    proptype_oneOfType.js:41:22
     41| (<OptionalExample p={0} />); // error: number ~> string
@@ -2479,6 +2527,7 @@ References:
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:49:21
 
 Cannot create `EmptyExample` element because number [1] is incompatible with empty [2] in property `nil`.
+[incompatible-type]
 
    proptype_oneOfType.js:49:21
    49| (<EmptyExample nil={0} />); // number ~> empty
@@ -2492,7 +2541,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:91:34
 
-Cannot call `React.PropTypes.oneOfType` because number [1] is not an array.
+Cannot call `React.PropTypes.oneOfType` because number [1] is not an array. [invalid-prop-type]
 
    91|     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
                                         ^ [1]
@@ -2500,7 +2549,7 @@ Cannot call `React.PropTypes.oneOfType` because number [1] is not an array.
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:99:35
 
-object literal [1] is not a React propType.
+object literal [1] is not a React propType. [invalid-prop-type]
 
    99|     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
                                          ^^ [1]
@@ -2509,6 +2558,7 @@ object literal [1] is not a React propType.
 Error ------------------------------------------------------------------------------------------ proptype_shape.js:20:21
 
 Cannot get `this.props.foo.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
+[prop-missing]
 
    proptype_shape.js:20:21
    20|     (this.props.foo.baz: string);
@@ -2526,6 +2576,7 @@ References:
 Error ------------------------------------------------------------------------------------------ proptype_shape.js:24:20
 
 Cannot assign `0` to `this.props.foo.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
+[prop-missing]
 
    proptype_shape.js:24:20
    24|     this.props.foo.baz = 0;
@@ -2543,7 +2594,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptypes_builtins.js:7:2
 
 Cannot cast `React.PropTypes.arrayOf` to `NoFun` because `ReactPropsCheckType` [1] is incompatible with mixed [2] in the
-first argument.
+first argument. [incompatible-cast]
 
    proptypes_builtins.js:7:2
      7| (React.PropTypes.arrayOf : NoFun);
@@ -2561,7 +2612,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptypes_builtins.js:7:2
 
 Cannot cast `React.PropTypes.arrayOf` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
-empty [2] in the return value.
+empty [2] in the return value. [incompatible-cast]
 
    proptypes_builtins.js:7:2
      7| (React.PropTypes.arrayOf : NoFun);
@@ -2579,7 +2630,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:11:2
 
 Cannot cast `React.PropTypes.instanceOf` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
-empty [2] in the return value.
+empty [2] in the return value. [incompatible-cast]
 
    proptypes_builtins.js:11:2
     11| (React.PropTypes.instanceOf : NoFun);
@@ -2597,7 +2648,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:15:2
 
 Cannot cast `React.PropTypes.objectOf` to `NoFun` because `ReactPropsCheckType` [1] is incompatible with mixed [2] in
-the first argument.
+the first argument. [incompatible-cast]
 
    proptypes_builtins.js:15:2
     15| (React.PropTypes.objectOf : NoFun);
@@ -2615,7 +2666,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:15:2
 
 Cannot cast `React.PropTypes.objectOf` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
-empty [2] in the return value.
+empty [2] in the return value. [incompatible-cast]
 
    proptypes_builtins.js:15:2
     15| (React.PropTypes.objectOf : NoFun);
@@ -2633,7 +2684,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:19:2
 
 Cannot cast `React.PropTypes.oneOf` to `NoFun` because array type [1] is incompatible with mixed [2] in the first
-argument.
+argument. [incompatible-cast]
 
    proptypes_builtins.js:19:2
     19| (React.PropTypes.oneOf : NoFun);
@@ -2651,7 +2702,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:19:2
 
 Cannot cast `React.PropTypes.oneOf` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
-empty [2] in the return value.
+empty [2] in the return value. [incompatible-cast]
 
    proptypes_builtins.js:19:2
     19| (React.PropTypes.oneOf : NoFun);
@@ -2669,7 +2720,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:23:2
 
 Cannot cast `React.PropTypes.oneOfType` to `NoFun` because array type [1] is incompatible with mixed [2] in the first
-argument.
+argument. [incompatible-cast]
 
    proptypes_builtins.js:23:2
     23| (React.PropTypes.oneOfType : NoFun);
@@ -2687,7 +2738,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:23:2
 
 Cannot cast `React.PropTypes.oneOfType` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
-empty [2] in the return value.
+empty [2] in the return value. [incompatible-cast]
 
    proptypes_builtins.js:23:2
     23| (React.PropTypes.oneOfType : NoFun);
@@ -2705,7 +2756,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:27:2
 
 Cannot cast `React.PropTypes.shape` to `NoFun` because object type [1] is incompatible with mixed [2] in the first
-argument.
+argument. [incompatible-cast]
 
    proptypes_builtins.js:27:2
     27| (React.PropTypes.shape : NoFun);
@@ -2723,7 +2774,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:27:2
 
 Cannot cast `React.PropTypes.shape` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
-empty [2] in the return value.
+empty [2] in the return value. [incompatible-cast]
 
    proptypes_builtins.js:27:2
     27| (React.PropTypes.shape : NoFun);
@@ -2740,7 +2791,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptypes_sealed.js:18:17
 
-Cannot get `this.props.baz` because property `baz` is missing in propTypes of React component [1].
+Cannot get `this.props.baz` because property `baz` is missing in propTypes of React component [1]. [prop-missing]
 
    proptypes_sealed.js:18:17
    18|     (this.props.baz: string);
@@ -2758,6 +2809,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptypes_sealed.js:22:16
 
 Cannot assign `0` to `this.props.baz` because property `baz` is missing in propTypes of React component [1].
+[prop-missing]
 
    proptypes_sealed.js:22:16
    22|     this.props.baz = 0;
@@ -2775,6 +2827,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:12:11
 
 Cannot create `Foo` element because number [1] is incompatible with `Foo` [2] in the first argument of property `ref`.
+[incompatible-type]
 
    ref.js:12:11
    12| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
@@ -2791,7 +2844,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:13:19
 
-Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2].
+Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [incompatible-cast]
 
    ref.js:13:19
     13| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -2808,7 +2861,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:15:19
 
-Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2].
+Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2]. [incompatible-type]
 
    ref.js:15:19
    15| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
@@ -2826,7 +2879,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:23:16
 
 Cannot create `FooExact` element because number [1] is incompatible with `FooExact` [2] in the first argument of
-property `ref`.
+property `ref`. [incompatible-type]
 
    ref.js:23:16
    23| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
@@ -2843,7 +2896,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:24:24
 
-Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact` [2].
+Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact` [2]. [incompatible-cast]
 
    ref.js:24:24
     24| <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
@@ -2860,7 +2913,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:26:24
 
-Cannot cast `foo` to union type because `FooExact` [1] is incompatible with `Bar` [2].
+Cannot cast `foo` to union type because `FooExact` [1] is incompatible with `Bar` [2]. [incompatible-type]
 
    ref.js:26:24
    26| <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
@@ -2877,7 +2930,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- render.js:9:17
 
-Cannot extend `React.Component` [1] with `A` because in the return value of property `render`:
+Cannot extend `React.Component` [1] with `A` because in the return value of property `render`: [incompatible-type]
  - Either undefined [2] is incompatible with null [3].
  - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
 
@@ -2899,7 +2952,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- render.js:24:59
 
-Cannot assign function to `C` because in the return value:
+Cannot assign function to `C` because in the return value: [incompatible-type]
  - Either undefined [1] is incompatible with null [2].
  - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
 
@@ -2918,7 +2971,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- render.js:26:3
 
-Cannot assign function to `D` because in the return value:
+Cannot assign function to `D` because in the return value: [incompatible-type]
  - Either undefined [1] is incompatible with null [2].
  - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
 
@@ -2937,7 +2990,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- render.js:47:18
 
-Cannot extend `React.Component` [1] with `F` because in the return value of property `render`:
+Cannot extend `React.Component` [1] with `F` because in the return value of property `render`: [incompatible-type]
  - Either undefined [2] is incompatible with null [3].
  - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
 
@@ -2962,7 +3015,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- render.js:55:10
 
-Cannot assign function to `G` because in the return value:
+Cannot assign function to `G` because in the return value: [incompatible-type]
  - Either undefined [1] is incompatible with null [2].
  - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
 
@@ -2985,6 +3038,7 @@ References:
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:7:21
 
 Cannot create `MyComponent` element because undefined [1] is incompatible with string [2] in property `title`.
+[incompatible-type]
 
    undefined_prop.js:7:21
    7| <MyComponent title={undefined} />;
@@ -2998,7 +3052,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useCallback_hook.js:6:9
 
-Cannot call `React.useCallback` because function [1] requires another argument.
+Cannot call `React.useCallback` because function [1] requires another argument. [incompatible-call]
 
    useCallback_hook.js:6:9
      6|   React.useCallback(); // Error: function requires another argument.
@@ -3016,7 +3070,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:12:23
 
-Cannot assign `callback()` to `str` because number [1] is incompatible with string [2].
+Cannot assign `callback()` to `str` because number [1] is incompatible with string [2]. [incompatible-type]
 
    useCallback_hook.js:12:23
    12|   const str: string = callback();// Error: number is incompatible with string.
@@ -3033,7 +3087,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- useCallback_hook.js:21:3
 
-Cannot call `callback` because function [1] requires another argument.
+Cannot call `callback` because function [1] requires another argument. [incompatible-call]
 
    useCallback_hook.js:21:3
    21|   callback(true); // Error: function requires another argument.
@@ -3052,6 +3106,7 @@ References:
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:21:12
 
 Cannot call `callback` with `true` bound to `num` because boolean [1] is incompatible with number [2].
+[incompatible-call]
 
    useCallback_hook.js:21:12
    21|   callback(true); // Error: function requires another argument.
@@ -3066,6 +3121,7 @@ References:
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:22:12
 
 Cannot call `callback` with `'123'` bound to `num` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    useCallback_hook.js:22:12
    22|   callback('123', 'abc'); // Error: string is incompatible with number.
@@ -3079,7 +3135,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- useContext_hook.js:6:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useContext_hook.js:6:9
      6|   React.useMutationEffect(); // Error: function requires another argument.
@@ -3125,6 +3181,7 @@ References:
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:18
 
 Cannot assign `React.useContext(...)` to `numericValue` because string [1] is incompatible with number [2].
+[incompatible-type]
 
    useContext_hook.js:21:18
    21|   numericValue = React.useContext(StringContext); // Error: string is incompatible with number
@@ -3142,7 +3199,7 @@ References:
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:23:73
 
 Cannot assign `React.createContext(...)` to `InvalidContext` because inexact string [1] is incompatible with exact
-`CustomType` [2] in type argument `T` [3].
+`CustomType` [2] in type argument `T` [3]. [incompatible-exact]
 
    useContext_hook.js:23:73
     23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
@@ -3160,6 +3217,7 @@ References:
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:29:17
 
 Cannot assign `React.useContext(...)` to `stringValue` because `CustomType` [1] is incompatible with string [2].
+[incompatible-type]
 
    useContext_hook.js:29:17
    29|   stringValue = React.useContext(CustomContext); // Error: CustomType is incompatible with string
@@ -3176,7 +3234,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useContext_hook.js:54:4
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2].
+Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useContext_hook.js:54:4
    54|   (bar: string); // Error: number is incompatible with string
@@ -3193,7 +3251,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- useDebugValue_hook.js:5:30
 
-Cannot call `React.useDebugValue` because property `useDebugValue` is missing in object type [1].
+Cannot call `React.useDebugValue` because property `useDebugValue` is missing in object type [1]. [prop-missing]
 
    useDebugValue_hook.js:5:30
      5| const undefinedValue = React.useDebugValue(123);
@@ -3238,7 +3296,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- useEffect_hook.js:6:9
 
-Cannot call `React.useEffect` because function [1] requires another argument.
+Cannot call `React.useEffect` because function [1] requires another argument. [incompatible-call]
 
    useEffect_hook.js:6:9
      6|   React.useEffect(); // Error: function requires another argument.
@@ -3257,6 +3315,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:19
 
 Cannot call `React.useEffect` with `1` bound to `create` because number [1] is incompatible with function type [2].
+[incompatible-call]
 
    useEffect_hook.js:22:19
     22|   React.useEffect(1); // Error: number is incompatible with function type
@@ -3271,7 +3330,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:29
 
 Cannot call `React.useEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
-type [2].
+type [2]. [incompatible-call]
 
    useEffect_hook.js:23:29
     23|   React.useEffect(() => {}, 1); // Error: number is incompatible with function react-only array
@@ -3287,6 +3346,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useEffect` with async function bound to `create` because a call signature declaring the expected
 parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
+[incompatible-type]
 
    useEffect_hook.js:24:30
     24|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -3301,7 +3361,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:25:31
 
 Cannot call `React.useEffect` with function bound to `create` because number [1] is incompatible with undefined [2] in
-the return value of the return value.
+the return value of the return value. [incompatible-call]
 
    useEffect_hook.js:25:31
     25|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
@@ -3315,7 +3375,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- useImperativeHandle_hook.js:6:9
 
-Cannot call `React.useImperativeHandle` because function [1] requires another argument.
+Cannot call `React.useImperativeHandle` because function [1] requires another argument. [incompatible-call]
 
    useImperativeHandle_hook.js:6:9
      6|   React.useImperativeHandle(); // Error: function requires another argument.
@@ -3335,7 +3395,7 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:31:41
 
 Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
-incompatible with exact `Interface` [2] in the return value.
+incompatible with exact `Interface` [2] in the return value. [incompatible-type]
 
    useImperativeHandle_hook.js:31:41
    31|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -3350,7 +3410,7 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:34:47
 
 Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
-incompatible with exact `Interface` [2] in the return value.
+incompatible with exact `Interface` [2] in the return value. [incompatible-type]
 
    useImperativeHandle_hook.js:34:47
    34|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -3364,7 +3424,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:6:9
 
-Cannot call `React.useLayoutEffect` because function [1] requires another argument.
+Cannot call `React.useLayoutEffect` because function [1] requires another argument. [incompatible-call]
 
    useLayoutEffect_hook.js:6:9
      6|   React.useLayoutEffect(); // Error: function requires another argument.
@@ -3383,7 +3443,7 @@ References:
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:22:25
 
 Cannot call `React.useLayoutEffect` with `1` bound to `create` because number [1] is incompatible with function
-type [2].
+type [2]. [incompatible-call]
 
    useLayoutEffect_hook.js:22:25
     22|   React.useLayoutEffect(1); // Error: number is incompatible with function type
@@ -3398,7 +3458,7 @@ References:
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:35
 
 Cannot call `React.useLayoutEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
-type [2].
+type [2]. [incompatible-call]
 
    useLayoutEffect_hook.js:23:35
     23|   React.useLayoutEffect(() => {}, 1); // Error: number is incompatible with function react-only array
@@ -3414,6 +3474,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useLayoutEffect` with async function bound to `create` because a call signature declaring the
 expected parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
+[incompatible-type]
 
    useLayoutEffect_hook.js:24:36
     24|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -3428,7 +3489,7 @@ References:
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:25:37
 
 Cannot call `React.useLayoutEffect` with function bound to `create` because number [1] is incompatible with
-undefined [2] in the return value of the return value.
+undefined [2] in the return value of the return value. [incompatible-call]
 
    useLayoutEffect_hook.js:25:37
     25|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
@@ -3442,7 +3503,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:6:9
 
-Cannot call `React.useMemo` because function [1] requires another argument.
+Cannot call `React.useMemo` because function [1] requires another argument. [incompatible-call]
 
    useMemo_hook.js:6:9
      6|   React.useMemo(); // Error: function requires another argument.
@@ -3460,7 +3521,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- useMemo_hook.js:17:27
 
-Cannot assign `React.useMemo(...)` to `invalid` because string [1] is incompatible with number [2].
+Cannot assign `React.useMemo(...)` to `invalid` because string [1] is incompatible with number [2]. [incompatible-type]
 
    useMemo_hook.js:17:27
    17|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
@@ -3477,7 +3538,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:6:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:6:9
      6|   React.useMutationEffect(); // Error: function requires another argument.
@@ -3522,7 +3583,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:11:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:11:9
     11|   React.useMutationEffect(() => {});
@@ -3567,7 +3628,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:12:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:12:9
     12|   React.useMutationEffect(() => {}, []);
@@ -3612,7 +3673,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:13:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:13:9
     13|   React.useMutationEffect(() => {}, [1, 2, 3]);
@@ -3657,7 +3718,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:16:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:16:9
     16|   React.useMutationEffect(() => () => {});
@@ -3702,7 +3763,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:17:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:17:9
     17|   React.useMutationEffect(() => () => {}, []);
@@ -3747,7 +3808,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:18:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:18:9
     18|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
@@ -3792,7 +3853,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:22:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:22:9
     22|   React.useMutationEffect(1); // Error: number is incompatible with function type
@@ -3837,7 +3898,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:23:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:23:9
     23|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
@@ -3882,7 +3943,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:9
 
-Cannot call `React.useReducer` because:
+Cannot call `React.useReducer` because: [not-a-function]
  - Either function type [1] requires another argument from call of method `useReducer` [2].
  - Or function type [3] requires another argument from call of method `useReducer` [2].
  - Or function type [4] requires another argument from call of method `useReducer` [2].
@@ -3922,7 +3983,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2].
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useReducer_hook.js:27:4
    27|   (state.count: string); // Error: number is incompatible with string
@@ -3939,7 +4000,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2].
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useReducer_hook.js:27:4
    27|   (state.count: string); // Error: number is incompatible with string
@@ -3956,7 +4017,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2].
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useReducer_hook.js:27:4
    27|   (state.count: string); // Error: number is incompatible with string
@@ -3973,7 +4034,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2].
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useReducer_hook.js:27:4
    27|   (state.count: string); // Error: number is incompatible with string
@@ -3990,7 +4051,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2].
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useReducer_hook.js:27:4
    27|   (state.count: string); // Error: number is incompatible with string
@@ -4007,7 +4068,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2].
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useReducer_hook.js:27:4
    27|   (state.count: string); // Error: number is incompatible with string
@@ -4025,7 +4086,7 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:62
 
 Cannot assign `React.useRef(...)` to `stringValue` because number [1] is incompatible with string [2] in property
-`current`.
+`current`. [incompatible-type]
 
    useRef_hook.js:16:62
    16|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
@@ -4040,7 +4101,7 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:17:62
 
 Cannot assign `React.useRef(...)` to `numberValue` because string [1] is incompatible with number [2] in property
-`current`.
+`current`. [incompatible-type]
 
    useRef_hook.js:17:62
    17|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
@@ -4055,7 +4116,7 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:18:51
 
 Cannot assign `React.useRef(...)` to `nullValue` because boolean [1] is incompatible with null [2] in property
-`current`.
+`current`. [incompatible-type]
 
    useRef_hook.js:18:51
    18|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
@@ -4069,7 +4130,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:24:25
 
-Cannot assign `123` to `stringValue.current` because number [1] is incompatible with string [2].
+Cannot assign `123` to `stringValue.current` because number [1] is incompatible with string [2]. [incompatible-type]
 
    useRef_hook.js:24:25
    24|   stringValue.current = 123; // Error: number is incompatible with string in property current
@@ -4084,6 +4145,7 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:32:51
 
 Cannot assign `React.useRef(...)` to `foo` because `Bar` [1] is incompatible with `Foo` [2] in property `current`.
+[incompatible-type]
 
    useRef_hook.js:32:51
    32|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
@@ -4097,7 +4159,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- useState_hook.js:10:2
 
-Cannot cast `count` to string because number [1] is incompatible with string [2].
+Cannot cast `count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    useState_hook.js:10:2
    10| (count: string); // Error: number is incompatible with string
@@ -4115,6 +4177,7 @@ References:
 Error ------------------------------------------------------------------------------------------- useState_hook.js:13:10
 
 Cannot call `setCount` with `true` bound to the first parameter because boolean [1] is incompatible with number [2].
+[incompatible-type]
 
    useState_hook.js:13:10
    13| setCount(true); // Error: boolean is incompatible with number

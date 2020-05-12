@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ downstream.js:6:2
 
-Cannot cast `o.a` to number because frozen object type [1] is incompatible with number [2].
+Cannot cast `o.a` to number because frozen object type [1] is incompatible with number [2]. [incompatible-cast]
 
    downstream.js:6:2
    6| (o.a: number);

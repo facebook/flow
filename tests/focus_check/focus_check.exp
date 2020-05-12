@@ -3,7 +3,7 @@ Stop any already-running server.
 Full check:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -20,7 +20,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    dir/test2.foo:4:5
    4| x = 3 + "string";
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    other_root/other_root_file.js:3:17
    3| var x: string = 123; // Error
@@ -48,7 +48,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2].
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:3:2
    3| ("": number);
@@ -66,7 +66,7 @@ Found 4 errors
 Full focus-check:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -83,7 +83,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    dir/test2.foo:4:5
    4| x = 3 + "string";
@@ -97,7 +97,7 @@ References:
 
 Error ------------------------------------------------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    other_root/other_root_file.js:3:17
    3| var x: string = 123; // Error
@@ -111,7 +111,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2].
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:3:2
    3| ("": number);
@@ -129,7 +129,7 @@ Found 4 errors
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2].
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:3:2
    3| ("": number);
@@ -147,7 +147,7 @@ Found 1 error
 Focused check on a file with no local errors but a dependency:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -168,7 +168,7 @@ Found 1 error
 Focused check on a file with no local errors but a reverse dependency:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -189,7 +189,7 @@ Found 1 error
 Focused check on two files with overlapping errors:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -210,7 +210,7 @@ Found 1 error
 Focused check on multiple files with disjoint sets of errors:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -227,7 +227,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2].
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:3:2
    3| ("": number);
@@ -245,7 +245,7 @@ Found 2 errors
 Focused check on a file and a directory:
 Error ------------------------------------------------------------------------------------------------ dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    dir/test2.foo:4:5
    4| x = 3 + "string";
@@ -259,7 +259,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2].
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:3:2
    3| ("": number);
@@ -277,7 +277,7 @@ Found 2 errors
 Focused check on files specified in list.txt:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -294,7 +294,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    dir/test2.foo:4:5
    4| x = 3 + "string";
@@ -312,7 +312,7 @@ Found 2 errors
 Focused check guessing root by looking at first file:
 Error --------------------------------------------------------------------------- other_root/other_root_dependent.js:5:2
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2].
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    other_root/other_root_dependent.js:5:2
    5| (foo: string); // Error
@@ -329,7 +329,7 @@ References:
 
 Error ------------------------------------------------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    other_root/other_root_file.js:3:17
    3| var x: string = 123; // Error
@@ -347,7 +347,7 @@ Found 2 errors
 Focused check with explicit root:
 Error ------------------------------------------------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    other_root/other_root_file.js:3:17
    3| var x: string = 123; // Error

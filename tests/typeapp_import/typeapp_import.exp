@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:7:6
 
-Cannot cast `y` to number because string [1] is incompatible with number [2].
+Cannot cast `y` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    main.js:7:6
    7|     (y: number); // error string ~> number

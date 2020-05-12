@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined.
+undefined. [incompatible-return]
 
    6|     constructor():number { }
                         ^^^^^^ [1]
@@ -10,6 +10,7 @@ undefined.
 Error --------------------------------------------------------------------------------------------- constructor.js:15:10
 
 Cannot cast `new Foo(...)` to `Bar` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
 
    constructor.js:15:10
    15| (new Foo(123): Bar<string>); // error, number !~> string
@@ -27,6 +28,7 @@ References:
 Error --------------------------------------------------------------------------------------------- constructor.js:22:10
 
 Cannot cast `new Baz(...)` to `Baz` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
 
    constructor.js:22:10
    22| (new Baz(123): Baz<string>); // error, number !~> string

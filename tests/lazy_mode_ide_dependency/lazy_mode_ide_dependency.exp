@@ -8,7 +8,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Focus a file
 Error --------------------------------------------------------------------------------------------------- focused.js:3:2
 
-Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    focused.js:3:2
    3| (require('./dependency'): string);
@@ -38,7 +38,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Revert edit
 Error --------------------------------------------------------------------------------------------------- focused.js:3:2
 
-Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    focused.js:3:2
    3| (require('./dependency'): string);

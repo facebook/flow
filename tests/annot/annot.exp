@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:4:44
 
 Cannot assign `foo` to `bar` because string [1] is incompatible with number [2] in the first argument.
+[incompatible-type]
 
    annot.js:4:44
    4| var bar: (str:number, i:number)=> string = foo;
@@ -17,7 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:6:58
 
-Cannot return `foo(...)` because string [1] is incompatible with number [2].
+Cannot return `foo(...)` because string [1] is incompatible with number [2]. [incompatible-return]
 
    annot.js:6:58
    6| var qux = function(str:string, i:number):number { return foo(str,i); }
@@ -35,7 +36,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:46
 
 Cannot assign object literal to `obj` because property `j` is missing in object literal [1] but exists in object
-type [2].
+type [2]. [prop-missing]
 
    annot.js:8:46
    8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
@@ -50,6 +51,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:62
 
 Cannot assign object literal to `obj` because string [1] is incompatible with number [2] in property `i`.
+[incompatible-type]
 
    annot.js:8:62
    8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
@@ -64,6 +66,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot.js:10:31
 
 Cannot assign array literal to `arr` because string [1] is incompatible with number [2] in array element.
+[incompatible-type]
 
    annot.js:10:31
    10| var arr: Array<number> = [1,2,"..."];
@@ -78,6 +81,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot.js:13:28
 
 Cannot assign array literal to `array` because string [1] is incompatible with number [2] in array element.
+[incompatible-type]
 
    annot.js:13:28
    13| var array: number[] = [1,2,"..."];
@@ -92,7 +96,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot.js:27:25
 
 Cannot assign object literal to `test_obj` because property `foo-bar` is missing in object literal [1] but exists in
-`ObjType` [2].
+`ObjType` [2]. [prop-missing]
 
    annot.js:27:25
    27| var test_obj: ObjType = { 'bar-foo': '23' };
@@ -106,7 +110,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:31:7
 
-Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2].
+Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2]. [incompatible-type]
 
    annot.js:31:7
    31|   n = "hey"; // error
@@ -121,7 +125,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot.js:46:14
 
 Cannot assign `batchRequests.map(...)` to `batchRequests` because property `path` is missing in object literal [1] but
-exists in object type [2] in array element.
+exists in object type [2] in array element. [prop-missing]
 
    annot.js:46:14
                     v
@@ -140,7 +144,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:55:18
 
-Cannot assign `3` to `toz` because number [1] is incompatible with null [2].
+Cannot assign `3` to `toz` because number [1] is incompatible with null [2]. [incompatible-type]
 
    annot.js:55:18
    55| var toz : null = 3;
@@ -154,7 +158,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- forward_ref.js:1:32
 
-Cannot assign `null` to `myClassInstance` because null [1] is incompatible with `MyClass` [2].
+Cannot assign `null` to `myClassInstance` because null [1] is incompatible with `MyClass` [2]. [incompatible-type]
 
    forward_ref.js:1:32
    1| let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
@@ -168,7 +172,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- forward_ref.js:4:10
 
-Cannot return `null` because null [1] is incompatible with `MyClass` [2].
+Cannot return `null` because null [1] is incompatible with `MyClass` [2]. [incompatible-return]
 
    forward_ref.js:4:10
    4|   return null; // forward ref ok, null ~> class error

@@ -2,7 +2,7 @@
 Server should start in types-first mode
 Error ------------------------------------------------------------------------------------------------------- bar.js:5:5
 
-Cannot call `foo` with `5` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `foo` with `5` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    bar.js:5:5
    5| foo(5);
@@ -23,7 +23,7 @@ No errors!
 Adding the @flow pragma back to foo.js should make the errors return
 Error ------------------------------------------------------------------------------------------------------- bar.js:5:5
 
-Cannot call `foo` with `5` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `foo` with `5` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    bar.js:5:5
    5| foo(5);

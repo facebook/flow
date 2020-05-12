@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
-Cannot cast `foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:7:2
    7| (foo: empty); // error: should be string

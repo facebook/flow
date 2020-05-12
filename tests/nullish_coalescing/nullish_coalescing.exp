@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:4:4
 
-Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2].
+Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:4:4
    4|   (a ?? "hello" : empty);
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:4:9
 
-Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2].
+Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:4:9
    4|   (a ?? "hello" : empty);
@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:6:4
 
-Cannot cast `a ?? 42` to empty because string [1] is incompatible with empty [2].
+Cannot cast `a ?? 42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:6:4
    6|   (a ?? 42 : empty);
@@ -48,7 +48,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:6:9
 
-Cannot cast `a ?? 42` to empty because number [1] is incompatible with empty [2].
+Cannot cast `a ?? 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:6:9
    6|   (a ?? 42 : empty);
@@ -62,7 +62,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:4
 
-Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2].
+Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:16:4
    16|   (d ?? "hello" : empty);
@@ -79,7 +79,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:4
 
-Cannot cast `d ?? "hello"` to empty because number [1] is incompatible with empty [2].
+Cannot cast `d ?? "hello"` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:16:4
    16|   (d ?? "hello" : empty);
@@ -96,7 +96,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:9
 
-Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2].
+Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    nullish_coalescing.js:16:9
    16|   (d ?? "hello" : empty);

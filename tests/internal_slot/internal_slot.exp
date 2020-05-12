@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------- declare_class_unsupported.js:1:19
 
-Unsupported internal slot `foo`.
+Unsupported internal slot `foo`. [unsupported-syntax]
 
    1| declare class C { [[foo]]: mixed }
                         ^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Unsupported internal slot `foo`.
 
 Error ------------------------------------------------------------------------------------ interface_unsupported.js:1:15
 
-Unsupported internal slot `foo`.
+Unsupported internal slot `foo`. [unsupported-syntax]
 
    1| interface I { [[foo]]: mixed }
                     ^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Unsupported internal slot `foo`.
 
 Error --------------------------------------------------------------------------------------- object_unsupported.js:1:12
 
-Unsupported internal slot `foo`.
+Unsupported internal slot `foo`. [unsupported-syntax]
 
    1| type T = { [[foo]]: mixed }
                  ^^^^^^^^^^^^^^

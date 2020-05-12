@@ -78,6 +78,7 @@ val mk_error :
   ?root:Loc.t * Loc.t Friendly.message ->
   ?frames:Loc.t Friendly.message list ->
   Loc.t ->
+  Error_codes.error_code option ->
   Loc.t Friendly.message ->
   Loc.t printable_error
 
@@ -87,6 +88,7 @@ val mk_speculation_error :
   loc:Loc.t ->
   root:(Loc.t * Loc.t Friendly.message) option ->
   frames:Loc.t Friendly.message list ->
+  error_code:Error_codes.error_code option ->
   speculation_errors:(int * Loc.t printable_error) list ->
   Loc.t printable_error
 

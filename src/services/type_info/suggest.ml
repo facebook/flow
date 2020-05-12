@@ -32,7 +32,7 @@ class visitor ~exact_by_default ~ty_query =
     method private warn loc (w : warning) =
       Errors.(
         let desc = warning_desc_to_string w in
-        let err = mk_error loc (Friendly.message_of_string desc) in
+        let err = mk_error loc None (Friendly.message_of_string desc) in
         _warnings <- ConcreteLocPrintableErrorSet.add err _warnings;
         None)
 

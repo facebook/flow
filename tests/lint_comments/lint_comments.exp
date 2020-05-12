@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:5:12
 
-Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`?
+Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-setting]
 
    5| /*flowlint not-a-real-lint : not-a-real-setting   ,
                  ^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`?
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:5:30
 
-Invalid setting. Valid settings are error, warn, and off.
+Invalid setting. Valid settings are error, warn, and off. [lint-setting]
 
    5| /*flowlint not-a-real-lint : not-a-real-setting   ,
                                    ^^^^^^^^^^^^^^^^^^
@@ -17,7 +17,7 @@ Invalid setting. Valid settings are error, warn, and off.
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:13:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:13:7
    13|   if (x) {/* sketchy */}/* flowlint sketchy-null:off */
@@ -35,7 +35,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:44:5
 
 Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-bool`)
+[sketchy-null-bool]
 
    simple_sketchies.js:44:5
    44| if (x1) { /* sketchy */ }
@@ -53,7 +53,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:67:5
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:67:5
    67| if (x3) { /* sketchy */ }
@@ -71,7 +71,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:77:7
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:77:7
    77|   if (x) { /* sketchy because of calls */ }
@@ -89,7 +89,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:83:7
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:83:7
    83|   if (x) { /* sketchy because of calls; Not suppressed */ }
@@ -107,7 +107,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:91:7
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:91:7
    91|   if (x) { /* sketchy because of calls */ }
@@ -125,7 +125,7 @@ References:
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:114:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:114:7
    114|   if (o.p) { /* sketchy */ }
@@ -142,7 +142,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:131:24
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    131|   //flowlint-next-line sketchy-null:off
                                ^^^^^^^^^^^^^^^^
@@ -150,7 +150,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:144:12
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    144| //flowlint sketchy-null:error
                    ^^^^^^^^^^^^^^^^^^
@@ -159,7 +159,7 @@ Redundant argument. This argument doesn't change any lint settings.
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:148:20
 
 Avoid using `&&` to check the value of number [1]. Consider handling falsy values (0 and NaN) by using a conditional to
-choose an explicit default instead. (`sketchy-number-and`)
+choose an explicit default instead. [sketchy-number-and]
 
    simple_sketchies.js:148:20
    148| var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:error*/ /* flowlint-line sketchy-null:error */
@@ -174,7 +174,7 @@ References:
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:148:20
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:148:20
    148| var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:error*/ /* flowlint-line sketchy-null:error */
@@ -192,7 +192,7 @@ References:
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:149:19
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:149:19
    149| var sketchyTrue = val2 || true; /* sketchy */
@@ -210,6 +210,7 @@ References:
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:154:13
 
 Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
+[lint-setting]
 
    154| // flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
                     
@@ -218,6 +219,7 @@ Malformed lint rule. Properly formed rules contain a single `:` character. Perha
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:154:38
 
 Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
+[lint-setting]
 
    154| // flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
                                              
@@ -226,6 +228,7 @@ Malformed lint rule. Properly formed rules contain a single `:` character. Perha
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:154:64
 
 Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
+[lint-setting]
 
    154| // flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
                                                                        
@@ -234,6 +237,7 @@ Malformed lint rule. Properly formed rules contain a single `:` character. Perha
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:157:13
 
 Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
+[lint-setting]
 
    157| // flowlint sketchy-null-bool:error sketchy-null-mixed:off
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

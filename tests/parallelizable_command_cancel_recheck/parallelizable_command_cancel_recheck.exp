@@ -12,7 +12,7 @@ propB string
 Now we should see the errors:
 Error ----------------------------------------------------------------------------------------------- dependency.js:3:21
 
-Cannot assign `123` to `mybug` because number [1] is incompatible with string [2].
+Cannot assign `123` to `mybug` because number [1] is incompatible with string [2]. [incompatible-type]
 
    dependency.js:3:21
    3| let mybug: string = 123;

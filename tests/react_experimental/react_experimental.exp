@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:7:30
 
 Cannot call `React.useDeferredValue` with object literal bound to `config` because property `timeoutMs` is missing in
-object literal [1] but exists in `TimeoutConfig` [2].
+object literal [1] but exists in `TimeoutConfig` [2]. [incompatible-type]
 
    useDeferredValue_hook.js:7:30
      7| React.useDeferredValue(true, {}); // Error: property `timeoutMs` is missing in object literal but exists in `SuspenseConfig`
@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:9:30
 
 Cannot call `React.useDeferredValue` with object literal bound to `config` because property `foo` is missing in
-`TimeoutConfig` [1] but exists in object literal [2].
+`TimeoutConfig` [1] but exists in object literal [2]. [incompatible-type]
 
    useDeferredValue_hook.js:9:30
      9| React.useDeferredValue(true, {foo: 1}); // Error: property `foo` is missing in `SuspenseConfig`
@@ -31,7 +31,7 @@ References:
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:7:21
 
 Cannot call `React.useTransition` with object literal bound to `config` because property `timeoutMs` is missing in
-object literal [1] but exists in `TimeoutConfig` [2].
+object literal [1] but exists in `TimeoutConfig` [2]. [incompatible-type]
 
    useTransition_hook.js:7:21
      7| React.useTransition({}); // Error: property `timeoutMs` is missing in object literal but exists in `SuspenseConfig`
@@ -46,7 +46,7 @@ References:
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:9:21
 
 Cannot call `React.useTransition` with object literal bound to `config` because property `foo` is missing in
-`TimeoutConfig` [1] but exists in object literal [2].
+`TimeoutConfig` [1] but exists in object literal [2]. [incompatible-type]
 
    useTransition_hook.js:9:21
      9| React.useTransition({foo: 1}); // Error: property `foo` is missing in `SuspenseConfig`
@@ -61,7 +61,7 @@ References:
 Error -------------------------------------------------------------------------------------- useTransition_hook.js:15:17
 
 Cannot call `startTransition` with `true` bound to the first parameter because boolean [1] is incompatible with function
-type [2].
+type [2]. [incompatible-call]
 
    useTransition_hook.js:15:17
     15| startTransition(true); // error

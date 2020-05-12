@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:3:17
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    3| //flowlint-line sketchy-null:off
                       ^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:4:22
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    4| //flowlint-next-line sketchy-null:off
                            ^^^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:12
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    6| //flowlint sketchy-null:off
                  ^^^^^^^^^^^^^^^^
@@ -24,7 +24,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:12
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    12| //flowlint sketchy-null:error
                   ^^^^^^^^^^^^^^^^^^
@@ -32,7 +32,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:17
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    13| //flowlint-line sketchy-null:error
                        ^^^^^^^^^^^^^^^^^^
@@ -40,7 +40,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:12
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    16| //flowlint sketchy-null:off
                   ^^^^^^^^^^^^^^^^
@@ -48,7 +48,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:17:17
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    17| //flowlint-line sketchy-null:off
                        ^^^^^^^^^^^^^^^^
@@ -56,7 +56,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:32
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    22| //flowlint sketchy-null:error, sketchy-null:error
                                       ^^^^^^^^^^^^^^^^^^
@@ -64,7 +64,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:35
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    23| //flowlint-line sketchy-null:off, sketchy-null:off
                                          ^^^^^^^^^^^^^^^^
@@ -72,7 +72,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:30
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    25| //flowlint sketchy-null:off, sketchy-null:off
                                     ^^^^^^^^^^^^^^^^
@@ -80,7 +80,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:26:37
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    26| //flowlint-line sketchy-null:error, sketchy-null:error
                                            ^^^^^^^^^^^^^^^^^^
@@ -88,7 +88,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:31:12
 
-Redundant argument. The values set by this argument are overwritten later in this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
    31| //flowlint sketchy-null:error, sketchy-null:off
                   ^^^^^^^^^^^^^^^^^^
@@ -96,7 +96,7 @@ Redundant argument. The values set by this argument are overwritten later in thi
 
 Error ---------------------------------------------------------------------------------------------------- test.js:32:17
 
-Redundant argument. The values set by this argument are overwritten later in this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
    32| //flowlint-line sketchy-null:error, sketchy-null:off
                        ^^^^^^^^^^^^^^^^^^
@@ -104,7 +104,7 @@ Redundant argument. The values set by this argument are overwritten later in thi
 
 Error ---------------------------------------------------------------------------------------------------- test.js:37:12
 
-Redundant argument. The values set by this argument are overwritten later in this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
    37| //flowlint sketchy-null-bool:error, sketchy-null:off
                   ^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,7 +112,7 @@ Redundant argument. The values set by this argument are overwritten later in thi
 
 Error ---------------------------------------------------------------------------------------------------- test.js:38:17
 
-Redundant argument. The values set by this argument are overwritten later in this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
    38| //flowlint-line sketchy-null-bool:error, sketchy-null:off
                        ^^^^^^^^^^^^^^^^^^^^^^^
@@ -120,7 +120,7 @@ Redundant argument. The values set by this argument are overwritten later in thi
 
 Error ---------------------------------------------------------------------------------------------------- test.js:50:12
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    50| //flowlint sketchy-null:error, sketchy-null:error
                   ^^^^^^^^^^^^^^^^^^
@@ -128,7 +128,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:50:32
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    50| //flowlint sketchy-null:error, sketchy-null:error
                                       ^^^^^^^^^^^^^^^^^^
@@ -136,7 +136,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:51:17
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    51| //flowlint-line sketchy-null:error, sketchy-null:error
                        ^^^^^^^^^^^^^^^^^^
@@ -144,7 +144,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:51:37
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    51| //flowlint-line sketchy-null:error, sketchy-null:error
                                            ^^^^^^^^^^^^^^^^^^
@@ -152,7 +152,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:12
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    54| //flowlint sketchy-null:off, sketchy-null:off
                   ^^^^^^^^^^^^^^^^
@@ -160,7 +160,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:30
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    54| //flowlint sketchy-null:off, sketchy-null:off
                                     ^^^^^^^^^^^^^^^^
@@ -168,7 +168,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:55:17
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    55| //flowlint-line sketchy-null:off, sketchy-null:off
                        ^^^^^^^^^^^^^^^^
@@ -176,7 +176,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:55:35
 
-Redundant argument. This argument doesn't change any lint settings.
+Redundant argument. This argument doesn't change any lint settings. [lint-setting]
 
    55| //flowlint-line sketchy-null:off, sketchy-null:off
                                          ^^^^^^^^^^^^^^^^
@@ -184,7 +184,7 @@ Redundant argument. This argument doesn't change any lint settings.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:60:12
 
-Redundant argument. The values set by this argument are overwritten later in this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
    60| //flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
                   ^^^^^^^^^^^^^^^^^^
@@ -192,7 +192,7 @@ Redundant argument. The values set by this argument are overwritten later in thi
 
 Error ---------------------------------------------------------------------------------------------------- test.js:61:17
 
-Redundant argument. The values set by this argument are overwritten later in this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
    61| //flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
                        ^^^^^^^^^^^^^^^^^^

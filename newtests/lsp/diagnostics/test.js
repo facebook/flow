@@ -34,15 +34,11 @@ export default suite(
           '{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
-            ],
-          ],
+          [],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
     ]),
@@ -56,15 +52,11 @@ export default suite(
           '{Cannot extend}',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{"Cannot extend  `H` [1] with `I` because  `H` [1] is not inheritable.","message":"[1] `H`"}',
-            ],
-          ],
+          [],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
     ]),
@@ -78,15 +70,11 @@ export default suite(
           '{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
-            ],
-          ],
+          [],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
       modifyFile('witherrors1.js', 'return 23;', 'return "";')
@@ -218,12 +206,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
-            ],
-          ],
+          ['textDocument/publishDiagnostics'],
           ['window/showStatus'],
         ),
       // Edit it fix the problem. The live type error should be dismissed.
@@ -278,12 +261,7 @@ export default suite(
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{Cannot assign `123` to `y` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
-            ],
-          ],
+          ['textDocument/publishDiagnostics'],
           ['window/showStatus'],
         ),
       // Close the file. The live error should go away.
@@ -320,12 +298,7 @@ export default suite(
           '{Cannot assign `123` to `x`}',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
-            ],
-          ],
+          [],
           ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
     ]).flowConfig('_flowconfig_lazy'),

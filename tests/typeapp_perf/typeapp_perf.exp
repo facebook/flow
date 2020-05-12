@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test3.js:7:2
 
-Cannot cast `x.m()` to empty because string [1] is incompatible with empty [2].
+Cannot cast `x.m()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test3.js:7:2
    7| (x.m(): empty); // error: string ~> empty, number ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:7:2
 
-Cannot cast `x.m()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x.m()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test3.js:7:2
    7| (x.m(): empty); // error: string ~> empty, number ~> empty

@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- cycle/a.js:6:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with function type [1] argument [invalid-type-arg]
 
    6| TypeAssertIs<(x: number) => string>(8);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -8,7 +8,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error --------------------------------------------------------------------------------------------------- cycle/b.js:6:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with function type [1] argument [invalid-type-arg]
 
    6| TypeAssertIs<(x: number) => string>(8);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -16,7 +16,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error --------------------------------------------------------------------------------------------------- cycle/c.js:6:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with function type [1] argument [invalid-type-arg]
 
    6| TypeAssertIs<(x: number) => string>(8);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -24,7 +24,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:13:1
 
-Cannot use TypeAssert library function [1] with fewer than 1 type argument.
+Cannot use TypeAssert library function [1] with fewer than 1 type argument. [missing-type-arg]
 
    13| TypeAssertIs(8);
        ^^^^^^^^^^^^^^^ [1]
@@ -32,7 +32,7 @@ Cannot use TypeAssert library function [1] with fewer than 1 type argument.
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:16:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with function type [1] argument [invalid-type-arg]
 
    16| TypeAssertIs<(mixed => mixed)>(8);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -40,7 +40,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:20:1
 
-Cannot use TypeAssert library function [1] with `funtype` [1] argument
+Cannot use TypeAssert library function [1] with `funtype` [1] argument [invalid-type-arg]
 
    20| TypeAssertIs<funtype>(8);
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -48,7 +48,7 @@ Cannot use TypeAssert library function [1] with `funtype` [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:23:1
 
-Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
+Cannot use TypeAssert library function [1] with explicit 'any' [1] argument [invalid-type-arg]
 
    23| TypeAssertIs<any>(8);
        ^^^^^^^^^^^^^^^^^^^^ [1]
@@ -56,7 +56,7 @@ Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:26:1
 
-Cannot use TypeAssert library function [1] with more than 1 type argument.
+Cannot use TypeAssert library function [1] with more than 1 type argument. [extra-type-arg]
 
    26| TypeAssertIs<number, boolean>(8);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -64,7 +64,7 @@ Cannot use TypeAssert library function [1] with more than 1 type argument.
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:35:5
 
-Cannot use TypeAssert library function [1] with bound type var T [1] argument
+Cannot use TypeAssert library function [1] with bound type var T [1] argument [invalid-type-arg]
 
    35|     TypeAssertIs<T>(9);
            ^^^^^^^^^^^^^^^^^^ [1]
@@ -72,7 +72,7 @@ Cannot use TypeAssert library function [1] with bound type var T [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:36:5
 
-Cannot use TypeAssert library function [1] with bound type var T [1] argument
+Cannot use TypeAssert library function [1] with bound type var T [1] argument [invalid-type-arg]
 
    36|     TypeAssertIs<T | number>(9);
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -80,7 +80,7 @@ Cannot use TypeAssert library function [1] with bound type var T [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:37:5
 
-Cannot use TypeAssert library function [1] with bound type var T [1] argument
+Cannot use TypeAssert library function [1] with bound type var T [1] argument [invalid-type-arg]
 
    37|     TypeAssertIs<{A: number, B: T}>(9);
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -88,7 +88,7 @@ Cannot use TypeAssert library function [1] with bound type var T [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:42:1
 
-Cannot use TypeAssert library function [1] with function type [1] argument
+Cannot use TypeAssert library function [1] with function type [1] argument [invalid-type-arg]
 
    42| TypeAssertThrows<Array<(mixed => mixed)>>(9);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -96,7 +96,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:43:1
 
-Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
+Cannot use TypeAssert library function [1] with explicit 'any' [1] argument [invalid-type-arg]
 
    43| TypeAssertThrows<{[number]: Array<{A: number, B: any}>}>(9);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -104,7 +104,7 @@ Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:46:1
 
-Cannot use TypeAssert library function [1] with `A` [1] argument
+Cannot use TypeAssert library function [1] with `A` [1] argument [invalid-type-arg]
 
    46| TypeAssertThrows<A>(8);
        ^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -112,7 +112,7 @@ Cannot use TypeAssert library function [1] with `A` [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:49:1
 
-Cannot use TypeAssert library function [1] with `invalidA` [1] argument
+Cannot use TypeAssert library function [1] with `invalidA` [1] argument [invalid-type-arg]
 
    49| TypeAssertThrows<invalidA>(8);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -120,7 +120,7 @@ Cannot use TypeAssert library function [1] with `invalidA` [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:52:2
 
-Cannot cast `TypeAssertIs<...>(...)` to number because boolean [1] is incompatible with number [2].
+Cannot cast `TypeAssertIs<...>(...)` to number because boolean [1] is incompatible with number [2]. [incompatible-cast]
 
    type-args-tests.js:52:2
    52| (TypeAssertIs<number>(8) : number);
@@ -138,6 +138,7 @@ References:
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:55:2
 
 Cannot cast `TypeAssertThrows<...>(...)` to number because string [1] is incompatible with number [2].
+[incompatible-cast]
 
    type-args-tests.js:55:2
    55| (TypeAssertThrows<number | string>(8) : number);
@@ -155,6 +156,7 @@ References:
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:56:2
 
 Cannot cast `TypeAssertWraps<...>(...)` to number because Result<T> [1] is incompatible with number [2].
+[incompatible-cast]
 
    type-args-tests.js:56:2
    56| (TypeAssertWraps<number>(8) : number);

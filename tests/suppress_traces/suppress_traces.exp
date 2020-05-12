@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- traces.js:15:17
 
-Cannot assign `foo(...)` to `a` because number [1] is incompatible with string [2].
+Cannot assign `foo(...)` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    traces.js:15:17
    15| var a: string = foo('hi'); // error number ~> string

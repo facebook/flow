@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- class.js:11:37
 
-Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in `Foo` [1].
+Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in `Foo` [1]. [prop-missing]
 
    class.js:11:37
    11| (any: React$ElementRef<Class<Foo>>).yep2; // Error
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:12:37
 
-Cannot get `any.nope` because property `nope` is missing in `Foo` [1].
+Cannot get `any.nope` because property `nope` is missing in `Foo` [1]. [prop-missing]
 
    class.js:12:37
    12| (any: React$ElementRef<Class<Foo>>).nope; // Error
@@ -28,7 +28,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:13:37
 
-Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in `Bar` [1].
+Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in `Bar` [1]. [prop-missing]
 
    class.js:13:37
    13| (any: React$ElementRef<Class<Bar>>).yep1; // Error
@@ -42,7 +42,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:15:37
 
-Cannot get `any.nope` because property `nope` is missing in `Bar` [1].
+Cannot get `any.nope` because property `nope` is missing in `Bar` [1]. [prop-missing]
 
    class.js:15:37
    15| (any: React$ElementRef<Class<Bar>>).nope; // Error
@@ -56,7 +56,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:7:37
 
-Cannot get `any.nope` because property `nope` is missing in undefined [1].
+Cannot get `any.nope` because property `nope` is missing in undefined [1]. [incompatible-use]
 
    function.js:7:37
    7| (any: React$ElementRef<typeof Foo>).nope; // Error
@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:6:32
 
-Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in object type [1].
+Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in object type [1]. [prop-missing]
 
    intrinsic.js:6:32
    6| (any: React$ElementRef<'foo'>).yep2; // Error
@@ -84,7 +84,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:7:32
 
-Cannot get `any.nope` because property `nope` is missing in object type [1].
+Cannot get `any.nope` because property `nope` is missing in object type [1]. [prop-missing]
 
    intrinsic.js:7:32
    7| (any: React$ElementRef<'foo'>).nope; // Error
@@ -98,7 +98,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:8:32
 
-Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in object type [1].
+Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in object type [1]. [prop-missing]
 
    intrinsic.js:8:32
    8| (any: React$ElementRef<'bar'>).yep1; // Error
@@ -112,7 +112,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- intrinsic.js:10:32
 
-Cannot get `any.nope` because property `nope` is missing in object type [1].
+Cannot get `any.nope` because property `nope` is missing in object type [1]. [prop-missing]
 
    intrinsic.js:10:32
    10| (any: React$ElementRef<'bar'>).nope; // Error

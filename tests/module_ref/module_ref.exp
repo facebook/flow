@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------- B.js:11:12
 
 Cannot call `ifRequired` with `'A'` bound to `id` because string [1] is incompatible with `$Flow$ModuleRef` [2].
+[incompatible-call]
 
    B.js:11:12
    11| ifRequired('A', A => A.FOO); // Error - A is a plain string, not a module ref
@@ -14,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- B.js:13:26
 
-Cannot get `A.BAR` because property `BAR` is missing in object literal [1].
+Cannot get `A.BAR` because property `BAR` is missing in object literal [1]. [prop-missing]
 
    B.js:13:26
    13| ifRequired('m#A', A => A.BAR); // Ok
@@ -32,7 +33,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- D.js:10:3
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `C`?
-(`untyped-import`)
+[untyped-import]
 
    10|   'm#C',
          ^^^^^

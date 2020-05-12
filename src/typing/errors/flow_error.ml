@@ -646,11 +646,13 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
      * an error message. *)
     let mk_use_op_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) message =
       let (root, loc, frames) = unwrap_use_ops loc use_op in
-      mk_error ~trace_infos ?root ~frames loc message
+      let code = code_of_error error in
+      mk_error ~trace_infos ?root ~frames loc code message
     in
     (* Make a friendly error based on failed speculation. *)
     let mk_use_op_speculation_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) branches =
       let (root, loc, frames) = unwrap_use_ops loc use_op in
+      let error_code = code_of_error error in
       let speculation_errors =
         Base.List.map
           ~f:(fun (_, (msg : Loc.t Error_message.t')) ->
@@ -659,7 +661,14 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
             (score, error))
           branches
       in
-      mk_speculation_error ~kind:InferError ~trace_infos ~loc ~root ~frames ~speculation_errors
+      mk_speculation_error
+        ~kind:InferError
+        ~trace_infos
+        ~loc
+        ~root
+        ~frames
+        ~error_code
+        ~speculation_errors
     in
     (* An error between two incompatible types. A "lower" type and an "upper"
      * type. The use_op describes the path which we followed to find
@@ -994,7 +1003,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
         @ [text (actual ^ " in "); ref upper] )
     in
     match (loc, friendly_message_of_msg msg) with
-    | (Some loc, Error_message.Normal { features }) -> mk_error ~trace_infos ~kind loc features
+    | (Some loc, Error_message.Normal { features }) ->
+      mk_error ~trace_infos ~kind loc (code_of_error error) features
     | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion

@@ -38,7 +38,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (Any: number);
-                ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2].
+                ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2]. [incompatible-cast]
             References:
               3: import * as Any from "any";
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -80,7 +80,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: number);
-                ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2].
+                ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2]. [incompatible-cast]
             References:
               3: import * as obj from "object";
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -98,11 +98,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import {x, y} from "string";
-                       ^ Cannot import \`x\` because there is no \`x\` export in \`string\`. Did you mean \`import x from "..."\`?
+                       ^ Cannot import \`x\` because there is no \`x\` export in \`string\`. Did you mean \`import x from "..."\`? [missing-export]
 
           test.js:3
             3: import {x, y} from "string";
-                          ^ Cannot import \`y\` because there is no \`y\` export in \`string\`. Did you mean \`import y from "..."\`?
+                          ^ Cannot import \`y\` because there is no \`y\` export in \`string\`. Did you mean \`import y from "..."\`? [missing-export]
         `,
       ),
   ]),

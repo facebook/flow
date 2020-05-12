@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- object_freeze.js:4:5
 
-Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable.
+Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable. [cannot-write]
 
    4| foo.bar = '23456'; // error
           ^^^
@@ -8,7 +8,7 @@ Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable.
 
 Error --------------------------------------------------------------------------------------------- object_freeze.js:6:1
 
-Incorrect arguments passed to call of method `assign` because property `bar` is not writable.
+Incorrect arguments passed to call of method `assign` because property `bar` is not writable. [cannot-write]
 
    6| Object.assign(foo, {bar: '12345'}); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Incorrect arguments passed to call of method `assign` because property `bar` is 
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:10:8
 
-Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable.
+Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable. [cannot-write]
 
    10| bliffl.bar = '23456'; // error
               ^^^
@@ -24,7 +24,7 @@ Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable.
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:11:8
 
-Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable.
+Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable. [cannot-write]
 
    11| bliffl.baz = 3456; // error
               ^^^
@@ -32,7 +32,7 @@ Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable.
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:12:8
 
-Cannot get `bliffl.corge` because property `corge` is missing in frozen object literal [1].
+Cannot get `bliffl.corge` because property `corge` is missing in frozen object literal [1]. [prop-missing]
 
    object_freeze.js:12:8
    12| bliffl.corge; // error
@@ -46,7 +46,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:13:8
 
-Cannot assign `baz` to `bliffl.constructor` because property `constructor` is not writable.
+Cannot assign `baz` to `bliffl.constructor` because property `constructor` is not writable. [cannot-write]
 
    13| bliffl.constructor = baz; // error
               ^^^^^^^^^^^
@@ -54,7 +54,7 @@ Cannot assign `baz` to `bliffl.constructor` because property `constructor` is no
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:14:8
 
-Cannot assign function to `bliffl.toString` because property `toString` is not writable.
+Cannot assign function to `bliffl.toString` because property `toString` is not writable. [cannot-write]
 
    14| bliffl.toString = function() {}; // error
               ^^^^^^^^
@@ -63,6 +63,7 @@ Cannot assign function to `bliffl.toString` because property `toString` is not w
 Error ------------------------------------------------------------------------------------------- object_freeze.js:20:45
 
 Cannot assign `Object.freeze(...)` to `xx` because string [1] is incompatible with number [2] in property `x`.
+[incompatible-type]
 
    object_freeze.js:20:45
    20| var xx : { x: number } = Object.freeze({ x: "error" })

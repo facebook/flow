@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- A.js:12:18
 
-Cannot resolve module `Exists3`.
+Cannot resolve module `Exists3`. [cannot-resolve-module]
 
    12| var m2 = require('2DoesntExist'); // Error
                         ^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Cannot resolve module `Exists3`.
 
 Error ------------------------------------------------------------------------------------------------------- A.js:13:33
 
-Cannot resolve module `Exists4`.
+Cannot resolve module `Exists4`. [cannot-resolve-module]
 
    13| import {numVal as numVal2} from '3DoesntExist'; // Error
                                        ^^^^^^^^^^^^^^

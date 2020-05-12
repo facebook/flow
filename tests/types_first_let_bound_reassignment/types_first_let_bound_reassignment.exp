@@ -2,7 +2,7 @@
 Errors in classic
 Error ----------------------------------------------------------------------------------------------------- file.js:17:5
 
-Cannot assign `1` to `Lib.baz` because property `baz` is not writable.
+Cannot assign `1` to `Lib.baz` because property `baz` is not writable. [cannot-write]
 
    17| Lib.baz = 1; // error in both modes, baz is not writable
            ^^^
@@ -10,7 +10,7 @@ Cannot assign `1` to `Lib.baz` because property `baz` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- file.js:20:7
 
-Cannot assign `1` to `bak` because number [1] is incompatible with function type [2].
+Cannot assign `1` to `bak` because number [1] is incompatible with function type [2]. [incompatible-type]
 
    file.js:20:7
    20| bak = 1; // error in both modes
@@ -28,7 +28,7 @@ Found 2 errors
 Errors in types-first
 Error ------------------------------------------------------------------------------------------------------ file.js:6:1
 
-Cannot reassign exported class binding `C` [1].
+Cannot reassign exported class binding `C` [1]. [cannot-reassign-export]
 
    file.js:6:1
    6| C = 1; // error in types-first, cannot reassign exported class
@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ file.js:9:1
 
-Cannot reassign exported function binding `foo` [1].
+Cannot reassign exported function binding `foo` [1]. [cannot-reassign-export]
 
    file.js:9:1
    9| foo = 1; // error in types-first, cannot reassign exported function
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:17:5
 
-Cannot assign `1` to `Lib.baz` because property `baz` is not writable.
+Cannot assign `1` to `Lib.baz` because property `baz` is not writable. [cannot-write]
 
    17| Lib.baz = 1; // error in both modes, baz is not writable
            ^^^
@@ -64,7 +64,7 @@ Cannot assign `1` to `Lib.baz` because property `baz` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- file.js:20:7
 
-Cannot assign `1` to `bak` because number [1] is incompatible with function type [2].
+Cannot assign `1` to `bak` because number [1] is incompatible with function type [2]. [incompatible-type]
 
    file.js:20:7
    20| bak = 1; // error in both modes
@@ -79,7 +79,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- file.js:24:3
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
-toplevel definition that needs hoisting: (`signature-verification-failure`)
+toplevel definition that needs hoisting: [signature-verification-failure]
 
    24|   function d() {} // additional entry in the exported locals map
          ^^^^^^^^^^^^^^^
@@ -87,7 +87,7 @@ toplevel definition that needs hoisting: (`signature-verification-failure`)
 
 Error ----------------------------------------------------------------------------------------------------- file.js:26:1
 
-Cannot reassign exported function binding `d` [1].
+Cannot reassign exported function binding `d` [1]. [cannot-reassign-export]
 
    file.js:26:1
    26| d = 1; // error in types-first
@@ -101,7 +101,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:30:1
 
-Cannot reassign exported function binding `e` [1].
+Cannot reassign exported function binding `e` [1]. [cannot-reassign-export]
 
    file.js:30:1
    30| e = 1; // error in types-first, exported via eObj
@@ -115,7 +115,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:34:1
 
-Cannot reassign exported function binding `f` [1].
+Cannot reassign exported function binding `f` [1]. [cannot-reassign-export]
 
    file.js:34:1
    34| f = 1; // error in types-first, exported via type F

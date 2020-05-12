@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test2.js:7:14
 
-Cannot assign `new C()` to `y` because `C` [1] is incompatible with `B` [2].
+Cannot assign `new C()` to `y` because `C` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test2.js:7:14
    7| var y: I.B = new C();
@@ -15,6 +15,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test3.js:6:41
 
 Cannot assign `c` to `a` because boolean [1] is incompatible with array type [2] in type argument `Z` [3].
+[incompatible-type-arg]
 
    test3.js:6:41
    6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
@@ -35,7 +36,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test4.js:7:20
 
 Cannot call `foo` with object literal bound to `x` because property `f` is missing in object literal [1] but exists in
-`O` [2].
+`O` [2]. [prop-missing]
 
    test4.js:7:20
    7| foo((new C: C<O>), { f_: 0 });
@@ -50,7 +51,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test4.js:13:12
 
 Cannot call `foo` with object literal bound to `x` because property `f` is missing in object literal [1] but exists in
-`O` [2].
+`O` [2]. [prop-missing]
 
    test4.js:13:12
    13| foo(new D, { f_: 0 });

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------- computed_properties.js:12:2
 
-Cannot cast `x1?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `x1?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:12:2
    12| (x1?.["foo"]: empty);
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:12:2
 
-Cannot cast `x1?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x1?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:12:2
    12| (x1?.["foo"]: empty);
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:13:2
 
-Cannot cast `x2?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x2?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:13:2
    13| (x2?.["foo"]: empty);
@@ -52,7 +52,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:13:2
 
 This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:13:2
    13| (x2?.["foo"]: empty);
@@ -67,6 +67,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
 
 Cannot cast `y1?.["bar"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:15:2
    15| (y1?.["bar"]?.["foo"]: empty);
@@ -83,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
 
-Cannot cast `y1?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:15:2
    15| (y1?.["bar"]?.["foo"]: empty);
@@ -101,7 +102,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
 
 This use of optional chaining (`?.`) is unnecessary because `y1?.["bar"]` [1] cannot be nullish or because an earlier
-`?.` will short-circuit the nullish case. (`unnecessary-optional-chain`)
+`?.` will short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:15:2
    15| (y1?.["bar"]?.["foo"]: empty);
@@ -116,7 +117,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:16:2
    16| (y2?.["bar"]?.["foo"]: empty);
@@ -130,7 +131,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
 
-Cannot cast `y2?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:16:2
    16| (y2?.["bar"]?.["foo"]: empty);
@@ -148,7 +149,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2?.["bar"]` [1] cannot be nullish or because an earlier
-`?.` will short-circuit the nullish case. (`unnecessary-optional-chain`)
+`?.` will short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:16:2
    16| (y2?.["bar"]?.["foo"]: empty);
@@ -163,6 +164,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
 
 Cannot cast `y1?.["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:17:2
    17| (y1?.["baz"]?.["foo"]: empty);
@@ -180,6 +182,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
 
 Cannot cast `y1?.["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:17:2
    17| (y1?.["baz"]?.["foo"]: empty);
@@ -196,7 +199,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
 
-Cannot cast `y1?.["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:17:2
    17| (y1?.["baz"]?.["foo"]: empty);
@@ -214,7 +217,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:18:2
    18| (y2?.["baz"]?.["foo"]: empty);
@@ -229,6 +232,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
 
 Cannot cast `y2?.["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:18:2
    18| (y2?.["baz"]?.["foo"]: empty);
@@ -245,7 +249,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
 
-Cannot cast `y2?.["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:18:2
    18| (y2?.["baz"]?.["foo"]: empty);
@@ -263,6 +267,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:20:2
 
 Cannot cast `y1?.["bar"]["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:20:2
    20| (y1?.["bar"]["foo"]: empty);
@@ -279,7 +284,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:20:2
 
-Cannot cast `y1?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:20:2
    20| (y1?.["bar"]["foo"]: empty);
@@ -297,7 +302,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:21:2
    21| (y2?.["bar"]["foo"]: empty);
@@ -311,7 +316,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
 
-Cannot cast `y2?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:21:2
    21| (y2?.["bar"]["foo"]: empty);
@@ -329,6 +334,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
 
 Cannot cast `y1?.["baz"]["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:22:2
    22| (y1?.["baz"]["foo"]: empty);
@@ -345,7 +351,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
 
-Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:22:2
    22| (y1?.["baz"]["foo"]: empty);
@@ -363,7 +369,7 @@ References:
 Error ------------------------------------------------------------------------------------- computed_properties.js:22:14
 
 Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:22:14
    22| (y1?.["baz"]["foo"]: empty);
@@ -378,7 +384,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:23:2
    23| (y2?.["baz"]["foo"]: empty);
@@ -392,7 +398,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
 
-Cannot cast `y2?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:23:2
    23| (y2?.["baz"]["foo"]: empty);
@@ -410,7 +416,7 @@ References:
 Error ------------------------------------------------------------------------------------- computed_properties.js:23:14
 
 Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:23:14
    23| (y2?.["baz"]["foo"]: empty);
@@ -425,7 +431,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:5
 
 Cannot get `y1["bar"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:25:5
    25| (y1["bar"]?.["foo"]: empty);
@@ -439,7 +445,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
 
-Cannot cast `y1["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:25:2
    25| (y1["bar"]?.["foo"]: empty);
@@ -457,7 +463,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
 
 This use of optional chaining (`?.`) is unnecessary because `y1["bar"]` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:25:2
    25| (y1["bar"]?.["foo"]: empty);
@@ -471,7 +477,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:26:2
 
-Cannot cast `y2["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:26:2
    26| (y2["bar"]?.["foo"]: empty);
@@ -489,7 +495,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:26:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2["bar"]` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:26:2
    26| (y2["bar"]?.["foo"]: empty);
@@ -504,7 +510,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:5
 
 Cannot get `y1["baz"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:27:5
    27| (y1["baz"]?.["foo"]: empty);
@@ -519,6 +525,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
 
 Cannot cast `y1["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:27:2
    27| (y1["baz"]?.["foo"]: empty);
@@ -535,7 +542,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
 
-Cannot cast `y1["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:27:2
    27| (y1["baz"]?.["foo"]: empty);
@@ -553,6 +560,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:28:2
 
 Cannot cast `y2["baz"]?.["foo"]` to empty because null or undefined [1] is incompatible with empty [2].
+[incompatible-cast]
 
    computed_properties.js:28:2
    28| (y2["baz"]?.["foo"]: empty);
@@ -569,7 +577,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:28:2
 
-Cannot cast `y2["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2["baz"]?.["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:28:2
    28| (y2["baz"]?.["foo"]: empty);
@@ -586,7 +594,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:30:2
 
-Cannot cast `y1?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:30:2
    30| ((y1?.["bar"])["foo"]: empty);
@@ -604,7 +612,7 @@ References:
 Error ------------------------------------------------------------------------------------- computed_properties.js:30:16
 
 Cannot get `y1?.["bar"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:30:16
    30| ((y1?.["bar"])["foo"]: empty);
@@ -618,7 +626,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:31:2
 
-Cannot cast `y2?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:31:2
    31| ((y2?.["bar"])["foo"]: empty);
@@ -636,7 +644,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:31:3
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:31:3
    31| ((y2?.["bar"])["foo"]: empty);
@@ -650,7 +658,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
 
-Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:32:2
    32| ((y1?.["baz"])["foo"]: empty);
@@ -668,7 +676,7 @@ References:
 Error ------------------------------------------------------------------------------------- computed_properties.js:32:16
 
 Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:32:16
    32| ((y1?.["baz"])["foo"]: empty);
@@ -683,7 +691,7 @@ References:
 Error ------------------------------------------------------------------------------------- computed_properties.js:32:16
 
 Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:32:16
    32| ((y1?.["baz"])["foo"]: empty);
@@ -697,7 +705,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:33:2
 
-Cannot cast `y2?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    computed_properties.js:33:2
    33| ((y2?.["baz"])["foo"]: empty);
@@ -715,7 +723,7 @@ References:
 Error ------------------------------------------------------------------------------------- computed_properties.js:33:16
 
 Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    computed_properties.js:33:16
    33| ((y2?.["baz"])["foo"]: empty);
@@ -730,7 +738,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:33:3
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    computed_properties.js:33:3
    33| ((y2?.["baz"])["foo"]: empty);
@@ -744,7 +752,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- deletion.js:9:8
 
-Cannot delete `x?.a` because undefined [1] is incompatible with number [2].
+Cannot delete `x?.a` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    deletion.js:9:8
    9| delete x?.a; // error from writing undefined to number, otherwise ok
@@ -761,7 +769,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:10:8
 
-Cannot delete `x?.b?.c` because undefined [1] is incompatible with number [2].
+Cannot delete `x?.b?.c` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    deletion.js:10:8
    10| delete x?.b?.c; // error from writing undefined to number, otherwise ok
@@ -778,7 +786,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:12:8
 
-Cannot delete `z.d?.c` because undefined [1] is incompatible with number [2].
+Cannot delete `z.d?.c` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    deletion.js:12:8
    12| delete z.d?.c; // error from writing undefined to number, otherwise ok
@@ -796,7 +804,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- deletion.js:13:8
 
 This use of optional chaining (`?.`) is unnecessary because `z` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    deletion.js:13:8
    13| delete z?.d; // unnecessary chain
@@ -811,7 +819,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- deletion.js:15:8
 
 This use of optional chaining (`?.`) is unnecessary because `w?.g` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    deletion.js:15:8
    15| delete w?.g?.e; // one unnecessary chain
@@ -826,7 +834,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- deletion.js:16:8
 
 This use of optional chaining (`?.`) is unnecessary because `w2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    deletion.js:16:8
    16| delete w2?.g?.e; // two unnecessary chains
@@ -841,7 +849,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- deletion.js:16:8
 
 This use of optional chaining (`?.`) is unnecessary because `w2?.g` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    deletion.js:16:8
    16| delete w2?.g?.e; // two unnecessary chains
@@ -855,7 +863,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
 
-Cannot cast `a.a` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `a.a` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    deletion.js:20:2
    20| (a.a: empty); // don't refine a.a to definitely exist
@@ -872,7 +880,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
 
-Cannot cast `a.a` to empty because number [1] is incompatible with empty [2].
+Cannot cast `a.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    deletion.js:20:2
    20| (a.a: empty); // don't refine a.a to definitely exist
@@ -889,7 +897,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:4
 
-Cannot get `a.a` because property `a` is missing in null or undefined [1].
+Cannot get `a.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    deletion.js:20:4
    20| (a.a: empty); // don't refine a.a to definitely exist
@@ -903,7 +911,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:23:8
 
-Cannot assign `42` to `w?.g.e` because property `e` is missing in null or undefined [1].
+Cannot assign `42` to `w?.g.e` because property `e` is missing in null or undefined [1]. [incompatible-use]
 
    deletion.js:23:8
    23| (w?.g).e = 42; // should fail
@@ -917,7 +925,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ deletion.js:24:15
 
-Cannot delete `w?.g.e` because property `e` is missing in null or undefined [1].
+Cannot delete `w?.g.e` because property `e` is missing in null or undefined [1]. [incompatible-use]
 
    deletion.js:24:15
    24| delete (w?.g).e; // should fail
@@ -931,7 +939,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
 
-Cannot cast `x1?.()` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `x1?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    function_calls.js:8:2
    8| (x1?.(): empty);
@@ -948,7 +956,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
 
-Cannot cast `x1?.()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x1?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    function_calls.js:8:2
    8| (x1?.(): empty);
@@ -965,7 +973,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:9:2
 
-Cannot cast `x2?.()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x2?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    function_calls.js:9:2
    9| (x2?.(): empty)
@@ -983,7 +991,7 @@ References:
 Error -------------------------------------------------------------------------------------------- function_calls.js:9:2
 
 This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    function_calls.js:9:2
    9| (x2?.(): empty)
@@ -997,7 +1005,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_calls.js:13:2
 
-Cannot call `x3?.()` because null or undefined [1] is not a function.
+Cannot call `x3?.()` because null or undefined [1] is not a function. [not-a-function]
 
    function_calls.js:13:2
    13| (x3?.())();
@@ -1012,7 +1020,7 @@ References:
 Error -------------------------------------------------------------------------------------- in_line_refinements.js:16:6
 
 This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    in_line_refinements.js:16:6
    16| x?.i[x?.a]; // unnecessary optional chain
@@ -1026,7 +1034,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- in_line_refinements.js:24:14
 
-Cannot get `x.a` because property `a` is missing in null or undefined [1].
+Cannot get `x.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    in_line_refinements.js:24:14
    24| x?.f2(x.a)(x.a); // havoc refinements
@@ -1051,7 +1059,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ lhs_types.js:12:2
 
 This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    lhs_types.js:12:2
    12| (x?.foo: ?number); // no error, lint
@@ -1065,7 +1073,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lhs_types.js:13:9
 
-Cannot get `mixed?.foo` because property `foo` is missing in mixed [1].
+Cannot get `mixed?.foo` because property `foo` is missing in mixed [1]. [incompatible-use]
 
    lhs_types.js:13:9
    13| (mixed?.foo: ?number); // error, no lint
@@ -1079,7 +1087,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
 
-Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:9:2
    9| (foo?.bar?.(): empty);
@@ -1096,7 +1104,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
 
-Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:9:2
    9| (foo?.bar?.(): empty);
@@ -1113,7 +1121,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
 
-Cannot cast `foo?.bar?.()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo?.bar?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:9:2
    9| (foo?.bar?.(): empty);
@@ -1130,7 +1138,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:6
 
-Cannot call `foo.bar` because property `bar` is missing in null or undefined [1].
+Cannot call `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
 
    method_calls.js:10:6
    10| (foo.bar?.(): empty);
@@ -1144,7 +1152,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
 
-Cannot cast `foo.bar?.()` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `foo.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:10:2
    10| (foo.bar?.(): empty);
@@ -1161,7 +1169,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
 
-Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:10:2
    10| (foo.bar?.(): empty);
@@ -1178,7 +1186,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:7
 
-Cannot call `foo?.bar` because null or undefined [1] is not a function.
+Cannot call `foo?.bar` because null or undefined [1] is not a function. [not-a-function]
 
    method_calls.js:11:7
    11| (foo?.bar(): empty);
@@ -1192,7 +1200,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
 
-Cannot cast `foo?.bar()` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `foo?.bar()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:11:2
    11| (foo?.bar(): empty);
@@ -1209,7 +1217,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
 
-Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:11:2
    11| (foo?.bar(): empty);
@@ -1226,7 +1234,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:3
 
-Cannot call `foo?.bar` because null or undefined [1] is not a function.
+Cannot call `foo?.bar` because null or undefined [1] is not a function. [not-a-function]
 
    method_calls.js:12:3
    12| ((foo?.bar)(): empty);
@@ -1240,7 +1248,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:3
 
-Cannot call `foo?.bar` because null or undefined [1] is not a function.
+Cannot call `foo?.bar` because null or undefined [1] is not a function. [not-a-function]
 
    method_calls.js:12:3
    12| ((foo?.bar)(): empty);
@@ -1254,7 +1262,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
 
-Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    method_calls.js:12:2
    12| ((foo?.bar)(): empty);
@@ -1271,7 +1279,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
 
-Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2].
+Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
@@ -1288,7 +1296,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
 
-Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2].
+Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
@@ -1305,7 +1313,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
 
-Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2].
+Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
@@ -1322,7 +1330,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
 
-Cannot assign `a.b?.()?.c?.d` to `y` because number [1] is incompatible with empty [2].
+Cannot assign `a.b?.()?.c?.d` to `y` because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:15:16
    15| var y: empty = a.b?.()?.c?.d;
@@ -1339,7 +1347,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
 
-Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible with empty [2].
+Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:16:16
    16| var x: empty = a.c?.d?.e;
@@ -1356,7 +1364,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
 
-Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible with empty [2].
+Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:16:16
    16| var x: empty = a.c?.d?.e;
@@ -1373,7 +1381,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
 
-Cannot assign `a.c?.d?.e` to `x` because number [1] is incompatible with empty [2].
+Cannot assign `a.c?.d?.e` to `x` because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:16:16
    16| var x: empty = a.c?.d?.e;
@@ -1390,7 +1398,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:17:16
 
-Cannot assign `a.d?.e.f().g` to `w` because null or undefined [1] is incompatible with empty [2].
+Cannot assign `a.d?.e.f().g` to `w` because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:17:16
    17| var w: empty = a.d?.e.f().g;
@@ -1407,7 +1415,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:17:16
 
-Cannot assign `a.d?.e.f().g` to `w` because number [1] is incompatible with empty [2].
+Cannot assign `a.d?.e.f().g` to `w` because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:17:16
    17| var w: empty = a.d?.e.f().g;
@@ -1425,6 +1433,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:20:37
 
 Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because undefined [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:20:37
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
@@ -1442,6 +1451,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:20:37
 
 Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:20:37
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
@@ -1459,6 +1469,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:20:53
 
 Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:20:53
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
@@ -1473,6 +1484,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
 
 Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
@@ -1490,6 +1502,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
 
 Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
@@ -1507,6 +1520,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
 
 Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
@@ -1524,6 +1538,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
 
 Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because null or undefined [1] is incompatible with empty [2].
+[incompatible-type]
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
@@ -1540,7 +1555,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
 
-Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because number [1] is incompatible with empty [2].
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:23:16
    23| var z: empty = c?.[0]?.()?.[0]?.[0]
@@ -1558,7 +1573,7 @@ References:
 Error --------------------------------------------------------------------------------------------- method_calls.js:43:3
 
 This use of optional chaining (`?.`) is unnecessary because `cc` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    method_calls.js:43:3
    43|   cc?.c();
@@ -1572,7 +1587,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
 
-Cannot cast `this?.#foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `this?.#foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    private_properties.js:6:6
    6|     (this?.#foo: empty);
@@ -1590,7 +1605,7 @@ References:
 Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
 
 This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    private_properties.js:6:6
    6|     (this?.#foo: empty);
@@ -1604,7 +1619,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:14:6
 
-Cannot cast `this?.#bar` to empty because `X` [1] is incompatible with empty [2].
+Cannot cast `this?.#bar` to empty because `X` [1] is incompatible with empty [2]. [incompatible-cast]
 
    private_properties.js:14:6
    14|     (this?.#bar: empty);
@@ -1622,7 +1637,7 @@ References:
 Error --------------------------------------------------------------------------------------- private_properties.js:14:6
 
 This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    private_properties.js:14:6
    14|     (this?.#bar: empty);
@@ -1636,7 +1651,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:6
 
-Cannot cast `this?.#baz` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `this?.#baz` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    private_properties.js:15:6
    15|     (this?.#baz: empty);
@@ -1653,7 +1668,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:6
 
-Cannot cast `this?.#baz` to empty because `X` [1] is incompatible with empty [2].
+Cannot cast `this?.#baz` to empty because `X` [1] is incompatible with empty [2]. [incompatible-cast]
 
    private_properties.js:15:6
    15|     (this?.#baz: empty);
@@ -1671,7 +1686,7 @@ References:
 Error --------------------------------------------------------------------------------------- private_properties.js:15:6
 
 This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    private_properties.js:15:6
    15|     (this?.#baz: empty);
@@ -1685,7 +1700,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:15:9
 
-Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
+Cannot get `a.b.c.d` because property `d` is missing in undefined [1]. [incompatible-use]
 
    refinements.js:15:9
    15|   a.b.c.d; // bad
@@ -1700,7 +1715,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:16:4
 
 This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:16:4
    16|   (a?.b.c?.d: ?number); // ok, one unneeded optional chain
@@ -1715,7 +1730,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:17:4
 
 This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:17:4
    17|   (a?.b.e: number); // ok, one unneeded optional chain
@@ -1730,7 +1745,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:18:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:18:4
    18|   (a.b?.e: number); // ok, one unneeded optional chain
@@ -1745,7 +1760,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:22:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:22:4
    22|   (a.b?.f(): ?number); // unneeded chain and bad
@@ -1759,7 +1774,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:22:9
 
-Cannot call `a.b?.f` because null or undefined [1] is not a function.
+Cannot call `a.b?.f` because null or undefined [1] is not a function. [not-a-function]
 
    refinements.js:22:9
    22|   (a.b?.f(): ?number); // unneeded chain and bad
@@ -1774,7 +1789,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:30:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:30:4
    30|   (a.b?.f?.(): ?number); // ok, one unneeded optional chain
@@ -1789,7 +1804,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:38:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:38:4
    38|   (a.b.g?.(): number); // ok, unneeded chain
@@ -1804,7 +1819,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:42:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:42:4
    42|   (a.b?.g(): number); // ok, unneeded chain
@@ -1819,7 +1834,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:46:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:46:4
    46|   (a.b?.g?.(): number); // ok, two unneeded chains
@@ -1834,7 +1849,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:46:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:46:4
    46|   (a.b?.g?.(): number); // ok, two unneeded chains
@@ -1848,7 +1863,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:48:4
 
-Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2].
+Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-cast]
 
    refinements.js:48:4
    48|   (a: {}); // should fail, sanity check
@@ -1865,7 +1880,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:49:4
 
-Cannot cast `a` to union type because object type [1] is incompatible with enum [2].
+Cannot cast `a` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements.js:49:4
    49|   (a: (null | void)); // should fail, sanity check
@@ -1882,7 +1897,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:59:6
 
-Cannot get `x.a` because property `a` is missing in null or undefined [1].
+Cannot get `x.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements.js:59:6
    59|   (x.a: empty) // should fail
@@ -1896,7 +1911,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:66:9
 
-Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
+Cannot get `a.b.c.d` because property `d` is missing in undefined [1]. [incompatible-use]
 
    refinements.js:66:9
    66|   a.b.c.d; // bad
@@ -1911,7 +1926,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:67:4
 
 This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:67:4
    67|   (a?.b.c?.d: ?number); // ok, one unneeded optional chain
@@ -1926,7 +1941,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:68:4
 
 This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:68:4
    68|   (a?.b.e: number); // ok, one unneeded optional chain
@@ -1941,7 +1956,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:69:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:69:4
    69|   (a.b?.e: number); // ok, one unneeded optional chain
@@ -1956,7 +1971,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:73:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:73:4
    73|   (a.b?.f(): ?number); // unneeded chain and bad
@@ -1970,7 +1985,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:73:9
 
-Cannot call `a.b?.f` because null or undefined [1] is not a function.
+Cannot call `a.b?.f` because null or undefined [1] is not a function. [not-a-function]
 
    refinements.js:73:9
    73|   (a.b?.f(): ?number); // unneeded chain and bad
@@ -1985,7 +2000,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:81:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:81:4
    81|   (a.b?.f?.(): ?number); // ok, one unneeded optional chain
@@ -2000,7 +2015,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:89:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:89:4
    89|   (a.b.g?.(): number); // ok, unneeded chain
@@ -2015,7 +2030,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:93:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:93:4
    93|   (a.b?.g(): number); // ok, unneeded chain
@@ -2030,7 +2045,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:97:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:97:4
    97|   (a.b?.g?.(): number); // ok, two unneeded chains
@@ -2045,7 +2060,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:97:4
 
 This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    refinements.js:97:4
    97|   (a.b?.g?.(): number); // ok, two unneeded chains
@@ -2059,7 +2074,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:99:4
 
-Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2].
+Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-cast]
 
    refinements.js:99:4
    99|   (a: {}); // should fail, sanity check
@@ -2076,7 +2091,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:100:4
 
-Cannot cast `a` to union type because object type [1] is incompatible with enum [2].
+Cannot cast `a` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements.js:100:4
    100|   (a: (null | void)); // should fail, sanity check
@@ -2094,6 +2109,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:108:4
 
 Cannot cast `b.x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    refinements.js:108:4
    108|   (b.x: false); // nope
@@ -2110,7 +2126,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:108:6
 
-Cannot get `b.x` because property `x` is missing in null or undefined [1].
+Cannot get `b.x` because property `x` is missing in null or undefined [1]. [incompatible-use]
 
    refinements.js:108:6
    108|   (b.x: false); // nope
@@ -2124,7 +2140,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:111:10
 
-Property `u` is missing in undefined [1].
+Property `u` is missing in undefined [1]. [incompatible-type]
 
    refinements.js:111:10
    111| if (b?.w.u) { // error here
@@ -2138,7 +2154,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:116:14
 
-Property `u` is missing in undefined [1].
+Property `u` is missing in undefined [1]. [incompatible-type]
 
    refinements.js:116:14
    116| if (b && b.w.u) { // error consistent with above
@@ -2152,7 +2168,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:123:6
 
-Cannot get `b.z` because property `z` is missing in null or undefined [1].
+Cannot get `b.z` because property `z` is missing in null or undefined [1]. [incompatible-use]
 
    refinements.js:123:6
    123|   (b.z.value: string); // error
@@ -2166,7 +2182,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:123:4
 
-Cannot cast `b.z.value` to string because number [1] is incompatible with string [2].
+Cannot cast `b.z.value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    refinements.js:123:4
    123|   (b.z.value: string); // error
@@ -2184,7 +2200,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:126:5
 
 Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
-(`sketchy-null-bool`)
+[sketchy-null-bool]
 
    refinements.js:126:5
    126| if (b?.y) {// sketchy null
@@ -2199,6 +2215,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:129:4
 
 Cannot cast `b.y` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    refinements.js:129:4
    129|   (b.y: false); // nope
@@ -2216,6 +2233,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:129:4
 
 Cannot cast `b.y` to boolean literal `false` because undefined [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    refinements.js:129:4
    129|   (b.y: false); // nope
@@ -2232,7 +2250,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:129:6
 
-Cannot get `b.y` because property `y` is missing in null or undefined [1].
+Cannot get `b.y` because property `y` is missing in null or undefined [1]. [incompatible-use]
 
    refinements.js:129:6
    129|   (b.y: false); // nope
@@ -2247,7 +2265,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:136:9
 
 Cannot get `c[1][0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
    refinements.js:136:9
    136|   (c[1][0]: {}); // no
@@ -2261,7 +2279,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:142:6
 
-Cannot call `d.a` because undefined [1] is not a function.
+Cannot call `d.a` because undefined [1] is not a function. [not-a-function]
 
    refinements.js:142:6
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
@@ -2275,7 +2293,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:142:6
 
-Cannot call `d.a` because property `a` is missing in null or undefined [1].
+Cannot call `d.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements.js:142:6
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
@@ -2289,7 +2307,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:142:12
 
-Cannot get `d.a().b.c` because property `c` is missing in undefined [1].
+Cannot get `d.a().b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
    refinements.js:142:12
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
@@ -2303,7 +2321,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:148:18
 
-Cannot assign `a11?.a || b11?.a` to `x11` because string [1] is incompatible with empty [2].
+Cannot assign `a11?.a || b11?.a` to `x11` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    refinements.js:148:18
    148| var x11: empty = a11?.a || b11?.a;
@@ -2321,6 +2339,7 @@ References:
 Error -------------------------------------------------------------------------------------------- refinements.js:148:18
 
 Cannot assign `a11?.a || b11?.a` to `x11` because property `a` of unknown type [1] is incompatible with empty [2].
+[incompatible-type]
 
    refinements.js:148:18
    148| var x11: empty = a11?.a || b11?.a;
@@ -2335,6 +2354,7 @@ References:
 Error -------------------------------------------------------------------------------------------- refinements.js:148:28
 
 Cannot assign `a11?.a || b11?.a` to `x11` because null or undefined [1] is incompatible with empty [2].
+[incompatible-type]
 
    refinements.js:148:28
    148| var x11: empty = a11?.a || b11?.a;
@@ -2351,7 +2371,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:148:33
 
-Cannot get `b11?.a` because property `a` is missing in object type [1].
+Cannot get `b11?.a` because property `a` is missing in object type [1]. [prop-missing]
 
    refinements.js:148:33
    148| var x11: empty = a11?.a || b11?.a;
@@ -2365,7 +2385,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements2.js:9:4
 
-Cannot cast `t` to union type because `T` [1] is incompatible with enum [2].
+Cannot cast `t` to union type because `T` [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements2.js:9:4
    9|   (t: (null | void)); // no
@@ -2382,7 +2402,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:10:4
 
-Cannot cast `t.a` to number because null [1] is incompatible with number [2].
+Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements2.js:10:4
    10|   (t.a: number); // no for two reasons
@@ -2399,7 +2419,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:10:6
 
-Cannot get `t.a` because property `a` is missing in null or undefined [1].
+Cannot get `t.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:10:6
    10|   (t.a: number); // no for two reasons
@@ -2413,7 +2433,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:13:4
 
-Cannot cast `t` to union type because `T` [1] is incompatible with enum [2].
+Cannot cast `t` to union type because `T` [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements2.js:13:4
    13|   (t: (null | void)); // no
@@ -2430,7 +2450,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:14:4
 
-Cannot cast `t.a` to number because null [1] is incompatible with number [2].
+Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements2.js:14:4
    14|   (t.a: number); // no for two reasons
@@ -2447,7 +2467,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:14:6
 
-Cannot get `t.a` because property `a` is missing in null or undefined [1].
+Cannot get `t.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:14:6
    14|   (t.a: number); // no for two reasons
@@ -2461,7 +2481,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:23:4
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
 
    refinements2.js:23:4
    23|   (s: S); // no, may be nulled
@@ -2478,7 +2498,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:4
 
-Cannot cast `s.a` to union type because:
+Cannot cast `s.a` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -2500,7 +2520,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:6
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1].
+Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:24:6
    24|   (s.a: (null | void)); // no for two reasons
@@ -2514,7 +2534,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:33:4
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
 
    refinements2.js:33:4
    33|   (s: S); // no, may be nulled
@@ -2531,7 +2551,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:4
 
-Cannot cast `s.a` to union type because:
+Cannot cast `s.a` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -2553,7 +2573,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:6
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1].
+Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:34:6
    34|   (s.a: (null | void)); // no for two reasons
@@ -2567,7 +2587,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:37:4
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
 
    refinements2.js:37:4
    37|   (s: S); // no, may be nulled
@@ -2584,7 +2604,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:4
 
-Cannot cast `s.a` to union type because:
+Cannot cast `s.a` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -2606,7 +2626,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:6
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1].
+Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:38:6
    38|   (s.a: (null | void)); // no for two reasons
@@ -2620,7 +2640,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:41:4
 
-Cannot cast `s.a` to number because null or undefined [1] is incompatible with number [2].
+Cannot cast `s.a` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements2.js:41:4
    41|   (s.a: number); // no: s.a can be null
@@ -2637,7 +2657,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:45:4
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
 
    refinements2.js:45:4
    45|   (s: S); // no, may be nulled
@@ -2654,7 +2674,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:4
 
-Cannot cast `s.a` to union type because:
+Cannot cast `s.a` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -2676,7 +2696,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:6
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1].
+Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:46:6
    46|   (s.a: (null | void)); // no for two reasons
@@ -2690,7 +2710,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:59:4
 
-Cannot cast `w` to `W` because null or undefined [1] is incompatible with `W` [2].
+Cannot cast `w` to `W` because null or undefined [1] is incompatible with `W` [2]. [incompatible-cast]
 
    refinements2.js:59:4
    59|   (w: W); // no
@@ -2707,7 +2727,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:60:5
 
-Cannot get `w.a` because property `a` is missing in null or undefined [1].
+Cannot get `w.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:60:5
    60|   w.a; // no
@@ -2721,7 +2741,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:68:5
 
-Cannot get `a.b` because property `b` is missing in null or undefined [1].
+Cannot get `a.b` because property `b` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:68:5
    68|   a.b; // nope
@@ -2735,7 +2755,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:69:4
 
-Cannot cast `a` to union type because object type [1] is incompatible with enum [2].
+Cannot cast `a` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements2.js:69:4
    69|   (a: (null | void));// nope
@@ -2752,7 +2772,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:74:5
 
-Cannot get `b.a` because property `a` is missing in null or undefined [1].
+Cannot get `b.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:74:5
    74|   b.a; //nope
@@ -2766,7 +2786,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:75:4
 
-Cannot cast `b` to union type because object type [1] is incompatible with enum [2].
+Cannot cast `b` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements2.js:75:4
    75|   (b: (null | void)); // nope
@@ -2783,7 +2803,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:85:5
 
-Cannot get `b.a` because property `a` is missing in null or undefined [1].
+Cannot get `b.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:85:5
    85|   b.a; // nope
@@ -2797,7 +2817,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:86:4
 
-Cannot cast `b` to union type because object type [1] is incompatible with enum [2].
+Cannot cast `b` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements2.js:86:4
    86|   (b: (null | void)); // nope
@@ -2814,7 +2834,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:94:5
 
-Cannot get `c.d` because property `d` is missing in null or undefined [1].
+Cannot get `c.d` because property `d` is missing in null or undefined [1]. [incompatible-use]
 
    refinements2.js:94:5
    94|   c.d; //nope
@@ -2828,7 +2848,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:95:4
 
-Cannot cast `c` to union type because object type [1] is incompatible with enum [2].
+Cannot cast `c` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
 
    refinements2.js:95:4
    95|   (c: (null | void)); //nope
@@ -2845,7 +2865,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements2.js:103:4
 
-Cannot cast `b1?.a` to number because null or undefined [1] is incompatible with number [2].
+Cannot cast `b1?.a` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements2.js:103:4
    103|   (b1?.a: number) // b1.a may not exist and may not be number
@@ -2862,7 +2882,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements2.js:103:4
 
-Cannot cast `b1?.a` to number because undefined [1] is incompatible with number [2].
+Cannot cast `b1?.a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements2.js:103:4
    103|   (b1?.a: number) // b1.a may not exist and may not be number
@@ -2879,7 +2899,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
 
-Cannot cast `x1?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `x1?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:12:2
    12| (x1?.foo: empty);
@@ -2896,7 +2916,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
 
-Cannot cast `x1?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x1?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:12:2
    12| (x1?.foo: empty);
@@ -2913,7 +2933,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:13:2
 
-Cannot cast `x2?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `x2?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:13:2
    13| (x2?.foo: empty);
@@ -2931,7 +2951,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:13:2
 
 This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:13:2
    13| (x2?.foo: empty);
@@ -2945,7 +2965,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:15:2
 
-Cannot cast `y1?.bar?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y1?.bar?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:15:2
    15| (y1?.bar?.foo: empty);
@@ -2962,7 +2982,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:15:2
 
-Cannot cast `y1?.bar?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:15:2
    15| (y1?.bar?.foo: empty);
@@ -2980,7 +3000,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:15:2
 
 This use of optional chaining (`?.`) is unnecessary because `y1?.bar` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:15:2
    15| (y1?.bar?.foo: empty);
@@ -2995,7 +3015,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:16:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:16:2
    16| (y2?.bar?.foo: empty);
@@ -3009,7 +3029,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:16:2
 
-Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:16:2
    16| (y2?.bar?.foo: empty);
@@ -3027,7 +3047,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:16:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2?.bar` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:16:2
    16| (y2?.bar?.foo: empty);
@@ -3041,7 +3061,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:2
 
-Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:17:2
    17| (y1?.baz?.foo: empty);
@@ -3058,7 +3078,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:2
 
-Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:17:2
    17| (y1?.baz?.foo: empty);
@@ -3075,7 +3095,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:2
 
-Cannot cast `y1?.baz?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:17:2
    17| (y1?.baz?.foo: empty);
@@ -3093,7 +3113,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:18:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:18:2
    18| (y2?.baz?.foo: empty);
@@ -3107,7 +3127,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:2
 
-Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:18:2
    18| (y2?.baz?.foo: empty);
@@ -3124,7 +3144,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:2
 
-Cannot cast `y2?.baz?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:18:2
    18| (y2?.baz?.foo: empty);
@@ -3141,7 +3161,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:20:2
 
-Cannot cast `y1?.bar.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y1?.bar.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:20:2
    20| (y1?.bar.foo: empty);
@@ -3158,7 +3178,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:20:2
 
-Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:20:2
    20| (y1?.bar.foo: empty);
@@ -3176,7 +3196,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:21:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:21:2
    21| (y2?.bar.foo: empty);
@@ -3190,7 +3210,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:21:2
 
-Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:21:2
    21| (y2?.bar.foo: empty);
@@ -3207,7 +3227,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:2
 
-Cannot cast `y1?.baz.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y1?.baz.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:22:2
    22| (y1?.baz.foo: empty);
@@ -3224,7 +3244,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:2
 
-Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:22:2
    22| (y1?.baz.foo: empty);
@@ -3241,7 +3261,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:22:10
 
-Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
+Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:22:10
    22| (y1?.baz.foo: empty);
@@ -3256,7 +3276,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:23:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:23:2
    23| (y2?.baz.foo: empty);
@@ -3270,7 +3290,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:23:2
 
-Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:23:2
    23| (y2?.baz.foo: empty);
@@ -3287,7 +3307,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:23:10
 
-Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1].
+Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:23:10
    23| (y2?.baz.foo: empty);
@@ -3301,7 +3321,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:25:5
 
-Cannot get `y1.bar` because property `bar` is missing in null or undefined [1].
+Cannot get `y1.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:25:5
    25| (y1.bar?.foo: empty);
@@ -3315,7 +3335,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:25:2
 
-Cannot cast `y1.bar?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:25:2
    25| (y1.bar?.foo: empty);
@@ -3333,7 +3353,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:25:2
 
 This use of optional chaining (`?.`) is unnecessary because `y1.bar` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:25:2
    25| (y1.bar?.foo: empty);
@@ -3347,7 +3367,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:26:2
 
-Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:26:2
    26| (y2.bar?.foo: empty);
@@ -3365,7 +3385,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:26:2
 
 This use of optional chaining (`?.`) is unnecessary because `y2.bar` [1] cannot be nullish or because an earlier `?.`
-will short-circuit the nullish case. (`unnecessary-optional-chain`)
+will short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:26:2
    26| (y2.bar?.foo: empty);
@@ -3379,7 +3399,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:5
 
-Cannot get `y1.baz` because property `baz` is missing in null or undefined [1].
+Cannot get `y1.baz` because property `baz` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:27:5
    27| (y1.baz?.foo: empty);
@@ -3393,7 +3413,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:2
 
-Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:27:2
    27| (y1.baz?.foo: empty);
@@ -3410,7 +3430,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:2
 
-Cannot cast `y1.baz?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:27:2
    27| (y1.baz?.foo: empty);
@@ -3427,7 +3447,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:28:2
 
-Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2].
+Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:28:2
    28| (y2.baz?.foo: empty);
@@ -3444,7 +3464,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:28:2
 
-Cannot cast `y2.baz?.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:28:2
    28| (y2.baz?.foo: empty);
@@ -3461,7 +3481,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:30:2
 
-Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:30:2
    30| ((y1?.bar).foo: empty);
@@ -3478,7 +3498,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:30:12
 
-Cannot get `y1?.bar.foo` because property `foo` is missing in null or undefined [1].
+Cannot get `y1?.bar.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:30:12
    30| ((y1?.bar).foo: empty);
@@ -3492,7 +3512,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:31:2
 
-Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:31:2
    31| ((y2?.bar).foo: empty);
@@ -3510,7 +3530,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:31:3
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:31:3
    31| ((y2?.bar).foo: empty);
@@ -3524,7 +3544,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:32:2
 
-Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:32:2
    32| ((y1?.baz).foo: empty);
@@ -3541,7 +3561,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:32:12
 
-Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
+Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:32:12
    32| ((y1?.baz).foo: empty);
@@ -3555,7 +3575,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:32:12
 
-Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
+Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:32:12
    32| ((y1?.baz).foo: empty);
@@ -3569,7 +3589,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:33:2
 
-Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2].
+Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    static_members.js:33:2
    33| ((y2?.baz).foo: empty);
@@ -3586,7 +3606,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:33:12
 
-Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1].
+Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
 
    static_members.js:33:12
    33| ((y2?.baz).foo: empty);
@@ -3601,7 +3621,7 @@ References:
 Error ------------------------------------------------------------------------------------------- static_members.js:33:3
 
 This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
-short-circuit the nullish case. (`unnecessary-optional-chain`)
+short-circuit the nullish case. [unnecessary-optional-chain]
 
    static_members.js:33:3
    33| ((y2?.baz).foo: empty);
@@ -3616,7 +3636,7 @@ References:
 Error ------------------------------------------------------------------------------------------ static_members.js:36:26
 
 Cannot assign `a?.a` to `b` because undefined (result of null short-circuiting an optional chain) [1] is incompatible
-with null [2].
+with null [2]. [incompatible-type]
 
    static_members.js:36:26
    36| const b: string | null = a?.a;
@@ -3633,7 +3653,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:38:26
 
-Cannot assign `c?.c` to `d` because null or undefined [1] is incompatible with null [2].
+Cannot assign `c?.c` to `d` because null or undefined [1] is incompatible with null [2]. [incompatible-type]
 
    static_members.js:38:26
    38| const d: string | null = c?.c;
@@ -3650,7 +3670,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:25
 
-read-only array type [1] is incompatible with undefined [2].
+read-only array type [1] is incompatible with undefined [2]. [incompatible-type]
 
    typeof.js:6:25
    6|   type T = $ElementType<typeof y, 0>;

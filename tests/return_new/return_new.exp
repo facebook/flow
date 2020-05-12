@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:2:19
 
-Cannot assign `new Foo()` to `foo` because object literal [1] is incompatible with number [2].
+Cannot assign `new Foo()` to `foo` because object literal [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:2:19
    2| var foo: number = new Foo(); // error (returns object literal above)
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:19
 
-Cannot assign `new Bar()` to `bar` because new object [1] is incompatible with number [2].
+Cannot assign `new Bar()` to `bar` because new object [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:5:19
    5| var bar: number = new Bar(); // error (returns new object)
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:19
 
-Cannot assign `new Qux()` to `qux` because new object [1] is incompatible with number [2].
+Cannot assign `new Qux()` to `qux` because new object [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:8:19
    8| var qux: number = new Qux(); // error (returns new object)
@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:7
 
-Cannot assign empty string to `d.x` because string [1] is incompatible with number [2].
+Cannot assign empty string to `d.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test2.js:7:7
    7| d.x = ""; // error, string ~/~ number (but property x is found)
@@ -59,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:9:2
 
-Cannot cast `new D` to `D` because object type [1] is incompatible with `D` [2].
+Cannot cast `new D` to `D` because object type [1] is incompatible with `D` [2]. [incompatible-cast]
 
    test2.js:9:2
    9| (new D: D); // error, new D is an object, D not in proto chain

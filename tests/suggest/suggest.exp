@@ -371,7 +371,7 @@ err-infer-0.js (--fail-on-tc-errors)
 
 Error ----------------------------------------------------------------------------------------------- err-infer-0.js:3:7
 
-Cannot add empty string and function because function [1] is incompatible with string [2].
+Cannot add empty string and function because function [1] is incompatible with string [2]. [incompatible-type]
 
    err-infer-0.js:3:7
    3| "" + (() => 1);

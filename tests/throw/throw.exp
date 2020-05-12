@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:13:12
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    test.js:13:12
    13|     return a*1; // a is not null

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- json_stringify.js:9:2
 
-Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2].
+Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
 
    json_stringify.js:9:2
      9| (JSON.stringify(bad1): string);
@@ -18,7 +18,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:23:21
 
 Cannot call `Map` with array literal bound to `iterable` because string [1] is incompatible with tuple type [2] in type
-argument `Yield` [3] of the return value of property `@@iterator`.
+argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
    map.js:23:21
     23|     let x = new Map(['foo', 123]); // error
@@ -39,7 +39,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:23:21
 
 Cannot call `Map` with array literal bound to `iterable` because number [1] is incompatible with tuple type [2] in type
-argument `Yield` [3] of the return value of property `@@iterator`.
+argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
    map.js:23:21
     23|     let x = new Map(['foo', 123]); // error
@@ -60,6 +60,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:24:44
 
 Cannot assign `new Map(...)` to `y` because string [1] is incompatible with number [2] in type argument `K` [3].
+[incompatible-type-arg]
 
    map.js:24:44
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -77,6 +78,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:24:51
 
 Cannot assign `new Map(...)` to `y` because number [1] is incompatible with string [2] in type argument `V` [3].
+[incompatible-type-arg]
 
    map.js:24:51
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -93,7 +95,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:29:6
 
-Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2].
+Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
 
    map.js:29:6
     29|     (x.get('foo'): boolean); // error, string | void
@@ -110,7 +112,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:29:6
 
-Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2].
+Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
    map.js:29:6
    29|     (x.get('foo'): boolean); // error, string | void
@@ -127,7 +129,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- map.js:30:11
 
-Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2].
+Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2]. [incompatible-call]
 
    map.js:30:11
    30|     x.get(123); // error, wrong key type
@@ -142,7 +144,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- regexp.js:26:19
 
 Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2]
-since `z` is not a member of the set.
+since `z` is not a member of the set. [invalid-charset-type-arg]
 
    regexp.js:26:19
     26|     RegExp('foo', 'z'); // error
@@ -157,7 +159,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- regexp.js:27:23
 
 Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2]
-since `z` is not a member of the set.
+since `z` is not a member of the set. [invalid-charset-type-arg]
 
    regexp.js:27:23
     27|     new RegExp('foo', 'z'); // error
@@ -172,7 +174,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`:
+property `@@iterator`: [incompatible-type]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
@@ -198,7 +200,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`:
+property `@@iterator`: [incompatible-type]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
@@ -224,7 +226,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`:
+property `@@iterator`: [incompatible-type]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
@@ -249,7 +251,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:36:23
 
-Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]:
+Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]: [incompatible-type]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 

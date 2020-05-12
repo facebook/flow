@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------------- boolean.js:8:34
 
 Cannot call `veryOptimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean
-literal `true` [2].
+literal `true` [2]. [incompatible-call]
 
    boolean.js:8:34
    8| var y : boolean = veryOptimistic(false); // error
@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- boolean.js:15:35
 
 Cannot call `veryPessimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean
-literal `true` [2].
+literal `true` [2]. [incompatible-call]
 
    boolean.js:15:35
    15| var y : boolean = veryPessimistic(false); // error
@@ -31,6 +31,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- boolean.js:21:12
 
 Cannot return `x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+[incompatible-return]
 
    boolean.js:21:12
    21|     return x;
@@ -48,6 +49,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- boolean.js:23:12
 
 Cannot return `!x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+[incompatible-return]
 
    boolean.js:23:12
    23|     return !x;
@@ -61,7 +63,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- boolean.js:29:5
 
-Cannot call `bar` with `1` bound to `x` because number [1] is incompatible with enum [2].
+Cannot call `bar` with `1` bound to `x` because number [1] is incompatible with enum [2]. [incompatible-call]
 
    boolean.js:29:5
    29| bar(1); // error
@@ -76,6 +78,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- number.js:8:12
 
 Cannot call `highlander` with `2` bound to `howMany` because number [1] is incompatible with number literal `1` [2].
+[incompatible-call]
 
    number.js:8:12
    8| highlander(2); // error
@@ -89,7 +92,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:19:5
 
-Cannot call `bar` with `3` bound to `num` because number [1] is incompatible with enum [2].
+Cannot call `bar` with `3` bound to `num` because number [1] is incompatible with enum [2]. [incompatible-call]
 
    number.js:19:5
    19| bar(3); // error

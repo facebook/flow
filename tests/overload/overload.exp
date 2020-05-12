@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- annot.js:6:1
 
-Cannot call `f` because:
+Cannot call `f` because: [not-a-function]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with number [3].
 
@@ -22,7 +22,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:18
 
-Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
+Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2]. [incompatible-type]
 
    overload.js:7:18
      7| var x1: number = "".match(0)[0];
@@ -40,6 +40,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:7:30
 
 Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
+[incompatible-use]
 
    overload.js:7:30
      7| var x1: number = "".match(0)[0];
@@ -54,6 +55,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:7:27
 
 Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompatible with string [2].
+[incompatible-type]
 
    overload.js:7:27
      7| var x1: number = "".match(0)[0];
@@ -67,7 +69,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18
 
-Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
+Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    overload.js:8:18
      8| var x2: number = "".match(/pattern/)[0];
@@ -85,6 +87,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:8:38
 
 Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
+[incompatible-use]
 
    overload.js:8:38
      8| var x2: number = "".match(/pattern/)[0];
@@ -98,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ overload.js:10:18
 
-Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2].
+Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2]. [incompatible-type]
 
    overload.js:10:18
     10| var x4: number = "".split(/pattern/)[0];
@@ -115,7 +118,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:24:3
 
-Cannot call `a.foo` because:
+Cannot call `a.foo` because: [not-a-function]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -137,7 +140,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:28:3
 
-Cannot call `a.bar` because:
+Cannot call `a.bar` because: [not-a-function]
  - Either boolean [1] is incompatible with number [2] in property `a`.
  - Or boolean [1] is incompatible with string [3] in property `a`.
 
@@ -159,7 +162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:32:3
 
-Cannot call `a.bar` because:
+Cannot call `a.bar` because: [not-a-function]
  - Either boolean [1] is incompatible with number [2] in property `a`.
  - Or boolean [1] is incompatible with string [3] in property `a`.
 
@@ -181,7 +184,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:2
 
-Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test2.js:7:2
    7| (foo.bar('hmmm'): number); // error

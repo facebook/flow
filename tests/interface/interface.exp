@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ fun.js:5:19
 
 Cannot assign function to `f0` because number [1] is incompatible with undefined [2] in the return value.
+[incompatible-type]
 
    fun.js:5:19
    5| var f0: F = () => 0; // error: number ~> void
@@ -14,7 +15,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- indexer.js:9:3
 
-Multiple indexers are not supported.
+Multiple indexers are not supported. [unsupported-syntax]
 
    9|   [k2: number]: number; // error: not supported (yet)
         ^^^^^^^^^^^^^^^^^^^^
@@ -23,6 +24,7 @@ Multiple indexers are not supported.
 Error ---------------------------------------------------------------------------------------------------- inline.js:5:6
 
 Cannot cast object literal to `A` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    inline.js:5:6
    5| ({p: "bad"}: A); // error: string ~> number
@@ -37,6 +39,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- inline.js:8:6
 
 Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
    inline.js:8:6
    8| ({p: "bad", q: 0}: B); // error: string ~> number
@@ -51,6 +54,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:9:12
 
 Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `q`.
+[incompatible-cast]
 
    inline.js:9:12
    9| ({p: 0, q: "bad"}: B); // error: string ~> number
@@ -65,6 +69,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:10:2
 
 Cannot cast object literal to `B` because property `p` is missing in object literal [1] but exists in `A` [2].
+[prop-missing]
 
    inline.js:10:2
    10| ({q: 0}: B); // error: missing property p
@@ -79,6 +84,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:11:2
 
 Cannot cast object literal to `B` because property `q` is missing in object literal [1] but exists in `B` [2].
+[prop-missing]
 
    inline.js:11:2
    11| ({p: 0}: B); // error: missing property q
@@ -92,7 +98,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:16:4
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    inline.js:16:4
    16|   (o.p: empty); // error: number ~> empty
@@ -109,7 +115,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:17:4
 
-Cannot cast `o.q` to empty because string [1] is incompatible with empty [2].
+Cannot cast `o.q` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    inline.js:17:4
    17|   (o.q: empty); // error: string ~> empty
@@ -126,7 +132,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:18:5
 
-Cannot get `o.z` because property `z` is missing in interface type [1].
+Cannot get `o.z` because property `z` is missing in interface type [1]. [prop-missing]
 
    inline.js:18:5
    18|   o.z; // error: undeclared property z
@@ -140,7 +146,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:21:5
 
-Cannot get `o.name` because property `name` is missing in interface type [1].
+Cannot get `o.name` because property `name` is missing in interface type [1]. [prop-missing]
 
    inline.js:21:5
    21|   o.name;
@@ -155,6 +161,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- inline.js:25:29
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    inline.js:25:29
    25| type C<+T> = interface { p: T }
@@ -169,6 +176,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:29:6
 
 Cannot extend `Base` [1] with interface type because string [2] is incompatible with number [3] in property `p`.
+[incompatible-extend]
 
    inline.js:29:6
    29|   p: string, // error: string ~> number
@@ -185,7 +193,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:3:17
 
-Cannot assign `(new C()).x` to `x` because number [1] is incompatible with string [2].
+Cannot assign `(new C()).x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    interface.js:3:17
    3| var x: string = new C().x;
@@ -202,7 +210,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:7:13
 
-Cannot reference type `I` [1] from a value position.
+Cannot reference type `I` [1] from a value position. [type-as-value]
 
    interface.js:7:13
    7| var i = new I(); // error
@@ -216,7 +224,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:10:6
 
-Cannot get `o.name` because property `name` is missing in `I` [1].
+Cannot get `o.name` because property `name` is missing in `I` [1]. [prop-missing]
 
    interface.js:10:6
    10|   (o.name: string); // error, name is static
@@ -231,6 +239,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
 
 Cannot assign object literal to `k` because string [1] is incompatible with number [2] in property `x`.
+[incompatible-type]
 
    test.js:6:17
    6| var k: K = { x: "", y: "" }; // error: x should be number
@@ -244,7 +253,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
-Cannot cast `k.x` to string because number [1] is incompatible with string [2].
+Cannot cast `k.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:7:2
    7| (k.x: string); // error: x is number
@@ -262,6 +271,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:17:25
 
 Cannot assign object literal to `e` because string [1] is incompatible with number [2] in property `x`.
+[incompatible-type]
 
    test.js:17:25
    17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
@@ -276,6 +286,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:17:39
 
 Cannot assign object literal to `e` because string [1] is incompatible with number [2] in property `z`.
+[incompatible-type]
 
    test.js:17:39
    17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
@@ -289,7 +300,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:2
 
-Cannot cast `e.x` to string because number [1] is incompatible with string [2].
+Cannot cast `e.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:18:2
    18| (e.x: string); // error: x is number
@@ -306,7 +317,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:2
 
-Cannot cast `e.z` to string because number [1] is incompatible with string [2].
+Cannot cast `e.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:20:2
    20| (e.z: string); // error: z is number
@@ -323,7 +334,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:5:34
 
-Cannot get `l.z` because property `z` is missing in `L` [1].
+Cannot get `l.z` because property `z` is missing in `L` [1]. [prop-missing]
 
    test2.js:5:34
    5| function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
@@ -337,7 +348,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:3:31
 
-Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`.
+Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`. [incompatible-extend]
 
    test3.js:3:31
    3| interface K extends I, J { x: string } // error: x is number in I
@@ -354,7 +365,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:4
 
-Cannot cast `k.x` to number because string [1] is incompatible with number [2].
+Cannot cast `k.x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test3.js:5:4
    5|   (k.x: number); // error: x is string in K
@@ -371,7 +382,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:6:4
 
-Cannot cast `k.y` to number because string [1] is incompatible with number [2].
+Cannot cast `k.y` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test3.js:6:4
    6|   (k.y: number); // error: y is string in I
@@ -388,7 +399,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:2:2
 
-Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2].
+Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2]. [prop-missing]
 
    test4.js:2:2
    2| (function foo(x: number) { }: I); // error, property `foo` not found function
@@ -402,7 +413,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:9:9
 
-Cannot call `(new C()).bar` because string [1] is incompatible with number [2] in the first argument.
+Cannot call `(new C()).bar` because string [1] is incompatible with number [2] in the first argument. [not-a-function]
 
    test4.js:9:9
    9| new C().bar((x: string) => { }); // error, number ~/~> string
@@ -419,7 +430,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:12:2
 
-Cannot cast `a.x` to empty because function type [1] is incompatible with empty [2].
+Cannot cast `a.x` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
 
    test5.js:12:2
    12| (a.x: empty); // error: function ~> empty
@@ -436,7 +447,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:15:2
 
-Cannot cast `b.x` to empty because number [1] is incompatible with empty [2].
+Cannot cast `b.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test5.js:15:2
    15| (b.x: empty); // error: number ~> empty

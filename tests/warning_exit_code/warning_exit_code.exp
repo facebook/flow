@@ -2,7 +2,7 @@ Check Existing Server With Warnings (zero exit code):
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -24,7 +24,7 @@ Check Existing Server With Warnings and --max-warnings 0 (nonzero exit code):
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -45,7 +45,7 @@ Check Existing Server With Errors (nonzero exit code):
 Error ------------------------------------------------------------------------------------------------------ test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -68,7 +68,7 @@ Status (Running Server) With Warnings (zero exit code):
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -88,7 +88,7 @@ Found 1 warning
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -108,7 +108,7 @@ Found 1 warning
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -130,7 +130,7 @@ Status (Running Server) With Errors (nonzero exit code):
 Error ------------------------------------------------------------------------------------------------------ test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -153,7 +153,7 @@ Status (No Running Server) With Warnings (zero exit code):
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -175,7 +175,7 @@ Status (No Running Server) With Errors (nonzero exit code):
 Error ------------------------------------------------------------------------------------------------------ test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -198,7 +198,7 @@ Check Contents With Warnings (zero exit code):
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -218,7 +218,7 @@ Found 1 warning
 Warning ---------------------------------------------------------------------------------------------------- test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}
@@ -240,7 +240,7 @@ Check Contents With Errors (nonzero exit code):
 Error ------------------------------------------------------------------------------------------------------ test.js:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:4:5
    4| if (x) {}

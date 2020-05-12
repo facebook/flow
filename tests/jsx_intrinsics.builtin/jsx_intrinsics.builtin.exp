@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:12:4
 
 Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is incompatible with `CustomComponentNope` [2]
-in property `type`.
+in property `type`. [incompatible-type]
 
    main.js:12:4
    12|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -19,7 +19,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:14:3
 
 Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
-type [2] in property `props`.
+type [2] in property `props`. [prop-missing]
 
    main.js:14:3
    14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:14:4
 
 Cannot assign `<CustomComponent />` to `c` because property `prop` is missing in object type [1] but exists in object
-type [2] in type argument `Props` [3] of property `type`.
+type [2] in type argument `Props` [3] of property `type`. [prop-missing]
 
    main.js:14:4
    14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -58,7 +58,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:14:4
 
 Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
-type [2] in type argument `Props` [3] of property `type`.
+type [2] in type argument `Props` [3] of property `type`. [prop-missing]
 
    main.js:14:4
    14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -79,6 +79,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- main.js:21:27
 
 Cannot assign `<div />` to `e` because `div` [1] is incompatible with string literal `span` [2] in property `type`.
+[incompatible-type]
 
    main.js:21:27
    21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;

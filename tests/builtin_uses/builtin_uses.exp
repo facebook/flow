@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:2:2
 
-Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
+Cannot cast `o.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:2:2
    2| (o.foo: string);
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:2:2
 
-Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
+Cannot cast `o.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test2.js:2:2
    2| (o.foo: string);

@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:4:2
 
 Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+[incompatible-cast]
 
    commonjs-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -17,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:6:2
 
-Cannot cast object literal to `Node` because:
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -40,7 +41,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ commonjs-pascal.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
    commonjs-pascal.js:7:14
      7| (null: React.Missing); // Error
@@ -55,6 +56,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
 
 Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+[incompatible-cast]
 
    commonjs.js:4:2
     4| (React.Component: number); // Error
@@ -71,7 +73,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
 
-Cannot cast object literal to `Node` because:
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -94,7 +96,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- commonjs.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
    commonjs.js:7:14
    7| (null: React.Missing); // Error
@@ -109,6 +111,7 @@ References:
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:4:2
 
 Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+[incompatible-cast]
 
    es-default-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -125,7 +128,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:6:2
 
-Cannot cast object literal to `Node` because:
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -148,7 +151,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- es-default-pascal.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
    es-default-pascal.js:7:14
      7| (null: React.Missing); // Error: Not in default export.
@@ -163,6 +166,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
 
 Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+[incompatible-cast]
 
    es-default.js:4:2
     4| (React.Component: number); // Error
@@ -179,7 +183,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:5:25
 
-Cannot get `React.Node` because property `Node` is missing in object type [1].
+Cannot get `React.Node` because property `Node` is missing in object type [1]. [prop-missing]
 
    es-default.js:5:25
      5| ('Hello, world!': React.Node); // Error: Not in default export.
@@ -224,7 +228,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:6:12
 
-Cannot get `React.Node` because property `Node` is missing in object type [1].
+Cannot get `React.Node` because property `Node` is missing in object type [1]. [prop-missing]
 
    es-default.js:6:12
      6| ({}: React.Node); // Error: Not in default export.
@@ -269,7 +273,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in object type [1].
+Cannot get `React.Missing` because property `Missing` is missing in object type [1]. [prop-missing]
 
    es-default.js:7:14
      7| (null: React.Missing); // Error: Not in default export.
@@ -315,6 +319,7 @@ References:
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:4:2
 
 Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+[incompatible-cast]
 
    es-namespace-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -331,7 +336,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:6:2
 
-Cannot cast object literal to `Node` because:
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -354,7 +359,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- es-namespace-pascal.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `React` [1].
+Cannot get `React.Missing` because property `Missing` is missing in module `React` [1]. [prop-missing]
 
    es-namespace-pascal.js:7:14
    7| (null: React.Missing); // Error
@@ -369,6 +374,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
 
 Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+[incompatible-cast]
 
    es-namespace.js:4:2
     4| (React.Component: number); // Error
@@ -385,7 +391,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
 
-Cannot cast object literal to `Node` because:
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -408,7 +414,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es-namespace.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
    es-namespace.js:7:14
    7| (null: React.Missing); // Error

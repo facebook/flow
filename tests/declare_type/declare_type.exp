@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------- import_declare_type.js:11:15
 
-Cannot assign `"shab"` to `k2` because string [1] is incompatible with number [2].
+Cannot assign `"shab"` to `k2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_declare_type.js:11:15
    11| var k2: baz = "shab"; // Error: string to int
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- import_declare_type.js:26:2
 
-Cannot cast object literal to `Foo` because object literal [1] is incompatible with string [2].
+Cannot cast object literal to `Foo` because object literal [1] is incompatible with string [2]. [incompatible-cast]
 
    import_declare_type.js:26:2
    26| ({toz:3} : Foo); // error : {toz : number} ~> string
@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- import_declare_type.js:28:2
 
-Cannot cast `3` to `Bar` because number [1] is incompatible with `A` [2].
+Cannot cast `3` to `Bar` because number [1] is incompatible with `A` [2]. [incompatible-cast]
 
    import_declare_type.js:28:2
    28| (3 : Bar); // error : number ~> A
@@ -42,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- import_declare_type.js:30:2
 
-Cannot cast `"lol"` to `Id` because string [1] is incompatible with number [2].
+Cannot cast `"lol"` to `Id` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    import_declare_type.js:30:2
    30| ("lol" : Id<number>); // error : string ~> number

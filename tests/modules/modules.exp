@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ cli2.js:5:3
 
-Cannot call `f` with `"..."` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `f` with `"..."` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    cli2.js:5:3
    5| f("...");
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lib.js:7:33
 
-Cannot call `g` with `x` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `g` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    lib.js:7:33
    7| function f(x:number):number { g(x); return x; }

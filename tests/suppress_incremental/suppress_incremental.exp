@@ -4,7 +4,7 @@ No errors!
 After introducing an error:
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:3:2
    3| (123: string); // error

@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Experimental class static field usage. Class static fields are an active early stage feature proposal that may change.
 You may opt-in to using them anyway in Flow by putting `esproposal.class_static_fields=enable` into the `[options]`
-section of your `.flowconfig`.
+section of your `.flowconfig`. [illegal-class-field]
 
    5|   static initOnly = 'asdf';
         ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -12,7 +12,7 @@ Error --------------------------------------------------------------------------
 
 Experimental class static field usage. Class static fields are an active early stage feature proposal that may change.
 You may opt-in to using them anyway in Flow by putting `esproposal.class_static_fields=enable` into the `[options]`
-section of your `.flowconfig`.
+section of your `.flowconfig`. [illegal-class-field]
 
    6|   static initWithAnnotation: string = 'asdf';
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

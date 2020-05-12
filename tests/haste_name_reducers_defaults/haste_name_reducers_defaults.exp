@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- Module1.js:5:2
 
-Cannot cast `test` to boolean because `Test` [1] is incompatible with boolean [2].
+Cannot cast `test` to boolean because `Test` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    Module1.js:5:2
    5| (test: boolean);
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- index.js:3:2
 
-Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with boolean [2].
+Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    index.js:3:2
    3| (require('Module1'): boolean);
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- index.js:4:2
 
-Cannot cast `require(...).foo()` to boolean because `Test2` [1] is incompatible with boolean [2].
+Cannot cast `require(...).foo()` to boolean because `Test2` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    index.js:4:2
    4| (require('Module2').foo(): boolean);
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- index.js:5:9
 
-Cannot resolve module `Module3`.
+Cannot resolve module `Module3`. [cannot-resolve-module]
 
    5| require('Module3');
               ^^^^^^^^^

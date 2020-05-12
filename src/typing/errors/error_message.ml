@@ -3135,7 +3135,7 @@ let error_code_of_upper_kind = function
   | IncompatibleMixinT
   | IncompatibleThisSpecializeT ->
     Some NotAClass
-  | _ -> Some IncompatibleType
+  | _ -> Some Error_codes.IncompatibleUse
 
 let error_code_of_message err : error_code option =
   match err with
@@ -3164,7 +3164,7 @@ let error_code_of_message err : error_code option =
     begin
       match name with
       | Some x when is_internal_module_name x -> Some CannotResolveModule
-      | _ -> Some CannotResolveModule
+      | _ -> Some CannotResolveName
     end
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete
@@ -3286,7 +3286,7 @@ let error_code_of_message err : error_code option =
   | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis
   | EUnexpectedTypeof _ -> Some InvalidTypeOf
-  | EUnionSpeculationFailed _ -> Some Error_codes.Speculation
+  | EUnionSpeculationFailed _ -> Some Error_codes.IncompatibleType
   | EUnreachable _ -> Some UnreachableCode
   | EUnsafeGetSet _ -> Some IllegalGetSet
   | EUnsupportedExact (_, _) -> Some InvalidExact

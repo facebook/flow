@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:13:7
 
-Cannot call `x.c` because property `c` is missing in `B` [1].
+Cannot call `x.c` because property `c` is missing in `B` [1]. [prop-missing]
 
    Sigma.js:13:7
    13|     x.c(); // error
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:15:5
 
-Cannot assign number to `x` because number [1] is incompatible with `B` [2].
+Cannot assign number to `x` because number [1] is incompatible with `B` [2]. [incompatible-type]
 
    Sigma.js:15:5
    15|     x++; // TODO no error? since unreachable (x: B implies x: A)
@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:15:5
 
-number [1] is incompatible with `B` [2].
+number [1] is incompatible with `B` [2]. [incompatible-type]
 
    Sigma.js:15:5
    15|     x++; // TODO no error? since unreachable (x: B implies x: A)
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:24:7
 
-Cannot call `x.d` because property `d` is missing in `C` [1].
+Cannot call `x.d` because property `d` is missing in `C` [1]. [prop-missing]
 
    Sigma.js:24:7
    24|     x.d(); // error
@@ -56,7 +56,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:27:7
 
-Cannot call `x.c` because property `c` is missing in `A` [1].
+Cannot call `x.c` because property `c` is missing in `A` [1]. [prop-missing]
 
    Sigma.js:27:7
    27|     x.c(); // error
@@ -70,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- Sigma.js:35:20
 
-`A` [1] is incompatible with `D` [2].
+`A` [1] is incompatible with `D` [2]. [incompatible-type]
 
    Sigma.js:35:20
    35|   if (x instanceof A) {
@@ -87,7 +87,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:16
 
-Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1].
+Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1]. [prop-missing]
 
    test.js:11:16
    11|     return obj.childProp_TYPO; // error (obj: ChildClass)

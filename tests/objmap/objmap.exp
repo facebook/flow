@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-objmap
-for documentation.
+for documentation. [incompatible-call]
 
    arity.js:8:10
     8|   return g(o);
@@ -28,7 +28,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-objmap
-for documentation.
+for documentation. [incompatible-call]
 
    arity.js:12:10
    12|   return g<Columns>(o);
@@ -54,7 +54,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-objmap
-for documentation.
+for documentation. [incompatible-call]
 
    arity.js:16:10
    16|   return g(o);
@@ -80,7 +80,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-objmap
-for documentation.
+for documentation. [incompatible-call]
 
    arity.js:20:10
    20|   return g<T>(o);
@@ -106,7 +106,7 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `$ObjMap` because `$ObjMap` [1] expects the provided function type to take only one argument, the
 value type number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-objmap for documentation.
+https://flow.org/en/docs/types/utilities/#toc-objmap for documentation. [invalid-obj-map]
 
    arity.js:23:25
    23| function h(o: Columns): $ObjMap<Columns, typeof makeEditedColumn> {
@@ -129,7 +129,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
 string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incompatible-call]
 
    arity2.js:8:10
     8|   return g(o);
@@ -159,7 +159,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
 string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incompatible-call]
 
    arity2.js:12:10
    12|   return g<Columns>(o);
@@ -189,7 +189,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
 string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incompatible-call]
 
    arity2.js:16:10
    16|   return g(o);
@@ -219,7 +219,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
 string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incompatible-call]
 
    arity2.js:20:10
    20|   return g<T>(o);
@@ -249,7 +249,7 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `$ObjMapi` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the
 key type string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [invalid-obj-mapi]
 
    arity2.js:23:25
    23| function h(o: Columns): $ObjMapi<Columns, typeof makeEditedColumn> {
@@ -276,7 +276,7 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `$TupleMap` because `$TupleMap` [1] expects the provided function type to take only one argument, the
 value type number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [invalid-tuple-map]
 
    arity3.js:3:46
     3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
@@ -299,7 +299,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [incompatible-call]
 
    arity3.js:8:10
     8|   return g(o);
@@ -325,7 +325,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [incompatible-call]
 
    arity3.js:12:10
    12|   return g<Columns>(o);
@@ -351,7 +351,7 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `$TupleMap` because `$TupleMap` [1] expects the provided function type to take only one argument, the
 value type number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [invalid-tuple-map]
 
    arity3.js:15:25
    15| function h(o: Columns): $TupleMap<Columns, typeof makeEditedColumn> {
@@ -374,6 +374,7 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `$Call` because `$Call` [1] passes only one argument to the provided function type, but function
 type [2] expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+[invalid-call-util]
 
    arity4.js:3:30
     3| function g<T: number>(o: T): $Call<typeof makeEditedColumn, T> {
@@ -393,6 +394,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$Call` [1] passes only one argument to the provided function type, but function type [2]
 expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+[incompatible-call]
 
    arity4.js:8:10
     8|   return g(o);
@@ -415,6 +417,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because `$Call` [1] passes only one argument to the provided function type, but function type [2]
 expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+[incompatible-call]
 
    arity4.js:12:10
    12|   return g<Columns>(o);
@@ -437,6 +440,7 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `$Call` because `$Call` [1] passes only one argument to the provided function type, but function
 type [2] expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+[invalid-call-util]
 
    arity4.js:15:25
    15| function h(o: Columns): $Call<typeof makeEditedColumn, Columns> {
@@ -455,6 +459,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:20:6
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `a`.
+[incompatible-cast]
 
    identity.js:20:6
    20|   a: 'asd', // Error: string ~> number
@@ -469,6 +474,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:21:6
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `b`.
+[incompatible-cast]
 
    identity.js:21:6
    21|   b: 'asd', // Error: string ~> number
@@ -482,7 +488,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:25:6
 
-Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`.
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`. [incompatible-cast]
 
    identity.js:25:6
    25|   a: string, // Error: string ~> number
@@ -496,7 +502,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:26:6
 
-Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`.
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`. [incompatible-cast]
 
    identity.js:26:6
    26|   b: string, // Error: string ~> number
@@ -511,6 +517,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:29:7
 
 Cannot cast object literal to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    identity.js:29:7
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
@@ -525,6 +532,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:29:7
 
 Cannot cast object literal to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    identity.js:29:7
    29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
@@ -539,6 +547,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:31:8
 
 Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    identity.js:31:8
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
@@ -553,6 +562,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:31:8
 
 Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    identity.js:31:8
    31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
@@ -566,7 +576,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:38:2
 
-Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`.
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`. [incompatible-cast]
 
    identity.js:38:2
    38| (foo: {
@@ -583,7 +593,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:38:2
 
-Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`.
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`. [incompatible-cast]
 
    identity.js:38:2
    38| (foo: {
@@ -600,7 +610,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:43:2
 
-Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    identity.js:43:2
    43| (foo.a: empty); // Error: number ~> empty
@@ -617,7 +627,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:62:8
 
-Cannot cast object literal to `$ObjMap` because in property `foo`:
+Cannot cast object literal to `$ObjMap` because in property `foo`: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -636,7 +646,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:70:2
 
-Cannot cast object literal to `$ObjMap` because:
+Cannot cast object literal to `$ObjMap` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2] in property `foo`.
  - Or boolean [1] is incompatible with number [3] in property `foo`.
 
@@ -662,7 +672,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:7:2
 
 Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2].
+`BAR` [2]. [incompatible-cast]
 
    issue-2674.js:7:2
    7| (a.FOO: 'BAR'); // error
@@ -679,7 +689,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:8:9
 
-Cannot assign `'BAR'` to `a.FOO` because string [1] is incompatible with string literal `FOO` [2].
+Cannot assign `'BAR'` to `a.FOO` because string [1] is incompatible with string literal `FOO` [2]. [incompatible-type]
 
    issue-2674.js:8:9
    8| a.FOO = 'BAR'; // error
@@ -694,7 +704,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue-2674.js:14:2
 
 Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2].
+`BAR` [2]. [incompatible-cast]
 
    issue-2674.js:14:2
    14| (b.FOO : 'BAR'); // error
@@ -711,7 +721,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-2674.js:15:9
 
-Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2].
+Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2]. [incompatible-type]
 
    issue-2674.js:15:9
    15| b.FOO = 'BAR'; // error
@@ -726,7 +736,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue-2674.js:21:2
 
 Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2].
+`BAR` [2]. [incompatible-cast]
 
    issue-2674.js:21:2
    21| (c[0]: 'BAR'); // error
@@ -743,7 +753,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-2674.js:22:8
 
-Cannot assign `'BAR'` to `c[0]` because string [1] is incompatible with string literal `FOO` [2].
+Cannot assign `'BAR'` to `c[0]` because string [1] is incompatible with string literal `FOO` [2]. [incompatible-type]
 
    issue-2674.js:22:8
    22| c[0] = 'BAR'; // error
@@ -758,7 +768,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- objmap.js:10:2
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2].
+`BAR` [2]. [incompatible-cast]
 
    objmap.js:10:2
    10| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
@@ -775,7 +785,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objmap.js:16:4
 
-Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
+Cannot cast `o.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    objmap.js:16:4
    16|   (o.foo: string); // error, number ~> string
@@ -793,6 +803,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- objmap.js:23:5
 
 Cannot assign object literal to `foo` because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    objmap.js:23:5
    23| > = {} // error, {| a: number |} ~> {} 
@@ -810,7 +821,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:13:2
 
-Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
+Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2]. [incompatible-cast]
 
    optional.js:13:2
    13| (o3.b: Array<number | void>); // Error: void ~> array
@@ -827,7 +838,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:17:2
 
-Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2].
+Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2]. [incompatible-cast]
 
    optional.js:17:2
    17| (o6.b: Array<number | void>); // Error: void ~> array

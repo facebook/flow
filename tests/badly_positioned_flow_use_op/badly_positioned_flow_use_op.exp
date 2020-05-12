@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- b.js:17:12
 
-Property `x` is missing in object literal [1] but exists in `Data` [2].
+Property `x` is missing in object literal [1] but exists in `Data` [2]. [prop-missing]
 
    b.js:17:12
    17|   o['fun'](data);
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:17:12
 
-Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument.
+Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument. [prop-missing]
 
    b.js:17:12
    17|   o['fun'](data);
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:22:12
 
-Property `x` is missing in object literal [1] but exists in `Data` [2].
+Property `x` is missing in object literal [1] but exists in `Data` [2]. [prop-missing]
 
    b.js:22:12
    22|   o['fun'](data);
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:22:12
 
-Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument.
+Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument. [prop-missing]
 
    b.js:22:12
    22|   o['fun'](data);
@@ -68,7 +68,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:6:16
 
-Cannot assign `5` to `t` because number [1] is incompatible with string [2].
+Cannot assign `5` to `t` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test2.js:6:16
    6| const t: arg = 5;

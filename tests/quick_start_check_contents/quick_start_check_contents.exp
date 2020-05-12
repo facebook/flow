@@ -12,7 +12,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Check contents with dependency, expect errors in contents.
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:3:2
    3| (require('./dependency'): string);
@@ -33,7 +33,7 @@ Found 1 error
 Expect errors in dependency.
 Error ----------------------------------------------------------------------------------------------- dependency.js:2:19
 
-Cannot cast `"hello"` to number because string [1] is incompatible with number [2].
+Cannot cast `"hello"` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    dependency.js:2:19
    2| module.exports = ("hello": number);

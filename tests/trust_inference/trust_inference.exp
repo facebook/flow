@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ t2.js:12:10
 
 Cannot return `g(...)` because `any` may have been passed into number [1] and `any` is incompatible with trusted
-number [2].
+number [2]. [incompatible-trust]
 
    t2.js:12:10
    12|   return g(x)
@@ -19,6 +19,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- t2.js:16:8
 
 Cannot call `f` with `42` bound to `x` because explicit 'any' [1] is incompatible with trusted number [2].
+[incompatible-trust]
 
    t2.js:16:8
    16| f((42: any));
@@ -33,7 +34,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ t2.js:19:35
 
 Cannot assign `x` to `y` because `any` may have been passed into number [1] and `any` is incompatible with trusted
-number [2] in the return value.
+number [2] in the return value. [incompatible-trust]
 
    t2.js:19:35
    19| var y: number=>$Trusted<number> = x;
@@ -51,6 +52,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- t2.js:23:2
 
 Cannot cast `b` to explicit 'any' because explicit 'any' [1] is incompatible with trusted number [2].
+[incompatible-trust]
 
    t2.js:23:2
    23| (b: any)
@@ -68,7 +70,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ t3.js:15:27
 
 Cannot assign `a` to `b` because `any` may have been passed into number [1] and `any` is incompatible with trusted
-number [2].
+number [2]. [incompatible-trust]
 
    t3.js:15:27
    15| var b: $Trusted<number> = a;

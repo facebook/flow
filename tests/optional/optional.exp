@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- generic.js:1:22
 
-number [1] is incompatible with `T` [2].
+number [1] is incompatible with `T` [2]. [incompatible-type]
 
    generic.js:1:22
    1| function x<T>(x: T = 0) {}
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:15
 
-number [1] is incompatible with `T` [2].
+number [1] is incompatible with `T` [2]. [incompatible-type]
 
    generic.js:4:15
    4|   x<T>(x: T = 0) {}
@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- loop.js:5:33
 
-Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2].
+Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2]. [incompatible-type]
 
    loop.js:5:33
    5| function f<T:*>(x:T,y?:T) { x = y }
@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:17:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:17:5
    17|     x.y++; // should error
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:17:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:17:5
    17|     x.y++; // should error
@@ -73,7 +73,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:23:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:23:5
    23|     x.y++; // should error
@@ -87,7 +87,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:23:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:23:5
    23|     x.y++; // should error
@@ -101,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:29:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:29:5
    29|     x.y++; // should error
@@ -115,7 +115,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:29:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:29:5
    29|     x.y++; // should error
@@ -129,7 +129,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:35:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:35:5
    35|     x.y++; // should error
@@ -143,7 +143,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:35:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    nullable.js:35:5
    35|     x.y++; // should error
@@ -157,7 +157,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:1:23
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    optional.js:1:23
    1| function bar(x?,y?) { x * 0; }
@@ -171,7 +171,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:14
 
-Missing type annotation for `x`.
+Missing type annotation for `x`. [missing-annot]
 
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                    ^
@@ -179,7 +179,7 @@ Missing type annotation for `x`.
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:27
 
-Missing type annotation for rest parameter `y`.
+Missing type annotation for rest parameter `y`. [missing-annot]
 
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                                 ^
@@ -187,7 +187,7 @@ Missing type annotation for rest parameter `y`.
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:43
 
-Cannot call `foo` with `x` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `foo` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    optional.js:7:43
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -204,7 +204,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:54
 
-Cannot return `y[0]` because number [1] is incompatible with string [2].
+Cannot return `y[0]` because number [1] is incompatible with string [2]. [incompatible-return]
 
    optional.js:7:54
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:54
 
-Cannot return `y[0]` because number [1] is incompatible with string [2].
+Cannot return `y[0]` because number [1] is incompatible with string [2]. [incompatible-return]
 
    optional.js:7:54
     7| function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -239,6 +239,7 @@ References:
 Error ------------------------------------------------------------------------------------------ optional_param2.js:7:31
 
 Cannot assign `i.map(...)` to `j` because undefined [1] is incompatible with number [2] in type argument `V` [3].
+[incompatible-type-arg]
 
    optional_param2.js:7:31
    7| var j:I<number> = i.map(id => id);
@@ -258,7 +259,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_param4.js:12:5
 
-Cannot call `foo` with `true` bound to `x` because boolean [1] is incompatible with number [2].
+Cannot call `foo` with `true` bound to `x` because boolean [1] is incompatible with number [2]. [incompatible-call]
 
    optional_param4.js:12:5
    12| foo(true); // ERROR boolean ~> number
@@ -272,7 +273,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_param4.js:13:10
 
-Cannot call `foo` because boolean [1] is incompatible with string [2] in array element.
+Cannot call `foo` because boolean [1] is incompatible with string [2] in array element. [incompatible-call]
 
    optional_param4.js:13:10
    13| foo(123, true); // ERROR boolean ~> string
@@ -286,7 +287,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined.js:8:14
 
-Cannot get `x.duck` because property `duck` is missing in undefined [1].
+Cannot get `x.duck` because property `duck` is missing in undefined [1]. [incompatible-use]
 
    undefined.js:8:14
    8|     return x.duck;
@@ -300,7 +301,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:8:14
 
-Cannot get `x.duck` because property `duck` is missing in undefined [1].
+Cannot get `x.duck` because property `duck` is missing in undefined [1]. [incompatible-use]
 
    undefined2.js:8:14
    8|     return x.duck;

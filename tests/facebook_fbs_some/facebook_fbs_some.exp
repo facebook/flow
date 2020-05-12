@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:4:2
 
-Cannot cast `<fbs />` to string because number [1] is incompatible with string [2].
+Cannot cast `<fbs />` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    main.js:4:2
    4| (<fbs />: string); // Error (the libdef in this test marks fbs as number)

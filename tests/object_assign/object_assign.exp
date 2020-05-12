@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- A.js:13:19
 
-Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with number [2].
+Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with number [2]. [incompatible-type]
 
    A.js:13:19
    13| var bad: number = Bad.foo();
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:21:20
 
-Cannot assign `Good.foo()` to `good` because string [1] is incompatible with number [2].
+Cannot assign `Good.foo()` to `good` because string [1] is incompatible with number [2]. [incompatible-type]
 
    A.js:21:20
    21| var good: number = Good.foo();
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:7:20
 
-Cannot assign `A.Good.foo()` to `good` because string [1] is incompatible with number [2].
+Cannot assign `A.Good.foo()` to `good` because string [1] is incompatible with number [2]. [incompatible-type]
 
    B.js:7:20
     7| var good: number = A.Good.foo(); // string ~> number
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- B.js:10:20
 
-Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2].
+Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2]. [incompatible-type]
 
    B.js:10:20
    10| var bad_: number = f(); // error: string ~> number
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- B.js:12:19
 
-Cannot assign `A.Bad.foo()` to `bad` because string [1] is incompatible with number [2].
+Cannot assign `A.Bad.foo()` to `bad` because string [1] is incompatible with number [2]. [incompatible-type]
 
    B.js:12:19
    12| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
@@ -86,7 +86,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:4:45
 
 Cannot cast `Object.assign.apply(...)` to object type because number [1] is incompatible with string [2] in property
-`b`.
+`b`. [incompatible-cast]
 
    apply.js:4:45
    4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
@@ -100,7 +100,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:5:2
 
-Cannot call `Object.assign.apply` because no more than 2 arguments are expected by function type [1].
+Cannot call `Object.assign.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
 
    apply.js:5:2
      5| (Object.assign.apply({}, {a: 1}, {b: 'foo'}): {a: number, b: string}); // error
@@ -114,7 +114,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:7:2
 
-Incorrect arguments passed to call of method `call` because array literal [1] is not an object.
+Incorrect arguments passed to call of method `call` because array literal [1] is not an object. [not-an-object]
 
    apply.js:7:2
    7| (Object.assign.call({}, [{a: 1}, {b: 'foo'}]): {a: number, b: string}); // error
@@ -129,6 +129,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:9:37
 
 Cannot cast `Object.assign.call(...)` to object type because number [1] is incompatible with string [2] in property `b`.
+[incompatible-cast]
 
    apply.js:9:37
    9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
@@ -142,7 +143,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:12:2
 
-Cannot cast `Object.assign.length` to string because number [1] is incompatible with string [2].
+Cannot cast `Object.assign.length` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    apply.js:12:2
     12| (Object.assign.length : string); // error
@@ -159,7 +160,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:14:2
 
-Cannot cast `Object.assign.name` to number because string [1] is incompatible with number [2].
+Cannot cast `Object.assign.name` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    apply.js:14:2
     14| (Object.assign.name : number); // error
@@ -176,7 +177,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
 
-Incorrect arguments passed to call of method `assign` because property `a` is missing in string [1].
+Incorrect arguments passed to call of method `assign` because property `a` is missing in string [1]. [incompatible-use]
 
    non_objects.js:3:1
    3| Object.assign("123", {a: "foo"});
@@ -190,7 +191,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:4:1
 
-Incorrect arguments passed to call of method `assign` because property `a` is missing in number [1].
+Incorrect arguments passed to call of method `assign` because property `a` is missing in number [1]. [incompatible-use]
 
    non_objects.js:4:1
    4| Object.assign(123, {a: "foo"});
@@ -204,7 +205,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:5:1
 
-Incorrect arguments passed to call of method `assign` because number [1] is not an object.
+Incorrect arguments passed to call of method `assign` because number [1] is not an object. [not-an-object]
 
    non_objects.js:5:1
    5| Object.assign({a: "foo"}, 123);
@@ -218,7 +219,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:33:4
 
-Cannot cast `obj.attr` to number because string [1] is incompatible with number [2].
+Cannot cast `obj.attr` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    scope.js:33:4
    33|   (obj.attr: number);
@@ -236,6 +237,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:2
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-cast]
 
    spread.js:7:2
    7| (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
@@ -253,6 +255,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- spread.js:8:2
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-cast]
 
    spread.js:8:2
    8| (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
@@ -270,6 +273,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- spread.js:9:2
 
 Cannot cast `Object.assign(...)` to object type because number [1] is incompatible with boolean [2] in property `bar`.
+[incompatible-cast]
 
    spread.js:9:2
    9| (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
@@ -287,7 +291,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- spread.js:13:19
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with boolean literal `true` [2] in
-property `b`.
+property `b`. [incompatible-cast]
 
    spread.js:13:19
    13|   ...[{a: 1}, {b: 'foo'}],

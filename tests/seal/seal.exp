@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ obj_annot.js:4:18
 
-Cannot get `param.id` because property `id` is missing in object type [1].
+Cannot get `param.id` because property `id` is missing in object type [1]. [prop-missing]
 
    obj_annot.js:4:18
    4|     return param.id;

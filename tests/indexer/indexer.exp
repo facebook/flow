@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------- A.js:13:10
 
 Cannot return object literal because string `foo` [1] is incompatible with number [2] in the indexer property's key.
+[incompatible-return]
 
    A.js:13:10
    13|   return { foo: "bar" }
@@ -14,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:18:17
 
-Cannot return object literal because string [1] is incompatible with number [2] in property `foo`.
+Cannot return object literal because string [1] is incompatible with number [2] in property `foo`. [incompatible-return]
 
    A.js:18:17
    18|   return { foo: "bar" }
@@ -29,6 +30,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- A.js:23:10
 
 Cannot return object literal because string `foo` [1] is incompatible with number [2] in the indexer property's key.
+[incompatible-return]
 
    A.js:23:10
    23|   return { foo: "bar" }
@@ -42,7 +44,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:23:17
 
-Cannot return object literal because string [1] is incompatible with number [2] in property `foo`.
+Cannot return object literal because string [1] is incompatible with number [2] in property `foo`. [incompatible-return]
 
    A.js:23:17
    23|   return { foo: "bar" }
@@ -56,7 +58,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:38:17
 
-Cannot return object literal because string [1] is incompatible with number [2] in property `foo`.
+Cannot return object literal because string [1] is incompatible with number [2] in property `foo`. [incompatible-return]
 
    A.js:38:17
    38|   return { foo: "bar" }
@@ -70,7 +72,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ call.js:4:2
 
-Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2].
+Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2]. [incompatible-cast]
 
    call.js:4:2
    4| (y: {(number): string});
@@ -88,7 +90,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ call.js:4:2
 
 Cannot cast `y` to object type because a call signature declaring the expected parameter / return type is missing in
-object type [1] but exists in object type [2].
+object type [1] but exists in object type [2]. [prop-missing]
 
    call.js:4:2
    4| (y: {(number): string});
@@ -105,7 +107,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- multiple.js:7:7
 
-Multiple indexers are not supported.
+Multiple indexers are not supported. [unsupported-syntax]
 
    7|       [k2: number]: number, // error: not supported (yet)
             ^^^^^^^^^^^^^^^^^^^^

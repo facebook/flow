@@ -11,7 +11,7 @@ export default suite(({addFile}) => [
         `
           no_at_flow.js:1
             1: var x: number = "not a number";
-                               ^^^^^^^^^^^^^^ Cannot assign \`"not a number"\` to \`x\` because string [1] is incompatible with number [2].
+                               ^^^^^^^^^^^^^^ Cannot assign \`"not a number"\` to \`x\` because string [1] is incompatible with number [2]. [incompatible-type]
             References:
               1: var x: number = "not a number";
                                  ^^^^^^^^^^^^^^ [1]

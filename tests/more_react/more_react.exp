@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- API.react.js:4:5
 
-Cannot call `app.setProps` because property `setProps` is missing in `React.Element` [1].
+Cannot call `app.setProps` because property `setProps` is missing in `React.Element` [1]. [prop-missing]
 
    API.react.js:4:5
     4| app.setProps({y:42}); // error, y:number but foo expects string in App.react
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- API.react.js:5:5
 
-Cannot call `app.setState` because property `setState` is missing in `React.Element` [1].
+Cannot call `app.setState` because property `setState` is missing in `React.Element` [1]. [prop-missing]
 
    API.react.js:5:5
     5| app.setState({z:42}); // error, z:number but foo expects string in App.react
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- App.react.js:36:14
 
-Cannot call `foo` with `z` bound to `p` because number [1] is incompatible with string [2].
+Cannot call `foo` with `z` bound to `p` because number [1] is incompatible with string [2]. [incompatible-call]
 
    App.react.js:36:14
    36|         {foo(z,x)} // error, since z: number
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- checkPropTypes.js:7:1
 
-Cannot call `checkPropTypes` because function [1] requires another argument.
+Cannot call `checkPropTypes` because function [1] requires another argument. [incompatible-call]
 
    checkPropTypes.js:7:1
      7| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
@@ -72,7 +72,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- checkPropTypes.js:8:1
 
-Cannot call `checkPropTypes` because function [1] requires another argument.
+Cannot call `checkPropTypes` because function [1] requires another argument. [incompatible-call]
 
    checkPropTypes.js:8:1
      8| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
@@ -94,7 +94,7 @@ References:
 Error ------------------------------------------------------------------------------------------ checkPropTypes.js:12:91
 
 Cannot call `checkPropTypes` with function bound to `getStack` because number [1] is incompatible with string [2] in the
-return value.
+return value. [incompatible-call]
 
    checkPropTypes.js:12:91
     12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
@@ -109,6 +109,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
 
 Cannot create `Component2` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    inexact_config.js:12:13
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -126,6 +127,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
 
 Cannot create `Component2` element because property `foo` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    inexact_config.js:12:13
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -143,6 +145,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:13:13
 
 Cannot create `Component2` element because property `children` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    inexact_config.js:13:13
    13| const _d = <Component2>{"foo"}</Component2>; //error
@@ -160,6 +163,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:22:13
 
 Cannot create `Component4` element because property `bar` is missing in object type [1] but exists in props [2].
+[prop-missing]
 
    inexact_config.js:22:13
    22| const _g = <Component4 foo={3} bar={3} />; //error
@@ -177,6 +181,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:23:13
 
 Cannot create `Component4` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    inexact_config.js:23:13
    23| const _h = <Component4></Component4>; //error
@@ -193,7 +198,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexact_props.js:19:2
 
-Cannot create `B` element because property `z` is missing in `Props2` [1] but exists in props [2].
+Cannot create `B` element because property `z` is missing in `Props2` [1] but exists in props [2]. [prop-missing]
 
    inexact_props.js:19:2
    19| <B x={4} y={"hello"} z={3}></B>; // error
@@ -211,6 +216,7 @@ References:
 Error ------------------------------------------------------------------------------------------- inexact_props.js:44:34
 
 Cannot create `YComponent` element because null or undefined [1] is incompatible with string [2] in property `p3`.
+[incompatible-type]
 
    inexact_props.js:44:34
    44| <YComponent p1={true} p2={3} p3={s}></YComponent>
@@ -228,7 +234,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ propTypes.js:15:2
 
 Cannot create `D` element because property `name` is missing in props [1] but exists in propTypes of React
-component [2].
+component [2]. [prop-missing]
 
    propTypes.js:15:2
    15| <D />; // errors: properties `name` and `title` not found
@@ -250,7 +256,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ propTypes.js:15:2
 
 Cannot create `D` element because property `title` is missing in props [1] but exists in propTypes of React
-component [2].
+component [2]. [prop-missing]
 
    propTypes.js:15:2
    15| <D />; // errors: properties `name` and `title` not found
@@ -271,7 +277,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
-`D` [1] is incompatible with `React.Component` [2].
+`D` [1] is incompatible with `React.Component` [2]. [incompatible-type]
 
    subclassComponent.js:29:2
    29| <D></D>; // error
@@ -288,7 +294,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
 
-`E` [1] is incompatible with `React.Component` [2].
+`E` [1] is incompatible with `React.Component` [2]. [incompatible-type]
 
    subclassComponent.js:30:2
    30| <E></E>; // error
@@ -305,7 +311,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
-`F` [1] is incompatible with `React.Component` [2].
+`F` [1] is incompatible with `React.Component` [2]. [incompatible-type]
 
    subclassComponent.js:31:2
    31| <F></F>; // error

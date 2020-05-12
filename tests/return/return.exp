@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ function_return.js:7:16
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined.
+undefined. [incompatible-return]
 
    7| function f(x): number {
                      ^^^^^^ [1]
@@ -9,7 +9,7 @@ undefined.
 
 Error ------------------------------------------------------------------------------------------ function_return.js:23:3
 
-Cannot return undefined because undefined [1] is incompatible with number [2].
+Cannot return undefined because undefined [1] is incompatible with number [2]. [incompatible-return]
 
    function_return.js:23:3
    23|   return;
@@ -24,7 +24,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- implicit.js:6:22
 
 Cannot expect number as the return type of async function because number [1] is incompatible with implicitly-returned
-`Promise`.
+`Promise`. [incompatible-return]
 
    6| async function g1(): number {}
                            ^^^^^^ [1]
@@ -33,7 +33,7 @@ Cannot expect number as the return type of async function because number [1] is 
 Error ------------------------------------------------------------------------------------------------- implicit.js:7:30
 
 Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
-undefined in type argument `R` [2].
+undefined in type argument `R` [2]. [incompatible-return]
 
    implicit.js:7:30
      7| async function g2(): Promise<number> {}
@@ -47,7 +47,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- void.js:12:2
 
-Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    void.js:12:2
    12| (f(true): void); // error: string ~> void

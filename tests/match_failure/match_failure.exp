@@ -120,7 +120,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:8:25
 
-number literal `2` [1] is incompatible with enum [2].
+number literal `2` [1] is incompatible with enum [2]. [incompatible-type]
 
    enum.js:8:25
    8|   } else if (binary === 2) { // oops

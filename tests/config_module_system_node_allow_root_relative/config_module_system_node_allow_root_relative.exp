@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------- subdir/test.js:7:2
 
 Cannot cast `ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    subdir/test.js:7:2
    7| (ambiguous: empty)
@@ -18,6 +19,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:10:2
 
 Cannot cast `sub_ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    subdir/test.js:10:2
    10| (sub_ambiguous: empty)
@@ -35,6 +37,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:14:2
 
 Cannot cast `user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    subdir/test.js:14:2
    14| (user_code: empty)
@@ -52,6 +55,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:17:2
 
 Cannot cast `sub_user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    subdir/test.js:17:2
    17| (sub_user_code: empty)
@@ -69,6 +73,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:21:2
 
 Cannot cast `node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    subdir/test.js:21:2
    21| (node_code: empty)
@@ -86,6 +91,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:24:2
 
 Cannot cast `sub_node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    subdir/test.js:24:2
    24| (sub_node_code: empty)
@@ -102,7 +108,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- subdir/test.js:27:25
 
-Cannot resolve module `nonexistent`.
+Cannot resolve module `nonexistent`. [cannot-resolve-module]
 
    27| import nonexistent from 'nonexistent'
                                ^^^^^^^^^^^^^
@@ -110,7 +116,7 @@ Cannot resolve module `nonexistent`.
 
 Error --------------------------------------------------------------------------------------------- subdir/test.js:28:29
 
-Cannot resolve module `subdir/nonexistent`.
+Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
 
    28| import sub_nonexistent from 'subdir/nonexistent'
                                    ^^^^^^^^^^^^^^^^^^^^
@@ -119,6 +125,7 @@ Cannot resolve module `subdir/nonexistent`.
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
 Cannot cast `ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    test.js:5:2
    5| (ambiguous: empty)
@@ -136,6 +143,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:8:2
 
 Cannot cast `sub_ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    test.js:8:2
    8| (sub_ambiguous: empty)
@@ -153,6 +161,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
 Cannot cast `user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    test.js:12:2
    12| (user_code: empty)
@@ -170,6 +179,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:15:2
 
 Cannot cast `sub_user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    test.js:15:2
    15| (sub_user_code: empty)
@@ -187,6 +197,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
 Cannot cast `node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    test.js:19:2
    19| (node_code: empty)
@@ -204,6 +215,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:22:2
 
 Cannot cast `sub_node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    test.js:22:2
    22| (sub_node_code: empty)
@@ -220,7 +232,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:25
 
-Cannot resolve module `nonexistent`.
+Cannot resolve module `nonexistent`. [cannot-resolve-module]
 
    25| import nonexistent from 'nonexistent'
                                ^^^^^^^^^^^^^
@@ -228,7 +240,7 @@ Cannot resolve module `nonexistent`.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:26:29
 
-Cannot resolve module `subdir/nonexistent`.
+Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
 
    26| import sub_nonexistent from 'subdir/nonexistent'
                                    ^^^^^^^^^^^^^^^^^^^^

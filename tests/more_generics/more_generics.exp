@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------- error_message.js:7:25
 
 Cannot return `this.x` because the expected type is not parametric in `Y` [1], perhaps due to the use of `*` or the lack
-of a type annotation in property `p`.
+of a type annotation in property `p`. [incompatible-return]
 
    error_message.js:7:25
    7|   foo(): D1<X> { return this.x; }
@@ -15,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:3:36
 
-Cannot return `x` because `T` [1] is incompatible with `S` [2].
+Cannot return `x` because `T` [1] is incompatible with `S` [2]. [incompatible-return]
 
    poly.js:3:36
    3| function foo2<T,S>(x:T):S { return x; }
@@ -33,7 +33,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
 Cannot return `x` because the expected type is not parametric in `T` [1], perhaps due to the use of `*` or the lack of a
-type annotation in array element.
+type annotation in array element. [incompatible-return]
 
    poly.js:10:38
    10| function foo5<T>():Array<T> { return x; }
@@ -47,7 +47,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:20:34
 
-Cannot return `foo5()` because array type [1] is incompatible with `R` [2].
+Cannot return `foo5()` because array type [1] is incompatible with `R` [2]. [incompatible-return]
 
    poly.js:20:34
    20| function foo7<R>(x:R):R { return foo5(); }
@@ -64,7 +64,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:24:3
 
-Cannot call `y` because `U` [1] is not a function.
+Cannot call `y` because `U` [1] is not a function. [not-a-function]
 
    poly.js:24:3
    24|   y();

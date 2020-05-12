@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- positining.js:23:18
 
-number literal `3` [1] is incompatible with empty [2] in the first argument.
+number literal `3` [1] is incompatible with empty [2] in the first argument. [incompatible-type]
 
    positining.js:23:18
    23|   selectedValue: X,
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- positining.js:23:18
 
-number literal `3` [1] is incompatible with empty [2] in type argument `T` of the first argument.
+number literal `3` [1] is incompatible with empty [2] in type argument `T` of the first argument. [incompatible-type]
 
    positining.js:23:18
    23|   selectedValue: X,
@@ -35,7 +35,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- positining.js:28:2
 
 Cannot cast `x` to `$RelayProps` because property `$fragmentRefs` is missing in object type [1] but exists in
-`$FragmentRef` [2] in property `selectedValue`.
+`$FragmentRef` [2] in property `selectedValue`. [prop-missing]
 
    positining.js:28:2
    28| (x: $RelayProps<Props>);
@@ -53,7 +53,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- positining.js:28:2
 
 Cannot cast `x` to `$RelayProps` because property `$refType` is missing in `$FragmentRef` [1] but exists in object
-type [2] in property `selectedValue`.
+type [2] in property `selectedValue`. [prop-missing]
 
    positining.js:28:2
    28| (x: $RelayProps<Props>);
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:6
 
-Cannot create `Foo` element because number [1] is incompatible with boolean [2] in property `a`.
+Cannot create `Foo` element because number [1] is incompatible with boolean [2] in property `a`. [incompatible-type]
 
    test.js:18:6
    18|   a={3}

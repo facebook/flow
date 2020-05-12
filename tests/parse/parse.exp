@@ -24,7 +24,7 @@ Unexpected token `.`, expected the start of a statement
 
 Error ------------------------------------------------------------------------------------------- no_parse_error.js:6:13
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    no_parse_error.js:6:13
    6| var y = 5 / x;

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test2.js:4:12
 
-Cannot return `x` because number [1] is incompatible with `ID` [2].
+Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-return]
 
    test2.js:4:12
    4|     return x; // Error: number ~> ID
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:8:12
 
-Cannot return `show(...)` because number [1] is incompatible with `ID` [2].
+Cannot return `show(...)` because number [1] is incompatible with `ID` [2]. [incompatible-return]
 
    test2.js:8:12
    8|     return show(x); // Error: number ~> ID
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test2.js:12:12
 
-Cannot return `opaquify(...)` because `ID` [1] is incompatible with number [2].
+Cannot return `opaquify(...)` because `ID` [1] is incompatible with number [2]. [incompatible-return]
 
    test2.js:12:12
    12|     return opaquify(x); // Error: ID ~> number
@@ -51,7 +51,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:5:46
 
-Cannot cast `x` to `typeof y` because number [1] is incompatible with `num` [2].
+Cannot cast `x` to `typeof y` because number [1] is incompatible with `num` [2]. [incompatible-cast]
 
    test3.js:5:46
    5| export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
@@ -68,7 +68,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:5:68
 
-Cannot return `x` because number [1] is incompatible with `num` [2].
+Cannot return `x` because number [1] is incompatible with `num` [2]. [incompatible-return]
 
    test3.js:5:68
    5| export function test(x: number): typeof(y) {(x: typeof(y)); return x;}

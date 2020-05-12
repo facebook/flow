@@ -12,7 +12,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                             `
                                                               test.js:3
                                                                 3: import {named} from "./dep.js"; named = 43;
-                                                                                                   ^^^^^ Cannot reassign import \`named\` [1].
+                                                                                                   ^^^^^ Cannot reassign import \`named\` [1]. [reassign-import]
                                                                 References:
                                                                   3: import {named} from "./dep.js"; named = 43;
                                                                              ^^^^^ [1]
@@ -26,7 +26,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                           `
                                                             test.js:3
                                                               3: import def from "./dep.js"; def = "nope";
-                                                                                             ^^^ Cannot reassign import \`def\` [1].
+                                                                                             ^^^ Cannot reassign import \`def\` [1]. [reassign-import]
                                                               References:
                                                                 3: import def from "./dep.js"; def = "nope";
                                                                           ^^^ [1]
@@ -40,7 +40,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:3
                                                              3: import * as ns from "./dep.js"; ns = {};
-                                                                                                ^^ Cannot reassign import \`ns\` [1].
+                                                                                                ^^ Cannot reassign import \`ns\` [1]. [reassign-import]
                                                              References:
                                                                3: import * as ns from "./dep.js"; ns = {};
                                                                               ^^ [1]

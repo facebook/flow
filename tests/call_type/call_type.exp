@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- intersection.js:10:32
 
-Cannot return `x` because `B` [1] is incompatible with `A` [2].
+Cannot return `x` because `B` [1] is incompatible with `A` [2]. [incompatible-return]
 
    intersection.js:10:32
    10| function foo(x: X): A { return x; } // error
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- intersection.js:11:32
 
-Cannot return `x` because `A` [1] is incompatible with `B` [2].
+Cannot return `x` because `A` [1] is incompatible with `B` [2]. [incompatible-return]
 
    intersection.js:11:32
    11| function bar(x: X): B { return x; } // error
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:10
 
-Cannot use type without at least 1 type argument.
+Cannot use type without at least 1 type argument. [missing-type-arg]
 
    7| type A = $Call; // Error: one or more arguments are required.
                ^^^^^
@@ -42,7 +42,7 @@ Cannot use type without at least 1 type argument.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:10
 
-Cannot use type without at least 1 type argument.
+Cannot use type without at least 1 type argument. [missing-type-arg]
 
    8| type B = $Call<>; // Error: one or more arguments are required.
                ^^^^^^^
@@ -50,7 +50,7 @@ Cannot use type without at least 1 type argument.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:9
 
-Cannot cast `null` to `C` because mixed [1] is incompatible with number [2].
+Cannot cast `null` to `C` because mixed [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:13:9
    13| ((null: mixed): C); // Error: mixed ~> number
@@ -64,7 +64,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:2
 
-Cannot cast `c` to empty because number [1] is incompatible with empty [2].
+Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:15:2
    15| (c: empty); // Error: number ~> empty
@@ -81,7 +81,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
-Cannot cast `42` to `D` because number [1] is incompatible with undefined [2].
+Cannot cast `42` to `D` because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    test.js:19:2
    19| (42: D); // Error: number ~> undefined
@@ -95,7 +95,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:24:9
 
-Cannot cast `null` to `E` because mixed [1] is incompatible with number [2].
+Cannot cast `null` to `E` because mixed [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:24:9
    24| ((null: mixed): E); // Error: mixed ~> number
@@ -109,7 +109,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:2
 
-Cannot cast `e` to empty because number [1] is incompatible with empty [2].
+Cannot cast `e` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:26:2
    26| (e: empty); // Error: number ~> empty
@@ -126,7 +126,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:9
 
-Cannot cast `null` to `F` because mixed [1] is incompatible with number [2].
+Cannot cast `null` to `F` because mixed [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:31:9
    31| ((null: mixed): F); // Error: mixed ~> number
@@ -140,7 +140,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:2
 
-Cannot cast `f` to empty because number [1] is incompatible with empty [2].
+Cannot cast `f` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:33:2
    33| (f: empty); // Error: number ~> empty
@@ -157,7 +157,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:9
 
-Cannot cast `null` to `G` because:
+Cannot cast `null` to `G` because: [incompatible-type]
  - Either cannot instantiate `$Call` because mixed [1] is incompatible with number [2] in the first argument.
  - Or cannot instantiate `$Call` because mixed [1] is incompatible with string [3] in the second argument.
 
@@ -176,7 +176,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:2
 
-Cannot cast `g` to number because string [1] is incompatible with number [2].
+Cannot cast `g` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:39:2
    39| (g: number); // Error: number | string ~> number
@@ -193,7 +193,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:2
 
-Cannot cast `g` to empty because number [1] is incompatible with empty [2].
+Cannot cast `g` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:41:2
    41| (g: empty); // Error: number | string ~> empty
@@ -210,7 +210,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:2
 
-Cannot cast `g` to empty because string [1] is incompatible with empty [2].
+Cannot cast `g` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:41:2
    41| (g: empty); // Error: number | string ~> empty
@@ -227,7 +227,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:6:9
 
-Cannot cast `null` to `A` because:
+Cannot cast `null` to `A` because: [incompatible-type]
  - Either mixed [1] is incompatible with string [2].
  - Or mixed [1] is incompatible with number [3].
 
@@ -246,7 +246,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:7:2
 
-Cannot cast `a` to number because string [1] is incompatible with number [2].
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    union.js:7:2
    7| (a: number); // Error: number | string ~> number
@@ -263,7 +263,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
-Cannot cast `a` to empty because number [1] is incompatible with empty [2].
+Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    union.js:9:2
    9| (a: empty); // Error: number | string ~> empty
@@ -280,7 +280,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
-Cannot cast `a` to empty because string [1] is incompatible with empty [2].
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    union.js:9:2
    9| (a: empty); // Error: number | string ~> empty
@@ -297,7 +297,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:14:9
 
-Cannot cast `null` to `B` because:
+Cannot cast `null` to `B` because: [incompatible-type]
  - Either mixed [1] is incompatible with string [2].
  - Or mixed [1] is incompatible with number [3].
 
@@ -316,7 +316,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:15:2
 
-Cannot cast `b` to number because string [1] is incompatible with number [2].
+Cannot cast `b` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    union.js:15:2
    15| (b: number); // Error: number | string ~> number
@@ -333,7 +333,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:17:2
 
-Cannot cast `b` to empty because number [1] is incompatible with empty [2].
+Cannot cast `b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    union.js:17:2
    17| (b: empty); // Error: number | string ~> empty
@@ -350,7 +350,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:17:2
 
-Cannot cast `b` to empty because string [1] is incompatible with empty [2].
+Cannot cast `b` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    union.js:17:2
    17| (b: empty); // Error: number | string ~> empty
@@ -367,7 +367,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:22:9
 
-Cannot cast `null` to `C` because:
+Cannot cast `null` to `C` because: [incompatible-type]
  - Either mixed [1] is incompatible with number [2].
  - Or mixed [1] is incompatible with string [3].
 
@@ -386,7 +386,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:23:2
 
-Cannot cast `c` to number because string [1] is incompatible with number [2].
+Cannot cast `c` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    union.js:23:2
    23| (c: number); // Error: number | string ~> number
@@ -403,7 +403,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:25:2
 
-Cannot cast `c` to empty because number [1] is incompatible with empty [2].
+Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    union.js:25:2
    25| (c: empty); // Error: number | string ~> empty
@@ -420,7 +420,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:25:2
 
-Cannot cast `c` to empty because string [1] is incompatible with empty [2].
+Cannot cast `c` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    union.js:25:2
    25| (c: empty); // Error: number | string ~> empty

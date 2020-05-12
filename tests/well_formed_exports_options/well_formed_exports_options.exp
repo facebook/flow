@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
-expression. (`signature-verification-failure`)
+expression. [signature-verification-failure]
 
    4| module.exports = foo();
                        ^^^^^
@@ -12,7 +12,7 @@ Error --------------------------------------------------------------------------
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
-expression. (`signature-verification-failure`)
+expression. [signature-verification-failure]
 
    4| export default foo(); // sig. verification error - file is whitelisted
                      ^^^^^
@@ -22,7 +22,7 @@ Error --------------------------------------------------------------------------
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
-expression. (`signature-verification-failure`)
+expression. [signature-verification-failure]
 
    4| export default foo(); // sig. verification error - dirA is whitelisted
                      ^^^^^

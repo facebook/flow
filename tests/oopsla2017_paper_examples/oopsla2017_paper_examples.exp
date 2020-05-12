@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- example1.js:3:23
 
-Cannot call `f` because null [1] is not a function.
+Cannot call `f` because null [1] is not a function. [not-a-function]
 
    example1.js:3:23
    3| function pipe(x, f) { f(x); }
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ example5.js:12:12
 
-Cannot get `x.kind` because property `kind` is missing in null [1].
+Cannot get `x.kind` because property `kind` is missing in null [1]. [incompatible-use]
 
    example5.js:12:12
    12|   return x.kind; // error
@@ -29,7 +29,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- example6.js:9:10
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3] or to `x` [4].
+fix add a type annotation to return [3] or to `x` [4]. [speculation-ambiguous]
 
    example6.js:9:10
    9| onString(id);
@@ -53,7 +53,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ example7.js:14:39
 
 Cannot call `stringIsString` with object literal bound to `x` because number [1] is incompatible with string [2] in
-property `val`.
+property `val`. [incompatible-call]
 
    example7.js:14:39
    14| stringIsString({ type: "string", val: 0 }); // error

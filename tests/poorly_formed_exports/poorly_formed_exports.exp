@@ -1,7 +1,7 @@
 FLOW STATUS:
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    4|   module.exports = 42
         ^^^^^^^^^^^^^^
@@ -9,7 +9,7 @@ Exports can only appear at the top level
 
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    4|   module.exports.foo = 42;
         ^^^^^^^^^^^^^^
@@ -17,7 +17,7 @@ Exports can only appear at the top level
 
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:5:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    5|   exports.bar = 42;
         ^^^^^^^
@@ -25,7 +25,7 @@ Exports can only appear at the top level
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:13:11
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    13| addsAProp(module.exports);
                  ^^^^^^
@@ -33,7 +33,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:14:11
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    14| addsAProp(module['exports']);
                  ^^^^^^
@@ -41,7 +41,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:14:11
 
-Cannot resolve name `module`.
+Cannot resolve name `module`. [cannot-resolve-name]
 
    14| addsAProp(module['exports']);
                  ^^^^^^
@@ -49,7 +49,7 @@ Cannot resolve name `module`.
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:15:11
 
-`exports` may only be used as part of a legal top level export statement
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
    15| addsAProp(exports);
                  ^^^^^^^
@@ -57,7 +57,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:16:20
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    16| addsAPropToExports(module);
                           ^^^^^^
@@ -65,7 +65,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:18:1
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    18| module.exports['foo'] = 42;
        ^^^^^^
@@ -73,7 +73,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:19:1
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    19| module['exports'] = {};
        ^^^^^^
@@ -81,7 +81,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:20:1
 
-`exports` may only be used as part of a legal top level export statement
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
    20| exports['foo'] = 42;
        ^^^^^^^
@@ -89,7 +89,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:22:5
 
-`exports` may only be used as part of a legal top level export statement
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
    22| (5, exports).foo = 1;
            ^^^^^^^
@@ -97,7 +97,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:23:5
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    23| (5, module).exports.foo = 34;
            ^^^^^^
@@ -105,7 +105,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:26:3
 
-`exports` may only be used as part of a legal top level export statement
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
    26|   exports['foo'] = 42;
          ^^^^^^^
@@ -113,7 +113,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:27:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    27|   exports.foo = 5;
          ^^^^^^^
@@ -121,7 +121,7 @@ Exports can only appear at the top level
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:35:3
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    35|   module = {};
          ^^^^^^
@@ -129,7 +129,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:36:3
 
-`exports` may only be used as part of a legal top level export statement
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
    36|   exports = {};
          ^^^^^^^
@@ -137,7 +137,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:51:5
 
-Cannot resolve name `require`.
+Cannot resolve name `require`. [cannot-resolve-name]
 
    51| if (require.main === module) { }
            ^^^^^^^
@@ -145,7 +145,7 @@ Cannot resolve name `require`.
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:53:26
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    53| if (require.main === (5, module)) { }
                                 ^^^^^^
@@ -153,7 +153,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:57:43
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    57| switch ('') { case '': const module = ''; module; };
                                                  ^^^^^^
@@ -164,7 +164,7 @@ Found 20 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    4|   module.exports.foo = 42;
         ^^^^^^^^^^^^^^
@@ -172,7 +172,7 @@ Exports can only appear at the top level
 
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:5:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    5|   exports.bar = 42;
         ^^^^^^^

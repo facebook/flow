@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------- foo/bar/nested_test.js:10:27
 
-Cannot resolve module `annotation`.
+Cannot resolve module `annotation`. [cannot-resolve-module]
 
    10| var unreachable = require('annotation');
                                  ^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Cannot resolve module `annotation`.
 
 Error -------------------------------------------------------------------------------------- foo/bar/nested_test.js:12:2
 
-Cannot cast `docblock.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `docblock.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:12:2
    12| (docblock.fun(): string);
@@ -25,7 +25,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- foo/bar/nested_test.js:13:2
 
-Cannot cast `min.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `min.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:13:2
    13| (min.fun(): string);
@@ -42,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- foo/bar/nested_test.js:14:2
 
-Cannot cast `corge.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `corge.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:14:2
    14| (corge.fun(): string);
@@ -59,7 +59,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- foo/bar/nested_test.js:15:2
 
-Cannot cast `SomeOtherModule.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `SomeOtherModule.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:15:2
    15| (SomeOtherModule.fun(): string);
@@ -76,7 +76,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `Implicit.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): string);
@@ -93,7 +93,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
-Cannot cast `ExplicitSameName.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `ExplicitSameName.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): string);
@@ -111,6 +111,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to string because number [1] is incompatible with string [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): string);
@@ -127,7 +128,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:2
 
-Cannot cast `Flow.x` to empty because number [1] is incompatible with empty [2].
+Cannot cast `Flow.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:14:2
    14| (Flow.x: empty); // error: should be number
@@ -144,7 +145,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:2
 
-Cannot cast `NotFlowShadowed.x` to empty because number [1] is incompatible with empty [2].
+Cannot cast `NotFlowShadowed.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:26:2
    26| (NotFlowShadowed.x: empty); // error: should be number

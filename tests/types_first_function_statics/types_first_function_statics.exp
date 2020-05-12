@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:7:2
 
-Cannot cast `a.x` to string because number [1] is incompatible with string [2].
+Cannot cast `a.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    b.js:7:2
    7| (a.x: string);
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:8:4
 
-Cannot get `a.other` because property `other` is missing in statics of function type [1].
+Cannot get `a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
    b.js:8:4
    8| (a.other: number);
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:15:2
 
-Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2].
+Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    b.js:15:2
    15| (poly_a.x: string);
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:16:9
 
-Cannot get `poly_a.other` because property `other` is missing in statics of function type [1].
+Cannot get `poly_a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
    b.js:16:9
    16| (poly_a.other: number);

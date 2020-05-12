@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:24:2
 
-Cannot create `Foo` element because property `x` is missing in object type [1] but exists in `Props` [2].
+Cannot create `Foo` element because property `x` is missing in object type [1] but exists in `Props` [2]. [prop-missing]
 
    test.js:24:2
    24| <Foo />;

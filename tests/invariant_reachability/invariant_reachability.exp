@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- index.js:19:3
 
-Unreachable code.
+Unreachable code. [unreachable-code]
 
    19|   return "default string";
          ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Unreachable code.
 
 Error ---------------------------------------------------------------------------------------------------- index.js:31:3
 
-Unreachable code.
+Unreachable code. [unreachable-code]
 
    31|   return "default string";
          ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Unreachable code.
 
 Error ---------------------------------------------------------------------------------------------------- index.js:37:3
 
-Unreachable code.
+Unreachable code. [unreachable-code]
 
    37|   return "default string";
          ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -24,7 +24,7 @@ Unreachable code.
 
 Error --------------------------------------------------------------------------------------------------- index.js:50:14
 
-Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2].
+Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2]. [incompatible-return]
 
    index.js:50:14
    50|   return c ? 1 : invariant();

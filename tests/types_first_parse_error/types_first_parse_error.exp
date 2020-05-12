@@ -2,7 +2,7 @@
 Server should start in types-first mode
 Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2].
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    bar.js:4:2
    4| (foo: string);
@@ -38,7 +38,7 @@ No errors!
 Revert to initial state
 Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2].
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    bar.js:4:2
    4| (foo: string);
@@ -59,7 +59,7 @@ Found 1 error
 Add a recursive dependent
 Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2].
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    bar.js:4:2
    4| (foo: string);
@@ -76,7 +76,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- qux.js:3:2
 
-Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    qux.js:3:2
    3| (require('./bar'): string);

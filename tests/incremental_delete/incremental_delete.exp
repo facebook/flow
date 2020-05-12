@@ -2,7 +2,7 @@
 Initial status:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -16,7 +16,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -33,7 +33,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -51,6 +51,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -68,7 +69,7 @@ Found 4 errors
 Delete c.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -82,7 +83,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -100,6 +101,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -117,7 +119,7 @@ Found 3 errors
 Delete b.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -132,6 +134,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -149,7 +152,7 @@ Found 2 errors
 Restore b.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -163,7 +166,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -181,6 +184,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -198,7 +202,7 @@ Found 3 errors
 Restore c.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -212,7 +216,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -229,7 +233,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -247,6 +251,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -264,7 +269,7 @@ Found 4 errors
 Delete d.json:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -278,7 +283,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -295,7 +300,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -313,6 +318,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -330,7 +336,7 @@ Found 4 errors
 Delete unchecked.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -344,7 +350,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -361,7 +367,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -379,6 +385,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -392,7 +399,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- requires_unchecked.js:5:25
 
-Cannot resolve module `Unchecked`.
+Cannot resolve module `Unchecked`. [cannot-resolve-module]
 
    5| var unchecked = require('Unchecked');
                               ^^^^^^^^^^^
@@ -404,7 +411,7 @@ Found 5 errors
 Restore unchecked.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -418,7 +425,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -435,7 +442,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -453,6 +460,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**
@@ -470,7 +478,7 @@ Found 4 errors
 Delete dupe2.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -484,7 +492,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -501,7 +509,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -522,7 +530,7 @@ Found 3 errors
 Restore dupe2.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -536,7 +544,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -553,7 +561,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -571,6 +579,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+[duplicate-module]
 
    dupe2.js:1:1
    1| /**

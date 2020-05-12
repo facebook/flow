@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:17:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:17:3
    17|   x = "hey"; // error, const param cannot be reassigned
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:32:3
    32|   x = 0; // error, const param cannot be reeassigned
@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:36:3
    36|   x = 0; // error, const param cannot be reeassigned
@@ -42,7 +42,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:37:3
 
-Cannot reassign constant `o` [1].
+Cannot reassign constant `o` [1]. [reassign-const]
 
    test.js:37:3
    37|   o = 0; // error, const param cannot be reeassigned
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:41:3
    41|   x = 0; // error, const param cannot be reeassigned
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot reassign constant `a` [1].
+Cannot reassign constant `a` [1]. [reassign-const]
 
    test.js:42:3
    42|   a = 0; // error, const param cannot be reeassigned

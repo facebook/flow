@@ -21,7 +21,7 @@ Group names may only contain [a-zA-Z0-9._]:
 Error ---------------------------------------------------------------------------------- error_malformed_exports.js:3:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    3| export function foo(x: number) { return x; }
                                     
@@ -43,7 +43,7 @@ Disable a .*.js ignore via rollout:
 Error ---------------------------------------------------------------------------------- error_malformed_exports.js:3:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    3| export function foo(x: number) { return x; }
                                     

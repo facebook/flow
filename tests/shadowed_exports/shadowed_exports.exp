@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------- import_shadow_exports.js:4:2
 
-Cannot cast `x` to number because exports [1] is incompatible with number [2].
+Cannot cast `x` to number because exports [1] is incompatible with number [2]. [incompatible-cast]
 
    import_shadow_exports.js:4:2
    4| (x: number);
@@ -15,6 +15,7 @@ References:
 Error -------------------------------------------------------------------------------------------- shadow_exports.js:4:8
 
 Cannot assign `42` to `module.exports` because property `exports` is missing in statics of function type [1].
+[prop-missing]
 
    shadow_exports.js:4:8
    4| module.exports = 42;
@@ -28,7 +29,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ shadow_exports_lookup.js:4:17
 
-Cannot assign `module.exports` to `y` because string [1] is incompatible with number [2].
+Cannot assign `module.exports` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    shadow_exports_lookup.js:4:17
    4| var y: number = module.exports;

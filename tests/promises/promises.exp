@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ all.js:13:4
 
-Cannot cast `a` to number because string [1] is incompatible with number [2].
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    all.js:13:4
    13|   (a: number);  // Error: string ~> number
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:14:4
 
-Cannot cast `b` to boolean because number [1] is incompatible with boolean [2].
+Cannot cast `b` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
    all.js:14:4
    14|   (b: boolean); // Error: number ~> boolean
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:15:4
 
-Cannot cast `c` to string because boolean [1] is incompatible with string [2].
+Cannot cast `c` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    all.js:15:4
    15|   (c: string);  // Error: boolean ~> string
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:19:6
 
-Cannot cast `x` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    all.js:19:6
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:19:6
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    all.js:19:6
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -85,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:19:6
 
-Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-cast]
 
    all.js:19:6
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -103,6 +103,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ all.js:24:9
 
 Cannot call `Promise.all` because property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+[incompatible-call]
 
    all.js:24:9
     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
@@ -120,7 +121,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- all.js:27:13
 
 Cannot call `Promise.all` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but exists
-in `$Iterable` [2].
+in `$Iterable` [2]. [prop-missing]
 
    all.js:27:13
     27| Promise.all(0); // Error: expected array instead of number
@@ -135,7 +136,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ allSettled.js:4:9
 
 Cannot call `Promise.allSettled` because property `@@iterator` is missing in undefined [1] but exists in
-`$Iterable` [2].
+`$Iterable` [2]. [incompatible-call]
 
    allSettled.js:4:9
      4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
@@ -153,7 +154,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- allSettled.js:7:20
 
 Cannot call `Promise.allSettled` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but
-exists in `$Iterable` [2].
+exists in `$Iterable` [2]. [prop-missing]
 
    allSettled.js:7:20
      7| Promise.allSettled(0); // Error: expected $Iterable instead of number
@@ -168,6 +169,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- allSettled.js:36:8
 
 Cannot cast `first.status` to empty because string literal `rejected` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    allSettled.js:36:8
     36|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -184,7 +186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- allSettled.js:42:30
 
-Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1].
+Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [prop-missing]
 
    allSettled.js:42:30
    42|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
@@ -198,7 +200,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- allSettled.js:42:30
 
-Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1].
+Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [prop-missing]
 
    allSettled.js:42:30
    42|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
@@ -212,7 +214,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:16:19
    16|   var b: string = num; // Error: number ~> string
@@ -229,7 +231,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- promise.js:25:21
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:25:21
    25|     var b: string = num; // Error: number ~> string
@@ -246,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- promise.js:35:19
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:35:19
    35|   var b: string = num; // Error: number ~> string
@@ -263,7 +265,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- promise.js:47:19
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:47:19
    47|   var b: string = num; // Error: number ~> string
@@ -280,7 +282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- promise.js:63:19
 
-Cannot assign `numOrStr` to `c` because number [1] is incompatible with string [2].
+Cannot assign `numOrStr` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:63:19
    63|   var c: string = numOrStr; // Error: number|string -> string
@@ -297,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:117:19
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:117:19
    117|   var b: string = num; // Error: number ~> string
@@ -314,7 +316,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:123:19
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:123:19
    123|   var b: string = num; // Error: number ~> string
@@ -331,7 +333,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:129:19
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:129:19
    129|   var b: string = num; // Error: number ~> string
@@ -348,7 +350,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:161:21
 
-Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    promise.js:161:21
    161|     var b: number = str; // Error: string ~> number
@@ -365,7 +367,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:169:21
 
-Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    promise.js:169:21
    169|     var b: number = str; // Error: string ~> number
@@ -382,7 +384,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:177:21
 
-Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    promise.js:177:21
    177|     var b: number = str; // Error: string ~> number
@@ -399,7 +401,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:201:21
 
-Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    promise.js:201:21
    201|     var b: number = str; // Error: string ~> number
@@ -416,7 +418,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:209:21
 
-Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    promise.js:209:21
    209|     var b: number = str; // Error: string ~> number
@@ -433,7 +435,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:217:21
 
-Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    promise.js:217:21
    217|     var b: number = str; // Error: string ~> number
@@ -450,7 +452,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:225:21
 
-Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:225:21
    225|     var b: string = num; // Error: string ~> number
@@ -467,7 +469,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ promise.js:225:21
 
-Cannot assign `num` to `b` because undefined [1] is incompatible with string [2].
+Cannot assign `num` to `b` because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    promise.js:225:21
    225|     var b: string = num; // Error: string ~> number
@@ -484,7 +486,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ resolve_global.js:35:18
 
-Cannot call `Promise.resolve` because property `resolve` is missing in statics of `Promise` [1].
+Cannot call `Promise.resolve` because property `resolve` is missing in statics of `Promise` [1]. [prop-missing]
 
    resolve_global.js:35:18
    35|   return Promise.resolve(0);
@@ -498,7 +500,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ resolve_global.js:39:23
 
-Cannot instantiate class `Promise` because class `Promise` [1] is not a polymorphic type.
+Cannot instantiate class `Promise` because class `Promise` [1] is not a polymorphic type. [incompatible-use]
 
    resolve_global.js:39:23
    39| async function baz(): Promise<number> {
@@ -513,7 +515,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:3:2
 
 Cannot cast `Promise.resolve()` to `Promise` because undefined [1] is incompatible with number [2] in type argument
-`R` [3].
+`R` [3]. [incompatible-cast]
 
    resolve_void.js:3:2
      3| (Promise.resolve(): Promise<number>); // error
@@ -531,7 +533,7 @@ References:
 Error --------------------------------------------------------------------------------------------- resolve_void.js:5:18
 
 Cannot cast `Promise.resolve(...)` to `Promise` because undefined [1] is incompatible with number [2] in type argument
-`R` [3].
+`R` [3]. [incompatible-cast]
 
    resolve_void.js:5:18
      5| (Promise.resolve(undefined): Promise<number>); // error

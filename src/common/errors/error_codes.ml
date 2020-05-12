@@ -167,7 +167,7 @@ let string_of_code : error_code -> string = function
   | CannotResolveModule -> "cannot-resolve-module"
   | CannotResolveName -> "cannot-resolve-name"
   | CannotSpreadIndexer -> "cannot-spread-indexer"
-  | CannotSpreadInexact -> "cannot-spread-exact"
+  | CannotSpreadInexact -> "cannot-spread-inexact"
   | CannotSpreadInterface -> "cannot-spread-interface"
   | CannotWrite -> "cannot-write"
   | CannotWriteEnum -> "cannot-write-enum"

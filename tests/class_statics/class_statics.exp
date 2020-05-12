@@ -32,7 +32,7 @@ Classes may not have static fields named `prototype`.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
-Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1].
+Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1]. [prop-missing]
 
    test.js:7:3
    7| A.qux = function(x: string) { } // error?
@@ -46,7 +46,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:13
 
-Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `x`.
+Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `x`. [incompatible-extend]
 
    test.js:10:13
    10|   static x: string; // error?
@@ -64,7 +64,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:11:17
 
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the first argument of property
-`foo`.
+`foo`. [incompatible-extend]
 
    test.js:11:17
    11|   static foo(x: string) { } // error?
@@ -81,7 +81,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:11
 
-Cannot assign `0` to `B.x` because number [1] is incompatible with string [2].
+Cannot assign `0` to `B.x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:13:11
    13|     B.x = 0; // error
@@ -95,7 +95,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:15:11
 
-Cannot call `B.foo` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `B.foo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    test.js:15:11
    15|     B.foo(0); // error
@@ -109,7 +109,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:17:11
 
-Cannot assign `0` to `B.y` because number [1] is incompatible with string [2].
+Cannot assign `0` to `B.y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:17:11
    17|     B.y = 0; // error
@@ -123,7 +123,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:18:11
 
-Cannot call `B.bar` with `0` bound to `y` because number [1] is incompatible with string [2].
+Cannot call `B.bar` with `0` bound to `y` because number [1] is incompatible with string [2]. [incompatible-call]
 
    test.js:18:11
    18|     B.bar(0); // error
@@ -137,7 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
-Cannot call `B.qux` because property `qux` is missing in statics of `B` [1].
+Cannot call `B.qux` because property `qux` is missing in statics of `B` [1]. [prop-missing]
 
    test.js:19:7
    19|     B.qux(0); // error
@@ -151,7 +151,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:26:12
 
-Cannot return `new this()` because `B` [1] is incompatible with number [2].
+Cannot return `new this()` because `B` [1] is incompatible with number [2]. [incompatible-return]
 
    test.js:26:12
    26|     return new this(); // error B ~> number
@@ -165,7 +165,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:7
 
-Cannot call `D.foo` because property `foo` is missing in statics of `D` [1].
+Cannot call `D.foo` because property `foo` is missing in statics of `D` [1]. [prop-missing]
 
    test.js:40:7
    40|     D.foo(0); // error?
@@ -179,7 +179,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:42:11
 
-Cannot call `D.bar` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `D.bar` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    test.js:42:11
    42|     D.bar(0);
@@ -193,7 +193,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:2
 
-Cannot cast `new A` to `typeof A` because `A` [1] is incompatible with class `A` [2].
+Cannot cast `new A` to `typeof A` because `A` [1] is incompatible with class `A` [2]. [incompatible-cast]
 
    test.js:47:2
    47| (new A: typeof A);
@@ -207,7 +207,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:53:10
 
-Cannot call `this.bar` because property `bar` is missing in statics of `E` [1].
+Cannot call `this.bar` because property `bar` is missing in statics of `E` [1]. [prop-missing]
 
    test.js:53:10
    53|     this.bar(); // error
@@ -221,7 +221,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:12
 
-Cannot return `this.x` because number [1] is incompatible with string [2].
+Cannot return `this.x` because number [1] is incompatible with string [2]. [incompatible-return]
 
    test.js:54:12
    54|     return this.x; // error

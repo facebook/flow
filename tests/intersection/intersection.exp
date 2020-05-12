@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- pred.js:17:8
 
 Cannot return `options.objectMode || options.readableObjectMode || options.writableObjectMode` because undefined [1] is
-incompatible with boolean [2].
+incompatible with boolean [2]. [incompatible-return]
 
    pred.js:17:8
    17|     || options.writableObjectMode; // error, undefined ~> boolean
@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- proper_blaming.js:9:3
 
-Cannot get `x.nope` because property `nope` is missing in null [1].
+Cannot get `x.nope` because property `nope` is missing in null [1]. [incompatible-use]
 
    proper_blaming.js:9:3
    9| x.nope; // error here
@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ test_obj.js:29:12
 
-Cannot assign `c` to `e` because:
+Cannot assign `c` to `e` because: [incompatible-type]
  - Either number [1] is incompatible with string [2] in the indexer property.
  - Or number [3] is incompatible with string [2] in the indexer property.
 

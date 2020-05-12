@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:11:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:11:7
    11|   if (x) {}

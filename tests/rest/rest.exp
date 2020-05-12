@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- type.js:10:2
 
 Cannot cast `o1` to object type because property `x` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:10:2
    10| (o1: {||}); // Error: missing x
@@ -17,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because `X` [1] is incompatible with undefined [2] in property `x`.
+Cannot cast `o1` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
 
    type.js:12:2
    12| (o1: {|x?: X|}); // Error: x is not optional
@@ -35,6 +36,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:13:2
 
 Cannot cast `o1` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:13:2
    13| (o1: {|x: X, y?: Y|}); // Error: y is not in O1
@@ -52,6 +54,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:14:2
 
 Cannot cast `o1` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:14:2
    14| (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
@@ -68,7 +71,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:14:2
 
-Cannot cast `o1` to object type because `X` [1] is incompatible with undefined [2] in property `x`.
+Cannot cast `o1` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
 
    type.js:14:2
    14| (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
@@ -85,7 +88,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:15:2
 
-Cannot cast `o1` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o1` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:15:2
    15| (o1: {|x: Y|}); // Error: X = Y
@@ -103,6 +106,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:16:2
 
 Cannot cast object literal to `O1` because property `x` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
 
    type.js:16:2
    16| ({y}: O1); // Error: missing x
@@ -117,6 +121,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:16:2
 
 Cannot cast object literal to `O1` because property `y` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
 
    type.js:16:2
    16| ({y}: O1); // Error: missing x
@@ -131,6 +136,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:18:2
 
 Cannot cast object literal to `O1` because property `y` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
 
    type.js:18:2
    18| ({x, y}: O1); // Error: y is not in O1
@@ -144,7 +150,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:19:6
 
-Cannot cast object literal to `O1` because `Y` [1] is incompatible with `X` [2] in property `x`.
+Cannot cast object literal to `O1` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:19:6
    19| ({x: y}: O1); // Error: Y ~> X
@@ -161,7 +167,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:21:28
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type.js:21:28
    21| type O2 = $Rest<{|x: X, y: Y|}, {|y: X|}>;
@@ -176,6 +182,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:27:2
 
 Cannot cast `o3` to object type because property `x` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:27:2
    27| (o3: {||}); // Error: missing x and y
@@ -193,6 +200,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:27:2
 
 Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:27:2
    27| (o3: {||}); // Error: missing x and y
@@ -210,6 +218,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:28:2
 
 Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:28:2
    28| (o3: {|x: X|}); // Error: x is optional and missing y
@@ -226,7 +235,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:28:2
 
-Cannot cast `o3` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o3` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:28:2
    28| (o3: {|x: X|}); // Error: x is optional and missing y
@@ -244,6 +253,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:29:2
 
 Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:29:2
    29| (o3: {|x?: X|}); // Error: missing y
@@ -260,7 +270,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:30:2
 
-Cannot cast `o3` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o3` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:30:2
    30| (o3: {|x: X, y?: Y|}); // Error: x is optional
@@ -278,6 +288,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:32:2
 
 Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:32:2
    32| (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
@@ -294,7 +305,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:32:2
 
-Cannot cast `o3` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o3` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:32:2
    32| (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
@@ -311,7 +322,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:32:2
 
-Cannot cast `o3` to object type because undefined [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o3` to object type because undefined [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:32:2
    32| (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
@@ -329,6 +340,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:33:2
 
 Cannot cast object literal to `O3` because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type.js:33:2
    33| ({}: O3); // OK
@@ -342,7 +354,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:6
 
-Cannot cast object literal to `O3` because `Y` [1] is incompatible with `X` [2] in property `x`.
+Cannot cast object literal to `O3` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:36:6
    36| ({x: y}: O3); // Error: Y ~> X
@@ -360,6 +372,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:40:2
 
 Cannot cast `o4` to object type because property `x` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:40:2
    40| (o4: {||}); // Error: missing x and y
@@ -377,6 +390,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:40:2
 
 Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:40:2
    40| (o4: {||}); // Error: missing x and y
@@ -394,6 +408,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:41:2
 
 Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:41:2
    41| (o4: {|x: X|}); // Error: missing y
@@ -411,6 +426,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:42:2
 
 Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:42:2
    42| (o4: {|x?: X|}); // Error: x is not optional and missing y
@@ -427,7 +443,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:42:2
 
-Cannot cast `o4` to object type because `X` [1] is incompatible with undefined [2] in property `x`.
+Cannot cast `o4` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
 
    type.js:42:2
    42| (o4: {|x?: X|}); // Error: x is not optional and missing y
@@ -444,7 +460,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:44:2
 
-Cannot cast `o4` to object type because `X` [1] is incompatible with undefined [2] in property `x`.
+Cannot cast `o4` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
 
    type.js:44:2
    44| (o4: {|x?: X, y?: Y|}); // Error: x is not optional
@@ -462,6 +478,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:45:2
 
 Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:45:2
    45| (o4: {|x: Y|}); // Error: X = Y, and missing y
@@ -478,7 +495,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:45:2
 
-Cannot cast `o4` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o4` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:45:2
    45| (o4: {|x: Y|}); // Error: X = Y, and missing y
@@ -496,6 +513,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:46:2
 
 Cannot cast object literal to `O4` because property `x` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
 
    type.js:46:2
    46| ({y}: O4); // Error: missing x
@@ -509,7 +527,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:49:6
 
-Cannot cast object literal to `O4` because `Y` [1] is incompatible with `X` [2] in property `x`.
+Cannot cast object literal to `O4` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:49:6
    49| ({x: y}: O4); // Error: Y ~> X
@@ -527,6 +545,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:53:2
 
 Cannot cast `o5` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type.js:53:2
    53| (o5: {|x?: X|}); // Error: inexact ~> exact
@@ -543,7 +562,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:55:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o5` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:55:2
    55| (o5: {x: X}); // Error: x is optional
@@ -561,6 +580,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:57:2
 
 Cannot cast `o5` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:57:2
    57| (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
@@ -577,7 +597,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:57:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o5` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:57:2
    57| (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
@@ -595,6 +615,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:58:2
 
 Cannot cast `o5` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:58:2
    58| (o5: {x?: X, y?: Y}); // Error: y is not in O5
@@ -611,7 +632,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:59:2
 
-Cannot cast `o5` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o5` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:59:2
    59| (o5: {x: Y}); // Error: x is optional and X = Y
@@ -628,7 +649,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:59:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o5` to object type because undefined [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:59:2
    59| (o5: {x: Y}); // Error: x is optional and X = Y
@@ -645,7 +666,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:63:6
 
-Cannot cast object literal to `O5` because `Y` [1] is incompatible with `X` [2] in property `x`.
+Cannot cast object literal to `O5` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:63:6
    63| ({x: y}: O5); // Error: Y ~> X
@@ -663,6 +684,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:67:2
 
 Cannot cast `o6` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type.js:67:2
    67| (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
@@ -679,7 +701,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:69:2
 
-Cannot cast `o6` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o6` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:69:2
    69| (o6: {x: X}); // Error: x is optional
@@ -696,7 +718,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:71:2
 
-Cannot cast `o6` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o6` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:71:2
    71| (o6: {x: X, y?: Y}); // Error: x is optional
@@ -713,7 +735,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:73:2
 
-Cannot cast `o6` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o6` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:73:2
    73| (o6: {x: Y}); // Error: X = Y, x is optional
@@ -730,7 +752,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:73:2
 
-Cannot cast `o6` to object type because undefined [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o6` to object type because undefined [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:73:2
    73| (o6: {x: Y}); // Error: X = Y, x is optional
@@ -747,7 +769,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:77:6
 
-Cannot cast object literal to `O6` because `Y` [1] is incompatible with `X` [2] in property `x`.
+Cannot cast object literal to `O6` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:77:6
    77| ({x: y}: O6); // Error: Y ~> X
@@ -765,6 +787,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:81:2
 
 Cannot cast `o7` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type.js:81:2
    81| (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
@@ -781,7 +804,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:83:2
 
-Cannot cast `o7` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o7` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:83:2
    83| (o7: {x: X}); // Error: x is optional
@@ -798,7 +821,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:85:2
 
-Cannot cast `o7` to object type because undefined [1] is incompatible with `X` [2] in property `x`.
+Cannot cast `o7` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:85:2
    85| (o7: {x: X, y?: Y}); // Error: x is optional
@@ -815,7 +838,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:87:2
 
-Cannot cast `o7` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o7` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:87:2
    87| (o7: {x: Y}); // Error: X = Y and x is optional
@@ -832,7 +855,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:87:2
 
-Cannot cast `o7` to object type because undefined [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o7` to object type because undefined [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type.js:87:2
    87| (o7: {x: Y}); // Error: X = Y and x is optional
@@ -849,7 +872,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:91:6
 
-Cannot cast object literal to `O7` because `Y` [1] is incompatible with `X` [2] in property `x`.
+Cannot cast object literal to `O7` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:91:6
    91| ({x: y}: O7); // Error: Y ~> X
@@ -866,7 +889,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:93:27
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type.js:93:27
    93| type O8 = $Rest<{x: X, y: Y}, {|y: X|}>; // Error: Y ~> X
@@ -880,7 +903,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:97:28
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type.js:97:28
    97| type O9 = $Rest<{|x: X, y: Y|}, {y: X}>; // Error: Y ~> X
@@ -894,7 +917,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- type.js:101:29
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type.js:101:29
    101| type O10 = $Rest<{|x: X, y: Y|}, {|y?: X|}>; // Error: Y ~> X
@@ -908,7 +931,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- type.js:105:30
 
-Cannot instantiate `$Rest` because undefined [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because undefined [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type.js:105:30
    105| type O11 = $Rest<{|x: X, y?: Y|}, {|y: Y|}>; // Error: void ~> Y
@@ -922,7 +945,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- type.js:109:18
 
-Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type.js:109:18
    109| type O12 = $Rest<{|x: X|}, {|y: Y|}>; // Error: void ~> Y
@@ -937,6 +960,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:10:2
 
 Cannot cast `o1` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type_dict.js:10:2
    10| (o1: {||}); // Error: missing y
@@ -953,7 +977,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:11:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast `o1` to object type because undefined [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:11:2
    11| (o1: {|y: Y|}); // Error: y is optional
@@ -970,7 +994,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:13:2
 
-Cannot cast `o1` to object type because `Y` [1] is incompatible with `X` [2] in property `y`.
+Cannot cast `o1` to object type because `Y` [1] is incompatible with `X` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:13:2
    13| (o1: {|y?: X|}); // Error: Y = X
@@ -988,6 +1012,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:14:2
 
 Cannot cast object literal to `O1` because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type_dict.js:14:2
    14| ({}: O1); // OK
@@ -1001,7 +1026,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:16:6
 
-Cannot cast object literal to `O1` because `X` [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast object literal to `O1` because `X` [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:16:6
    16| ({y: x}: O1); // Error: X ~> Y
@@ -1018,7 +1043,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:18:22
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type_dict.js:18:22
    18| type O2 = $Rest<{|y: Y|}, {|[string]: X|}>; // Error: Y ~> X
@@ -1033,6 +1058,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:24:2
 
 Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type_dict.js:24:2
    24| (o3: {||}); // Error: missing y
@@ -1049,7 +1075,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:25:2
 
-Cannot cast `o3` to object type because undefined [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast `o3` to object type because undefined [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:25:2
    25| (o3: {|y: Y|}); // Error: y is optional
@@ -1066,7 +1092,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:27:2
 
-Cannot cast `o3` to object type because `Y` [1] is incompatible with `X` [2] in property `y`.
+Cannot cast `o3` to object type because `Y` [1] is incompatible with `X` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:27:2
    27| (o3: {|y?: X|}); // Error: Y = X
@@ -1084,6 +1110,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:28:2
 
 Cannot cast object literal to `O3` because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type_dict.js:28:2
    28| ({}: O3); // OK
@@ -1097,7 +1124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:30:6
 
-Cannot cast object literal to `O3` because `X` [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast object literal to `O3` because `X` [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:30:6
    30| ({y: x}: O3); // Error: X ~> Y
@@ -1115,6 +1142,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:34:2
 
 Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type_dict.js:34:2
    34| (o4: {|y?: Y|}); // Error: inexact ~> exact
@@ -1131,7 +1159,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:36:2
 
-Cannot cast `o4` to object type because undefined [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast `o4` to object type because undefined [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:36:2
    36| (o4: {y: Y}); // Error: y is optional
@@ -1148,7 +1176,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:38:2
 
-Cannot cast `o4` to object type because `Y` [1] is incompatible with `X` [2] in property `y`.
+Cannot cast `o4` to object type because `Y` [1] is incompatible with `X` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:38:2
    38| (o4: {y?: X}); // Error: Y = X
@@ -1165,7 +1193,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:42:6
 
-Cannot cast object literal to `O4` because `X` [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast object literal to `O4` because `X` [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:42:6
    42| ({y: x}: O4); // Error: X ~> Y
@@ -1183,6 +1211,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:46:2
 
 Cannot cast `o5` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type_dict.js:46:2
    46| (o5: {|y?: Y|}); // Error: inexact ~> exact
@@ -1199,7 +1228,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:48:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast `o5` to object type because undefined [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:48:2
    48| (o5: {y: Y}); // Error: y is optional
@@ -1216,7 +1245,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:50:2
 
-Cannot cast `o5` to object type because `Y` [1] is incompatible with `X` [2] in property `y`.
+Cannot cast `o5` to object type because `Y` [1] is incompatible with `X` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:50:2
    50| (o5: {y?: X}); // Error: Y = X
@@ -1233,7 +1262,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:54:6
 
-Cannot cast object literal to `O5` because `X` [1] is incompatible with `Y` [2] in property `y`.
+Cannot cast object literal to `O5` because `X` [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
 
    type_dict.js:54:6
    54| ({y: x}: O5); // Error: X ~> Y
@@ -1250,7 +1279,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:56:21
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type_dict.js:56:21
    56| type O6 = $Rest<{y: Y}, {|[string]: X|}>; // Error: Y ~> X
@@ -1264,7 +1293,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:60:22
 
-Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because `Y` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type_dict.js:60:22
    60| type O7 = $Rest<{|y: Y|}, {[string]: X}>; // Error: Y ~> X
@@ -1278,7 +1307,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:84:30
 
-Cannot instantiate `$Rest` because `X` [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because `X` [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type_dict.js:84:30
    84| type O13 = $Rest<{|[string]: X|}, {|[string]: Y|}>; // Error: X ~> Y
@@ -1292,7 +1321,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:96:30
 
-Cannot instantiate `$Rest` because `X` [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because `X` [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type_dict.js:96:30
    96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
@@ -1306,7 +1335,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:96:30
 
-Cannot instantiate `$Rest` because undefined [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because undefined [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type_dict.js:96:30
    96| type O16 = $Rest<{|[string]: X|}, {|y: Y|}>; // Error: X ~> Y and void ~> Y
@@ -1320,7 +1349,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:102:2
 
-Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
 
    type_dict.js:102:2
    102| (o17: {|[string]: Y | void|}); // OK
@@ -1337,7 +1366,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:102:2
 
-Cannot cast `o17` to object type because `X` [1] is incompatible with undefined [2] in property `x`.
+Cannot cast `o17` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
 
    type_dict.js:102:2
    102| (o17: {|[string]: Y | void|}); // OK
@@ -1354,7 +1383,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:102:2
 
-Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`.
+Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-type]
 
    type_dict.js:102:2
    102| (o17: {|[string]: Y | void|}); // OK
@@ -1371,7 +1400,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:1:37
 
-Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2].
+Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    type_generic.js:1:37
    1| function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
@@ -1385,7 +1414,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:2:10
 
-Property `p` is missing in `A` [1].
+Property `p` is missing in `A` [1]. [incompatible-use]
 
    type_generic.js:2:10
    2|   const {p, ...o} = a;
@@ -1399,7 +1428,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:2:13
 
-`A` [1] is not an object.
+`A` [1] is not an object. [not-an-object]
 
    type_generic.js:2:13
    2|   const {p, ...o} = a;
@@ -1414,6 +1443,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_generic.js:7:2
 
 Cannot cast `o` to object type because property `p` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
 
    type_generic.js:7:2
    7| (o: {|x: string|});
@@ -1431,6 +1461,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_generic.js:7:2
 
 Cannot cast `o` to object type because undefined [1] is incompatible with string [2] in property `x`.
+[incompatible-cast]
 
    type_generic.js:7:2
    7| (o: {|x: string|});
@@ -1447,7 +1478,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:14:2
 
-Cannot cast object literal to `O1` because:
+Cannot cast object literal to `O1` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].
 
@@ -1466,7 +1497,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:16:2
 
-Cannot cast object literal to `O1` because:
+Cannot cast object literal to `O1` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].
 
@@ -1485,7 +1516,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:21:2
 
-Cannot cast object literal to `O2` because:
+Cannot cast object literal to `O2` because: [incompatible-type]
  - Either property `y` is missing in object type [1] but exists in object literal [2].
  - Or property `y` is missing in object type [3] but exists in object literal [2].
 
@@ -1504,7 +1535,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:22:2
 
-Cannot cast object literal to `O2` because:
+Cannot cast object literal to `O2` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `y` is missing in object type [3] but exists in object literal [2].
 
@@ -1523,7 +1554,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:24:17
 
-Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type_union.js:24:17
    24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
@@ -1537,7 +1568,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:24:28
 
-Cannot instantiate `$Rest` because undefined property `x` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because undefined property `x` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type_union.js:24:28
    24| type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
@@ -1551,7 +1582,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:29:2
 
-Cannot cast object literal to `O4` because:
+Cannot cast object literal to `O4` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].
 
@@ -1570,7 +1601,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:30:2
 
-Cannot cast object literal to `O4` because:
+Cannot cast object literal to `O4` because: [incompatible-type]
  - Either property `y` is missing in object type [1] but exists in object literal [2].
  - Or property `y` is missing in object type [3] but exists in object literal [2].
 
@@ -1589,7 +1620,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:31:2
 
-Cannot cast object literal to `O4` because:
+Cannot cast object literal to `O4` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].
 
@@ -1608,7 +1639,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:34:2
 
-Cannot cast `o` to `O5` because:
+Cannot cast `o` to `O5` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object type [2].
  - Or property `y` is missing in object type [1] but exists in object type [2].
 
@@ -1627,7 +1658,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:37:2
 
-Cannot cast object literal to `O5` because:
+Cannot cast object literal to `O5` because: [incompatible-type]
  - Either property `y` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [1] but exists in object literal [2].
 
@@ -1643,7 +1674,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:39:17
 
-Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type_union.js:39:17
    39| type O6 = $Rest<{|x: X|}, {|x: X|} | {|y: Y|}>; // Error: void ~> Y
@@ -1658,6 +1689,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_union.js:44:2
 
 Cannot cast object literal to `O7` because property `x` is missing in object type [1] but exists in object literal [2].
+[incompatible-type]
 
    type_union.js:44:2
    44| ({x}: O7); // Error: x is not allowed
@@ -1672,6 +1704,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_union.js:46:2
 
 Cannot cast object literal to `O7` because property `x` is missing in object type [1] but exists in object literal [2].
+[incompatible-type]
 
    type_union.js:46:2
    46| ({x, y}: O7); // Error: x is not allowed
@@ -1685,7 +1718,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:48:17
 
-Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2].
+Cannot instantiate `$Rest` because undefined property `y` [1] is incompatible with `Y` [2]. [incompatible-type]
 
    type_union.js:48:17
    48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
@@ -1699,7 +1732,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:48:28
 
-Cannot instantiate `$Rest` because undefined property `x` [1] is incompatible with `X` [2].
+Cannot instantiate `$Rest` because undefined property `x` [1] is incompatible with `X` [2]. [incompatible-type]
 
    type_union.js:48:28
    48| type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
@@ -1713,7 +1746,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:55:2
 
-Cannot cast object literal to `O9` because:
+Cannot cast object literal to `O9` because: [incompatible-type]
  - Either property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `y` is missing in object type [3] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].

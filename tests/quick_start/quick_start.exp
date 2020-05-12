@@ -12,7 +12,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Change @flow file, expect error.
 Error --------------------------------------------------------------------------------------------------------- a.js:4:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2].
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    a.js:4:2
    4| (0: string);
@@ -39,7 +39,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Revert file, expect error again.
 Error --------------------------------------------------------------------------------------------------------- a.js:4:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2].
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    a.js:4:2
    4| (0: string);

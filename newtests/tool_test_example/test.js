@@ -38,7 +38,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: var boom = myNum * myStr;
-                                  ^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
+                                  ^^^^^ Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
             References:
               5: var myStr = "hello";
                              ^^^^^^^ [1]

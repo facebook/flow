@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:9
 
-Deprecated utility. Using `$Supertype` types is not recommended! (`deprecated-utility`)
+Deprecated utility. Using `$Supertype` types is not recommended! [deprecated-utility]
 
    3| let x : $Supertype<number> = 3;
               ^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Deprecated utility. Using `$Supertype` types is not recommended! (`deprecated-ut
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:9
 
-Deprecated utility. Using `$Subtype` types is not recommended! (`deprecated-utility`)
+Deprecated utility. Using `$Subtype` types is not recommended! [deprecated-utility]
 
    4| let y : $Subtype<number> = 3;
               ^^^^^^^^^^^^^^^^

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- generics.js:4:32
 
-Cannot assign `x` to `r` because `X` [1] is incompatible with number [2].
+Cannot assign `x` to `r` because `X` [1] is incompatible with number [2]. [incompatible-type]
 
    generics.js:4:32
    4| function foo<X>(x: X): X { r = x; return x; }
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_class.js:3:15
 
-Cannot call `C` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot call `C` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    import_class.js:3:15
    3| var c = new C("");
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:5:17
 
-Cannot assign `c.foo()` to `x` because number [1] is incompatible with string [2].
+Cannot assign `c.foo()` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    objects.js:5:17
    5| var x: string = c.foo();
@@ -48,7 +48,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:13:17
 
-Cannot assign `o2.bar()` to `y` because string [1] is incompatible with number [2].
+Cannot assign `o2.bar()` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    objects.js:13:17
    13| var y: number = o2.bar();

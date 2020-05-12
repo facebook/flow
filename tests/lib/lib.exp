@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- libtest.js:1:16
 
-Cannot assign `NaN` to `x` because number [1] is incompatible with string [2].
+Cannot assign `NaN` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    libtest.js:1:16
     1| var x:string = NaN
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- libtest.js:2:16
 
-Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with string [2].
+Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    libtest.js:2:16
      2| var y:string = Number.MAX_VALUE;
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- libtest.js:3:16
 
-Cannot assign `(new TypeError()).name` to `z` because string [1] is incompatible with number [2].
+Cannot assign `(new TypeError()).name` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
 
    libtest.js:3:16
      3| var z:number = new TypeError().name;
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- libtest.js:4:16
 
-Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with string [2].
+Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with string [2]. [incompatible-type]
 
    libtest.js:4:16
     4| var w:string = parseInt("...");

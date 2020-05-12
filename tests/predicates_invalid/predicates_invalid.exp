@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------------------- a.js:3:48
 
 Invalid destructuring [1] in predicate function. Predicate functions cannot have destructured or spread parameters. This
-predicate annotation will be ignored.
+predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:3:48
    3| export function f({a: b}: {a: mixed}): boolean %checks {
@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:10:36
 
 Invalid destructuring [1] in predicate function. Predicate functions cannot have destructured or spread parameters. This
-predicate annotation will be ignored.
+predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:10:36
    10| function g([b]: [number]): boolean %checks {
@@ -31,7 +31,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:14:41
 
 Invalid rest parameter `a` [1] in predicate function. Predicate functions cannot have destructured or spread parameters.
-This predicate annotation will be ignored.
+This predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:14:41
    14| function h(...a: Array<mixed>): boolean %checks {
@@ -46,7 +46,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:18:49
 
 Invalid rest parameter `a` [1] in predicate function. Predicate functions cannot have destructured or spread parameters.
-This predicate annotation will be ignored.
+This predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:18:49
    18| declare function i(...a: Array<mixed>): boolean %checks(typeof a === 'string');
@@ -61,7 +61,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:20:61
 
 Invalid destructuring [1] in predicate function. Predicate functions cannot have destructured or spread parameters. This
-predicate annotation will be ignored.
+predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:20:61
    20| function j({a: b}: {a: mixed}, ...c: Array<mixed>): boolean %checks {
@@ -76,7 +76,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:20:61
 
 Invalid rest parameter `c` [1] in predicate function. Predicate functions cannot have destructured or spread parameters.
-This predicate annotation will be ignored.
+This predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:20:61
    20| function j({a: b}: {a: mixed}, ...c: Array<mixed>): boolean %checks {
@@ -91,7 +91,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:27:49
 
 Invalid rest parameter `x` [1] in predicate function. Predicate functions cannot have destructured or spread parameters.
-This predicate annotation will be ignored.
+This predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:27:49
    27| declare function l(...x: Array<mixed>): boolean %checks(typeof x === 'string');
@@ -106,7 +106,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- a.js:29:58
 
 Invalid destructuring [1] in predicate function. Predicate functions cannot have destructured or spread parameters. This
-predicate annotation will be ignored.
+predicate annotation will be ignored. [unsupported-syntax]
 
    a.js:29:58
    29| export function m(x: mixed, {a: b}: {a: mixed}): boolean %checks {

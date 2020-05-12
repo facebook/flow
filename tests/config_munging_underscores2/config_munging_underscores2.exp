@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- chain.js:20:15
 
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `_property1`.
+[incompatible-extend]
 
    chain.js:20:15
    20|   _property1: string;
@@ -18,6 +19,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- chain.js:21:22
 
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `_sProperty`.
+[incompatible-extend]
 
    chain.js:21:22
    21|   static _sProperty: string;
@@ -35,7 +37,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- chain.js:27:15
 
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the return value of property
-`_method1`.
+`_method1`. [incompatible-extend]
 
    chain.js:27:15
    27|   _method1(): string {
@@ -53,7 +55,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- chain.js:30:22
 
 Cannot extend `A` [1] with `B` because number [2] is incompatible with string [3] in the return value of property
-`_sMethod`.
+`_sMethod`. [incompatible-extend]
 
    chain.js:30:22
    30|   static _sMethod(): number {

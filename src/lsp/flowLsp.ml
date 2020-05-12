@@ -865,7 +865,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
   in
   let error_to_diagnostic (loc, parse_error) =
     let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
-    let error = Errors.mk_error ~kind:Errors.ParseError loc message in
+    let error = Errors.mk_error ~kind:Errors.ParseError loc None message in
     let (_, diagnostic) =
       error_to_lsp ~default_uri:uri ~severity:(Some PublishDiagnostics.Error) error
     in

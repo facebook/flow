@@ -54,7 +54,7 @@ module.exports = foo;
 Error -------------------------------------------------------------------------------------------------------- a.js:14:2
 
 Cannot cast `foo()` to array type because inexact object type [1] is incompatible with exact `Exact` [2] in array
-element.
+element. [incompatible-exact]
 
    a.js:14:2
    14| (foo(): Array<Exact>);

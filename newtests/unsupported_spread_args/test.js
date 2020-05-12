@@ -15,7 +15,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8: idx(...arr, obj => obj.foo)
-                      ^^^ A spread argument is unsupported here.
+                      ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
     addCode('idx({}, ...arr)')
@@ -23,7 +23,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:10
            10: idx({}, ...arr)
-                          ^^^ A spread argument is unsupported here.
+                          ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
     addCode('idx(...arr, ...arr)')
@@ -31,11 +31,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: idx(...arr, ...arr)
-                      ^^^ A spread argument is unsupported here.
+                      ^^^ A spread argument is unsupported here. [unsupported-syntax]
 
           test.js:12
            12: idx(...arr, ...arr)
-                              ^^^ A spread argument is unsupported here.
+                              ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
   ]),
@@ -47,14 +47,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component. [not-a-component]
             References:
               3: const arr = [1,2,3];
                               ^ [1]
 
           test.js:7
             7: React.createElement(...arr, {})
-                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object. [not-an-object]
             References:
               3: const arr = [1,2,3];
                                 ^ [1]
@@ -65,7 +65,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: React.createElement(({}: any), ...arr)
-                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object. [not-an-object]
             References:
               3: const arr = [1,2,3];
                               ^ [1]
@@ -76,14 +76,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component. [not-a-component]
             References:
               3: const arr = [1,2,3];
                               ^ [1]
 
           test.js:11
            11: React.createElement(...arr, ...arr)
-                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object. [not-an-object]
             References:
               3: const arr = [1,2,3];
                                 ^ [1]
@@ -97,7 +97,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function (...args) { return this.bar; }).call(...arr);
-                                                                 ^^^ A spread argument is unsupported here.
+                                                                 ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
   ]),
@@ -108,7 +108,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function () { return this.bar; }).apply(...arr);
-                                                           ^^^ A spread argument is unsupported here.
+                                                           ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
     addCode('(function () { return this.bar; }).apply(({}: any), ...arr);')
@@ -116,7 +116,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: (function () { return this.bar; }).apply(({}: any), ...arr);
-                                                                      ^^^ A spread argument is unsupported here.
+                                                                      ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
     addCode('(function () { return this.bar; }).apply(...arr, ...arr);')
@@ -124,11 +124,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                           ^^^ A spread argument is unsupported here.
+                                                           ^^^ A spread argument is unsupported here. [unsupported-syntax]
 
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                                   ^^^ A spread argument is unsupported here.
+                                                                   ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
   ]),
@@ -138,7 +138,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: Object.getPrototypeOf(...arr)
-                                        ^^^ A spread argument is unsupported here.
+                                        ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
   ]),
@@ -152,7 +152,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       const o1 = Object.assign(...objArr);
-                                                 ^^^^^^ A spread argument is unsupported here.
+                                                 ^^^^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
     addCode(`
@@ -166,7 +166,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:17
            17: Object.assign({}, ...[1])
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ Incorrect arguments passed to call of method \`assign\` because number [1] is not an object.
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ Incorrect arguments passed to call of method \`assign\` because number [1] is not an object. [not-an-object]
             References:
              17: Object.assign({}, ...[1])
                                        ^ [1]

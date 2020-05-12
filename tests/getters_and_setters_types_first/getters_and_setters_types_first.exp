@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- class.js:26:3
 
-Computed property keys not supported.
+Computed property keys not supported. [unsupported-syntax]
 
    26|   set [z](x: string) {}
          ^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Computed property keys not supported.
 
 Error ---------------------------------------------------------------------------------------------------- class.js:27:3
 
-Computed property keys not supported.
+Computed property keys not supported. [unsupported-syntax]
 
    27|   get [z](): string { return string; }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -17,6 +17,7 @@ Computed property keys not supported.
 Error -------------------------------------------------------------------------------------------- declare_class.js:25:3
 
 Cannot shadow proto property `propOverriddenWithGetter` [1] because number [2] is incompatible with string [3].
+[incompatible-type]
 
    declare_class.js:25:3
    25|   propOverriddenWithGetter: number; // error: can't shadow proto with incompatible own
@@ -37,6 +38,7 @@ References:
 Error -------------------------------------------------------------------------------------------- declare_class.js:28:3
 
 Cannot shadow proto property `propOverriddenWithSetter` [1] because string [2] is incompatible with number [3].
+[incompatible-type]
 
    declare_class.js:28:3
    28|   propOverriddenWithSetter: number; // error: can't shadow proto with incompatible own
@@ -57,6 +59,7 @@ References:
 Error --------------------------------------------------------------------------------------------- import-class.js:8:38
 
 Cannot get `foo.goodGetterNoAnnotation` because property `goodGetterNoAnnotation` is missing in `Foo` [1].
+[prop-missing]
 
    import-class.js:8:38
    8| var testGetterNoError1: number = foo.goodGetterNoAnnotation;
@@ -71,6 +74,7 @@ References:
 Error -------------------------------------------------------------------------------------------- import-class.js:11:40
 
 Cannot get `foo.goodGetterNoAnnotation` because property `goodGetterNoAnnotation` is missing in `Foo` [1].
+[prop-missing]
 
    import-class.js:11:40
    11| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
@@ -85,7 +89,7 @@ References:
 Error -------------------------------------------------------------------------------------------- import-class.js:12:36
 
 Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
-string [2].
+string [2]. [incompatible-type]
 
    import-class.js:12:36
    12| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
@@ -103,6 +107,7 @@ References:
 Error --------------------------------------------------------------------------------------------- import-class.js:15:5
 
 Cannot assign `123` to `foo.goodSetterNoAnnotation` because property `goodSetterNoAnnotation` is missing in `Foo` [1].
+[prop-missing]
 
    import-class.js:15:5
    15| foo.goodSetterNoAnnotation = 123;
@@ -117,7 +122,7 @@ References:
 Error --------------------------------------------------------------------------------------------- import-class.js:19:5
 
 Cannot assign `"hello"` to `foo.goodSetterNoAnnotation` because property `goodSetterNoAnnotation` is missing in
-`Foo` [1].
+`Foo` [1]. [prop-missing]
 
    import-class.js:19:5
    19| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
@@ -132,6 +137,7 @@ References:
 Error -------------------------------------------------------------------------------------------- import-class.js:20:32
 
 Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+[incompatible-type]
 
    import-class.js:20:32
    20| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
@@ -146,7 +152,7 @@ References:
 Error -------------------------------------------------------------------------------------------- import-class.js:22:44
 
 Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2].
+incompatible with number [2]. [incompatible-type]
 
    import-class.js:22:44
    22| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -164,7 +170,7 @@ References:
 Error ------------------------------------------------------------------------------------ import-declare_class.js:12:36
 
 Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
-string [2].
+string [2]. [incompatible-type]
 
    import-declare_class.js:12:36
    12| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
@@ -182,6 +188,7 @@ References:
 Error ------------------------------------------------------------------------------------ import-declare_class.js:17:32
 
 Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+[incompatible-type]
 
    import-declare_class.js:17:32
    17| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
@@ -196,7 +203,7 @@ References:
 Error ------------------------------------------------------------------------------------ import-declare_class.js:19:44
 
 Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2].
+incompatible with number [2]. [incompatible-type]
 
    import-declare_class.js:19:44
    19| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -214,7 +221,7 @@ References:
 Error -------------------------------------------------------------------------------------- import-object_type.js:12:38
 
 Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
-string [2].
+string [2]. [incompatible-type]
 
    import-object_type.js:12:38
    12|   var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
@@ -232,6 +239,7 @@ References:
 Error -------------------------------------------------------------------------------------- import-object_type.js:17:34
 
 Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+[incompatible-type]
 
    import-object_type.js:17:34
    17|   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
@@ -246,7 +254,7 @@ References:
 Error -------------------------------------------------------------------------------------- import-object_type.js:19:46
 
 Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2].
+incompatible with number [2]. [incompatible-type]
 
    import-object_type.js:19:46
    19|   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -263,7 +271,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- import-object_type.js:24:45
 
-Cannot resolve name `C`.
+Cannot resolve name `C`. [cannot-resolve-name]
 
    24|   obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                                    ^
@@ -272,7 +280,7 @@ Cannot resolve name `C`.
 Error --------------------------------------------------------------------------------------- import-object_type.js:28:5
 
 Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
-`A` [1] is incompatible with number [2].
+`A` [1] is incompatible with number [2]. [incompatible-type]
 
    import-object_type.js:28:5
    28|     obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
@@ -290,7 +298,7 @@ References:
 Error ------------------------------------------------------------------------------------------- import-variance.js:9:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is read-only in `<<anonymous class>>` [2] but
-writable in `Base` [1].
+writable in `Base` [1]. [incompatible-variance]
 
    import-variance.js:9:2
         v-------------------
@@ -309,7 +317,7 @@ References:
 Error ------------------------------------------------------------------------------------------ import-variance.js:14:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is write-only in `<<anonymous class>>` [2] but
-readable in `Base` [1].
+readable in `Base` [1]. [incompatible-variance]
 
    import-variance.js:14:2
         v-------------------
@@ -328,7 +336,7 @@ References:
 Error ------------------------------------------------------------------------------------------ import-variance.js:25:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `pos` is write-only in `<<anonymous class>>` [2]
-but read-only in `Base` [1].
+but read-only in `Base` [1]. [incompatible-variance]
 
    import-variance.js:25:2
         v-------------------
@@ -347,7 +355,7 @@ References:
 Error ------------------------------------------------------------------------------------------ import-variance.js:35:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `neg` is read-only in `<<anonymous class>>` [2] but
-write-only in `Base` [1].
+write-only in `Base` [1]. [incompatible-variance]
 
    import-variance.js:35:2
         v-------------------

@@ -13,7 +13,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       function x() { new.target(); }
-                                    ^^^^^^^^^^ Not supported.
+                                    ^^^^^^^^^^ Not supported. [unsupported-syntax]
         `,
       ),
   ]),

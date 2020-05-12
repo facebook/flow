@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- symbol.js:8:17
 
-Cannot call `Symbol` because no more than 1 argument is expected by function type [1].
+Cannot call `Symbol` because no more than 1 argument is expected by function type [1]. [extra-arg]
 
    symbol.js:8:17
      8|   Symbol('foo', 'bar'); // Error: unused argument
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:6
 
-Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2].
+Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2]. [incompatible-cast]
 
    symbol.js:23:6
    23|     (x: boolean); // Error
@@ -31,7 +31,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:26:6
 
-Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2].
+Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2]. [incompatible-cast]
 
    symbol.js:26:6
    26|     (x: symbol); // Error
@@ -49,6 +49,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- symbol.js:45:27
 
 Cannot assign `Symbol.toPrimitive` to `y` because symbol [1] is incompatible with `$SymbolMatch` [2].
+[incompatible-type]
 
    symbol.js:45:27
     45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
@@ -65,7 +66,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:62:3
 
-Cannot compare tuple type [1] to symbol [2].
+Cannot compare tuple type [1] to symbol [2]. [invalid-compare]
 
    symbol.js:62:3
    62|   x == s; // Error
@@ -82,7 +83,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:63:3
 
-Cannot compare symbol [1] to tuple type [2].
+Cannot compare symbol [1] to tuple type [2]. [invalid-compare]
 
    symbol.js:63:3
    63|   s == x; // Error
@@ -99,7 +100,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:64:3
 
-Cannot compare tuple type [1] to symbol [2].
+Cannot compare tuple type [1] to symbol [2]. [invalid-compare]
 
    symbol.js:64:3
    64|   x != s; // Error
@@ -116,7 +117,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:65:3
 
-Cannot compare symbol [1] to tuple type [2].
+Cannot compare symbol [1] to tuple type [2]. [invalid-compare]
 
    symbol.js:65:3
    65|   s != x; // Error

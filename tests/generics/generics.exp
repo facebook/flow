@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ generics.js:19:16
 
-Cannot assign `d.x` to `s` because number [1] is incompatible with string [2].
+Cannot assign `d.x` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
 
    generics.js:19:16
    19| var s:string = d.x;
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:20:16
 
-Cannot assign `o.u` to `n` because `T` [1] is incompatible with number [2].
+Cannot assign `o.u` to `n` because `T` [1] is incompatible with number [2]. [incompatible-type]
 
    generics.js:20:16
    20| var n:number = o.u;
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:28:16
 
-Cannot assign `e.set(...)` to `x` because undefined [1] is incompatible with string [2].
+Cannot assign `e.set(...)` to `x` because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    generics.js:28:16
    28| var x:string = e.set(0);
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:28:16
 
-Cannot assign `e.set(...)` to `x` because number [1] is incompatible with string [2].
+Cannot assign `e.set(...)` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    generics.js:28:16
    28| var x:string = e.set(0);
@@ -69,6 +69,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ generics.js:39:41
 
 Cannot assign `h1` to `h2` because string [1] is incompatible with number [2] in array element of type argument `X` [3].
+[incompatible-type-arg]
 
    generics.js:39:41
    39| var h2:F<Array<Array<Array<number>>>> = h1;
@@ -88,7 +89,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:41:11
 
-Cannot apply type because it is not a polymorphic type.
+Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
    41| var obj : Object<string, string> = {} // error, arity 0
                  ^^^^^^^^^^^^^^^^^^^^^^
@@ -96,7 +97,7 @@ Cannot apply type because it is not a polymorphic type.
 
 Error ------------------------------------------------------------------------------------------------ generics.js:42:10
 
-Cannot apply type because it is not a polymorphic type.
+Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
    42| var fn : Function<string> = function() { return 'foo'; } // error, arity 0
                 ^^^^^^^^^^^^^^^^
@@ -104,7 +105,7 @@ Cannot apply type because it is not a polymorphic type.
 
 Error ------------------------------------------------------------------------------------------------ generics.js:43:10
 
-Cannot apply type because it is not a polymorphic type.
+Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
    43| var fn : function<string> = function() { return 'foo'; } // error, arity 0
                 ^^^^^^^^^^^^^^^^

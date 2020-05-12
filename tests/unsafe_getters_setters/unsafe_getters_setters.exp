@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------ unsafe_getters_setters.js:6:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    6|   get a() { return 4; },
         ^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ------------------------------------------------------------------------------------ unsafe_getters_setters.js:7:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    7|   set b(x: number) { this.c = x; },
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:12:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    12|   get a() { return 4; }
          ^^^^^^^^^^^^^^^^^^^^^
@@ -24,7 +24,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:13:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    13|   set b(x: number) { this.c = x; }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -32,7 +32,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:18:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    18|   get a(): number,
          ^^^^^^^^^^^^^^^
@@ -40,7 +40,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:19:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    19|   set b(x: number): void,
          ^^^^^^^^^^^^^^^^^^^^^^
@@ -48,7 +48,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:24:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    24|   get a(): number;
          ^^^^^^^^^^^^^^^
@@ -56,7 +56,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:25:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    25|   set b(x: number): void;
          ^^^^^^^^^^^^^^^^^^^^^^
@@ -64,7 +64,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:31:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    31|   get b(): number;
          ^^^^^^^^^^^^^^^
@@ -72,7 +72,7 @@ Getters and setters can have side effects and are unsafe. (`unsafe-getters-sette
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:32:3
 
-Getters and setters can have side effects and are unsafe. (`unsafe-getters-setters`)
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
    32|   set c(x: number): void;
          ^^^^^^^^^^^^^^^^^^^^^^

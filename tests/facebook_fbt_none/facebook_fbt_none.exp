@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:4:2
 
-Cannot cast `<fbt />` to number because `React.Element` [1] is incompatible with number [2].
+Cannot cast `<fbt />` to number because `React.Element` [1] is incompatible with number [2]. [incompatible-cast]
 
    main.js:4:2
    4| (<fbt />: number); // Error: ReactElement ~> number

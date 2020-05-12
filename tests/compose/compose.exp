@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- basic.js:6:2
 
-Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    basic.js:6:2
      6| (compose(n => n.toString())(42): empty); // Error: string ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- basic.js:8:2
 
-Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2].
+Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    basic.js:8:2
      8| (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
@@ -34,7 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:10:2
 
-Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    basic.js:10:2
         v-------
@@ -55,7 +55,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:11:8
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    basic.js:11:8
     11|   n => n * 5, // Error: string cannot be multiplied.
@@ -69,7 +69,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:15:2
 
-Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2].
+Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    basic.js:15:2
          v--------------
@@ -91,6 +91,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- recompose.js:23:19
 
 Cannot call `Math.round` with `props.p` bound to `x` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    recompose.js:23:19
     23|     c: Math.round(props.p), // Error: string ~> number
@@ -107,7 +108,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:8:2
 
-Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:8:2
         v-------
@@ -127,7 +128,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:8:2
 
-Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:8:2
         v-------
@@ -148,7 +149,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:12:2
 
 Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible
-with number [2].
+with number [2]. [incompatible-call]
 
    spread.js:12:2
         v-------
@@ -168,7 +169,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:12:2
 
-Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:12:2
         v-------
@@ -188,7 +189,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:12:2
 
-Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:12:2
         v-------
@@ -209,7 +210,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:16:2
 
 Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible
-with number [2].
+with number [2]. [incompatible-call]
 
    spread.js:16:2
         v-------
@@ -229,7 +230,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:16:2
 
-Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:16:2
         v-------
@@ -249,7 +250,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:16:2
 
-Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:16:2
         v-------
@@ -269,7 +270,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
-Cannot call `compose` because property `p` is missing in `Number` [1].
+Cannot call `compose` because property `p` is missing in `Number` [1]. [prop-missing]
 
    spread.js:21:2
    21| (compose(
@@ -283,7 +284,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
-Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:21:2
         v-------
@@ -303,7 +304,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
-Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:21:2
         v-------
@@ -323,7 +324,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
-Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:21:2
         v-------
@@ -343,7 +344,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
-Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:21:2
         v-------
@@ -363,7 +364,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
-Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:21:2
         v-------
@@ -383,7 +384,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:27:2
 
-Cannot cast `compose(...)(...)` to empty because `X2` [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because `X2` [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:27:2
         v--------
@@ -403,7 +404,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:27:2
 
-Cannot cast `compose(...)(...)` to empty because `X2` [1] is incompatible with empty [2].
+Cannot cast `compose(...)(...)` to empty because `X2` [1] is incompatible with empty [2]. [incompatible-cast]
 
    spread.js:27:2
         v--------

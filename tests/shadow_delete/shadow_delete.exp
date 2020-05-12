@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- dir/A.js:3:2
 
-Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    dir/A.js:3:2
    3| (require('B'): string);
@@ -22,7 +22,7 @@ Delete dependency that was shadowing another dependency
 Expect shadowed dependency, now unshadowed, to trigger error
 Error ----------------------------------------------------------------------------------------------------- dir/A.js:3:2
 
-Cannot cast `require(...)` to string because boolean [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    dir/A.js:3:2
    3| (require('B'): string);
@@ -44,7 +44,7 @@ Undo delete to resurrect shadowing dependency
 Expect shadowing dependency to trigger error
 Error ----------------------------------------------------------------------------------------------------- dir/A.js:3:2
 
-Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    dir/A.js:3:2
    3| (require('B'): string);
