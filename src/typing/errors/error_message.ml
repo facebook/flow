@@ -3091,3 +3091,232 @@ let is_lint_error = function
   | EUninitializedInstanceProperty _ ->
     true
   | _ -> false
+
+open Error_codes
+
+let error_code_of_use_op use_op =
+  let code_of_root = function
+    | Cast _ -> Some IncompatibleCast
+    | ClassExtendsCheck _ -> Some IncompatibleExtend
+    | FunCall _
+    | FunCallMethod _ ->
+      Some IncompatibleCall
+    | FunReturnStatement _
+    | FunImplicitReturn _ ->
+      Some IncompatibleReturn
+    | _ -> None
+  in
+  let code_of_frame acc frame =
+    match (acc, frame) with
+    | (Some _, _) -> acc
+    | (_, TypeArgCompatibility _)
+    | (_, TypeParamBound _) ->
+      Some IncompatibleTypeArg
+    | (_, CallFunCompatibility _) -> Some InvalidCallUtil
+    | (_, TupleMapFunCompatibility _) -> Some InvalidTupleMap
+    | (_, ObjMapFunCompatibility _) -> Some InvalidObjMap
+    | (_, ObjMapiFunCompatibility _) -> Some InvalidObjMapi
+    | (None, _) -> None
+  in
+  Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some IncompatibleType)
+
+let error_code_of_upper_kind = function
+  | IncompatibleConstructorT
+  | IncompatibleCallT ->
+    Some NotAFunction
+  | IncompatibleObjAssignFromTSpread
+  | IncompatibleArrRestT ->
+    Some NotAnArray
+  | IncompatibleObjAssignFromT
+  | IncompatibleObjRestT
+  | IncompatibleObjSealT
+  | IncompatibleGetKeysT ->
+    Some NotAnObject
+  | IncompatibleMixinT
+  | IncompatibleThisSpecializeT ->
+    Some NotAClass
+  | _ -> Some IncompatibleType
+
+let error_code_of_message err : error_code option =
+  match err with
+  | EAdditionMixed _ -> Some UnclearAddition
+  | EArithmeticOperand _ -> Some UnsafeAddition
+  | EAssignExportedConstLikeBinding _ -> Some CannotReassignExport
+  | EBadExportContext _ -> Some InvalidExport
+  | EBadExportPosition _ -> Some InvalidExport
+  | EBinaryInLHS _ -> Some InvalidInLhs
+  | EBinaryInRHS _ -> Some InvalidInRhs
+  | EBindingError (binding_error, _, _, _) ->
+    begin
+      match binding_error with
+      | ENameAlreadyBound -> Some NameAlreadyBound
+      | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
+      | ETypeInValuePosition
+      | ETypeAliasInValuePosition ->
+        Some TypeAsValue
+      | EConstReassigned
+      | EConstParamReassigned ->
+        Some ReassignConst
+      | EImportReassigned -> Some ReassignImport
+      | EEnumReassigned -> Some ReassignEnum
+    end
+  | EBuiltinLookupFailed { name; _ } ->
+    begin
+      match name with
+      | Some x when is_internal_module_name x -> Some CannotResolveModule
+      | _ -> Some CannotResolveModule
+    end
+  | ECallTypeArity _ -> Some NonpolymorphicTypeArg
+  | ECannotDelete _ -> Some CannotDelete
+  | ECannotResolveOpenTvar _ -> Some CannotInferType
+  | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
+  | ECannotSpreadInterface _ -> Some CannotSpreadInterface
+  | ECharSetAnnot _ -> Some InvalidCharsetTypeArg
+  | EComparison (_, _) -> Some InvalidCompare
+  | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
+  | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
+  | EDebugPrint (_, _) -> None
+  | EDocblockError (_, err) ->
+    begin
+      match err with
+      | MultipleFlowAttributes -> Some DuplicateFlowDecl
+      | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
+      | MultipleJSXAttributes -> Some DuplicateJsxDecl
+      | InvalidJSXAttribute _ -> Some InvalidJsxDecl
+    end
+  | EDuplicateModuleProvider _ -> Some DuplicateModule
+  | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumInvalidCheck _ -> Some InvalidEnumAccess
+  | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
+  | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
+  | EEnumMemberUsedAsType _ -> Some EnumValueAsType
+  | EEnumModification _ -> Some CannotWriteEnum
+  | EEnumNotAllChecked _ -> Some InvalidExhaustiveCheck
+  | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op
+  | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op
+  | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op
+  | EExperimentalClassProperties (_, _) -> Some IllegalClassField
+  | EExperimentalDecorators _ -> Some IllegalDecorator
+  | EExperimentalEnums _ -> Some IllegalEnum
+  | EExperimentalExportStarAs _ -> Some IllegalExportStar
+  | EExperimentalOptionalChaining _ -> Some IllegalOptionalChain
+  | EExponentialSpread _ -> Some ExponentialSpread
+  | EExportsAnnot _ -> Some InvalidExportsTypeArg
+  | EExportValueAsType (_, _) -> Some ExportValueAsType
+  | EForInRHS _ -> Some InvalidInRhs
+  | EFunctionCallExtraArg _ -> Some ExtraArg
+  | EFunPredCustom (_, _) -> Some FunctionPredicate
+  | EIdxArity _ -> Some InvalidIdx
+  | EIdxUse1 _ -> Some InvalidIdx
+  | EIdxUse2 _ -> Some InvalidIdx
+  | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
+  | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
+  | EImportValueAsType (_, _) -> Some ImportValueAsType
+  | EIncompatible { upper = (_, upper_kind); _ } -> error_code_of_upper_kind upper_kind
+  | EIncompatibleDefs { use_op; _ } -> error_code_of_use_op use_op
+  | EIncompatibleProp { use_op = Some use_op; _ } -> error_code_of_use_op use_op
+  | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
+  | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
+  | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
+  | EIncompatibleWithShape _ -> Some IncompatibleShape
+  | EIncompatibleWithUseOp (_, _, use_op) -> error_code_of_use_op use_op
+  | EIndeterminateModuleType _ -> Some ModuleTypeConflict
+  | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
+  (* We don't want these to be suppressible *)
+  | EInternal (_, _) -> None
+  | EInvalidCharSet _ -> Some InvalidCharsetTypeArg
+  | EInvalidLHSInAssignment _ -> Some InvalidLhs
+  | EInvalidObjectKit _ -> Some NotAnObject
+  | EInvalidPrototype _ -> Some NotAnObject
+  | EInvalidReactConfigType _ -> Some InvalidReactConfig
+  | EInvalidReactCreateClass _ -> Some InvalidReactCreateClass
+  | EInvalidReactPropType _ -> Some InvalidPropType
+  | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
+  | EInvalidTypeof _ -> Some IllegalTypeof
+  | ELintSetting _ -> Some LintSetting
+  | EMalformedPackageJson (_, _) -> Some MalformedPackage
+  | EMissingAnnotation _ -> Some MissingAnnot
+  | EMissingTypeArgs _ -> Some MissingTypeArg
+  | EModuleOutsideRoot (_, _) -> Some InvalidModule
+  | ENoDefaultExport (_, _, _) -> Some MissingExport
+  | ENoNamedExport (_, _, _, _) -> Some MissingExport
+  | ENonLitArrayToTuple _ -> Some InvalidTupleArity
+  | ENotAReactComponent _ -> Some NotAComponent
+  | EObjectComputedPropertyAccess (_, _) -> Some InvalidComputedProp
+  | EObjectComputedPropertyAssign (_, _) -> Some InvalidComputedProp
+  | EOnlyDefaultExport (_, _, _) -> Some MissingExport
+  | EOptionalChainingMethods _ -> Some IllegalOptionalChain
+  (* We don't want these to be suppressible *)
+  | EParseError (_, _) -> None
+  | EPolarityMismatch _ -> Some IncompatibleVariance
+  | EPredAnnot _ -> Some InvalidPredTypeArg
+  | EPrivateAnnot _ -> Some InvalidPrivateTypeArg
+  | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
+  | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
+  | EPropNotFound _ -> Some Error_codes.PropMissing
+  | EPropNotReadable _ -> Some CannotRead
+  | EPropNotWritable _ -> Some CannotWrite
+  | EPropPolarityMismatch _ -> Some IncompatibleVariance
+  | EReactElementFunArity (_, _, _) -> Some MissingArg
+  (* We don't want these to be suppressible *)
+  | ERecursionLimit (_, _) -> None
+  | ERefineAnnot _ -> Some InvalidRefineTypeArg
+  | ERefineAsValue (_, _) -> Some RefineAsValue
+  | EROArrayWrite _ -> Some CannotWrite
+  | ESignatureVerification _ -> Some SignatureVerificationFailure
+  | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
+  | EStrictLookupFailed _ -> Some Error_codes.PropMissing
+  | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
+  | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
+  | ETrustedAnnot _ -> Some InvalidTrustedTypeArg
+  | ETrustIncompatibleWithUseOp _ -> Some Error_codes.IncompatibleTrust
+  | ETupleArityMismatch _ -> Some InvalidTupleArity
+  | ETupleNonIntegerIndex _ -> Some InvalidTupleIndex
+  | ETupleOutOfBounds _ -> Some InvalidTupleIndex
+  | ETupleUnsafeWrite _ -> Some InvalidTupleIndex
+  | ETypeParamArity (_, _) -> Some NonpolymorphicTypeApp
+  | ETypeParamMinArity (_, _) -> Some MissingTypeArg
+  | EUnableToSpread { error_kind; _ } ->
+    begin
+      match error_kind with
+      | Inexact -> Some CannotSpreadInexact
+      | Indexer -> Some CannotSpreadIndexer
+    end
+  | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
+  | EUnexpectedThisType _ -> Some IllegalThis
+  | EUnexpectedTypeof _ -> Some InvalidTypeOf
+  | EUnionSpeculationFailed _ -> Some Error_codes.Speculation
+  | EUnreachable _ -> Some UnreachableCode
+  | EUnsafeGetSet _ -> Some IllegalGetSet
+  | EUnsupportedExact (_, _) -> Some InvalidExact
+  | EUnsupportedImplements _ -> Some CannotImplement
+  | EUnsupportedKeyInObjectType _ -> Some IllegalKey
+  | EUnsupportedSetProto _ -> Some CannotWrite
+  | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
+  | EUnusedSuppression _ -> None
+  | EUseArrayLiteral _ -> Some IllegalNewArray
+  | EValueUsedAsType _ -> Some ValueAsType
+  (* lints should match their lint name *)
+  | EUntypedTypeImport _
+  | ENullVoidAddition _
+  | EUntypedImport _
+  | ENonstrictImport _
+  | EUnclearType _
+  | EDeprecatedType _
+  | EDeprecatedUtility _
+  | EDynamicExport _
+  | EUnsafeGettersSetters _
+  | ESketchyNullLint _
+  | ESketchyNumberLint _
+  | EBigIntNotYetSupported _
+  | EUnnecessaryOptionalChain _
+  | EUnnecessaryInvariant _
+  | EImplicitInexactObject _
+  | EAmbiguousObjectType _
+  | EUninitializedInstanceProperty _ ->
+    begin
+      match kind_of_msg err with
+      | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
+      | _ -> None
+    end

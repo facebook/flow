@@ -23,6 +23,8 @@ let loc_of_error { loc; _ } = loc
 
 let msg_of_error { msg; _ } = msg
 
+let code_of_error err = msg_of_error err |> Error_message.error_code_of_message
+
 let source_file { source_file; _ } = source_file
 
 let trace_reasons { trace_reasons; _ } = trace_reasons
