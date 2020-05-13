@@ -10,6 +10,7 @@ type explicit_type =
   | Number
   | String
   | Symbol
+[@@deriving ord]
 
 let string_of_explicit_type = function
   | Boolean -> "boolean"

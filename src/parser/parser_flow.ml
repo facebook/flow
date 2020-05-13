@@ -21,7 +21,7 @@ let filter_duplicate_errors =
     let compare (a_loc, a_error) (b_loc, b_error) =
       let loc = Loc.compare a_loc b_loc in
       if loc = 0 then
-        Pervasives.compare a_error b_error
+        Parse_error.compare a_error b_error
       else
         loc
   end) in

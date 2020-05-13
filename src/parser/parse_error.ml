@@ -154,6 +154,7 @@ type t =
   | NullishCoalescingDisabled
   | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
+[@@deriving ord]
 
 exception Error of (Loc.t * t) list
 
