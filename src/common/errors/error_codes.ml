@@ -1,0 +1,288 @@
+(*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
+
+type error_code =
+  | AmbiguousObjectType
+  | CannotDelete
+  | CannotImplement
+  | CannotInferType
+  | CannotRead
+  | CannotReassignExport
+  | CannotResolveModule
+  | CannotResolveName
+  | CannotSpreadIndexer
+  | CannotSpreadInexact
+  | CannotSpreadInterface
+  | CannotWrite
+  | CannotWriteEnum
+  | DeprecatedType
+  | DeprecatedUtility
+  | DuplicateEnumInit
+  | DuplicateFlowDecl
+  | DuplicateJsxDecl
+  | DuplicateModule
+  | DuplicateProvideModuleDecl
+  | DynamicExport
+  | EnumValueAsType
+  | ExponentialSpread
+  | ExportValueAsType
+  | ExtraArg
+  | ExtraTypeArg
+  | FunctionPredicate
+  | IllegalClassField
+  | IllegalDecorator
+  | IllegalEnum
+  | IllegalExportStar
+  | IllegalGetSet
+  | IllegalKey
+  | IllegalNewArray
+  | IllegalOptionalChain
+  | IllegalThis
+  | IllegalTypeof
+  | ImplicitInexactObject
+  | ImportTypeAsValue
+  | ImportValueAsType
+  | IncompatibleCall
+  | IncompatibleCast
+  | IncompatibleExact
+  | IncompatibleExtend
+  | IncompatibleIndexer
+  | IncompatibleReturn
+  | IncompatibleShape
+  | IncompatibleTrust
+  | IncompatibleType
+  | IncompatibleTypeArg
+  | IncompatibleUse
+  | IncompatibleVariance
+  | InvalidCallUtil
+  | InvalidCharsetTypeArg
+  | InvalidCompare
+  | InvalidComputedProp
+  | InvalidEnumAccess
+  | InvalidExact
+  | InvalidExhaustiveCheck
+  | InvalidExport
+  | InvalidExportsTypeArg
+  | InvalidIdx
+  | InvalidImportType
+  | InvalidInLhs
+  | InvalidInRhs
+  | InvalidJsxDecl
+  | InvalidLhs
+  | InvalidModule
+  | InvalidObjMap
+  | InvalidObjMapi
+  | InvalidPredTypeArg
+  | InvalidPrivateTypeArg
+  | InvalidPropertyTypeArg
+  | InvalidPropType
+  | InvalidReactConfig
+  | InvalidReactCreateClass
+  | InvalidRefineTypeArg
+  | InvalidTrustedTypeArg
+  | InvalidTupleArity
+  | InvalidTupleIndex
+  | InvalidTupleMap
+  | InvalidTypeArg
+  | InvalidTypeOf
+  | InvalidTempType
+  | LintSetting
+  | MalformedPackage
+  | MissingAnnot
+  | MissingArg
+  | MissingExport
+  | MissingTypeArg
+  | ModuleTypeConflict
+  | NameAlreadyBound
+  | NonpolymorphicTypeApp
+  | NonpolymorphicTypeArg
+  | NonstrictImport
+  | NotAClass
+  | NotAComponent
+  | NotAFunction
+  | NotAnArray
+  | NotAnObject
+  | NullVoidAddition
+  | PropMissing
+  | ReassignConst
+  | ReassignEnum
+  | ReassignImport
+  | ReferenceBeforeDeclaration
+  | RefineAsValue
+  | SignatureVerificationFailure
+  | SketchyNullBool
+  | SketchyNullMixed
+  | SketchyNullNumber
+  | SketchyNullString
+  | SketchyNumberAnd
+  | Speculation
+  | SpeculationAmbiguous
+  | TypeAsValue
+  | UnclearAddition
+  | UnclearType
+  | UninitializedInstanceProperty
+  | UnnecessaryInvariant
+  | UnnecessaryOptionalChain
+  | UnreachableCode
+  | UnsafeAddition
+  | UnsafeGettersSetters
+  | UnsupportedSyntax
+  | UntypedImport
+  | UntypedTypeImport
+  | ValueAsType
+
+let code_of_lint : Lints.lint_kind -> error_code = function
+  | Lints.UntypedTypeImport -> UntypedTypeImport
+  | Lints.UntypedImport -> UntypedImport
+  | Lints.NonstrictImport -> NonstrictImport
+  | Lints.UnclearType -> UnclearType
+  | Lints.DeprecatedType -> DeprecatedType
+  | Lints.DeprecatedUtility -> DeprecatedUtility
+  | Lints.DynamicExport -> DynamicExport
+  | Lints.UnsafeGettersSetters -> UnsafeGettersSetters
+  | Lints.UnnecessaryOptionalChain -> UnnecessaryOptionalChain
+  | Lints.UnnecessaryInvariant -> UnnecessaryInvariant
+  | Lints.SignatureVerificationFailure -> SignatureVerificationFailure
+  | Lints.ImplicitInexactObject -> ImplicitInexactObject
+  | Lints.UninitializedInstanceProperty -> UninitializedInstanceProperty
+  | Lints.AmbiguousObjectType -> AmbiguousObjectType
+  | Lints.NullVoidAddition -> NullVoidAddition
+  | Lints.SketchyNumber Lints.SketchyNumberAnd -> SketchyNumberAnd
+  | Lints.SketchyNull (Lints.SketchyNullBool | Lints.SketchyNullEnumBool) -> SketchyNullBool
+  | Lints.SketchyNull (Lints.SketchyNullString | Lints.SketchyNullEnumString) -> SketchyNullString
+  | Lints.SketchyNull (Lints.SketchyNullNumber | Lints.SketchyNullEnumNumber) -> SketchyNullNumber
+  | Lints.SketchyNull Lints.SketchyNullMixed -> SketchyNullMixed
+
+let string_of_code : error_code -> string = function
+  | AmbiguousObjectType -> "ambiguous-object-type"
+  | CannotDelete -> "cannot-delete"
+  | CannotImplement -> "cannot-implement"
+  | CannotInferType -> "cannot-infer-type"
+  | CannotRead -> "cannot-read"
+  | CannotReassignExport -> "cannot-reassign-export"
+  | CannotResolveModule -> "cannot-resolve-module"
+  | CannotResolveName -> "cannot-resolve-name"
+  | CannotSpreadIndexer -> "cannot-spread-indexer"
+  | CannotSpreadInexact -> "cannot-spread-exact"
+  | CannotSpreadInterface -> "cannot-spread-interface"
+  | CannotWrite -> "cannot-write"
+  | CannotWriteEnum -> "cannot-write-enum"
+  | DeprecatedType -> "deprecated-type"
+  | DeprecatedUtility -> "deprecated-utility"
+  | DuplicateEnumInit -> "duplicate-enum-init"
+  | DuplicateFlowDecl -> "duplicate-flow-decl"
+  | DuplicateJsxDecl -> "duplicate-jsx-decl"
+  | DuplicateModule -> "duplicate-module"
+  | DuplicateProvideModuleDecl -> "duplicate-provide-module-decl"
+  | DynamicExport -> "dynamic-export"
+  | EnumValueAsType -> "enum-value-as-type"
+  | ExponentialSpread -> "exponential-spread"
+  | ExportValueAsType -> "export-value-as-type"
+  | ExtraArg -> "extra-arg"
+  | ExtraTypeArg -> "extra-type-arg"
+  | FunctionPredicate -> "function-predicate"
+  | IllegalClassField -> "illegal-class-field"
+  | IllegalDecorator -> "illegal-decorator"
+  | IllegalEnum -> "illegal-enum"
+  | IllegalExportStar -> "illegal-export-star"
+  | IllegalGetSet -> "illegal-get-set"
+  | IllegalKey -> "illegal-key"
+  | IllegalNewArray -> "illegal-new-array"
+  | IllegalOptionalChain -> "illegal-optional-chain"
+  | IllegalThis -> "illegal-this"
+  | IllegalTypeof -> "illegal-typeof"
+  | ImplicitInexactObject -> "implicit-inexact-object"
+  | ImportTypeAsValue -> "import-type-as-value"
+  | ImportValueAsType -> "import-value-as-type"
+  | IncompatibleCall -> "incompatible-call"
+  | IncompatibleCast -> "incompatible-cast"
+  | IncompatibleExact -> "incompatible-exact"
+  | IncompatibleExtend -> "incompatible-extend"
+  | IncompatibleIndexer -> "incompatible-indexer"
+  | IncompatibleReturn -> "incompatible-return"
+  | IncompatibleShape -> "incompatible-shape"
+  | IncompatibleTrust -> "incompatible-trust"
+  | IncompatibleType -> "incompatible-type"
+  | IncompatibleTypeArg -> "incompatible-type-arg"
+  | IncompatibleUse -> "incompatible-use"
+  | IncompatibleVariance -> "incompatible-variance"
+  | InvalidCallUtil -> "invalid-call-util"
+  | InvalidCharsetTypeArg -> "invalid-charset-type-arg"
+  | InvalidCompare -> "invalid-compare"
+  | InvalidComputedProp -> "invalid-computed-prop"
+  | InvalidEnumAccess -> "invalid-enum-access"
+  | InvalidExact -> "invalid-exact"
+  | InvalidExhaustiveCheck -> "invalid-exhaustive-check"
+  | InvalidExport -> "invalid-export"
+  | InvalidExportsTypeArg -> "invalid-exports-type-arg"
+  | InvalidIdx -> "invalid-idx"
+  | InvalidImportType -> "invalid-import-type"
+  | InvalidInLhs -> "invalid-in-lhs"
+  | InvalidInRhs -> "invalid-in-rhs"
+  | InvalidJsxDecl -> "invalid-jsx-decl"
+  | InvalidLhs -> "invalid-lhs"
+  | InvalidModule -> "invalid-module"
+  | InvalidObjMap -> "invalid-obj-map"
+  | InvalidObjMapi -> "invalid-obj-mapi"
+  | InvalidPredTypeArg -> "invalid-pred-type-arg"
+  | InvalidPrivateTypeArg -> "invalid-private-type-arg"
+  | InvalidPropertyTypeArg -> "invalid-property-type-arg"
+  | InvalidPropType -> "invalid-prop-type"
+  | InvalidReactConfig -> "invalid-react-config"
+  | InvalidReactCreateClass -> "invalid-react-create-class"
+  | InvalidRefineTypeArg -> "invalid-refine-type-arg"
+  | InvalidTrustedTypeArg -> "invalid-trusted-type-arg"
+  | InvalidTupleArity -> "invalid-tuple-arity"
+  | InvalidTupleIndex -> "invalid-tuple-index"
+  | InvalidTupleMap -> "invalid-tuple-map"
+  | InvalidTypeArg -> "invalid-type-arg"
+  | InvalidTypeOf -> "invalid-typeof"
+  | InvalidTempType -> "invalid-temp-type"
+  | LintSetting -> "lint-setting"
+  | MalformedPackage -> "malformed-package"
+  | MissingAnnot -> "missing-annot"
+  | MissingArg -> "missing-arg"
+  | MissingExport -> "missing-export"
+  | MissingTypeArg -> "missing-type-arg"
+  | ModuleTypeConflict -> "module-type-conflict"
+  | NameAlreadyBound -> "name-already-bound"
+  | NonpolymorphicTypeApp -> "nonpolymorphic-type-app"
+  | NonpolymorphicTypeArg -> "nonpolymorphic-type-arg"
+  | NonstrictImport -> "nonstrict-import"
+  | NotAClass -> "not-a-class"
+  | NotAComponent -> "not-a-component"
+  | NotAFunction -> "not-a-function"
+  | NotAnArray -> "not-an-array"
+  | NotAnObject -> "not-an-object"
+  | NullVoidAddition -> "unsafe-addition"
+  | PropMissing -> "prop-missing"
+  | ReassignConst -> "reassign-const"
+  | ReassignEnum -> "reassign-enum"
+  | ReassignImport -> "reassign-import"
+  | ReferenceBeforeDeclaration -> "reference-before-declaration"
+  | RefineAsValue -> "refine-as-value"
+  | SignatureVerificationFailure -> "signature-verification-failure"
+  | SketchyNullBool -> "sketchy-null-bool"
+  | SketchyNullMixed -> "sketchy-null-mixed"
+  | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullString -> "sketchy-null-string"
+  | SketchyNumberAnd -> "sketchy-number-and"
+  | Speculation -> "speculation"
+  | SpeculationAmbiguous -> "speculation-ambiguous"
+  | TypeAsValue -> "type-as-value"
+  | UnclearAddition -> "unclear-addition"
+  | UnclearType -> "unclear-type"
+  | UninitializedInstanceProperty -> "uninitialized-instance-property"
+  | UnnecessaryInvariant -> "unnecessary-invariant"
+  | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
+  | UnreachableCode -> "unreachable-code"
+  | UnsafeAddition -> "unsafe-addition"
+  | UnsafeGettersSetters -> "unsafe-getters-setters"
+  | UnsupportedSyntax -> "unsupported-syntax"
+  | UntypedImport -> "untyped-import"
+  | UntypedTypeImport -> "untyped-type-import"
+  | ValueAsType -> "value-as-type"
