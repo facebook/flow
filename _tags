@@ -10,4 +10,4 @@
 <**/node_modules/**>: -traverse
 <_obuild>: -traverse
 <packages>: -traverse
-true: strict-sequence
+true: strict-sequence, thread
