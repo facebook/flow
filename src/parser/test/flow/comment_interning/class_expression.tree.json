@@ -1,5 +1,13 @@
 {
   "type":"Program",
+  "leadingComments":[
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":11}},
+      "range":[0,11],
+      "value":" @flow "
+    }
+  ],
   "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":5,"column":87}},
   "range":[13,236],
   "body":[
@@ -18,12 +26,6 @@
       "expression":{
         "type":"ClassExpression",
         "leadingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":11}},
-            "range":[0,11],
-            "value":" @flow "
-          },
           {
             "type":"Block",
             "loc":{"source":null,"start":{"line":3,"column":1},"end":{"line":3,"column":18}},

@@ -77,6 +77,7 @@ module rec Parse : PARSER = struct
     identifier_name env
 
   let rec program env =
+    let leading = Eat.program_comments env in
     let stmts = module_body_with_directives env (fun _ -> false) in
     let end_loc = Peek.loc env in
     Expect.token env T_EOF;
@@ -86,7 +87,12 @@ module rec Parse : PARSER = struct
       | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts)))
     in
     let all_comments = List.rev (comments env) in
-    (loc, { Ast.Program.statements = stmts; all_comments })
+    ( loc,
+      {
+        Ast.Program.statements = stmts;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ();
+        all_comments;
+      } )
 
   and directives =
     let check env token =

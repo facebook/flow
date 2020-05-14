@@ -171,7 +171,7 @@ let parse_json_file ~fail content file =
         } )
   in
   let all_comments = ([] : Loc.t Comment.t list) in
-  ((loc, { Program.statements = [statement]; all_comments }), parse_errors)
+  ((loc, { Program.statements = [statement]; comments = None; all_comments }), parse_errors)
 
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10

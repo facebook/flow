@@ -376,7 +376,12 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
 
   Flow_js.Cache.clear ();
 
-  let (prog_aloc, { Ast.Program.statements = aloc_statements; all_comments = aloc_all_comments }) =
+  let ( prog_aloc,
+        {
+          Ast.Program.statements = aloc_statements;
+          comments = aloc_comments;
+          all_comments = aloc_all_comments;
+        } ) =
     aloc_ast
   in
   add_require_tvars cx file_sig;
@@ -426,7 +431,12 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   let module_t = Import_export.mk_module_t cx reason in
   Context.add_module cx module_ref module_t;
 
-  (prog_aloc, { Ast.Program.statements = typed_statements; all_comments = aloc_all_comments })
+  ( prog_aloc,
+    {
+      Ast.Program.statements = typed_statements;
+      comments = aloc_comments;
+      all_comments = aloc_all_comments;
+    } )
 
 (* Because libdef parsing is overly permissive, a libdef file might include an
    unexpected top-level statement like `export type` which mutates the module

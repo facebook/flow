@@ -116,7 +116,7 @@ with type t = Impl.t = struct
       in
       let prefix = locs @ comments @ [("type", string _type)] in
       obj (List.rev_append prefix props)
-    and program (loc, { Ast.Program.statements; all_comments }) =
+    and program (loc, { Ast.Program.statements; comments; all_comments }) =
       let body = statement_list statements in
       let props =
         if Config.include_comments then
@@ -124,7 +124,7 @@ with type t = Impl.t = struct
         else
           [("body", body)]
       in
-      node "Program" loc props
+      node ?comments "Program" loc props
     and statement_list statements = array_of_list statement statements
     and statement =
       let open Statement in

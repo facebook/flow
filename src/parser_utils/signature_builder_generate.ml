@@ -2197,6 +2197,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         Ast.Program.statements =
           List.sort Stdlib.compare (List.rev_append env @@ List.rev outlined_stmts)
           @ List.sort Stdlib.compare (List.rev_append values @@ List.rev types);
+        comments = None;
         all_comments = [];
       } )
 

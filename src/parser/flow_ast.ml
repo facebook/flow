@@ -1832,6 +1832,7 @@ and Program : sig
 
   and ('M, 'T) t' = {
     statements: ('M, 'T) Statement.t list;
+    comments: ('M, unit) Syntax.t option;
     all_comments: 'M Comment.t list;
   }
   [@@deriving show]

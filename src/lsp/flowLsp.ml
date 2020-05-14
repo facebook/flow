@@ -907,7 +907,8 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         let filekey = Base.Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
         let parse_options = get_parse_options () in
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
-      with _ -> ((Loc.none, { Flow_ast.Program.statements = []; all_comments = [] }), [])
+      with _ ->
+        ((Loc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] }), [])
     in
     ( program,
       if liveSyntaxErrors then

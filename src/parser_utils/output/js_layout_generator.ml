@@ -491,7 +491,7 @@ let rec program
     ?(opts = default_opts)
     ~preserve_docblock
     ~checksum
-    (loc, { Ast.Program.statements; all_comments }) =
+    (loc, { Ast.Program.statements; all_comments; _ }) =
   let nodes =
     if preserve_docblock && all_comments <> [] then
       let (directives, statements) = Flow_ast_utils.partition_directives statements in

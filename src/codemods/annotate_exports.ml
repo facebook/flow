@@ -569,7 +569,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                ~reserved_names);
 
         let prog' = super#program prog in
-        let (loc, { Ast.Program.statements = stmts; all_comments }) = prog' in
+        let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = prog' in
 
         if prog != prog' then
           this#update_acc (fun acc ->
@@ -628,5 +628,5 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         let inferred_imports = this#get_remote_converter#to_import_stmts () in
         let generated_imports = hardcoded_imports @ inferred_imports in
         let stmts = this#add_statement_after_directive_and_type_imports stmts generated_imports in
-        (loc, { Ast.Program.statements = stmts; all_comments })
+        (loc, { Ast.Program.statements = stmts; comments; all_comments })
   end

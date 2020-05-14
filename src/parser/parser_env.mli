@@ -247,6 +247,8 @@ module Eat : sig
   val trailing_comments : env -> Loc.t Flow_ast.Comment.t list
 
   val comments_until_next_line : env -> Loc.t Flow_ast.Comment.t list
+
+  val program_comments : env -> Loc.t Flow_ast.Comment.t list
 end
 
 module Expect : sig

@@ -73,13 +73,14 @@ class ['loc] mapper =
   object (this)
     method program (program : ('loc, 'loc) Ast.Program.t) =
       let open Ast.Program in
-      let (loc, { statements; all_comments }) = program in
+      let (loc, { statements; comments; all_comments }) = program in
       let statements' = this#toplevel_statement_list statements in
+      let comments' = this#syntax_opt comments in
       let all_comments' = map_list this#comment all_comments in
-      if statements == statements' && all_comments == all_comments' then
+      if statements == statements' && comments == comments' && all_comments == all_comments' then
         program
       else
-        (loc, { statements = statements'; all_comments = all_comments' })
+        (loc, { statements = statements'; comments = comments'; all_comments = all_comments' })
 
     method statement (stmt : ('loc, 'loc) Ast.Statement.t) =
       let open Ast.Statement in
