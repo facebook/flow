@@ -202,7 +202,12 @@ module Opts = struct
       shm_heap_size = 1024 * 1024 * 1024 * 25;
       (* 25 gigs *)
       shm_log_level = 0;
-      suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
+      suppress_comments =
+        [
+          Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe";
+          Str.regexp "\\(.\\|\n\\)*\\$FlowIssue";
+          Str.regexp "\\(.\\|\n\\)*\\$FlowExpectedError";
+        ];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
       traces = 0;
