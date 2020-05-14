@@ -1,3 +1,38 @@
+### 0.125.0
+
+Likely to cause new Flow errors:
+
+* Fixed signatures generated in types-first for classes with non-trivial expressions
+  in their extends clauses, which were before treated like extending `any`.
+
+New features:
+
+* Types-first is no longer an experimental mode, but is now fully supported!
+
+Notable bug fixes:
+
+* Fixed a soundness bug that allowed refined property expressions to be treated as
+  `empty` in some circumstances.
+
+Misc:
+
+* Added `$FlowIssue` and `$FlowExpectedError` as default suppression comments.
+* Improved quality of AST and comment printing and layout.
+* Improved quality of type printing for `type-at-pos` and friends.
+* Add '.cjs' as a default extension.
+
+Parser:
+
+* Fixed ranges of sequence and assignment expressions that contain grouping parentheses.
+* Disallowed newline after `type` keyword in type aliases.
+
+Library definitions:
+
+* Added headers timeout to http & https server (thanks, @mattconde!)
+* Added flushHeaders to http$ServerResponse (thanks, @gajus!)
+* Changed `thisArg` parameter for array callback functions (e.g. `map`, `reduce`) to `mixed`.
+* Added more precise typing for common cases of `Array.flat`.
+
 ### 0.124.0
 
 Library Definitions:
