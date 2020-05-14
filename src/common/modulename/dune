@@ -5,4 +5,5 @@
     flow_parser
     collections ; hack
   )
+  (preprocess (pps ppx_deriving.std))
 )

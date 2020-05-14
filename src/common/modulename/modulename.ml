@@ -22,19 +22,18 @@
 type t =
   | String of string
   | Filename of File_key.t
+[@@deriving ord]
 
 let to_string = function
   | String m -> m
   | Filename f -> File_key.to_string f
-
-let compare = Pervasives.compare
 
 module Key = struct
   type nonrec t = t
 
   let to_string = to_string
 
-  let compare = compare
+  let compare : t -> t -> int = compare
 end
 
 module Set = Set.Make (Key)
