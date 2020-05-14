@@ -39,7 +39,7 @@ type node =
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
-  | TemplateLiteral of (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
+  | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t
 

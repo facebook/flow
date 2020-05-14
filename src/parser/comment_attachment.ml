@@ -598,6 +598,21 @@ let comment_bounds loc node f =
   ignore (f collector node);
   collector#comment_bounds
 
+(* Expand node's loc to include its attached comments *)
+let expand_loc_with_comment_bounds loc (first_leading, last_trailing) =
+  let open Loc in
+  let start =
+    match first_leading with
+    | None -> loc
+    | Some (first_leading_loc, _) -> first_leading_loc
+  in
+  let _end =
+    match last_trailing with
+    | None -> loc
+    | Some (last_trailing_loc, _) -> last_trailing_loc
+  in
+  btwn start _end
+
 (* Remove the trailing comment bound if it is a line comment *)
 let comment_bounds_without_trailing_line_comment (leading, trailing) =
   match trailing with

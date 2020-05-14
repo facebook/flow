@@ -2230,17 +2230,7 @@ and list_with_newlines
       let open Loc in
       (* Expand node's loc to include its attached comments *)
       let loc =
-        let start =
-          match first_leading with
-          | None -> loc
-          | Some (first_leading_loc, _) -> first_leading_loc
-        in
-        let _end =
-          match last_trailing with
-          | None -> loc
-          | Some (last_trailing_loc, _) -> last_trailing_loc
-        in
-        btwn start _end
+        Comment_attachment.expand_loc_with_comment_bounds loc (first_leading, last_trailing)
       in
       let has_trailing_line_comment =
         match last_trailing with

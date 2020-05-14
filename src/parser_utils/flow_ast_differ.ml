@@ -214,7 +214,7 @@ type node =
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
-  | TemplateLiteral of (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
+  | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Ast.JSX.Identifier.t
 
@@ -1151,9 +1151,9 @@ let program
       | ((loc, Object obj1), (_, Object obj2)) -> object_ loc obj1 obj2
       | ((loc, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2)) ->
         Some (tagged_template loc t_tmpl1 t_tmpl2)
-      | ((loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2))
-        ->
-        Some (template_literal loc t_lit1 t_lit2)
+      | ( (loc1, Ast.Expression.TemplateLiteral t_lit1),
+          (loc2, Ast.Expression.TemplateLiteral t_lit2) ) ->
+        Some (template_literal loc1 loc2 t_lit1 t_lit2)
       | ((loc, JSXElement jsx_elem1), (_, JSXElement jsx_elem2)) ->
         jsx_element loc jsx_elem1 jsx_elem2
       | ((loc, JSXFragment frag1), (_, JSXFragment frag2)) -> jsx_fragment loc frag1 frag2
@@ -1236,15 +1236,16 @@ let program
       (t_tmpl1 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
       (t_tmpl2 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t) : node change list =
     let open Ast.Expression.TaggedTemplate in
-    let { tag = tag1; quasi = (quasi_loc, quasi1); comments = comments1 } = t_tmpl1 in
-    let { tag = tag2; quasi = (_, quasi2); comments = comments2 } = t_tmpl2 in
+    let { tag = tag1; quasi = (quasi_loc1, quasi1); comments = comments1 } = t_tmpl1 in
+    let { tag = tag2; quasi = (quasi_loc2, quasi2); comments = comments2 } = t_tmpl2 in
     let tag_diff = diff_if_changed expression tag1 tag2 in
-    let quasi_diff = diff_if_changed (template_literal quasi_loc) quasi1 quasi2 in
+    let quasi_diff = diff_if_changed (template_literal quasi_loc1 quasi_loc2) quasi1 quasi2 in
     let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     Base.List.concat [tag_diff; quasi_diff; comments_diff]
   and template_literal
-      (loc : Loc.t)
-      (* Need to pass in loc because TemplateLiteral doesn't have a loc attached *)
+      (loc1 : Loc.t)
+      (loc2 : Loc.t)
+      (* Need to pass in locs because TemplateLiteral doesn't have a loc attached *)
         (t_lit1 : (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t)
       (t_lit2 : (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t) : node change list =
     let open Ast.Expression.TemplateLiteral in
@@ -1252,11 +1253,11 @@ let program
     let { quasis = quasis2; expressions = exprs2; comments = comments2 } = t_lit2 in
     let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
     let exprs_diff = diff_and_recurse_nonopt_no_trivial expression exprs1 exprs2 in
-    let comments_diff = syntax_opt loc comments1 comments2 in
+    let comments_diff = syntax_opt loc1 comments1 comments2 in
     let result = join_diff_list [quasis_diff; exprs_diff; comments_diff] in
     Base.Option.value
       result
-      ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))]
+      ~default:[(loc1, Replace (TemplateLiteral (loc1, t_lit1), TemplateLiteral (loc2, t_lit2)))]
   and template_literal_element
       (tl_elem1 : Loc.t Ast.Expression.TemplateLiteral.Element.t)
       (tl_elem2 : Loc.t Ast.Expression.TemplateLiteral.Element.t) : node change list option =
