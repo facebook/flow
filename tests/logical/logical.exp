@@ -152,7 +152,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:291:22
 
-Cannot return `x || y || false` because: [incompatible-type]
+Cannot return `x || y || false` because: [incompatible-return]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -171,7 +171,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:315:22
 
-Cannot return `x && y && false` because: [incompatible-type]
+Cannot return `x && y && false` because: [incompatible-return]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 

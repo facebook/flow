@@ -70,7 +70,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:16:8
 
-Cannot cast `any` to union type because null or undefined [1] is incompatible with null [2]. [incompatible-type]
+Cannot cast `any` to union type because null or undefined [1] is incompatible with null [2]. [incompatible-cast]
 
    error.js:16:8
    16| ((any: ?number): number | null);
@@ -84,7 +84,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:17:8
 
-Cannot cast `any` to union type because null or undefined [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `any` to union type because null or undefined [1] is incompatible with undefined [2]. [incompatible-cast]
 
    error.js:17:8
    17| ((any: ?number): number | void);

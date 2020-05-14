@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:18:5
 
-Cannot call `Date` because object literal [1] is incompatible with `Date` [2]. [not-a-function]
+Cannot call `Date` because object literal [1] is incompatible with `Date` [2]. [incompatible-call]
 
    date.js:18:5
     18| new Date({});
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:19:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:19:5
     19| new Date(2015, '6');
@@ -68,7 +68,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:20:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:20:5
     20| new Date(2015, 6, '18');
@@ -85,7 +85,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:21:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:21:5
     21| new Date(2015, 6, 18, '11');
@@ -102,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:22:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:22:5
     22| new Date(2015, 6, 18, 11, '55');
@@ -119,7 +119,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:23:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:23:5
     23| new Date(2015, 6, 18, 11, 55, '42');
@@ -136,7 +136,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:24:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:24:5
     24| new Date(2015, 6, 18, 11, 55, 42, '999');
@@ -153,7 +153,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:25:5
 
-Cannot call `Date` because: [not-a-function]
+Cannot call `Date` because: [incompatible-call]
  - Either no arguments are expected by function type [1].
  - Or no more than 1 argument is expected by function type [2].
  - Or no more than 1 argument is expected by function type [3].
@@ -184,7 +184,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:26:5
 
-Cannot call `Date` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:26:5
     26| new Date('2015', 6);

@@ -154,7 +154,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:46:3
 
-Cannot cast function to `$Values` because: [incompatible-type]
+Cannot cast function to `$Values` because: [incompatible-cast]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with string [3].
  - Or function [1] is incompatible with number [4].
@@ -177,7 +177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:48:2
 
-Cannot cast `true` to `$Values` because: [incompatible-type]
+Cannot cast `true` to `$Values` because: [incompatible-cast]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with string [3].
  - Or boolean [1] is incompatible with number [4].
@@ -354,7 +354,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:20:2
 
-Cannot cast `true` to `ManyProps` because: [incompatible-type]
+Cannot cast `true` to `ManyProps` because: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
  - Or boolean [1] is incompatible with string [4].
@@ -377,7 +377,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:23:16
 
-Cannot cast `null` to union type because: [incompatible-type]
+Cannot cast `null` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with boolean [3].
 
@@ -396,7 +396,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:27:2
 
-Cannot cast `'yo'` to `DictProps` because: [incompatible-type]
+Cannot cast `'yo'` to `DictProps` because: [incompatible-cast]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with boolean [3].
 
@@ -415,7 +415,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:32:16
 
-Cannot cast `null` to union type because: [incompatible-type]
+Cannot cast `null` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with boolean [3].
 
@@ -434,7 +434,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:40:2
 
-Cannot cast `true` to `$Values` because: [incompatible-type]
+Cannot cast `true` to `$Values` because: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -453,7 +453,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:43:3
 
-Cannot cast function to `$Values` because: [incompatible-type]
+Cannot cast function to `$Values` because: [incompatible-cast]
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with string [3].
 
@@ -500,7 +500,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:73:15
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because: [incompatible-type]
+Cannot cast `'Diamonds'` to `SuiteEnum` because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `Spades` [2].
  - Or string [1] is incompatible with string literal `Hearts` [3].
  - Or string [1] is incompatible with string literal `Diamonds` [4].
@@ -557,7 +557,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:81:25
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because: [incompatible-type]
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because: [incompatible-call]
  - Either string [1] is incompatible with string literal `Spades` [2].
  - Or string [1] is incompatible with string literal `Hearts` [3].
  - Or string [1] is incompatible with string literal `Diamonds` [4].
@@ -612,7 +612,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:97:15
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because: [incompatible-type]
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `Spades` [2].
  - Or string [1] is incompatible with string literal `Hearts` [3].
  - Or string [1] is incompatible with string literal `Diamonds` [4].

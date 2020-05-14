@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_shadow.js:42:5
 
-Cannot call `g.m` because in type argument `T`: [incompatible-type]
+Cannot call `g.m` because in type argument `T`: [incompatible-call]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 

@@ -18,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-824.js:21:21
 
-Cannot call `this.foo` with `p` bound to `p` because: [incompatible-type]
+Cannot call `this.foo` with `p` bound to `p` because: [incompatible-call]
  - Either `I` [1] is incompatible with `B` [2].
  - Or `C` [3] is incompatible with `B` [2].
  - Or `I` [1] is incompatible with `C` [4].
@@ -369,7 +369,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test26.js:20:14
 
-Cannot call `(new Record()).set` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `(new Record()).set` because string [1] is incompatible with number [2]. [incompatible-call]
 
    test26.js:20:14
    20| new Record().set('foo', "42");

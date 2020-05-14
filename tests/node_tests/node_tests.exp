@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- buffer/buffer.js:57:17
 
-Cannot call `Buffer.from` because: [not-a-function]
+Cannot call `Buffer.from` because: [incompatible-call]
  - Either no more than 1 argument is expected by function type [1].
  - Or no more than 2 arguments are expected by function type [2].
  - Or no more than 1 argument is expected by function type [3].
@@ -23,7 +23,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ child_process/execSync.js:8:2
 
-Cannot call `execSync` because string [1] is incompatible with number [2] in property `timeout`. [not-a-function]
+Cannot call `execSync` because string [1] is incompatible with number [2] in property `timeout`. [incompatible-call]
 
    child_process/execSync.js:8:2
      8| (execSync('ls', {timeout: '250'})); // error, no signatures match
@@ -91,7 +91,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:16:10
 
-Cannot call `hmac.write` because: [not-a-function]
+Cannot call `hmac.write` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
@@ -181,7 +181,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:23:5
 
-Cannot call `dns.lookup` because: [not-a-function]
+Cannot call `dns.lookup` because: [incompatible-call]
  - Either function type [1] requires another argument from call of method `lookup` [2].
  - Or function type [3] requires another argument from call of method `lookup` [2].
 
@@ -212,7 +212,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:25:5
 
-Cannot call `dns.lookup` because: [not-a-function]
+Cannot call `dns.lookup` because: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with `LookupOptions` [3].
  - Or function type [4] requires another argument from call of method `lookup` [1].
@@ -242,7 +242,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:27:5
 
-Cannot call `dns.lookup` because number [1] is incompatible with function type [2]. [not-a-function]
+Cannot call `dns.lookup` because number [1] is incompatible with function type [2]. [incompatible-call]
 
    dns/dns.js:27:5
     27| dns.lookup("test.com", 4); // error
@@ -260,7 +260,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:29:5
 
 Cannot call `dns.lookup` because a call signature declaring the expected parameter / return type is missing in object
-literal [1] but exists in function type [2]. [not-a-function]
+literal [1] but exists in function type [2]. [incompatible-call]
 
    dns/dns.js:29:5
     29| dns.lookup("test.com", { family: 6 }); // error
@@ -277,7 +277,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:31:5
 
-Cannot call `dns.lookup` because no more than 2 arguments are expected by function type [1]. [not-a-function]
+Cannot call `dns.lookup` because no more than 2 arguments are expected by function type [1]. [incompatible-call]
 
    dns/dns.js:31:5
     31| dns.lookup("test.com", null, (err, address, family) => {}); // error
@@ -295,7 +295,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:33:5
 
-Cannot call `dns.lookup` because: [not-a-function]
+Cannot call `dns.lookup` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with string [3].
 
@@ -716,7 +716,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:13:6
 
-Cannot call `http.get` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `http.get` because number [1] is incompatible with string [2]. [incompatible-call]
 
    http/get.js:13:6
      13| http.get(-1); // error
@@ -733,7 +733,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:14:6
 
-Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    http/get.js:14:6
      14| http.get({port: 'expects number'}); // error
@@ -750,7 +750,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:15:6
 
-Cannot call `http.get` because number [1] is incompatible with function type [2]. [not-a-function]
+Cannot call `http.get` because number [1] is incompatible with function type [2]. [incompatible-call]
 
    http/get.js:15:6
      15| http.get(url, {}, -1); // error
@@ -767,7 +767,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:16:6
 
-Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    http/get.js:16:6
      16| http.get(url, {port: 'expects number'}, () => {}); // error
@@ -784,7 +784,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- http/request.js:13:6
 
-Cannot call `http.request` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `http.request` because number [1] is incompatible with string [2]. [incompatible-call]
 
    http/request.js:13:6
      13| http.request(-1); // error
@@ -801,7 +801,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- http/request.js:14:6
 
-Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    http/request.js:14:6
      14| http.request({port: 'expects number'}); // error
@@ -818,7 +818,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- http/request.js:15:6
 
-Cannot call `http.request` because number [1] is incompatible with function type [2]. [not-a-function]
+Cannot call `http.request` because number [1] is incompatible with function type [2]. [incompatible-call]
 
    http/request.js:15:6
      15| http.request(url, {}, -1); // error
@@ -835,7 +835,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- http/request.js:16:6
 
-Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    http/request.js:16:6
      16| http.request(url, {port: 'expects number'}, () => {}); // error
@@ -852,7 +852,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:69:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [not-a-function]
+Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
 
    http/server.js:69:8
      69| server.listen({}, () => {}, 'localhost', 123);
@@ -869,7 +869,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:70:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [not-a-function]
+Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
 
    http/server.js:70:8
      70| server.listen({}, function() {}, 'localhost', 123);
@@ -886,7 +886,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:71:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
@@ -912,7 +912,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:72:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
@@ -938,7 +938,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:75:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
@@ -964,7 +964,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:76:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
@@ -990,7 +990,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:79:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [not-a-function]
+Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
 
    http/server.js:79:8
      79| server.listen(8080, () => {}, 'localhost', 123);
@@ -1007,7 +1007,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:80:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [not-a-function]
+Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
 
    http/server.js:80:8
      80| server.listen(8080, function() {}, 'localhost', 123);
@@ -1024,7 +1024,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:81:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1050,7 +1050,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:82:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1076,7 +1076,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:83:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1102,7 +1102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:84:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1128,7 +1128,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:13:7
 
-Cannot call `https.get` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `https.get` because number [1] is incompatible with string [2]. [incompatible-call]
 
    https/get.js:13:7
      13| https.get(-1); // error
@@ -1145,7 +1145,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:14:7
 
-Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    https/get.js:14:7
      14| https.get({port: 'expects number'}); // error
@@ -1162,7 +1162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:15:7
 
-Cannot call `https.get` because number [1] is incompatible with function type [2]. [not-a-function]
+Cannot call `https.get` because number [1] is incompatible with function type [2]. [incompatible-call]
 
    https/get.js:15:7
      15| https.get(url, {}, -1); // error
@@ -1179,7 +1179,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:16:7
 
-Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    https/get.js:16:7
      16| https.get(url, {port: 'expects number'}, () => {}); // error
@@ -1196,7 +1196,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- https/request.js:13:7
 
-Cannot call `https.request` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `https.request` because number [1] is incompatible with string [2]. [incompatible-call]
 
    https/request.js:13:7
      13| https.request(-1); // error
@@ -1213,7 +1213,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- https/request.js:14:7
 
-Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    https/request.js:14:7
      14| https.request({port: 'expects number'}); // error
@@ -1230,7 +1230,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- https/request.js:15:7
 
-Cannot call `https.request` because number [1] is incompatible with function type [2]. [not-a-function]
+Cannot call `https.request` because number [1] is incompatible with function type [2]. [incompatible-call]
 
    https/request.js:15:7
      15| https.request(url, {}, -1); // error
@@ -1247,7 +1247,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- https/request.js:16:7
 
-Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`. [not-a-function]
+Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
 
    https/request.js:16:7
      16| https.request(url, {port: 'expects number'}, () => {}); // error
@@ -1264,7 +1264,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:69:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [not-a-function]
+Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
 
    https/server.js:69:8
      69| server.listen({}, () => {}, 'localhost', 123);
@@ -1281,7 +1281,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:70:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [not-a-function]
+Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
 
    https/server.js:70:8
      70| server.listen({}, function() {}, 'localhost', 123);
@@ -1298,7 +1298,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:71:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
@@ -1324,7 +1324,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:72:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with number [3].
  - Or object literal [1] is incompatible with number [4].
@@ -1350,7 +1350,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:75:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
@@ -1376,7 +1376,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:76:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with number [4].
@@ -1402,7 +1402,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:79:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [not-a-function]
+Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
 
    https/server.js:79:8
      79| server.listen(8443, () => {}, 'localhost', 123);
@@ -1419,7 +1419,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:80:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [not-a-function]
+Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
 
    https/server.js:80:8
      80| server.listen(8443, function() {}, 'localhost', 123);
@@ -1436,7 +1436,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:81:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1462,7 +1462,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:82:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1488,7 +1488,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:83:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1514,7 +1514,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:84:8
 
-Cannot call `server.listen` because: [not-a-function]
+Cannot call `server.listen` because: [incompatible-call]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with number [3].
  - Or function [1] is incompatible with string [4].
@@ -1814,7 +1814,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:10:9
 
-Cannot call `process.emitWarning` because: [not-a-function]
+Cannot call `process.emitWarning` because: [incompatible-call]
  - Either undefined [1] is incompatible with string [2].
  - Or undefined [1] is incompatible with `Error` [3].
  - Or function type [4] requires another argument from call of method `emitWarning` [1].
@@ -1854,7 +1854,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:11:9
 
-Cannot call `process.emitWarning` because: [not-a-function]
+Cannot call `process.emitWarning` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
  - Or number [1] is incompatible with string [4].
@@ -1880,7 +1880,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:12:9
 
-Cannot call `process.emitWarning` because: [not-a-function]
+Cannot call `process.emitWarning` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
@@ -1902,7 +1902,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:13:9
 
-Cannot call `process.emitWarning` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `process.emitWarning` because number [1] is incompatible with string [2]. [incompatible-call]
 
    process/emitWarning.js:13:9
      13| process.emitWarning("blah", "blah", 42); // error
@@ -2087,7 +2087,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- stream/stream.js:52:8
 
-Cannot call `stream.pipeline` because: [not-a-function]
+Cannot call `stream.pipeline` because: [incompatible-call]
  - Either `MyWriteStream` [1] is incompatible with `stream$Readable` [2].
  - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [3].
  - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [4].
@@ -2125,7 +2125,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- stream/stream.js:58:8
 
-Cannot call `stream.pipeline` because: [not-a-function]
+Cannot call `stream.pipeline` because: [incompatible-call]
  - Either `MyWriteStream` [1] is incompatible with `stream$Duplex` [2].
  - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [3].
  - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [4].
@@ -2159,7 +2159,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- stream/stream.js:65:8
 
-Cannot call `stream.pipeline` because: [not-a-function]
+Cannot call `stream.pipeline` because: [incompatible-call]
  - Either `MyReadStream` [1] is incompatible with `stream$Writable` [2].
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [3].
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [4].

@@ -627,7 +627,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:62:8
 
-Cannot cast object literal to `$ObjMap` because in property `foo`: [incompatible-type]
+Cannot cast object literal to `$ObjMap` because in property `foo`: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -646,7 +646,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:70:2
 
-Cannot cast object literal to `$ObjMap` because: [incompatible-type]
+Cannot cast object literal to `$ObjMap` because: [incompatible-cast]
  - Either boolean [1] is incompatible with string [2] in property `foo`.
  - Or boolean [1] is incompatible with number [3] in property `foo`.
 

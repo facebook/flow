@@ -3094,7 +3094,7 @@ let is_lint_error = function
 
 open Error_codes
 
-let error_code_of_use_op use_op =
+let error_code_of_use_op use_op ~default =
   let code_of_root = function
     | Cast _ -> Some IncompatibleCast
     | ClassExtendsCheck _ -> Some IncompatibleExtend
@@ -3118,7 +3118,7 @@ let error_code_of_use_op use_op =
     | (_, ObjMapiFunCompatibility _) -> Some InvalidObjMapi
     | (None, _) -> None
   in
-  Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some IncompatibleType)
+  Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)
 
 let error_code_of_upper_kind = function
   | IncompatibleConstructorT
@@ -3193,9 +3193,9 @@ let error_code_of_message err : error_code option =
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType
   | EEnumModification _ -> Some CannotWriteEnum
   | EEnumNotAllChecked _ -> Some InvalidExhaustiveCheck
-  | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op
-  | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op
-  | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op
+  | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExperimentalClassProperties (_, _) -> Some IllegalClassField
   | EExperimentalDecorators _ -> Some IllegalDecorator
   | EExperimentalEnums _ -> Some IllegalEnum
@@ -3213,14 +3213,19 @@ let error_code_of_message err : error_code option =
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
   | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
   | EImportValueAsType (_, _) -> Some ImportValueAsType
-  | EIncompatible { upper = (_, upper_kind); _ } -> error_code_of_upper_kind upper_kind
-  | EIncompatibleDefs { use_op; _ } -> error_code_of_use_op use_op
-  | EIncompatibleProp { use_op = Some use_op; _ } -> error_code_of_use_op use_op
+  | EIncompatible { upper = (_, upper_kind); branches = []; _ } ->
+    error_code_of_upper_kind upper_kind
+  | EIncompatible { use_op = Some use_op; _ } ->
+    error_code_of_use_op use_op ~default:Error_codes.IncompatibleUse
+  | EIncompatible _ -> Some Error_codes.IncompatibleUse
+  | EIncompatibleDefs { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EIncompatibleProp { use_op = Some use_op; _ } ->
+    error_code_of_use_op use_op ~default:IncompatibleType
   | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
   | EIncompatibleWithShape _ -> Some IncompatibleShape
-  | EIncompatibleWithUseOp (_, _, use_op) -> error_code_of_use_op use_op
+  | EIncompatibleWithUseOp (_, _, use_op) -> error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)
@@ -3286,7 +3291,7 @@ let error_code_of_message err : error_code option =
   | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis
   | EUnexpectedTypeof _ -> Some InvalidTypeOf
-  | EUnionSpeculationFailed _ -> Some Error_codes.IncompatibleType
+  | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EUnreachable _ -> Some UnreachableCode
   | EUnsafeGetSet _ -> Some IllegalGetSet
   | EUnsupportedExact (_, _) -> Some InvalidExact

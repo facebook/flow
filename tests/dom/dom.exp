@@ -59,7 +59,7 @@ References:
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:27:64
 
 Cannot call `ClipboardEvent` with object literal bound to `eventInit` because object literal [1] is incompatible with
-`DataTransfer` [2] in property `clipboardData`. [incompatible-type]
+`DataTransfer` [2] in property `clipboardData`. [incompatible-call]
 
    ClipboardEvent.js:27:64
                                                                        v
@@ -90,7 +90,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `behavior`. [incompatible-type]
+in property `behavior`. [incompatible-call]
 
    Element.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -108,7 +108,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `block`. [incompatible-type]
+in property `block`. [incompatible-call]
 
    Element.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -126,7 +126,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- Element.js:16:28
 
 Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
-[incompatible-type]
+[incompatible-call]
 
    Element.js:16:28
      16|     element.scrollIntoView(1);
@@ -183,7 +183,7 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:22:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `behavior`. [incompatible-type]
+in property `behavior`. [incompatible-call]
 
    HTMLElement.js:22:28
      22|     element.scrollIntoView({behavior: 'invalid'});
@@ -201,7 +201,7 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:23:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `block`. [incompatible-type]
+in property `block`. [incompatible-call]
 
    HTMLElement.js:23:28
      23|     element.scrollIntoView({block: 'invalid'});
@@ -219,7 +219,7 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:24:28
 
 Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
-[incompatible-type]
+[incompatible-call]
 
    HTMLElement.js:24:28
      24|     element.scrollIntoView(1);
@@ -280,7 +280,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:51:6
 
 Cannot cast `element.querySelector(...)` to union type because `HTMLElement` [1] is incompatible with
-`HTMLAnchorElement` [2]. [incompatible-type]
+`HTMLAnchorElement` [2]. [incompatible-cast]
 
    HTMLElement.js:51:6
      51|     (element.querySelector(str): HTMLAnchorElement | null);
@@ -365,7 +365,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:60:6
 
 Cannot cast `element.querySelector(...)` to union type because `HTMLDivElement` [1] is incompatible with
-`HTMLAnchorElement` [2]. [incompatible-type]
+`HTMLAnchorElement` [2]. [incompatible-cast]
 
    HTMLElement.js:60:6
      60|     (element.querySelector('div'): HTMLAnchorElement | null);
@@ -482,7 +482,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ HTMLInputElement.js:7:8
 
-Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2]. [not-a-function]
+Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2]. [incompatible-call]
 
    HTMLInputElement.js:7:8
       7|     el.setRangeText('foo', 123); // end is required
@@ -499,7 +499,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:8
 
-Cannot call `el.setRangeText` because string [1] is incompatible with enum [2]. [not-a-function]
+Cannot call `el.setRangeText` because string [1] is incompatible with enum [2]. [incompatible-call]
 
    HTMLInputElement.js:10:8
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -638,7 +638,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- path2d.js:16:11
 
-Cannot call `path.arcTo` because string [1] is incompatible with number [2]. [not-a-function]
+Cannot call `path.arcTo` because string [1] is incompatible with number [2]. [incompatible-call]
 
    path2d.js:16:11
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
@@ -685,7 +685,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:29:14
 
-Cannot call `document.createNodeIterator` because: [not-a-function]
+Cannot call `document.createNodeIterator` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Attr` [2].
  - Or object literal [1] is incompatible with `Document` [3].
  - Or object literal [1] is incompatible with `Document` [4].
@@ -863,7 +863,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:33:14
 
-Cannot call `document.createTreeWalker` because: [not-a-function]
+Cannot call `document.createTreeWalker` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Attr` [2].
  - Or object literal [1] is incompatible with `Document` [3].
  - Or object literal [1] is incompatible with `Document` [4].
@@ -1077,7 +1077,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:189:14
 
-Cannot call `document.createNodeIterator` because: [not-a-function]
+Cannot call `document.createNodeIterator` because: [incompatible-call]
  - Either number [1] is incompatible with number literal `1` [2].
  - Or number [1] is incompatible with number literal `4` [3].
  - Or number [1] is incompatible with number literal `5` [4].
@@ -1155,7 +1155,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:196:14
 
-Cannot call `document.createTreeWalker` because: [not-a-function]
+Cannot call `document.createTreeWalker` because: [incompatible-call]
  - Either number [1] is incompatible with number literal `1` [2].
  - Or number [1] is incompatible with number literal `4` [3].
  - Or number [1] is incompatible with number literal `5` [4].

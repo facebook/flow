@@ -549,7 +549,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
 
-Cannot cast `NotAFunctionComponent` to AbstractComponent because: [incompatible-type]
+Cannot cast `NotAFunctionComponent` to AbstractComponent because: [incompatible-cast]
  - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].

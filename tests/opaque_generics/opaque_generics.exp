@@ -120,7 +120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
 
-Cannot return `x` because in type argument `U` [1]: [incompatible-type]
+Cannot return `x` because in type argument `U` [1]: [incompatible-return]
  - Either null [2] is incompatible with number [3].
  - Or null [2] is incompatible with string [4].
 

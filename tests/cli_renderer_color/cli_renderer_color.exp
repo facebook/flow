@@ -3252,7 +3252,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:16:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3267,7 +3267,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:16:12[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3282,7 +3282,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:16:18[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3311,7 +3311,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:23:12[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3340,7 +3340,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:26:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3411,7 +3411,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:29:18[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3441,7 +3441,7 @@
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:36:6[0m[0m
 [0m[0m
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mproperty[0m[0m
-[0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m[0m[0;2m33[0m[0;2m|[0m[0;2m[0m[0m
 [0m[0m        [0m[0m[0m[0;2m34[0m[0;2m|[0m[0m [0m[0;2m// Error: number ~> boolean. Because of union error scoring we should only see[0m[0m
@@ -3467,7 +3467,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:39:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m[0m[0;2m36[0m[0;2m|[0m[0m [0m[0;2m({a: {b: 42}}: {a: boolean | {b: boolean | {}}});[0m[0m
 [0m[0m        [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
@@ -3480,7 +3480,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:40:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
 [0m[0m        [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
@@ -3493,7 +3493,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:43:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1my[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mx[0m[0m.[0m[0m
 [0m[0m
@@ -3508,7 +3508,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:48:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1my[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mx[0m[0m.[0m[0m
 [0m[0m
@@ -3523,7 +3523,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:52:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0m[0m[0;1mPoint[0m[0m[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0m[0m[0;1mPoint[0m[0m[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1my[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mx[0m[0m.[0m[0m
 [0m[0m
@@ -3541,7 +3541,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:54:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3556,7 +3556,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:55:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3571,7 +3571,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:56:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3586,7 +3586,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:57:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3601,7 +3601,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:59:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3616,7 +3616,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:62:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3633,7 +3633,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:63:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3650,7 +3650,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:64:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3667,7 +3667,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:65:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1md[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1md[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3684,7 +3684,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:75:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m
@@ -3701,7 +3701,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:76:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m
@@ -3718,7 +3718,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:77:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m
@@ -3735,7 +3735,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:78:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1md[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1md[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m
@@ -3752,7 +3752,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:86:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0;4m [0m[0;4mliteral[0m[0;4m [0m[0;4m[0m[0;1;4mfalse[0m[0;4m[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3768,7 +3768,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:87:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0;4m [0m[0;4mliteral[0m[0;4m [0m[0;4m[0m[0;1;4mfalse[0m[0;4m[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3784,7 +3784,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:88:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0;4m [0m[0;4mliteral[0m[0;4m [0m[0;4m[0m[0;1;4mfalse[0m[0;4m[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3800,7 +3800,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:89:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0;4m [0m[0;4mliteral[0m[0;4m [0m[0;4m[0m[0;1;4mfalse[0m[0;4m[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3816,7 +3816,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:90:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0;4m [0m[0;4mliteral[0m[0;4m [0m[0;4m[0m[0;1;4mfalse[0m[0;4m[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3832,7 +3832,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:92:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3849,7 +3849,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:93:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3866,7 +3866,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:94:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3883,7 +3883,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:95:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3900,7 +3900,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:96:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m.[0m[0m
@@ -3917,7 +3917,7 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:98:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m95[0m[0;2m|[0m[0m [0m[0;2m(true: (string | number) | number | number); // Error: should be flattened[0m[0m
 [0m[0m        [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
@@ -3931,7 +3931,7 @@
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:99:6[0m[0m
 [0m[0m
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
 [0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
@@ -3945,7 +3945,7 @@
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:99:15[0m[0m
 [0m[0m
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
 [0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
@@ -3958,7 +3958,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:100:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
@@ -3974,7 +3974,7 @@
 [0m[31mError -------------------------------------------------------------------------------------------------- union.js:100:15[0m[0m
 [0m[0m
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
 [0m[0m        [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
@@ -3987,7 +3987,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:103:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mA[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mB[0m[0;4m[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
@@ -4004,7 +4004,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:106:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mA[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mD[0m[0;4m[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
@@ -4020,7 +4020,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:109:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mA[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m
@@ -4035,7 +4035,7 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:112:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m        [0m[0m[0m[0;2m109[0m[0;2m|[0m[0m [0m[0;2m((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);[0m[0m
 [0m[0m        [0m[0m[0m[0;2m110[0m[0;2m|[0m[0;2m[0m[0m

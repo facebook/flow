@@ -163,7 +163,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
 Cannot assign `<Foo />` to `foo` because number [1] is incompatible with string [2] in type argument `ElementType`.
-[incompatible-type]
+[incompatible-type-arg]
 
    classes.js:39:25
     39| var foo: $jsx<number> = <Foo/>;
@@ -295,7 +295,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
 Cannot assign `<FooLegacy />` to `foo_legacy` because number [1] is incompatible with string [2] in type argument
-`ElementType`. [incompatible-type]
+`ElementType`. [incompatible-type-arg]
 
    classes.js:79:32
     79| var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -362,7 +362,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:79:33
 
 Cannot assign `<FooLegacy />` to `foo_legacy` because number [1] is not an object in type argument `ElementType`.
-[incompatible-type]
+[incompatible-type-arg]
 
    classes.js:79:33
    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -985,7 +985,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- state3.js:13:23
 
 Cannot call `this.setState` with object literal bound to `partialState` because boolean [1] is incompatible with
-string [2] in property `x`. [incompatible-type]
+string [2] in property `x`. [incompatible-call]
 
    state3.js:13:23
                              v
@@ -1006,7 +1006,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- state4.js:9:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `y` is missing in object
-type [1] in property `y`. [incompatible-type]
+type [1] in property `y`. [incompatible-call]
 
    state4.js:9:19
    9|     this.setState({ y: 0 });
@@ -1098,7 +1098,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:41:25
 
 Cannot call `this.setState` with `any` bound to `partialState` because number [1] is incompatible with `State` [2] in
-the first argument. [incompatible-type]
+the first argument. [incompatible-call]
 
    state6.js:41:25
    41|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature

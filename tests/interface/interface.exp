@@ -413,7 +413,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:9:9
 
-Cannot call `(new C()).bar` because string [1] is incompatible with number [2] in the first argument. [not-a-function]
+Cannot call `(new C()).bar` because string [1] is incompatible with number [2] in the first argument.
+[incompatible-call]
 
    test4.js:9:9
    9| new C().bar((x: string) => { }); // error, number ~/~> string

@@ -646,7 +646,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
 
-Cannot cast `o1` to object type because in property `p`: [incompatible-type]
+Cannot cast `o1` to object type because in property `p`: [incompatible-cast]
  - Either undefined [1] is incompatible with string [2].
  - Or undefined [1] is incompatible with number [3].
 
@@ -1076,7 +1076,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-type]
+Cannot cast `o1` to union type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1093,7 +1093,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-type]
+Cannot cast `o1` to union type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-cast]
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok

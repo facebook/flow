@@ -165,7 +165,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:27:3
 
-Cannot call `a.set` because: [not-a-function]
+Cannot call `a.set` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Blob` [2].
  - Or object literal [1] is incompatible with `File` [3].
 
@@ -187,7 +187,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:28:3
 
-Cannot call `a.set` because: [not-a-function]
+Cannot call `a.set` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
  - Or number [1] is incompatible with string [4].
@@ -213,7 +213,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:29:3
 
-Cannot call `a.set` because: [not-a-function]
+Cannot call `a.set` because: [incompatible-call]
  - Either string [1] is incompatible with `Blob` [2].
  - Or string [1] is incompatible with `File` [3].
 
@@ -235,7 +235,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:32:3
 
-Cannot call `a.set` because: [not-a-function]
+Cannot call `a.set` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
@@ -257,7 +257,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:35:3
 
-Cannot call `a.set` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `a.set` because number [1] is incompatible with string [2]. [incompatible-call]
 
    FormData.js:35:3
     35| a.set('bar', new Blob, 2) // incorrect
@@ -274,7 +274,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:39:3
 
-Cannot call `a.append` because: [not-a-function]
+Cannot call `a.append` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Blob` [2].
  - Or object literal [1] is incompatible with `File` [3].
 
@@ -296,7 +296,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:40:3
 
-Cannot call `a.append` because: [not-a-function]
+Cannot call `a.append` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
  - Or number [1] is incompatible with string [4].
@@ -322,7 +322,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:41:3
 
-Cannot call `a.append` because: [not-a-function]
+Cannot call `a.append` because: [incompatible-call]
  - Either string [1] is incompatible with `Blob` [2].
  - Or string [1] is incompatible with `File` [3].
 
@@ -344,7 +344,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:45:3
 
-Cannot call `a.append` because: [not-a-function]
+Cannot call `a.append` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
@@ -366,7 +366,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:48:3
 
-Cannot call `a.append` because number [1] is incompatible with string [2]. [not-a-function]
+Cannot call `a.append` because number [1] is incompatible with string [2]. [incompatible-call]
 
    FormData.js:48:3
     48| a.append('bar', new Blob, 2) // incorrect
@@ -684,7 +684,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:18:3
 
-Cannot call `o.observe` because: [incompatible-type]
+Cannot call `o.observe` because: [incompatible-call]
  - Either undefined [1] is incompatible with object type [2].
  - Or undefined [1] is incompatible with object type [3].
  - Or undefined [1] is incompatible with object type [4].
@@ -724,7 +724,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:19:3
 
-Cannot call `o.observe` because: [incompatible-type]
+Cannot call `o.observe` because: [incompatible-call]
  - Either undefined [1] is incompatible with object type [2].
  - Or undefined [1] is incompatible with object type [3].
  - Or undefined [1] is incompatible with object type [4].
@@ -779,7 +779,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:20:3
 
-Cannot call `o.observe` because: [incompatible-type]
+Cannot call `o.observe` because: [incompatible-call]
  - Either undefined [1] is incompatible with object type [2].
  - Or undefined [1] is incompatible with object type [3].
  - Or undefined [1] is incompatible with object type [4].
@@ -805,7 +805,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:21:16
 
-Cannot call `o.observe` with object literal bound to `options` because: [incompatible-type]
+Cannot call `o.observe` with object literal bound to `options` because: [incompatible-call]
  - Either property `childList` is missing in object literal [1] but exists in object type [2].
  - Or property `attributes` is missing in object literal [1] but exists in object type [3].
  - Or property `characterData` is missing in object literal [1] but exists in object type [4].
@@ -828,7 +828,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:22:16
 
-Cannot call `o.observe` with object literal bound to `options` because: [incompatible-type]
+Cannot call `o.observe` with object literal bound to `options` because: [incompatible-call]
  - Either property `childList` is missing in object literal [1] but exists in object type [2].
  - Or property `attributes` is missing in object literal [1] but exists in object type [3].
  - Or property `characterData` is missing in object literal [1] but exists in object type [4].

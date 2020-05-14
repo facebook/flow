@@ -1295,7 +1295,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- create_element.js:122:24
 
-Cannot call `React.createElement` because in property `children`: [incompatible-type]
+Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with array type [3].
 
@@ -1383,7 +1383,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- create_element.js:153:24
 
-Cannot call `React.createElement` because in property `children`: [incompatible-type]
+Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with array type [3].
 
@@ -2792,7 +2792,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- create_factory.js:128:10
 
-Cannot call `gFactory` because in property `children`: [incompatible-type]
+Cannot call `gFactory` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with array type [3].
 
@@ -2842,7 +2842,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- create_factory.js:145:10
 
-Cannot call `hFactory` because in property `children`: [incompatible-type]
+Cannot call `hFactory` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with array type [3].
 

@@ -42,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- headers.js:3:23
 
-Cannot call `Headers` with `''Content-T...'` bound to `init` because: [incompatible-type]
+Cannot call `Headers` with `''Content-T...'` bound to `init` because: [incompatible-call]
  - Either string [1] is incompatible with `Headers` [2].
  - Or string [1] is incompatible with object type [3].
 
@@ -61,7 +61,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- headers.js:4:23
 
-Cannot call `Headers` with array literal bound to `init` because: [incompatible-type]
+Cannot call `Headers` with array literal bound to `init` because: [incompatible-call]
  - Either array literal [1] is incompatible with `Headers` [2].
  - Or array literal [1] is incompatible with object type [3].
 
@@ -248,7 +248,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:2:24
 
-Cannot call `Request` because: [incompatible-type]
+Cannot call `Request` because: [incompatible-call]
  - Either undefined [1] is incompatible with `Request` [2].
  - Or undefined [1] is incompatible with `URL` [3].
  - Or undefined [1] is incompatible with string [4].
@@ -454,7 +454,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:8:32
 
-Cannot call `Request` with object literal bound to `input` because: [incompatible-type]
+Cannot call `Request` with object literal bound to `input` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Request` [2].
  - Or object literal [1] is incompatible with `URL` [3].
 
@@ -473,7 +473,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- request.js:24:10
 
-Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument. [not-a-function]
+Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument.
+[incompatible-call]
 
    request.js:24:10
      24| h.text().then((t: Buffer) => t); // incorrect
@@ -491,7 +492,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- request.js:26:17
 
 Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first argument.
-[not-a-function]
+[incompatible-call]
 
    request.js:26:17
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -508,7 +509,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- request.js:56:12
 
-Cannot call `Request` with object literal bound to `init` because in property `headers`: [incompatible-type]
+Cannot call `Request` with object literal bound to `init` because in property `headers`: [incompatible-call]
  - Either string [1] is incompatible with `Headers` [2].
  - Or string [1] is incompatible with object type [3].
 
@@ -572,7 +573,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ response.js:13:14
 
-Cannot call `Response` with object literal bound to `init` because in property `headers`: [incompatible-type]
+Cannot call `Response` with object literal bound to `init` because in property `headers`: [incompatible-call]
  - Either string [1] is incompatible with `Headers` [2].
  - Or string [1] is incompatible with object type [3].
 
@@ -591,7 +592,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ response.js:30:34
 
-Cannot call `Response` with object literal bound to `input` because: [incompatible-type]
+Cannot call `Response` with object literal bound to `input` because: [incompatible-call]
  - Either object literal [1] is incompatible with `URLSearchParams` [2].
  - Or object literal [1] is incompatible with `FormData` [3].
  - Or object literal [1] is incompatible with `Blob` [4].
@@ -636,7 +637,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ response.js:42:10
 
-Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument. [not-a-function]
+Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument.
+[incompatible-call]
 
    response.js:42:10
      42| h.text().then((t: Buffer) => t); // incorrect
@@ -654,7 +656,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ response.js:44:17
 
 Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first argument.
-[not-a-function]
+[incompatible-call]
 
    response.js:44:17
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect

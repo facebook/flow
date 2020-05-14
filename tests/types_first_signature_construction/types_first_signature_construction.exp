@@ -120,7 +120,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Cannot call `f3` because: [not-a-function]
+Cannot call `f3` because: [incompatible-call]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with boolean [3].
 

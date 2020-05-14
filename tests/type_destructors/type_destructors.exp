@@ -276,7 +276,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:4:15
 
-Cannot return `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `0` because number [1] is incompatible with string [2]. [incompatible-return]
 
    non_maybe_type.js:4:15
    4|   else return 0; // this should be an error
@@ -781,7 +781,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:10:2
 
-Cannot cast `null` to `P2` because: [incompatible-type]
+Cannot cast `null` to `P2` because: [incompatible-cast]
  - Either null [1] is incompatible with number [2].
  - Or null [1] is incompatible with string [3].
 

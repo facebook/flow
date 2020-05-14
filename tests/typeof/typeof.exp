@@ -97,7 +97,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
-Cannot cast `null` to `typeof x` because: [incompatible-type]
+Cannot cast `null` to `typeof x` because: [incompatible-cast]
  - Either cannot call `f` with `42` bound to `a` because null [1] is incompatible with number [2].
  - Or cannot call `f` with `'foo'` bound to `b` because null [1] is incompatible with string [3].
 

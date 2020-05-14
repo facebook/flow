@@ -126,7 +126,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
-Cannot cast `BS.A` to union type because: [incompatible-type]
+Cannot cast `BS.A` to union type because: [incompatible-cast]
  - Either `B` [1] is incompatible with string [2].
  - Or `B` [1] is incompatible with boolean [3].
 
@@ -152,7 +152,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
-Cannot cast `BS.A` to union type because: [incompatible-type]
+Cannot cast `BS.A` to union type because: [incompatible-cast]
  - Either `S` [1] is incompatible with string [2].
  - Or `S` [1] is incompatible with boolean [3].
 
@@ -178,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
-Cannot cast `sb` to union type because: [incompatible-type]
+Cannot cast `sb` to union type because: [incompatible-cast]
  - Either `S` [1] is incompatible with string [2].
  - Or `S` [1] is incompatible with boolean [3].
 
@@ -200,7 +200,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
-Cannot cast `sb` to union type because: [incompatible-type]
+Cannot cast `sb` to union type because: [incompatible-cast]
  - Either `B` [1] is incompatible with string [2].
  - Or `B` [1] is incompatible with boolean [3].
 
@@ -2149,7 +2149,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:80:4
 
-Cannot cast `bBoolVoid` to union type because: [incompatible-type]
+Cannot cast `bBoolVoid` to union type because: [incompatible-cast]
  - Either undefined [1] is incompatible with `B` [2].
  - Or undefined [1] is incompatible with boolean [3].
 
@@ -2530,7 +2530,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:193:4
 
-Cannot cast `nNumVoid` to union type because: [incompatible-type]
+Cannot cast `nNumVoid` to union type because: [incompatible-cast]
  - Either undefined [1] is incompatible with `N` [2].
  - Or undefined [1] is incompatible with number [3].
 
@@ -2841,7 +2841,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:279:4
 
-Cannot cast `sStrVoid` to union type because: [incompatible-type]
+Cannot cast `sStrVoid` to union type because: [incompatible-cast]
  - Either undefined [1] is incompatible with `S` [2].
  - Or undefined [1] is incompatible with string [3].
 

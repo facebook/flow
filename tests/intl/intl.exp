@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- collator.js:6:15
 
 Cannot call `Intl.Collator` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-type]
+[incompatible-call]
 
    collator.js:6:15
     6| Intl.Collator(1, {
@@ -144,7 +144,7 @@ References:
 Error ----------------------------------------------------------------------------------------- date_time_format.js:6:21
 
 Cannot call `Intl.DateTimeFormat` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-type]
+[incompatible-call]
 
    date_time_format.js:6:21
     6| Intl.DateTimeFormat(1, {
@@ -410,7 +410,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:6:43
 
-Cannot call `getCanonicalLocales` with `null` bound to `locales` because: [incompatible-type]
+Cannot call `getCanonicalLocales` with `null` bound to `locales` because: [incompatible-call]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with array type [3].
 
@@ -497,7 +497,7 @@ References:
 Error -------------------------------------------------------------------------------------------- number_format.js:6:19
 
 Cannot call `Intl.NumberFormat` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-type]
+[incompatible-call]
 
    number_format.js:6:19
     6| Intl.NumberFormat(1, {
@@ -714,7 +714,7 @@ References:
 Error --------------------------------------------------------------------------------------------- plural_rules.js:8:19
 
 Cannot call `PluralRules` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-type]
+[incompatible-call]
 
    plural_rules.js:8:19
     8|   new PluralRules(1); // incorrect
@@ -850,7 +850,7 @@ References:
 Error -------------------------------------------------------------------------------------------- plural_rules.js:39:34
 
 Cannot call `PluralRules.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
-string [2]. [incompatible-type]
+string [2]. [incompatible-call]
 
    plural_rules.js:39:34
    39|   PluralRules.supportedLocalesOf(1) // incorrect

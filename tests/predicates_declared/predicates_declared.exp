@@ -69,7 +69,7 @@ References:
 
 Error -------------------------------------------------------------------------------- sanity-parameter-mismatch.js:10:8
 
-Cannot call `foo` with `3` bound to `types` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `foo` with `3` bound to `types` because number [1] is incompatible with string [2]. [incompatible-call]
 
    sanity-parameter-mismatch.js:10:8
    10| foo(3, 3);

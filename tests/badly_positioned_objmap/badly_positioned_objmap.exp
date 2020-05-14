@@ -18,7 +18,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- objmapi.js:22:12
 
 Cannot instantiate `PickKeysFromObject` because property `q` is missing in `MySpec` [1] in the first argument.
-[not-a-function]
+[invalid-obj-mapi]
 
    objmapi.js:22:12
    22|   type A = PickKeysFromObject<MySpec, typeof keys>;

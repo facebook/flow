@@ -702,7 +702,7 @@ References:
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:45:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `q` is missing in object
-type [1] in property `q`. [incompatible-type]
+type [1] in property `q`. [incompatible-call]
 
    create_class_initial_state_sealed.js:45:19
    45|     this.setState({ q: 0 }); // property `q` not found
@@ -748,7 +748,7 @@ References:
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:81:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `baz` (did you mean `bar`?) is
-missing in object type [1] in property `baz`. [incompatible-type]
+missing in object type [1] in property `baz`. [incompatible-call]
 
    create_class_initial_state_sealed.js:81:19
    81|     this.setState({ baz: 0 }); // property `baz`  not found
@@ -1375,7 +1375,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
 
-Cannot call `myHOC` with function bound to `Component` because: [incompatible-type]
+Cannot call `myHOC` with function bound to `Component` because: [incompatible-call]
  - Either undefined [1] is incompatible with null [2].
  - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
 
@@ -2861,7 +2861,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:15:19
 
-Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2]. [incompatible-type]
+Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2]. [incompatible-cast]
 
    ref.js:15:19
    15| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
@@ -2913,7 +2913,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:26:24
 
-Cannot cast `foo` to union type because `FooExact` [1] is incompatible with `Bar` [2]. [incompatible-type]
+Cannot cast `foo` to union type because `FooExact` [1] is incompatible with `Bar` [2]. [incompatible-cast]
 
    ref.js:26:24
    26| <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
@@ -2930,7 +2930,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- render.js:9:17
 
-Cannot extend `React.Component` [1] with `A` because in the return value of property `render`: [incompatible-type]
+Cannot extend `React.Component` [1] with `A` because in the return value of property `render`: [incompatible-extend]
  - Either undefined [2] is incompatible with null [3].
  - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
 
@@ -2990,7 +2990,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- render.js:47:18
 
-Cannot extend `React.Component` [1] with `F` because in the return value of property `render`: [incompatible-type]
+Cannot extend `React.Component` [1] with `F` because in the return value of property `render`: [incompatible-extend]
  - Either undefined [2] is incompatible with null [3].
  - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
 
@@ -3346,7 +3346,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useEffect` with async function bound to `create` because a call signature declaring the expected
 parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
-[incompatible-type]
+[incompatible-call]
 
    useEffect_hook.js:24:30
     24|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -3395,7 +3395,7 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:31:41
 
 Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
-incompatible with exact `Interface` [2] in the return value. [incompatible-type]
+incompatible with exact `Interface` [2] in the return value. [incompatible-call]
 
    useImperativeHandle_hook.js:31:41
    31|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -3410,7 +3410,7 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:34:47
 
 Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
-incompatible with exact `Interface` [2] in the return value. [incompatible-type]
+incompatible with exact `Interface` [2] in the return value. [incompatible-call]
 
    useImperativeHandle_hook.js:34:47
    34|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -3474,7 +3474,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useLayoutEffect` with async function bound to `create` because a call signature declaring the
 expected parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
-[incompatible-type]
+[incompatible-call]
 
    useLayoutEffect_hook.js:24:36
     24|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -3943,7 +3943,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:9
 
-Cannot call `React.useReducer` because: [not-a-function]
+Cannot call `React.useReducer` because: [incompatible-call]
  - Either function type [1] requires another argument from call of method `useReducer` [2].
  - Or function type [3] requires another argument from call of method `useReducer` [2].
  - Or function type [4] requires another argument from call of method `useReducer` [2].
@@ -4177,7 +4177,7 @@ References:
 Error ------------------------------------------------------------------------------------------- useState_hook.js:13:10
 
 Cannot call `setCount` with `true` bound to the first parameter because boolean [1] is incompatible with number [2].
-[incompatible-type]
+[incompatible-call]
 
    useState_hook.js:13:10
    13| setCount(true); // Error: boolean is incompatible with number

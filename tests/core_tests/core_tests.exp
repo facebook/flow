@@ -174,7 +174,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`: [incompatible-type]
+property `@@iterator`: [incompatible-call]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
@@ -200,7 +200,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`: [incompatible-type]
+property `@@iterator`: [incompatible-call]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
@@ -226,7 +226,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`: [incompatible-type]
+property `@@iterator`: [incompatible-call]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
@@ -251,7 +251,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:36:23
 
-Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]: [incompatible-type]
+Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]: [incompatible-call]
  - Either number [2] is incompatible with object type [3].
  - Or number [2] is incompatible with read-only array type [4].
 

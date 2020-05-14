@@ -209,7 +209,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:34:3
 
 Cannot create `ExpectsProps` element because property `name` is missing in object type [1] but exists in object type [2]
-in the first argument. [not-a-function]
+in the first argument. [incompatible-use]
 
    jsx.js:34:3
    34| (<ExpectsProps />); // Error - missing prop
@@ -244,7 +244,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:38:3
 
 Cannot create `ExpectsChildrenTuple` element because rest array [1] has an arity of 0 but tuple type [2] has an arity of
-1. [not-a-function]
+1. [incompatible-use]
 
    jsx.js:38:3
    38| (<ExpectsChildrenTuple />); // Error - missing child
@@ -262,7 +262,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:40:3
 
 Cannot create `ExpectsChildrenTuple` element because number [1] is incompatible with string [2] in index 0.
-[not-a-function]
+[incompatible-use]
 
    jsx.js:40:3
    40| (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
@@ -280,7 +280,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:41:3
 
 Cannot create `ExpectsChildrenTuple` element because rest array [1] has an arity of 2 but tuple type [2] has an arity of
-1. [not-a-function]
+1. [incompatible-use]
 
    jsx.js:41:3
    41| (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
@@ -298,7 +298,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:46:3
 
 Cannot create `ExpectsChildrenArray` element because number [1] is incompatible with string [2] in array element.
-[not-a-function]
+[incompatible-use]
 
    jsx.js:46:3
    46| (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
