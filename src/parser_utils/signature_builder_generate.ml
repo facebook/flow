@@ -253,7 +253,7 @@ module T = struct
           abs_object_key object_key
         | (_, OSpread _) -> assert false
       in
-      (fun op1 op2 -> Pervasives.compare (abs_object_key op1) (abs_object_key op2))
+      (fun op1 op2 -> Stdlib.compare (abs_object_key op1) (abs_object_key op2))
     in
     let summarize_object_property_pair loc op1 op2 =
       match (snd op1, snd op2) with
@@ -2193,8 +2193,8 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     let (values, types) = exports outlined file_sig in
     let outlined_stmts = T.Outlined.get outlined in
     ( program_loc,
-      List.sort Pervasives.compare (List.rev_append env @@ List.rev outlined_stmts)
-      @ List.sort Pervasives.compare (List.rev_append values @@ List.rev types),
+      List.sort Stdlib.compare (List.rev_append env @@ List.rev outlined_stmts)
+      @ List.sort Stdlib.compare (List.rev_append values @@ List.rev types),
       [] )
 
   (* no need to include the comments *)

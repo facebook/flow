@@ -132,7 +132,7 @@ class special_caser
 
 let resolve_special_cases ~reader ~is_legit_require ~typed_ast def_loc =
   try
-    Pervasives.ignore ((new special_caser reader is_legit_require def_loc)#program typed_ast);
+    Stdlib.ignore ((new special_caser reader is_legit_require def_loc)#program typed_ast);
     Done (Def def_loc)
   with SpecialCase res -> res
 

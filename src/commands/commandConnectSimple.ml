@@ -53,7 +53,7 @@ let wait_on_server_restart ic =
 module SockMap = WrappedMap.Make (struct
   type t = Socket.addr
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 (* We used to open a new connection every time we tried to connect to a socket

@@ -271,4 +271,4 @@ let summarize_flow_constraint () =
       !FlowConstraint.cache
       SMap.empty
   in
-  SMap.elements group_counts |> List.sort (fun (_, i1) (_, i2) -> Pervasives.compare i1 i2)
+  SMap.elements group_counts |> List.sort (fun (_, i1) (_, i2) -> Stdlib.compare i1 i2)

@@ -231,7 +231,7 @@ let unix_worker_main restore (state, controller_fd) (ic, oc) =
         | Unix.WEXITED code ->
           Printf.printf "Worker exited (code: %d)\n" code;
           flush stdout;
-          Pervasives.exit code
+          Stdlib.exit code
         | Unix.WSIGNALED x ->
           let sig_str = PrintSignal.string_of_signal x in
           Printf.printf "Worker interrupted with signal: %s\n" sig_str;

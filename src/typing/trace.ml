@@ -59,7 +59,7 @@ type step =
  *)
 and t = step list * int
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let trace_depth = snd
 

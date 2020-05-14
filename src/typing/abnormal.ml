@@ -132,7 +132,7 @@ module AbnormalMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
 
   type t = abnormal
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 let abnormals : Env.t AbnormalMap.t ref = ref AbnormalMap.empty

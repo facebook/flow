@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Pervasives
 open Utils_js
 open Reason
 open Loc_collections
@@ -917,7 +916,7 @@ end = struct
            let%map ty = type__ ~env t in
            Nel.to_list (Ty.bk_union ty))
     >>| Base.List.concat
-    >>| Base.List.dedup_and_sort ~compare:Pervasives.compare
+    >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
 
   and empty_with_upper_bounds ~env bounds =
     let uses = T.UseTypeMap.keys bounds.Constraint.upper in

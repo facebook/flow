@@ -961,7 +961,7 @@ let rec compare compare_loc =
         if k = 0 then
           let k = compare_lists compare_message_feature m1 m2 in
           if k = 0 then
-            Pervasives.compare c1 c2
+            Stdlib.compare c1 c2
           else
             k
         else
@@ -982,7 +982,7 @@ let rec compare compare_loc =
                 b2
             in
             if k = 0 then
-              Pervasives.compare c1 c2
+              Stdlib.compare c1 c2
             else
               k
           else

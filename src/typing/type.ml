@@ -1356,7 +1356,7 @@ end = struct
     | Void
     | Null
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 
   type star =
     | One of t
@@ -1721,7 +1721,7 @@ end = struct
 
     type t = key
 
-    let compare = Pervasives.compare
+    let compare = Stdlib.compare
   end)
 
   type map = t Map.t
@@ -2238,7 +2238,7 @@ and TypeSet : (Set.S with type elt = TypeTerm.t) = Set.Make (struct
 
   type t = elt
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 and TypeMap : (WrappedMap.S with type key = TypeTerm.t) = WrappedMap.Make (struct
@@ -2246,7 +2246,7 @@ and TypeMap : (WrappedMap.S with type key = TypeTerm.t) = WrappedMap.Make (struc
 
   type t = key
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
@@ -2254,7 +2254,7 @@ and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
 
   type t = elt
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 and UseTypeMap : (WrappedMap.S with type key = TypeTerm.use_t) = WrappedMap.Make (struct
@@ -2262,7 +2262,7 @@ and UseTypeMap : (WrappedMap.S with type key = TypeTerm.use_t) = WrappedMap.Make
 
   type t = key
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 and Object : sig
@@ -2504,7 +2504,7 @@ let with_trust (trust_constructor : unit -> trust_rep) (type_constructor : trust
 
 (*********************************************************)
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let open_tvar tvar =
   match tvar with

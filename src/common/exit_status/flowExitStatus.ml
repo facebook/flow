@@ -236,4 +236,4 @@ let exit ?msg t =
   | None -> ());
   print_json ?msg t;
   FlowEventLogger.exit msg (to_string t);
-  Pervasives.exit (error_code t)
+  Stdlib.exit (error_code t)

@@ -68,7 +68,7 @@ struct
     module ValSet = Set.Make (struct
       type nonrec t = t
 
-      let compare = Pervasives.compare
+      let compare = Stdlib.compare
     end)
 
     let rec normalize t =

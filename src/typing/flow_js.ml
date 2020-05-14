@@ -305,7 +305,7 @@ end
 module ConstFoldMap = WrappedMap.Make (struct
   type t = reason * int
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 module ConstFoldExpansion : sig

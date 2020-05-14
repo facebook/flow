@@ -173,14 +173,14 @@ type ty_or_type_ast =
 module NSpecSet = Set.Make (struct
   type t = (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 module HardCodedImportMap = struct
   include WrappedMap.Make (struct
     type t = Loc.t * Loc.t Ast.StringLiteral.t
 
-    let compare = Pervasives.compare
+    let compare = Stdlib.compare
   end)
 
   let to_import_stmts m =

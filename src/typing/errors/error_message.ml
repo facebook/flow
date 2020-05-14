@@ -22,7 +22,7 @@ type invalid_char_set =
 module InvalidCharSetSet = Set.Make (struct
   type t = invalid_char_set
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 type t = ALoc.t t'

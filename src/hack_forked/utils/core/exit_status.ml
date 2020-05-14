@@ -146,7 +146,7 @@ let exit_code = function
 
 let exit t =
   let ec = exit_code t in
-  Pervasives.exit ec
+  Stdlib.exit ec
 
 let to_string = function
   | No_error -> "Ok"

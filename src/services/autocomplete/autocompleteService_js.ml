@@ -42,7 +42,7 @@ let remove_autocomplete_token_from_loc loc =
 
 let autocomplete_result_to_json ~strip_root result =
   let name = result.res_name in
-  Pervasives.ignore strip_root;
+  Stdlib.ignore strip_root;
   Hh_json.JSON_Object
     [("name", Hh_json.JSON_String name); ("type", Hh_json.JSON_String result.res_ty)]
 
@@ -366,7 +366,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
 let members_of_type
     ~exclude_proto_members
     ?(exclude_keys = SSet.empty)
-    ?(idx_hook = Pervasives.ignore)
+    ?(idx_hook = Stdlib.ignore)
     cx
     file_sig
     typed_ast
@@ -499,7 +499,7 @@ class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
 
 let collect_types ~reader locs typed_ast =
   let collector = new type_collector reader locs in
-  Pervasives.ignore (collector#program typed_ast);
+  Stdlib.ignore (collector#program typed_ast);
   collector#collected_types
 
 let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
@@ -708,7 +708,7 @@ class local_type_identifiers_searcher =
 
 let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
-  Pervasives.ignore (search#program typed_ast);
+  Stdlib.ignore (search#program typed_ast);
   search#ids
   |> Base.List.map ~f:(fun ((_, t), Flow_ast.Identifier.{ name; _ }) -> (name, t))
   |> Ty_normalizer.from_types
@@ -756,8 +756,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
             }
         | _ -> None)
       exports
-    |> Base.List.sort ~compare:(fun { res_name = a; _ } { res_name = b; _ } ->
-           Pervasives.compare a b)
+    |> Base.List.sort ~compare:(fun { res_name = a; _ } { res_name = b; _ } -> Stdlib.compare a b)
     |> Base.List.mapi ~f:(fun i r -> { r with rank = i })
   | _ -> []
 

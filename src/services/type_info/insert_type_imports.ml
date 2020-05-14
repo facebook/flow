@@ -489,7 +489,7 @@ end = struct
   module SymbolWithUseModeMap = WrappedMap.Make (struct
     type t = Ty.symbol * use_mode
 
-    let compare = Pervasives.compare
+    let compare = Stdlib.compare
   end)
 
   (* Any errors we encounter should surface as an error to the top-level type
@@ -501,7 +501,7 @@ end = struct
 
     type t = Statement.ImportDeclaration.importKind * (Loc.t * Loc.t StringLiteral.t)
 
-    let compare = Pervasives.compare
+    let compare = Stdlib.compare
   end)
 
   class remote_converter ~iteration ~file ~reserved_names =

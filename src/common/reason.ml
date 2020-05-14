@@ -916,7 +916,7 @@ let mk_annot_reason desc annot_loc = annot_reason ~annot_loc (mk_reason desc ann
 module ReasonMap = WrappedMap.Make (struct
   type t = reason
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 (* Creates a description string for an arbitrary expression. This description

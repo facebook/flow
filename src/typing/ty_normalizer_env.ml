@@ -134,7 +134,7 @@ type instance_member_expansion_mode =
 module SymbolSet = Set.Make (struct
   type t = Ty_symbol.symbol
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 (* Info used for implementation of `expand_toplevel_members` *)

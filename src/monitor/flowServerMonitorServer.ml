@@ -38,7 +38,7 @@ type command =
   | Notify_dead_persistent_connection of { client_id: LspProt.client_id }
   | Notify_file_changes
 
-(* A wrapper for Pervasives.exit which gives other threads a second to handle their business
+(* A wrapper for Stdlib.exit which gives other threads a second to handle their business
  * before the monitor exits *)
 let exiting = ref false
 
@@ -58,7 +58,7 @@ let exit ~msg exit_status =
     Lwt.protected
       (let%lwt () = Lwt_unix.sleep 1.0 in
        FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
-       Pervasives.exit (FlowExitStatus.error_code exit_status))
+       Stdlib.exit (FlowExitStatus.error_code exit_status))
   )
 
 (* Exit after 7 days of no requests *)

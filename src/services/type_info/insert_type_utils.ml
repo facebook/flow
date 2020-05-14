@@ -42,7 +42,7 @@ module SymbolMap = struct
   module M = WrappedMap.Make (struct
     type t = Ty_symbol.symbol
 
-    let compare = Pervasives.compare
+    let compare = Stdlib.compare
   end)
 
   include M
@@ -51,7 +51,7 @@ end
 module SymbolSet = Set.Make (struct
   type t = Ty_symbol.symbol
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 let is_react_file_key = function

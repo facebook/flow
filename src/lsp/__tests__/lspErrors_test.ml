@@ -74,7 +74,7 @@ let with_assert_errors_match ~ctxt ~reason ~expected f =
   let actual = ref [] in
   let ret = f (fun json -> actual := List.rev_append (error_list_of_json_response json) !actual) in
   let actual = List.rev !actual in
-  let sort = List.sort Pervasives.compare in
+  let sort = List.sort Stdlib.compare in
   assert_equal ~ctxt ~printer ~msg:reason (sort expected) (sort actual);
   ret
 

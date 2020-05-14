@@ -334,9 +334,9 @@ class ['A] comparator_ty =
           | exception Failure _ -> assert0 (String.compare x y)
         end
 
-    method! private on_bool _env x y = assert0 (Pervasives.compare x y)
+    method! private on_bool _env x y = assert0 (Stdlib.compare x y)
 
-    method! private on_symbol _env x y = assert0 (Pervasives.compare x y)
+    method! private on_symbol _env x y = assert0 (Stdlib.compare x y)
 
     method! private on_aloc _env x y = assert0 (ALoc.compare x y)
 

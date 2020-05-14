@@ -20,7 +20,7 @@ type 'loc t =
   | UnsupportedPredicateExpression of 'loc
   | TODO of string * 'loc
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let map_locs ~f = function
   | ExpectedSort (sort, str, loc) -> ExpectedSort (sort, str, f loc)

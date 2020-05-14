@@ -12,7 +12,7 @@ module S = struct
 
   let equal x y = !equal_ref x y
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 
 include S

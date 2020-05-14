@@ -43,17 +43,17 @@ module Alarm_timeout = struct
 
   (** Channel *)
 
-  type in_channel = Pervasives.in_channel * int option
+  type in_channel = Stdlib.in_channel * int option
 
   let ignore_timeout f ?timeout:_ (ic, _pid) = f ic
 
-  let input = ignore_timeout Pervasives.input
+  let input = ignore_timeout Stdlib.input
 
-  let really_input = ignore_timeout Pervasives.really_input
+  let really_input = ignore_timeout Stdlib.really_input
 
-  let input_char = ignore_timeout Pervasives.input_char
+  let input_char = ignore_timeout Stdlib.input_char
 
-  let input_line = ignore_timeout Pervasives.input_line
+  let input_line = ignore_timeout Stdlib.input_line
 
   let input_value_with_workaround ic =
     (* OCaml 4.03.0 changed the behavior of input_value to no longer
@@ -61,18 +61,18 @@ module Alarm_timeout = struct
      * behavior, however, by trying to read a byte afterwards, which WILL
      * raise End_of_file if the pipe has closed
      * http://caml.inria.fr/mantis/view.php?id=7142 *)
-    try Pervasives.input_value ic
+    try Stdlib.input_value ic
     with Failure msg as e ->
-      if msg = "input_value: truncated object" then Pervasives.input_char ic |> ignore;
+      if msg = "input_value: truncated object" then Stdlib.input_char ic |> ignore;
       raise e
 
   let input_value = ignore_timeout input_value_with_workaround
 
-  let open_in name = (Pervasives.open_in name, None)
+  let open_in name = (Stdlib.open_in name, None)
 
-  let close_in (ic, _) = Pervasives.close_in ic
+  let close_in (ic, _) = Stdlib.close_in ic
 
-  let close_in_noerr (ic, _) = Pervasives.close_in_noerr ic
+  let close_in_noerr (ic, _) = Stdlib.close_in_noerr ic
 
   let in_channel_of_descr fd = (Unix.in_channel_of_descr fd, None)
 
@@ -106,7 +106,7 @@ module Alarm_timeout = struct
     match pid with
     | None -> invalid_arg "Timeout.close_process_in"
     | Some pid ->
-      Pervasives.close_in ic;
+      Stdlib.close_in ic;
       snd (Sys_utils.waitpid_non_intr [] pid)
 
   let read_process ~timeout ~on_timeout ~reader cmd args =
