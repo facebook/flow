@@ -484,7 +484,7 @@ let output_dependencies ~env root strip_root types_only outfile =
   let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
   let%lwt () = LwtUtils.output_graph out strip_root graph in
   let%lwt () = Lwt_io.close out in
-  ok_unit |> Lwt.return
+  Lwt.return (Ok ())
 
 let get_cycle ~env fn types_only =
   (* Re-calculate SCC *)
