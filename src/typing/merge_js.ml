@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
+type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
 module RequireMap = WrappedMap.Make (struct
   (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)

@@ -85,8 +85,8 @@ module rec Parse : PARSER = struct
       | [] -> end_loc
       | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts)))
     in
-    let comments = List.rev (comments env) in
-    (loc, stmts, comments)
+    let all_comments = List.rev (comments env) in
+    (loc, { Ast.Program.statements = stmts; all_comments })
 
   and directives =
     let check env token =

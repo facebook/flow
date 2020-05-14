@@ -15,8 +15,8 @@ val infer_ast :
   Context.t ->
   File_key.t ->
   Loc.t Flow_ast.Comment.t list ->
-  (ALoc.t, ALoc.t) Flow_ast.program ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file :
@@ -24,5 +24,5 @@ val infer_lib_file :
   lint_severities:Severity.severity LintSettings.t ->
   file_sig:File_sig.With_ALoc.t ->
   Context.t ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   string list

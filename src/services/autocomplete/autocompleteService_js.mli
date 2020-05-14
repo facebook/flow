@@ -17,7 +17,7 @@ val autocomplete_get_results :
   reader:Parsing_heaps.Reader.reader ->
   Context.t ->
   File_sig.With_Loc.t ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   string option ->
   Loc.t ->
   string * autocomplete_service_result

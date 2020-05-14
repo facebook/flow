@@ -119,7 +119,7 @@ type genv = {
   (* Full (merged) context *)
   cx: Context.t;
   (* Typed AST of the current file *)
-  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
+  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
 }

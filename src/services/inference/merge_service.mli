@@ -21,7 +21,7 @@ type error_acc =
 type type_acc =
   ( Context.t
   * File_sig.With_ALoc.t FilenameMap.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.program Utils_js.FilenameMap.t )
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t Utils_js.FilenameMap.t )
   option
 
 type acc = type_acc * error_acc
@@ -49,7 +49,7 @@ type merge_context_result = {
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
-  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
+  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
   coverage_map: Coverage_response.file_coverage FilenameMap.t option;
 }
 
@@ -60,10 +60,10 @@ val merge_contents_context :
   reader:State_reader.t ->
   Options.t ->
   File_key.t ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
   File_sig.With_Loc.t ->
-  Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+  Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 val merge_runner :
   job:'a merge_job ->

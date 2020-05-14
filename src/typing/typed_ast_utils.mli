@@ -17,7 +17,7 @@ class type_parameter_mapper :
   end
 
 val find_exact_match_annotation :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> ALoc.t -> Type.TypeScheme.t option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.TypeScheme.t option
 (**
  * Return the first typed AST entry that exactly matches the (abstract) location
  * passed as input.
@@ -25,7 +25,7 @@ val find_exact_match_annotation :
  *)
 
 val find_type_at_pos_annotation :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> Loc.t -> (Loc.t * Type.TypeScheme.t) option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> Loc.t -> (Loc.t * Type.TypeScheme.t) option
 (**
  * Find the first typed AST entry for "type-at-pos" related queries. A query
  * succeeds if the location is within the range of a symbol in the AST. The kinds
@@ -42,11 +42,11 @@ val find_type_at_pos_annotation :
  *)
 
 val typed_ast_to_map :
-  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
   Type.TypeScheme.t Loc_collections.ALocMap.t
 
 val typed_ast_to_list :
-  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
   (ALoc.t * Type.TypeScheme.t) list
 
 val error_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper

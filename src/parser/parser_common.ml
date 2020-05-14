@@ -18,7 +18,7 @@ type pattern_cover =
   | Cover_patt of (Loc.t, Loc.t) Expression.t * pattern_errors
 
 module type PARSER = sig
-  val program : env -> (Loc.t, Loc.t) program
+  val program : env -> (Loc.t, Loc.t) Program.t
 
   val statement : env -> (Loc.t, Loc.t) Statement.t
 

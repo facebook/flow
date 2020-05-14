@@ -493,7 +493,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method computed_key : ('M, 'T) Ast.ComputedKey.t -> ('N, 'U) Ast.ComputedKey.t
 
-    method program : ('M, 'T) Ast.program -> ('N, 'U) Ast.program
+    method program : ('M, 'T) Ast.Program.t -> ('N, 'U) Ast.Program.t
 
     method return : ('M, 'T) Ast.Statement.Return.t -> ('N, 'U) Ast.Statement.Return.t
 

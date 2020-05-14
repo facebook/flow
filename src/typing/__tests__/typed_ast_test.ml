@@ -114,7 +114,7 @@ let before_and_after_stmts file_name =
   let file_key = File_key.LibFile file_name in
   match parse_content file_key content with
   | Error e -> Error e
-  | Ok ((_, stmts, _), file_sig) ->
+  | Ok ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) ->
     let cx =
       let sig_cx = Context.make_sig () in
       let aloc_table = Utils_js.FilenameMap.empty in
@@ -228,7 +228,13 @@ let pp_diff =
   in
   let string_of_src stmts =
     let none_mapper = new loc_none_mapper in
-    let prog = (Loc.none, Base.List.map ~f:none_mapper#statement stmts, []) in
+    let prog =
+      ( Loc.none,
+        {
+          Flow_ast.Program.statements = Base.List.map ~f:none_mapper#statement stmts;
+          all_comments = [];
+        } )
+    in
     let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
     layout |> Pretty_printer.print ~source_maps:None |> Source.contents
   in

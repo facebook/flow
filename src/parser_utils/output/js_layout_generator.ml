@@ -487,17 +487,21 @@ let identifier_with_comments current_loc name comments =
   | None -> node
 
 (* Generate JS layouts *)
-let rec program ?(opts = default_opts) ~preserve_docblock ~checksum (loc, statements, comments) =
+let rec program
+    ?(opts = default_opts)
+    ~preserve_docblock
+    ~checksum
+    (loc, { Ast.Program.statements; all_comments }) =
   let nodes =
-    if preserve_docblock && comments <> [] then
+    if preserve_docblock && all_comments <> [] then
       let (directives, statements) = Flow_ast_utils.partition_directives statements in
-      let comments =
+      let all_comments =
         match statements with
-        | [] -> comments
-        | (loc, _) :: _ -> comments_before_loc loc comments
+        | [] -> all_comments
+        | (loc, _) :: _ -> comments_before_loc loc all_comments
       in
       [
-        combine_directives_and_comments ~opts directives comments;
+        combine_directives_and_comments ~opts directives all_comments;
         fuse (statement_list ~opts statements);
       ]
     else
@@ -508,7 +512,7 @@ let rec program ?(opts = default_opts) ~preserve_docblock ~checksum (loc, statem
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0 } } in
   source_location_with_comments (loc, nodes)
 
-and program_simple ?(opts = default_opts) (loc, statements, _) =
+and program_simple ?(opts = default_opts) (loc, { Ast.Program.statements; _ }) =
   let nodes = group [fuse (statement_list ~opts statements)] in
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0 } } in
   source_location_with_comments (loc, nodes)

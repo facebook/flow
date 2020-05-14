@@ -23,8 +23,8 @@ let name package = package.name
 let main package = package.main
 
 let statement_of_program = function
-  | (_, [statement], _) -> Ok statement
-  | (loc, _, _) -> Error (loc, "Expected a single statement.")
+  | (_, { Ast.Program.statements = [statement]; _ }) -> Ok statement
+  | (loc, _) -> Error (loc, "Expected a single statement.")
 
 let object_of_statement statement =
   let open Ast in

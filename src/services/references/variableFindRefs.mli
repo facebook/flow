@@ -9,6 +9,6 @@
  * with exports (the above will find some additional locations related to imports/exports even with
 * global:false). *)
 val local_find_refs :
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   Loc.t ->
   (FindRefsTypes.find_refs_found * Loc.t) (* definition location *) option

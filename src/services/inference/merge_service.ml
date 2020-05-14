@@ -23,7 +23,7 @@ type error_acc =
 type type_acc =
   ( Context.t
   * File_sig.With_ALoc.t FilenameMap.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.program Utils_js.FilenameMap.t )
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t Utils_js.FilenameMap.t )
   option
 
 type acc = type_acc * error_acc
@@ -49,7 +49,7 @@ type merge_context_result = {
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
-  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
+  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
   coverage_map: Coverage_response.file_coverage FilenameMap.t option;
 }
 
@@ -192,16 +192,18 @@ let merge_context ~options ~reader component =
       (match Options.arch options with
       | Options.Classic ->
         fun ~reader file ->
-          let ((_, _, comments) as ast) =
+          let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
             Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
           in
           let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-          (comments, aloc_ast)
+          (all_comments, aloc_ast)
       | Options.TypesFirst ->
         fun ~reader file ->
-          let (_, _, comments) = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+          let (_, { Flow_ast.Program.all_comments; _ }) =
+            Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
+          in
           let aloc_ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
-          (comments, aloc_ast))
+          (all_comments, aloc_ast))
     ~get_file_sig_unsafe:
       (match Options.arch options with
       | Options.Classic ->
@@ -214,7 +216,7 @@ let merge_context ~options ~reader component =
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
-  let (_, _, comments) = ast in
+  let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -254,7 +256,7 @@ let merge_contents_context ~reader options file ast info file_sig =
       ~lint_severities
       ~strict_mode
       ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
       ~get_aloc_table_unsafe
       ~get_docblock_unsafe:(fun _ -> info)
       ~phase:Context.Checking
@@ -337,11 +339,11 @@ let check_file options ~reader file =
         ~reader
         ~phase:Context.Checking
         ~get_ast_unsafe:(fun ~reader file ->
-          let ((_, _, comments) as ast) =
+          let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
             Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
           in
           let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-          (comments, aloc_ast))
+          (all_comments, aloc_ast))
         ~get_file_sig_unsafe:(fun ~reader file ->
           Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file
           |> File_sig.abstractify_locs)

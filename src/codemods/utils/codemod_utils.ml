@@ -41,7 +41,7 @@ let make_visitor job_config =
     match runner with
     | Reducer reducer ->
       let reducer = reducer ask in
-      let (_ : (Loc.t, Loc.t) Flow_ast.program) = reducer#program ast in
+      let (_ : (Loc.t, Loc.t) Flow_ast.Program.t) = reducer#program ast in
       reducer#acc
     | Mapper mapper ->
       let mapper = mapper ask in

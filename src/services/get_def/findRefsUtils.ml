@@ -10,7 +10,7 @@ module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
-type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
+type ast_info = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t
 
 let compute_docblock file content =
   Parsing_service_js.(
@@ -39,7 +39,7 @@ let compute_ast_result options file content =
     | Parse_skip _ -> Error "Parse unexpectedly skipped")
 
 let get_ast_result ~reader file :
-    ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result =
+    ((Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t, string) result =
   Parsing_heaps.(
     let get_result f kind =
       let error =

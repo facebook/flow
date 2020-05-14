@@ -28,7 +28,7 @@ type node =
   | BigIntLiteral of Loc.t * Loc.t Flow_ast.BigIntLiteral.t
   | BooleanLiteral of Loc.t * Loc.t Flow_ast.BooleanLiteral.t
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
-  | Program of (Loc.t, Loc.t) Flow_ast.program
+  | Program of (Loc.t, Loc.t) Flow_ast.Program.t
   | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
   | Params of (Loc.t, Loc.t) Flow_ast.Function.Params.t
@@ -48,8 +48,8 @@ type node =
  * does not work well for e.g. parsing two programs and determining their differences. *)
 val program :
   diff_algorithm ->
-  (Loc.t, Loc.t) Flow_ast.program ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   node change list
 
 (* Diffs two lists and produces an edit script. This is exposed only for testing purposes *)

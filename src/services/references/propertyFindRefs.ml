@@ -19,7 +19,7 @@ let add_ref_kind kind = Base.List.map ~f:(fun loc -> (kind, loc))
 module LiteralToPropLoc : sig
   (* Returns a map from object_literal_loc to prop_loc, for all object literals which contain the
    * given property name. *)
-  val make : (Loc.t, Loc.t) Ast.program -> prop_name:string -> Loc.t LocMap.t
+  val make : (Loc.t, Loc.t) Ast.Program.t -> prop_name:string -> Loc.t LocMap.t
 end = struct
   class locmap_builder prop_name =
     object (this)

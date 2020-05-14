@@ -203,7 +203,7 @@ type node =
   | BigIntLiteral of Loc.t * Loc.t Ast.BigIntLiteral.t
   | BooleanLiteral of Loc.t * Loc.t Ast.BooleanLiteral.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
-  | Program of (Loc.t, Loc.t) Ast.program
+  | Program of (Loc.t, Loc.t) Ast.Program.t
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
   | Params of (Loc.t, Loc.t) Ast.Function.Params.t
@@ -334,8 +334,8 @@ let partition_imports (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
 (* Entry point *)
 let program
     (algo : diff_algorithm)
-    (program1 : (Loc.t, Loc.t) Ast.program)
-    (program2 : (Loc.t, Loc.t) Ast.program) : node change list =
+    (program1 : (Loc.t, Loc.t) Ast.Program.t)
+    (program2 : (Loc.t, Loc.t) Ast.Program.t) : node change list =
   (* Assuming a diff has already been generated, recurse into it.
      This function is passed the old_list and index_offset parameters
      in order to correctly insert new statements WITHOUT assuming that
@@ -456,10 +456,11 @@ let program
       when not (String.equal c1 c2) ->
       Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
     | _ -> None
-  and program' (program1 : (Loc.t, Loc.t) Ast.program) (program2 : (Loc.t, Loc.t) Ast.program) :
+  and program' (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t) Ast.Program.t) :
       node change list =
-    let (program_loc, statements1, _) = program1 in
-    let (_, statements2, _) = program2 in
+    let open Ast.Program in
+    let (program_loc, { statements = statements1; _ }) = program1 in
+    let (_, { statements = statements2; _ }) = program2 in
     toplevel_statement_list statements1 statements2
     |> Base.Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
   and toplevel_statement_list

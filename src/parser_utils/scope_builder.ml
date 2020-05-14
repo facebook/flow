@@ -200,8 +200,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#with_bindings ~lexical:true loc lexical_bindings (super#block loc) stmt
 
       (* like block *)
-      method! program (program : (L.t, L.t) Ast.program) =
-        let (loc, _, _) = program in
+      method! program (program : (L.t, L.t) Ast.Program.t) =
+        let (loc, _) = program in
         let lexical_hoist = new lexical_hoister in
         let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
         this#with_bindings ~lexical:true loc lexical_bindings super#program program
@@ -360,7 +360,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
     end
 
   let program ?(ignore_toplevel = false) program =
-    let (loc, _, _) = program in
+    let (loc, _) = program in
     let walk = new scope_builder in
     let bindings =
       if ignore_toplevel then

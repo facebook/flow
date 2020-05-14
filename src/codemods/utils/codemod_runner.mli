@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
+type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
 
 type 'a untyped_flow_init_runner_visitor = {
   (* Runner init function which is called after Types_js.init but before any of the

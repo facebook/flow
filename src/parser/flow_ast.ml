@@ -1825,6 +1825,15 @@ and Function : sig
     | BodyExpression of ('M, 'T) Expression.t
   [@@deriving show]
 end =
-  Function]
+  Function
 
-type ('M, 'T) program = 'M * ('M, 'T) Statement.t list * 'M Comment.t list [@@deriving show]
+and Program : sig
+  type ('M, 'T) t = 'M * ('M, 'T) t'
+
+  and ('M, 'T) t' = {
+    statements: ('M, 'T) Statement.t list;
+    all_comments: 'M Comment.t list;
+  }
+  [@@deriving show]
+end =
+  Program]

@@ -11,7 +11,7 @@ type type_contents_artifacts =
   Context.t
   * Docblock.t
   * File_sig.With_Loc.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (Loc.t * Parse_error.t) list
 
 type single_client = {

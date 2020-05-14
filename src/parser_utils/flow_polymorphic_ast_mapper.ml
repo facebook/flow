@@ -16,12 +16,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method virtual on_type_annot : 'T -> 'U
 
-    method program (program : ('M, 'T) Ast.program) : ('N, 'U) Ast.program =
-      let (annot, statements, comments) = program in
+    method program (program : ('M, 'T) Ast.Program.t) : ('N, 'U) Ast.Program.t =
+      let open Ast.Program in
+      let (annot, { statements; all_comments }) = program in
       let annot' = this#on_loc_annot annot in
       let statements' = this#toplevel_statement_list statements in
-      let comments' = Base.List.map ~f:this#comment comments in
-      (annot', statements', comments')
+      let all_comments' = Base.List.map ~f:this#comment all_comments in
+      (annot', { statements = statements'; all_comments = all_comments' })
 
     method statement ((annot, stmt) : ('M, 'T) Ast.Statement.t) : ('N, 'U) Ast.Statement.t =
       Ast.Statement.

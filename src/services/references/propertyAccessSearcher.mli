@@ -6,4 +6,4 @@
  *)
 
 (* Returns true iff the given AST contains an access to a property with the given name *)
-val search : string (* name *) -> (Loc.t, Loc.t) Flow_ast.program -> bool
+val search : string (* name *) -> (Loc.t, Loc.t) Flow_ast.Program.t -> bool

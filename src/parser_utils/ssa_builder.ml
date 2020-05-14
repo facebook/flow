@@ -1101,7 +1101,7 @@ struct
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =
-    let (loc, _, _) = program in
+    let (loc, _) = program in
     let ssa_walk = new ssa_builder in
     let bindings =
       if ignore_toplevel then

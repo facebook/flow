@@ -10,7 +10,7 @@ module type READER = sig
 
   val has_ast : reader:reader -> File_key.t -> bool
 
-  val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program option
+  val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
@@ -20,9 +20,9 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
+  val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.program
+  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t
 
   val get_sig_ast_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
@@ -52,8 +52,8 @@ type worker_mutator = {
   add_file:
     File_key.t ->
     Docblock.t ->
-    (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t ->
-    ((ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option) option ->
+    (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
+    ((ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option) option ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }

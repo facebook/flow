@@ -34,7 +34,7 @@ let get_target_filename_set ~options ~libs ~all filename_set =
 
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
-type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.program -> 'ctx -> 'a
+type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
 
 (* A runner needs to specify two main things, in order to be used in repeat mode:
  *
@@ -78,7 +78,7 @@ module TypedRunner :
   StepRunnerT with type 'a visitor = ('a, Codemod_context.Typed.t) abstract_visitor = struct
   type env = ServerEnv.env
 
-  type 'a visitor = (Loc.t, Loc.t) Flow_ast.program -> Codemod_context.Typed.t -> 'a
+  type 'a visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> Codemod_context.Typed.t -> 'a
 
   (* We calculate the files that need to be merged in the same way that recheck
      would, but making the following assumptions:
@@ -350,7 +350,7 @@ module UntypedRunner :
   StepRunnerT with type 'a visitor = ('a, Codemod_context.Untyped.t) abstract_visitor = struct
   type env = unit
 
-  type 'a visitor = (Loc.t, Loc.t) Flow_ast.program -> Codemod_context.Untyped.t -> 'a
+  type 'a visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> Codemod_context.Untyped.t -> 'a
 
   let run genv ~visit roots =
     let { ServerEnv.workers; options } = genv in

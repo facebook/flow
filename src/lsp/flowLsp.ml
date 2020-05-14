@@ -81,7 +81,7 @@ type open_file_info = {
   (* o_open_doc is guaranteed to be up-to-date with respect to the editor *)
   o_open_doc: Lsp.TextDocumentItem.t;
   (* o_ast, if present, is guaranteed to be up-to-date. It gets computed lazily. *)
-  o_ast: ((Loc.t, Loc.t) Flow_ast.program * Lsp.PublishDiagnostics.diagnostic list option) option;
+  o_ast: ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) option;
   (* o_unsaved if true means that this open file has unsaved changes to the buffer. *)
   o_unsaved: bool;
 }
@@ -854,7 +854,7 @@ let error_to_lsp
  * or it's an unopened file in which case we'll retrieve parse results but
  * won't store them. *)
 let parse_and_cache flowconfig_name (state : state) (uri : string) :
-    state * ((Loc.t, Loc.t) Flow_ast.program * Lsp.PublishDiagnostics.diagnostic list option) =
+    state * ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) =
   (* part of parsing is producing parse errors, if so desired *)
   let liveSyntaxErrors =
     Initialize.(
@@ -907,7 +907,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         let filekey = Base.Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
         let parse_options = get_parse_options () in
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
-      with _ -> ((Loc.none, [], []), [])
+      with _ -> ((Loc.none, { Flow_ast.Program.statements = []; all_comments = [] }), [])
     in
     ( program,
       if liveSyntaxErrors then

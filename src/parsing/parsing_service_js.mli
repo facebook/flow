@@ -11,9 +11,9 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type t = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t
 
-type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option
+type aloc_t = (ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
 
 type parse_ok =
   | Classic of t
@@ -121,7 +121,7 @@ val parse_docblock :
   docblock_error list * Docblock.t
 
 val parse_json_file :
-  fail:bool -> string -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program * parse_error list
+  fail:bool -> string -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t * parse_error list
 
 val parse_source_file :
   fail:bool ->
@@ -129,7 +129,7 @@ val parse_source_file :
   use_strict:bool ->
   string ->
   File_key.t ->
-  (Loc.t, Loc.t) Flow_ast.program * parse_error list
+  (Loc.t, Loc.t) Flow_ast.Program.t * parse_error list
 
 (* parse contents of a file *)
 val do_parse :

@@ -19,10 +19,7 @@ end
 module Translate (Impl : Translator_intf.S) (Config : Config) : sig
   type t
 
-  val program :
-    Offset_utils.t option ->
-    Loc.t * (Loc.t, Loc.t) Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
-    t
+  val program : Offset_utils.t option -> (Loc.t, Loc.t) Ast.Program.t -> t
 
   val expression : Offset_utils.t option -> (Loc.t, Loc.t) Ast.Expression.t -> t
 
@@ -32,7 +29,7 @@ with type t = Impl.t = struct
   type t = Impl.t
 
   type functions = {
-    program: Loc.t * (Loc.t, Loc.t) Ast.Statement.t list * (Loc.t * Ast.Comment.t') list -> t;
+    program: (Loc.t, Loc.t) Ast.Program.t -> t;
     expression: (Loc.t, Loc.t) Ast.Expression.t -> t;
   }
 
@@ -119,11 +116,11 @@ with type t = Impl.t = struct
       in
       let prefix = locs @ comments @ [("type", string _type)] in
       obj (List.rev_append prefix props)
-    and program (loc, statements, comments) =
+    and program (loc, { Ast.Program.statements; all_comments }) =
       let body = statement_list statements in
       let props =
         if Config.include_comments then
-          [("body", body); ("comments", comment_list comments)]
+          [("body", body); ("comments", comment_list all_comments)]
         else
           [("body", body)]
       in

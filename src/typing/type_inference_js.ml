@@ -376,7 +376,9 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
 
   Flow_js.Cache.clear ();
 
-  let (prog_aloc, aloc_statements, aloc_comments) = aloc_ast in
+  let (prog_aloc, { Ast.Program.statements = aloc_statements; all_comments = aloc_all_comments }) =
+    aloc_ast
+  in
   add_require_tvars cx file_sig;
   Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
 
@@ -424,7 +426,7 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   let module_t = Import_export.mk_module_t cx reason in
   Context.add_module cx module_ref module_t;
 
-  (prog_aloc, typed_statements, aloc_comments)
+  (prog_aloc, { Ast.Program.statements = typed_statements; all_comments = aloc_all_comments })
 
 (* Because libdef parsing is overly permissive, a libdef file might include an
    unexpected top-level statement like `export type` which mutates the module
@@ -460,8 +462,8 @@ let with_libdef_builtins cx f =
  *)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let (_, _, comments) = ast in
-  let (_, aloc_statements, _) = aloc_ast in
+  let (_, { Ast.Program.all_comments; _ }) = ast in
+  let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
   Flow_js.Cache.clear ();
 
   let () =
@@ -474,7 +476,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
-      scan_for_suppressions cx lint_severities comments);
+      scan_for_suppressions cx lint_severities all_comments);
 
   ( module_scope
   |> Scope.(

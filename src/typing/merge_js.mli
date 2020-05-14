@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
+type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
 module Reqs : sig
   type t
@@ -41,7 +41,7 @@ val merge_component :
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
-  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
+  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) Nel.t
 
 val merge_tvar : Context.t -> Reason.t -> Constraint.ident -> Type.t
 

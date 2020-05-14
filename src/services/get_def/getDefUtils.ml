@@ -57,7 +57,7 @@ module ObjectKeyAtLoc : sig
    * enclosing object literal. This is because later, we need to figure out which types are related
    * to this object literal which is easier to do when we have the location of the actual object
    * literal than if we only had the location of a single key. *)
-  val get : (Loc.t, Loc.t) Flow_ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
+  val get : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t * Loc.t * string) option
 end = struct
   class object_key_finder target_loc =
     object (this)

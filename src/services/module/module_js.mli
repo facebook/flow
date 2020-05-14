@@ -129,7 +129,7 @@ val package_incompatible :
   options:Options.t ->
   reader:State_reader.t ->
   string ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   package_incompatible_return
 
 (***************************************************)

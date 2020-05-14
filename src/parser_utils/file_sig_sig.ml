@@ -197,7 +197,7 @@ module type S = sig
   type error = IndeterminateModuleType of L.t
 
   val program_with_exports_info :
-    ast:(L.t, L.t) Flow_ast.program ->
+    ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
     (exports_info t', error) result
 
@@ -212,7 +212,7 @@ module type S = sig
   val init : t
 
   val program :
-    ast:(L.t, L.t) Flow_ast.program -> module_ref_prefix:string option -> (t, error) result
+    ast:(L.t, L.t) Flow_ast.Program.t -> module_ref_prefix:string option -> (t, error) result
 
   val verified :
     Signature_builder_deps.PrintableErrorSet.t -> L.LSet.t SMap.t option -> exports_info t' -> t

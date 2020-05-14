@@ -262,7 +262,7 @@ let infer_and_merge ~root filename ast file_sig =
   let lint_severities = LintSettings.empty_severities in
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
-  let (_, _, comments) = ast in
+  let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let ((cx, tast), _other_cxs) =
     Merge_js.merge_component
@@ -270,7 +270,7 @@ let infer_and_merge ~root filename ast file_sig =
       ~lint_severities
       ~strict_mode
       ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
         (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
          * shouldn't use them to decide whether or not to use abstract locations. We should pass through
          * whatever options we need instead *)

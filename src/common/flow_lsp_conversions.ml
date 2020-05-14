@@ -397,7 +397,7 @@ module DocumentSymbols = struct
     | _ -> acc
 end
 
-let flow_ast_to_lsp_symbols ~(uri : Lsp.documentUri) (program : (Loc.t, Loc.t) Ast.program) :
+let flow_ast_to_lsp_symbols ~(uri : Lsp.documentUri) (program : (Loc.t, Loc.t) Ast.Program.t) :
     Lsp.SymbolInformation.t list =
-  let (_loc, statements, _comments) = program in
+  let (_loc, { Ast.Program.statements; _ }) = program in
   Base.List.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)

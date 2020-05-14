@@ -517,7 +517,8 @@ module Comments = struct
     (loc, { kind = Line; text; on_newline })
 end
 
-let mk_program ?(comments = []) stmts = (Loc.none, stmts, comments)
+let mk_program ?(all_comments = []) stmts =
+  (Loc.none, { Ast.Program.statements = stmts; all_comments })
 
 let ast_of_string ~parser str =
   let parse_options =
@@ -551,4 +552,4 @@ let statement_of_string str =
 
 let program_of_string str =
   let stmts = ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
-  (Loc.none, stmts, [])
+  (Loc.none, { Ast.Program.statements = stmts; all_comments = [] })

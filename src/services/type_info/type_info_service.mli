@@ -8,7 +8,7 @@
 val type_at_pos :
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
   evaluate_type_destructors:bool ->
@@ -24,12 +24,12 @@ val dump_types :
   evaluate_type_destructors:bool ->
   Context.t ->
   File_sig.With_Loc.t ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   (Loc.t * string) list
 
 val coverage :
   cx:Context.t ->
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   force:bool ->
   trust:bool ->
   File_key.t ->

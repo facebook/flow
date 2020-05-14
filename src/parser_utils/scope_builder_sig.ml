@@ -14,7 +14,7 @@ module type S = sig
     type t = Api.info
   end
 
-  val program : ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.program -> Acc.t
+  val program : ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> Acc.t
 
   class scope_builder :
     object

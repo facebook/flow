@@ -12,4 +12,6 @@ val loc_to_aloc_mapper : (Loc.t, Loc.t, ALoc.t, ALoc.t) Flow_polymorphic_ast_map
 (* Converts an (ALoc.t, ALoc.t) AST where the ALoc.ts have a concrete underlying representation to
  * one where the ALoc.ts have a keyed underlying representation. *)
 val keyify_alocs :
-  File_key.t -> (ALoc.t, ALoc.t) Flow_ast.program -> ALoc.table * (ALoc.t, ALoc.t) Flow_ast.program
+  File_key.t ->
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+  ALoc.table * (ALoc.t, ALoc.t) Flow_ast.Program.t

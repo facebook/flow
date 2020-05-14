@@ -2187,15 +2187,18 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       }
 
   let make env file_sig program =
-    let (program_loc, _, _) = program in
+    let (program_loc, _) = program in
     let outlined = T.Outlined.create () in
     let env = make_env outlined env in
     let (values, types) = exports outlined file_sig in
     let outlined_stmts = T.Outlined.get outlined in
     ( program_loc,
-      List.sort Stdlib.compare (List.rev_append env @@ List.rev outlined_stmts)
-      @ List.sort Stdlib.compare (List.rev_append values @@ List.rev types),
-      [] )
+      {
+        Ast.Program.statements =
+          List.sort Stdlib.compare (List.rev_append env @@ List.rev outlined_stmts)
+          @ List.sort Stdlib.compare (List.rev_append values @@ List.rev types);
+        all_comments = [];
+      } )
 
   (* no need to include the comments *)
 end

@@ -15,6 +15,6 @@ val func_details :
 val find_signatures :
   cx:Context.t ->
   file_sig:File_sig.With_ALoc.t ->
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Loc.t ->
   ((ServerProt.Response.func_details_result list * int) option, Ty_normalizer.error) result

@@ -35,10 +35,10 @@ val program :
   ?opts:opts ->
   preserve_docblock:bool ->
   checksum:string option ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   Layout.layout_node
 
-val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
+val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.Program.t -> Layout.layout_node
 
 val literal : opts:opts -> Loc.t -> Loc.t Flow_ast.Literal.t -> Layout.layout_node
 

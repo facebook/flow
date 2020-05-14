@@ -9,9 +9,9 @@ module Ast = Flow_ast
 open Utils_js
 open Sys_utils
 
-type t = (Loc.t, Loc.t) Ast.program * File_sig.With_Loc.t
+type t = (Loc.t, Loc.t) Ast.Program.t * File_sig.With_Loc.t
 
-type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_ALoc.t * ALoc.table option
+type aloc_t = (ALoc.t, ALoc.t) Ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
 
 type parse_ok =
   | Classic of t
@@ -170,8 +170,8 @@ let parse_json_file ~fail content file =
           comments = None;
         } )
   in
-  let comments = ([] : Loc.t Comment.t list) in
-  ((loc, [statement], comments), parse_errors)
+  let all_comments = ([] : Loc.t Comment.t list) in
+  ((loc, { Program.statements = [statement]; all_comments }), parse_errors)
 
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10

@@ -181,9 +181,9 @@ let tests =
       let c_loc = Loc.{ none with start = { line = 1; column = 1 } } in
       let s_loc = Loc.{ none with start = { line = 2; column = 1 } } in
       let ast =
-        let comments = [Ast_builder.Comments.line ~loc:c_loc " hello world"] in
+        let all_comments = [Ast_builder.Comments.line ~loc:c_loc " hello world"] in
         let statements = [S.expression ~loc:s_loc (E.identifier "x")] in
-        Ast_builder.mk_program ~comments statements
+        Ast_builder.mk_program ~all_comments statements
       in
       begin
         let layout = Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast in
