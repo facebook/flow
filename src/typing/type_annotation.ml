@@ -887,10 +887,10 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match convert_type_params () with
             | ([DefT (_, _, SingletonNumT (f, _))], targs) ->
-              let n = Pervasives.int_of_float f in
+              let n = Base.Int.of_float f in
               let key_strs =
                 ListUtils.range 0 n
-                |> Base.List.map ~f:(fun i -> Some ("x_" ^ Pervasives.string_of_int i))
+                |> Base.List.map ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i))
               in
               let emp = Key_map.empty in
               let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
@@ -924,7 +924,7 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 3 (fun () ->
             match convert_type_params () with
             | ([base_t; fun_pred_t; DefT (_, _, SingletonNumT (f, _))], targs) ->
-              let idx = Pervasives.int_of_float f in
+              let idx = Base.Int.of_float f in
               let reason = mk_reason (RCustom "refined type") loc in
               let pred = LatentP (fun_pred_t, idx) in
               reconstruct_ast (EvalT (base_t, LatentPredT (reason, pred), mk_eval_id cx loc)) targs

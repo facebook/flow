@@ -673,8 +673,8 @@ and tuple_length reason trust ts =
   in
   let t =
     let n = List.length ts in
-    let float = Pervasives.float_of_int n in
-    let string = Pervasives.string_of_int n in
+    let float = Base.Float.of_int n in
+    let string = Base.Int.to_string n in
     SingletonNumT (float, string)
   in
   DefT (r, trust, t)

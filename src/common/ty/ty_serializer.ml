@@ -300,7 +300,7 @@ let type_ options =
     { Ast.StringLiteral.value = lit; raw; comments = None }
   and num_lit lit =
     {
-      Ast.NumberLiteral.value = (try Pervasives.float_of_string lit with Failure _ -> 0.);
+      Ast.NumberLiteral.value = (try Base.Float.of_string lit with Failure _ -> 0.);
       raw = lit;
       comments = None;
     }

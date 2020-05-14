@@ -23,9 +23,6 @@
 
    *)
 let less_than_or_equal_to_version =
-  let int_of_string x =
-    (try Pervasives.int_of_string x with Failure _ -> raise (Failure ("int_of_string: " ^ x)))
-  in
   let rec all_nines str i len =
     if i >= len then
       true
@@ -57,7 +54,7 @@ let less_than_or_equal_to_version =
     else
       let msd_str = String.sub part 0 1 in
       let rest = String.sub part 1 (len - 1) in
-      let msd = int_of_string msd_str in
+      let msd = Base.Int.of_string msd_str in
       (* for "234", match 200-234 *)
       let x = msd_str ^ union (range ~pad:true rest) in
       if msd > 1 then
