@@ -11,6 +11,21 @@ include Ty_ancestors
 type aloc = (ALoc.t[@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))])
 [@@deriving show]
 
+(* WARNING to avoid VisitorsRuntime.StructuralMismatch exceptions when using
+ * comparator_ty, make sure to override the respective fail_* method for every
+ * variant type. To ensure that all such methods have been overridden, check the
+ * file generated with
+ *
+ *  ocamlfind ppx_tools/rewriter \
+ *    -ppx ' \
+ *    `ocamlfind query ppx_deriving`/ppx_deriving \
+ *    `ocamlfind query -predicates ppx_driver,byte -format '%d/%a' ppx_deriving.show` \
+ *    `ocamlfind query -predicates ppx_driver,byte -format '%d/%a' visitors.ppx`' \
+ *    src/common/ty/ty.ml
+ *
+ * and make sure all fail_* methods in the iter_ty class are overridden in
+ * comparator_ty.
+ *)
 type t =
   | TVar of tvar * t list option
   | Bound of aloc * string
@@ -151,7 +166,7 @@ and named_prop =
   | Field of {
       t: t;
       polarity: polarity;
-      optional: opt;
+      optional: bool;
     }
   | Method of fun_t
   | Get of t
@@ -170,8 +185,6 @@ and type_param = {
   tp_polarity: polarity;
   tp_default: t option;
 }
-
-and opt = bool
 
 and utility =
   (* https://flow.org/en/docs/types/utilities/ *)
@@ -363,6 +376,8 @@ class ['A] comparator_ty =
 
     method! private fail_gen_kind env x y = fail_gen this#tag_of_gen_kind env x y
 
+    method! private fail_obj_kind env x y = fail_gen this#tag_of_obj_kind env x y
+
     method! private fail_prop env x y = fail_gen this#tag_of_prop env x y
 
     method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
@@ -372,6 +387,12 @@ class ['A] comparator_ty =
     method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
 
     method! private fail_unsoundness_kind env x y = fail_gen this#tag_of_unsoundness_kind env x y
+
+    method! private fail_builtin_or_symbol env x y = fail_gen this#tag_of_builtin_or_symbol env x y
+
+    method! private fail_decl env x y = fail_gen this#tag_of_decl env x y
+
+    method! private fail_elt env x y = fail_gen this#tag_of_elt env x y
 
     (* types will show up in unions and intersections in ascending order *)
     (* No two elements of each variant can be assigned the same tag *)
@@ -407,7 +428,7 @@ class ['A] comparator_ty =
       | InlineInterface _ -> 24
       | CharSet _ -> 25
 
-    method tag_of_decl =
+    method tag_of_decl _ =
       function
       | VariableDecl _ -> 0
       | TypeAliasDecl _ -> 1
@@ -416,7 +437,7 @@ class ['A] comparator_ty =
       | EnumDecl _ -> 4
       | ModuleDecl _ -> 5
 
-    method tag_of_elt =
+    method tag_of_elt _ =
       function
       | Type _ -> 0
       | Decl _ -> 1
@@ -427,6 +448,12 @@ class ['A] comparator_ty =
       | InterfaceKind -> 1
       | TypeAliasKind -> 2
       | EnumKind -> 3
+
+    method tag_of_obj_kind _ =
+      function
+      | ExactObj -> 0
+      | InexactObj -> 1
+      | IndexedObj _ -> 2
 
     method tag_of_any_kind _ =
       function
@@ -507,6 +534,15 @@ class ['A] comparator_ty =
       | NoUpper -> 0
       | SomeKnownUpper _ -> 1
       | SomeUnknownUpper _ -> 2
+
+    method tag_of_builtin_or_symbol _ =
+      function
+      | FunProto -> 0
+      | ObjProto -> 1
+      | FunProtoApply -> 2
+      | FunProtoBind -> 3
+      | FunProtoCall -> 4
+      | TSymbol _ -> 5
   end
 
 (* Type destructors *)
