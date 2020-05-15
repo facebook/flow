@@ -110,6 +110,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/cli/coverage/":
   title: "Flow Coverage"
   description: "Increase your confidence in Flow checking"
+"/docs/cli/annotate-exports/":
+  title: "Flow Annotate-Exports"
+  description: "Prepare your codebase for Types-First"
 "/docs/cli/find-module/":
   title: "flow find-module"
   description: ""
@@ -212,6 +215,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/lang/lazy-modes/":
   title: "Lazy Modes"
   description: "Explanation of Flow's lazy mode"
+"/docs/lang/types-first/":
+  title: "Types-First"
+  description: "A New Architecture for Performance and Reliability"
 "/docs/libdefs/":
   title: "Library Definitions"
   description: "Typing third-party libraries"
