@@ -1,3 +1,7 @@
+### 0.125.1
+
+Publishing of `flow-bin` v0.125.0 failed to include the binaries. Oops!
+
 ### 0.125.0
 
 Likely to cause new Flow errors:
