@@ -140,6 +140,7 @@ module Opts = struct
     |> SSet.add ".woff2"
     |> SSet.add ".mp4"
     |> SSet.add ".webm"
+    |> SSet.add ".webp"
 
   let default_options =
     {
