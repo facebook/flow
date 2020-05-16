@@ -5397,14 +5397,33 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
 
 and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
   let open Ast.Expression.Logical in
+  (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
+   * expression throws. To model this we do not catch abnormal exceptions on the LHS.
+   * As such, we only analyze the RHS expression if the LHS does not throw.
+   * If the LHS does not throw, and the RHS does throw, then we cannot say that the
+   * entire expression throws, because we only evaluate the RHS depending on the value of the LHS.
+   * Thus, we catch abnormal control flow exceptions on the RHS and do not rethrow them.
+   *
+   * Note that the only kind of abnormal control flow that should be raised from an
+   * expression is a Throw. The other kinds (Return, Break, Continue) can only arise from
+   * statements, and while statements can appear within expressions (e.g. function expressions),
+   * any abnormals will be handled before they get here.
+   *)
   match operator with
   | Or ->
     let () = check_default_pattern cx left right in
     let ((((_, t1), _) as left), _, not_map, xtypes) =
       predicates_of_condition ~cond:OtherTest cx left
     in
-    let (((_, t2), _) as right) =
-      Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx right)
+    let ((((_, t2), _) as right), right_abnormal) =
+      Abnormal.catch_expr_control_flow_exception (fun () ->
+          Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx right))
+    in
+    let t2 =
+      match right_abnormal with
+      | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+      | None -> t2
+      | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
     in
     let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
     ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
@@ -5413,15 +5432,30 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
     let ((((_, t1), _) as left), map, _, xtypes) =
       predicates_of_condition ~cond:OtherTest cx left
     in
-    let (((_, t2), _) as right) =
-      Env.in_refined_env cx loc map xtypes (fun () -> expression cx right)
+    let ((((_, t2), _) as right), right_abnormal) =
+      Abnormal.catch_expr_control_flow_exception (fun () ->
+          Env.in_refined_env cx loc map xtypes (fun () -> expression cx right))
+    in
+    let t2 =
+      match right_abnormal with
+      | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+      | None -> t2
+      | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
     in
     let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
     ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))),
       { operator = And; left; right; comments } )
   | NullishCoalesce ->
     let (((_, t1), _) as left) = expression cx left in
-    let (((_, t2), _) as right) = expression cx right in
+    let ((((_, t2), _) as right), right_abnormal) =
+      Abnormal.catch_expr_control_flow_exception (fun () -> expression cx right)
+    in
+    let t2 =
+      match right_abnormal with
+      | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+      | None -> t2
+      | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
+    in
     let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
     ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))),
       { operator = NullishCoalesce; left; right; comments } )
@@ -7074,12 +7108,13 @@ and predicates_of_condition cx ~cond e =
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
      predicated when it is resolved. *)
-  | (loc, Call ({ Call.arguments = (_, { ArgList.arguments; comments = _ }); _ } as call)) ->
+  | (loc, Call ({ Call.callee; arguments = (_, { ArgList.arguments; comments = _ }); _ } as call))
+    ->
     let is_spread = function
       | Spread _ -> true
       | _ -> false
     in
-    if List.exists is_spread arguments then
+    if List.exists is_spread arguments || is_call_to_invariant callee then
       empty_result (expression cx e)
     else
       let (fun_t, keys, arg_ts, ret_t, call_ast) = predicated_call_expression cx loc call in

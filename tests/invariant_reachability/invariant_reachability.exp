@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Unreachable code. [unreachable-code]
 
-   19|   return "default string";
+   19|   return "default string"; // Error: unreachable
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -10,7 +10,7 @@ Error --------------------------------------------------------------------------
 
 Unreachable code. [unreachable-code]
 
-   31|   return "default string";
+   31|   return "default string"; // Error: unreachable
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -18,7 +18,7 @@ Error --------------------------------------------------------------------------
 
 Unreachable code. [unreachable-code]
 
-   37|   return "default string";
+   37|   return "default string"; // Error: unreachable
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -27,14 +27,89 @@ Error --------------------------------------------------------------------------
 Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2]. [incompatible-return]
 
    index.js:50:14
-   50|   return c ? 1 : invariant();
+   50|   return c ? 1 : invariant(); // Error: number is incompatible with string
                     ^ [1]
 
 References:
-   index.js:49:23
-   49| function foo(c: bool):string {
-                             ^^^^^^ [2]
+   index.js:49:24
+   49| function foo(c: bool): string {
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:75:3
+
+Unreachable code. [unreachable-code]
+
+   75|   return "default string"; // Error: unreachable
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- index.js:79:10
+
+Cannot return `c || invariant()` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   index.js:79:10
+   79|   return c || invariant(); // Error: return incompatible with string
+                ^
+
+References:
+   index.js:78:17
+   78| function foo(c: bool): string {
+                       ^^^^ [1]
+   index.js:78:24
+   78| function foo(c: bool): string {
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:99:3
+
+Unreachable code. [unreachable-code]
+
+   99|   return "default string"; // Error: unreachable
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- index.js:103:10
+
+Cannot return `c && invariant()` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   index.js:103:10
+   103|   return c && invariant(); // Error: return incompatible with string
+                 ^
+
+References:
+   index.js:102:17
+   102| function foo(c: bool): string {
+                        ^^^^ [1]
+   index.js:102:24
+   102| function foo(c: bool): string {
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- index.js:123:3
+
+Unreachable code. [unreachable-code]
+
+   123|   return "default string"; // Error: unreachable
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- index.js:127:10
+
+Cannot return `c ?? invariant()` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   index.js:127:10
+   127|   return c ?? invariant(); // Error: return incompatible with string
+                 ^
+
+References:
+   index.js:126:18
+   126| function foo(c: ?bool): string {
+                         ^^^^ [1]
+   index.js:126:25
+   126| function foo(c: ?bool): string {
+                                ^^^^^^ [2]
 
 
 
-Found 4 errors
+Found 10 errors
