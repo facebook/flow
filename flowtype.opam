@@ -9,7 +9,7 @@ doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
   "ocaml" {>= "4.07.1"}
-  "base" {= "v0.11.1"}
+  "base" {>= "v0.11.1"}
   "base-unix"
   "base-bytes"
   "dtoa" {>= "0.3.1"}
