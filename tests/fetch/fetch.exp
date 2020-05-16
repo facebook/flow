@@ -8,8 +8,8 @@ Cannot assign `fetch(...)` to `b` because `Response` [1] is incompatible with st
                                     ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1501:76
-   1501| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+   <BUILTINS>/bom.js:1502:76
+   1502| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [1]
    fetch.js:12:18
      12| const b: Promise<string> = fetch(myRequest); // incorrect
@@ -32,8 +32,8 @@ References:
    fetch.js:25:18
      25| const d: Promise<Blob> = fetch('image.png'); // incorrect
                           ^^^^ [1]
-   <BUILTINS>/bom.js:1501:76
-   1501| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+   <BUILTINS>/bom.js:1502:76
+   1502| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [2]
    <BUILTINS>/core.js:667:24
     667| declare class Promise<+R> {
@@ -44,7 +44,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Headers` with `''Content-T...'` bound to `init` because: [incompatible-call]
  - Either string [1] is incompatible with `Headers` [2].
- - Or string [1] is incompatible with object type [3].
+ - Or string [1] is incompatible with array type [3].
+ - Or string [1] is incompatible with object type [4].
 
    headers.js:3:23
       3| const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
@@ -52,30 +53,44 @@ Cannot call `Headers` with `''Content-T...'` bound to `init` because: [incompati
 
 References:
    <BUILTINS>/bom.js:1365:20
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
                             ^^^^^^^ [2]
    <BUILTINS>/bom.js:1365:30
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:1365:56
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- headers.js:4:23
+Error -------------------------------------------------------------------------------------------------- headers.js:4:24
 
-Cannot call `Headers` with array literal bound to `init` because: [incompatible-call]
- - Either array literal [1] is incompatible with `Headers` [2].
- - Or array literal [1] is incompatible with object type [3].
+Cannot call `Headers` with array literal bound to `init` because string [1] is incompatible with tuple type [2] in array
+element. [incompatible-call]
 
-   headers.js:4:23
+   headers.js:4:24
       4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:1365:20
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
-                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:1365:30
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:1365:36
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- headers.js:4:40
+
+Cannot call `Headers` with array literal bound to `init` because string [1] is incompatible with tuple type [2] in array
+element. [incompatible-call]
+
+   headers.js:4:40
+      4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
+                                                ^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:1365:36
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                            ^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- headers.js:9:3
@@ -274,6 +289,24 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
+Cannot call `Request` with `c` bound to `init` because property `signal` is read-only in `Request` [1] but writable in
+`RequestOptions` [2]. [incompatible-variance]
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
+   request.js:4:10
+      4| const c: Request = new Request(b); // correct
+                  ^^^^^^^ [1]
+   <BUILTINS>/bom.js:1465:44
+   1465|     constructor(input: RequestInfo, init?: RequestOptions): void;
+                                                    ^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
 Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property `cache`.
 [incompatible-call]
 
@@ -306,6 +339,24 @@ References:
    <BUILTINS>/bom.js:1417:17
    1417|   credentials?: CredentialsType,
                          ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
+Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompatible with array type [2] in property
+`headers`. [incompatible-call]
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
+   <BUILTINS>/bom.js:1472:14
+   1472|     headers: Headers;
+                      ^^^^^^^ [1]
+   <BUILTINS>/bom.js:1418:13
+   1418|   headers?: HeadersInit,
+                     ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
@@ -484,8 +535,8 @@ References:
    request.js:24:19
      24| h.text().then((t: Buffer) => t); // incorrect
                            ^^^^^^ [1]
-   <BUILTINS>/bom.js:1487:21
-   1487|     text(): Promise<string>;
+   <BUILTINS>/bom.js:1488:21
+   1488|     text(): Promise<string>;
                              ^^^^^^ [2]
 
 
@@ -499,8 +550,8 @@ Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible wit
                          ^^^^
 
 References:
-   <BUILTINS>/bom.js:1483:28
-   1483|     arrayBuffer(): Promise<ArrayBuffer>;
+   <BUILTINS>/bom.js:1484:28
+   1484|     arrayBuffer(): Promise<ArrayBuffer>;
                                     ^^^^^^^^^^^ [1]
    request.js:26:27
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -511,7 +562,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Request` with object literal bound to `init` because in property `headers`: [incompatible-call]
  - Either string [1] is incompatible with `Headers` [2].
- - Or string [1] is incompatible with object type [3].
+ - Or string [1] is incompatible with array type [3].
+ - Or string [1] is incompatible with object type [4].
 
    request.js:56:12
      56|   headers: 'Content-Type: image/jpeg',
@@ -519,11 +571,14 @@ Cannot call `Request` with object literal bound to `init` because in property `h
 
 References:
    <BUILTINS>/bom.js:1365:20
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
                             ^^^^^^^ [2]
    <BUILTINS>/bom.js:1365:30
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:1365:56
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- request.js:63:28
@@ -575,7 +630,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Response` with object literal bound to `init` because in property `headers`: [incompatible-call]
  - Either string [1] is incompatible with `Headers` [2].
- - Or string [1] is incompatible with object type [3].
+ - Or string [1] is incompatible with array type [3].
+ - Or string [1] is incompatible with object type [4].
 
    response.js:13:14
      13|     headers: "'Content-Type': 'image/jpeg'"
@@ -583,11 +639,14 @@ Cannot call `Response` with object literal bound to `init` because in property `
 
 References:
    <BUILTINS>/bom.js:1365:20
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
                             ^^^^^^^ [2]
    <BUILTINS>/bom.js:1365:30
-   1365| type HeadersInit = Headers | { [key: string]: string, ... };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:1365:56
+   1365| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ response.js:30:34
@@ -857,7 +916,7 @@ References:
 
 
 
-Found 49 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
