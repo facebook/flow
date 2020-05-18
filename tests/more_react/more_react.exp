@@ -58,15 +58,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument. [in
         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:227:41
+   <BUILTINS>/react.js:229:41
                                                 v---
-   227|   declare export function checkPropTypes<V>(
-   228|     propTypes : any,
-   229|     values: V,
-   230|     location: string,
-   231|     componentName: string,
-   232|     getStack: ?(() => ?string)
-   233|   ) : void;
+   229|   declare export function checkPropTypes<V>(
+   230|     propTypes : any,
+   231|     values: V,
+   232|     location: string,
+   233|     componentName: string,
+   234|     getStack: ?(() => ?string)
+   235|   ) : void;
           -------^ [1]
 
 
@@ -79,15 +79,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument. [in
         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:227:41
+   <BUILTINS>/react.js:229:41
                                                 v---
-   227|   declare export function checkPropTypes<V>(
-   228|     propTypes : any,
-   229|     values: V,
-   230|     location: string,
-   231|     componentName: string,
-   232|     getStack: ?(() => ?string)
-   233|   ) : void;
+   229|   declare export function checkPropTypes<V>(
+   230|     propTypes : any,
+   231|     values: V,
+   232|     location: string,
+   233|     componentName: string,
+   234|     getStack: ?(() => ?string)
+   235|   ) : void;
           -------^ [1]
 
 
@@ -101,8 +101,8 @@ return value. [incompatible-call]
                                                                                                   ^^^ [1]
 
 References:
-   <BUILTINS>/react.js:232:24
-   232|     getStack: ?(() => ?string)
+   <BUILTINS>/react.js:234:24
+   234|     getStack: ?(() => ?string)
                                ^^^^^^ [2]
 
 

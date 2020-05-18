@@ -112,5 +112,41 @@ References:
                                 ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:14:22
 
-Found 6 errors
+Cannot create `Component2` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   test.js:14:22
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                            ^^^^^^^^^^
+
+References:
+   test.js:14:21
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:22
+
+Cannot create `Component2` element because property `foo` is missing in object type [1] but exists in props [2].
+[prop-missing]
+
+   test.js:14:22
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                            ^^^^^^^^^^
+
+References:
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [1]
+   test.js:14:21
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 8 errors

@@ -187,8 +187,8 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with s
                    ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 
@@ -202,8 +202,8 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with s
                    ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 
@@ -217,8 +217,8 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with b
                     ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:484:34
-   484|   bool: React$PropType$Primitive<boolean>,
+   <BUILTINS>/react.js:486:34
+   486|   bool: React$PropType$Primitive<boolean>,
                                          ^^^^^^^ [2]
 
 
@@ -232,8 +232,8 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with b
                     ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:484:34
-   484|   bool: React$PropType$Primitive<boolean>,
+   <BUILTINS>/react.js:486:34
+   486|   bool: React$PropType$Primitive<boolean>,
                                          ^^^^^^^ [2]
 
 
@@ -247,8 +247,8 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with n
                   ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -291,8 +291,8 @@ Cannot create `Legacy_ManyProps` element because null or undefined [1] is incomp
                                                              ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -2825,8 +2825,8 @@ Cannot create `Legacy_OptionalProps` element because undefined [1] is incompatib
                                    ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -2840,8 +2840,8 @@ Cannot create `Legacy_OptionalProps` element because string [1] is incompatible 
               ^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -2855,8 +2855,8 @@ Cannot create `Legacy_OptionalProps` element because string [1] is incompatible 
               ^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 

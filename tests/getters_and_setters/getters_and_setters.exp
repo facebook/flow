@@ -475,8 +475,8 @@ Cannot create `Example` element because string [1] is incompatible with number [
                     ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -489,8 +489,8 @@ Cannot create `Example` element because number [1] is incompatible with string [
                            ^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 

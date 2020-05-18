@@ -5889,10 +5889,15 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
   let (children_loc, _) = frag_children in
   let loc_opening = frag_openingElement in
   let fragment_t =
-    let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
-    let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
-    let use_op = Op (GetProperty reason) in
-    get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
+    match Context.react_runtime cx with
+    | Options.ReactRuntimeAutomatic ->
+      let reason = mk_reason (RIdentifier "Fragment") loc_opening in
+      Flow.get_builtin_type cx reason "React$FragmentType"
+    | Options.ReactRuntimeClassic ->
+      let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
+      let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
+      let use_op = Op (GetProperty reason) in
+      get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
   in
   let (unresolved_params, frag_children) = collapse_children cx frag_children in
   let locs = (expr_loc, frag_openingElement, children_loc) in

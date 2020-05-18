@@ -140,7 +140,7 @@ react_component.js:3:9 = module "react" {
   type MixedElement = React$MixedElement;
   type Key = React$Key;
   type Interaction = {name: string, timestamp: number, ...};
-  declare var Fragment: ({children?: React$Node, ...}) => React$Node;
+  declare var Fragment: React$FragmentType;
   type ElementType = React$ElementType;
   type ElementRef<C> = React$ElementRef<C>;
   type ElementProps<C> = React$ElementProps<C>;
@@ -182,51 +182,14 @@ react_component.js:18:17 = {|enabled: boolean|}
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
   "expanded_type":{
-    "kind":"Fun",
-    "typeParams":null,
-    "paramTypes":[
-      {
-        "kind":"Obj",
-        "obj_kind":"Inexact",
-        "frozen":false,
-        "literal":null,
-        "props":[
-          {
-            "kind":"NamedProp",
-            "prop":{
-              "name":"children",
-              "prop":{
-                "kind":"field",
-                "type":{
-                  "kind":"Generic",
-                  "type":{
-                    "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:14:5,20:25"},
-                    "name":"React$Node"
-                  },
-                  "kind":"type alias"
-                },
-                "polarity":"Neutral",
-                "optional":true
-              },
-              "from_proto":false
-            }
-          }
-        ]
-      }
-    ],
-    "paramNames":["_"],
-    "restParam":null,
-    "returnType":{
-      "kind":"Generic",
-      "type":{
-        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:14:5,20:25"},
-        "name":"React$Node"
-      },
-      "kind":"type alias"
+    "kind":"Generic",
+    "type":{
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:222:35-80"},
+      "name":"React$FragmentType"
     },
-    "staticType":{"kind":"Obj","obj_kind":"Inexact","frozen":false,"literal":null,"props":[]}
+    "kind":"type alias"
   },
-  "type":"({children?: React$Node, ...}) => React$Node",
+  "type":"React$FragmentType",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -245,7 +208,7 @@ react_component.js:32:13 = {
     "kind":"Generic",
     "typeArgs":[{"kind":"Num"}],
     "type":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:23-35"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:256:23-35"},
       "name":"ComponentType"
     },
     "kind":"type alias"
@@ -268,7 +231,7 @@ react_component.js:32:29 = {
   "expanded_type":{
     "kind":"TypeAlias",
     "name":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:23-35"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:256:23-35"},
       "name":"ComponentType"
     },
     "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],

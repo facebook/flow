@@ -8,8 +8,8 @@ object literal [1] but exists in `TimeoutConfig` [2]. [incompatible-call]
                                      ^^ [1]
 
 References:
-   <BUILTINS>/react.js:378:13
-   378|     config: TimeoutConfig | void | null,
+   <BUILTINS>/react.js:380:13
+   380|     config: TimeoutConfig | void | null,
                     ^^^^^^^^^^^^^ [2]
 
 
@@ -23,8 +23,8 @@ Cannot call `React.useDeferredValue` with object literal bound to `config` becau
                                      ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:13
-   378|     config: TimeoutConfig | void | null,
+   <BUILTINS>/react.js:380:13
+   380|     config: TimeoutConfig | void | null,
                     ^^^^^^^^^^^^^ [1]
 
 
@@ -38,8 +38,8 @@ object literal [1] but exists in `TimeoutConfig` [2]. [incompatible-call]
                             ^^ [1]
 
 References:
-   <BUILTINS>/react.js:382:13
-   382|     config: TimeoutConfig | void | null,
+   <BUILTINS>/react.js:384:13
+   384|     config: TimeoutConfig | void | null,
                     ^^^^^^^^^^^^^ [2]
 
 
@@ -53,8 +53,8 @@ Cannot call `React.useTransition` with object literal bound to `config` because 
                             ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:382:13
-   382|     config: TimeoutConfig | void | null,
+   <BUILTINS>/react.js:384:13
+   384|     config: TimeoutConfig | void | null,
                     ^^^^^^^^^^^^^ [1]
 
 
@@ -68,8 +68,8 @@ type [2]. [incompatible-call]
                         ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:383:8
-   383|   ): [(() => void) => void, boolean];
+   <BUILTINS>/react.js:385:8
+   385|   ): [(() => void) => void, boolean];
                ^^^^^^^^^^ [2]
 
 
