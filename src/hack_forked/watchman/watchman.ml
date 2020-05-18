@@ -82,28 +82,30 @@ type changes =
   | Watchman_pushed of pushed_changes
   | Watchman_synchronous of pushed_changes list
 
+module Jget = Hh_json_helpers.Jget
 module J = Hh_json_helpers.AdhocJsonHelpers
 
 (* Looks for common errors in watchman responses *)
 let assert_no_error obj =
-  (try
-     let warning = J.get_string_val "warning" obj in
-     EventLogger.watchman_warning warning;
-     Hh_logger.log "Watchman warning: %s\n" warning
-   with Not_found -> ());
-  (try
-     let error = J.get_string_val "error" obj in
-     EventLogger.watchman_error error;
-     raise @@ Watchman_error error
-   with Not_found -> ());
-  try
-    let canceled = J.get_bool_val "canceled" obj in
-    if canceled then (
-      EventLogger.watchman_error "Subscription canceled by watchman";
-      raise @@ Subscription_canceled_by_watchman
-    ) else
-      ()
-  with Not_found -> ()
+  let obj = Some obj in
+  (match Jget.string_opt obj "warning" with
+  | None -> ()
+  | Some warning ->
+    EventLogger.watchman_warning warning;
+    Hh_logger.log "Watchman warning: %s\n" warning);
+  (match Jget.string_opt obj "error" with
+  | None -> ()
+  | Some error ->
+    EventLogger.watchman_error error;
+    raise @@ Watchman_error error);
+  (match Jget.bool_opt obj "canceled" with
+  | None
+  | Some false ->
+    ()
+  | Some true ->
+    EventLogger.watchman_error "Subscription canceled by watchman";
+    raise @@ Subscription_canceled_by_watchman);
+  ()
 
 (* Verifies that a watchman response is valid JSON and free from common errors *)
 let sanitize_watchman_response ~debug_logging output =
@@ -647,21 +649,17 @@ let init ?since_clockspec settings () =
   re_init ?prior_clockspec settings
 
 let extract_file_names env json =
-  let files =
-    try J.get_array_val "files" json
-    with
-    (* When an hg.update happens, it shows up in the watchman subscription
-     * as a notification with no files key present. *)
-    | Not_found ->
-      []
-  in
-  let files =
-    Base.List.map files ~f:(fun json ->
-        let s = Hh_json.get_string_exn json in
-        let abs = Filename.concat env.watch_root s in
-        abs)
-  in
-  files
+  let open Hh_json.Access in
+  return json
+  >>= get_array "files"
+  |> counit_with (fun _ ->
+         (* When an hg.update happens, it shows up in the watchman subscription
+            as a notification with no files key present. *)
+         [])
+  |> Base.List.map ~f:(fun json ->
+         let s = Hh_json.get_string_exn json in
+         let abs = Filename.concat env.watch_root s in
+         abs)
 
 let within_backoff_time attempts time =
   let offset =
@@ -817,12 +815,14 @@ let transform_asynchronous_get_changes_response env data =
       match make_mergebase_changed_response env data with
       | Ok (env, response) -> (env, response)
       | Error _ ->
-        env.clockspec <- J.get_string_val "clock" data;
+        env.clockspec <- Jget.string_exn (Some data) "clock";
         assert_no_fresh_instance data;
-        (try (env, make_state_change_response `Enter (J.get_string_val "state-enter" data) data)
-         with Not_found ->
-           (try (env, make_state_change_response `Leave (J.get_string_val "state-leave" data) data)
-            with Not_found -> (env, Files_changed (set_of_list @@ extract_file_names env data))))
+        (match Jget.string_opt (Some data) "state-enter" with
+        | Some state -> (env, make_state_change_response `Enter state data)
+        | None ->
+          (match Jget.string_opt (Some data) "state-leave" with
+          | Some state -> (env, make_state_change_response `Leave state data)
+          | None -> (env, Files_changed (set_of_list @@ extract_file_names env data))))
     end
 
 let get_changes ?deadline instance =
