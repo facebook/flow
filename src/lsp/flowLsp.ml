@@ -361,30 +361,13 @@ let get_next_event
         let%lwt event = get_next_event_from_client state client parser in
         Lwt.return event
 
-let show_status
-    ?(titles = [])
-    ?(handler = (fun _title state -> state))
-    ~(type_ : MessageType.t)
-    ~(message : string)
-    ~(shortMessage : string option)
-    ~(progress : int option)
-    ~(total : int option)
-    (ienv : initialized_env) : initialized_env =
+(* What should we display/hide? It's a tricky question... *)
+let should_send_status (ienv : initialized_env) (status : ShowStatus.params) =
   let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
-  let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title }) in
-  let params =
-    {
-      ShowStatus.request = { ShowMessageRequest.type_; message; actions };
-      shortMessage;
-      progress;
-      total;
-    }
-  in
-  (* What should we display/hide? It's a tricky question... *)
   let (will_dismiss_old, will_show_new) =
-    match (use_status, ienv.i_status, params) with
+    match (use_status, ienv.i_status, status) with
     (* If the new status is identical to the old, then no-op *)
-    | (_, Shown (_, existingParams), params) when existingParams = params -> (false, false)
+    | (_, Shown (_, existingStatus), status) when existingStatus = status -> (false, false)
     (* If the client supports status reporting, then we'll blindly send everything *)
     | (true, _, _) -> (false, true)
     (* If the client only supports dialog boxes, then we'll be very limited:  *)
@@ -406,6 +389,28 @@ let show_status
       (false, true)
     | (false, Never_shown, _) -> (false, false)
   in
+  (will_dismiss_old, will_show_new)
+
+let show_status
+    ?(titles = [])
+    ?(handler = (fun _title state -> state))
+    ~(type_ : MessageType.t)
+    ~(message : string)
+    ~(shortMessage : string option)
+    ~(progress : int option)
+    ~(total : int option)
+    (ienv : initialized_env) : initialized_env =
+  let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
+  let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title }) in
+  let params =
+    {
+      ShowStatus.request = { ShowMessageRequest.type_; message; actions };
+      shortMessage;
+      progress;
+      total;
+    }
+  in
+  let (will_dismiss_old, will_show_new) = should_send_status ienv params in
   (* dismiss the old one *)
   let ienv =
     match (will_dismiss_old, ienv.i_status) with
