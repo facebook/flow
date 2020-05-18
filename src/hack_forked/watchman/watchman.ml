@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Base
 open Utils
 module Let_syntax = Lwt.Infix.Let_syntax
 
@@ -221,7 +222,7 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
       | Some terms -> terms :: expressions
       | None -> expressions
     in
-    assert (expressions <> []);
+    assert (not (List.is_empty expressions));
     let directives =
       [
         JSON_Object
@@ -329,7 +330,7 @@ let get_sockname () =
     let msg =
       spf
         "watchman not found on PATH: %s"
-        (Base.Option.value (Sys_utils.getenv_path ()) ~default:"(not set)")
+        (Option.value (Sys_utils.getenv_path ()) ~default:"(not set)")
     in
     let () = EventLogger.watchman_error msg in
     let () = Hh_logger.error "%s" msg in
@@ -351,7 +352,7 @@ let open_connection () =
   let%lwt sockname = get_sockname () in
   let (ic, oc) =
     if
-      Sys.os_type = "Unix"
+      String.equal Sys.os_type "Unix"
       (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
        * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
        * different fds *)
@@ -508,7 +509,7 @@ let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~timeout ~watch
 let prepend_relative_path_term ~relative_path ~terms =
   match terms with
   | None -> None
-  | Some _ when relative_path = "" ->
+  | Some _ when String.is_empty relative_path ->
     (* If we're watching the watch root directory, then there's no point in specifying a list of
      * files and directories to watch. We're already subscribed to any change in this watch root
      * anyway *)
@@ -577,7 +578,7 @@ let re_init
           match SSet.find_first_opt (fun root -> string_starts_with path root) watch_roots with
           | None -> failwith (spf "Cannot deduce watch root for path %s" path)
           | Some root ->
-            let relative_path = lstrip (lstrip path root) Filename.dir_sep in
+            let relative_path = lstrip (lstrip path root) Caml.Filename.dir_sep in
             prepend_relative_path_term ~relative_path ~terms))
       failed_paths
       watched_path_expression_terms
@@ -617,7 +618,7 @@ let re_init
       J.get_string_val "clock" response
   in
   let watched_path_expression_terms =
-    Base.Option.map watched_path_expression_terms ~f:(J.pred "anyof")
+    Option.map watched_path_expression_terms ~f:(J.pred "anyof")
   in
   let env =
     {
@@ -656,22 +657,15 @@ let extract_file_names env json =
          (* When an hg.update happens, it shows up in the watchman subscription
             as a notification with no files key present. *)
          [])
-  |> Base.List.map ~f:(fun json ->
+  |> List.map ~f:(fun json ->
          let s = Hh_json.get_string_exn json in
-         let abs = Filename.concat env.watch_root s in
+         let abs = Caml.Filename.concat env.watch_root s in
          abs)
 
 let within_backoff_time attempts time =
-  let offset =
-    4.0
-    *. 2.0
-       ** float
-            ( if attempts > 3 then
-              3
-            else
-              attempts )
-  in
-  Unix.time () >= time +. offset
+  let attempts = min attempts 3 in
+  let offset = 4 * (2 ** attempts) in
+  Float.(Unix.time () >= time +. of_int offset)
 
 let maybe_restart_instance instance =
   match instance with
@@ -739,13 +733,13 @@ let call_on_instance :
           on_dead' on_dead env
         in
         match Exception.unwrap exn with
-        | Sys_error msg when msg = "Broken pipe" ->
+        | Sys_error msg when String.equal msg "Broken pipe" ->
           Hh_logger.log "Watchman Pipe broken.";
           close_channel_on_instance' env
-        | Sys_error msg when msg = "Connection reset by peer" ->
+        | Sys_error msg when String.equal msg "Connection reset by peer" ->
           Hh_logger.log "Watchman connection reset by peer.";
           close_channel_on_instance' env
-        | Sys_error msg when msg = "Bad file descriptor" ->
+        | Sys_error msg when String.equal msg "Bad file descriptor" ->
           (* This happens when watchman is tearing itself down after we
            * retrieved a sock address and connected to the sock address. That's
            * because Unix.open_connection (via Timeout.open_connection) doesn't
@@ -832,12 +826,12 @@ let get_changes ?deadline instance =
     ~on_dead:(fun _ -> Watchman_unavailable)
     ~on_alive:(fun env ->
       let timeout =
-        Base.Option.map deadline (fun deadline ->
+        Option.map deadline (fun deadline ->
             let timeout = deadline -. Unix.time () in
-            max timeout 0.0)
+            Float.max timeout 0.0)
       in
       let debug_logging = env.settings.debug_logging in
-      if env.settings.subscribe_mode <> None then
+      if Option.is_some env.settings.subscribe_mode then
         let%map response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
         let (env, result) = transform_asynchronous_get_changes_response env response in
         (env, Watchman_pushed result)
