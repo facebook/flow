@@ -21,6 +21,10 @@ else
   UNAME_S=$(shell uname -s)
 endif
 
+# Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
+# with `make OCAMLBUILD_JOBS=1`
+OCAMLBUILD_JOBS := 0
+
 -include facebook/Makefile.defs
 
 ################################################################################
@@ -273,7 +277,7 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
-OCB=ocamlbuild -use-ocamlfind -no-links
+OCB=ocamlbuild -use-ocamlfind -no-links -j $(OCAMLBUILD_JOBS)
 
 all: bin/flow$(EXE)
 
