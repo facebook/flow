@@ -219,7 +219,11 @@ and 'loc t' =
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
   | EInvalidLHSInAssignment of 'loc
-  | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
+  | EIncompatibleWithUseOp of {
+      use_op: 'loc virtual_use_op;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+    }
   | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
   | ENotAReactComponent of {
@@ -650,8 +654,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     EInvalidObjectKit
       { reason = map_reason reason; reason_op = map_reason reason_op; use_op = map_use_op use_op }
-  | EIncompatibleWithUseOp (rl, ru, op) ->
-    EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
+  | EIncompatibleWithUseOp { use_op; reason_lower; reason_upper } ->
+    EIncompatibleWithUseOp
+      {
+        use_op = map_use_op use_op;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+      }
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
     ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ENotAReactComponent { reason; use_op } ->
@@ -927,7 +936,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     util use_op (fun use_op -> EInvalidObjectKit { reason; reason_op; use_op })
-  | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
+  | EIncompatibleWithUseOp ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> EIncompatibleWithUseOp { contents with use_op })
   | ENotAReactComponent { reason; use_op } ->
     util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
   | EInvalidReactConfigType { reason; use_op } ->
@@ -2431,7 +2441,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
   | EInvalidLHSInAssignment _ ->
     Normal { features = [text "Invalid left-hand side in assignment expression."] }
-  | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
+  | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
   | ETrustIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
     IncompatibleTrust { reason_lower; reason_upper; use_op }
@@ -3225,7 +3235,7 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
   | EIncompatibleWithShape _ -> Some IncompatibleShape
-  | EIncompatibleWithUseOp (_, _, use_op) -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EIncompatibleWithUseOp { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)

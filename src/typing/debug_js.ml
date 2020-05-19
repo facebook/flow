@@ -1393,11 +1393,11 @@ let dump_error_message =
     | EObjectComputedPropertyAssign (reason1, reason2) ->
       spf "EObjectComputedPropertyAssign (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
-    | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
+    | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
       spf
-        "EIncompatibleWithUseOp (%s, %s, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+        "EIncompatibleWithUseOp { reason_lower = %s; reason_upper = %s; use_op = %s }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
         (string_of_use_op use_op)
     | ETrustIncompatibleWithUseOp (reason1, reason2, use_op) ->
       spf

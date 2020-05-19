@@ -664,7 +664,8 @@ let strict_equatable_error cond_context (l, r) =
             (SwitchCheck
                { case_test = case_test_reason; switch_discriminant = switch_discriminant_reason })
         in
-        Error_message.EIncompatibleWithUseOp (reason_of_t l, reason_of_t r, use_op)
+        Error_message.EIncompatibleWithUseOp
+          { reason_lower = reason_of_t l; reason_upper = reason_of_t r; use_op }
       | _ ->
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
         Error_message.EComparison reasons)
@@ -3003,9 +3004,15 @@ struct
                      cx
                      ~trace
                      (Error_message.EIncompatibleWithUseOp
-                        ( reason_l,
-                          UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_u rep,
-                          use_op ));
+                        {
+                          reason_lower = reason_l;
+                          reason_upper =
+                            UnionRep.specialized_reason
+                              ~reason_of_t:TypeUtil.reason_of_t
+                              reason_u
+                              rep;
+                          use_op;
+                        });
                  true
                | _ -> false ->
           ()
@@ -6893,7 +6900,11 @@ struct
           rec_flow cx trace (l, UseT (use_op, fun_proto))
         | (_, ExtendsUseT (use_op, _, [], t, tc)) ->
           let (reason_l, reason_u) = FlowError.ordered_reasons (reason_of_t t, reason_of_t tc) in
-          add_output cx ~trace (Error_message.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithUseOp
+               { reason_lower = reason_l; reason_upper = reason_u; use_op })
         (*******************************)
         (* ToString abstract operation *)
         (*******************************)
@@ -6987,7 +6998,8 @@ struct
           add_output
             cx
             ~trace
-            (Error_message.EIncompatibleWithUseOp (reason_of_t l, reason_of_t u, use_op))
+            (Error_message.EIncompatibleWithUseOp
+               { reason_lower = reason_of_t l; reason_upper = reason_of_t u; use_op })
         | _ ->
           add_output
             cx
