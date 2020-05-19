@@ -368,7 +368,7 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1 };
   }
 
-let infer_type filename content line col =
+let infer_type filename content line col : Loc.t * (string, string) result =
   let filename = File_key.SourceFile filename in
   let root = Path.dummy_path in
   match parse_content filename content with
@@ -395,7 +395,7 @@ let infer_type filename content line col =
       (match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
       | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line t))))
+      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line ~exact_by_default:true t))))
 
 let types_to_json types ~strip_root =
   Hh_json.(
