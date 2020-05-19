@@ -379,9 +379,15 @@ function createEditor(
       .then(flowProxy => flowProxy.typeAtPos(
         '-', value, cursor.line + 1, cursor.ch
       ))
-      .then(typeAtPos => {
-        typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
-        typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
+      .then(result => {
+        // flow.js <= 0.125 incorrectly returned an ocaml string
+        // instead of a JS string, where the string value is hidden in a
+        // `c` property.
+        var typeAtPos = typeof result === "string"
+          ? result
+          : result.c;
+        typeAtPosNode.title = typeAtPos;
+        typeAtPosNode.textContent = typeAtPos;
       })
       .catch(() => {
         typeAtPosNode.title = '';

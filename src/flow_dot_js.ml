@@ -442,7 +442,7 @@ let type_at_pos js_file js_content js_line js_col =
   let line = Js.parseInt js_line in
   let col = Js.parseInt js_col in
   match infer_type filename content line col with
-  | (_, Ok resp) -> resp
+  | (_, Ok resp) -> Js.string resp
   | (_, _) -> failwith "Error"
 
 let exports =
