@@ -645,6 +645,7 @@ let clear_intermediates cx =
   cx.sig_cx.type_asserts_map <- ALocMap.empty;
   cx.sig_cx.goal_map <- IMap.empty;
   cx.sig_cx.enum_exhaustive_checks <- [];
+  cx.sig_cx.openness_graph <- Openness.empty_graph;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -657,8 +658,6 @@ let clear_master_shared cx master_cx =
   let module PMap = Type.Properties.Map in
   let module EMap = Type.Exports.Map in
   cx.sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) cx.sig_cx.graph;
-  cx.sig_cx.openness_graph <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.openness_graph)) cx.sig_cx.openness_graph;
   cx.sig_cx.trust_graph <-
     IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) cx.sig_cx.trust_graph;
   cx.sig_cx.property_maps <-
@@ -809,7 +808,6 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
   sig_cx.evaluated <- Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
-  sig_cx.openness_graph <- IMap.union sig_cx_other.openness_graph sig_cx.openness_graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
   ()
 
