@@ -132,9 +132,6 @@ module TypedRunner :
         let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
         let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
         Context.clear_master_shared cx master_cx;
-        Context.remove_all_errors cx;
-        Context.remove_all_error_suppressions cx;
-        Context.clear_intermediates cx;
         Context_heaps.Merge_context_mutator.add_merge_on_diff
           ~audit:Expensive.ok
           worker_mutator

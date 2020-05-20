@@ -334,12 +334,6 @@ val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 
-val remove_all_errors : t -> unit
-
-val remove_all_error_suppressions : t -> unit
-
-val remove_all_lint_severities : t -> unit
-
 val remove_tvar : t -> Constraint.ident -> unit
 
 val set_envs : t -> env IMap.t -> unit
@@ -373,8 +367,6 @@ val set_use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values -> un
 val set_module_map : t -> Type.t SMap.t -> unit
 
 val set_local_env : t -> ALocSet.t SMap.t option -> unit
-
-val clear_intermediates : t -> unit
 
 val clear_master_shared : t -> sig_t -> unit
 

@@ -128,9 +128,6 @@ let load_lib_files
              let errors = Context.errors cx in
              let suppressions = Context.error_suppressions cx in
              let severity_cover = Context.severity_cover cx in
-             Context.remove_all_errors cx;
-             Context.remove_all_error_suppressions cx;
-             Context.remove_all_lint_severities cx;
 
              save_infer_errors lib_file errors;
              save_suppressions lib_file suppressions;

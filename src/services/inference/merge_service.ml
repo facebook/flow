@@ -307,11 +307,6 @@ let merge_component ~worker_mutator ~options ~reader component =
         aloc_tables
         severity_cover
     in
-    Context.remove_all_errors cx;
-    Context.remove_all_error_suppressions cx;
-    Context.remove_all_lint_severities cx;
-
-    Context.clear_intermediates cx;
 
     Context_heaps.Merge_context_mutator.add_merge_on_diff
       ~audit:Expensive.ok

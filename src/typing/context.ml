@@ -600,12 +600,6 @@ let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.t
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
-let remove_all_errors cx = cx.ccx.errors <- Flow_error.ErrorSet.empty
-
-let remove_all_error_suppressions cx = cx.ccx.error_suppressions <- Error_suppressions.empty
-
-let remove_all_lint_severities cx = cx.ccx.severity_cover <- Utils_js.FilenameMap.empty
-
 let remove_tvar cx id = cx.ccx.sig_cx.graph <- IMap.remove id cx.ccx.sig_cx.graph
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
@@ -639,27 +633,6 @@ let set_use_def cx use_def = cx.use_def <- use_def
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
 let set_module_map cx module_map = cx.ccx.sig_cx.module_map <- module_map
-
-let clear_intermediates cx =
-  cx.ccx.envs <- IMap.empty;
-  cx.ccx.all_unresolved <- IMap.empty;
-  cx.ccx.nominal_poly_ids <- Type.Poly.Set.empty;
-  cx.ccx.nominal_prop_ids <- ISet.empty;
-
-  (* still 176 bytes :/ *)
-  cx.ccx.type_graph <- Graph_explorer.Tbl.create 0;
-  cx.ccx.exists_checks <- ALocMap.empty;
-  cx.ccx.exists_excuses <- ALocMap.empty;
-  cx.ccx.voidable_checks <- [];
-  cx.ccx.test_prop_hits_and_misses <- IMap.empty;
-  cx.ccx.computed_property_states <- IMap.empty;
-  cx.ccx.optional_chains_useful <- ALocMap.empty;
-  cx.ccx.invariants_useful <- ALocMap.empty;
-  cx.ccx.type_asserts_map <- ALocMap.empty;
-  cx.ccx.goal_map <- IMap.empty;
-  cx.ccx.enum_exhaustive_checks <- [];
-  cx.ccx.openness_graph <- Openness.empty_graph;
-  ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

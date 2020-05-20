@@ -114,8 +114,6 @@ let load_lib_files ~ccx ~options ~reader files =
                    (Context.aloc_tables cx)
                    severity_cover
                in
-               Context.remove_all_errors cx;
-               Context.remove_all_error_suppressions cx;
 
                if verbose != None then
                  prerr_endlinef "load_lib %s: added symbols { %s }" file (String.concat ", " syms);
@@ -183,9 +181,6 @@ let init ~options ~reader lib_files =
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
-
-  Context.remove_all_lint_severities master_cx;
-  Context.clear_intermediates master_cx;
 
   (* store master signature context to heap *)
   Context_heaps.Init_master_context_mutator.add_master_sig ~audit:Expensive.ok master_cx;
