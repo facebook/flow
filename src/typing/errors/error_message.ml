@@ -3232,7 +3232,7 @@ let error_code_of_message err : error_code option =
     end
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
-  | EEnumInvalidCheck _ -> Some InvalidEnumAccess
+  | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
   | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
