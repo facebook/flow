@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- cast.js:37:2
 
-Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2]. You can explicitly cast your enum
+value to a string using `(<expression>: string)`. [incompatible-cast]
 
    cast.js:37:2
    37| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
@@ -126,9 +127,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
-Cannot cast `BS.A` to union type because: [incompatible-cast]
- - Either `B` [1] is incompatible with string [2].
- - Or `B` [1] is incompatible with boolean [3].
+Cannot cast `BS.A` to union type because `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum
+value to a boolean using `(<expression>: boolean)`. [incompatible-cast]
 
    cast.js:66:2
    66| (BS.A: string | boolean); // Error
@@ -142,19 +142,15 @@ References:
     5|   B = false,
     6| }
        ^ [1]
-   cast.js:66:8
-   66| (BS.A: string | boolean); // Error
-              ^^^^^^ [2]
    cast.js:66:17
    66| (BS.A: string | boolean); // Error
-                       ^^^^^^^ [3]
+                       ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
-Cannot cast `BS.A` to union type because: [incompatible-cast]
- - Either `S` [1] is incompatible with string [2].
- - Or `S` [1] is incompatible with boolean [3].
+Cannot cast `BS.A` to union type because `S` [1] is incompatible with string [2]. You can explicitly cast your enum
+value to a string using `(<expression>: string)`. [incompatible-cast]
 
    cast.js:66:2
    66| (BS.A: string | boolean); // Error
@@ -171,16 +167,12 @@ References:
    cast.js:66:8
    66| (BS.A: string | boolean); // Error
               ^^^^^^ [2]
-   cast.js:66:17
-   66| (BS.A: string | boolean); // Error
-                       ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
-Cannot cast `sb` to union type because: [incompatible-cast]
- - Either `S` [1] is incompatible with string [2].
- - Or `S` [1] is incompatible with boolean [3].
+Cannot cast `sb` to union type because `S` [1] is incompatible with string [2]. You can explicitly cast your enum value
+to a string using `(<expression>: string)`. [incompatible-cast]
 
    cast.js:69:2
    69| (sb: string | boolean); // Error
@@ -193,16 +185,12 @@ References:
    cast.js:69:6
    69| (sb: string | boolean); // Error
             ^^^^^^ [2]
-   cast.js:69:15
-   69| (sb: string | boolean); // Error
-                     ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
-Cannot cast `sb` to union type because: [incompatible-cast]
- - Either `B` [1] is incompatible with string [2].
- - Or `B` [1] is incompatible with boolean [3].
+Cannot cast `sb` to union type because `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value
+to a boolean using `(<expression>: boolean)`. [incompatible-cast]
 
    cast.js:69:2
    69| (sb: string | boolean); // Error
@@ -212,12 +200,9 @@ References:
    cast.js:68:21
    68| declare var sb: S | B;
                            ^ [1]
-   cast.js:69:6
-   69| (sb: string | boolean); // Error
-            ^^^^^^ [2]
    cast.js:69:15
    69| (sb: string | boolean); // Error
-                     ^^^^^^^ [3]
+                     ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
@@ -761,12 +746,13 @@ References:
        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19
+Error ------------------------------------------------------------------------------------------- error-coercion.js:8:19
 
-Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2]. You can explicitly cast your enum value to a
+string using `(<expression>: string)`. [incompatible-type]
 
-   error-coercion.js:9:19
-   9| const a: string = E.A;
+   error-coercion.js:8:19
+   8| const a: string = E.A; // Error: cannot implicitly coerce enum to its representation type
                         ^^^
 
 References:
@@ -777,23 +763,167 @@ References:
    5|   B,
    6| }
       ^ [1]
-   error-coercion.js:9:10
-   9| const a: string = E.A;
+   error-coercion.js:8:10
+   8| const a: string = E.A; // Error: cannot implicitly coerce enum to its representation type
                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ error-coercion.js:12:14
+Error ------------------------------------------------------------------------------------------ error-coercion.js:10:14
 
 Cannot assign `'B'` to `b` because string [1] is incompatible with `E` [2]. [incompatible-type]
 
-   error-coercion.js:12:14
-   12| const b: E = 'B';
+   error-coercion.js:10:14
+   10| const b: E = 'B'; // Error: cannot implicitly coerce into enum type
                     ^^^ [1]
 
 References:
-   error-coercion.js:12:10
-   12| const b: E = 'B';
+   error-coercion.js:10:10
+   10| const b: E = 'B'; // Error: cannot implicitly coerce into enum type
                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:12:19
+
+Cannot assign `E.A` to `c` because `E` [1] is incompatible with number [2]. [incompatible-type]
+
+   error-coercion.js:12:19
+   12| const c: number = E.A; // Error, message does not include suggestion because string isn't a subtype of number
+                         ^^^
+
+References:
+   error-coercion.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   error-coercion.js:12:10
+   12| const c: number = E.A; // Error, message does not include suggestion because string isn't a subtype of number
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:17:23
+
+Cannot assign `B.A` to `bool` because `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value
+to a boolean using `(<expression>: boolean)`. [incompatible-type]
+
+   error-coercion.js:17:23
+   17| const bool: boolean = B.A; // Error, with suggestion
+                             ^^^
+
+References:
+   error-coercion.js:14:1
+       v------------------
+   14| enum B of boolean {
+   15|   A = true,
+   16| }
+       ^ [1]
+   error-coercion.js:17:13
+   17| const bool: boolean = B.A; // Error, with suggestion
+                   ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:18:19
+
+Cannot assign `B.A` to `x` because `B` [1] is incompatible with number [2]. [incompatible-type]
+
+   error-coercion.js:18:19
+   18| const x: number = B.A; // Error, no suggestion
+                         ^^^
+
+References:
+   error-coercion.js:14:1
+       v------------------
+   14| enum B of boolean {
+   15|   A = true,
+   16| }
+       ^ [1]
+   error-coercion.js:18:10
+   18| const x: number = B.A; // Error, no suggestion
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:23:21
+
+Cannot assign `N.A` to `num` because `N` [1] is incompatible with number [2]. You can explicitly cast your enum value to
+a number using `(<expression>: number)`. [incompatible-type]
+
+   error-coercion.js:23:21
+   23| const num: number = N.A; // Error, with suggestion
+                           ^^^
+
+References:
+   error-coercion.js:20:1
+       v-----------------
+   20| enum N of number {
+   21|   A = 1,
+   22| }
+       ^ [1]
+   error-coercion.js:23:12
+   23| const num: number = N.A; // Error, with suggestion
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:24:19
+
+Cannot assign `N.A` to `y` because `N` [1] is incompatible with string [2]. [incompatible-type]
+
+   error-coercion.js:24:19
+   24| const y: string = N.A; // Error, no suggestion
+                         ^^^
+
+References:
+   error-coercion.js:20:1
+       v-----------------
+   20| enum N of number {
+   21|   A = 1,
+   22| }
+       ^ [1]
+   error-coercion.js:24:10
+   24| const y: string = N.A; // Error, no suggestion
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:29:21
+
+Cannot assign `S.A` to `sym` because `S` [1] is incompatible with symbol [2]. You can explicitly cast your enum value to
+a symbol using `(<expression>: symbol)`. [incompatible-type]
+
+   error-coercion.js:29:21
+   29| const sym: symbol = S.A; // Error, with suggestion
+                           ^^^
+
+References:
+   error-coercion.js:26:1
+       v-----------------
+   26| enum S of symbol {
+   27|   A,
+   28| }
+       ^ [1]
+   error-coercion.js:29:12
+   29| const sym: symbol = S.A; // Error, with suggestion
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:30:20
+
+Cannot assign `S.A` to `z` because `S` [1] is incompatible with boolean [2]. [incompatible-type]
+
+   error-coercion.js:30:20
+   30| const z: boolean = S.A; // Error, no suggestion
+                          ^^^
+
+References:
+   error-coercion.js:26:1
+       v-----------------
+   26| enum S of symbol {
+   27|   A,
+   28| }
+       ^ [1]
+   error-coercion.js:30:10
+   30| const z: boolean = S.A; // Error, no suggestion
+                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ error-duplicate-values.js:6:7
@@ -3237,4 +3367,7 @@ References:
 
 
 
-Found 175 errors
+Found 182 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

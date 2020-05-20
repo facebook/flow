@@ -1615,6 +1615,13 @@ let dump_error_message =
         (Base.Option.value ~default:"<None>" example_member)
     | EEnumMemberUsedAsType { reason; enum_name } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
+    | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+      spf
+        "EEnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; representation_type = %s }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
+        (Base.Option.value ~default:"<None>" representation_type)
     | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
       spf
         "EAssignExportedConstLikeBinding (%s) (%s) (%s)"

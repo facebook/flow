@@ -363,6 +363,12 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_name: string;
     }
+  | EEnumIncompatible of {
+      use_op: 'loc virtual_use_op;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      representation_type: string option;
+    }
   (* end enum error messages *)
   | EAssignExportedConstLikeBinding of {
       loc: 'loc;
@@ -871,6 +877,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
+  | EEnumIncompatible { use_op; reason_lower; reason_upper; representation_type } ->
+    EEnumIncompatible
+      {
+        use_op = map_use_op use_op;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        representation_type;
+      }
   | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
     EAssignExportedConstLikeBinding
       { loc = f loc; definition = map_reason definition; binding_kind }
@@ -938,6 +952,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EInvalidObjectKit { reason; reason_op; use_op })
   | EIncompatibleWithUseOp ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> EIncompatibleWithUseOp { contents with use_op })
+  | EEnumIncompatible ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> EEnumIncompatible { contents with use_op })
   | ENotAReactComponent { reason; use_op } ->
     util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
   | EInvalidReactConfigType { reason; use_op } ->
@@ -1240,6 +1256,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidReactCreateClass _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
+  | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
   | EIncompatibleWithShape _
@@ -1371,6 +1388,12 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
+    }
+  | IncompatibleEnum of {
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+      suggestion: 'loc Errors.Friendly.message_feature list;
     }
   | PropMissing of {
       loc: 'loc;
@@ -3069,6 +3092,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+    let suggestion =
+      match representation_type with
+      | Some representation_type ->
+        [
+          text "You can explicitly cast your enum value to a ";
+          text representation_type;
+          text " using ";
+          code (spf "(<expression>: %s)" representation_type);
+        ]
+      | None -> []
+    in
+    IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }
   | EAssignExportedConstLikeBinding { definition; binding_kind; _ } ->
     let features =
       [
@@ -3235,7 +3271,9 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
   | EIncompatibleWithShape _ -> Some IncompatibleShape
-  | EIncompatibleWithUseOp { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EEnumIncompatible { use_op; _ }
+  | EIncompatibleWithUseOp { use_op; _ } ->
+    error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)

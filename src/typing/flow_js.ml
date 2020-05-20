@@ -6454,6 +6454,26 @@ struct
             UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
           when ALoc.equal_id id1 id2 ->
           ()
+        | (DefT (enum_reason, _, EnumT { representation_t; _ }), UseT (use_op, t))
+          when TypeUtil.quick_subtype (Context.trust_errors cx) representation_t t ->
+          let representation_type =
+            match representation_t with
+            | DefT (_, _, BoolT _) -> Some "boolean"
+            | DefT (_, _, NumT _) -> Some "number"
+            | DefT (_, _, StrT _) -> Some "string"
+            | DefT (_, _, SymbolT) -> Some "symbol"
+            | _ -> None
+          in
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumIncompatible
+               {
+                 reason_lower = enum_reason;
+                 reason_upper = reason_of_t t;
+                 use_op;
+                 representation_type;
+               })
         | ( DefT (enum_reason, _, EnumT enum),
             EnumExhaustiveCheckT (check_reason, EnumExhaustiveCheckPossiblyValid exhaustive_check)
           ) ->
