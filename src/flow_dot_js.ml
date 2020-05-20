@@ -96,11 +96,12 @@ let load_lib_files
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
              let sig_cx = Context.make_sig () in
+             let ccx = Context.make_ccx sig_cx in
              let aloc_table = Utils_js.FilenameMap.empty in
              let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
              let cx =
                Context.make
-                 sig_cx
+                 ccx
                  metadata
                  lib_file
                  aloc_table
@@ -205,11 +206,12 @@ let get_master_cx =
       cx
     | None ->
       let sig_cx = Context.make_sig () in
+      let ccx = Context.make_ccx sig_cx in
       let aloc_table = Utils_js.FilenameMap.empty in
       let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       let cx =
         Context.make
-          sig_cx
+          ccx
           (stub_metadata ~root ~checked:false)
           File_key.Builtins
           aloc_table

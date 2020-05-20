@@ -102,6 +102,12 @@ type sig_t = {
   mutable export_maps: Type.Exports.map;
   (* map from evaluation ids to types *)
   mutable evaluated: Type.t Type.Eval.Map.t;
+  (* map from module names to their types *)
+  mutable module_map: Type.t SMap.t;
+}
+
+type component_t = {
+  sig_cx: sig_t;
   (* map from goal ids to types *)
   mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
@@ -110,8 +116,6 @@ type sig_t = {
   mutable all_unresolved: ISet.t IMap.t;
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
-  (* map from module names to their types *)
-  mutable module_map: Type.t SMap.t;
   (* We track nominal ids in the context to help decide when the types exported by a module have
      meaningfully changed: see Merge_js.ContextOptimizer. We care about two different types of
      nominal ids, one for object properties and one for polymorphic types. **)
@@ -164,7 +168,7 @@ type phase =
   | Normalizing
 
 type t = {
-  sig_cx: sig_t;
+  ccx: component_t;
   file: File_key.t;
   phase: phase;
   (* Tables for the current component (cycle) *)
@@ -270,11 +274,16 @@ let make_sig () =
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
     evaluated = Type.Eval.Map.empty;
+    module_map = SMap.empty;
+  }
+
+let make_ccx sig_cx =
+  {
+    sig_cx;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
     envs = IMap.empty;
-    module_map = SMap.empty;
     nominal_poly_ids = Type.Poly.Set.empty;
     nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
@@ -296,9 +305,9 @@ let make_sig () =
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make sig_cx metadata file aloc_tables rev_aloc_table module_ref phase =
+let make ccx metadata file aloc_tables rev_aloc_table module_ref phase =
   {
-    sig_cx;
+    ccx;
     file;
     phase;
     aloc_tables;
@@ -314,7 +323,7 @@ let make sig_cx metadata file aloc_tables rev_aloc_table module_ref phase =
     exported_locals = None;
   }
 
-let sig_cx cx = cx.sig_cx
+let sig_cx cx = cx.ccx.sig_cx
 
 let graph_sig sig_cx = sig_cx.graph
 
@@ -351,9 +360,9 @@ let module_ref cx =
 (* accessors *)
 let current_phase cx = cx.phase
 
-let all_unresolved cx = cx.sig_cx.all_unresolved
+let all_unresolved cx = cx.ccx.all_unresolved
 
-let envs cx = cx.sig_cx.envs
+let envs cx = cx.ccx.envs
 
 let trust_constructor cx = cx.trust_constructor
 
@@ -372,9 +381,9 @@ let enable_enums cx = cx.metadata.enable_enums
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
-let errors cx = cx.sig_cx.errors
+let errors cx = cx.ccx.errors
 
-let error_suppressions cx = cx.sig_cx.error_suppressions
+let error_suppressions cx = cx.ccx.error_suppressions
 
 let esproposal_class_static_fields cx = cx.metadata.esproposal_class_static_fields
 
@@ -388,9 +397,9 @@ let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
 
 let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
 
-let evaluated cx = cx.sig_cx.evaluated
+let evaluated cx = cx.ccx.sig_cx.evaluated
 
-let goals cx = cx.sig_cx.goal_map
+let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
@@ -399,14 +408,14 @@ let file cx = cx.file
 let aloc_tables cx = cx.aloc_tables
 
 let find_props cx id =
-  try Type.Properties.Map.find id cx.sig_cx.property_maps
+  try Type.Properties.Map.find id cx.ccx.sig_cx.property_maps
   with Not_found -> raise (Props_not_found id)
 
 let find_call cx id =
-  (try IMap.find id cx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
+  (try IMap.find id cx.ccx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
 
 let find_exports cx id =
-  try Type.Exports.Map.find id cx.sig_cx.export_maps
+  try Type.Exports.Map.find id cx.ccx.sig_cx.export_maps
   with Not_found -> raise (Exports_not_found id)
 
 let find_require cx loc =
@@ -416,17 +425,17 @@ let find_require cx loc =
 let find_module cx m = find_module_sig (sig_cx cx) m
 
 let find_tvar cx id =
-  (try IMap.find id cx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
+  (try IMap.find id cx.ccx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
 
-let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.sig_cx.nominal_poly_ids
+let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.ccx.nominal_poly_ids
 
-let mem_nominal_prop_id cx id = ISet.mem id cx.sig_cx.nominal_prop_ids
+let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 
-let graph cx = graph_sig cx.sig_cx
+let graph cx = graph_sig cx.ccx.sig_cx
 
-let openness_graph cx = cx.sig_cx.openness_graph
+let openness_graph cx = cx.ccx.openness_graph
 
-let trust_graph cx = trust_graph_sig cx.sig_cx
+let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
 let import_stmts cx = cx.import_stmts
 
@@ -444,19 +453,19 @@ let is_strict_local cx = cx.metadata.strict_local
 
 let include_suppressions cx = cx.metadata.include_suppressions
 
-let severity_cover cx = cx.sig_cx.severity_cover
+let severity_cover cx = cx.ccx.severity_cover
 
 let max_trace_depth cx = cx.metadata.max_trace_depth
 
 let require_map cx = cx.require_map
 
-let module_map cx = cx.sig_cx.module_map
+let module_map cx = cx.ccx.sig_cx.module_map
 
-let property_maps cx = cx.sig_cx.property_maps
+let property_maps cx = cx.ccx.sig_cx.property_maps
 
-let call_props cx = cx.sig_cx.call_props
+let call_props cx = cx.ccx.sig_cx.call_props
 
-let export_maps cx = cx.sig_cx.export_maps
+let export_maps cx = cx.ccx.sig_cx.export_maps
 
 let react_runtime cx = cx.metadata.react_runtime
 
@@ -482,9 +491,9 @@ let suppress_types cx = cx.metadata.suppress_types
 
 let default_lib_dir cx = cx.metadata.default_lib_dir
 
-let type_asserts_map cx = cx.sig_cx.type_asserts_map
+let type_asserts_map cx = cx.ccx.type_asserts_map
 
-let type_graph cx = cx.sig_cx.type_graph
+let type_graph cx = cx.ccx.type_graph
 
 let trust_mode cx = cx.metadata.trust_mode
 
@@ -496,11 +505,11 @@ let max_workers cx = cx.metadata.max_workers
 
 let jsx cx = cx.metadata.jsx
 
-let exists_checks cx = cx.sig_cx.exists_checks
+let exists_checks cx = cx.ccx.exists_checks
 
-let exists_excuses cx = cx.sig_cx.exists_excuses
+let exists_excuses cx = cx.ccx.exists_excuses
 
-let voidable_checks cx = cx.sig_cx.voidable_checks
+let voidable_checks cx = cx.ccx.voidable_checks
 
 let use_def cx = cx.use_def
 
@@ -531,30 +540,33 @@ let pid_prefix (cx : t) =
 let copy_of_context cx =
   {
     cx with
-    sig_cx =
+    ccx =
       {
-        cx.sig_cx with
-        graph = cx.sig_cx.graph;
-        trust_graph = cx.sig_cx.trust_graph;
-        openness_graph = cx.sig_cx.openness_graph;
+        cx.ccx with
+        sig_cx =
+          {
+            cx.ccx.sig_cx with
+            graph = cx.ccx.sig_cx.graph;
+            trust_graph = cx.ccx.sig_cx.trust_graph;
+          };
+        openness_graph = cx.ccx.openness_graph;
       };
   }
 
 (* mutators *)
-let add_env cx frame env = cx.sig_cx.envs <- IMap.add frame env cx.sig_cx.envs
+let add_env cx frame env = cx.ccx.envs <- IMap.add frame env cx.ccx.envs
 
-let add_error cx error = cx.sig_cx.errors <- Flow_error.ErrorSet.add error cx.sig_cx.errors
+let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.errors
 
 let add_error_suppression cx loc =
-  cx.sig_cx.error_suppressions <- Error_suppressions.add loc cx.sig_cx.error_suppressions
+  cx.ccx.error_suppressions <- Error_suppressions.add loc cx.ccx.error_suppressions
 
 let add_severity_cover cx filekey severity_cover =
-  cx.sig_cx.severity_cover <-
-    Utils_js.FilenameMap.add filekey severity_cover cx.sig_cx.severity_cover
+  cx.ccx.severity_cover <- Utils_js.FilenameMap.add filekey severity_cover cx.ccx.severity_cover
 
 let add_lint_suppressions cx suppressions =
-  cx.sig_cx.error_suppressions <-
-    Error_suppressions.add_lint_suppressions suppressions cx.sig_cx.error_suppressions
+  cx.ccx.error_suppressions <-
+    Error_suppressions.add_lint_suppressions suppressions cx.ccx.error_suppressions
 
 let add_import_stmt cx stmt = cx.import_stmts <- stmt :: cx.import_stmts
 
@@ -562,90 +574,91 @@ let add_imported_t cx name t = cx.imported_ts <- SMap.add name t cx.imported_ts
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
-let add_module cx name tvar = cx.sig_cx.module_map <- SMap.add name tvar cx.sig_cx.module_map
+let add_module cx name tvar =
+  cx.ccx.sig_cx.module_map <- SMap.add name tvar cx.ccx.sig_cx.module_map
 
 let add_property_map cx id pmap =
-  cx.sig_cx.property_maps <- Type.Properties.Map.add id pmap cx.sig_cx.property_maps
+  cx.ccx.sig_cx.property_maps <- Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps
 
-let add_call_prop cx id t = cx.sig_cx.call_props <- IMap.add id t cx.sig_cx.call_props
+let add_call_prop cx id t = cx.ccx.sig_cx.call_props <- IMap.add id t cx.ccx.sig_cx.call_props
 
 let add_export_map cx id tmap =
-  cx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.sig_cx.export_maps
+  cx.ccx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.ccx.sig_cx.export_maps
 
-let add_tvar cx id bounds = cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.graph
+let add_tvar cx id bounds = cx.ccx.sig_cx.graph <- IMap.add id bounds cx.ccx.sig_cx.graph
 
-let add_trust_var cx id bounds = cx.sig_cx.trust_graph <- IMap.add id bounds cx.sig_cx.trust_graph
+let add_trust_var cx id bounds =
+  cx.ccx.sig_cx.trust_graph <- IMap.add id bounds cx.ccx.sig_cx.trust_graph
 
-let add_nominal_prop_id cx id = cx.sig_cx.nominal_prop_ids <- ISet.add id cx.sig_cx.nominal_prop_ids
+let add_nominal_prop_id cx id = cx.ccx.nominal_prop_ids <- ISet.add id cx.ccx.nominal_prop_ids
 
 let add_nominal_poly_id cx id =
-  cx.sig_cx.nominal_poly_ids <- Type.Poly.Set.add id cx.sig_cx.nominal_poly_ids
+  cx.ccx.nominal_poly_ids <- Type.Poly.Set.add id cx.ccx.nominal_poly_ids
 
-let add_type_assert cx k v =
-  cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
+let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
 
 let add_voidable_check cx voidable_check =
-  cx.sig_cx.voidable_checks <- voidable_check :: cx.sig_cx.voidable_checks
+  cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
-let remove_all_errors cx = cx.sig_cx.errors <- Flow_error.ErrorSet.empty
+let remove_all_errors cx = cx.ccx.errors <- Flow_error.ErrorSet.empty
 
-let remove_all_error_suppressions cx = cx.sig_cx.error_suppressions <- Error_suppressions.empty
+let remove_all_error_suppressions cx = cx.ccx.error_suppressions <- Error_suppressions.empty
 
-let remove_all_lint_severities cx = cx.sig_cx.severity_cover <- Utils_js.FilenameMap.empty
+let remove_all_lint_severities cx = cx.ccx.severity_cover <- Utils_js.FilenameMap.empty
 
-let remove_tvar cx id = cx.sig_cx.graph <- IMap.remove id cx.sig_cx.graph
+let remove_tvar cx id = cx.ccx.sig_cx.graph <- IMap.remove id cx.ccx.sig_cx.graph
 
-let set_all_unresolved cx all_unresolved = cx.sig_cx.all_unresolved <- all_unresolved
+let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 
-let set_envs cx envs = cx.sig_cx.envs <- envs
+let set_envs cx envs = cx.ccx.envs <- envs
 
-let set_evaluated cx evaluated = cx.sig_cx.evaluated <- evaluated
+let set_evaluated cx evaluated = cx.ccx.sig_cx.evaluated <- evaluated
 
-let set_goals cx goals = cx.sig_cx.goal_map <- goals
+let set_goals cx goals = cx.ccx.goal_map <- goals
 
-let set_graph cx graph = cx.sig_cx.graph <- graph
+let set_graph cx graph = cx.ccx.sig_cx.graph <- graph
 
-let set_openness_graph cx graph = cx.sig_cx.openness_graph <- graph
+let set_openness_graph cx graph = cx.ccx.openness_graph <- graph
 
-let set_trust_graph cx trust_graph = cx.sig_cx.trust_graph <- trust_graph
+let set_trust_graph cx trust_graph = cx.ccx.sig_cx.trust_graph <- trust_graph
 
-let set_property_maps cx property_maps = cx.sig_cx.property_maps <- property_maps
+let set_property_maps cx property_maps = cx.ccx.sig_cx.property_maps <- property_maps
 
-let set_call_props cx call_props = cx.sig_cx.call_props <- call_props
+let set_call_props cx call_props = cx.ccx.sig_cx.call_props <- call_props
 
-let set_export_maps cx export_maps = cx.sig_cx.export_maps <- export_maps
+let set_export_maps cx export_maps = cx.ccx.sig_cx.export_maps <- export_maps
 
-let set_type_graph cx type_graph = cx.sig_cx.type_graph <- type_graph
+let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
 
-let set_exists_checks cx exists_checks = cx.sig_cx.exists_checks <- exists_checks
+let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
 
-let set_exists_excuses cx exists_excuses = cx.sig_cx.exists_excuses <- exists_excuses
+let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excuses
 
 let set_use_def cx use_def = cx.use_def <- use_def
 
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
-let set_module_map cx module_map = cx.sig_cx.module_map <- module_map
+let set_module_map cx module_map = cx.ccx.sig_cx.module_map <- module_map
 
 let clear_intermediates cx =
-  cx.sig_cx.envs <- IMap.empty;
-  cx.sig_cx.all_unresolved <- IMap.empty;
-  cx.sig_cx.nominal_poly_ids <- Type.Poly.Set.empty;
-  cx.sig_cx.nominal_prop_ids <- ISet.empty;
+  cx.ccx.envs <- IMap.empty;
+  cx.ccx.all_unresolved <- IMap.empty;
+  cx.ccx.nominal_poly_ids <- Type.Poly.Set.empty;
+  cx.ccx.nominal_prop_ids <- ISet.empty;
 
   (* still 176 bytes :/ *)
-  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0;
-  cx.sig_cx.exists_checks <- ALocMap.empty;
-  cx.sig_cx.exists_excuses <- ALocMap.empty;
-  cx.sig_cx.voidable_checks <- [];
-  cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
-  cx.sig_cx.computed_property_states <- IMap.empty;
-  cx.sig_cx.optional_chains_useful <- ALocMap.empty;
-  cx.sig_cx.invariants_useful <- ALocMap.empty;
-  cx.sig_cx.type_asserts_map <- ALocMap.empty;
-  cx.sig_cx.goal_map <- IMap.empty;
-  cx.sig_cx.enum_exhaustive_checks <- [];
-  cx.sig_cx.openness_graph <- Openness.empty_graph;
+  cx.ccx.type_graph <- Graph_explorer.Tbl.create 0;
+  cx.ccx.exists_checks <- ALocMap.empty;
+  cx.ccx.exists_excuses <- ALocMap.empty;
+  cx.ccx.voidable_checks <- [];
+  cx.ccx.test_prop_hits_and_misses <- IMap.empty;
+  cx.ccx.computed_property_states <- IMap.empty;
+  cx.ccx.optional_chains_useful <- ALocMap.empty;
+  cx.ccx.invariants_useful <- ALocMap.empty;
+  cx.ccx.type_asserts_map <- ALocMap.empty;
+  cx.ccx.goal_map <- IMap.empty;
+  cx.ccx.enum_exhaustive_checks <- [];
+  cx.ccx.openness_graph <- Openness.empty_graph;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -657,28 +670,29 @@ let clear_intermediates cx =
 let clear_master_shared cx master_cx =
   let module PMap = Type.Properties.Map in
   let module EMap = Type.Exports.Map in
-  cx.sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) cx.sig_cx.graph;
-  cx.sig_cx.trust_graph <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) cx.sig_cx.trust_graph;
-  cx.sig_cx.property_maps <-
-    PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) cx.sig_cx.property_maps;
-  cx.sig_cx.call_props <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) cx.sig_cx.call_props;
-  cx.sig_cx.evaluated <-
+  let sig_cx = cx.ccx.sig_cx in
+  sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) sig_cx.graph;
+  sig_cx.trust_graph <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) sig_cx.trust_graph;
+  sig_cx.property_maps <-
+    PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) sig_cx.property_maps;
+  sig_cx.call_props <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) sig_cx.call_props;
+  sig_cx.evaluated <-
     Type.Eval.Map.filter
       (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
-      cx.sig_cx.evaluated;
-  cx.sig_cx.export_maps <-
-    EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) cx.sig_cx.export_maps;
+      sig_cx.evaluated;
+  sig_cx.export_maps <-
+    EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
   ()
 
 let test_prop_hit cx id =
-  cx.sig_cx.test_prop_hits_and_misses <- IMap.add id Hit cx.sig_cx.test_prop_hits_and_misses
+  cx.ccx.test_prop_hits_and_misses <- IMap.add id Hit cx.ccx.test_prop_hits_and_misses
 
 let test_prop_miss cx id name reasons use =
-  if not (IMap.mem id cx.sig_cx.test_prop_hits_and_misses) then
-    cx.sig_cx.test_prop_hits_and_misses <-
-      IMap.add id (Miss (name, reasons, use)) cx.sig_cx.test_prop_hits_and_misses
+  if not (IMap.mem id cx.ccx.test_prop_hits_and_misses) then
+    cx.ccx.test_prop_hits_and_misses <-
+      IMap.add id (Miss (name, reasons, use)) cx.ccx.test_prop_hits_and_misses
 
 let test_prop_get_never_hit cx =
   List.fold_left
@@ -687,30 +701,29 @@ let test_prop_get_never_hit cx =
       | Hit -> acc
       | Miss (name, reasons, use_op) -> (name, reasons, use_op) :: acc)
     []
-    (IMap.bindings cx.sig_cx.test_prop_hits_and_misses)
+    (IMap.bindings cx.ccx.test_prop_hits_and_misses)
 
-let computed_property_state_for_id cx id = IMap.find_opt id cx.sig_cx.computed_property_states
+let computed_property_state_for_id cx id = IMap.find_opt id cx.ccx.computed_property_states
 
 let computed_property_add_lower_bound cx id r =
-  cx.sig_cx.computed_property_states <-
-    IMap.add id (ResolvedOnce r) cx.sig_cx.computed_property_states
+  cx.ccx.computed_property_states <- IMap.add id (ResolvedOnce r) cx.ccx.computed_property_states
 
 let computed_property_add_multiple_lower_bounds cx id =
-  cx.sig_cx.computed_property_states <-
-    IMap.add id ResolvedMultipleTimes cx.sig_cx.computed_property_states
+  cx.ccx.computed_property_states <-
+    IMap.add id ResolvedMultipleTimes cx.ccx.computed_property_states
 
-let spread_widened_types_get_widest cx id = IMap.find_opt id cx.sig_cx.spread_widened_types
+let spread_widened_types_get_widest cx id = IMap.find_opt id cx.ccx.spread_widened_types
 
 let spread_widened_types_add_widest cx id objtype =
-  cx.sig_cx.spread_widened_types <- IMap.add id objtype cx.sig_cx.spread_widened_types
+  cx.ccx.spread_widened_types <- IMap.add id objtype cx.ccx.spread_widened_types
 
 let mark_optional_chain cx loc lhs_reason ~useful =
-  cx.sig_cx.optional_chains_useful <-
+  cx.ccx.optional_chains_useful <-
     ALocMap.add
       loc
       (lhs_reason, useful)
       ~combine:(fun (r, u) (_, u') -> (r, u || u'))
-      cx.sig_cx.optional_chains_useful
+      cx.ccx.optional_chains_useful
 
 let unnecessary_optional_chains cx =
   ALocMap.fold
@@ -719,16 +732,16 @@ let unnecessary_optional_chains cx =
         acc
       else
         (loc, r) :: acc)
-    cx.sig_cx.optional_chains_useful
+    cx.ccx.optional_chains_useful
     []
 
 let mark_invariant cx loc reason ~useful =
-  cx.sig_cx.invariants_useful <-
+  cx.ccx.invariants_useful <-
     ALocMap.add
       loc
       (reason, useful)
       ~combine:(fun (r, u) (_, u') -> (r, u || u'))
-      cx.sig_cx.invariants_useful
+      cx.ccx.invariants_useful
 
 let unnecessary_invariants cx =
   ALocMap.fold
@@ -737,13 +750,13 @@ let unnecessary_invariants cx =
         acc
       else
         (loc, r) :: acc)
-    cx.sig_cx.invariants_useful
+    cx.ccx.invariants_useful
     []
 
 let add_enum_exhaustive_check cx check =
-  cx.sig_cx.enum_exhaustive_checks <- check :: cx.sig_cx.enum_exhaustive_checks
+  cx.ccx.enum_exhaustive_checks <- check :: cx.ccx.enum_exhaustive_checks
 
-let enum_exhaustive_checks cx = cx.sig_cx.enum_exhaustive_checks
+let enum_exhaustive_checks cx = cx.ccx.enum_exhaustive_checks
 
 (* utils *)
 let find_real_props cx id =

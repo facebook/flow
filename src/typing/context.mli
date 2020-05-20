@@ -19,8 +19,23 @@ exception Tvar_not_found of Constraint.ident
 
 type env = Scope.t list
 
+(* The Context module defines types for data which is passed around during type
+ * checking, providing access to commonly needed state. The data is layered
+ * according to their lifetimes and falls into three categories: *)
+
+(* 1. Per-file information is needed during the AST traversal, to answer
+ * questions like "what options are enabled" where options can be set on a
+ * perf-file bases, like the ability to munge underscores. *)
 type t
 
+(* 2. Per-component information is needed during constraint solving, which
+ * happens outside the context of any specific file -- specifically when dealing
+ * with constraints between files in a cycle. *)
+type component_t
+
+(* 3. Inter-component information, i.e., stuff that we might want to know about
+ * dependencies, like what modules they export and what types correspond to what
+ * resolved tvars. *)
 type sig_t
 
 type enum_exhaustive_check_with_context = {
@@ -92,8 +107,10 @@ type computed_property_state =
 
 val make_sig : unit -> sig_t
 
+val make_ccx : sig_t -> component_t
+
 val make :
-  sig_t ->
+  component_t ->
   metadata ->
   File_key.t ->
   ALoc.table Lazy.t Utils_js.FilenameMap.t ->

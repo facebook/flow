@@ -334,6 +334,7 @@ let merge_component
     dep_cxs
     (master_cx : Context.sig_t) =
   let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx in
   let need_merge_master_cx = ref true in
   let (aloc_tables, rev_aloc_tables) =
     Nel.fold_left
@@ -362,7 +363,7 @@ let merge_component
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
         let rev_table = FilenameMap.find filename rev_aloc_tables in
-        let cx = Context.make sig_cx metadata filename aloc_tables rev_table module_ref phase in
+        let cx = Context.make ccx metadata filename aloc_tables rev_table module_ref phase in
         (* create builtins *)
         if !need_merge_master_cx then (
           need_merge_master_cx := false;

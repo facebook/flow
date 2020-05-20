@@ -59,7 +59,7 @@ let parse_lib_file ~reader options file =
 
    returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files ~sig_cx ~options ~reader files =
+let load_lib_files ~ccx ~options ~reader files =
   let verbose = Options.verbose options in
   (* iterate in reverse override order *)
   let%lwt (_, result) =
@@ -85,7 +85,7 @@ let load_lib_files ~sig_cx ~options ~reader files =
                let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
                let cx =
                  Context.make
-                   sig_cx
+                   ccx
                    metadata
                    lib_file
                    aloc_tables
@@ -156,6 +156,7 @@ let load_lib_files ~sig_cx ~options ~reader files =
  *)
 let init ~options ~reader lib_files =
   let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx in
   let master_cx =
     let metadata =
       Context.(
@@ -166,7 +167,7 @@ let init ~options ~reader lib_files =
     let aloc_tables = FilenameMap.empty in
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
     Context.make
-      sig_cx
+      ccx
       metadata
       File_key.Builtins
       aloc_tables
@@ -176,7 +177,7 @@ let init ~options ~reader lib_files =
   in
   Flow_js.mk_builtins master_cx;
 
-  let%lwt result = load_lib_files ~sig_cx ~options ~reader lib_files in
+  let%lwt result = load_lib_files ~ccx ~options ~reader lib_files in
   Flow.Cache.clear ();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
