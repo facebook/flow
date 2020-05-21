@@ -30,8 +30,7 @@ pre.highlight {
 }
 
 // padding
-.editor-content,
-.editor .CodeMirror {
+.editor-content {
   padding: 5px 0;
 }
 
@@ -55,15 +54,13 @@ pre.highlight {
 }
 
 // gutter line
-.editor-gutter,
-.editor .CodeMirror-gutters {
+.editor-gutter {
   border-right: 1px solid #ccc;
   border-right: 1px solid lighten($editor-accent, 10%);
 }
 
 // line number colors
-.editor-line,
-.editor .CodeMirror-linenumber {
+.editor-line {
   color: darken($editor-accent, 5%);
 }
 
@@ -71,50 +68,14 @@ pre.highlight {
   width: 100%;
 }
 
-.editor-code,
-.editor .CodeMirror-lines {
+.editor-code {
   padding-top: 5px;
   padding-bottom: 5px;
 }
 
-.editor-code,
-.editor .CodeMirror-line {
+.editor-code {
   padding-left: 10px;
   padding-right: 10px;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-.editor {
-  .CodeMirror {
-    font-family: $font-family-monospace;
-    height: auto;
-    line-height: inherit;
-    background: none;
-    color: inherit;
-  }
-
-  .CodeMirror-gutters {
-    background: none;
-    padding-right: 5px;
-  }
-
-  .CodeMirror-gutter-wrapper,
-  .CodeMirror pre {
-    font-size: $code-font-size;
-  }
-
-  .CodeMirror-scroll {
-    position: relative;
-  }
-
-  .CodeMirror-gutters {
-    min-height: auto;
-    height: auto !important;
-    position: absolute;
-    top: 0;
-    bottom: 30px;
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
