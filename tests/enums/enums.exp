@@ -3309,26 +3309,12 @@ References:
                          ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- utility-types.js:30:2
+Error ------------------------------------------------------------------------------------------- utility-types.js:30:12
 
-Cannot cast `E` to `typeof E` because inexact enum `E` [1] is incompatible with exact `typeof E` [2].
-[incompatible-exact]
+Cannot create exact type from enum `E` [1]. [invalid-exact]
 
-   utility-types.js:30:2
    30| (E: $Exact<typeof E>); // Error: TODO: improve error
-        ^
-
-References:
-   utility-types.js:3:1
-       v-------
-    3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
-   utility-types.js:30:5
-   30| (E: $Exact<typeof E>); // Error: TODO: improve error
-           ^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:33:17

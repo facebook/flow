@@ -8,7 +8,7 @@ Cannot call `React.cloneElement` without at least 1 argument. [missing-arg]
 
 Error ------------------------------------------------------------------------------------------- clone_element.js:23:20
 
-Inexact string [1] is incompatible with exact `React.Element` [1]. [incompatible-exact]
+string [1] is incompatible with object type [1]. [incompatible-type]
 
    23| React.cloneElement('nope'); // Error: Not a valid element type.
                           ^^^^^^ [1]
