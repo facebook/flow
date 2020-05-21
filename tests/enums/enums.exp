@@ -3296,15 +3296,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:27:11
 
-enum `E` [1] is not an object. [incompatible-use]
+Cannot instantiate `$Values` because enum `E` [1] is not an object. You can use the enum's name `E` as the type of its
+members. [not-an-object]
 
    utility-types.js:27:11
-   27| (trigger: $Values<typeof E>); // Error: enum `E` is not an object
+   27| (trigger: $Values<typeof E>); // Error
                  ^^^^^^^^^^^^^^^^^
 
 References:
    utility-types.js:27:19
-   27| (trigger: $Values<typeof E>); // Error: enum `E` is not an object
+   27| (trigger: $Values<typeof E>); // Error
                          ^^^^^^^^ [1]
 
 

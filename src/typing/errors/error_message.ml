@@ -339,6 +339,11 @@ and 'loc t' =
       prev_use_loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumInvalidObjectUtil of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      enum_name: string;
+    }
   | EEnumMemberAlreadyChecked of {
       reason: 'loc virtual_reason;
       prev_check_reason: 'loc virtual_reason;
@@ -859,6 +864,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
     EEnumMemberDuplicateValue
       { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
+  | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
+    EEnumInvalidObjectUtil
+      { reason = map_reason reason; enum_reason = map_reason enum_reason; enum_name }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
       {
@@ -1080,6 +1088,7 @@ let util_use_op_of_msg nope util = function
   | EEnumInvalidMemberAccess _
   | EEnumModification _
   | EEnumMemberDuplicateValue _
+  | EEnumInvalidObjectUtil _
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
@@ -1140,7 +1149,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumNotAllChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
-  | EEnumInvalidMemberAccess { reason; _ } ->
+  | EEnumInvalidMemberAccess { reason; _ }
+  | EEnumInvalidObjectUtil { reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3012,6 +3022,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
+    let features =
+      [
+        text "Cannot instantiate ";
+        desc reason;
+        text " because ";
+        ref enum_reason;
+        text " is not an object. You can use the enum's name ";
+        code enum_name;
+        text " as the type of its members.";
+      ]
+    in
+    Normal { features }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     let features =
       [
@@ -3234,6 +3257,7 @@ let error_code_of_message err : error_code option =
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
+  | EEnumInvalidObjectUtil _ -> Some NotAnObject
   | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType

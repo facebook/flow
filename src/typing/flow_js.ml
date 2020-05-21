@@ -6450,6 +6450,11 @@ struct
             cx
             ~trace
             (Error_message.EEnumModification { loc = aloc_of_reason op_reason; enum_reason })
+        | (DefT (enum_reason, _, EnumObjectT { enum_name; _ }), GetValuesT (op_reason, _)) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumInvalidObjectUtil { reason = op_reason; enum_reason; enum_name })
         | ( DefT (_, _, EnumT { enum_id = id1; _ }),
             UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
           when ALoc.equal_id id1 id2 ->
