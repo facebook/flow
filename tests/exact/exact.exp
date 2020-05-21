@@ -186,6 +186,187 @@ References:
           ^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- not_object.js:3:16
+
+Cannot assign `3` to `x` because number [1] is incompatible with object type [2]. [incompatible-type]
+
+   not_object.js:3:16
+   3| let x : {||} = 3;
+                     ^ [1]
+
+References:
+   not_object.js:3:9
+   3| let x : {||} = 3;
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:4:16
+
+Cannot assign empty string to `y` because string [1] is incompatible with object type [2]. [incompatible-type]
+
+   not_object.js:4:16
+   4| let y : {||} = "";
+                     ^^ [1]
+
+References:
+   not_object.js:4:9
+   4| let y : {||} = "";
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:5:16
+
+Cannot assign `true` to `z` because boolean [1] is incompatible with object type [2]. [incompatible-type]
+
+   not_object.js:5:16
+   5| let z : {||} = true;
+                     ^^^^ [1]
+
+References:
+   not_object.js:5:9
+   5| let z : {||} = true;
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:7:16
+
+Cannot assign `new class { ... }` to `c` because inexact `<<anonymous class>>` [1] is incompatible with exact object
+type [2]. [incompatible-exact]
+
+   not_object.js:7:16
+   7| let c : {||} = new class {};
+                     ^^^^^^^^^^^^ [1]
+
+References:
+   not_object.js:7:9
+   7| let c : {||} = new class {};
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:8:16
+
+Cannot assign function to `f` because inexact function [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   not_object.js:8:16
+   8| let f : {||} = () => {};
+                     ^^^^^^^^ [1]
+
+References:
+   not_object.js:8:9
+   8| let f : {||} = () => {};
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:11:2
+
+Cannot cast `u` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   not_object.js:11:2
+   11| (u : {||});
+        ^
+
+References:
+   not_object.js:10:24
+   10| declare var u : {||} | {};
+                              ^^ [1]
+   not_object.js:11:6
+   11| (u : {||});
+            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:14:2
+
+Cannot cast `v` to object type because number [1] is incompatible with object type [2]. [incompatible-cast]
+
+   not_object.js:14:2
+   14| (v : {||});
+        ^
+
+References:
+   not_object.js:13:17
+   13| declare var v : number | {};
+                       ^^^^^^ [1]
+   not_object.js:14:6
+   14| (v : {||});
+            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:14:2
+
+Cannot cast `v` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   not_object.js:14:2
+   14| (v : {||});
+        ^
+
+References:
+   not_object.js:13:26
+   13| declare var v : number | {};
+                                ^^ [1]
+   not_object.js:14:6
+   14| (v : {||});
+            ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:19:12
+
+Cannot create exact type from number [1]. [invalid-exact]
+
+   19| (0: $Exact<number>);
+                  ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:20:13
+
+Cannot create exact type from string [1]. [invalid-exact]
+
+   20| ("": $Exact<string>);
+                   ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:21:15
+
+Cannot create exact type from boolean [1]. [invalid-exact]
+
+   21| (true: $Exact<boolean>);
+                     ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:22:18
+
+Cannot create exact type from `A` [1]. [invalid-exact]
+
+   22| (new A(): $Exact<A>);
+                        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:23:18
+
+Cannot create exact type from function type [1]. [invalid-exact]
+
+   23| (()=>{} : $Exact<()=>{}>);
+                        ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:27:18
+
+Cannot create exact type from function [1]. [invalid-exact]
+
+   27| (()=>{} : $Exact<typeof foo>);
+                        ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:29:18
+
+Cannot create exact type from `A` [1]. [invalid-exact]
+
+   29| (new A(): $Exact<typeof bar>);
+                        ^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- objmap.js:11:36
 
 Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
@@ -376,4 +557,4 @@ References:
 
 
 
-Found 23 errors
+Found 38 errors

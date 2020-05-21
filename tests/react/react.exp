@@ -3198,8 +3198,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:23:73
 
-Cannot assign `React.createContext(...)` to `InvalidContext` because inexact string [1] is incompatible with exact
-`CustomType` [2] in type argument `T` [3]. [incompatible-exact]
+Cannot assign `React.createContext(...)` to `InvalidContext` because string [1] is incompatible with object type [2] in
+type argument `T` [3]. [incompatible-type-arg]
 
    useContext_hook.js:23:73
     23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType

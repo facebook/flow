@@ -527,18 +527,18 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
 
 Cannot assign class `NotAComponent` to `NotAComponent` because: [incompatible-type]
- - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
- - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+ - Either property `name` is missing in object type [1] but exists in statics of `NotAComponent` [2].
+ - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
 
    function_lower.js:22:7
    22| class NotAComponent {}; // Error, not a component
-             ^^^^^^^^^^^^^ [1]
+             ^^^^^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/react.js:18:5
    18|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+           ^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:19:5
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -550,21 +550,21 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
 
 Cannot cast `NotAFunctionComponent` to AbstractComponent because: [incompatible-cast]
- - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
- - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+ - Either property `name` is missing in object type [1] but exists in statics of `NotAComponent` [2].
+ - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
 
    function_lower.js:28:2
    28| (NotAFunctionComponent: React$AbstractComponent<Props, void>);
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   function_lower.js:22:7
-   22| class NotAComponent {}; // Error, not a component
-             ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:18:5
    18|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+           ^^^^^^^^^^^^^^^^^^ [1]
+   function_lower.js:22:7
+   22| class NotAComponent {}; // Error, not a component
+             ^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:19:5
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]

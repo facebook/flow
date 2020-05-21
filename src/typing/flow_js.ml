@@ -3462,13 +3462,11 @@ struct
            Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
            to be used just as o is allowed to be used. *)
         | (ShapeT (_, o), (UseT (_, ExactT _) | MakeExactT _)) -> rec_flow cx trace (o, u)
-        (* inexact LB ~> $Exact<UB>. error *)
-        | (_, UseT (use_op, ExactT (ru, _))) ->
-          let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
-          add_output
-            cx
-            ~trace
-            (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
+        (* Classes/Functions are "inexact" *)
+
+        (* anything else ~> $Exact<UB>. error *)
+        | (_, UseT (use_op, ExactT (r, t))) ->
+          rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
         (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
 
         (* exactify incoming LB object type, flow to UB *)
@@ -4545,6 +4543,13 @@ struct
           )
         | (DefT (_, _, ObjT _), UseT (_, NullProtoT _)) -> ()
         (* InstanceT -> ObjT *)
+        | ( DefT (lreason, _, InstanceT _),
+            UseT (use_op, DefT (ureason, _, ObjT { flags = { obj_kind = Exact; _ }; _ })) ) ->
+          let reasons = FlowError.ordered_reasons (lreason, ureason) in
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
         | ( DefT
               ( lreason,
                 _,
@@ -6137,6 +6142,13 @@ struct
        Now that call properties are stored separately, it is particularly
        egregious to emit this constraint. This only serves to maintain buggy
        behavior, which should be fixed, and this code removed. *)
+        | ( DefT (lreason, _, FunT _),
+            UseT (use_op, DefT (ureason, _, ObjT { flags = { obj_kind = Exact; _ }; _ })) ) ->
+          let reasons = FlowError.ordered_reasons (lreason, ureason) in
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
         | ( DefT (lreason, _, FunT _),
             UseT (use_op, DefT (ureason, _, ObjT { flags = { obj_kind = Indexed udict; _ }; _ })) )
           ->

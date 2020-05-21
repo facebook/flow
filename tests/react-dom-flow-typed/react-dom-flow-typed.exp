@@ -15,8 +15,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:17
 
-Cannot call `ReactDOM.render` with `null` bound to `element` because inexact null [1] is incompatible with exact
-`React.Element` [2]. [incompatible-exact]
+Cannot call `ReactDOM.render` with `null` bound to `element` because null [1] is incompatible with object type [2].
+[incompatible-call]
 
    test.js:11:17
    11| ReactDOM.render(null, null); // Error, null is incompatible
