@@ -24,7 +24,7 @@ const trigger = null;
 ("A": $Keys<typeof E>); // Error: TODO: improve error
 
 // $Values
-(trigger: $Values<typeof E>); // Error: enum `E` is not an object
+(trigger: $Values<typeof E>); // Error
 
 // $Exact
 (E: $Exact<typeof E>); // Error: TODO: improve error
