@@ -342,6 +342,41 @@ References:
              ^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- enum-object.js:57:17
+
+Enum `E` is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
+
+   57| for (const x of E) { // Error
+                       ^
+
+
+Error --------------------------------------------------------------------------------------------- enum-object.js:63:10
+
+Enum `E` is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
+
+   63|   yield* E; // Error
+                ^
+
+
+Error --------------------------------------------------------------------------------------------- enum-object.js:69:17
+
+Cannot iterate using a `for...in` loop because enum `E` [1] is not an object, null, or undefined. You can use
+`for (... of E.members()) { ... }` to iterate over the enum's members. [not-iterable]
+
+   enum-object.js:69:17
+   69| for (const x in E) { // Error
+                       ^
+
+References:
+   enum-object.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- equality.js:21:1
 
 Cannot compare string [1] to `E` [2]. [invalid-compare]
@@ -3354,7 +3389,7 @@ References:
 
 
 
-Found 182 errors
+Found 185 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

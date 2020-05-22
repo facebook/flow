@@ -6349,10 +6349,20 @@ struct
         | ((AnyT _ | ObjProtoT _), AssertForInRHST _) -> ()
         (* null/undefined are allowed *)
         | (DefT (_, _, (NullT | VoidT)), AssertForInRHST _) -> ()
+        | (DefT (enum_reason, _, EnumObjectT { enum_name; _ }), AssertForInRHST _) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumNotIterable { reason = enum_reason; enum_name; for_in = true })
         | (_, AssertForInRHST _) -> add_output cx ~trace (Error_message.EForInRHS (reason_of_t l))
         (***********************************)
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
+        | (DefT (enum_reason, _, EnumObjectT { enum_name; _ }), AssertIterableT _) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumNotIterable { reason = enum_reason; enum_name; for_in = false })
         | (_, AssertIterableT { use_op; reason; async; targs }) ->
           let iterable =
             if async then
