@@ -106,6 +106,7 @@ type error_code =
   | NotAFunction
   | NotAnArray
   | NotAnObject
+  | NotIterable
   | NullVoidAddition
   | PropMissing
   | ReassignConst
@@ -258,6 +259,7 @@ let string_of_code : error_code -> string = function
   | NotAFunction -> "not-a-function"
   | NotAnArray -> "not-an-array"
   | NotAnObject -> "not-an-object"
+  | NotIterable -> "not-iterable"
   | NullVoidAddition -> "unsafe-addition"
   | PropMissing -> "prop-missing"
   | ReassignConst -> "reassign-const"

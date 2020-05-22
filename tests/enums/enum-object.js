@@ -52,3 +52,19 @@ if (!x) {
   (x: void); // Valid
   (x: EO); // Error
 }
+
+// Iteration
+for (const x of E) { // Error
+}
+for (const x of E.members()) { // Valid
+}
+
+function* f() {
+  yield* E; // Error
+}
+function* f() {
+  yield* E.members(); // Valid
+}
+
+for (const x in E) { // Error
+}

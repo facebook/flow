@@ -1596,6 +1596,12 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
         enum_name
+    | EEnumNotIterable { reason; enum_name; for_in } ->
+      spf
+        "EEnumNotIterable (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        enum_name
+        (spf "for_in = %B" for_in)
     | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
       spf
         "EEnumMemberAlreadyChecked (%s) (%s) (%s) (%s)"

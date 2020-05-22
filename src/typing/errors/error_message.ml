@@ -344,6 +344,11 @@ and 'loc t' =
       enum_reason: 'loc virtual_reason;
       enum_name: string;
     }
+  | EEnumNotIterable of {
+      reason: 'loc virtual_reason;
+      enum_name: string;
+      for_in: bool;
+    }
   | EEnumMemberAlreadyChecked of {
       reason: 'loc virtual_reason;
       prev_check_reason: 'loc virtual_reason;
@@ -867,6 +872,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
     EEnumInvalidObjectUtil
       { reason = map_reason reason; enum_reason = map_reason enum_reason; enum_name }
+  | EEnumNotIterable { reason; enum_name; for_in } ->
+    EEnumNotIterable { reason = map_reason reason; enum_name; for_in }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
       {
@@ -1089,6 +1096,7 @@ let util_use_op_of_msg nope util = function
   | EEnumModification _
   | EEnumMemberDuplicateValue _
   | EEnumInvalidObjectUtil _
+  | EEnumNotIterable _
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
@@ -1150,7 +1158,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
-  | EEnumInvalidObjectUtil { reason; _ } ->
+  | EEnumInvalidObjectUtil { reason; _ }
+  | EEnumNotIterable { reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3035,6 +3044,29 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EEnumNotIterable { reason; enum_name; for_in } ->
+    let features =
+      if for_in then
+        [
+          text "Cannot iterate using a ";
+          code "for...in";
+          text " loop because ";
+          ref reason;
+          text " is not an object, null, or undefined. ";
+          text "You can use ";
+          code (spf "for (... of %s.members()) { ... }" enum_name);
+          text " to iterate over the enum's members.";
+        ]
+      else
+        [
+          desc reason;
+          text " is not an iterable. ";
+          text "You can use ";
+          code (spf "%s.members()" enum_name);
+          text " to get an iterator for the enum's members.";
+        ]
+    in
+    Normal { features }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     let features =
       [
@@ -3258,6 +3290,7 @@ let error_code_of_message err : error_code option =
   | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
   | EEnumInvalidObjectUtil _ -> Some NotAnObject
+  | EEnumNotIterable _ -> Some NotIterable
   | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType
