@@ -13,12 +13,16 @@
         "src/flow_parser_node.cc",
       ],
       "include_dirs": [
+        "<!(opam config var lib)/ocaml",
         "include/",
         "<!(node -e \"require('nan')\")",
       ],
       "libraries": [
         "-L../lib/<(platform)",
+        "-L<!(opam config var lib)/ocaml",
         "-lflowparser",
+        "-lbigarray",
+        "-lunix"
       ],
       "conditions": [
         ['OS=="mac"', {
