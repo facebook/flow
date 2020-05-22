@@ -635,6 +635,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertBinaryInLHST _ -> p t
     | AssertBinaryInRHST _ -> p t
     | AssertForInRHST _ -> p t
+    | AssertIterableT _ -> p t
     | AssertImportIsValueT _ -> p t
     | BecomeT (_, arg) -> p ~extra:(kid arg) t
     | BindT _ -> p t

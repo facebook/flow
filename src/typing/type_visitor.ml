@@ -309,6 +309,7 @@ class ['a] t =
       | AssertBinaryInRHST _
       | AssertForInRHST _ ->
         acc
+      | AssertIterableT { targs; _ } -> List.fold_left (self#type_ cx pole_TODO) acc targs
       | PredicateT (predicate, t) ->
         let acc = self#predicate cx acc predicate in
         let acc = self#type_ cx pole_TODO acc t in

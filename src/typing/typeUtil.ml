@@ -64,6 +64,7 @@ and reason_of_use_t = function
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
   | AssertForInRHST reason -> reason
+  | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
   | BindT (_, reason, _, _) -> reason
@@ -229,6 +230,8 @@ and mod_reason_of_use_t f = function
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertForInRHST reason -> AssertForInRHST (f reason)
+  | AssertIterableT ({ reason; _ } as contents) ->
+    AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
   | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
@@ -408,6 +411,8 @@ let rec util_use_op_of_use_t :
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
   | MakeExactT (r, Lower (op, t)) -> util op (fun op -> MakeExactT (r, Lower (op, t)))
+  | AssertIterableT ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> AssertIterableT { contents with use_op })
   | MakeExactT (_, _)
   | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)

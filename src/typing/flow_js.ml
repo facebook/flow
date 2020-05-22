@@ -6350,6 +6350,17 @@ struct
         (* null/undefined are allowed *)
         | (DefT (_, _, (NullT | VoidT)), AssertForInRHST _) -> ()
         | (_, AssertForInRHST _) -> add_output cx ~trace (Error_message.EForInRHS (reason_of_t l))
+        (***********************************)
+        (* iterable (e.g. RHS of `for..of` *)
+        (***********************************)
+        | (_, AssertIterableT { use_op; reason; async; targs }) ->
+          let iterable =
+            if async then
+              get_builtin_typeapp cx reason "$AsyncIterable" targs
+            else
+              get_builtin_typeapp cx reason "$Iterable" targs
+          in
+          rec_flow_t cx trace ~use_op (l, iterable)
         (**************************************)
         (* types may be refined by predicates *)
         (**************************************)
@@ -7560,6 +7571,7 @@ struct
      error. *)
     | (_, UseT _)
     | (_, ArrRestT _)
+    | (_, AssertIterableT _)
     | (_, CallElemT _)
     | (_, CallT _)
     | (_, CJSRequireT _)
@@ -7808,6 +7820,7 @@ struct
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
     | AssertForInRHST _
+    | AssertIterableT _
     | AssertImportIsValueT _
     | ComparatorT _
     | DebugPrintT _
