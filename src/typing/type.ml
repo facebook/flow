@@ -499,6 +499,12 @@ module rec TypeTerm : sig
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
+    | AssertIterableT of {
+        use_op: use_op;
+        reason: reason;
+        async: bool;
+        targs: t list;
+      }
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
@@ -2996,6 +3002,7 @@ let string_of_use_ctor = function
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
+  | AssertIterableT _ -> "AssertIterableT"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"

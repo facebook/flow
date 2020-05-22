@@ -1873,27 +1873,24 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       let (_ : Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
       let elem_t = Tvar.mk cx reason in
-      let o =
-        (* Second and third args here are never relevant to the loop, but they should be as
-             general as possible to allow iterating over arbitrary generators *)
-        let targs =
-          [
-            elem_t;
-            MixedT.why reason |> with_trust bogus_trust;
-            EmptyT.why reason |> with_trust bogus_trust;
-          ]
-        in
-        if await then
-          let reason = mk_reason (RCustom "async iteration expected on AsyncIterable") loc in
-          Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
-        else
-          Flow.get_builtin_typeapp
-            cx
-            (mk_reason (RCustom "iteration expected on Iterable") loc)
-            "$Iterable"
-            targs
+      (* Second and third args here are never relevant to the loop, but they should be as
+           general as possible to allow iterating over arbitrary generators *)
+      let targs =
+        [
+          elem_t;
+          MixedT.why reason |> with_trust bogus_trust;
+          EmptyT.why reason |> with_trust bogus_trust;
+        ]
       in
-      Flow.flow_t cx (t, o);
+      let (async, iterable_reason) =
+        if await then
+          (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
+        else
+          (false, mk_reason (RCustom "iteration expected on Iterable") loc)
+      in
+      Flow.flow
+        cx
+        (t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs });
 
       (* null/undefined are NOT allowed *)
       (Flow.reposition cx (loc_of_t t) elem_t, right_ast)
@@ -3502,17 +3499,12 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     in
     let ret = Tvar.mk cx ret_reason in
     (* widen yield with the element type of the delegated-to iterable *)
-    let iterable =
-      let targs = [yield; ret; next] in
+    let targs = [yield; ret; next] in
+    let (async, iterable_reason) =
       if Env.in_async_scope () then
-        let reason = mk_reason (RCustom "async iteration expected on AsyncIterable") loc in
-        Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
+        (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
       else
-        Flow.get_builtin_typeapp
-          cx
-          (mk_reason (RCustom "iteration expected on Iterable") loc)
-          "$Iterable"
-          targs
+        (false, mk_reason (RCustom "iteration expected on Iterable") loc)
     in
     Env.havoc_heap_refinements ();
     let use_op =
@@ -3525,7 +3517,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
                | None -> reason_of_t t);
            })
     in
-    Flow.flow cx (t, UseT (use_op, iterable));
+    Flow.flow cx (t, AssertIterableT { use_op; reason = iterable_reason; async; targs });
 
     ((loc, ret), Yield { Yield.argument = argument_ast; delegate = true; comments })
   (* TODO *)

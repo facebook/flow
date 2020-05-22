@@ -998,6 +998,12 @@ class virtual ['a] t_with_uses =
       | AssertBinaryInRHST _
       | AssertForInRHST _ ->
         t
+      | AssertIterableT { use_op; reason; async; targs } ->
+        let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
+        if targs' == targs then
+          t
+        else
+          AssertIterableT { use_op; reason; async; targs = targs' }
       | PredicateT (p, t') ->
         let p' = self#predicate cx map_cx p in
         let t'' = self#type_ cx map_cx t' in
