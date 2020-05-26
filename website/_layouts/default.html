@@ -24,10 +24,6 @@
     {% if page.search or layout.search %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min.css" integrity="sha256-qtayAfor6DgK7swJ/RmRl5Cbo9XUAhuJzGjNfqQLHDU=" crossorigin="anonymous"/>
     {% endif %}
-    {% if page.codemirror or layout.codemirror %}
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.css" integrity="sha256-MdzaXfGXzZdeHw/XEV2LNNycipsLk4uZ0FYzO3hbuvI=" crossorigin="anonymous"/>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/addon/lint/lint.min.css" integrity="sha256-EYLrIw6E5tjVEIS+bAgP0iR6uTreFdhzLmIGueibEDM=" crossorigin="anonymous"/>
-    {% endif %}
     <script type="text/javascript" src="{% asset_path 'require_2_3_3.js' %}"></script>
     <script type="text/javascript">
       requirejs.config({
@@ -44,11 +40,9 @@
           'tether-min': 'https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min',
           'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.5/js/bootstrap.min',
           'docsearch': 'https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min',
-          'codemirror/lib/codemirror': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min',
-          'codemirror/addon/lint/lint': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/addon/lint/lint.min',
-          'codemirror/mode/javascript/javascript': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/javascript/javascript.min',
-          'codemirror/mode/xml/xml': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/xml/xml.min',
-          'codemirror/mode/jsx/jsx': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/jsx/jsx.min',
+          'vs': 'https://unpkg.com/monaco-editor@0.20.0/min/vs',
+          'vscode-oniguruma': 'https://unpkg.com/vscode-oniguruma@1.3.1/release/main',
+          'vscode-textmate': 'https://unpkg.com/vscode-textmate@5.1.1/release/main',
           'lz-string': 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min'
         }
       });
@@ -65,9 +59,9 @@
   </head>
   <body>
     {% include navbar.html %}
-    <div class="content">
+    <section class="page-content">
       {{content}}
-    </div>
+    </section>
     {% if page.footer %}
       {% include footer.html %}
     {% endif %}

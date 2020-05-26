@@ -4,41 +4,28 @@ html.site-fullscreen .content {
   height: 100%;
 }
 
-.CodeMirror-lint-tooltip {
-  z-index: 1040 !important;
-}
-
 .try-editor {
-  position: relative;
+  display: flex;
+  flex: 1;
   height: 100%;
 
   .code,
   .results {
-    position: absolute;
-    top: 0;
-    bottom: 1.5rem;
+    flex: 1;
+    width: 50%;
+    margin-bottom: 1.5rem;
   }
 
   .code {
-    left: 0;
-    right: 50%;
     background: #fff;
   }
 
   .results {
-    right: 0;
-    left: 50%;
+    position: relative;
     font-size: 12px;
     background: #f7f7f7;
     border-left: 1px solid #ddd;
     overflow: auto;
-  }
-
-  .CodeMirror {
-    height: 100%;
-    font-family: "Roboto Mono", Menlo, monospace;
-    font-size: 12px;
-    -webkit-font-smoothing: subpixel-antialiased;
   }
 }
 

@@ -1,0 +1,202 @@
+{
+  "@generated": "copied from fbsource/vscode/vscode-extensions/flow/syntaxes",
+  "name": "Flow Regular Expressions",
+  "scopeName": "source.regexp.flow",
+  "fileTypes": [],
+  "patterns": [
+    {
+      "include": "#anchor"
+    },
+    {
+      "include": "#backref"
+    },
+    {
+      "include": "#quantifier"
+    },
+    {
+      "include": "#operator"
+    },
+    {
+      "include": "#group-assertion"
+    },
+    {
+      "include": "#group-definition"
+    },
+    {
+      "include": "#character-class-definition"
+    },
+    {
+      "include": "#character-class"
+    }
+  ],
+  "repository": {
+    "character-class-definition": {
+      "patterns": [
+        {
+          "name": "constant.other.character-class.set.regexp",
+          "begin": "(\\[)(\\^)?",
+          "end": "(\\])",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp"
+            },
+            "2": {
+              "name": "keyword.operator.negation.regexp"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp"
+            }
+          },
+          "patterns": [
+            {
+              "name": "constant.other.character-class.range.regexp",
+              "match": "((\\\\[wWsSdD]|\\.)|(\\\\([trnvf0]|c[A-Z]|x[\\da-fA-F]{2}|u[\\da-fA-F]{4}|u\\{[\\da-fA-F]+\\}|.)|([^\\]\\s])))(\\-)((\\\\[wWsSdD]|\\.)|(\\\\([trnvf0]|c[A-Z]|x[\\da-fA-F]{2}|u[\\da-fA-F]{4}|u\\{[\\da-fA-F]+\\}|.)|([^\\]\\s])))",
+              "captures": {
+                "2": {
+                  "name": "constant.character.escape.backslash.regexp"
+                },
+                "3": {
+                  "name": "constant.character.escape.backslash.regexp"
+                },
+                "5": {
+                  "name": "constant.character.regexp"
+                },
+                "6": {
+                  "name": "punctuation.definition.range.regexp"
+                },
+                "8": {
+                  "name": "constant.character.escape.backslash.regexp"
+                },
+                "9": {
+                  "name": "constant.character.escape.backslash.regexp"
+                },
+                "11": {
+                  "name": "constant.character.regexp"
+                }
+              }
+            },
+            {
+              "include": "#character-class"
+            }
+          ]
+        }
+      ]
+    },
+    "group-assertion": {
+      "patterns": [
+        {
+          "begin": "(\\()((\\?=)|(\\?!))",
+          "end": "(\\))",
+          "name": "meta.group.assertion.regexp",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp"
+            }
+          },
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp"
+            },
+            "2": {
+              "name": "punctuation.definition.group.assertion.regexp"
+            },
+            "3": {
+              "name": "meta.assertion.look-ahead.regexp"
+            },
+            "4": {
+              "name": "meta.assertion.negative-look-ahead.regexp"
+            }
+          },
+          "patterns": [
+            {
+              "include": "$self"
+            }
+          ]
+        }
+      ]
+    },
+    "anchor": {
+      "patterns": [
+        {
+          "name": "keyword.control.anchor.regexp",
+          "match": "\\\\[bB]|\\^|\\$"
+        }
+      ]
+    },
+    "operator": {
+      "patterns": [
+        {
+          "name": "keyword.operator.or.regexp",
+          "match": "\\|"
+        }
+      ]
+    },
+    "group-definition": {
+      "patterns": [
+        {
+          "begin": "(\\()((\\?:))?",
+          "end": "(\\))",
+          "name": "meta.group.regexp",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp"
+            }
+          },
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp"
+            },
+            "3": {
+              "name": "punctuation.definition.group.capture.regexp"
+            },
+            "5": {
+              "name": "punctuation.definition.group.capture.regexp"
+            },
+            "6": {
+              "name": "punctuation.definition.group.no-capture.regexp"
+            }
+          },
+          "patterns": [
+            {
+              "include": "$self"
+            }
+          ]
+        }
+      ]
+    },
+    "quantifier": {
+      "patterns": [
+        {
+          "name": "keyword.operator.quantifier.regexp",
+          "match": "(\\?|\\*\\??|\\+\\??)|\\{(\\d+,\\d+|\\d+,|\\d+)\\}"
+        }
+      ]
+    },
+    "backref": {
+      "patterns": [
+        {
+          "name": "keyword.other.back-reference.regexp",
+          "match": "\\\\[1-9][0-9]*"
+        }
+      ]
+    },
+    "character-class": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.backslash.regexp",
+          "match": "\\\\[wWsSdD]"
+        },
+        {
+          "match": "(\\\\([trnvf0\\\\]|c[A-Z]|x[\\da-fA-F]{2}|u[\\da-fA-F]{4}|u\\{[\\da-fA-F]+\\}|.))",
+          "captures": {
+            "1": {
+              "name": "constant.character.escape.backslash.regexp"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
