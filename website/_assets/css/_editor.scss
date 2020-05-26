@@ -1,3 +1,4 @@
+.article {
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -152,79 +153,4 @@ pre.highlight {
   color: $editor-error-bg;
 }
 
-// .highlighter-flow ~ span[data-error-id] {
-//   display: block;
-//   padding: 0.5rem 1rem;
-//   background: $editor-error-bg;
-//   color: white;
-// }
-
-//////////////////////////////////////////////////////////////////////////////
-
-// pre.highlight,
-// div.highlight table pre {
-//   font-size: 13px;
-//   line-height: 20px; }
-//
-// pre.highlight code {
-//   width: 100%;
-//   white-space: pre; }
-
-
-// .language-bash div.highlight table,
-// .language-bash pre.highlight code {
-//   border-left: 4px solid #6b6b6b;
-//   background-color: rgba(138, 138, 138, 0.1); }
-
-// .cli-error div.highlight table,
-// .cli-error pre.highlight code {
-//   border-left: 4px solid #d64400;
-//   background-color: rgba(226, 73, 50, 0.1); }
-
-/* remove space between CLI + CLI error examples */
-// div.language-bash + div.cli-error {
-//   margin-top: -20px; }
-
-//////////////////////////////////////////////////
-
-// // pre, .errmsg, .doc code {
-// //   font-family: "Roboto Mono", Menlo, monospace; }
-//
-// .doc {
-//   color: #336699;
-//   white-space: normal;
-//   font-family: Helvetica Neue, Georgia; }
-//
-// .doc p {
-//   font-family: Georgia;
-//   line-height: 1.35em;
-//   letter-spacing: 0.01em; }
-//
-// .doc code {
-//   font-size: 13px;
-//   background-color: rgba(40, 90, 120, 0.1);
-//   padding: 1px 2px;
-//   border-radius: 2px; }
-//
-// // .error {
-// //   background: url("/assets/underline.png") bottom repeat-x;
-// //   padding-bottom: 4px; }
-//
-// .selected {
-//   background-color: rgba(255, 100, 100, 0.2); }
-//
-// .main-selected {
-//   background-color: rgba(255, 100, 100, 0.6);
-//   border-bottom: none; }
-//
-// .errmsg {
-//   position: absolute;
-//   max-width: 450px;
-//   font-size: 12px;
-//   padding: 7px 10px;
-//   border: 1px solid #d64400;
-//   background-color: #FAEBE6;
-//   /* hsla(8, 75%, 54%, 0.1) over white */ }
-//
-// // .type {
-// //   opacity: 0.5; }
+}
