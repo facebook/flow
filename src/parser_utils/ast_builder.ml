@@ -280,8 +280,8 @@ module Statements = struct
   let let_declaration declarations =
     variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let declarations
 
-  let const_declaration declarations =
-    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const declarations
+  let const_declaration ?comments declarations =
+    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const ?comments declarations
 
   let function_declaration ?(loc = Loc.none) ?(async = false) ?(generator = false) ?params ?body id
       =
