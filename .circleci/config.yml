@@ -81,7 +81,7 @@ executors:
     working_directory: /flow
   flow-website:
     docker:
-      - image: flowtype/flow-website:0.0.3
+      - image: flowtype/flow-website:0.0.4
     working_directory: ~/flow
   awscli:
     docker:
