@@ -184,7 +184,7 @@ class FlowWorker {
     this._pending = {};
     this._index = 0;
 
-    const worker = this._worker = new Worker("{% asset_path 'tryFlowWorker' %}");
+    const worker = this._worker = new Worker("{% asset 'tryFlowWorker' @path %}");
     worker.onmessage = ({data}) => {
       if (data.id && this._pending[data.id]) {
         if (data.err) {
