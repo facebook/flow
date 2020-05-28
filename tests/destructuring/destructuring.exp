@@ -597,7 +597,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:77:26
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -619,7 +619,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:80:27
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 

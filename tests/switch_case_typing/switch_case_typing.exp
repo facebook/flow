@@ -98,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:3
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either object with property `type` that matches string literal `qux` [1] is incompatible with string literal
    `foo` [2].
  - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `bar` [3].
@@ -124,7 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:8
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [2].
  - Or string [1] is incompatible with string literal `bar` [3].
  - Or string [1] is incompatible with string literal `baz` [4].
@@ -147,7 +147,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:76:8
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [2].
  - Or string [1] is incompatible with string literal `bar` [3].
  - Or string [1] is incompatible with string literal `baz` [4].
@@ -170,7 +170,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:85:8
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either number [1] is incompatible with string literal `foo` [2].
  - Or number [1] is incompatible with string literal `bar` [3].
  - Or number [1] is incompatible with string literal `baz` [4].

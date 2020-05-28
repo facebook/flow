@@ -1394,7 +1394,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either undefined [1] is incompatible with null [2].
  - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
 

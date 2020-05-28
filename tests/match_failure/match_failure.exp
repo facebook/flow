@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- disjoint_union.js:8:7
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
    `rectangle` [2].
  - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
@@ -21,7 +21,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:8:22
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either string [1] is incompatible with string literal `rectangle` [2].
  - Or string [1] is incompatible with string literal `circle` [3].
 
@@ -40,7 +40,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:21:7
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
    `rectangle` [2].
  - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
@@ -61,7 +61,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:21:22
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either string [1] is incompatible with string literal `rectangle` [2].
  - Or string [1] is incompatible with string literal `circle` [3].
 
@@ -80,7 +80,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:34:7
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
    `rectangle` [2].
  - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
@@ -101,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:34:22
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either string [1] is incompatible with string literal `rectangle` [2].
  - Or string [1] is incompatible with string literal `circle` [3].
 
