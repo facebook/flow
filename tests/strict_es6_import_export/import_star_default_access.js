@@ -11,3 +11,5 @@ const {'default': renamed2} = Foo;
 let x = 0;
 ({default: x}) = Foo;
 ({'default': x}) = Foo;
+
+import {default as renamed3} from './foo';

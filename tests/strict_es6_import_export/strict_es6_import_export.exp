@@ -88,5 +88,14 @@ References:
               ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------- import_star_default_access.js:15:9
 
-Found 6 errors
+The default export of a module cannot be accessed from import destructuring. To use the default export you must import
+it directly. [default-import-access]
+
+   15| import {default as renamed3} from './foo';
+               ^^^^^^^
+
+
+
+Found 7 errors

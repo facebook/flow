@@ -35,6 +35,9 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
       let import_star_reason = Reason.mk_reason (Reason.RCode "import *") import_star_loc in
       this#add_error (Error_message.EBadDefaultImportAccess (loc, import_star_reason))
 
+    method private add_bad_default_import_destructuring_error loc =
+      this#add_error (Error_message.EBadDefaultImportDestructuring loc)
+
     method private import_star_from_use use =
       let { Scopes.Def.locs; _ } = Scopes.def_of_use scope_info use in
       Nel.fold_left
@@ -116,6 +119,22 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
           assign
         | _ -> super#assignment loc assign)
       | _ -> super#assignment loc assign
+
+    method! import_declaration loc decl =
+      let open Ast.Statement.ImportDeclaration in
+      begin
+        match decl with
+        | { specifiers = Some (ImportNamedSpecifiers specifiers); _ } ->
+          List.iter
+            (fun specifier ->
+              match specifier with
+              | { remote = (default_loc, { Ast.Identifier.name = "default"; _ }); _ } ->
+                this#add_bad_default_import_destructuring_error default_loc
+              | _ -> ())
+            specifiers
+        | _ -> ()
+      end;
+      super#import_declaration loc decl
   end
 
 let detect_errors cx ast =

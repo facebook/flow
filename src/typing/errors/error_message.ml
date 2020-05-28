@@ -205,6 +205,7 @@ and 'loc t' =
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
   | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
+  | EBadDefaultImportDestructuring of 'loc
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -761,6 +762,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
   | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
+  | EBadDefaultImportDestructuring loc -> EBadDefaultImportDestructuring (f loc)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1053,6 +1055,7 @@ let util_use_op_of_msg nope util = function
   | EBadExportPosition _
   | EBadExportContext _
   | EBadDefaultImportAccess _
+  | EBadDefaultImportDestructuring _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
@@ -1215,6 +1218,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBadExportContext (_, loc)
   | EBadExportPosition loc
   | EBadDefaultImportAccess (loc, _)
+  | EBadDefaultImportDestructuring loc
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1328,6 +1332,7 @@ let kind_of_msg =
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
+    | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2372,6 +2377,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " object. To use the default export you must import it directly.";
           ];
       }
+  | EBadDefaultImportDestructuring _ ->
+    Normal
+      {
+        features =
+          [
+            text "The default export of a module cannot be accessed from import destructuring. ";
+            text "To use the default export you must import it directly.";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -3261,6 +3275,7 @@ let error_code_of_message err : error_code option =
   | EBadExportContext _ -> Some InvalidExport
   | EBadExportPosition _ -> Some InvalidExport
   | EBadDefaultImportAccess _ -> Some DefaultImportAccess
+  | EBadDefaultImportDestructuring _ -> Some DefaultImportAccess
   | EBinaryInLHS _ -> Some InvalidInLhs
   | EBinaryInRHS _ -> Some InvalidInRhs
   | EBindingError (binding_error, _, _, _) ->
