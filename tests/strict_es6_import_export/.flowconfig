@@ -1,0 +1,5 @@
+[options]
+experimental.strict_es6_import_export=true
+
+[lints]
+all=error

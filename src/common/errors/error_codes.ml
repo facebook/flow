@@ -19,6 +19,7 @@ type error_code =
   | CannotSpreadInterface
   | CannotWrite
   | CannotWriteEnum
+  | DefaultImportAccess
   | DeprecatedType
   | DeprecatedUtility
   | DuplicateEnumInit
@@ -157,6 +158,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.SketchyNull (Lints.SketchyNullString | Lints.SketchyNullEnumString) -> SketchyNullString
   | Lints.SketchyNull (Lints.SketchyNullNumber | Lints.SketchyNullEnumNumber) -> SketchyNullNumber
   | Lints.SketchyNull Lints.SketchyNullMixed -> SketchyNullMixed
+  | Lints.DefaultImportAccess -> DefaultImportAccess
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -172,6 +174,7 @@ let string_of_code : error_code -> string = function
   | CannotSpreadInterface -> "cannot-spread-interface"
   | CannotWrite -> "cannot-write"
   | CannotWriteEnum -> "cannot-write-enum"
+  | DefaultImportAccess -> "default-import-access"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
   | DuplicateEnumInit -> "duplicate-enum-init"

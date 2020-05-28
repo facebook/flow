@@ -41,6 +41,7 @@ type lint_kind =
   | UninitializedInstanceProperty
   | AmbiguousObjectType
   | NullVoidAddition
+  | DefaultImportAccess
 
 val string_of_kind : lint_kind -> string
 

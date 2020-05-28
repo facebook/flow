@@ -1,0 +1,32 @@
+Error -------------------------------------------------------------------------------- import_star_default_access.js:5:1
+
+The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
+import it directly. [default-import-access]
+
+   import_star_default_access.js:5:1
+   5| Foo.default;
+      ^^^^^^^^^^^
+
+References:
+   import_star_default_access.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- import_star_default_access.js:6:1
+
+The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
+import it directly. [default-import-access]
+
+   import_star_default_access.js:6:1
+   6| Foo['default'];
+      ^^^^^^^^^^^^^^
+
+References:
+   import_star_default_access.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+
+Found 2 errors

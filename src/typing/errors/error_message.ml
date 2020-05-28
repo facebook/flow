@@ -204,6 +204,7 @@ and 'loc t' =
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
+  | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -759,6 +760,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
+  | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1050,6 +1052,7 @@ let util_use_op_of_msg nope util = function
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
+  | EBadDefaultImportAccess _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
@@ -1211,6 +1214,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ECannotDelete (loc, _)
   | EBadExportContext (_, loc)
   | EBadExportPosition loc
+  | EBadDefaultImportAccess (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1323,6 +1327,7 @@ let kind_of_msg =
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
+    | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2357,6 +2362,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features =
           [code name; text " may only be used as part of a legal top level export statement"];
       }
+  | EBadDefaultImportAccess (_, import_star_reason) ->
+    Normal
+      {
+        features =
+          [
+            text "The default export of a module cannot be accessed from an ";
+            ref import_star_reason;
+            text " object. To use the default export you must import it directly.";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -3245,6 +3260,7 @@ let error_code_of_message err : error_code option =
   | EAssignExportedConstLikeBinding _ -> Some CannotReassignExport
   | EBadExportContext _ -> Some InvalidExport
   | EBadExportPosition _ -> Some InvalidExport
+  | EBadDefaultImportAccess _ -> Some DefaultImportAccess
   | EBinaryInLHS _ -> Some InvalidInLhs
   | EBinaryInRHS _ -> Some InvalidInRhs
   | EBindingError (binding_error, _, _, _) ->

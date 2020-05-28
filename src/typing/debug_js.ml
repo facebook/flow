@@ -1375,6 +1375,8 @@ let dump_error_message =
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
+    | EBadDefaultImportAccess (loc, reason) ->
+      spf "EBadDefaultImportAccess (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
       spf
