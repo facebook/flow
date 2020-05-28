@@ -79,7 +79,7 @@ let rec js_of_json = function
   | Hh_json.JSON_Null -> Js.Unsafe.inject Js.null
 
 let load_lib_files
-    ~master_cx
+    ~ccx
     ~metadata
     files
     save_parse_errors
@@ -87,16 +87,14 @@ let load_lib_files
     save_suppressions
     save_lint_suppressions =
   (* iterate in reverse override order *)
-  let (_, result) =
+  let _ =
     List.rev files
     |> List.fold_left
-         (fun (exclude_syms, result) file ->
+         (fun exclude_syms file ->
            let lib_content = Sys_utils.cat file in
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
-             let sig_cx = Context.make_sig () in
-             let ccx = Context.make_ccx sig_cx in
              let aloc_table = Utils_js.FilenameMap.empty in
              let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
              let cx =
@@ -109,7 +107,6 @@ let load_lib_files
                  Files.lib_module_ref
                  Context.Checking
              in
-             Flow_js.mk_builtins cx;
              let syms =
                Type_inference_js.infer_lib_file
                  cx
@@ -118,13 +115,7 @@ let load_lib_files
                  ~file_sig:(File_sig.abstractify_locs file_sig)
                  ~lint_severities:LintSettings.empty_severities
              in
-             Context.merge_into (Context.sig_cx master_cx) sig_cx;
 
-             let () =
-               let from_t = Context.find_module master_cx Files.lib_module_ref in
-               let to_t = Context.find_module cx Files.lib_module_ref in
-               Flow_js.flow_t master_cx (from_t, to_t)
-             in
              let errors = Context.errors cx in
              let suppressions = Context.error_suppressions cx in
              let severity_cover = Context.severity_cover cx in
@@ -133,17 +124,14 @@ let load_lib_files
              save_suppressions lib_file suppressions;
              save_lint_suppressions lib_file severity_cover;
 
-             (* symbols loaded from this file are suppressed
-           if found in later ones *)
-             let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-             let result = (lib_file, true) :: result in
-             (exclude_syms, result)
+             (* symbols loaded from this file are suppressed if found in later ones *)
+             SSet.union exclude_syms (SSet.of_list syms)
            | Error parse_errors ->
              save_parse_errors lib_file parse_errors;
-             (exclude_syms, (lib_file, false) :: result))
-         (SSet.empty, [])
+             exclude_syms)
+         SSet.empty
   in
-  result
+  ()
 
 let stub_docblock =
   {
@@ -194,39 +182,36 @@ let stub_metadata ~root ~checked =
     type_asserts = false;
   }
 
-let get_master_cx =
-  let master_cx = ref None in
-  fun root ->
-    match !master_cx with
-    | Some (prev_root, cx) ->
-      assert (prev_root = root);
-      cx
-    | None ->
-      let sig_cx = Context.make_sig () in
-      let ccx = Context.make_ccx sig_cx in
-      let aloc_table = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-      let cx =
-        Context.make
-          ccx
-          (stub_metadata ~root ~checked:false)
-          File_key.Builtins
-          aloc_table
-          rev_table
-          Files.lib_module_ref
-          Context.Checking
-      in
-      Flow_js.mk_builtins cx;
-      master_cx := Some (root, cx);
-      cx
+let master_cx_ref : (Path.t * Context.sig_t) option ref = ref None
 
-let set_libs filenames =
+let get_master_cx root =
+  match !master_cx_ref with
+  | None -> failwith "builtins not initialized"
+  | Some (prev_root, sig_cx) ->
+    assert (prev_root = root);
+    sig_cx
+
+let init_builtins filenames =
   let root = Path.dummy_path in
-  let master_cx = get_master_cx root in
-  let metadata = stub_metadata ~root ~checked:true in
-  let (_ : (File_key.t * bool) list) =
+  let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx in
+  let master_cx =
+    let aloc_table = Utils_js.FilenameMap.empty in
+    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+    Context.make
+      ccx
+      (stub_metadata ~root ~checked:false)
+      File_key.Builtins
+      aloc_table
+      rev_table
+      Files.lib_module_ref
+      Context.Checking
+  in
+  Flow_js.mk_builtins master_cx;
+  let () =
+    let metadata = stub_metadata ~root ~checked:true in
     load_lib_files
-      ~master_cx
+      ~ccx
       ~metadata
       filenames
       (fun _file _errs -> ())
@@ -238,7 +223,8 @@ let set_libs filenames =
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
+  ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
+  master_cx_ref := Some (root, sig_cx)
 
 let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.
@@ -280,7 +266,7 @@ let infer_and_merge ~root filename ast file_sig =
       (Nel.one filename)
       reqs
       []
-      (Context.sig_cx master_cx)
+      master_cx
   in
   (cx, tast)
 
@@ -351,7 +337,8 @@ let check filename =
   let content = Sys_utils.cat filename in
   check_content ~filename ~content
 
-let set_libs_js js_libs = Js.to_array js_libs |> Array.to_list |> List.map Js.to_string |> set_libs
+let init_builtins_js js_libs =
+  Js.to_array js_libs |> Array.to_list |> List.map Js.to_string |> init_builtins
 
 let check_js js_file = check (Js.to_string js_file)
 
@@ -458,7 +445,7 @@ let () =
     "registerFile"
     (Js.wrap_callback (fun name content -> Sys_js.create_file ~name ~content))
 
-let () = Js.Unsafe.set exports "setLibs" (Js.wrap_callback set_libs_js)
+let () = Js.Unsafe.set exports "initBuiltins" (Js.wrap_callback init_builtins_js)
 
 let () = Js.Unsafe.set exports "check" (Js.wrap_callback check_js)
 
