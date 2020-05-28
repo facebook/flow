@@ -112,6 +112,7 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
+  opt_strict_es6_import_export: bool;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
   opt_suppress_comments: Str.regexp list;
@@ -238,6 +239,8 @@ let should_munge_underscores opts = opts.opt_munge_underscores
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 
 let should_strip_root opts = opts.opt_strip_root
+
+let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 
 let suppress_comments opts = opts.opt_suppress_comments
 

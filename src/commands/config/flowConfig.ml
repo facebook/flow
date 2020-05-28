@@ -96,6 +96,7 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
+    strict_es6_import_export: bool;
     suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
     temp_dir: string;
@@ -202,6 +203,7 @@ module Opts = struct
       shm_heap_size = 1024 * 1024 * 1024 * 25;
       (* 25 gigs *)
       shm_log_level = 0;
+      strict_es6_import_export = false;
       suppress_comments =
         [
           Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe";
@@ -603,6 +605,8 @@ module Opts = struct
         types_first_max_rss_bytes_for_check_per_worker_parser );
       ( "experimental.types_first.max_rss_bytes_for_check_per_worker",
         types_first_max_rss_bytes_for_check_per_worker_parser );
+      ( "experimental.strict_es6_import_export",
+        boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
     ]
 
   let parse =
@@ -1241,6 +1245,8 @@ let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 let shm_heap_size c = c.options.Opts.shm_heap_size
 
 let shm_log_level c = c.options.Opts.shm_log_level
+
+let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 
 let suppress_comments c = c.options.Opts.suppress_comments
 

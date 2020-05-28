@@ -1285,6 +1285,7 @@ let make_options
       opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
       opt_file_watcher_timeout;
+      opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
     })
 
 let make_env flowconfig_name connect_flags root =

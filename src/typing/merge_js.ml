@@ -355,9 +355,9 @@ let merge_component
       (FilenameMap.empty, FilenameMap.empty)
       component
   in
-  let (rev_cxs, rev_tasts, impl_cxs) =
+  let (rev_results, impl_cxs) =
     Nel.fold_left
-      (fun (cxs, tasts, impl_cxs) filename ->
+      (fun (results, impl_cxs) filename ->
         (* create cx *)
         let info = get_docblock_unsafe filename in
         let metadata = Context.docblock_overrides info metadata in
@@ -388,12 +388,12 @@ let merge_component
         let tast =
           Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
         in
-        (cx :: cxs, tast :: tasts, FilenameMap.add filename cx impl_cxs))
-      ([], [], FilenameMap.empty)
+        ((cx, ast, tast) :: results, FilenameMap.add filename cx impl_cxs))
+      ([], FilenameMap.empty)
       component
   in
-  let cxs = Base.List.rev rev_cxs in
-  let tasts = Base.List.rev rev_tasts in
+  let results = Base.List.rev rev_results in
+  let (cxs, _, tasts) = Base.List.unzip3 results in
   let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
   Flow_js.Cache.clear ();
 
@@ -442,7 +442,7 @@ let merge_component
 
     force_annotations cx other_cxs;
 
-    match Base.List.zip_exn cxs tasts with
+    match results with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
 

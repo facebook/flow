@@ -249,7 +249,7 @@ let infer_and_merge ~root filename ast file_sig =
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let ((cx, tast), _other_cxs) =
+  let ((cx, _, tast), _other_cxs) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities

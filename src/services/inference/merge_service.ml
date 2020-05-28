@@ -137,7 +137,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let (((full_cx, _), other_cxs) as cx_nel) =
+  let (((full_cx, _, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
@@ -152,7 +152,8 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
-  (* Only compute coverage on Types-First checking, or Classic merging phases *)
+  (* Only compute coverage and imports/exports errors on Types-First checking,
+     or Classic merging phases *)
   let coverage_map =
     match (Options.arch options, phase) with
     | (_, Context.Normalizing)
@@ -160,9 +161,11 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       None
     | (Options.TypesFirst, Context.Checking)
     | (Options.Classic, _) ->
+      if Options.strict_es6_import_export options then
+        Nel.iter (fun (_, ast, _) -> Strict_es6_import_export.detect_errors full_cx ast) cx_nel;
       Some
         (Nel.fold_left
-           (fun acc (ctx, typed_ast) ->
+           (fun acc (ctx, _, typed_ast) ->
              let file = Context.file ctx in
              let cov = Coverage.file_coverage ~full_cx typed_ast in
              FilenameMap.add file cov acc)
@@ -171,13 +174,13 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   in
   let typed_asts =
     Nel.fold_left
-      (fun typed_asts (ctx, typed_ast) ->
+      (fun typed_asts (ctx, _, typed_ast) ->
         let file = Context.file ctx in
         FilenameMap.add file typed_ast typed_asts)
       FilenameMap.empty
       cx_nel
   in
-  let other_cxs = Base.List.map ~f:(fun (cx, _) -> cx) other_cxs in
+  let other_cxs = Base.List.map ~f:(fun (cx, _, _) -> cx) other_cxs in
   { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
 
 let merge_context ~options ~reader component =
@@ -250,7 +253,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let ((cx, tast), _) =
+  let ((cx, _, tast), _) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
