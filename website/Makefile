@@ -66,7 +66,7 @@ ifndef YARN_EXISTS
 endif
 
 test-jekyll: test-bundler
-	@if ! bundle exec command -v jekyll > /dev/null 2>&1; then echo 'jekyll is not installed. Run `make install`'; exit 1; fi
+	@if ! bundle exec jekyll --version > /dev/null 2>&1; then echo 'jekyll is not installed. Run `make install`'; exit 1; fi
 
 # test-crowdin:
 # ifndef CROWDIN_EXISTS
