@@ -62,6 +62,60 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
           expr
         | None -> super#member expr_loc expr)
       | _ -> super#member expr_loc expr
+
+    method object_pattern_default_property object_pattern =
+      let open Ast.Pattern.Object in
+      let { properties; _ } = object_pattern in
+      Base.List.find_map
+        ~f:(fun prop ->
+          let open Property in
+          match prop with
+          | Ast.Pattern.Object.Property
+              ( _,
+                {
+                  key =
+                    ( Identifier (default_loc, { Ast.Identifier.name = "default"; _ })
+                    | Literal (default_loc, { Ast.Literal.value = Ast.Literal.String "default"; _ })
+                      );
+                  _;
+                } ) ->
+            Some default_loc
+          | _ -> None)
+        properties
+
+    method! variable_declarator ~kind decl =
+      let open Ast.Statement.VariableDeclaration.Declarator in
+      match decl with
+      | ( _,
+          {
+            id = (_, Ast.Pattern.Object object_pattern);
+            init = Some (_, Ast.Expression.Identifier (id_loc, _));
+          } ) ->
+        let default_loc = this#object_pattern_default_property object_pattern in
+        let import_star = this#import_star_from_use id_loc in
+        (match (default_loc, import_star) with
+        | (Some default_loc, Some import_star) ->
+          this#add_bad_default_import_access_error default_loc import_star;
+          decl
+        | _ -> super#variable_declarator ~kind decl)
+      | _ -> super#variable_declarator ~kind decl
+
+    method! assignment loc assign =
+      let open Ast.Expression.Assignment in
+      match assign with
+      | {
+       left = (_, Ast.Pattern.Object object_pattern);
+       right = (_, Ast.Expression.Identifier (id_loc, _));
+       _;
+      } ->
+        let default_loc = this#object_pattern_default_property object_pattern in
+        let import_star = this#import_star_from_use id_loc in
+        (match (default_loc, import_star) with
+        | (Some default_loc, Some import_star) ->
+          this#add_bad_default_import_access_error default_loc import_star;
+          assign
+        | _ -> super#assignment loc assign)
+      | _ -> super#assignment loc assign
   end
 
 let detect_errors cx ast =

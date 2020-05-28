@@ -28,5 +28,65 @@ References:
              ^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------- import_star_default_access.js:8:8
 
-Found 2 errors
+The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
+import it directly. [default-import-access]
+
+   import_star_default_access.js:8:8
+   8| const {default: renamed1} = Foo;
+             ^^^^^^^
+
+References:
+   import_star_default_access.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- import_star_default_access.js:9:8
+
+The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
+import it directly. [default-import-access]
+
+   import_star_default_access.js:9:8
+   9| const {'default': renamed2} = Foo;
+             ^^^^^^^^^
+
+References:
+   import_star_default_access.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- import_star_default_access.js:12:3
+
+The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
+import it directly. [default-import-access]
+
+   import_star_default_access.js:12:3
+   12| ({default: x}) = Foo;
+         ^^^^^^^
+
+References:
+   import_star_default_access.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- import_star_default_access.js:13:3
+
+The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
+import it directly. [default-import-access]
+
+   import_star_default_access.js:13:3
+   13| ({'default': x}) = Foo;
+         ^^^^^^^^^
+
+References:
+   import_star_default_access.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+
+Found 6 errors
