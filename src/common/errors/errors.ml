@@ -457,7 +457,15 @@ module Friendly = struct
              * for speculation errors in theory, but as long as there are
              * UnknownUses it's possible we won't get a root.) *)
             if (Base.Option.is_none error.root || not show_root) && frames = [] then
-              [text "all branches are incompatible:"]
+              let message = [text "all branches are incompatible:"] in
+              if show_code then
+                Base.Option.value_map
+                  ~f:(fun error_code ->
+                    message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
+                  ~default:message
+                  error_code
+              else
+                message
             else
               (* Otherwise create a message with our frames and optionally the
                * error message root. *)

@@ -359,7 +359,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-type]
  - Either number [1] is incompatible with string literal `foo` [2].
  - Or number [1] is incompatible with string literal `bar` [3].
 

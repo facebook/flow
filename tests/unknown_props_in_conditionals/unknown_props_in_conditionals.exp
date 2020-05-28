@@ -98,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:5
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-use]
  - Either property `thisPropDoesNotExist` is missing in object type [1].
  - Or property `thisPropDoesNotExist` is missing in object type [2].
 
