@@ -206,6 +206,7 @@ and 'loc t' =
   | EBadExportContext of string * 'loc
   | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
   | EBadDefaultImportDestructuring of 'loc
+  | EInvalidImportStarUse of 'loc * 'loc virtual_reason
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -763,6 +764,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
   | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
   | EBadDefaultImportDestructuring loc -> EBadDefaultImportDestructuring (f loc)
+  | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1056,6 +1058,7 @@ let util_use_op_of_msg nope util = function
   | EBadExportContext _
   | EBadDefaultImportAccess _
   | EBadDefaultImportDestructuring _
+  | EInvalidImportStarUse _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
@@ -1219,6 +1222,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBadExportPosition loc
   | EBadDefaultImportAccess (loc, _)
   | EBadDefaultImportDestructuring loc
+  | EInvalidImportStarUse (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1333,6 +1337,7 @@ let kind_of_msg =
     | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
+    | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2386,6 +2391,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text "To use the default export you must import it directly.";
           ];
       }
+  | EInvalidImportStarUse (_, import_star_reason) ->
+    Normal
+      {
+        features =
+          [
+            ref import_star_reason;
+            text " object can only be used by accessing one of its named exports";
+            text " with a member access or destructuring.";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -3276,6 +3291,7 @@ let error_code_of_message err : error_code option =
   | EBadExportPosition _ -> Some InvalidExport
   | EBadDefaultImportAccess _ -> Some DefaultImportAccess
   | EBadDefaultImportDestructuring _ -> Some DefaultImportAccess
+  | EInvalidImportStarUse _ -> Some InvalidImportStarUse
   | EBinaryInLHS _ -> Some InvalidInLhs
   | EBinaryInRHS _ -> Some InvalidInRhs
   | EBindingError (binding_error, _, _, _) ->

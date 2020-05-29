@@ -69,6 +69,7 @@ type error_code =
   | InvalidExport
   | InvalidExportsTypeArg
   | InvalidIdx
+  | InvalidImportStarUse
   | InvalidImportType
   | InvalidInLhs
   | InvalidInRhs
@@ -159,6 +160,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.SketchyNull (Lints.SketchyNullNumber | Lints.SketchyNullEnumNumber) -> SketchyNullNumber
   | Lints.SketchyNull Lints.SketchyNullMixed -> SketchyNullMixed
   | Lints.DefaultImportAccess -> DefaultImportAccess
+  | Lints.InvalidImportStarUse -> InvalidImportStarUse
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -224,6 +226,7 @@ let string_of_code : error_code -> string = function
   | InvalidExport -> "invalid-export"
   | InvalidExportsTypeArg -> "invalid-exports-type-arg"
   | InvalidIdx -> "invalid-idx"
+  | InvalidImportStarUse -> "invalid-import-star-use"
   | InvalidImportType -> "invalid-import-type"
   | InvalidInLhs -> "invalid-in-lhs"
   | InvalidInRhs -> "invalid-in-rhs"

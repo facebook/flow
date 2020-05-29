@@ -1,5 +1,6 @@
 [options]
 experimental.strict_es6_import_export=true
+no_flowlib=false
 
 [lints]
 all=error

@@ -42,6 +42,7 @@ type lint_kind =
   | AmbiguousObjectType
   | NullVoidAddition
   | DefaultImportAccess
+  | InvalidImportStarUse
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -77,6 +78,7 @@ let string_of_kind = function
   | AmbiguousObjectType -> "ambiguous-object-type"
   | NullVoidAddition -> "unsafe-addition"
   | DefaultImportAccess -> "default-import-access"
+  | InvalidImportStarUse -> "invalid-import-star-use"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -112,6 +114,7 @@ let kinds_of_string = function
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "unsafe-addition" -> Some [NullVoidAddition]
   | "default-import-access" -> Some [DefaultImportAccess]
+  | "invalid-import-star-use" -> Some [InvalidImportStarUse]
   | _ -> None
 
 module LintKind = struct

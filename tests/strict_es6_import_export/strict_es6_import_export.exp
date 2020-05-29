@@ -97,5 +97,148 @@ it directly. [default-import-access]
                ^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:7:1
 
-Found 7 errors
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:7:1
+   7| Foo;
+      ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:8:1
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:8:1
+   8| Foo();
+      ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:8:1
+
+Cannot call `Foo` because a call signature declaring the expected parameter / return type is missing in module
+`./foo` [1]. [prop-missing]
+
+   import_star_invalid_use.js:8:1
+   8| Foo();
+      ^^^
+
+References:
+   import_star_invalid_use.js:3:1
+   3| import * as Foo from './foo';
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- import_star_invalid_use.js:9:14
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:9:14
+   9| const Foo2 = Foo;
+                   ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+   3| import * as Foo from './foo';
+             ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:10:11
+
+Cannot use `Foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   10| let Foo3: Foo;
+                 ^^^
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:10:11
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:10:11
+   10| let Foo3: Foo;
+                 ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- import_star_invalid_use.js:11:2
+
+Cannot create `Foo` element because module `./foo` [1] is not a React component. [not-a-component]
+
+   import_star_invalid_use.js:11:2
+   11| <Foo></Foo>;
+        ^^^
+
+References:
+   import_star_invalid_use.js:3:1
+    3| import * as Foo from './foo';
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- import_star_invalid_use.js:11:2
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:11:2
+   11| <Foo></Foo>;
+        ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- import_star_invalid_use.js:15:1
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:15:1
+   15| Foo[prop];
+       ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:29:12
+   29| const {y = Foo} = Foo;
+                  ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+
+Found 17 errors
