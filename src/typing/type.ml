@@ -782,18 +782,30 @@ module rec TypeTerm : sig
 
   and enum_check_t =
     | EnumCheck of {
-        reason: Reason.t;
+        reason: reason;
         member_name: string;
-        obj_t: t;
       }
 
-  and enum_exhaustive_check_t = {
-    checks: enum_check_t list;
-    default_case: reason option;
-  }
+  (* Valid state transitions are:
+   * EnumResolveDiscriminant -> EnumResolveCaseTest (with discriminant info populated)
+   * EnumResolveCaseTest -> EnumResolveCaseTest *)
+  and enum_exhaustive_check_tool_t =
+    | EnumResolveDiscriminant
+    | EnumResolveCaseTest of {
+        discriminant_enum: enum_t;
+        discriminant_reason: reason;
+        check: enum_check_t;
+      }
 
   and enum_possible_exhaustive_check_t =
-    | EnumExhaustiveCheckPossiblyValid of enum_exhaustive_check_t
+    | EnumExhaustiveCheckPossiblyValid of {
+        tool: enum_exhaustive_check_tool_t;
+        (* We only convert a "possible check" into a "check" if it has the same
+         * enum type as the discriminant. *)
+        possible_checks: (t * enum_check_t) list;
+        checks: enum_check_t list;
+        default_case: reason option;
+      }
     | EnumExhaustiveCheckInvalid of reason list
 
   and cond_context =

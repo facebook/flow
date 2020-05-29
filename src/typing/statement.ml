@@ -8386,30 +8386,39 @@ and enum_exhaustive_check_of_switch_cases cases_ast =
           when is_valid_enum_member_name name ->
           (match acc with
           | EnumExhaustiveCheckInvalid _ -> acc
-          | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
+          | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case } ->
             let reason = mk_reason (RCustom "case") case_test_loc in
-            let check = EnumCheck { reason; member_name = name; obj_t } in
-            EnumExhaustiveCheckPossiblyValid { checks = check :: checks; default_case })
+            let possible_check = (obj_t, EnumCheck { reason; member_name = name }) in
+            EnumExhaustiveCheckPossiblyValid
+              { tool; possible_checks = possible_check :: possible_checks; checks; default_case })
         | (default_case_loc, { Case.test = None; _ }) ->
           (match acc with
           | EnumExhaustiveCheckInvalid _ -> acc
-          | EnumExhaustiveCheckPossiblyValid { checks; default_case = _ } ->
+          | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case = _ } ->
             EnumExhaustiveCheckPossiblyValid
-              { checks; default_case = Some (mk_reason (RCustom "default case") default_case_loc) })
+              {
+                tool;
+                possible_checks;
+                checks;
+                default_case = Some (mk_reason (RCustom "default case") default_case_loc);
+              })
         | (_, { Case.test = Some ((case_test_loc, _), _); _ }) ->
           let case_reason = Reason.mk_reason (Reason.RCustom "case") case_test_loc in
           (match acc with
           | EnumExhaustiveCheckInvalid invalid_checks ->
             EnumExhaustiveCheckInvalid (case_reason :: invalid_checks)
           | EnumExhaustiveCheckPossiblyValid _ -> EnumExhaustiveCheckInvalid [case_reason]))
-      (EnumExhaustiveCheckPossiblyValid { checks = []; default_case = None })
+      (EnumExhaustiveCheckPossiblyValid
+         { tool = EnumResolveDiscriminant; possible_checks = []; checks = []; default_case = None })
       cases_ast
   in
   match exhaustive_check with
   | EnumExhaustiveCheckInvalid invalid_checks ->
     EnumExhaustiveCheckInvalid (List.rev invalid_checks)
-  | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
-    EnumExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
+  | EnumExhaustiveCheckPossiblyValid _ ->
+    (* As we process `possible_checks` into `checks`, we reverse the list back
+     * into the correct order. *)
+    exhaustive_check
 
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in

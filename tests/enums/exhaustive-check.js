@@ -116,7 +116,7 @@ switch (s)  {
   case E.B: break; // Error
 }
 
-// Discriminant is union
+// Unions and intersections
 function f1(x?: E) {
   switch (x)  {
     case E.A: break; // Error
@@ -175,6 +175,39 @@ function f7(x: E & E) {
 
   switch (x) { // Error
     case E.A:
+  }
+}
+
+enum M {
+  A,
+}
+enum N {
+  A,
+}
+function f8(x: M | N, X: typeof M | typeof N) {
+  switch (x) { // Error
+    case X.A: break; // Error
+  }
+}
+
+function f9(x: E | F, X: typeof E & typeof F) {
+  switch (x) {
+    case X.A: break;
+    case X.B: break;
+  }
+}
+
+// Empty
+function f10(x: empty) {
+  switch (x) {
+    case E.A: break;
+    case E.B: break;
+  }
+}
+
+function f11(x: E, X: empty) {
+  switch (x) { // Error
+    case X.A: break;
   }
 }
 

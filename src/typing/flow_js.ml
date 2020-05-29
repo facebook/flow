@@ -6512,12 +6512,53 @@ struct
                  use_op;
                  representation_type;
                })
+        (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
         | ( DefT (enum_reason, _, EnumT enum),
-            EnumExhaustiveCheckT (check_reason, EnumExhaustiveCheckPossiblyValid exhaustive_check)
-          ) ->
-          Context.add_enum_exhaustive_check
+            EnumExhaustiveCheckT
+              ( check_reason,
+                EnumExhaustiveCheckPossiblyValid
+                  { tool = EnumResolveDiscriminant; possible_checks; checks; default_case } ) ) ->
+          enum_exhaustive_check
             cx
-            { Context.check_reason; enum_reason; enum; exhaustive_check }
+            ~trace
+            ~check_reason
+            ~enum_reason
+            ~enum
+            ~possible_checks
+            ~checks
+            ~default_case
+        (* Resolving the case tests. *)
+        | ( _,
+            EnumExhaustiveCheckT
+              ( check_reason,
+                EnumExhaustiveCheckPossiblyValid
+                  {
+                    tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
+                    possible_checks;
+                    checks;
+                    default_case;
+                  } ) ) ->
+          let (EnumCheck { member_name; _ }) = check in
+          let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
+          let checks =
+            match l with
+            | DefT (_, _, EnumObjectT { enum_id = enum_id_check; _ })
+              when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members
+              ->
+              check :: checks
+            (* If the check is not the same enum type, ignore it and continue. The user will
+             * still get an error as the comparison between discriminant and case test will fail. *)
+            | _ -> checks
+          in
+          enum_exhaustive_check
+            cx
+            ~trace
+            ~check_reason
+            ~enum_reason:discriminant_reason
+            ~enum:discriminant_enum
+            ~possible_checks
+            ~checks
+            ~default_case
         | ( DefT (_, _, EnumT { enum_name; members; _ }),
             EnumExhaustiveCheckT (_, EnumExhaustiveCheckInvalid reasons) ) ->
           let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
@@ -6525,7 +6566,13 @@ struct
             (fun reason ->
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
             reasons
-        | (_, EnumExhaustiveCheckT _) -> () (* ignore non-enum exhaustive checks *)
+        (* Ignore non-enum exhaustive checks. *)
+        | ( _,
+            EnumExhaustiveCheckT
+              ( _,
+                ( EnumExhaustiveCheckInvalid _
+                | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } ) ) ) ->
+          ()
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
@@ -7505,6 +7552,7 @@ struct
     | (_, ChoiceKitUseT _)
     | (_, CondT _)
     | (_, DestructuringT _)
+    | (_, EnumExhaustiveCheckT _)
     | (_, MakeExactT _)
     | (_, ObjKitT _)
     | (_, ReposLowerT _)
@@ -7632,7 +7680,6 @@ struct
     | (_, TypeAppVarianceCheckT _)
     | (_, TypeCastT _)
     | (_, EnumCastT _)
-    | (_, EnumExhaustiveCheckT _)
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
     | (_, ModuleExportsAssignT _)
@@ -8588,13 +8635,59 @@ struct
     in
     reposition cx ?trace (aloc_of_reason reason) result
 
-  (***************)
-  (* enums utils *)
-  (***************)
+  (*********)
+  (* enums *)
+  (*********)
   and enum_proto cx trace ~reason (enum_reason, trust, enum) =
     let enum_t = DefT (enum_reason, trust, EnumT enum) in
     let { representation_t; _ } = enum in
     get_builtin_typeapp cx ~trace reason "$EnumProto" [enum_t; representation_t]
+
+  and enum_exhaustive_check
+      cx ~trace ~check_reason ~enum_reason ~enum ~possible_checks ~checks ~default_case =
+    match possible_checks with
+    (* No possible checks left to resolve, analyze the exhaustive check. *)
+    | [] ->
+      let { members; _ } = enum in
+      let check_member (members_remaining, seen) (EnumCheck { reason; member_name }) =
+        if not @@ SMap.mem member_name members_remaining then
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumMemberAlreadyChecked
+               { reason; prev_check_reason = SMap.find member_name seen; enum_reason; member_name });
+        (SMap.remove member_name members_remaining, SMap.add member_name reason seen)
+      in
+      let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
+      (match (SMap.is_empty left_over, default_case) with
+      | (false, None) ->
+        add_output
+          cx
+          ~trace
+          (Error_message.EEnumNotAllChecked
+             { reason = check_reason; enum_reason; left_to_check = SMap.keys left_over })
+      | (true, Some default_case_reason) ->
+        add_output
+          cx
+          ~trace
+          (Error_message.EEnumAllMembersAlreadyChecked { reason = default_case_reason; enum_reason })
+      | _ -> ())
+    (* There are still possible checks to resolve, continue to resolve them. *)
+    | (obj_t, check) :: rest_possible_checks ->
+      let exhaustive_check =
+        EnumExhaustiveCheckT
+          ( check_reason,
+            EnumExhaustiveCheckPossiblyValid
+              {
+                tool =
+                  EnumResolveCaseTest
+                    { discriminant_enum = enum; discriminant_reason = enum_reason; check };
+                possible_checks = rest_possible_checks;
+                checks;
+                default_case;
+              } )
+      in
+      rec_flow cx trace (obj_t, exhaustive_check)
     (*******************************************************)
     (* Entry points into the process of trying different   *)
     (* branches of union and intersection types.           *)

@@ -1111,20 +1111,22 @@ class virtual ['a] t_with_uses =
           EnumCastT { use_op; enum = (reason, trust, enum') }
       | EnumExhaustiveCheckT (r, exhaustive_check) ->
         (match exhaustive_check with
-        | EnumExhaustiveCheckPossiblyValid { checks; default_case } ->
-          let map_check (EnumCheck { reason; member_name; obj_t } as check) =
+        | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case } ->
+          let map_possible_check ((obj_t, check) as possible_check) =
             let obj_t' = self#type_ cx map_cx obj_t in
             if obj_t' == obj_t then
-              check
+              possible_check
             else
-              EnumCheck { reason; member_name; obj_t = obj_t' }
+              (obj_t', check)
           in
-          let checks' = ListUtils.ident_map map_check checks in
-          if checks' == checks then
+          let possible_checks' = ListUtils.ident_map map_possible_check possible_checks in
+          if possible_checks' == possible_checks then
             t
           else
             EnumExhaustiveCheckT
-              (r, EnumExhaustiveCheckPossiblyValid { checks = checks'; default_case })
+              ( r,
+                EnumExhaustiveCheckPossiblyValid
+                  { tool; possible_checks = possible_checks'; checks; default_case } )
         | EnumExhaustiveCheckInvalid _ -> t)
       | FilterOptionalT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in

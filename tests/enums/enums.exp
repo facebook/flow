@@ -1859,8 +1859,9 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:176:11
 
-Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
-[invalid-exhaustive-check]
+All branches are incompatible: [incompatible-use]
+ - Either incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+ - Or incomplete exhaustive check: the member `B` of enum `E` [2] has not been considered in check of `x`.
 
    exhaustive-check.js:176:11
    176|   switch (x) { // Error
@@ -1870,14 +1871,110 @@ References:
    exhaustive-check.js:170:16
    170| function f7(x: E & E) {
                        ^ [1]
+   exhaustive-check.js:170:20
+   170| function f7(x: E & E) {
+                           ^ [2]
 
 
-Error --------------------------------------------------------------------------------------- exhaustive-check.js:184:10
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:188:11
+
+Incomplete exhaustive check: the member `A` of enum `M` [1] has not been considered in check of `x`.
+[invalid-exhaustive-check]
+
+   exhaustive-check.js:188:11
+   188|   switch (x) { // Error
+                  ^
+
+References:
+   exhaustive-check.js:187:16
+   187| function f8(x: M | N, X: typeof M | typeof N) {
+                       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:188:11
+
+Incomplete exhaustive check: the member `A` of enum `N` [1] has not been considered in check of `x`.
+[invalid-exhaustive-check]
+
+   exhaustive-check.js:188:11
+   188|   switch (x) { // Error
+                  ^
+
+References:
+   exhaustive-check.js:187:20
+   187| function f8(x: M | N, X: typeof M | typeof N) {
+                           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:189:10
+
+Invalid check of case test against switch discriminant [1] because `M` [2] is incompatible with `N` [3].
+[incompatible-type]
+
+   exhaustive-check.js:189:10
+   189|     case X.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:188:11
+   188|   switch (x) { // Error
+                  ^ [1]
+   exhaustive-check.js:181:1
+        v-------
+   181| enum M {
+   182|   A,
+   183| }
+        ^ [2]
+   exhaustive-check.js:187:20
+   187| function f8(x: M | N, X: typeof M | typeof N) {
+                           ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:189:10
+
+Invalid check of case test against switch discriminant [1] because `N` [2] is incompatible with `M` [3].
+[incompatible-type]
+
+   exhaustive-check.js:189:10
+   189|     case X.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:188:11
+   188|   switch (x) { // Error
+                  ^ [1]
+   exhaustive-check.js:184:1
+        v-------
+   184| enum N {
+   185|   A,
+   186| }
+        ^ [2]
+   exhaustive-check.js:187:16
+   187| function f8(x: M | N, X: typeof M | typeof N) {
+                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:209:11
+
+Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not been considered in check of `x`.
+[invalid-exhaustive-check]
+
+   exhaustive-check.js:209:11
+   209|   switch (x) { // Error
+                  ^
+
+References:
+   exhaustive-check.js:208:17
+   208| function f11(x: E, X: empty) {
+                        ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:217:10
 
 Cannot access `XXX` because `XXX` is not a member of enum `E` [1]. [invalid-enum-access]
 
-   exhaustive-check.js:184:10
-   184|   case E.XXX: break; // Error
+   exhaustive-check.js:217:10
+   217|   case E.XXX: break; // Error
                  ^^^
 
 References:
@@ -3389,7 +3486,7 @@ References:
 
 
 
-Found 185 errors
+Found 190 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
