@@ -81,7 +81,7 @@ executors:
     working_directory: /flow
   flow-website:
     docker:
-      - image: flowtype/flow-website:0.0.4
+      - image: flowtype/flow-website:0.0.5
     working_directory: ~/flow
   awscli:
     docker:
@@ -512,8 +512,9 @@ jobs:
     - run:
         name: Install gems
         command: |
-          cd website && \
-          bundle install --path vendor/bundle && \
+          cd website
+          bundle config set path 'vendor/bundle'
+          bundle install
           bundle exec s3_website install
     - save_cache:
         key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
@@ -524,7 +525,9 @@ jobs:
         command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
     - run:
         name: Publish website
-        command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
+        command: |
+          cd website
+          bundle exec s3_website push --site=~/flow/dist/flow.org
 
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
