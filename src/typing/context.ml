@@ -82,13 +82,6 @@ type computed_property_state =
   | ResolvedOnce of Reason.t
   | ResolvedMultipleTimes
 
-type enum_exhaustive_check_with_context = {
-  check_reason: Reason.t;
-  enum_reason: Reason.t;
-  enum: Type.enum_t;
-  exhaustive_check: Type.enum_exhaustive_check_t;
-}
-
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -158,7 +151,6 @@ type component_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
-  mutable enum_exhaustive_checks: enum_exhaustive_check_with_context list;
   mutable openness_graph: Openness.graph;
 }
 
@@ -298,7 +290,6 @@ let make_ccx sig_cx =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
-    enum_exhaustive_checks = [];
     openness_graph = Openness.empty_graph;
   }
 
@@ -725,11 +716,6 @@ let unnecessary_invariants cx =
         (loc, r) :: acc)
     cx.ccx.invariants_useful
     []
-
-let add_enum_exhaustive_check cx check =
-  cx.ccx.enum_exhaustive_checks <- check :: cx.ccx.enum_exhaustive_checks
-
-let enum_exhaustive_checks cx = cx.ccx.enum_exhaustive_checks
 
 (* utils *)
 let find_real_props cx id =
