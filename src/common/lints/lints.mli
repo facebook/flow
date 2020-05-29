@@ -43,6 +43,7 @@ type lint_kind =
   | NullVoidAddition
   | DefaultImportAccess
   | InvalidImportStarUse
+  | NonConstVarExport
 
 val string_of_kind : lint_kind -> string
 

@@ -43,6 +43,7 @@ type lint_kind =
   | NullVoidAddition
   | DefaultImportAccess
   | InvalidImportStarUse
+  | NonConstVarExport
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -79,6 +80,7 @@ let string_of_kind = function
   | NullVoidAddition -> "unsafe-addition"
   | DefaultImportAccess -> "default-import-access"
   | InvalidImportStarUse -> "invalid-import-star-use"
+  | NonConstVarExport -> "non-const-var-export"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -115,6 +117,7 @@ let kinds_of_string = function
   | "unsafe-addition" -> Some [NullVoidAddition]
   | "default-import-access" -> Some [DefaultImportAccess]
   | "invalid-import-star-use" -> Some [InvalidImportStarUse]
+  | "non-const-var-export" -> Some [NonConstVarExport]
   | _ -> None
 
 module LintKind = struct

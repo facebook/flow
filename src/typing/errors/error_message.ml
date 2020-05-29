@@ -207,6 +207,7 @@ and 'loc t' =
   | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
   | EBadDefaultImportDestructuring of 'loc
   | EInvalidImportStarUse of 'loc * 'loc virtual_reason
+  | ENonConstVarExport of 'loc
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -765,6 +766,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
   | EBadDefaultImportDestructuring loc -> EBadDefaultImportDestructuring (f loc)
   | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
+  | ENonConstVarExport loc -> ENonConstVarExport (f loc)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1059,6 +1061,7 @@ let util_use_op_of_msg nope util = function
   | EBadDefaultImportAccess _
   | EBadDefaultImportDestructuring _
   | EInvalidImportStarUse _
+  | ENonConstVarExport _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
@@ -1223,6 +1226,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBadDefaultImportAccess (loc, _)
   | EBadDefaultImportDestructuring loc
   | EInvalidImportStarUse (loc, _)
+  | ENonConstVarExport loc
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1338,6 +1342,7 @@ let kind_of_msg =
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
     | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
+    | ENonConstVarExport _ -> LintError Lints.NonConstVarExport
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2401,6 +2406,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " with a member access or destructuring.";
           ];
       }
+  | ENonConstVarExport _ ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot export variable declared using ";
+            code "var";
+            text " or ";
+            code "let";
+            text ". All exported variables must be ";
+            code "const";
+            text ".";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -3398,6 +3417,7 @@ let error_code_of_message err : error_code option =
   | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
+  | ENonConstVarExport _ -> Some NonConstVarExport
   | ENonLitArrayToTuple _ -> Some InvalidTupleArity
   | ENotAReactComponent _ -> Some NotAComponent
   | EObjectComputedPropertyAccess (_, _) -> Some InvalidComputedProp

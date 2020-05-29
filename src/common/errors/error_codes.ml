@@ -100,6 +100,7 @@ type error_code =
   | MissingTypeArg
   | ModuleTypeConflict
   | NameAlreadyBound
+  | NonConstVarExport
   | NonpolymorphicTypeApp
   | NonpolymorphicTypeArg
   | NonstrictImport
@@ -161,6 +162,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.SketchyNull Lints.SketchyNullMixed -> SketchyNullMixed
   | Lints.DefaultImportAccess -> DefaultImportAccess
   | Lints.InvalidImportStarUse -> InvalidImportStarUse
+  | Lints.NonConstVarExport -> NonConstVarExport
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -257,6 +259,7 @@ let string_of_code : error_code -> string = function
   | MissingTypeArg -> "missing-type-arg"
   | ModuleTypeConflict -> "module-type-conflict"
   | NameAlreadyBound -> "name-already-bound"
+  | NonConstVarExport -> "non-const-var-export"
   | NonpolymorphicTypeApp -> "nonpolymorphic-type-app"
   | NonpolymorphicTypeArg -> "nonpolymorphic-type-arg"
   | NonstrictImport -> "nonstrict-import"

@@ -1381,6 +1381,7 @@ let dump_error_message =
       spf "EBadDefaultImportDestructuring (%s)" (string_of_aloc loc)
     | EInvalidImportStarUse (loc, reason) ->
       spf "EInvalidImportStarUse (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
+    | ENonConstVarExport loc -> spf "ENonConstVarExport (%s)" (string_of_aloc loc)
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
       spf

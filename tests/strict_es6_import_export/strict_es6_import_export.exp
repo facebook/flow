@@ -240,5 +240,21 @@ References:
               ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ non-const-export.js:7:8
 
-Found 17 errors
+Cannot export variable declared using `var` or `let`. All exported variables must be `const`. [non-const-var-export]
+
+   7| export let test2: number = 2;
+             ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ non-const-export.js:8:8
+
+Cannot export variable declared using `var` or `let`. All exported variables must be `const`. [non-const-var-export]
+
+   8| export var test3: number = 3;
+             ^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 19 errors

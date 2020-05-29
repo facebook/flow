@@ -46,6 +46,9 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
       let import_star_reason = this#import_star_reason import_star in
       this#add_error (Error_message.EInvalidImportStarUse (loc, import_star_reason))
 
+    method private add_non_const_var_export_error loc =
+      this#add_error (Error_message.ENonConstVarExport loc)
+
     method private import_star_from_use =
       (* Create a map from import star use locs to the import star specifier *)
       let import_star_uses =
@@ -205,6 +208,22 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
         | _ -> ()
       end;
       super#jsx_element elem_loc elem
+
+    method! export_named_declaration loc decl =
+      let open Ast.Statement in
+      let { ExportNamedDeclaration.declaration; _ } = decl in
+      (* Only const variables can be exported *)
+      begin
+        match declaration with
+        | Some
+            ( loc,
+              VariableDeclaration
+                { VariableDeclaration.kind = VariableDeclaration.Var | VariableDeclaration.Let; _ }
+            ) ->
+          this#add_non_const_var_export_error loc
+        | _ -> ()
+      end;
+      super#export_named_declaration loc decl
   end
 
 let detect_errors cx ast =
