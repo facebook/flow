@@ -496,19 +496,17 @@ jobs:
         at: ~/flow
     - restore_cache:
         keys:
-          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "website/yarn.lock" }}
-          - v2-node-{{ arch }}-{{ .Branch }}-
+          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
     - run:
         name: Install yarn deps
         command: cd website && yarn install
     - save_cache:
-        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "website/yarn.lock" }}
+        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
         paths:
           - website/node_modules
     - restore_cache:
         keys:
-          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
-          - v2-gem-{{ arch }}-{{ .Branch }}-
+          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
     - run:
         name: Install gems
         command: |
@@ -517,7 +515,7 @@ jobs:
           bundle install
           bundle exec s3_website install
     - save_cache:
-        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
+        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
         paths:
           - website/vendor/bundle
     - run:
