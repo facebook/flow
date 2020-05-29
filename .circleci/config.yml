@@ -525,7 +525,7 @@ jobs:
         name: Publish website
         command: |
           cd website
-          bundle exec s3_website push --site=~/flow/dist/flow.org
+          bundle exec s3_website push --site ~/flow/dist/flow.org
 
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
