@@ -21,9 +21,12 @@ type declarations = {
   import_stars: (ALoc.t * (ALoc.t, ALoc.t) Ast.Identifier.t) ALocMap.t;
   (* Locs of ids and information about the declaration for all variable declarations *)
   var_decls: var_decl_info ALocMap.t;
+  (* Locs of ids and the function they are bound to *)
+  functions: (ALoc.t, ALoc.t) Ast.Function.t ALocMap.t;
 }
 
-let declarations_init = { import_stars = ALocMap.empty; var_decls = ALocMap.empty }
+let declarations_init =
+  { import_stars = ALocMap.empty; var_decls = ALocMap.empty; functions = ALocMap.empty }
 
 (* Gather information about top level declarations to be used when checking for import/export errors. *)
 let gather_declarations ast =
@@ -35,18 +38,32 @@ let gather_declarations ast =
   let add_var_decl acc id_loc decl_loc name kind =
     { acc with var_decls = ALocMap.add id_loc { decl_loc; name; kind } acc.var_decls }
   in
+  let add_function acc id_loc func =
+    { acc with functions = ALocMap.add id_loc func acc.functions }
+  in
   let (_, { Ast.Program.statements; _ }) = ast in
   List.fold_left
     (fun acc stmt ->
       match stmt with
       | (loc, VariableDeclaration { VariableDeclaration.kind; declarations; _ }) ->
         List.fold_left
-          (fun acc (_, { VariableDeclaration.Declarator.id; _ }) ->
-            Flow_ast_utils.fold_bindings_of_pattern
-              (fun acc (id_loc, { Ast.Identifier.name; _ }) ->
-                add_var_decl acc id_loc loc name kind)
-              acc
-              id)
+          (fun acc (_, { VariableDeclaration.Declarator.id; init }) ->
+            (* Gather all identifiers in variable declaration *)
+            let acc =
+              Flow_ast_utils.fold_bindings_of_pattern
+                (fun acc (id_loc, { Ast.Identifier.name; _ }) ->
+                  add_var_decl acc id_loc loc name kind)
+                acc
+                id
+            in
+            (* Gather simple variable declarations where the init is a function, of the forms:
+             const <ID> = function() { ... }
+             const <ID> = () => { ... } *)
+            match (id, init) with
+            | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ }),
+                Some (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ) ->
+              add_function acc id_loc func
+            | _ -> acc)
           acc
           declarations
       | ( _,
@@ -57,9 +74,24 @@ let gather_declarations ast =
               _;
             } ) ->
         add_import_star acc specifier
+      | (_, FunctionDeclaration ({ Ast.Function.id = Some (id_loc, _); _ } as func)) ->
+        add_function acc id_loc func
       | _ -> acc)
     declarations_init
     statements
+
+(* Visitor that finds locs for each usage of `this` outside a class. *)
+class this_visitor =
+  object (this)
+    inherit [ALoc.t list, ALoc.t] Flow_ast_visitor.visitor ~init:[]
+
+    method! this_expression loc expr =
+      this#update_acc (fun locs -> loc :: locs);
+      expr
+
+    (* `this` is allowed in classes so do not recurse into class body *)
+    method! class_body body = body
+  end
 
 (* Visitor that uses the previously found declaration info to check for errors in imports/exports. *)
 class import_export_visitor ~cx ~scope_info ~declarations =
@@ -91,6 +123,9 @@ class import_export_visitor ~cx ~scope_info ~declarations =
       in
       this#add_error (Error_message.ENonConstVarExport (loc, decl_reason))
 
+    method private add_this_in_exported_function_error loc =
+      this#add_error (Error_message.EThisInExportedFunction loc)
+
     method private import_star_from_use =
       (* Create a map from import star use locs to the import star specifier *)
       let import_star_uses =
@@ -108,6 +143,12 @@ class import_export_visitor ~cx ~scope_info ~declarations =
       (fun use -> ALocMap.find_opt use import_star_uses)
 
     method private is_import_star_use use = this#import_star_from_use use <> None
+
+    method add_exported_this_errors func =
+      let open Ast.Function in
+      let this_visitor = new this_visitor in
+      let this_locs = this_visitor#eval this_visitor#function_body_any func.body in
+      List.iter this#add_this_in_exported_function_error this_locs
 
     method! expression expr =
       let open Ast.Expression in
@@ -256,15 +297,30 @@ class import_export_visitor ~cx ~scope_info ~declarations =
       let open ExportNamedDeclaration in
       let { declaration; specifiers; _ } = decl in
       (* Only const variables can be exported *)
-      (match declaration with
-      | Some
-          ( loc,
-            VariableDeclaration
-              { VariableDeclaration.kind = VariableDeclaration.Var | VariableDeclaration.Let; _ } )
-        ->
-        this#add_non_const_var_export_error loc None
-      | _ -> ());
-      (* Also check for non-const variables in list of export specifiers *)
+      begin
+        match declaration with
+        | Some
+            ( loc,
+              VariableDeclaration
+                { VariableDeclaration.kind = VariableDeclaration.Var | VariableDeclaration.Let; _ }
+            ) ->
+          this#add_non_const_var_export_error loc None
+        | _ -> ()
+      end;
+      (* Check for usage of this in exported functions *)
+      begin
+        match declaration with
+        | Some (_, FunctionDeclaration func) -> this#add_exported_this_errors func
+        | Some (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
+          List.iter
+            (fun (_, { VariableDeclaration.Declarator.init; _ }) ->
+              match init with
+              | Some (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ->
+                this#add_exported_this_errors func
+              | _ -> ())
+            declarations
+        | _ -> ()
+      end;
       begin
         match specifiers with
         | Some (ExportSpecifiers specifiers) ->
@@ -272,14 +328,35 @@ class import_export_visitor ~cx ~scope_info ~declarations =
             (fun (_, { ExportSpecifier.local = (id_loc, _); _ }) ->
               let def = Scopes.def_of_use scope_info id_loc in
               let def_loc = Nel.hd def.Scopes.Def.locs in
-              match ALocMap.find_opt def_loc declarations.var_decls with
-              | Some { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let } ->
-                this#add_non_const_var_export_error id_loc (Some (decl_loc, name))
+              (* Also check for non-const variables in list of export specifiers *)
+              begin
+                match ALocMap.find_opt def_loc declarations.var_decls with
+                | Some { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let }
+                  ->
+                  this#add_non_const_var_export_error id_loc (Some (decl_loc, name))
+                | _ -> ()
+              end;
+              (* Check for `this` if exported variable is bound to a function *)
+              match ALocMap.find_opt def_loc declarations.functions with
+              | Some func -> this#add_exported_this_errors func
               | _ -> ())
             specifiers
         | _ -> ()
       end;
       super#export_named_declaration loc decl
+
+    method! export_default_declaration loc decl =
+      let open Ast.Statement.ExportDefaultDeclaration in
+      let { declaration; _ } = decl in
+      begin
+        match declaration with
+        | Declaration (_, Ast.Statement.FunctionDeclaration func)
+        | Expression (_, Ast.Expression.ArrowFunction func)
+        | Expression (_, Ast.Expression.Function func) ->
+          this#add_exported_this_errors func
+        | _ -> ()
+      end;
+      super#export_default_declaration loc decl
   end
 
 let detect_errors cx ast =

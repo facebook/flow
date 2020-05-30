@@ -1,3 +1,27 @@
+Error ------------------------------------------------------------------------- default_exported_this_arrow_func.js:3:24
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   3| export default () => { this; }
+                             ^^^^
+
+
+Error ------------------------------------------------------------------------------- default_exported_this_func.js:3:38
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   3| export default function default1() { this; }
+                                           ^^^^
+
+
+Error -------------------------------------------------------------------------- default_exported_this_func_expr.js:3:29
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   3| export default function() { this; }
+                                  ^^^^
+
+
 Error -------------------------------------------------------------------------------- import_star_default_access.js:5:1
 
 The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
@@ -240,6 +264,54 @@ References:
               ^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:4:28
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   4| export function named1() { this; }
+                                 ^^^^
+
+
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:5:36
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   5| export const named2 = function() { this; }
+                                         ^^^^
+
+
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:6:31
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   6| export const named3 = () => { this; }
+                                    ^^^^
+
+
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:9:24
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   9| function exported1() { this; }
+                             ^^^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:10:32
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   10| const exported2 = function() { this; };
+                                      ^^^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:11:27
+
+Cannot use `this` in an exported function. [this-in-exported-function]
+
+   11| const exported3 = () => { this; };
+                                 ^^^^
+
+
 Error ------------------------------------------------------------------------------------------ non-const-export.js:7:8
 
 Cannot export variable declared using `var` or `let`. All exported variables must be `const`. [non-const-var-export]
@@ -287,4 +359,4 @@ References:
 
 
 
-Found 21 errors
+Found 30 errors

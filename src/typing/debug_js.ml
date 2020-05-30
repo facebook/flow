@@ -1386,6 +1386,7 @@ let dump_error_message =
         "ENonConstVarExport (%s, %s)"
         (string_of_aloc loc)
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"None" reason)
+    | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
       spf

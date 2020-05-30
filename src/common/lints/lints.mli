@@ -44,6 +44,7 @@ type lint_kind =
   | DefaultImportAccess
   | InvalidImportStarUse
   | NonConstVarExport
+  | ThisInExportedFunction
 
 val string_of_kind : lint_kind -> string
 

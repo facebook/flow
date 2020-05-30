@@ -125,6 +125,7 @@ type error_code =
   | SketchyNumberAnd
   | Speculation
   | SpeculationAmbiguous
+  | ThisInExportedFunction
   | TypeAsValue
   | UnclearAddition
   | UnclearType
@@ -163,6 +164,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.DefaultImportAccess -> DefaultImportAccess
   | Lints.InvalidImportStarUse -> InvalidImportStarUse
   | Lints.NonConstVarExport -> NonConstVarExport
+  | Lints.ThisInExportedFunction -> ThisInExportedFunction
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -284,6 +286,7 @@ let string_of_code : error_code -> string = function
   | SketchyNumberAnd -> "sketchy-number-and"
   | Speculation -> "speculation"
   | SpeculationAmbiguous -> "speculation-ambiguous"
+  | ThisInExportedFunction -> "this-in-exported-function"
   | TypeAsValue -> "type-as-value"
   | UnclearAddition -> "unclear-addition"
   | UnclearType -> "unclear-type"

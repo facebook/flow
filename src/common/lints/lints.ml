@@ -44,6 +44,7 @@ type lint_kind =
   | DefaultImportAccess
   | InvalidImportStarUse
   | NonConstVarExport
+  | ThisInExportedFunction
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -81,6 +82,7 @@ let string_of_kind = function
   | DefaultImportAccess -> "default-import-access"
   | InvalidImportStarUse -> "invalid-import-star-use"
   | NonConstVarExport -> "non-const-var-export"
+  | ThisInExportedFunction -> "this-in-exported-function"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -118,6 +120,7 @@ let kinds_of_string = function
   | "default-import-access" -> Some [DefaultImportAccess]
   | "invalid-import-star-use" -> Some [InvalidImportStarUse]
   | "non-const-var-export" -> Some [NonConstVarExport]
+  | "this-in-exported-function" -> Some [ThisInExportedFunction]
   | _ -> None
 
 module LintKind = struct
