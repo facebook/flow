@@ -540,6 +540,35 @@ let do_initialize params : Initialize.result =
       };
   }
 
+let show_connected_status (cenv : connected_env) : connected_env =
+  let (type_, message, shortMessage, progress, total) =
+    if cenv.c_is_rechecking then
+      let (server_status, _) = cenv.c_server_status in
+      if not (ServerStatus.is_free server_status) then
+        let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
+        let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:true server_status in
+        (MessageType.WarningMessage, message, shortMessage, progress, total)
+      else
+        (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
+    else
+      let message =
+        match cenv.c_lazy_stats with
+        | Some { ServerProt.Response.lazy_mode; checked_files; total_files }
+          when checked_files < total_files && lazy_mode <> Options.NON_LAZY_MODE ->
+          Printf.sprintf
+            "Flow is ready. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
+            (Options.lazy_mode_to_string lazy_mode)
+            checked_files
+            total_files
+            "https://flow.org/en/docs/lang/lazy-modes/"
+        | _ -> "Flow is ready."
+      in
+      let short_message = Some "Flow: ready" in
+      (MessageType.InfoMessage, message, short_message, None, None)
+  in
+  let c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv in
+  { cenv with c_ienv }
+
 let show_connected (env : connected_env) : state =
   (* report that we're connected to telemetry/connectionStatus *)
   let i_isConnected =
@@ -551,17 +580,8 @@ let show_connected (env : connected_env) : state =
   in
   let env = { env with c_ienv = { env.c_ienv with i_isConnected } } in
   (* show green status *)
-  let message = "Flow server is now ready" in
-  let c_ienv =
-    show_status
-      ~type_:MessageType.InfoMessage
-      ~message
-      ~shortMessage:None
-      ~progress:None
-      ~total:None
-      env.c_ienv
-  in
-  Connected { env with c_ienv }
+  let env = show_connected_status env in
+  Connected env
 
 let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_env) : state =
   if reason = CommandConnectSimple.Server_missing then
@@ -941,30 +961,6 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
     let file = File_input.FileName fn in
     let (open_ast, _) = parse file in
     (state, (open_ast, None))
-
-let show_recheck_progress (cenv : connected_env) : state =
-  let (type_, message, shortMessage, progress, total) =
-    match (cenv.c_is_rechecking, cenv.c_server_status, cenv.c_lazy_stats) with
-    | (true, (server_status, _), _) when not (ServerStatus.is_free server_status) ->
-      let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
-      let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:true server_status in
-      (MessageType.WarningMessage, message, shortMessage, progress, total)
-    | (true, _, _) -> (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
-    | (false, _, Some { ServerProt.Response.lazy_mode = mode; checked_files; total_files })
-      when checked_files < total_files && mode <> Options.NON_LAZY_MODE ->
-      let message =
-        Printf.sprintf
-          "Flow: done recheck. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
-          (Options.lazy_mode_to_string mode)
-          checked_files
-          total_files
-          "https://flow.org/en/docs/lang/lazy-modes/"
-      in
-      (MessageType.InfoMessage, message, None, None, None)
-    | (false, _, _) -> (MessageType.InfoMessage, "Flow: done recheck", None, None, None)
-  in
-  let c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv in
-  Connected { cenv with c_ienv }
 
 let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params)
     : state =
@@ -2056,11 +2052,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | (Connected cenv, Server_message LspProt.(NotificationFromServer StartRecheck)) ->
     let start_state = collect_interaction_state state in
     LspInteraction.recheck_start ~start_state;
-    let state = show_recheck_progress { cenv with c_is_rechecking = true; c_lazy_stats = None } in
-    Ok (state, LogNotNeeded)
+    let cenv = { cenv with c_is_rechecking = true; c_lazy_stats = None } in
+    let cenv = show_connected_status cenv in
+    Ok (Connected cenv, LogNotNeeded)
   | (Connected cenv, Server_message LspProt.(NotificationFromServer (EndRecheck lazy_stats))) ->
     let state =
-      show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats }
+      let cenv = { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats } in
+      let cenv = show_connected_status cenv in
+      Connected cenv
     in
     Base.Option.iter (get_open_files state) ~f:(fun open_files ->
         let method_name = "synthetic/endRecheck" in
@@ -2092,8 +2091,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           (new_time, summary) :: cenv.c_recent_summaries
           |> List.filter ~f:(fun (t, _) -> t >= new_time -. 120.0))
     in
-    let state = show_recheck_progress { cenv with c_server_status; c_recent_summaries } in
-    Ok (state, LogNotNeeded)
+    let cenv = { cenv with c_server_status; c_recent_summaries } in
+    let cenv = show_connected_status cenv in
+    Ok (Connected cenv, LogNotNeeded)
   | (_, Server_message _) ->
     failwith
       (Printf.sprintf
