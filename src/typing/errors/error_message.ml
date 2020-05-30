@@ -207,7 +207,7 @@ and 'loc t' =
   | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
   | EBadDefaultImportDestructuring of 'loc
   | EInvalidImportStarUse of 'loc * 'loc virtual_reason
-  | ENonConstVarExport of 'loc
+  | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -766,7 +766,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
   | EBadDefaultImportDestructuring loc -> EBadDefaultImportDestructuring (f loc)
   | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
-  | ENonConstVarExport loc -> ENonConstVarExport (f loc)
+  | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1226,7 +1226,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBadDefaultImportAccess (loc, _)
   | EBadDefaultImportDestructuring loc
   | EInvalidImportStarUse (loc, _)
-  | ENonConstVarExport loc
+  | ENonConstVarExport (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -2406,19 +2406,29 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " with a member access or destructuring.";
           ];
       }
-  | ENonConstVarExport _ ->
+  | ENonConstVarExport (_, decl_reason) ->
+    let reason_opt =
+      match decl_reason with
+      | Some reason -> [text "variable "; ref reason]
+      | None -> [text "variable"]
+    in
     Normal
       {
         features =
-          [
-            text "Cannot export variable declared using ";
-            code "var";
-            text " or ";
-            code "let";
-            text ". All exported variables must be ";
-            code "const";
-            text ".";
-          ];
+          List.concat
+            [
+              [text "Cannot export "];
+              reason_opt;
+              [
+                text " declared using ";
+                code "var";
+                text " or ";
+                code "let";
+                text ". All exported variables must be ";
+                code "const";
+                text ".";
+              ];
+            ];
       }
   | EUnexpectedTemporaryBaseType _ ->
     Normal

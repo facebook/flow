@@ -6,26 +6,63 @@
  *)
 
 module Ast = Flow_ast
-module ALocSet = Loc_collections.ALocSet
 module ALocMap = Loc_collections.ALocMap
+module ALocSet = Loc_collections.ALocSet
 module Scopes = Scope_api.With_ALoc
 
-let rec import_stars stmts =
-  let open Ast.Statement in
-  match stmts with
-  | [] -> ALocMap.empty
-  | ( _,
-      ImportDeclaration
-        {
-          ImportDeclaration.specifiers =
-            Some (ImportDeclaration.ImportNamespaceSpecifier ((_, (id_loc, _)) as specifier));
-          _;
-        } )
-    :: rest ->
-    ALocMap.add id_loc specifier (import_stars rest)
-  | _ :: rest -> import_stars rest
+type var_decl_info = {
+  decl_loc: ALoc.t;
+  name: string;
+  kind: Ast.Statement.VariableDeclaration.kind;
+}
 
-class import_export_visitor ~cx ~scope_info ~import_stars =
+type declarations = {
+  (* Locs of ids and their import specifier for all `import *` declarations *)
+  import_stars: (ALoc.t * (ALoc.t, ALoc.t) Ast.Identifier.t) ALocMap.t;
+  (* Locs of ids and information about the declaration for all variable declarations *)
+  var_decls: var_decl_info ALocMap.t;
+}
+
+let declarations_init = { import_stars = ALocMap.empty; var_decls = ALocMap.empty }
+
+(* Gather information about top level declarations to be used when checking for import/export errors. *)
+let gather_declarations ast =
+  let open Ast.Statement in
+  let add_import_star acc specifier =
+    let (_, (id_loc, _)) = specifier in
+    { acc with import_stars = ALocMap.add id_loc specifier acc.import_stars }
+  in
+  let add_var_decl acc id_loc decl_loc name kind =
+    { acc with var_decls = ALocMap.add id_loc { decl_loc; name; kind } acc.var_decls }
+  in
+  let (_, { Ast.Program.statements; _ }) = ast in
+  List.fold_left
+    (fun acc stmt ->
+      match stmt with
+      | (loc, VariableDeclaration { VariableDeclaration.kind; declarations; _ }) ->
+        List.fold_left
+          (fun acc (_, { VariableDeclaration.Declarator.id; _ }) ->
+            Flow_ast_utils.fold_bindings_of_pattern
+              (fun acc (id_loc, { Ast.Identifier.name; _ }) ->
+                add_var_decl acc id_loc loc name kind)
+              acc
+              id)
+          acc
+          declarations
+      | ( _,
+          ImportDeclaration
+            {
+              ImportDeclaration.specifiers =
+                Some (ImportDeclaration.ImportNamespaceSpecifier specifier);
+              _;
+            } ) ->
+        add_import_star acc specifier
+      | _ -> acc)
+    declarations_init
+    statements
+
+(* Visitor that uses the previously found declaration info to check for errors in imports/exports. *)
+class import_export_visitor ~cx ~scope_info ~declarations =
   object (this)
     inherit [unit, ALoc.t] Flow_ast_visitor.visitor ~init:() as super
 
@@ -46,8 +83,13 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
       let import_star_reason = this#import_star_reason import_star in
       this#add_error (Error_message.EInvalidImportStarUse (loc, import_star_reason))
 
-    method private add_non_const_var_export_error loc =
-      this#add_error (Error_message.ENonConstVarExport loc)
+    method private add_non_const_var_export_error loc decl_info =
+      let decl_reason =
+        Base.Option.map
+          ~f:(fun (decl_loc, name) -> Reason.mk_reason (Reason.RIdentifier name) decl_loc)
+          decl_info
+      in
+      this#add_error (Error_message.ENonConstVarExport (loc, decl_reason))
 
     method private import_star_from_use =
       (* Create a map from import star use locs to the import star specifier *)
@@ -60,7 +102,7 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
               (fun use_loc all_uses -> ALocMap.add use_loc specifier all_uses)
               uses
               all_uses)
-          import_stars
+          declarations.import_stars
           ALocMap.empty
       in
       (fun use -> ALocMap.find_opt use import_star_uses)
@@ -211,24 +253,37 @@ class import_export_visitor ~cx ~scope_info ~import_stars =
 
     method! export_named_declaration loc decl =
       let open Ast.Statement in
-      let { ExportNamedDeclaration.declaration; _ } = decl in
+      let open ExportNamedDeclaration in
+      let { declaration; specifiers; _ } = decl in
       (* Only const variables can be exported *)
+      (match declaration with
+      | Some
+          ( loc,
+            VariableDeclaration
+              { VariableDeclaration.kind = VariableDeclaration.Var | VariableDeclaration.Let; _ } )
+        ->
+        this#add_non_const_var_export_error loc None
+      | _ -> ());
+      (* Also check for non-const variables in list of export specifiers *)
       begin
-        match declaration with
-        | Some
-            ( loc,
-              VariableDeclaration
-                { VariableDeclaration.kind = VariableDeclaration.Var | VariableDeclaration.Let; _ }
-            ) ->
-          this#add_non_const_var_export_error loc
+        match specifiers with
+        | Some (ExportSpecifiers specifiers) ->
+          List.iter
+            (fun (_, { ExportSpecifier.local = (id_loc, _); _ }) ->
+              let def = Scopes.def_of_use scope_info id_loc in
+              let def_loc = Nel.hd def.Scopes.Def.locs in
+              match ALocMap.find_opt def_loc declarations.var_decls with
+              | Some { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let } ->
+                this#add_non_const_var_export_error id_loc (Some (decl_loc, name))
+              | _ -> ())
+            specifiers
         | _ -> ()
       end;
       super#export_named_declaration loc decl
   end
 
 let detect_errors cx ast =
-  let (_, { Ast.Program.statements; _ }) = ast in
   let scope_info = Scope_builder.With_ALoc.program ast in
-  let import_stars = import_stars statements in
-  let visitor = new import_export_visitor ~cx ~scope_info ~import_stars in
+  let declarations = gather_declarations ast in
+  let visitor = new import_export_visitor ~cx ~scope_info ~declarations in
   ignore (visitor#program ast)
