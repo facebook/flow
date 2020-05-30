@@ -172,15 +172,15 @@ end = struct
     should_track_mergebase: bool;
   }
 
-  let get_mergebase env =
+  let get_mergebase_and_changes env =
     if env.should_track_mergebase then (
-      let%lwt (instance, mergebase) =
+      let%lwt (instance, mergebase_and_changes) =
         (* callers should provide their own timeout *)
-        Watchman.(get_mergebase ~timeout:None env.instance)
+        Watchman.(get_mergebase_and_changes ~timeout:None env.instance)
       in
       env.instance <- instance;
-      match mergebase with
-      | Ok mergebase -> Lwt.return (Ok (Some mergebase))
+      match mergebase_and_changes with
+      | Ok mergebase_and_changes -> Lwt.return (Ok (Some mergebase_and_changes))
       | Error msg -> Lwt.return (Error msg)
     ) else
       Lwt.return (Ok None)
@@ -243,14 +243,15 @@ end = struct
                *)
               if env.finished_an_hg_update then
                 let%lwt new_mergebase =
-                  match%lwt get_mergebase env with
-                  | Ok mergebase -> Lwt.return mergebase
+                  match%lwt get_mergebase_and_changes env with
+                  | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
                   | Error msg ->
                     (* TODO: handle this more gracefully than `failwith` *)
                     failwith msg
                 in
                 match (new_mergebase, env.mergebase) with
-                | (Some new_mergebase, Some old_mergebase) when new_mergebase <> old_mergebase ->
+                | (Some (new_mergebase, _changes), Some old_mergebase)
+                  when new_mergebase <> old_mergebase ->
                   Logger.info
                     "Watchman reports mergebase changed from %S to %S"
                     old_mergebase
@@ -376,12 +377,19 @@ end = struct
                 should_track_mergebase;
               }
             in
-            (match%lwt get_mergebase new_env with
-            | Ok mergebase ->
-              Base.Option.iter
-                mergebase
-                ~f:(Logger.info "Watchman reports the initial mergebase as %S");
-              let new_env = { new_env with mergebase } in
+            (match%lwt get_mergebase_and_changes new_env with
+            | Ok mergebase_and_changes ->
+              let (mergebase, files) =
+                match mergebase_and_changes with
+                | Some (mergebase, changes) ->
+                  Logger.info
+                    "Watchman reports the initial mergebase as %S, and %d changes"
+                    mergebase
+                    (SSet.cardinal changes);
+                  (Some mergebase, changes)
+                | None -> (None, SSet.empty)
+              in
+              let new_env = { new_env with mergebase; files } in
               env <- Some new_env;
               Lwt.wakeup wakener new_env;
               Lwt.return (Ok ())

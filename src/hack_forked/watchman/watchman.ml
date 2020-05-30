@@ -866,6 +866,24 @@ let get_mergebase ~timeout instance =
       | Some (_clock, mergebase) -> (env, Ok mergebase)
       | None -> (env, Error "Failed to extract mergebase from response"))
 
+let get_mergebase_and_changes ~timeout instance =
+  call_on_instance
+    instance
+    "get_mergebase_and_changes"
+    ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
+    ~on_alive:(fun env ->
+      let%map response =
+        request
+          ~timeout
+          ~debug_logging:env.settings.debug_logging
+          (get_changes_since_mergebase_query env)
+      in
+      match extract_mergebase response with
+      | Some (_clock, mergebase) ->
+        let changes = set_of_list @@ extract_file_names env response in
+        (env, Ok (mergebase, changes))
+      | None -> (env, Error "Failed to extract mergebase from response"))
+
 let conn_of_instance = function
   | Watchman_dead _ -> None
   | Watchman_alive { conn; _ } -> Some conn

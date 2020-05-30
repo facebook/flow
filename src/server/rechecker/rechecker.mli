@@ -6,7 +6,8 @@
  *)
 
 (* filter and relativize updated file paths *)
-val process_updates : options:Options.t -> ServerEnv.env -> SSet.t -> Utils_js.FilenameSet.t
+val process_updates :
+  ?skip_incompatible:bool -> options:Options.t -> ServerEnv.env -> SSet.t -> Utils_js.FilenameSet.t
 
 val recheck_single :
   files_to_force:CheckedSet.t ->

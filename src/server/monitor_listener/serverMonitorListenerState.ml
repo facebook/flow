@@ -133,17 +133,22 @@ let recheck_fetch ~process_updates ~get_forced =
     |> Base.List.fold_left
          ~init:!recheck_acc
          ~f:(fun workload { files; callback; file_watcher_metadata; recheck_reason } ->
+           let skip_incompatible =
+             match recheck_reason with
+             | LspProt.Lazy_init_typecheck -> Some true
+             | _ -> None
+           in
            let (is_empty_msg, workload) =
              match files with
              | ChangedFiles changed_files ->
-               let updates = process_updates changed_files in
+               let updates = process_updates ?skip_incompatible changed_files in
                ( FilenameSet.is_empty updates,
                  {
                    workload with
                    files_to_recheck = FilenameSet.union updates workload.files_to_recheck;
                  } )
              | FilesToForceFocusedAndRecheck forced_focused_files ->
-               let updates = process_updates forced_focused_files in
+               let updates = process_updates ?skip_incompatible forced_focused_files in
                let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
                ( FilenameSet.is_empty updates,
                  {

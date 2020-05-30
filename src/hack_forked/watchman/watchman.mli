@@ -85,6 +85,11 @@ val get_mergebase :
   watchman_instance ->
   (watchman_instance * (string, string) Pervasives.result) Lwt.t
 
+val get_mergebase_and_changes :
+  timeout:timeout ->
+  watchman_instance ->
+  (watchman_instance * (string * SSet.t, string) Pervasives.result) Lwt.t
+
 val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) Lwt.t
 
 val conn_of_instance : watchman_instance -> conn option

@@ -64,7 +64,6 @@ let main config codemod_flags () =
       ~flowconfig
       ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
       ~root
-      ~file_watcher_timeout:None
       option_values
   in
   (* Normalizes filepaths (symlinks and shortcuts) *)

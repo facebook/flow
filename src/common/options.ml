@@ -76,7 +76,6 @@ type t = {
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_file_options: Files.options;
-  opt_file_watcher_timeout: float option;
   opt_flowconfig_name: string;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
@@ -173,8 +172,6 @@ let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let flowconfig_name opts = opts.opt_flowconfig_name
 
 let file_options opts = opts.opt_file_options
-
-let file_watcher_timeout opts = opts.opt_file_watcher_timeout
 
 let is_debug_mode opts = opts.opt_debug
 
