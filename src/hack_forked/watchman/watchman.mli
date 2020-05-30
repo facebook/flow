@@ -27,10 +27,8 @@ type subscribe_mode =
 type timeout = float option
 
 type init_settings = {
-  (* None for query mode, otherwise specify subscriptions mode. *)
-  subscribe_mode: subscribe_mode option;
-  (* See watchman expression terms. *)
-  expression_terms: Hh_json.json list;
+  subscribe_mode: subscribe_mode;
+  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
   roots: Path.t list;
   subscription_prefix: string;
@@ -63,7 +61,6 @@ type pushed_changes =
 type changes =
   | Watchman_unavailable
   | Watchman_pushed of pushed_changes
-  | Watchman_synchronous of pushed_changes list
 
 type env
 

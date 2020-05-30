@@ -297,8 +297,6 @@ end = struct
           | Watchman.Changed_merge_base _ ->
             failwith "We're not using an scm aware subscription, so we should never get these"
         end
-      | Watchman.Watchman_synchronous _ ->
-        failwith "Flow should never use the synchronous watchman API"
       | Watchman.Watchman_unavailable ->
         (* TODO (glevi) - Should we die if we get this for too long? *)
         Logger.error "Watchman unavailable. Retrying...";
@@ -339,7 +337,7 @@ end = struct
         let settings =
           {
             (* Defer updates during `hg.update` *)
-            Watchman.subscribe_mode = Some Watchman.Defer_changes;
+            Watchman.subscribe_mode = Watchman.Defer_changes;
             expression_terms = watchman_expression_terms;
             subscription_prefix = "flow_watcher";
             roots = Files.watched_paths file_options;

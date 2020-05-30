@@ -45,10 +45,8 @@ type subscribe_mode =
 type timeout = float option
 
 type init_settings = {
-  (* None for query mode, otherwise specify subscriptions mode. *)
-  subscribe_mode: subscribe_mode option;
-  (* See watchman expression terms. *)
-  expression_terms: Hh_json.json list;
+  subscribe_mode: subscribe_mode;
+  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
   roots: Path.t list;
   subscription_prefix: string;
@@ -81,7 +79,6 @@ type pushed_changes =
 type changes =
   | Watchman_unavailable
   | Watchman_pushed of pushed_changes
-  | Watchman_synchronous of pushed_changes list
 
 module Jget = Hh_json_helpers.Jget
 module J = Hh_json_helpers.AdhocJsonHelpers
@@ -136,12 +133,6 @@ let catch ~f ~catch =
 
 (** This number is totally arbitrary. Just need some cap. *)
 let max_reinit_attempts = 8
-
-(**
-   * Triggers watchman to flush buffered updates on this subscription.
-   * See watchman/docs/cmd/flush-subscriptions.html
-   *)
-let flush_subscriptions_cmd = "cmd-flush-subscriptions"
 
 type dead_env = {
   (* Will reuse original settings to reinitializing watchman subscription. *)
@@ -247,16 +238,6 @@ let get_changes_since_mergebase_query env =
   in
   request_json ~extra_kv Query env
 
-let since_query env =
-  request_json
-    ~extra_kv:
-      [
-        ("since", Hh_json.JSON_String env.clockspec);
-        ("empty_on_fresh_instance", Hh_json.JSON_Bool true);
-      ]
-    Query
-    env
-
 let subscribe ~mode env =
   let (since, mode) =
     match mode with
@@ -275,13 +256,6 @@ let subscribe ~mode env =
     env
 
 let watch_project root = J.strlist ["watch-project"; root]
-
-(* See https://facebook.github.io/watchman/docs/cmd/version.html *)
-let capability_check ?(optional = []) required =
-  Hh_json.(
-    JSON_Array
-      ( [JSON_String "version"]
-      @ [JSON_Object [("optional", J.strlist optional); ("required", J.strlist required)]] ))
 
 (** We filter all responses from get_changes through this. This is to detect
    * Watchman server crashes.
@@ -456,16 +430,6 @@ let with_crash_record_opt source f =
         Exception.reraise exn
       | _ -> Lwt.return None)
 
-let has_capability name capabilities =
-  (* Projects down from the boolean error monad into booleans.
-   * Error states go to false, values are projected directly. *)
-  let project_bool m =
-    match m with
-    | Ok (v, _) -> v
-    | Error _ -> false
-  in
-  Hh_json.Access.(return capabilities >>= get_obj "capabilities" >>= get_bool name |> project_bool)
-
 (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
  * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
  * the new Watchman, then we may miss updates. It is important for Flow and Hack to restart
@@ -524,21 +488,6 @@ let re_init
     =
   with_crash_record_opt "init" @@ fun () ->
   let%bind conn = open_connection () in
-  let%bind capabilities =
-    request
-      ~debug_logging
-      ~conn
-      ~timeout:None (* the whole init process should be wrapped in a timeout *)
-      (capability_check ~optional:[flush_subscriptions_cmd] ["relative_root"])
-  in
-  let supports_flush = has_capability flush_subscriptions_cmd capabilities in
-  (* Disable subscribe if Watchman flush feature isn't supported. *)
-  let subscribe_mode =
-    if supports_flush then
-      subscribe_mode
-    else
-      None
-  in
   let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
     Lwt_list.fold_left_s
       (fun (terms, watch_roots, failed_paths) path ->
@@ -630,19 +579,14 @@ let re_init
       subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
     }
   in
-  let%map () =
-    match subscribe_mode with
-    | None -> Lwt.return ()
-    | Some mode ->
-      let%map response =
-        request
-          ~debug_logging
-          ~conn
-          ~timeout:None (* the whole init process should be wrapped in a timeout *)
-          (subscribe ~mode env)
-      in
-      ignore response
+  let%map response =
+    request
+      ~debug_logging
+      ~conn
+      ~timeout:None (* the whole init process should be wrapped in a timeout *)
+      (subscribe ~mode:subscribe_mode env)
   in
+  ignore response;
   env
 
 let init ?since_clockspec settings () =
@@ -831,15 +775,9 @@ let get_changes ?deadline instance =
             Float.max timeout 0.0)
       in
       let debug_logging = env.settings.debug_logging in
-      if Option.is_some env.settings.subscribe_mode then
-        let%map response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
-        let (env, result) = transform_asynchronous_get_changes_response env response in
-        (env, Watchman_pushed result)
-      else
-        let query = since_query env in
-        let%map response = request ~debug_logging ~conn:env.conn ~timeout query in
-        let (env, changes) = transform_asynchronous_get_changes_response env (Some response) in
-        (env, Watchman_synchronous [changes]))
+      let%map response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
+      let (env, result) = transform_asynchronous_get_changes_response env response in
+      (env, Watchman_pushed result))
 
 let get_changes_since_mergebase ~timeout env =
   let%map response =
@@ -891,7 +829,7 @@ let conn_of_instance = function
 module Testing = struct
   let test_settings =
     {
-      subscribe_mode = Some Defer_changes;
+      subscribe_mode = Defer_changes;
       expression_terms = [];
       debug_logging = false;
       roots = [Path.dummy_path];
