@@ -51,7 +51,7 @@ set updatetime=300
 set shortmess+=c
 
 " Use leader T to show documentation in preview window
-nnoremap &lt;leader&gt;t :call &lt;SID&gt;show_documentation()&lt;CR&gt;
+nnoremap <leader>t :call <SID>show_documentation()<CR>
 
 
 function! s:show_documentation()
