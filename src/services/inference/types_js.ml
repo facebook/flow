@@ -2857,60 +2857,8 @@ let load_saved_state ~profiling ~workers options =
        exit_if_no_fallback ~msg options;
        Lwt.return_none)
 
-exception Watchman_init_failed
-
-let query_watchman_for_changed_files ~options =
-  match Options.lazy_mode options with
-  | Options.NON_LAZY_MODE
-  | Options.LAZY_MODE_FILESYSTEM
-  | Options.LAZY_MODE_IDE ->
-    Lwt.return (fun ~libs:_ -> Lwt.return FilenameSet.(empty, empty))
-  | Options.LAZY_MODE_WATCHMAN ->
-    let init_settings =
-      {
-        (* We're not setting up a subscription, we're just sending a single query *)
-        Watchman.subscribe_mode = None;
-        expression_terms = Watchman_expression_terms.make ~options;
-        subscription_prefix = "flow_server_watcher";
-        roots = Files.watched_paths (Options.file_options options);
-        debug_logging = Options.is_debug_mode options;
-      }
-    in
-    let%lwt watchman_env = Watchman.init init_settings () in
-    let%lwt changed_files =
-      match watchman_env with
-      | None -> raise Watchman_init_failed
-      | Some watchman_env ->
-        (* No timeout. We'll time this out ourselves after init if we need *)
-        let%lwt changed_files = Watchman.(get_changes_since_mergebase ~timeout:None watchman_env) in
-        let%lwt () = Watchman.close watchman_env in
-        Lwt.return (SSet.of_list changed_files)
-    in
-    Lwt.return (fun ~libs ->
-        let updates =
-          Recheck_updates.process_updates ~skip_incompatible:true ~options ~libs changed_files
-        in
-        match updates with
-        | Base.Result.Error { Recheck_updates.msg; _ } ->
-          failwith
-            (Printf.sprintf "skip_incompatible was set to true, how did we manage to error? %S" msg)
-        | Base.Result.Ok updates ->
-          Hh_logger.info
-            "Watchman reports %d files changed since mergebase & we care about %d of them"
-            (SSet.cardinal changed_files)
-            (FilenameSet.cardinal updates);
-
-          (* We have to explicitly focus on these files, since we just parsed them and it will appear
-           * to the rechecker that they're unchanged *)
-          let files_to_focus = updates in
-          Lwt.return (updates, files_to_focus))
-
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
-  (* Don't wait for this thread yet. It will run in the background. Then, after init is done,
-   * we'll wait on it. We do this because we want to send the status update that we're waiting for
-   * Watchman if init is done but Watchman is not *)
-  let get_watchman_updates_thread = query_watchman_for_changed_files ~options in
   let%lwt (updates, env, libs_ok) =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
@@ -2920,43 +2868,15 @@ let init ~profiling ~workers options =
       (* We loaded a saved state successfully! We are awesome! *)
       init_from_saved_state ~profiling ~workers ~saved_state ~updates options
   in
-  let%lwt (updates, files_to_focus) =
-    let now = Unix.gettimeofday () in
-    let timeout = Options.file_watcher_timeout options in
-    let deadline = Base.Option.map ~f:(fun timeout -> now +. timeout) timeout in
-    MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
-    let%lwt (watchman_updates, files_to_focus) =
-      try%lwt
-        let go () =
-          let%lwt get_watchman_updates = get_watchman_updates_thread in
-          get_watchman_updates ~libs:env.ServerEnv.libs
-        in
-        match timeout with
-        | Some timeout -> Lwt_unix.with_timeout timeout go
-        | None -> go ()
-      with
-      | Lwt_unix.Timeout ->
-        let msg =
-          Printf.sprintf
-            "Timed out after %ds waiting for Watchman."
-            (Unix.gettimeofday () -. start_time |> int_of_float)
-        in
-        FlowExitStatus.(exit ~msg Watchman_error)
-      | Watchman_init_failed ->
-        let msg = "Failed to set up Watchman in order to get the changes since the mergebase" in
-        FlowExitStatus.(exit ~msg Watchman_error)
-    in
-    Lwt.return (FilenameSet.union updates watchman_updates, files_to_focus)
-  in
   let init_time = Unix.gettimeofday () -. start_time in
   let%lwt last_estimates =
     Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal env.ServerEnv.files)
   in
   (* Don't recheck if the libs are not ok *)
-  if (FilenameSet.is_empty updates && FilenameSet.is_empty files_to_focus) || not libs_ok then
+  if FilenameSet.is_empty updates || not libs_ok then
     Lwt.return (libs_ok, env, last_estimates)
   else
-    let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
+    let files_to_force = CheckedSet.empty in
     let recheck_reasons = [LspProt.Lazy_init_typecheck] in
     let%lwt (recheck_profiling, (log_recheck_event, _summary_info, env)) =
       let should_print_summary = Options.should_profile options in

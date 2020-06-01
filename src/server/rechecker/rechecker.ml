@@ -72,14 +72,15 @@ let get_lazy_stats ~options env =
  * FilenameSet. Updates may be coming in from the root, or an include path.
  *
  * If any update can't be processed incrementally, the Flow server will exit *)
-let process_updates ~options env updates =
-  Recheck_updates.(
-    match process_updates ~options ~libs:env.ServerEnv.libs updates with
-    | Base.Result.Ok updates -> updates
-    | Base.Result.Error { msg; exit_status } ->
-      Hh_logger.fatal "Status: Error";
-      Hh_logger.fatal "%s" msg;
-      FlowExitStatus.exit ~msg exit_status)
+let process_updates ?skip_incompatible ~options env updates =
+  match
+    Recheck_updates.process_updates ?skip_incompatible ~options ~libs:env.ServerEnv.libs updates
+  with
+  | Base.Result.Ok updates -> updates
+  | Base.Result.Error { Recheck_updates.msg; exit_status } ->
+    Hh_logger.fatal "Status: Error";
+    Hh_logger.fatal "%s" msg;
+    FlowExitStatus.exit ~msg exit_status
 
 (* on notification, execute client commands or recheck files *)
 let recheck
@@ -142,7 +143,7 @@ let recheck
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, post_cancel is called and its result returned *)
 let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post_cancel =
-  let process_updates = process_updates ~options env in
+  let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
   (* We don't want to start running f until we're in the try block *)
   let (waiter, wakener) = Lwt.task () in
   let run_thread =
@@ -180,7 +181,7 @@ let rec recheck_single
   ServerMonitorListenerState.(
     let env = update_env env in
     let options = genv.ServerEnv.options in
-    let process_updates = process_updates ~options env in
+    let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
     (* This ref is an estimate of the files which will be checked by the time the recheck is done.
      * As the recheck progresses, the estimate will get better. We use this estimate to prevent
      * canceling the recheck to force a file which we were already going to check

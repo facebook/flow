@@ -114,7 +114,8 @@ let rec serve ~genv ~env =
   (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
   let%lwt () =
     ServerMonitorListenerState.wait_for_anything
-      ~process_updates:(Rechecker.process_updates ~options env)
+      ~process_updates:(fun ?skip_incompatible ->
+        Rechecker.process_updates ?skip_incompatible ~options env)
       ~get_forced:(fun () -> env.ServerEnv.checked_files)
     (* We're not in the middle of a recheck *)
   in

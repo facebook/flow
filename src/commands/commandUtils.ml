@@ -1116,13 +1116,7 @@ let no_cgroup_flag =
            no_arg
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
 
-let make_options
-    ~flowconfig_name
-    ~flowconfig
-    ~lazy_mode
-    ~root
-    ~file_watcher_timeout
-    (options_flags : Options_flags.t) =
+let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Base.Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -1169,14 +1163,6 @@ let make_options
         Base.Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE
       in
       Base.Option.value lazy_mode ~default
-    in
-    let opt_file_watcher_timeout =
-      match
-        Base.Option.first_some file_watcher_timeout (FlowConfig.file_watcher_timeout flowconfig)
-      with
-      | Some 0 -> None
-      | Some x -> Some (float x)
-      | None -> Some (float default_file_watcher_timeout)
     in
     let opt_arch =
       if options_flags.types_first || FlowConfig.types_first flowconfig then
@@ -1284,7 +1270,6 @@ let make_options
         FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
       opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
-      opt_file_watcher_timeout;
     })
 
 let make_env flowconfig_name connect_flags root =
@@ -1651,6 +1636,12 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
     raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
   | (_, Some file_watcher) -> file_watcher
   | (_, None) -> Base.Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+
+let choose_file_watcher_timeout ~flowconfig cli_timeout =
+  match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with
+  | Some 0 -> None
+  | Some x -> Some (float x)
+  | None -> Some (float default_file_watcher_timeout)
 
 (* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
  * has changed since the location was constructed, the offset could be incorrect. If the file has
