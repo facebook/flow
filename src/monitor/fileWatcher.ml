@@ -23,7 +23,8 @@ class type watcher =
 
     method wait_for_init : timeout:float option -> (unit, string) result Lwt.t
 
-    method get_and_clear_changed_files : (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
+    method get_and_clear_changed_files :
+      (SSet.t * MonitorProt.file_watcher_metadata option * bool) Lwt.t
 
     method wait_for_changed_files : unit Lwt.t
 
@@ -42,7 +43,7 @@ class dummy : watcher =
 
     method wait_for_init ~timeout:_ = Lwt.return (Ok ())
 
-    method get_and_clear_changed_files = Lwt.return (SSet.empty, None)
+    method get_and_clear_changed_files = Lwt.return (SSet.empty, None, false)
 
     method wait_for_changed_files = Lwt.return_unit
 
@@ -99,7 +100,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in
-      let ret = (files, None) in
+      let ret = (files, None, false) in
       files <- SSet.empty;
       Lwt.return ret
 
@@ -166,6 +167,7 @@ end = struct
     mutable metadata: MonitorProt.file_watcher_metadata;
     mutable mergebase: string option;
     mutable finished_an_hg_update: bool;
+    mutable is_initial: bool;
     listening_thread: unit Lwt.t;
     changes_condition: unit Lwt_condition.t;
     init_settings: Watchman.init_settings;
@@ -370,6 +372,7 @@ end = struct
                   (let%lwt env = waiter in
                    WatchmanListenLoop.run env);
                 mergebase = None;
+                is_initial = true;
                 finished_an_hg_update = false;
                 changes_condition = Lwt_condition.create ();
                 metadata = MonitorProt.empty_file_watcher_metadata;
@@ -408,9 +411,10 @@ end = struct
        * probably don't care about hg updates or mergebase changing if no files were affected *)
       method get_and_clear_changed_files =
         let env = self#get_env in
-        let ret = (env.files, Some env.metadata) in
+        let ret = (env.files, Some env.metadata, env.is_initial) in
         env.files <- SSet.empty;
         env.metadata <- MonitorProt.empty_file_watcher_metadata;
+        env.is_initial <- false;
         Lwt.return ret
 
       method wait_for_changed_files =
