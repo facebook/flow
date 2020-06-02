@@ -1,3 +1,13 @@
+### 0.126.0
+
+* Allow indexers in exact object annotations
+* Fixed type-at-pos in flow.org/try
+* Improved language of LSP `window/showStatus` responses
+* Improved control flow handing in logical expressions
+* Allow applying utility types to opaque types in the defining module
+* Added `HeadersInit` and `signal` to Fetch API (thanks @andretshurotshka!)
+* Added `replace` method to `DOMTokenList` (thanks @w01fgang!)
+
 ### 0.125.1
 
 Publishing of `flow-bin` v0.125.0 failed to include the binaries. Oops!
