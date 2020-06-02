@@ -36,7 +36,6 @@ type command =
       lsp_init_params: Lsp.Initialize.params;
     }
   | Notify_dead_persistent_connection of { client_id: LspProt.client_id }
-  | Notify_file_init
   | Notify_file_changes
 
 (* A wrapper for Stdlib.exit which gives other threads a second to handle their business
@@ -160,8 +159,8 @@ end = struct
 
     (* In order to try and avoid races between the file system and a command (like `flow status`),
      * we check for file system notification before sending a request to the server *)
-    let send_file_watcher_notification ~initial watcher conn =
-      let%lwt (files, metadata) = watcher#get_and_clear_changed_files in
+    let send_file_watcher_notification watcher conn =
+      let%lwt (files, metadata, initial) = watcher#get_and_clear_changed_files in
       if not (SSet.is_empty files) then (
         let count = SSet.cardinal files in
         Logger.info
@@ -182,7 +181,7 @@ end = struct
         | Write_ephemeral_request { request; client } ->
           Doomsday.postpone ();
           if not (EphemeralConnection.is_closed client) then (
-            let%lwt () = send_file_watcher_notification ~initial:false watcher conn in
+            let%lwt () = send_file_watcher_notification watcher conn in
             let%lwt request_id = RequestMap.add ~request ~client in
             Logger.debug "Writing '%s' to the server connection" request_id;
             send_request ~msg:(MonitorProt.Request (request_id, request)) conn;
@@ -193,7 +192,7 @@ end = struct
           )
         | Write_persistent_request { client_id; request } ->
           Doomsday.postpone ();
-          let%lwt () = send_file_watcher_notification ~initial:false watcher conn in
+          let%lwt () = send_file_watcher_notification watcher conn in
           let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
           send_request ~msg conn;
           Lwt.return_unit
@@ -206,8 +205,7 @@ end = struct
           let msg = MonitorProt.DeadPersistentConnection client_id in
           send_request ~msg conn;
           Lwt.return_unit
-        | Notify_file_init -> send_file_watcher_notification ~initial:true watcher conn
-        | Notify_file_changes -> send_file_watcher_notification ~initial:false watcher conn
+        | Notify_file_changes -> send_file_watcher_notification watcher conn
       in
       Lwt.return (watcher, conn)
 
@@ -436,7 +434,7 @@ end = struct
 
     (* Check for changed files, which processes any files that have changed since the mergebase
        before we started up. *)
-    push_to_command_stream (Some Notify_file_init);
+    push_to_command_stream (Some Notify_file_changes);
 
     Lwt.return
       {
