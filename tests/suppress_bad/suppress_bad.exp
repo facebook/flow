@@ -1,1 +1,1 @@
-.flowconfig:8 Error setting value for "suppress_comment". Invalid regex "[" ([ class not closed by ])
+.flowconfig:8 Unsupported option specified! (suppress_comment)

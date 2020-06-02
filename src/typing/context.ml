@@ -54,7 +54,6 @@ type metadata = {
   recursion_limit: int;
   root: Path.t;
   strip_root: bool;
-  suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   max_workers: int;
   default_lib_dir: Path.t option;
@@ -216,7 +215,6 @@ let metadata_of_options options =
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
     strip_root = Options.should_strip_root options;
-    suppress_comments = Options.suppress_comments options;
     suppress_types = Options.suppress_types options;
     default_lib_dir = (Options.file_options options).Files.default_lib_dir;
     trust_mode = Options.trust_mode options;
@@ -475,8 +473,6 @@ let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requi
 let should_munge_underscores cx = cx.metadata.munge_underscores
 
 let should_strip_root cx = cx.metadata.strip_root
-
-let suppress_comments cx = cx.metadata.suppress_comments
 
 let suppress_types cx = cx.metadata.suppress_types
 

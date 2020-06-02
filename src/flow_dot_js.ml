@@ -175,7 +175,6 @@ let stub_metadata ~root ~checked =
     recursion_limit = 10000;
     root;
     strip_root = true;
-    suppress_comments = [];
     suppress_types = SSet.empty;
     default_lib_dir = None;
     trust_mode = Options.NoTrust;

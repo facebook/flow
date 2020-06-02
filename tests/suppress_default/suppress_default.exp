@@ -1,1 +1,16 @@
-Found 0 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:28:2
+
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:28:2
+   28| (3 : string);  // error
+        ^ [1]
+
+References:
+   test.js:28:6
+   28| (3 : string);  // error
+            ^^^^^^ [2]
+
+
+
+Found 1 error

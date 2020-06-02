@@ -114,7 +114,6 @@ type t = {
   opt_strict_es6_import_export: bool;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
-  opt_suppress_comments: Str.regexp list;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_traces: int;
@@ -238,8 +237,6 @@ let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
 
 let strict_es6_import_export opts = opts.opt_strict_es6_import_export
-
-let suppress_comments opts = opts.opt_suppress_comments
 
 let suppress_types opts = opts.opt_suppress_types
 

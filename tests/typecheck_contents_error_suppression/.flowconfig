@@ -7,7 +7,6 @@
 [lints]
 
 [options]
-suppress_comment=.*\\$FlowFixMe
 no_flowlib=true
 
 [strict]

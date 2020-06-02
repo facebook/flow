@@ -32,24 +32,11 @@ let infer_core cx statements =
   | Abnormal.Exn _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
   | exc -> raise exc
 
-(* There's a .flowconfig option to specify suppress_comments regexes. Any
- * comments that match those regexes will suppress any errors on the next line
- *)
-let scan_for_error_suppressions =
-  let should_suppress suppress_comments comment =
-    List.exists (fun r -> Str.string_match r comment 0) suppress_comments
-  in
-  fun cx comments ->
-    let suppress_comments = Context.suppress_comments cx in
-    let should_suppress = should_suppress suppress_comments in
-    (* Bail immediately if we're not using error suppressing comments *)
-    if suppress_comments <> [] then
-      List.iter
-        (function
-          | (loc, { Ast.Comment.text; _ }) when should_suppress text ->
-            Context.add_error_suppression cx loc
-          | _ -> ())
-        comments
+let scan_for_error_suppressions cx =
+  List.iter (function
+      | (loc, { Ast.Comment.text; _ }) when Suppression_comments.should_suppress text ->
+        Context.add_error_suppression cx loc
+      | _ -> ())
 
 type 'a located = {
   value: 'a;

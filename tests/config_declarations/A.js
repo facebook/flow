@@ -19,6 +19,6 @@ var test4: string = 123; // This error is NOT silenced
 var test5: string = 123; // This error should be suppressed
 
 /*
- * $FlowNewLine
+ * $FlowFixMe
  */
 var test6: string = 123;

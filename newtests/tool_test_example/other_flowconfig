@@ -6,4 +6,3 @@
 
 [options]
 all=true
-suppress_comment=.*\\$FlowFixMe

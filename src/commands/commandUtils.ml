@@ -1204,7 +1204,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_max_workers =
         Base.Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
         |> min Sys_utils.nbr_procs;
-      opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
       opt_suppress_types = FlowConfig.suppress_types flowconfig;
       opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
       opt_enable_const_params = FlowConfig.enable_const_params flowconfig;

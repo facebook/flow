@@ -48,20 +48,6 @@ References:
            ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- versions.js:7:2
-
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   versions.js:7:2
-   7| (123: string); // should not be suppressed
-       ^^^ [1]
-
-References:
-   versions.js:7:7
-   7| (123: string); // should not be suppressed
-            ^^^^^^ [2]
-
-
 Warning ------------------------------------------------------------------------------------------------------ A.js:14:1
 
 Unused suppression comment.
@@ -87,4 +73,4 @@ Unused suppression comment.
 
 
 
-Found 4 errors and 3 warnings
+Found 3 errors and 3 warnings

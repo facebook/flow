@@ -19,10 +19,6 @@ type error = int * string
 
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 
-let version_regex = Str.regexp_string "<VERSION>"
-
-let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version Flow_version.version
-
 let map_add map (key, value) = SMap.add key value map
 
 module Opts = struct
@@ -97,7 +93,6 @@ module Opts = struct
     shm_heap_size: int;
     shm_log_level: int;
     strict_es6_import_export: bool;
-    suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
     temp_dir: string;
     traces: int;
@@ -204,12 +199,6 @@ module Opts = struct
       (* 25 gigs *)
       shm_log_level = 0;
       strict_es6_import_export = false;
-      suppress_comments =
-        [
-          Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe";
-          Str.regexp "\\(.\\|\n\\)*\\$FlowIssue";
-          Str.regexp "\\(.\\|\n\\)*\\$FlowExpectedError";
-        ];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
       traces = 0;
@@ -296,11 +285,6 @@ module Opts = struct
   let optparse_string str =
     try Ok (Scanf.unescaped str)
     with Scanf.Scan_failure reason -> Error (spf "Invalid ocaml string: %s" reason)
-
-  let optparse_regexp str =
-    optparse_string str >>= fun unescaped ->
-    try Ok (Str.regexp unescaped)
-    with Failure reason -> Error (spf "Invalid regex \"%s\" (%s)" unescaped reason)
 
   let enum values =
     opt (fun str ->
@@ -535,17 +519,6 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v }) );
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
       ("weak", boolean (fun opts v -> Ok { opts with weak = v }));
-      ( "suppress_comment",
-        string
-          ~init:(fun opts -> { opts with suppress_comments = [] })
-          ~multiple:true
-          (fun opts v ->
-            Str.split_delim version_regex v
-            |> String.concat (">=" ^ less_or_equal_curr_version)
-            |> String.escaped
-            |> Base.Result.return
-            >>= optparse_regexp
-            >>= fun v -> Ok { opts with suppress_comments = v :: opts.suppress_comments }) );
       ( "suppress_type",
         string
           ~init:(fun opts -> { opts with suppress_types = SSet.empty })
@@ -1247,8 +1220,6 @@ let shm_heap_size c = c.options.Opts.shm_heap_size
 let shm_log_level c = c.options.Opts.shm_log_level
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
-
-let suppress_comments c = c.options.Opts.suppress_comments
 
 let suppress_types c = c.options.Opts.suppress_types
 

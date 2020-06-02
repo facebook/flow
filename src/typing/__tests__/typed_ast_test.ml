@@ -42,7 +42,6 @@ let metadata =
     recursion_limit = 10000;
     root = Path.dummy_path;
     strip_root = true;
-    suppress_comments = [];
     suppress_types = SSet.empty;
     default_lib_dir = None;
     trust_mode = Options.NoTrust;
