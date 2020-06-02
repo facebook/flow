@@ -4322,6 +4322,8 @@ struct
           rec_flow_t cx ~use_op trace (call_this_t, any);
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           rec_flow_t cx ~use_op trace (AnyT.untyped reason_op, call_tout)
+        | (_, FunImplicitVoidReturnT { use_op; return; void_t; _ }) ->
+          rec_flow cx trace (void_t, UseT (use_op, return))
         (* Special handlers for builtin functions *)
         | ( CustomFunT (_, ObjectAssign),
             CallT
@@ -6517,7 +6519,8 @@ struct
             EnumExhaustiveCheckT
               ( check_reason,
                 EnumExhaustiveCheckPossiblyValid
-                  { tool = EnumResolveDiscriminant; possible_checks; checks; default_case } ) ) ->
+                  { tool = EnumResolveDiscriminant; possible_checks; checks; default_case },
+                incomplete_out ) ) ->
           enum_exhaustive_check
             cx
             ~trace
@@ -6527,6 +6530,7 @@ struct
             ~possible_checks
             ~checks
             ~default_case
+            ~incomplete_out
         (* Resolving the case tests. *)
         | ( _,
             EnumExhaustiveCheckT
@@ -6537,7 +6541,8 @@ struct
                     possible_checks;
                     checks;
                     default_case;
-                  } ) ) ->
+                  },
+                incomplete_out ) ) ->
           let (EnumCheck { member_name; _ }) = check in
           let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
           let checks =
@@ -6559,20 +6564,24 @@ struct
             ~possible_checks
             ~checks
             ~default_case
+            ~incomplete_out
         | ( DefT (_, _, EnumT { enum_name; members; _ }),
-            EnumExhaustiveCheckT (_, EnumExhaustiveCheckInvalid reasons) ) ->
+            EnumExhaustiveCheckT (check_reason, EnumExhaustiveCheckInvalid reasons, incomplete_out)
+          ) ->
           let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
           List.iter
             (fun reason ->
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
-            reasons
+            reasons;
+          enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
         (* Ignore non-enum exhaustive checks. *)
         | ( _,
             EnumExhaustiveCheckT
-              ( _,
+              ( check_reason,
                 ( EnumExhaustiveCheckInvalid _
-                | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } ) ) ) ->
-          ()
+                | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } ),
+                incomplete_out ) ) ->
+          enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
@@ -7642,6 +7651,7 @@ struct
     | (_, ElemT _)
     | (_, ExportNamedT _)
     | (_, ExtendsUseT _)
+    | (_, FunImplicitVoidReturnT _)
     | (_, GetElemT _)
     | (_, GetKeysT _)
     | (_, GetPrivatePropT _)
@@ -7795,9 +7805,11 @@ struct
     | CopyTypeExportsT _
     | DestructuringT _
     | ElemT _
+    | EnumExhaustiveCheckT _
     | ExportNamedT _
     | ExportTypeT _
     | AssertExportIsTypeT _
+    | FunImplicitVoidReturnT _
     | GetElemT _
     | GetKeysT _
     | GetPrivatePropT _
@@ -7893,7 +7905,6 @@ struct
     | TypeAppVarianceCheckT _
     | TypeCastT _
     | EnumCastT _
-    | EnumExhaustiveCheckT _
     | FilterOptionalT _
     | FilterMaybeT _
     | VarianceCheckT _
@@ -8644,7 +8655,15 @@ struct
     get_builtin_typeapp cx ~trace reason "$EnumProto" [enum_t; representation_t]
 
   and enum_exhaustive_check
-      cx ~trace ~check_reason ~enum_reason ~enum ~possible_checks ~checks ~default_case =
+      cx
+      ~trace
+      ~check_reason
+      ~enum_reason
+      ~enum
+      ~possible_checks
+      ~checks
+      ~default_case
+      ~incomplete_out =
     match possible_checks with
     (* No possible checks left to resolve, analyze the exhaustive check. *)
     | [] ->
@@ -8665,7 +8684,8 @@ struct
           cx
           ~trace
           (Error_message.EEnumNotAllChecked
-             { reason = check_reason; enum_reason; left_to_check = SMap.keys left_over })
+             { reason = check_reason; enum_reason; left_to_check = SMap.keys left_over });
+        enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       | (true, Some default_case_reason) ->
         add_output
           cx
@@ -8685,9 +8705,15 @@ struct
                 possible_checks = rest_possible_checks;
                 checks;
                 default_case;
-              } )
+              },
+            incomplete_out )
       in
       rec_flow cx trace (obj_t, exhaustive_check)
+
+  and enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out =
+    (* Any type will do to trigger `FunImplicitVoidReturnT`. *)
+    let trigger = VoidT.why reason |> with_trust bogus_trust in
+    rec_flow_t cx trace ~use_op:unknown_use (trigger, incomplete_out)
     (*******************************************************)
     (* Entry points into the process of trying different   *)
     (* branches of union and intersection types.           *)
