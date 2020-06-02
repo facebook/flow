@@ -295,7 +295,13 @@ let update_env cx loc new_scopes =
 
 (* end of basic env API *)
 
-let global_any = ["eval"; "arguments"]
+let global_any =
+  [
+    "eval";
+    "arguments";
+    (* For `switch` statements not in a function body, so we don't get an error. *)
+    internal_name "maybe_exhaustively_checked";
+  ]
 
 let global_lexicals = [internal_name "super"; internal_name "this"]
 

@@ -1115,6 +1115,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     in
     (* typecheck discriminant *)
     let discriminant_ast = expression cx discriminant in
+    let exhaustive_check_incomplete_out =
+      Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
+    in
     (* switch body is a single lexical scope *)
     Env.in_lex_scope cx (fun () ->
         (* save incoming env state, clear changeset *)
@@ -1200,6 +1203,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                  let (consequent_ast, exit) =
                    Abnormal.catch_stmts_control_flow_exception (fun () -> toplevels cx consequent)
                  in
+                 if added_default && Base.Option.is_none test then
+                   Env.init_let
+                     cx
+                     ~use_op:unknown_use
+                     (internal_name "maybe_exhaustively_checked")
+                     ~has_anno:false
+                     exhaustive_check_incomplete_out
+                     (loc_of_t exhaustive_check_incomplete_out);
                  let break_opt = Abnormal.swap_saved (Abnormal.Break None) save_break in
                  (* restore ambient changes and save case writes *)
                  let case_writes =
@@ -1295,7 +1306,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         let ((_, discriminant_t), _) = discriminant_ast in
         Flow.flow
           cx
-          (discriminant_t, EnumExhaustiveCheckT (reason_of_t discriminant_t, enum_exhaustive_check));
+          ( discriminant_t,
+            EnumExhaustiveCheckT
+              (reason_of_t discriminant_t, enum_exhaustive_check, exhaustive_check_incomplete_out)
+          );
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )

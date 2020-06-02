@@ -352,7 +352,8 @@ class ['a] t =
       | TypeCastT (_, t) -> self#type_ cx pole_TODO acc t
       | EnumCastT { enum = (_, _, { representation_t; _ }); _ } ->
         self#type_ cx pole_TODO acc representation_t
-      | EnumExhaustiveCheckT (_, exhaustive_check) ->
+      | EnumExhaustiveCheckT (_, exhaustive_check, incomplete_out) ->
+        let acc = self#type_ cx pole_TODO acc incomplete_out in
         (match exhaustive_check with
         | EnumExhaustiveCheckPossiblyValid { possible_checks; _ } ->
           List.fold_left
@@ -360,6 +361,9 @@ class ['a] t =
             acc
             possible_checks
         | EnumExhaustiveCheckInvalid _ -> acc)
+      | FunImplicitVoidReturnT { use_op = _; reason = _; return; void_t } ->
+        let acc = self#type_ cx pole_TODO acc return in
+        self#type_ cx pole_TODO acc void_t
       | FilterOptionalT (_, t) -> self#type_ cx pole_TODO acc t
       | FilterMaybeT (_, t) -> self#type_ cx pole_TODO acc t
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->

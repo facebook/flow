@@ -672,6 +672,7 @@ and dump_use_t_ (depth, tvars) cx t =
              (kid arg)
              (String.concat "; " (Base.List.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
     | ExportTypeT _ -> p t
+    | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
     | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
     | GetKeysT _ -> p t
@@ -801,7 +802,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
       p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
-    | EnumExhaustiveCheckT (_, check) ->
+    | EnumExhaustiveCheckT (_, check, _) ->
       let check_str =
         match check with
         | EnumExhaustiveCheckPossiblyValid _ -> "EnumExhaustiveCheckPossiblyValid"

@@ -83,10 +83,11 @@ and reason_of_use_t = function
   | DebugSleepT reason -> reason
   | ElemT (_, reason, _, _) -> reason
   | EnumCastT { enum = (reason, _, _); _ } -> reason
-  | EnumExhaustiveCheckT (reason, _) -> reason
+  | EnumExhaustiveCheckT (reason, _, _) -> reason
   | EqT { reason; _ } -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _) -> reason
+  | FunImplicitVoidReturnT { reason; _ } -> reason
   | AssertExportIsTypeT (reason, _, _) -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT (_, reason, _, _) -> reason
@@ -254,7 +255,8 @@ and mod_reason_of_use_t f = function
   | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
   | EnumCastT { use_op; enum = (reason, trust, enum) } ->
     EnumCastT { use_op; enum = (f reason, trust, enum) }
-  | EnumExhaustiveCheckT (reason, check) -> EnumExhaustiveCheckT (f reason, check)
+  | EnumExhaustiveCheckT (reason, check, incomplete_out) ->
+    EnumExhaustiveCheckT (f reason, check, incomplete_out)
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)
@@ -262,6 +264,8 @@ and mod_reason_of_use_t f = function
   | AssertExportIsTypeT (reason, export_name, t_out) ->
     AssertExportIsTypeT (f reason, export_name, t_out)
   | ExtendsUseT (use_op, reason, ts, t1, t2) -> ExtendsUseT (use_op, f reason, ts, t1, t2)
+  | FunImplicitVoidReturnT ({ reason; _ } as contents) ->
+    FunImplicitVoidReturnT { contents with reason = f reason }
   | GetElemT (use_op, reason, it, et) -> GetElemT (use_op, f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
@@ -395,6 +399,8 @@ let rec util_use_op_of_use_t :
     util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
   | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
   | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
+  | FunImplicitVoidReturnT ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> FunImplicitVoidReturnT { contents with use_op })
   | FilterOptionalT (op, t) -> util op (fun op -> FilterOptionalT (op, t))
   | FilterMaybeT (op, t) -> util op (fun op -> FilterMaybeT (op, t))
   | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
