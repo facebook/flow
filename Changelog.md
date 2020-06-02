@@ -1,3 +1,7 @@
+### 0.126.1
+
+* Fixed an issue where changing `.flowconfig` or `package.json` and then running `flow status` would get stuck in a restart loop, if using lazy mode with Watchman and Mercurial.
+
 ### 0.126.0
 
 * Allow indexers in exact object annotations
