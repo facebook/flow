@@ -98,6 +98,7 @@ type error_code =
   | MissingArg
   | MissingExport
   | MissingTypeArg
+  | MixedImportAndRequire
   | ModuleTypeConflict
   | NameAlreadyBound
   | NonConstVarExport
@@ -165,6 +166,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.InvalidImportStarUse -> InvalidImportStarUse
   | Lints.NonConstVarExport -> NonConstVarExport
   | Lints.ThisInExportedFunction -> ThisInExportedFunction
+  | Lints.MixedImportAndRequire -> MixedImportAndRequire
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -259,6 +261,7 @@ let string_of_code : error_code -> string = function
   | MissingArg -> "missing-arg"
   | MissingExport -> "missing-export"
   | MissingTypeArg -> "missing-type-arg"
+  | MixedImportAndRequire -> "mixed-import-and-require"
   | ModuleTypeConflict -> "module-type-conflict"
   | NameAlreadyBound -> "name-already-bound"
   | NonConstVarExport -> "non-const-var-export"

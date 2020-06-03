@@ -10,3 +10,5 @@ export type TypeExport = string;
 export function ComponentExport(): string {
   return '';
 }
+
+export class ClassExport {}

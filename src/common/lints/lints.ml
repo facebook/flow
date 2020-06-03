@@ -45,6 +45,7 @@ type lint_kind =
   | InvalidImportStarUse
   | NonConstVarExport
   | ThisInExportedFunction
+  | MixedImportAndRequire
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -83,6 +84,7 @@ let string_of_kind = function
   | InvalidImportStarUse -> "invalid-import-star-use"
   | NonConstVarExport -> "non-const-var-export"
   | ThisInExportedFunction -> "this-in-exported-function"
+  | MixedImportAndRequire -> "mixed-import-and-require"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -121,6 +123,7 @@ let kinds_of_string = function
   | "invalid-import-star-use" -> Some [InvalidImportStarUse]
   | "non-const-var-export" -> Some [NonConstVarExport]
   | "this-in-exported-function" -> Some [ThisInExportedFunction]
+  | "mixed-import-and-require" -> Some [MixedImportAndRequire]
   | _ -> None
 
 module LintKind = struct

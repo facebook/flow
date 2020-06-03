@@ -264,6 +264,34 @@ References:
               ^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------- mixed_import_and_require.js:6:1
+
+Cannot use a mix of non-type toplevel `import` [1] and `require` statements in the same file. [mixed-import-and-require]
+
+   mixed_import_and_require.js:6:1
+   6| const {named1: require1} = require('./foo');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   mixed_import_and_require.js:3:1
+   3| import {named1} from './foo';
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------- mixed_require_and_import_member.js:5:1
+
+Cannot use a mix of non-type toplevel `import` [1] and `require` statements in the same file. [mixed-import-and-require]
+
+   mixed_require_and_import_member.js:5:1
+   5| const named2 = require('./foo').named2;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   mixed_require_and_import_member.js:3:1
+   3| import {named1} from './foo';
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------- named_exported_this_func.js:4:28
 
 Cannot use `this` in an exported function. [this-in-exported-function]
@@ -359,4 +387,4 @@ References:
 
 
 
-Found 30 errors
+Found 32 errors

@@ -23,10 +23,44 @@ type declarations = {
   var_decls: var_decl_info ALocMap.t;
   (* Locs of ids and the function they are bound to *)
   functions: (ALoc.t, ALoc.t) Ast.Function.t ALocMap.t;
+  first_import: ALoc.t option;
+  first_require: ALoc.t option;
 }
 
 let declarations_init =
-  { import_stars = ALocMap.empty; var_decls = ALocMap.empty; functions = ALocMap.empty }
+  {
+    import_stars = ALocMap.empty;
+    var_decls = ALocMap.empty;
+    functions = ALocMap.empty;
+    first_import = None;
+    first_require = None;
+  }
+
+let rec is_require =
+  let open Ast.Expression in
+  let open Ast.Literal in
+  function
+  | (_, Member { Member._object; _ }) -> is_require _object
+  | ( _,
+      Call
+        {
+          Call.callee = (_, Identifier (_, { Ast.Identifier.name = "require"; _ }));
+          arguments =
+            (_, { ArgList.arguments = [Expression (_, Literal { value = String _; _ })]; _ });
+          _;
+        } ) ->
+    true
+  | _ -> false
+
+let has_value_import =
+  let open Ast.Statement.ImportDeclaration in
+  function
+  | { importKind = ImportValue; specifiers = Some (ImportNamedSpecifiers specifiers); _ } ->
+    List.exists
+      (fun { Ast.Statement.ImportDeclaration.kind; _ } -> kind = None || kind = Some ImportValue)
+      specifiers
+  | { importKind = ImportValue; _ } -> true
+  | _ -> false
 
 (* Gather information about top level declarations to be used when checking for import/export errors. *)
 let gather_declarations ast =
@@ -40,6 +74,16 @@ let gather_declarations ast =
   in
   let add_function acc id_loc func =
     { acc with functions = ALocMap.add id_loc func acc.functions }
+  in
+  let add_import acc import_loc =
+    match acc with
+    | { first_import = None; _ } -> { acc with first_import = Some import_loc }
+    | _ -> acc
+  in
+  let add_require acc require_loc =
+    match acc with
+    | { first_require = None; _ } -> { acc with first_require = Some require_loc }
+    | _ -> acc
   in
   let (_, { Ast.Program.statements; _ }) = ast in
   List.fold_left
@@ -59,21 +103,34 @@ let gather_declarations ast =
             (* Gather simple variable declarations where the init is a function, of the forms:
              const <ID> = function() { ... }
              const <ID> = () => { ... } *)
-            match (id, init) with
-            | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ }),
-                Some (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ) ->
-              add_function acc id_loc func
+            let acc =
+              match (id, init) with
+              | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ }),
+                  Some (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ) ->
+                add_function acc id_loc func
+              | _ -> acc
+            in
+            (* Gather require loc if this is a require statement *)
+            match init with
+            | Some init when is_require init -> add_require acc loc
             | _ -> acc)
           acc
           declarations
-      | ( _,
-          ImportDeclaration
-            {
-              ImportDeclaration.specifiers =
-                Some (ImportDeclaration.ImportNamespaceSpecifier specifier);
-              _;
-            } ) ->
-        add_import_star acc specifier
+      | (loc, ImportDeclaration import) ->
+        (* Gather import loc if this import statement imports a value *)
+        let acc =
+          if has_value_import import then
+            add_import acc loc
+          else
+            acc
+        in
+        (match import with
+        | {
+         ImportDeclaration.specifiers = Some (ImportDeclaration.ImportNamespaceSpecifier specifier);
+         _;
+        } ->
+          add_import_star acc specifier
+        | _ -> acc)
       | (_, FunctionDeclaration ({ Ast.Function.id = Some (id_loc, _); _ } as func)) ->
         add_function acc id_loc func
       | _ -> acc)
@@ -359,8 +416,16 @@ class import_export_visitor ~cx ~scope_info ~declarations =
       super#export_default_declaration loc decl
   end
 
+let detect_mixed_import_and_require_error cx declarations =
+  match declarations with
+  | { first_import = Some first_import_loc; first_require = Some first_require_loc; _ } ->
+    let import_reason = Reason.mk_reason (Reason.RCode "import") first_import_loc in
+    Flow_js.add_output cx (Error_message.EMixedImportAndRequire (first_require_loc, import_reason))
+  | _ -> ()
+
 let detect_errors cx ast =
   let scope_info = Scope_builder.With_ALoc.program ast in
   let declarations = gather_declarations ast in
+  detect_mixed_import_and_require_error cx declarations;
   let visitor = new import_export_visitor ~cx ~scope_info ~declarations in
   ignore (visitor#program ast)

@@ -209,6 +209,7 @@ and 'loc t' =
   | EInvalidImportStarUse of 'loc * 'loc virtual_reason
   | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EThisInExportedFunction of 'loc
+  | EMixedImportAndRequire of 'loc * 'loc virtual_reason
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -769,6 +770,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
   | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
+  | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1065,6 +1067,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidImportStarUse _
   | ENonConstVarExport _
   | EThisInExportedFunction _
+  | EMixedImportAndRequire _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
@@ -1231,6 +1234,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidImportStarUse (loc, _)
   | ENonConstVarExport (loc, _)
   | EThisInExportedFunction loc
+  | EMixedImportAndRequire (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1348,6 +1352,7 @@ let kind_of_msg =
     | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
     | ENonConstVarExport _ -> LintError Lints.NonConstVarExport
     | EThisInExportedFunction _ -> LintError Lints.ThisInExportedFunction
+    | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2437,6 +2442,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EThisInExportedFunction _ ->
     Normal { features = [text "Cannot use "; code "this"; text " in an exported function."] }
+  | EMixedImportAndRequire (_, import_reason) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use a mix of non-type toplevel ";
+            ref import_reason;
+            text " and ";
+            code "require";
+            text " statements in the same file.";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -3431,6 +3448,7 @@ let error_code_of_message err : error_code option =
   | EMalformedPackageJson (_, _) -> Some MalformedPackage
   | EMissingAnnotation _ -> Some MissingAnnot
   | EMissingTypeArgs _ -> Some MissingTypeArg
+  | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport

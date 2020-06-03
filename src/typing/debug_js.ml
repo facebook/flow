@@ -1388,6 +1388,8 @@ let dump_error_message =
         (string_of_aloc loc)
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"None" reason)
     | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
+    | EMixedImportAndRequire (loc, reason) ->
+      spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
       spf
