@@ -133,13 +133,12 @@ end = struct
       counter: int;
       cache: Cache.t;
       (* This set is useful for synthesizing recursive types. It holds the set
-         of type variables that are encountered "free". We say that a type
-         variable is free when it appears in the body of its own definition.
-         The process of calculating free variables in a type could be
-         implemented post-fact. The reason we prefer to keep this in the state
-         instead is performance, since it trivializes the "check if variable
-         appears free".
-       *)
+       * of type variables that are encountered "free". We say that a type
+       * variable is free when it appears in the body of its own definition.
+       * The process of calculating free variables in a type could be
+       * implemented post-fact. The reason we prefer to keep this in the state
+       * instead is performance, since it trivializes the "check if variable
+       * appears free". *)
       free_tvars: VSet.t;
     }
 
@@ -249,21 +248,20 @@ end = struct
   (*********************)
 
   (* There are three phases in resolving a type variable:
-
-     A. UNSEEN: Type variable has not been seen yet. It does not appear in the
-        type cache.
-
-     B. UNDER RESOLUTION: Variable has been seen at least once and it is set to
-        "under resolution". It appears in the type_cache as a mapping from
-        the original `Type.tvar` to a fresh `Ty.tvar`. This binding is important
-        for termination purposes as well as determining if the variable appears
-        free in a type context.
-
-     C. RESOLVED: All lower bounds of the variable have been normalized and so
-        the variable is considered resolved. The cache is updated with the final
-        type or an error message.
-
-  *)
+   *
+   * A. UNSEEN: Type variable has not been seen yet. It does not appear in the
+   *    type cache.
+   *
+   * B. UNDER RESOLUTION: Variable has been seen at least once and it is set to
+   *    "under resolution". It appears in the type_cache as a mapping from
+   *    the original `Type.tvar` to a fresh `Ty.tvar`. This binding is important
+   *    for termination purposes as well as determining if the variable appears
+   *    free in a type context.
+   *
+   * C. RESOLVED: All lower bounds of the variable have been normalized and so
+   *    the variable is considered resolved. The cache is updated with the final
+   *    type or an error message.
+   *)
 
   module Recursive = struct
     (* Helper functions *)
@@ -275,21 +273,21 @@ end = struct
         t
 
     (* When inferring recursive types, the top-level appearances of the recursive
-       variable should be eliminated. This visitor performs the following
-       transformations:
+     * variable should be eliminated. This visitor performs the following
+     * transformations:
+     *
+     * (recursive var: X , type: X           ) ==> Bot
+     * (recursive var: X , type: X | t       ) ==> Bot | t
+     * (recursive var: X , type: X & t       ) ==> Top & t
+     * (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
+     *
+     * The visitor only descends down to the first concrete constructor
+     * (e.g. Function, Class) and is applied to the subparts of unions,
+     * intersections and recursive types.
 
-         (recursive var: X , type: X           ) ==> Bot
-         (recursive var: X , type: X | t       ) ==> Bot | t
-         (recursive var: X , type: X & t       ) ==> Top & t
-         (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
-
-       The visitor only descends down to the first concrete constructor
-       (e.g. Function, Class) and is applied to the subparts of unions,
-       intersections and recursive types.
-
-       It is expected to followed by type minimization, so that the introduced
-       Bot and Top can be eliminated.
-    *)
+     * It is expected to followed by type minimization, so that the introduced
+     * Bot and Top can be eliminated.
+     *)
     let remove_toplevel_tvar =
       Ty.(
         let o =
@@ -330,33 +328,33 @@ end = struct
         (fun v t -> o#on_t (v, `Union) t))
 
     (* Constructing recursive types.
-
-       This function is expected to be called after fully normalizing the lower
-       bounds of a type variable `v` and constructing a type `t`. `free_vars` is
-       the set of free variables appearing in `t`. This information is available
-       from the state of the monad.
-
-       To determine if we truly have a recursive type we take the following into
-       account:
-
-        - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
-          we return it as-is.
-
-        - If `v` appears in `free_vars`, we may be dealing with a recursive type
-          but we also might have a degenerate case like this one:
-
-            Mu (v, v | string)
-
-          which is not a recursive type. (It is equivalent to string.)
-          So, first we simplify the type by performing the "remove_top_level_tvar"
-          transformation and some subsequent simplifications. Then if the type
-          changed we check again if `v` is in the free variables.
-
-          NOTE that we need to recompute free vars since the simplifications might
-          have eliminated some of them. Here we use the FreeVars module. This is
-          an expensive pass, which is why we avoid doing it if it's definitely
-          not a recursive type.
-    *)
+     *
+     * This function is expected to be called after fully normalizing the lower
+     * bounds of a type variable `v` and constructing a type `t`. `free_vars` is
+     * the set of free variables appearing in `t`. This information is available
+     * from the state of the monad.
+     *
+     * To determine if we truly have a recursive type we take the following into
+     * account:
+     *
+     * - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
+     *   we return it as-is.
+     *
+     * - If `v` appears in `free_vars`, we may be dealing with a recursive type
+     *   but we also might have a degenerate case like this one:
+     *
+     *   Mu (v, v | string)
+     *
+     *   which is not a recursive type. (It is equivalent to string.)
+     *   So, first we simplify the type by performing the "remove_top_level_tvar"
+     *   transformation and some subsequent simplifications. Then if the type
+     *   changed we check again if `v` is in the free variables.
+     *
+     *   NOTE that we need to recompute free vars since the simplifications might
+     *   have eliminated some of them. Here we use the FreeVars module. This is
+     *   an expensive pass, which is why we avoid doing it if it's definitely
+     *   not a recursive type.
+     *)
     let make free_vars i t =
       if not (VSet.mem i free_vars) then
         t
@@ -562,8 +560,8 @@ end = struct
     Ty.mk_union (t0, t1 :: ts)
 
   (* Utility that determines the next immediate concrete constructor, ie. reads
-     through OpenTs and AnnotTs. This is useful in determining, for example, the
-     toplevel cosntructor and adjusting the logic accordingly. *)
+   * through OpenTs and AnnotTs. This is useful in determining, for example, the
+   * toplevel cosntructor and adjusting the logic accordingly. *)
   module Lookahead : sig
     type t =
       | Recursive
@@ -603,6 +601,28 @@ end = struct
         | exception RecursiveExn -> Recursive
         | ts -> LowerBounds ts
   end
+
+  (* Arguments:
+   * - cont: apply when destructuring returned a single type
+   * - default: apply when destructuring returned 0 or >1 types, or a recursive type
+   * - non_eval: apply when no destructuring happened
+   *)
+  let type_destructor_t ~env ~cont ~default ~non_eval (use_op, reason, id, t, d) =
+    if Env.evaluate_type_destructors env then
+      let cx = Env.get_cx env in
+      Context.with_normalizer_mode cx (fun cx ->
+          (* The evaluated type might be recursive. To avoid non-termination we
+           * wrap the evaluation with our caching mechanism. *)
+          Recursive.with_cache (EvalKey id) ~f:(fun () ->
+              let trace = Trace.dummy_trace in
+              match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
+              | exception Flow_js.Attempted_operation_on_bound _ -> non_eval ~env t d
+              | (_, tout) ->
+                (match Lookahead.peek env tout with
+                | Lookahead.LowerBounds [t] -> cont ~env t
+                | _ -> default ~env tout)))
+    else
+      non_eval ~env t d
 
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
@@ -672,11 +692,27 @@ end = struct
       | _ -> false
   end
 
-  (*************************)
-  (* Main transformation   *)
-  (*************************)
+  module TypeConverter : sig
+    val convert_t : ?skip_reason:bool -> env:Env.t -> Type.t -> (Ty.t, error) t
 
-  module TypeConverter = struct
+    val convert_type_params_t :
+      env:Env.t -> T.typeparam Nel.t -> (Env.t * Ty.type_param list option, error) t
+
+    val convert_react_component_class : env:Env.t -> T.t -> Type.Properties.id -> (Ty.t, error) t
+
+    val convert_instance_t :
+      env:Env.t -> Reason.reason -> Type.super -> Type.insttype -> (Ty.t, error_kind * string) t
+
+    val convert_inline_interface :
+      env:Env.t -> Type.super -> T.Properties.id -> int option -> (Ty.t, error) t
+
+    val convert_obj_props_t :
+      env:Env.t -> ?proto:bool -> T.Properties.id -> int option -> (Ty.prop list, error) t
+
+    val convert_obj_t : env:Env.t -> Reason.reason -> Type.objtype -> (Ty.obj_t, error) t
+
+    val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
+  end = struct
     let rec type__ =
       let type_debug ~env ~depth t state =
         let cx = Env.get_cx env in
@@ -704,17 +740,17 @@ end = struct
             type_poly ~env t
 
     (* Before we start pattern-matching on the structure of the input type, we can
-     reconstruct some types based on attached reasons. Two cases are of interest here:
-     - Type parameters: we use RPolyTest reasons for these
-     - Type aliases: we use RTypeAlias reasons for these *)
+     * reconstruct some types based on attached reasons. Two cases are of interest here:
+     * - Type parameters: we use RPolyTest reasons for these
+     * - Type aliases: we use RTypeAlias reasons for these *)
     and type_poly ~env t =
       let next = type_with_alias_reason in
       (* The RPolyTest description is used for types that represent type parameters.
-       When normalizing, we want such types to be replaced by the type parameter,
-       whose name is part of the description, but only in the case that the parameter
-       is in scope. The reason we need to make this distinction is that bound tests
-       may exit the scope of the structure that introduced them, in which case we
-       do not perform the substitution. There instead we unfold the underlying type. *)
+       * When normalizing, we want such types to be replaced by the type parameter,
+       * whose name is part of the description, but only in the case that the parameter
+       * is in scope. The reason we need to make this distinction is that bound tests
+       * may exit the scope of the structure that introduced them, in which case we
+       * do not perform the substitution. There instead we unfold the underlying type. *)
       let reason = TypeUtil.reason_of_t t in
       match desc_of_reason ~unwrap:false reason with
       | RPolyTest (name, _) ->
@@ -724,7 +760,7 @@ end = struct
       | _ -> next ~env t
 
     and type_with_alias_reason ~env t =
-      let next = type_after_reason ~cont:type_with_alias_reason in
+      let next = type_ctor ~cont:type_with_alias_reason in
       let reason = TypeUtil.reason_of_t t in
       if Env.expand_type_aliases env then
         next ~env t
@@ -760,7 +796,7 @@ end = struct
                 next ~env t
             end)
 
-    and type_after_reason ~env ~cont t =
+    and type_ctor ~env ~cont t =
       let open Type in
       match t with
       | OpenT (_, id) -> type_variable ~env id
@@ -1363,37 +1399,6 @@ end = struct
       let opaque_symbol = symbol_from_reason env reason name in
       return (generic_talias opaque_symbol None)
 
-    (* We are being a bit lax here with opaque types so that we don't have to
-     introduce a new constructor in Ty.t to support all kinds of OpaqueT.
-     If an underlying type is available, then we use that as the alias body.
-     If not, we check for a super type and use that if there is one.
-     Otherwise, we fall back to a bodyless TypeAlias.
-  *)
-    and opaque_type_t ~env reason opaque_type tparams =
-      Type.(
-        let name = opaque_type.opaque_name in
-        let current_source = Env.current_file env in
-        let opaque_source = ALoc.source (def_aloc_of_reason reason) in
-        let name = symbol_from_reason env reason name in
-        (* Compare the current file (of the query) and the file that the opaque
-         type is defined. If they differ, then hide the underlying/super type.
-         Otherwise, display the underlying/super type. *)
-        if Some current_source <> opaque_source then
-          return (Ty.TypeAliasDecl { import = false; name; tparams; type_ = None })
-        else
-          let t_opt =
-            match opaque_type with
-            | { underlying_t = Some t; _ } (* opaque type A = number; *)
-            | { super_t = Some t; _ } ->
-              Some t (* declare opaque type B: number; *)
-            | _ -> None
-            (* declare opaque type C; *)
-            (* TODO: This will potentially report a remote name.
-           The same fix for T25963804 should be applied here as well. *)
-          in
-          let%map type_ = option (type__ ~env) t_opt in
-          Ty.TypeAliasDecl { import = false; name; tparams; type_ })
-
     and custom_fun_expanded ~env =
       Type.(
         function
@@ -1710,28 +1715,6 @@ end = struct
         in
         mk_spread ty target prefix_tys head_slice
 
-    and type_destructor_t
-        ~env
-        ~cont (* apply when destructuring returned a single type *)
-        ~default (* apply when destructuring returned 0 or >1 types, or a recursive type *)
-        ~non_eval (* apply when no destructuring happened *)
-        (use_op, reason, id, t, d) =
-      if Env.evaluate_type_destructors env then
-        let cx = Env.get_cx env in
-        Context.with_normalizer_mode cx (fun cx ->
-            (* The evaluated type might be recursive. To avoid non-termination we
-             * wrap the evaluation with our caching mechanism. *)
-            Recursive.with_cache (EvalKey id) ~f:(fun () ->
-                let trace = Trace.dummy_trace in
-                match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
-                | exception Flow_js.Attempted_operation_on_bound _ -> non_eval ~env t d
-                | (_, tout) ->
-                  (match Lookahead.peek env tout with
-                  | Lookahead.LowerBounds [t] -> cont ~env t
-                  | _ -> default ~env tout)))
-      else
-        non_eval ~env t d
-
     and type_destructor_unevaluated ~env t d =
       let%bind ty = type__ ~env t in
       match d with
@@ -1820,21 +1803,75 @@ end = struct
         (* return the recorded use type *)
         return t
 
-    let rec type_after_reason_ = type_after_reason ~cont:type_after_reason_
+    let rec type_ctor_ = type_ctor ~cont:type_ctor_
 
-    (* Type Aliases *)
+    let convert_t ?(skip_reason = false) =
+      if skip_reason then
+        type_ctor_
+      else
+        type__
+
+    let convert_type_params_t = type_params_t
+
+    let convert_react_component_class = react_component_class
+
+    let convert_instance_t = instance_t
+
+    let convert_inline_interface = inline_interface
+
+    let convert_obj_props_t = obj_props_t
+
+    let convert_obj_t = obj_ty
+
+    let convert_type_destructor_unevaluated = type_destructor_unevaluated
+  end
+
+  module ElementConverter : sig
+    val convert_toplevel : env:Env.t -> Type.t -> (Ty.elt, error) t
+  end = struct
+    (* We are being a bit lax here with opaque types so that we don't have to
+     * introduce a new constructor in Ty.t to support all kinds of OpaqueT.
+     * If an underlying type is available, then we use that as the alias body.
+     * If not, we check for a super type and use that if there is one.
+     * Otherwise, we fall back to a bodyless TypeAlias.
+     *)
+    let opaque_type_t ~env reason opaque_type tparams =
+      let open Type in
+      let name = opaque_type.opaque_name in
+      let current_source = Env.current_file env in
+      let opaque_source = ALoc.source (def_aloc_of_reason reason) in
+      let name = symbol_from_reason env reason name in
+      (* Compare the current file (of the query) and the file that the opaque
+         type is defined. If they differ, then hide the underlying/super type.
+         Otherwise, display the underlying/super type. *)
+      if Some current_source <> opaque_source then
+        return (Ty.TypeAliasDecl { import = false; name; tparams; type_ = None })
+      else
+        let t_opt =
+          match opaque_type with
+          | { underlying_t = Some t; _ } (* opaque type A = number; *)
+          | { super_t = Some t; _ } ->
+            Some t (* declare opaque type B: number; *)
+          | _ -> None
+          (* declare opaque type C; *)
+          (* TODO: This will potentially report a remote name.
+           * The same fix for T25963804 should be applied here as well. *)
+        in
+        let%map type_ = option (TypeConverter.convert_t ~env) t_opt in
+        Ty.TypeAliasDecl { import = false; name; tparams; type_ }
+
     let type_t =
       let open Type in
       let local env reason t tparams =
         let%bind name = Reason_utils.local_type_alias_symbol env reason in
         let env = Env.set_type_alias name env in
-        let%map t = type_after_reason_ ~env t in
+        let%map t = TypeConverter.convert_t ~skip_reason:true ~env t in
         Ty.Decl (Ty.TypeAliasDecl { import = false; name; tparams; type_ = Some t })
       in
       let import env reason t tparams =
         let%bind name = Reason_utils.imported_type_alias_symbol env reason in
         let env = Env.set_type_alias name env in
-        let%map t = type__ ~env t in
+        let%map t = TypeConverter.convert_t ~env t in
         Ty.Decl (Ty.TypeAliasDecl { name; import = true; tparams; type_ = Some t })
       in
       let opaque env t ps =
@@ -1848,13 +1885,14 @@ end = struct
         match desc_of_reason r with
         | RType name ->
           let loc = Reason.def_aloc_of_reason r in
-          let default t = type_with_alias_reason ~env t in
+          let default t = TypeConverter.convert_t ~env t in
           let%map p = lookup_tparam ~default env t name loc in
           Ty.Type p
         | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in
       let class_ env t =
-        let%map c = class_t ~env t in
+        let ct = T.DefT (TypeUtil.reason_of_t t, T.bogus_trust (), T.ClassT t) in
+        let%map c = TypeConverter.convert_t ~env ct in
         Ty.Type c
       in
       fun ~env r kind t ps ->
@@ -1867,164 +1905,166 @@ end = struct
         | TypeParamKind -> type_param env r t
         (* The following cases are not common *)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
-  end
 
-  (* The normalizer input, Type.t, is a rather flat structure. It encompasses types
-     that expressions might have (e.g. number, string, object), but also types that
-     represent declarations (e.g. class and type alias declarations). This representation
-     makes it harder to enforce invariants that intuitively should exist. E.g.
-
-     - Type alias, class declaration types, etc. do not nest.
-
-     - Type aliases, class declarations and modules are toplevel or parts of modules.
-
-     To restore these, we trap Type.t constructors that should only appear at the
-     toplevel, like modules, type aliases, etc.
-  *)
-  let rec toplevel =
-    let open Type in
-    let class_or_interface_decl ~env r tparams static super inst =
-      let%bind ps =
-        match tparams with
-        | Some tparams ->
-          let%map (_, ps) = TypeConverter.type_params_t ~env tparams in
-          ps
-        | None -> return None
+    (* The normalizer input, Type.t, is a rather flat structure. It encompasses types
+     * that expressions might have (e.g. number, string, object), but also types that
+     * represent declarations (e.g. class and type alias declarations). This representation
+     * makes it harder to enforce invariants that intuitively should exist. E.g.
+     *
+     * - Type alias, class declaration types, etc. do not nest.
+     *
+     * - Type aliases, class declarations and modules are toplevel or parts of modules.
+     *
+     * To restore these, we trap Type.t constructors that should only appear at the
+     * toplevel, like modules, type aliases, etc.
+     *)
+    let rec toplevel =
+      let open Type in
+      let class_or_interface_decl ~env r tparams static super inst =
+        let%bind ps =
+          match tparams with
+          | Some tparams ->
+            let%map (_, ps) = TypeConverter.convert_type_params_t ~env tparams in
+            ps
+          | None -> return None
+        in
+        let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+        let desc = desc_of_reason ~unwrap:false r in
+        match (inst_kind, desc) with
+        | (_, Reason.RReactComponent) ->
+          let%map ty = TypeConverter.convert_react_component_class ~env static own_props in
+          Ty.Type ty
+        | (T.InterfaceKind { inline = false }, _) ->
+          let%map symbol = Reason_utils.instance_symbol env r in
+          Ty.Decl (Ty.InterfaceDecl (symbol, ps))
+        | (T.InterfaceKind { inline = true }, _) ->
+          let%map ty = TypeConverter.convert_inline_interface ~env super own_props inst_call_t in
+          Ty.Type ty
+        | (T.ClassKind, _) ->
+          let%map symbol = Reason_utils.instance_symbol env r in
+          Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
-      let desc = desc_of_reason ~unwrap:false r in
-      match (inst_kind, desc) with
-      | (_, Reason.RReactComponent) ->
-        let%map ty = TypeConverter.react_component_class ~env static own_props in
-        Ty.Type ty
-      | (T.InterfaceKind { inline = false }, _) ->
-        let%map symbol = Reason_utils.instance_symbol env r in
-        Ty.Decl (Ty.InterfaceDecl (symbol, ps))
-      | (T.InterfaceKind { inline = true }, _) ->
-        let%map ty = TypeConverter.inline_interface ~env super own_props inst_call_t in
-        Ty.Type ty
-      | (T.ClassKind, _) ->
-        let%map symbol = Reason_utils.instance_symbol env r in
-        Ty.Decl (Ty.ClassDecl (symbol, ps))
-    in
-    let singleton_poly ~env ~orig_t tparams = function
-      (* Imported interfaces *)
-      | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
-        class_or_interface_decl ~env r (Some tparams) static super inst
-      (* Classes *)
-      | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
-      (* Interfaces *)
-      | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
-        class_or_interface_decl ~env r (Some tparams) static super inst
-      (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
+      let singleton_poly ~env ~orig_t tparams = function
+        (* Imported interfaces *)
+        | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
+          class_or_interface_decl ~env r (Some tparams) static super inst
+        (* Classes *)
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        (* Interfaces *)
+        | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
+          class_or_interface_decl ~env r (Some tparams) static super inst
+        (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
          The initial abstraction is wrapper within an abstraction and a type application.
          The current case unwraps the abstraction and application to reveal the
          initial imported type. *)
-      | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> toplevel ~env t
-      (* Type Aliases *)
-      | DefT (r, _, TypeT (kind, t)) ->
-        let%bind (env, ps) = TypeConverter.type_params_t ~env tparams in
-        TypeConverter.type_t ~env r kind t ps
-      | _ ->
-        let%map ty = TypeConverter.type__ ~env orig_t in
-        Ty.Type ty
-    in
-    let singleton ~env ~orig_t t =
-      match t with
-      (* Polymorphic variants - see singleton_poly *)
-      | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env ~orig_t tparams t_out
-      (* Modules *)
-      | ModuleT (reason, exports, _) ->
-        let%map m = module_t ~env reason exports in
-        Ty.Decl m
-      | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r ->
-        let%map (name, exports, default) = module_of_object ~env r o in
-        Ty.Decl (Ty.ModuleDecl { name; exports; default })
-      (* Monomorphic Classes/Interfaces *)
-      | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
-      | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
-      | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
-      | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
-        class_or_interface_decl ~env r None static super inst
-      (* Monomorphic Type Aliases *)
-      | DefT (r, _, TypeT (kind, t)) ->
-        let r =
-          match kind with
-          | ImportClassKind -> r
-          | _ -> TypeUtil.reason_of_t t
-        in
-        TypeConverter.type_t ~env r kind t None
-      (* Enums *)
-      | DefT (reason, _, EnumObjectT enum) ->
-        let { T.enum_name; _ } = enum in
-        let symbol = symbol_from_reason env reason enum_name in
-        return (Ty.Decl Ty.(EnumDecl symbol))
-      (* Types *)
-      | _ ->
-        let%map t = TypeConverter.type__ ~env orig_t in
-        Ty.Type t
-    in
-    fun ~env t ->
-      match Lookahead.peek ~env t with
-      | Lookahead.LowerBounds [l] -> singleton ~env ~orig_t:t l
-      | Lookahead.Recursive
-      | Lookahead.LowerBounds _ ->
-        let%map t = TypeConverter.type__ ~env t in
-        Ty.Type t
-
-  and module_t =
-    let open Type in
-    let from_cjs_export ~env = function
-      | None -> return None
-      | Some exports ->
-        (match Lookahead.peek ~env exports with
-        | Lookahead.LowerBounds [DefT (r, _, ObjT o)] ->
-          let%map (_, _, default) = module_of_object ~env r o in
-          default
+        | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> toplevel ~env t
+        (* Type Aliases *)
+        | DefT (r, _, TypeT (kind, t)) ->
+          let%bind (env, ps) = TypeConverter.convert_type_params_t ~env tparams in
+          type_t ~env r kind t ps
+        | _ ->
+          let%map ty = TypeConverter.convert_t ~env orig_t in
+          Ty.Type ty
+      in
+      let singleton ~env ~orig_t t =
+        match t with
+        (* Polymorphic variants - see singleton_poly *)
+        | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env ~orig_t tparams t_out
+        (* Modules *)
+        | ModuleT (reason, exports, _) ->
+          let%map m = module_t ~env reason exports in
+          Ty.Decl m
+        | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r ->
+          let%map (name, exports, default) = module_of_object ~env r o in
+          Ty.Decl (Ty.ModuleDecl { name; exports; default })
+        (* Monomorphic Classes/Interfaces *)
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
+        | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
+        | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
+          class_or_interface_decl ~env r None static super inst
+        (* Monomorphic Type Aliases *)
+        | DefT (r, _, TypeT (kind, t)) ->
+          let r =
+            match kind with
+            | ImportClassKind -> r
+            | _ -> TypeUtil.reason_of_t t
+          in
+          type_t ~env r kind t None
+        (* Enums *)
+        | DefT (reason, _, EnumObjectT enum) ->
+          let { T.enum_name; _ } = enum in
+          let symbol = symbol_from_reason env reason enum_name in
+          return (Ty.Decl Ty.(EnumDecl symbol))
+        (* Types *)
+        | _ ->
+          let%map t = TypeConverter.convert_t ~env orig_t in
+          Ty.Type t
+      in
+      fun ~env t ->
+        match Lookahead.peek ~env t with
+        | Lookahead.LowerBounds [l] -> singleton ~env ~orig_t:t l
         | Lookahead.Recursive
         | Lookahead.LowerBounds _ ->
-          let%map t = TypeConverter.type__ ~env exports in
-          Some t)
-    in
-    let from_exports_tmap ~env exports_tmap =
-      let step (x, (_loc, t)) =
-        match%map toplevel ~env t with
-        | Ty.Decl d -> d
-        | Ty.Type t -> Ty.VariableDecl (x, t)
-      in
-      Context.find_exports (Env.get_cx env) exports_tmap |> SMap.bindings |> mapM step
-    in
-    fun ~env reason { exports_tmap; cjs_export; _ } ->
-      let%bind name = Reason_utils.module_symbol_opt env reason in
-      let%bind exports = from_exports_tmap ~env exports_tmap in
-      let%map default = from_cjs_export ~env cjs_export in
-      Ty.ModuleDecl { name; exports; default }
+          let%map t = TypeConverter.convert_t ~env t in
+          Ty.Type t
 
-  and module_of_object =
-    let obj_module_props ~env props_id =
-      let step (decls, default) (x, t, _pol) =
-        match%map toplevel ~env t with
-        | Ty.Type (Ty.Obj _) when x = "default" -> (decls, default)
-        | Ty.Type t when x = "default" -> (decls, Some t)
-        | Ty.Type t -> (Ty.VariableDecl (x, t) :: decls, default)
-        | Ty.Decl d -> (d :: decls, default)
+    and module_t =
+      let open Type in
+      let from_cjs_export ~env = function
+        | None -> return None
+        | Some exports ->
+          (match Lookahead.peek ~env exports with
+          | Lookahead.LowerBounds [DefT (r, _, ObjT o)] ->
+            let%map (_, _, default) = module_of_object ~env r o in
+            default
+          | Lookahead.Recursive
+          | Lookahead.LowerBounds _ ->
+            let%map t = TypeConverter.convert_t ~env exports in
+            Some t)
       in
-      let rec loop acc xs =
-        match xs with
-        | [] -> return acc
-        | (x, T.Field (_, t, p)) :: tl ->
-          let%bind acc' = step acc (x, t, p) in
-          loop acc' tl
-        | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"module-prop" None
+      let from_exports_tmap ~env exports_tmap =
+        let step (x, (_loc, t)) =
+          match%map toplevel ~env t with
+          | Ty.Decl d -> d
+          | Ty.Type t -> Ty.VariableDecl (x, t)
+        in
+        Context.find_exports (Env.get_cx env) exports_tmap |> SMap.bindings |> mapM step
       in
-      let cx = Env.get_cx env in
-      let props = SMap.bindings (Context.find_props cx props_id) in
-      loop ([], None) props
-    in
-    fun ~env reason o ->
-      let%bind name = Reason_utils.module_symbol_opt env reason in
-      let%map (exports, default) = obj_module_props ~env o.T.props_tmap in
-      (name, exports, default)
+      fun ~env reason { exports_tmap; cjs_export; _ } ->
+        let%bind name = Reason_utils.module_symbol_opt env reason in
+        let%bind exports = from_exports_tmap ~env exports_tmap in
+        let%map default = from_cjs_export ~env cjs_export in
+        Ty.ModuleDecl { name; exports; default }
+
+    and module_of_object =
+      let obj_module_props ~env props_id =
+        let step (decls, default) (x, t, _pol) =
+          match%map toplevel ~env t with
+          | Ty.Type (Ty.Obj _) when x = "default" -> (decls, default)
+          | Ty.Type t when x = "default" -> (decls, Some t)
+          | Ty.Type t -> (Ty.VariableDecl (x, t) :: decls, default)
+          | Ty.Decl d -> (d :: decls, default)
+        in
+        let rec loop acc xs =
+          match xs with
+          | [] -> return acc
+          | (x, T.Field (_, t, p)) :: tl ->
+            let%bind acc' = step acc (x, t, p) in
+            loop acc' tl
+          | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"module-prop" None
+        in
+        let cx = Env.get_cx env in
+        let props = SMap.bindings (Context.find_props cx props_id) in
+        loop ([], None) props
+      in
+      fun ~env reason o ->
+        let%bind name = Reason_utils.module_symbol_opt env reason in
+        let%map (exports, default) = obj_module_props ~env o.T.props_tmap in
+        (name, exports, default)
+
+    let convert_toplevel = toplevel
+  end
 
   let run_type_aux
       ~(f : env:Env.t -> T.t -> ('a, error) t)
@@ -2046,16 +2086,16 @@ end = struct
     in
     (result, state)
 
-  let run_type = run_type_aux ~f:toplevel ~simpl:Ty_utils.simplify_elt
+  let run_type = run_type_aux ~f:ElementConverter.convert_toplevel ~simpl:Ty_utils.simplify_elt
 
   (* Before we start normalizing the input type we populate our environment with
-     aliases that are in scope due to typed imports. These appear inside
-     File_sig.module_sig.requires. This step includes the normalization
-     of all imported types and the creation of a map to hold bindings of imported
-     names to location of definition. This map will be used later to determine
-     whether a located name (symbol) appearing is part of the file's imports or a
-     remote (hidden or non-imported) name.
-  *)
+   * aliases that are in scope due to typed imports. These appear inside
+   * File_sig.module_sig.requires. This step includes the normalization
+   * of all imported types and the creation of a map to hold bindings of imported
+   * names to location of definition. This map will be used later to determine
+   * whether a located name (symbol) appearing is part of the file's imports or a
+   * remote (hidden or non-imported) name.
+   *)
   module Imports = struct
     open File_sig
 
@@ -2139,7 +2179,7 @@ end = struct
         let { Type.TypeScheme.tparams; type_ = t } = scheme in
         let imported_names = ALocMap.empty in
         let env = Env.init ~options ~genv ~tparams ~imported_names in
-        let%map ty = toplevel ~env t in
+        let%map ty = ElementConverter.convert_toplevel ~env t in
         def_loc_of_elt ty
 
     let normalize_imports ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t =
@@ -2173,7 +2213,14 @@ end = struct
   (* Expand the toplevel structure of the input type into an object type. This is
    * useful for services like autocomplete for properties.
    *)
-  module ExpandMembersConverter = struct
+  module ExpandMembersConverter : sig
+    val convert_t :
+      include_proto_members:bool ->
+      idx_hook:(unit -> unit) ->
+      env:Env.t ->
+      Type.t ->
+      (Ty.t, error) t
+  end = struct
     (* Sets how to expand members upon encountering an InstanceT:
      * - if set to IMStatic then expand the static members
      * - if set to IMUnset or IMInstance then expand the instance members.
@@ -2224,8 +2271,10 @@ end = struct
         loop ~env ~proto:true ~imode:IMInstance (Flow_js.get_builtin (Env.get_cx env) builtin r)
       and member_expand_object ~env super inst =
         let { T.own_props; proto_props; _ } = inst in
-        let%bind own_ty_props = TypeConverter.obj_props_t ~env own_props None in
-        let%bind proto_ty_props = TypeConverter.obj_props_t ~env ~proto:true proto_props None in
+        let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env own_props None in
+        let%bind proto_ty_props =
+          TypeConverter.convert_obj_props_t ~env ~proto:true proto_props None
+        in
         let%map obj_props =
           if include_proto_members then
             let%map super_ty = loop ~env ~proto:true ~imode:IMInstance super in
@@ -2256,7 +2305,7 @@ end = struct
             [enum_t; representation_t]
         in
         let%bind proto_ty = loop ~env ~proto:true ~imode:IMUnset proto_t in
-        let%map enum_ty = TypeConverter.type__ ~env enum_ty in
+        let%map enum_ty = TypeConverter.convert_t ~env enum_ty in
         let members_ty =
           List.map
             (fun name ->
@@ -2266,7 +2315,7 @@ end = struct
         in
         Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
       and obj_t ~env ~proto ~imode reason o =
-        let%bind obj = TypeConverter.obj_ty ~env reason o in
+        let%bind obj = TypeConverter.convert_obj_t ~env reason o in
         let obj =
           if include_proto_members && proto then
             { obj with Ty.obj_props = Base.List.map ~f:set_proto_prop obj.Ty.obj_props }
@@ -2290,7 +2339,7 @@ end = struct
         match (inst_kind, desc, imode) with
         | (_, Reason.RReactComponent, _)
         | (T.InterfaceKind _, _, _) ->
-          TypeConverter.instance_t ~env r super inst
+          TypeConverter.convert_instance_t ~env r super inst
         | (T.ClassKind, _, IMStatic) -> loop ~env ~proto:false ~imode static
         | (T.ClassKind, _, (IMUnset | IMInstance)) -> member_expand_object ~env super inst
       and latent_pred_t ~env ~proto ~imode id t =
@@ -2344,12 +2393,12 @@ end = struct
           Ty.mk_union (Ty.Void, [t])
         | EvalT (t, TypeDestructorT (use_op, r, d), id) ->
           let cont = loop ~proto ~imode in
-          let non_eval = TypeConverter.type_destructor_unevaluated in
-          let default = TypeConverter.type__ in
-          TypeConverter.type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
+          let non_eval = TypeConverter.convert_type_destructor_unevaluated in
+          let default = TypeConverter.convert_t ~skip_reason:false in
+          type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
         | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
         | ExactT (_, t) -> loop ~env ~proto ~imode t
-        | t -> TypeConverter.type__ ~env t
+        | t -> TypeConverter.convert_t ~env t
       in
       loop ~proto:false ~imode:IMUnset
   end
