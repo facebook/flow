@@ -84,17 +84,17 @@ module Make (L : Loc_sig.S) = struct
       use_def_map
       DefMap.empty
 
-  let def_of_use { scopes; _ } use =
-    let def_opt =
-      IMap.fold
-        (fun _ scope acc ->
-          match acc with
-          | Some _ -> acc
-          | None -> L.LMap.find_opt use scope.Scope.locals)
-        scopes
-        None
-    in
-    match def_opt with
+  let def_of_use_opt { scopes; _ } use =
+    IMap.fold
+      (fun _ scope acc ->
+        match acc with
+        | Some _ -> acc
+        | None -> L.LMap.find_opt use scope.Scope.locals)
+      scopes
+      None
+
+  let def_of_use info use =
+    match def_of_use_opt info use with
     | Some def -> def
     | None -> failwith "missing def"
 

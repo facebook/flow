@@ -383,20 +383,23 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         | Some (ExportSpecifiers specifiers) ->
           List.iter
             (fun (_, { ExportSpecifier.local = (id_loc, _); _ }) ->
-              let def = Scopes.def_of_use scope_info id_loc in
-              let def_loc = Nel.hd def.Scopes.Def.locs in
-              (* Also check for non-const variables in list of export specifiers *)
-              begin
-                match ALocMap.find_opt def_loc declarations.var_decls with
-                | Some { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let }
-                  ->
-                  this#add_non_const_var_export_error id_loc (Some (decl_loc, name))
-                | _ -> ()
-              end;
-              (* Check for `this` if exported variable is bound to a function *)
-              match ALocMap.find_opt def_loc declarations.functions with
-              | Some func -> this#add_exported_this_errors func
-              | _ -> ())
+              match Scopes.def_of_use_opt scope_info id_loc with
+              | Some def ->
+                let def_loc = Nel.hd def.Scopes.Def.locs in
+                (* Also check for non-const variables in list of export specifiers *)
+                begin
+                  match ALocMap.find_opt def_loc declarations.var_decls with
+                  | Some
+                      { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let }
+                    ->
+                    this#add_non_const_var_export_error id_loc (Some (decl_loc, name))
+                  | _ -> ()
+                end;
+                (* Check for `this` if exported variable is bound to a function *)
+                (match ALocMap.find_opt def_loc declarations.functions with
+                | Some func -> this#add_exported_this_errors func
+                | _ -> ())
+              | None -> ())
             specifiers
         | _ -> ()
       end;

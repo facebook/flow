@@ -22,6 +22,14 @@ Cannot use `this` in an exported function. [this-in-exported-function]
                                   ^^^^
 
 
+Error ----------------------------------------------------------------------------------- export_unresolved_ident.js:4:9
+
+Cannot resolve name `A`. [cannot-resolve-name]
+
+   4| export {A}
+              ^
+
+
 Error -------------------------------------------------------------------------------- import_star_default_access.js:5:1
 
 The default export of a module cannot be accessed from an `import *` [1] object. To use the default export you must
@@ -387,4 +395,4 @@ References:
 
 
 
-Found 32 errors
+Found 33 errors
