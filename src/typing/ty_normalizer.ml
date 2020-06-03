@@ -536,6 +536,20 @@ end = struct
     | (Some targ_lst, Some tparam_lst) -> Some (remove_if_able targ_lst tparam_lst)
     | _ -> targs
 
+  let app_intersection ~f rep =
+    let (t0, (t1, ts)) = T.InterRep.members_nel rep in
+    let%bind t0 = f t0 in
+    let%bind t1 = f t1 in
+    let%map ts = mapM f ts in
+    Ty.mk_inter (t0, t1 :: ts)
+
+  let app_union ~f rep =
+    let (t0, (t1, ts)) = T.UnionRep.members_nel rep in
+    let%bind t0 = f t0 in
+    let%bind t1 = f t1 in
+    let%map ts = mapM f ts in
+    Ty.mk_union (t0, t1 :: ts)
+
   (* Utility that determines the next immediate concrete constructor, ie. reads
      through OpenTs and AnnotTs. This is useful in determining, for example, the
      toplevel cosntructor and adjusting the logic accordingly. *)
@@ -782,18 +796,8 @@ end = struct
       Ty.Fun t
     | DefT (r, _, ObjT o) -> obj_ty ~env r o
     | DefT (r, _, ArrT a) -> arr_ty ~env r a
-    | UnionT (_, rep) ->
-      let (t0, (t1, ts)) = UnionRep.members_nel rep in
-      let%bind t0 = type__ ~env t0 in
-      let%bind t1 = type__ ~env t1 in
-      let%map ts = mapM (type__ ~env) ts in
-      Ty.mk_union (t0, t1 :: ts)
-    | IntersectionT (_, rep) ->
-      let (t0, (t1, ts)) = InterRep.members_nel rep in
-      let%bind t0 = type__ ~env t0 in
-      let%bind t1 = type__ ~env t1 in
-      let%map ts = mapM (type__ ~env) ts in
-      Ty.mk_inter (t0, t1 :: ts)
+    | UnionT (_, rep) -> app_union ~f:(type__ ~env) rep
+    | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env) rep
     | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
     | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
     | DefT (r, _, InstanceT (static, super, _, t)) -> instance_t ~env r static super t
