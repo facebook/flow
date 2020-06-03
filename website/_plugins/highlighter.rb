@@ -274,7 +274,6 @@ module Jekyll
       f.write(
         <<-EOF.gsub(/^ {10}/, '')
           [options]
-          suppress_comment=\\\\(.\\\\|\\n\\\\)*\\\\$DocIssue
           max_header_tokens=1
         EOF
       )
