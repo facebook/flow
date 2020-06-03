@@ -1156,7 +1156,11 @@ let do_rage flowconfig_name (state : state) : Rage.result =
       { title = None; data } :: items
     in
     let add_pid (items : rageItem list) ((pid, reason) : int * string) : rageItem list =
-      if String_utils.string_starts_with reason "slave" then
+      (* The "slave" check here can be removed after v0.127.0 *)
+      if
+        String_utils.string_starts_with reason "slave"
+        || String_utils.string_starts_with reason "worker"
+      then
         items
       else
         let pid = string_of_int pid in

@@ -18,12 +18,12 @@ open Worker
  * of tasks better (cf multiWorker.ml)
  *
  * On Unix, we "spawn" workers when initializing Hack. Then, this
- * worker, "fork" a slave for each incoming request. The forked "slave"
- * will die after processing a single request.
+ * worker, "fork" a clone process for each incoming request.
+ * The forked "clone" will die after processing a single request.
  *
  * On Windows, we do not "prespawn" when initializing Hack, but we just
  * allocate all the required information into a record. Then, we
- * spawn a slave for each incoming request. It will also die after
+ * spawn a worker for each incoming request. It will also die after
  * one request.
  *
  * A worker never handle more than one request at a time.
@@ -90,7 +90,7 @@ type worker = {
    *
    * This is also an offset into the shared heap segment, used to access
    * worker-local data. As such, the numbering is important. The IDs must be
-   * dense and start at 1. (0 is the master process offset.) *)
+   * dense and start at 1. (0 is the controller process offset.) *)
   id: int;
   (* The call wrapper will wrap any workload sent to the worker (via "call"
    * below) before invoking the workload.
@@ -102,9 +102,9 @@ type worker = {
    * workers. For example, this can be useful to handle exceptions uniformly
    * across workers regardless what workload is called on them. *)
   call_wrapper: call_wrapper option;
-  (* On Unix, Worker Master sends status messages over this fd to this
-   * Controller. On Windows, it doesn't send anything, so don't try to read from
-   * it (it should be set to None). *)
+  (* On Unix, Worker sends status messages over this fd to this Controller. On
+   * Windows, it doesn't send anything, so don't try to read from it (it should
+   * be set to None). *)
   controller_fd: Unix.file_descr option;
   (* Sanity check: is the worker still available ? *)
   mutable killed: bool;
@@ -114,7 +114,7 @@ type worker = {
   mutable handle: 'a 'b. ('a, 'b) handle option;
   (* On Unix, a reference to the 'prespawned' worker. *)
   prespawned: (void, request) Daemon.handle option;
-  (* On Windows, a function to spawn a slave. *)
+  (* On Windows, a function to spawn a worker. *)
   spawn: unit -> (void, request) Daemon.handle;
 }
 
@@ -131,22 +131,19 @@ and ('a, 'b) handle = ('a, 'b) delayed ref
 and ('a, 'b) delayed = ('a * int) * 'b worker_handle
 
 and 'b worker_handle =
-  | Processing of 'b slave
+  | Processing of 'b job
   | Cached of 'b * worker
   | Canceled
   | Failed of exn
 
-(* The Controller's slave has a Worker. The Worker is itself a single process
- * on Windows. On Unix, the slave is itself a Worker Master process, and Worker
- * Slave. *)
-and 'a slave = {
+(* The Controller's job has a Worker. The Worker is itself a single process
+ * on Windows. On Unix, the Worker is itself forks Clones *)
+and 'a job = {
   worker: worker;
   (* The associated worker *)
-  slave_pid: int;
-  (* The actual slave pid *)
 
   (* The file descriptor we might pass to select in order to
-     wait for the slave to finish its job. *)
+     wait for the worker to finish its job. *)
   infd: Unix.file_descr;
   (* A blocking function that returns the job result. *)
   result: unit -> 'a;
@@ -200,7 +197,7 @@ let register_entry_point ~restore =
     SharedMem.connect heap_handle ~worker_id;
     Caml.Gc.set gc_control
   in
-  let name = Printf.sprintf "slave_%d" !entry_counter in
+  let name = Printf.sprintf "worker_%d" !entry_counter in
   Daemon.register_entry_point
     name
     ( if Sys.win32 then
@@ -292,14 +289,14 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
 
-  (* Spawn the slave, if not prespawned. *)
-  let ({ Daemon.pid = slave_pid; channels = (inc, outc) } as h) = spawn w in
+  (* Spawn the worker process, if not prespawned. *)
+  let ({ Daemon.pid = worker_pid; channels = (inc, outc) } as h) = spawn w in
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
   let worker_failed pid_stat controller_fd =
     (* If we have a controller fd, we read the true pid status
      * over that channel instead of using the one returned from the
-     * Worker Master. *)
+     * Worker. *)
     let pid_stat =
       match controller_fd with
       | None -> snd pid_stat
@@ -309,7 +306,7 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
           ~on_timeout:(fun _ -> snd pid_stat)
           ~do_:(fun _ ->
             try
-              let (Slave_terminated status) = Marshal_tools.from_fd_with_preamble fd in
+              let (Job_terminated status) = Marshal_tools.from_fd_with_preamble fd in
               status
             with End_of_file -> snd pid_stat)
     in
@@ -317,31 +314,31 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
     | Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
       raise SharedMem.Out_of_shared_memory
     | Unix.WEXITED i ->
-      Caml.Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
-      raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
-    | Unix.WSTOPPED i -> raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
-    | Unix.WSIGNALED i -> raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
+      Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i;
+      raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i)))
+    | Unix.WSTOPPED i -> raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))
+    | Unix.WSIGNALED i -> raise (Worker_failed (worker_pid, Worker_quit (Unix.WSIGNALED i)))
   in
-  (* Checks if the worker master has exited. *)
-  let with_exit_status_check ?(block_on_waitpid = false) slave_pid f =
+  (* Checks if the worker process has exited. *)
+  let with_exit_status_check ?(block_on_waitpid = false) worker_pid f =
     let wait_flags =
       if block_on_waitpid then
         []
       else
         [Unix.WNOHANG]
     in
-    let pid_stat = Unix.waitpid wait_flags slave_pid in
+    let pid_stat = Unix.waitpid wait_flags worker_pid in
     match pid_stat with
     | (0, _) -> f ()
     | (_, Unix.WEXITED 0) ->
-      (* This will never actually happen. Worker Master only exits if this
+      (* This will never actually happen. Worker process only exits if this
        * Controller process has exited. *)
-      failwith "Worker Master exited 0 unexpectedly"
+      failwith "Worker process exited 0 unexpectedly"
     | _ -> worker_failed pid_stat w.controller_fd
   in
-  (* Prepare ourself to read answer from the slave. *)
+  (* Prepare ourself to read answer from the worker process. *)
   let get_result_with_status_check ?(block_on_waitpid = false) () : b =
-    with_exit_status_check ~block_on_waitpid slave_pid (fun () ->
+    with_exit_status_check ~block_on_waitpid worker_pid (fun () ->
         let data : b = Marshal_tools.from_fd_with_preamble infd in
         let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
         close w h;
@@ -353,30 +350,30 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
      * We run the "with_exit_status_check" twice (first time non-blockingly).
      * This is because of a race condition.
      *
-     * Immediately after the worker master forks the slave (see worker.ml), it does
-     * a blocking, non-interruptible waitpid on the slave. This means that if the slave
-     * fails, then the master will see the failure and also fail accordingly, which we
+     * Immediately after the worker forks the clone (see worker.ml), it does
+     * a blocking, non-interruptible waitpid on the clone. This means that if the clone
+     * fails, then the worker will see the failure and also fail accordingly, which we
      * will catch in here with "with_exit_status_check". This is designed around a sort-of
-     * invariant - if the worker slave fails, then the worker master will fail, so
-     * the WorkerController here will see the failure and not attempt to read the result
-     * with "Marshal_tools.from_fd_with_preamble"
+     * invariant - if the clone fails, then the worker will fail, so the WorkerController
+     * here will see the failure and not attempt to read the result with
+     *"Marshal_tools.from_fd_with_preamble"
      *
-     * But there is a brief moment after the slave is forked and before the
-     * non-interruptible waitpid where the worker slave can actually fail quickly
-     * and this WorkerController has already checked the worker master's status. So the
+     * But there is a brief moment after the clone is forked and before the
+     * non-interruptible waitpid where the clone can actually fail quickly
+     * and this WorkerController has already checked the worker process's status. So the
      * invariant above will be broken, the WorkerController will try to read the result
      * with Marshal_tools, get an End_of_file, and crash.
      *
-     * To get around this, we give the worker master time to "catch up" and reach the
+     * To get around this, we give the worker process time to "catch up" and reach the
      * non-interruptible waitpid that we expect it to be at. Eventually, it will also
-     * fail accordingly, since its slave has failed.
+     * fail accordingly, since its clone has failed.
      *)
     try get_result_with_status_check ()
     with End_of_file -> get_result_with_status_check ~block_on_waitpid:true ()
   in
   let wait_for_cancel () : unit =
-    with_exit_status_check slave_pid (fun () ->
-        (* Depending on whether we manage to kill the slave before it starts writing
+    with_exit_status_check worker_pid (fun () ->
+        (* Depending on whether we manage to kill the clone before it starts writing
          * results back, this will return either actual results, or "anything"
          * (written by interrupt signal that exited). The types don't match, but we
          * ignore both of them anyway. *)
@@ -384,20 +381,20 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
         let (_ : 'c) = Marshal_tools.from_fd_with_preamble infd in
         ())
   in
-  let slave = { result; slave_pid; infd; worker = w; wait_for_cancel } in
+  let job = { result; infd; worker = w; wait_for_cancel } in
   let request = wrap_request w f x in
-  (* Send the job to the slave. *)
+  (* Send the job to the worker. *)
   let () =
     try Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request |> ignore
     with e ->
       begin
-        match Unix.waitpid [Unix.WNOHANG] slave_pid with
+        match Unix.waitpid [Unix.WNOHANG] worker_pid with
         | (0, _) -> raise (Worker_failed_to_send_job (Other_send_job_failure e))
         | (_, status) -> raise (Worker_failed_to_send_job (Worker_already_exited status))
       end
   in
   (* And returned the 'handle'. *)
-  let handle = ref ((x, call_id), Processing slave) in
+  let handle = ref ((x, call_id), Processing job) in
   w.handle <- Caml.Obj.magic (Some handle);
   handle
 
@@ -407,10 +404,10 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
  *
  **************************************************************************)
 
-let with_worker_exn (handle : ('a, 'b) handle) slave f =
+let with_worker_exn (handle : ('a, 'b) handle) job f =
   try f () with
   | Worker_failed (pid, status) as exn ->
-    mark_free slave.worker;
+    mark_free job.worker;
     handle := (fst !handle, Failed exn);
     begin
       match status with
@@ -418,7 +415,7 @@ let with_worker_exn (handle : ('a, 'b) handle) slave f =
       | _ -> raise exn
     end
   | exn ->
-    mark_free slave.worker;
+    mark_free job.worker;
     handle := (fst !handle, Failed exn);
     raise exn
 

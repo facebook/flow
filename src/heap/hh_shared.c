@@ -366,7 +366,7 @@ static HANDLE memfd;
 
 /**************************************************************************
  * We create an anonymous memory file, whose `handle` might be
- * inherited by slave processes.
+ * inherited by subprocesses.
  *
  * This memory file is tagged "reserved" but not "committed". This
  * means that the memory space will be reserved in the virtual memory

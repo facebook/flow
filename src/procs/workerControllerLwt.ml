@@ -31,8 +31,8 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
 
-  (* Spawn the slave, if not prespawned. *)
-  let ({ Daemon.pid = slave_pid; channels = (inc, outc) } as h) = spawn w in
+  (* Spawn the worker, if not prespawned. *)
+  let ({ Daemon.pid = worker_pid; channels = (inc, outc) } as h) = spawn w in
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
   let infd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true infd in
@@ -52,7 +52,7 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
 
        (* Failed to send the job to the worker. Is it because the worker is dead or is it
         * something else? *)
-       let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
+       let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
        (match pid with
        | 0 -> raise (Worker_failed_to_send_job (Other_send_job_failure exn))
        | _ -> raise (Worker_failed_to_send_job (Worker_already_exited status)))
@@ -81,25 +81,25 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
        let _ = Marshal_tools.from_fd_with_preamble infd in
        raise exn
      | exn ->
-       let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
+       let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
        begin
          match (pid, status) with
          | (0, _)
          | (_, Unix.WEXITED 0) ->
-           (* The slave is still running or exited normally. It's odd that we failed to read
+           (* The worker is still running or exited normally. It's odd that we failed to read
             * the response, so just raise that exception *)
            raise exn
          | (_, Unix.WEXITED i) when i = Exit_status.(exit_code Out_of_shared_memory) ->
            raise SharedMem.Out_of_shared_memory
          | (_, Unix.WEXITED i) ->
-           let () = Printf.eprintf "Subprocess(%d): fail %d" slave_pid i in
-           raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
+           let () = Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
+           raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i)))
          | (_, Unix.WSTOPPED i) ->
-           let () = Printf.eprintf "Subprocess(%d): stopped %d" slave_pid i in
-           raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
+           let () = Printf.eprintf "Subprocess(%d): stopped %d" worker_pid i in
+           raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))
          | (_, Unix.WSIGNALED i) ->
-           let () = Printf.eprintf "Subprocess(%d): signaled %d" slave_pid i in
-           raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
+           let () = Printf.eprintf "Subprocess(%d): signaled %d" worker_pid i in
+           raise (Worker_failed (worker_pid, Worker_quit (Unix.WSIGNALED i)))
        end
    in
    close w h;
