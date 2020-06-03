@@ -172,7 +172,6 @@ let ty_normalizer_options =
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
-      expand_toplevel_members = None;
       max_depth = Some 50;
     }
 
@@ -372,15 +371,13 @@ let members_of_type
     typed_ast
     this
     ~tparams =
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let this_ty_res =
-    Ty_normalizer.from_scheme
-      ~options:
-        {
-          ty_normalizer_options with
-          Ty_normalizer_env.expand_toplevel_members =
-            Some Ty_normalizer_env.{ include_proto_members = not exclude_proto_members; idx_hook };
-        }
-      ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+    Ty_normalizer.expand_members
+      ~include_proto_members:(not exclude_proto_members)
+      ~idx_hook
+      ~options:ty_normalizer_options
+      ~genv
       Type.TypeScheme.{ tparams; type_ = this }
   in
   let is_valid_member (s, _) =
@@ -395,15 +392,14 @@ let members_of_type
   in
   match this_ty_res with
   | Error error -> return ([], [Ty_normalizer.error_to_string error])
-  | Ok (Ty.Type (Ty.Any _)) -> fail "not enough type information to autocomplete"
-  | Ok (Ty.Type this_ty) ->
+  | Ok (Ty.Any _) -> fail "not enough type information to autocomplete"
+  | Ok this_ty ->
     let (mems, errs) = members_of_ty this_ty in
     return
       ( mems |> SMap.bindings |> List.filter is_valid_member,
         match errs with
         | [] -> []
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx this) :: errs )
-  | Ok _ -> return ([], ["Non type"])
 
 let autocomplete_member
     ~reader

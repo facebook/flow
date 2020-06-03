@@ -75,7 +75,6 @@ let type_at_pos_type
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer;
-      expand_toplevel_members = None;
       max_depth = Some max_depth;
     }
   in
@@ -140,7 +139,6 @@ let insert_type_normalize
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
-      expand_toplevel_members = None;
       max_depth = None;
     }
   in

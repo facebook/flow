@@ -63,6 +63,17 @@ module type S = sig
 
   val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
+  val mk_typeapp_instance :
+    Context.t ->
+    ?trace:Trace.t ->
+    use_op:Type.use_op ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.reason ->
+    ?cache:Reason.reason list ->
+    Type.t ->
+    Type.t list ->
+    Type.t
+
   val is_munged_prop_name : Context.t -> name -> bool
 
   val is_munged_prop_name_with_munge : name -> should_munge_underscores:bool -> bool

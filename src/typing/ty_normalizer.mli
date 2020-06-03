@@ -56,3 +56,14 @@ val fold_hashtbl :
   htbl:('loc, 'b) Hashtbl.t ->
   'a ->
   'a
+
+(* `include_proto_members` controls whether to include prototypes' members.
+   `idx_hook` is a function that will be called if the given type is in an IdxWrapper;
+   Feels hacky, but idx isn't super important now that we have optional chaining. *)
+val expand_members :
+  include_proto_members:bool ->
+  idx_hook:(unit -> unit) ->
+  options:options ->
+  genv:genv ->
+  Type.TypeScheme.t ->
+  (Ty.t, error) result

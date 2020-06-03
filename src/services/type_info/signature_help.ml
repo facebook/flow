@@ -143,7 +143,6 @@ let ty_normalizer_options =
       fall_through_merged = true;
       expand_internal_types = true;
       expand_type_aliases = false;
-      expand_toplevel_members = None;
       flag_shadowed_type_params = true;
       preserve_inferred_literal_types = false;
       evaluate_type_destructors = true;

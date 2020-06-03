@@ -114,7 +114,6 @@ module SignatureVerification = struct
         omit_targ_defaults = true;
         merge_bot_and_any_kinds = false;
         verbose_normalizer = false;
-        expand_toplevel_members = None;
         max_depth = None;
       }
     in

@@ -875,7 +875,7 @@ Flags: --pretty
     {"name":"toString","type":"() => string"},
     {"name":"valueOf","type":"() => mixed"},
     {"name":"x","type":"number"},
-    {"name":"y","type":"T"}
+    {"name":"y","type":"number"}
   ]
 }
 
@@ -889,7 +889,7 @@ Flags: --pretty
     {"name":"toLocaleString","type":"() => string"},
     {"name":"toString","type":"() => string"},
     {"name":"valueOf","type":"() => mixed"},
-    {"name":"x","type":"S"}
+    {"name":"x","type":"number"}
   ]
 }
 
