@@ -151,6 +151,7 @@ type component_t = {
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   mutable openness_graph: Openness.graph;
+  constraint_cache: Type.FlowSet.t ref;
 }
 
 type phase =
@@ -289,6 +290,7 @@ let make_ccx sig_cx =
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
     openness_graph = Openness.empty_graph;
+    constraint_cache = ref Type.FlowSet.empty;
   }
 
 (* create a new context structure.
@@ -855,3 +857,5 @@ let find_trust_graph cx id =
 let with_normalizer_mode cx f = f { cx with phase = Normalizing }
 
 let in_normalizer_mode cx = cx.phase = Normalizing
+
+let constraint_cache cx = cx.ccx.constraint_cache

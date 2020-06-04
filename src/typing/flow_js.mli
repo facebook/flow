@@ -51,7 +51,7 @@ module Cache : sig
 
   val stats_poly_instantiation : unit -> Hashtbl.statistics
 
-  val summarize_flow_constraint : unit -> (string * int) list
+  val summarize_flow_constraint : Context.t -> (string * int) list
 end
 
 val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t

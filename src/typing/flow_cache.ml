@@ -13,8 +13,6 @@ module ImplicitTypeArgument = Instantiation_utils.ImplicitTypeArgument
 
 (* Cache that remembers pairs of types that are passed to __flow. *)
 module FlowConstraint = struct
-  let cache = ref FlowSet.empty
-
   let rec toplevel_use_op = function
     | Frame (_frame, use_op) -> toplevel_use_op use_op
     | Op (Speculation use_op) -> toplevel_use_op use_op
@@ -35,6 +33,7 @@ module FlowConstraint = struct
          non-termination problems. To ensure proper caching, we hash use ops
          to just their toplevel structure. *)
       let u = mod_use_op_of_use_t toplevel_use_op u in
+      let cache = Context.constraint_cache cx in
       let cache' = FlowSet.add (l, u) !cache in
       let found = cache' == !cache in
       if not found then
@@ -220,7 +219,6 @@ module Spread = struct
 end
 
 let clear () =
-  FlowConstraint.cache := FlowSet.empty;
   Hashtbl.clear Subst.cache;
   Hashtbl.clear PolyInstantiation.cache;
   repos_cache := Repos_cache.empty;
@@ -236,7 +234,7 @@ let stats_poly_instantiation () = Hashtbl.stats PolyInstantiation.cache
 (* debug util: please don't dead-code-eliminate *)
 (* Summarize flow constraints in cache as ctor/reason pairs, and return counts
    for each group. *)
-let summarize_flow_constraint () =
+let summarize_flow_constraint cx =
   let group_counts =
     FlowSet.fold
       (fun (l, u) map ->
@@ -251,7 +249,7 @@ let summarize_flow_constraint () =
         match SMap.find_opt key map with
         | None -> SMap.add key 0 map
         | Some i -> SMap.add key (i + 1) map)
-      !FlowConstraint.cache
+      !(Context.constraint_cache cx)
       SMap.empty
   in
   SMap.elements group_counts |> List.sort (fun (_, i1) (_, i2) -> Stdlib.compare i1 i2)

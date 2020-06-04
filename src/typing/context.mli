@@ -447,3 +447,5 @@ val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Tr
 val with_normalizer_mode : t -> (t -> 'a) -> 'a
 
 val in_normalizer_mode : t -> bool
+
+val constraint_cache : t -> Type.FlowSet.t ref

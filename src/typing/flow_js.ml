@@ -9161,11 +9161,12 @@ struct
    iteratively and processes its results. *)
   and speculative_match cx trace branch l u =
     let typeapp_stack = TypeAppExpansion.get () in
-    let cache = !Cache.FlowConstraint.cache in
+    let constraint_cache_ref = Context.constraint_cache cx in
+    let constraint_cache = !constraint_cache_ref in
     Speculation.set_speculative branch;
     let restore () =
       Speculation.restore_speculative ();
-      Cache.FlowConstraint.cache := cache;
+      constraint_cache_ref := constraint_cache;
       TypeAppExpansion.set typeapp_stack
     in
     try
