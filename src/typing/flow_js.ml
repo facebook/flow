@@ -239,9 +239,9 @@ let add_output cx ?trace msg =
      even add it *)
   if not is_enabled then
     ()
-  else if Speculation.speculating () then
+  else if Speculation.speculating cx then
     if Error_message.is_lint_error msg then
-      ignore @@ Speculation.(defer_action cx (Action.Error msg))
+      ignore @@ Speculation.defer_action cx (Speculation_state.ErrorAction msg)
     else (
       if Context.is_verbose cx then
         prerr_endlinef "\nspeculative_error: %s" (Debug_js.dump_error_message cx msg);
@@ -871,7 +871,7 @@ struct
        is, then when speculation is complete, the action either fires or is
        discarded depending on whether the case that created the action is
        selected or not. *)
-      if Speculation.(defer_action cx (Action.Flow (l, u))) then
+      if Speculation.defer_action cx (Speculation_state.FlowAction (l, u)) then
         print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
       (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
       else if
@@ -925,13 +925,13 @@ struct
               flows_across cx trace ~use_op bounds1.lower bounds2.upper
             )
           | (Unresolved bounds1, (Resolved (use_op', t2) | FullyResolved (use_op', t2))) ->
-            let t2_use = flow_use_op use_op' (UseT (use_op, t2)) in
+            let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
             edges_and_flows_to_t cx trace (id1, bounds1) t2_use
           | ((Resolved (_, t1) | FullyResolved (_, t1)), Unresolved bounds2) ->
             edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
           | ( (Resolved (_, t1) | FullyResolved (_, t1)),
               (Resolved (use_op', t2) | FullyResolved (use_op', t2)) ) ->
-            let t2_use = flow_use_op use_op' (UseT (use_op, t2)) in
+            let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
             rec_flow cx trace (t1, t2_use))
         (******************)
         (* process Y ~> U *)
@@ -957,7 +957,7 @@ struct
           | Unresolved bounds2 -> edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
           | Resolved (use_op', t2)
           | FullyResolved (use_op', t2) ->
-            let t2_use = flow_use_op use_op' (UseT (use_op, t2)) in
+            let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
             rec_flow cx trace (t1, t2_use))
         (*****************************************)
         (* BoundTs - only used for normalization *)
@@ -9163,9 +9163,9 @@ struct
     let typeapp_stack = TypeAppExpansion.get () in
     let constraint_cache_ref = Context.constraint_cache cx in
     let constraint_cache = !constraint_cache_ref in
-    Speculation.set_speculative branch;
+    Speculation.set_speculative cx branch;
     let restore () =
-      Speculation.restore_speculative ();
+      Speculation.restore_speculative cx;
       constraint_cache_ref := constraint_cache;
       TypeAppExpansion.set typeapp_stack
     in
@@ -9232,115 +9232,113 @@ struct
       long_path_speculative_matches cx trace r speculation_id spec
 
   and long_path_speculative_matches cx trace r speculation_id spec =
-    Speculation.Case.(
-      (* extract stuff to ignore while considering actions *)
-      let ignore = ignore_of_spec spec in
-      (* split spec into a list of pairs of types to try speculative matching on *)
-      let trials = trials_of_spec spec in
-      let rec loop match_state = function
-        (* Here match_state can take on various values:
-
-       (a) (NoMatch errs) indicates that everything has failed up to this point,
-       with errors recorded in errs. Note that the initial value of acc is
-       Some (NoMatch []).
-
-       (b) (ConditionalMatch case) indicates the a promising alternative has
-       been found, but not chosen yet.
-    *)
-        | [] -> return match_state
-        | (case_id, case_r, l, u) :: trials ->
-          let case = { case_id; unresolved = ISet.empty; actions = [] } in
-          (* speculatively match the pair of types in this trial *)
-          let error = speculative_match cx trace { Speculation.ignore; speculation_id; case } l u in
-          (match error with
-          | None ->
-            (* no error, looking great so far... *)
-            begin
-              match match_state with
-              | Speculation.NoMatch _ ->
-                (* everything had failed up to this point. so no ambiguity yet... *)
-                if
-                  ISet.is_empty case.unresolved
-                  (* ...and no unresolved tvars encountered during the speculative
-             match! This is great news. It means that this alternative will
-             definitely succeed. Fire any deferred actions and short-cut. *)
-                then
-                  fire_actions cx trace spec case.actions
-                (* Otherwise, record that we've found a promising alternative. *)
-                else
-                  loop (Speculation.ConditionalMatch case) trials
-              | Speculation.ConditionalMatch prev_case ->
-                (* umm, there's another previously found promising alternative *)
-                (* so compute the difference in side effects between that alternative
-             and this *)
-                let ts = diff cx prev_case case in
-                (* if the side effects of the previously found promising alternative
-             are fewer, then keep holding on to that alternative *)
-                if ts = [] then
-                  loop match_state trials
-                (* otherwise, we have an ambiguity; blame the unresolved tvars and
-             short-cut *)
-                else
-                  let prev_case_id = prev_case.case_id in
-                  let cases : Type.t list = choices_of_spec spec in
-                  blame_unresolved cx trace prev_case_id case_id cases case_r ts
-            end
-          | Some err ->
-            (* if an error is found, then throw away this alternative... *)
-            begin
-              match match_state with
-              | Speculation.NoMatch errs ->
-                (* ...adding to the error list if no promising alternative has been
-             found yet *)
-                loop (Speculation.NoMatch (err :: errs)) trials
-              | _ -> loop match_state trials
-            end)
-      and return = function
-        | Speculation.ConditionalMatch case ->
-          (* best choice that survived, congrats! fire deferred actions  *)
-          fire_actions cx trace spec case.actions
-        | Speculation.NoMatch msgs ->
-          (* everything failed; make a really detailed error message listing out the
-       error found for each alternative *)
-          let ts = choices_of_spec spec in
-          assert (List.length ts = List.length msgs);
-          let branches =
-            Base.List.mapi
-              ~f:(fun i msg ->
-                let reason = reason_of_t (List.nth ts i) in
-                (reason, msg))
-              msgs
-          in
-          (* Add the error. *)
+    let open Speculation_state in
+    (* extract stuff to ignore while considering actions *)
+    let ignore = ignore_of_spec spec in
+    (* split spec into a list of pairs of types to try speculative matching on *)
+    let trials = trials_of_spec spec in
+    (* Here match_state can take on various values:
+     * (a) (NoMatch errs) indicates that everything has failed up to this point,
+     *   with errors recorded in errs. Note that the initial value of acc is
+     *   Some (NoMatch []).
+     * (b) (ConditionalMatch case) indicates the a promising alternative has
+     *    been found, but not chosen yet.
+     *)
+    let rec loop match_state = function
+      | [] -> return match_state
+      | (case_id, case_r, l, u) :: trials ->
+        let case = { case_id; unresolved = ISet.empty; actions = [] } in
+        (* speculatively match the pair of types in this trial *)
+        let error = speculative_match cx trace { ignore; speculation_id; case } l u in
+        (match error with
+        | None ->
+          (* no error, looking great so far... *)
           begin
-            match spec with
-            | UnionCases (use_op, l, _rep, us) ->
-              let reason = reason_of_t l in
-              let reason_op = mk_union_reason r us in
-              add_output
-                cx
-                ~trace
-                (Error_message.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
-            | IntersectionCases (ls, upper) ->
-              let err =
-                let reason_lower = mk_intersection_reason r ls in
-                match upper with
-                | UseT (use_op, t) ->
-                  Error_message.EIncompatibleDefs
-                    { use_op; reason_lower; reason_upper = reason_of_t t; branches }
-                | _ ->
-                  Error_message.EIncompatible
-                    {
-                      use_op = use_op_of_use_t upper;
-                      lower = (reason_lower, Some Error_message.Incompatible_intersection);
-                      upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
-                      branches;
-                    }
-              in
-              add_output cx ~trace err
+            match match_state with
+            | NoMatch _ ->
+              (* everything had failed up to this point. so no ambiguity yet... *)
+              if
+                ISet.is_empty case.unresolved
+                (* ...and no unresolved tvars encountered during the speculative
+                 * match! This is great news. It means that this alternative will
+                 * definitely succeed. Fire any deferred actions and short-cut. *)
+              then
+                fire_actions cx trace spec case.actions
+              (* Otherwise, record that we've found a promising alternative. *)
+              else
+                loop (ConditionalMatch case) trials
+            | ConditionalMatch prev_case ->
+              (* umm, there's another previously found promising alternative *)
+              (* so compute the difference in side effects between that alternative
+               * and this *)
+              let ts = Speculation.case_diff cx prev_case case in
+              (* if the side effects of the previously found promising alternative
+               * are fewer, then keep holding on to that alternative *)
+              if ts = [] then
+                loop match_state trials
+              (* otherwise, we have an ambiguity; blame the unresolved tvars and
+               * short-cut *)
+              else
+                let prev_case_id = prev_case.case_id in
+                let cases : Type.t list = choices_of_spec spec in
+                blame_unresolved cx trace prev_case_id case_id cases case_r ts
           end
-      in
-      loop (Speculation.NoMatch []) trials)
+        | Some err ->
+          (* if an error is found, then throw away this alternative... *)
+          begin
+            match match_state with
+            | NoMatch errs ->
+              (* ...adding to the error list if no promising alternative has been
+               * found yet *)
+              loop (NoMatch (err :: errs)) trials
+            | _ -> loop match_state trials
+          end)
+    and return = function
+      | ConditionalMatch case ->
+        (* best choice that survived, congrats! fire deferred actions  *)
+        fire_actions cx trace spec case.actions
+      | NoMatch msgs ->
+        (* everything failed; make a really detailed error message listing out the
+         * error found for each alternative *)
+        let ts = choices_of_spec spec in
+        assert (List.length ts = List.length msgs);
+        let branches =
+          Base.List.mapi
+            ~f:(fun i msg ->
+              let reason = reason_of_t (List.nth ts i) in
+              (reason, msg))
+            msgs
+        in
+        (* Add the error. *)
+        begin
+          match spec with
+          | UnionCases (use_op, l, _rep, us) ->
+            let reason = reason_of_t l in
+            let reason_op = mk_union_reason r us in
+            add_output
+              cx
+              ~trace
+              (Error_message.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
+          | IntersectionCases (ls, upper) ->
+            let err =
+              let reason_lower = mk_intersection_reason r ls in
+              match upper with
+              | UseT (use_op, t) ->
+                Error_message.EIncompatibleDefs
+                  { use_op; reason_lower; reason_upper = reason_of_t t; branches }
+              | _ ->
+                Error_message.EIncompatible
+                  {
+                    use_op = use_op_of_use_t upper;
+                    lower = (reason_lower, Some Error_message.Incompatible_intersection);
+                    upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
+                    branches;
+                  }
+            in
+            add_output cx ~trace err
+        end
+    in
+    loop (NoMatch []) trials
 
   (* Make an informative error message that points out the ambiguity, and where
    additional annotations can help disambiguate. Recall that an ambiguity
@@ -9493,7 +9491,7 @@ struct
    * an UnknownUse. *)
   and fire_actions cx trace spec =
     List.iter (function
-        | (_, Speculation.Action.Flow (l, u)) ->
+        | (_, Speculation_state.FlowAction (l, u)) ->
           (match spec with
           | IntersectionCases (_, u') ->
             let use_op = use_op_of_use_t u' in
@@ -9503,7 +9501,7 @@ struct
               rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
           | UnionCases (use_op, _, _, _) ->
             rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
-        | (_, Speculation.Action.Unify (use_op, t1, t2)) ->
+        | (_, Speculation_state.UnifyAction (use_op, t1, t2)) ->
           (match spec with
           | IntersectionCases (_, u') ->
             let use_op' = use_op_of_use_t u' in
@@ -9513,12 +9511,12 @@ struct
               rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
           | UnionCases (use_op', _, _, _) ->
             rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-        | (_, Speculation.Action.Error msg) -> add_output cx ~trace msg
-        | (_, Speculation.Action.UnsealedObjectProperty (flds, s, up)) ->
+        | (_, Speculation_state.ErrorAction msg) -> add_output cx ~trace msg
+        | (_, Speculation_state.UnsealedObjectProperty (flds, s, up)) ->
           Context.set_prop cx flds s up)
 
   and speculative_object_write cx flds s up =
-    let action = Speculation.Action.UnsealedObjectProperty (flds, s, up) in
+    let action = Speculation_state.UnsealedObjectProperty (flds, s, up) in
     if not (Speculation.defer_action cx action) then Context.set_prop cx flds s up
 
   and mk_union_reason r us =
@@ -10480,7 +10478,7 @@ struct
   (*******************************************************************)
   (* /predicate *)
   (*******************************************************************)
-  and flow_use_op op1 u =
+  and flow_use_op cx op1 u =
     let ignore_root = function
       | UnknownUse -> true
       | Internal _ -> true
@@ -10490,7 +10488,7 @@ struct
        *
        * Ideally we could replace the Speculation use_ops on benign tvars with their
        * underlying use_op after speculation ends. *)
-      | Speculation _ -> not (Speculation.speculating ())
+      | Speculation _ -> not (Speculation.speculating cx)
       | _ -> false
     in
     if ignore_root (root_of_use_op op1) then
@@ -10589,14 +10587,14 @@ struct
   and flows_to_t cx trace ls u =
     ls
     |> TypeMap.iter (fun l (trace_l, use_op) ->
-           let u = flow_use_op use_op u in
+           let u = flow_use_op cx use_op u in
            join_flow cx [trace_l; trace] (l, u))
 
   (* for each u in us: l => u *)
   and flows_from_t cx trace ~use_op l us =
     us
     |> UseTypeMap.iter (fun u trace_u ->
-           let u = flow_use_op use_op u in
+           let u = flow_use_op cx use_op u in
            join_flow cx [trace; trace_u] (l, u))
 
   (* for each l in ls, u in us: l => u *)
@@ -10605,7 +10603,7 @@ struct
     |> TypeMap.iter (fun l (trace_l, use_op') ->
            us
            |> UseTypeMap.iter (fun u trace_u ->
-                  let u = flow_use_op use_op' (flow_use_op use_op u) in
+                  let u = flow_use_op cx use_op' (flow_use_op cx use_op u) in
                   join_flow cx [trace_l; trace; trace_u] (l, u)))
 
   (* bounds.upper += u *)
@@ -10892,7 +10890,7 @@ struct
      is, then when speculation is complete, the action either fires or is
      discarded depending on whether the case that created the action is
      selected or not. *)
-      if not Speculation.(defer_action cx (Action.Unify (use_op, t1, t2))) then
+      if not (Speculation.defer_action cx (Speculation_state.UnifyAction (use_op, t1, t2))) then
         match (t1, t2) with
         | (OpenT (_, id1), OpenT (_, id2)) -> merge_ids cx trace ~use_op id1 id2
         | (OpenT (r, id), t) when ok_unify ~unify_any (desc_of_reason r) t ->
