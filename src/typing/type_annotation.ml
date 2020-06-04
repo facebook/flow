@@ -446,7 +446,7 @@ let rec convert cx tparams_map =
             let (elemts, targs) = convert_type_params () in
             let elemt = List.hd elemts in
             reconstruct_ast
-              (DefT (mk_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
+              (DefT (mk_annot_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
               targs)
       (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
       | "$ReadOnlyArray" ->

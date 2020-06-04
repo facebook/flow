@@ -521,13 +521,13 @@ Cannot get `this.props.y[0]` because an index signature declaring the expected k
 undefined [1]. [incompatible-use]
 
    new_react.js:21:22
-   21|         this.props.y[0];
-                            ^
+    21|         this.props.y[0];
+                             ^
 
 References:
-   new_react.js:7:12
-    7|         y: React.PropTypes.array,
-                  ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:485:35
+   485|   array: React$PropType$Primitive<Array<any>>,
+                                          ^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:29:23
