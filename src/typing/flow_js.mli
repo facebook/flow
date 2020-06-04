@@ -47,8 +47,6 @@ val reposition :
 val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
 module Cache : sig
-  val clear : unit -> unit
-
   val stats_poly_instantiation : Context.t -> Hashtbl.statistics
 
   val summarize_flow_constraint : Context.t -> (string * int) list

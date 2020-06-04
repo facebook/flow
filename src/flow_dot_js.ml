@@ -194,7 +194,6 @@ let init_builtins filenames =
   let root = Path.dummy_path in
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx in
-  Flow_js.Cache.clear ();
   let master_cx =
     let aloc_table = Utils_js.FilenameMap.empty in
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in

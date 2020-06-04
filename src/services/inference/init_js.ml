@@ -155,7 +155,6 @@ let load_lib_files ~ccx ~options ~reader files =
 let init ~options ~reader lib_files =
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx in
-  Flow.Cache.clear ();
   let master_cx =
     let metadata =
       Context.(

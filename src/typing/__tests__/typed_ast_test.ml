@@ -117,7 +117,6 @@ let before_and_after_stmts file_name =
     let cx =
       let sig_cx = Context.make_sig () in
       let ccx = Context.make_ccx sig_cx in
-      Flow_js.Cache.clear ();
       let aloc_table = Utils_js.FilenameMap.empty in
       let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       Context.make ccx metadata file_key aloc_table rev_table Files.lib_module_ref Context.Checking

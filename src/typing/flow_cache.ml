@@ -111,8 +111,6 @@ module Fix = struct
     Hashtbl.add cache cache_key tvar
 end
 
-let clear () = ()
-
 let stats_poly_instantiation cx =
   let cache = Context.instantiation_cache cx in
   Hashtbl.stats cache
