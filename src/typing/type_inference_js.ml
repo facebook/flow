@@ -34,7 +34,8 @@ let infer_core cx statements =
 
 let scan_for_error_suppressions cx =
   List.iter (function
-      | (loc, { Ast.Comment.text; _ }) when Suppression_comments.should_suppress text ->
+      | (loc, { Ast.Comment.text; _ })
+        when Suppression_comments.should_suppress text |> Base.Option.is_some ->
         Context.add_error_suppression cx loc
       | _ -> ())
 
