@@ -7242,7 +7242,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
             let t =
               Tvar.mk_where cx reason (fun tvar ->
                   let loc = aloc_of_reason reason in
-                  let propdesc = typeapp ~implicit:true ~annot_loc:loc propdesc_type [tvar] in
+                  let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [tvar] in
                   Flow.flow cx (spec, UseT (use_op, propdesc)))
             in
             let p = Field (loc, t, Polarity.Neutral) in
@@ -7315,7 +7315,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     in
     let loc = aloc_of_reason reason in
     let propdesc_type = Flow.get_builtin cx "PropertyDescriptor" reason in
-    let propdesc = typeapp ~implicit:true ~annot_loc:loc propdesc_type [ty] in
+    let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [ty] in
     let (((_, o), _) as e_ast) = expression cx e in
     let key_ast = expression cx key in
     let (((_, spec), _) as config_ast) = expression cx config in
@@ -7363,7 +7363,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
              in
              let tvar = Tvar.mk cx reason in
              let loc = aloc_of_reason reason in
-             let propdesc = typeapp ~implicit:true ~annot_loc:loc propdesc_type [tvar] in
+             let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [tvar] in
              Flow.flow cx (spec, UseT (use_op, propdesc));
              Flow.flow
                cx

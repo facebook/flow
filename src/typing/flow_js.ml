@@ -8591,7 +8591,7 @@ struct
      by transforming the instance type to a type application *)
     | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
       let targs = typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name)) |> Nel.to_list in
-      let tapp = typeapp ~implicit:true t targs in
+      let tapp = implicit_typeapp t targs in
       Some (poly_type (Context.generate_poly_id cx) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
@@ -11839,8 +11839,9 @@ struct
             ids = Some Properties.Set.empty;
           } )
 
-  and get_builtin_typeapp cx ?trace reason x ts =
-    typeapp ?annot_loc:(annot_aloc_of_reason reason) (get_builtin cx ?trace x reason) ts
+  and get_builtin_typeapp cx ?trace reason x targs =
+    let t = get_builtin cx ?trace x reason in
+    typeapp reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
   and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =

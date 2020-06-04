@@ -75,7 +75,11 @@ val poly_type_of_tparam_list : Type.Poly.id -> ALoc.t -> Type.typeparam list -> 
 
 val poly_type_of_tparams : Type.Poly.id -> Type.typeparams -> Type.t -> Type.t
 
-val typeapp : ?implicit:bool -> ?annot_loc:ALoc.t -> Type.t -> Type.t list -> Type.t
+val typeapp : reason -> Type.t -> Type.t list -> Type.t
+
+val typeapp_annot : ALoc.t -> Type.t -> Type.t list -> Type.t
+
+val implicit_typeapp : ?annot_loc:ALoc.t -> Type.t -> Type.t list -> Type.t
 
 val this_typeapp : ?annot_loc:ALoc.t -> Type.t -> Type.t -> Type.t list option -> Type.t
 

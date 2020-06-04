@@ -525,7 +525,7 @@ module Make (F : Func_sig.S) = struct
         let targs =
           Base.List.map ~f:(fun tp -> BoundT (tp.Type.reason, tp.name)) (TypeParams.to_list tparams)
         in
-        TypeUtil.typeapp self targs
+        TypeUtil.typeapp reason self targs
     in
     let this_reason = replace_desc_reason RThisType reason in
     let this_tp =
@@ -583,7 +583,7 @@ module Make (F : Func_sig.S) = struct
             | None ->
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
               Flow.mk_instance cx reason c
-            | Some targs -> typeapp ~annot_loc c targs)
+            | Some targs -> typeapp_annot annot_loc c targs)
           extends
       in
       (* If the interface definition includes a callable property, add the
@@ -672,7 +672,7 @@ module Make (F : Func_sig.S) = struct
                 annot_reason ~annot_loc @@ repos_reason annot_loc (TypeUtil.reason_of_t c)
               in
               Flow.mk_instance cx reason c
-            | Some targs -> TypeUtil.typeapp ~annot_loc c targs)
+            | Some targs -> TypeUtil.typeapp_annot annot_loc c targs)
           implements
     in
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
@@ -696,7 +696,7 @@ module Make (F : Func_sig.S) = struct
             | None ->
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
               Flow.mk_instance cx reason c
-            | Some targs -> typeapp ~annot_loc c targs
+            | Some targs -> typeapp_annot annot_loc c targs
           in
           let use_op =
             Op

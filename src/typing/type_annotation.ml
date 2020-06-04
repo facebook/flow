@@ -1618,7 +1618,8 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
     (Flow.mk_instance cx reason c, None)
   | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
     let (targs, targs_ast) = convert_list cx tparams_map targs in
-    (typeapp ~annot_loc c targs, Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
+    ( typeapp_annot annot_loc c targs,
+      Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
