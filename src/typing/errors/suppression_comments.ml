@@ -57,6 +57,12 @@ let consume_tokens =
   in
   (fun tokens str -> consume_tokens tokens (str, false))
 
+let is_valid_code_char c =
+  let ascii = Char.code c in
+  ascii = 45 (* - *) || (ascii >= 97 && ascii <= 122)
+
+(* lowercase letters*)
+
 let should_suppress comment =
   let (comment, is_suppressor) =
     consume_tokens [" "; "\n"; "\t"; "\r"; "*"] comment
@@ -64,19 +70,23 @@ let should_suppress comment =
     |> consume_tokens ["$FlowFixMe"; "$FlowIssue"; "$FlowExpectedError"]
   in
   if not is_suppressor then
-    None
+    Ok None
   else
     let (comment, has_preceding_spaces) = consume_tokens [" "; "\n"; "\t"; "\r"] comment in
     let (comment, has_code) = consume_token "[" comment in
     if not has_code then
-      Some All
+      Ok (Some All)
     else
       match Base.String.index comment ']' with
-      | None -> Some All
-      | Some 0 -> None (* $FlowFixMe[] is not a real code *)
+      | None -> Ok (Some All) (* Not a code if the bracket is not terminated *)
+      | Some 0 -> Error () (* $FlowFixMe[] is not a real code *)
       | Some index ->
         (* //$FlowFixMe [code] is invalid *)
         if has_preceding_spaces then
-          None
+          Error ()
         else
-          Some (Specific (Base.String.prefix comment index |> CodeSet.singleton))
+          let code = Base.String.prefix comment index in
+          if Base.String.for_all ~f:is_valid_code_char code then
+            Ok (Some (Specific (CodeSet.singleton code)))
+          else
+            Error ()
