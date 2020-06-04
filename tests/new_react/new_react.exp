@@ -218,16 +218,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2]. [incompatible-type]
 
    classes.js:57:21
-    57|     var _: string = this.props.x;
-                            ^^^^^^^^^^^^
+   57|     var _: string = this.props.x;
+                           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [1]
+   classes.js:47:8
+   47|     x: React.PropTypes.number.isRequired
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:57:12
-    57|     var _: string = this.props.x;
-                   ^^^^^^ [2]
+   57|     var _: string = this.props.x;
+                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:64:11
@@ -469,16 +469,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.z` to `qux` because number [1] is incompatible with string [2]. [incompatible-type]
 
    new_react.js:19:27
-    19|         var qux: string = this.props.z;
-                                  ^^^^^^^^^^^^
+   19|         var qux: string = this.props.z;
+                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [1]
+   new_react.js:8:12
+    8|         z: React.PropTypes.number
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    new_react.js:19:18
-    19|         var qux: string = this.props.z;
-                         ^^^^^^ [2]
+   19|         var qux: string = this.props.z;
+                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:19:27
@@ -486,16 +486,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.z` to `qux` because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    new_react.js:19:27
-    19|         var qux: string = this.props.z;
-                                  ^^^^^^^^^^^^
+   19|         var qux: string = this.props.z;
+                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [1]
+   new_react.js:8:12
+    8|         z: React.PropTypes.number
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    new_react.js:19:18
-    19|         var qux: string = this.props.z;
-                         ^^^^^^ [2]
+   19|         var qux: string = this.props.z;
+                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:20:24
@@ -503,16 +503,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.x` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
 
    new_react.js:20:24
-    20|         var w:number = this.props.x;
-                               ^^^^^^^^^^^^
+   20|         var w:number = this.props.x;
+                              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   new_react.js:6:12
+    6|         x: React.PropTypes.string.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    new_react.js:20:15
-    20|         var w:number = this.props.x;
-                      ^^^^^^ [2]
+   20|         var w:number = this.props.x;
+                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:21:22
@@ -521,13 +521,13 @@ Cannot get `this.props.y[0]` because an index signature declaring the expected k
 undefined [1]. [incompatible-use]
 
    new_react.js:21:22
-    21|         this.props.y[0];
-                             ^
+   21|         this.props.y[0];
+                            ^
 
 References:
-   <BUILTINS>/react.js:485:35
-   485|   array: React$PropType$Primitive<Array<any>>,
-                                          ^^^^^^^^^^ [1]
+   new_react.js:7:12
+    7|         y: React.PropTypes.array,
+                  ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:29:23
@@ -535,13 +535,13 @@ Error --------------------------------------------------------------------------
 Cannot create `C` element because number [1] is incompatible with string [2] in property `x`. [incompatible-type]
 
    new_react.js:29:23
-    29| var element = <C x = {0}/>;
-                              ^ [1]
+   29| var element = <C x = {0}/>;
+                             ^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   new_react.js:6:12
+    6|         x: React.PropTypes.string.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:30:17
@@ -703,16 +703,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.x` to `a` because string [1] is incompatible with number [2]. [incompatible-type]
 
    props.js:14:25
-    14|         var a: number = this.props.x; // error
-                                ^^^^^^^^^^^^
+   14|         var a: number = this.props.x; // error
+                               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   props.js:5:12
+    5|         x: React.PropTypes.string,
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    props.js:14:16
-    14|         var a: number = this.props.x; // error
-                       ^^^^^^ [2]
+   14|         var a: number = this.props.x; // error
+                      ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- props.js:14:25
@@ -720,16 +720,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.x` to `a` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    props.js:14:25
-    14|         var a: number = this.props.x; // error
-                                ^^^^^^^^^^^^
+   14|         var a: number = this.props.x; // error
+                               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   props.js:5:12
+    5|         x: React.PropTypes.string,
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    props.js:14:16
-    14|         var a: number = this.props.x; // error
-                       ^^^^^^ [2]
+   14|         var a: number = this.props.x; // error
+                      ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- props.js:15:36
@@ -755,16 +755,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.z` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    props.js:16:25
-    16|         var c: string = this.props.z; // error
-                                ^^^^^^^^^^^^
+   16|         var c: string = this.props.z; // error
+                               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [1]
+   props.js:6:12
+    6|         z: React.PropTypes.number
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    props.js:16:16
-    16|         var c: string = this.props.z; // error
-                       ^^^^^^ [2]
+   16|         var c: string = this.props.z; // error
+                      ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- props.js:16:25
@@ -772,16 +772,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `this.props.z` to `c` because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    props.js:16:25
-    16|         var c: string = this.props.z; // error
-                                ^^^^^^^^^^^^
+   16|         var c: string = this.props.z; // error
+                               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [1]
+   props.js:6:12
+    6|         z: React.PropTypes.number
+                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    props.js:16:16
-    16|         var c: string = this.props.z; // error
-                       ^^^^^^ [2]
+   16|         var c: string = this.props.z; // error
+                      ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- props.js:20:29
@@ -790,13 +790,13 @@ Cannot create `TestProps` element because boolean [1] is incompatible with strin
 [incompatible-type]
 
    props.js:20:29
-    20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                    ^^^^^ [1]
+   20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                   ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   props.js:5:12
+    5|         x: React.PropTypes.string,
+                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- props.js:20:49
@@ -805,13 +805,13 @@ Cannot create `TestProps` element because boolean [1] is incompatible with numbe
 [incompatible-type]
 
    props.js:20:49
-    20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                                        ^^^^^ [1]
+   20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   props.js:6:12
+    6|         z: React.PropTypes.number
+                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- props.js:27:2
@@ -858,16 +858,16 @@ Error --------------------------------------------------------------------------
 Cannot create `C` element because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
 
    props2.js:15:17
-    15|         return <C {...this.state} foo = {0} />;
-                        ^
+   15|         return <C {...this.state} foo = {0} />;
+                       ^
 
 References:
    props2.js:9:41
-     9|     getInitialState: function(): { bar: number } {
-                                                ^^^^^^ [1]
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+    9|     getInitialState: function(): { bar: number } {
+                                               ^^^^^^ [1]
+   props2.js:5:14
+    5|         bar: React.PropTypes.string.isRequired,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- props2.js:15:42
@@ -875,13 +875,13 @@ Error --------------------------------------------------------------------------
 Cannot create `C` element because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
 
    props2.js:15:42
-    15|         return <C {...this.state} foo = {0} />;
-                                                 ^ [1]
+   15|         return <C {...this.state} foo = {0} />;
+                                                ^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   props2.js:4:14
+    4|         foo: React.PropTypes.string.isRequired,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- props3.js:49:32

@@ -91,16 +91,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:7:6
-     7|     (this.props.foo: empty); // error: string ~> empty
-             ^^^^^^^^^^^^^^
+   7|     (this.props.foo: empty); // error: string ~> empty
+           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:4:32
+   4|   mixins: [{ propTypes: { foo: React.PropTypes.string.isRequired } }],
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:7:22
-     7|     (this.props.foo: empty); // error: string ~> empty
-                             ^^^^^ [2]
+   7|     (this.props.foo: empty); // error: string ~> empty
+                           ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- create_class.js:8:6
@@ -108,16 +108,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `this.props.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:8:6
-     8|     (this.props.bar: empty); // error: number ~> empty
-             ^^^^^^^^^^^^^^
+   8|     (this.props.bar: empty); // error: number ~> empty
+           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [1]
+   create_class.js:5:21
+   5|   propTypes: { bar: React.PropTypes.number.isRequired },
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:8:22
-     8|     (this.props.bar: empty); // error: number ~> empty
-                             ^^^^^ [2]
+   8|     (this.props.bar: empty); // error: number ~> empty
+                           ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:15:14
@@ -267,9 +267,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:110:10
+   110|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:117:22
    117|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -284,9 +284,9 @@ Cannot cast `this.state.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:110:10
+   110|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:118:22
    118|     (this.state.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -301,9 +301,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:133:22
    133|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -318,9 +318,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:137:22
    137|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -335,9 +335,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:141:22
    141|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -352,9 +352,9 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:142:21
    142|     (nextProps.foo: empty); // string ~> empty
                             ^^^^^ [2]
@@ -369,9 +369,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:146:22
    146|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -403,9 +403,9 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:148:21
    148|     (nextProps.foo: empty); // string ~> empty
                             ^^^^^ [2]
@@ -451,9 +451,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:153:22
    153|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -485,9 +485,9 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:155:21
    155|     (nextProps.foo: empty); // string ~> empty
                             ^^^^^ [2]
@@ -519,9 +519,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:160:22
    160|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -553,9 +553,9 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:162:21
    162|     (nextProps.foo: empty); // string ~> empty
                             ^^^^^ [2]
@@ -587,9 +587,9 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [1]
+   create_class.js:127:10
+   127|     foo: React.PropTypes.string.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_class.js:167:22
    167|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
@@ -1991,16 +1991,16 @@ Error --------------------------------------------------------------------------
 Cannot create `Foo` element because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
 
    jsx_spread.js:11:13
-    11| var blah = <Foo {...props} />; // error bar, number given string expected
-                    ^^^
+   11| var blah = <Foo {...props} />; // error bar, number given string expected
+                   ^^^
 
 References:
    jsx_spread.js:10:19
-    10| var props = {bar: 42};
-                          ^^ [1]
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   10| var props = {bar: 42};
+                         ^^ [1]
+   jsx_spread.js:6:10
+    6|     bar: React.PropTypes.string.isRequired,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- key.js:12:11
@@ -2082,7 +2082,7 @@ Cannot create `Example` element because number [1] is incompatible with array ty
 References:
    proptype_arrayOf.js:6:10
     6|     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:15:45
@@ -2091,13 +2091,13 @@ Cannot create `Example` element because string [1] is incompatible with number [
 [incompatible-type]
 
    proptype_arrayOf.js:15:45
-    15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
-                                                    ^^^^^ [1]
+   15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
+                                                   ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   proptype_arrayOf.js:6:34
+    6|     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                                        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:20:36
@@ -2106,13 +2106,13 @@ Cannot create `Example` element because null [1] is incompatible with number [2]
 [incompatible-type]
 
    proptype_arrayOf.js:20:36
-    20| var todo_required = <Example arr={[null]} />
-                                           ^^^^ [1]
+   20| var todo_required = <Example arr={[null]} />
+                                          ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   proptype_arrayOf.js:6:34
+    6|     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                                        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:30:25
@@ -2121,13 +2121,13 @@ Cannot create `OptionalExample` element because string [1] is incompatible with 
 `arr`. [incompatible-type]
 
    proptype_arrayOf.js:30:25
-    30| (<OptionalExample arr={[""]} />); // error: string ~> number
-                                ^^ [1]
+   30| (<OptionalExample arr={[""]} />); // error: string ~> number
+                               ^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   proptype_arrayOf.js:24:34
+   24|     arr: React.PropTypes.arrayOf(React.PropTypes.number),
+                                        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:43:34
@@ -2289,7 +2289,7 @@ Cannot create `Example` element because number [1] is incompatible with object t
 References:
    proptype_objectOf.js:6:10
     6|     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:15:47
@@ -2298,13 +2298,13 @@ Cannot create `Example` element because string [1] is incompatible with number [
 [incompatible-type]
 
    proptype_objectOf.js:15:47
-    15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                                                      ^^^^^ [1]
+   15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
+                                                     ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   proptype_objectOf.js:6:35
+    6|     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:20:38
@@ -2313,13 +2313,13 @@ Cannot create `Example` element because null [1] is incompatible with number [2]
 [incompatible-type]
 
    proptype_objectOf.js:20:38
-    20| var todo_required = <Example obj={{p:null}} />
-                                             ^^^^ [1]
+   20| var todo_required = <Example obj={{p:null}} />
+                                            ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   proptype_objectOf.js:6:35
+    6|     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:30:27
@@ -2328,13 +2328,13 @@ Cannot create `OptionalExample` element because string [1] is incompatible with 
 [incompatible-type]
 
    proptype_objectOf.js:30:27
-    30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
-                                  ^^ [1]
+   30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
+                                 ^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   proptype_objectOf.js:24:35
+   24|     obj: React.PropTypes.objectOf(React.PropTypes.number),
+                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:43:35
@@ -2383,9 +2383,9 @@ Cannot create `Example` element because boolean [1] is incompatible with boolean
                        ^^^^^ [1]
 
 References:
-   proptype_oneOf.js:8:34
+   proptype_oneOf.js:8:11
     8|     bool: React.PropTypes.oneOf([true]),
-                                        ^^^^ [2]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:24:18
@@ -2475,38 +2475,40 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Example` element because in property `prop`: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Or boolean [1] is incompatible with number [2].
 
    proptype_oneOfType.js:24:32
-    24| var fail_bool = <Example prop={true} />;
-                                       ^^^^ [1]
+   24| var fail_bool = <Example prop={true} />;
+                                      ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [3]
+   proptype_oneOfType.js:6:11
+                 v--------------------------
+    6|     prop: React.PropTypes.oneOfType([
+    7|       React.PropTypes.string,
+    8|       React.PropTypes.number
+    9|     ]).isRequired
+           ------------^ [2]
 
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:29:36
 
 Cannot create `Example` element because in property `prop`: [incompatible-type]
  - Either null [1] is incompatible with string [2].
- - Or null [1] is incompatible with number [3].
+ - Or null [1] is incompatible with number [2].
 
    proptype_oneOfType.js:29:36
-    29| var todo_required = <Example prop={null} />;
-                                           ^^^^ [1]
+   29| var todo_required = <Example prop={null} />;
+                                          ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [3]
+   proptype_oneOfType.js:6:11
+                 v--------------------------
+    6|     prop: React.PropTypes.oneOfType([
+    7|       React.PropTypes.string,
+    8|       React.PropTypes.number
+    9|     ]).isRequired
+           ------------^ [2]
 
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:41:22
@@ -2515,13 +2517,16 @@ Cannot create `OptionalExample` element because number [1] is incompatible with 
 [incompatible-type]
 
    proptype_oneOfType.js:41:22
-    41| (<OptionalExample p={0} />); // error: number ~> string
-                             ^ [1]
+   41| (<OptionalExample p={0} />); // error: number ~> string
+                            ^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   proptype_oneOfType.js:33:8
+              v--------------------------
+   33|     p: React.PropTypes.oneOfType([
+   34|       React.PropTypes.string,
+   35|     ]),
+           -^ [2]
 
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:49:21
@@ -2570,7 +2575,7 @@ References:
    14|     foo: React.PropTypes.shape({
    15|       bar: React.PropTypes.string.isRequired,
    16|     }).isRequired,
-           -^ [1]
+           ------------^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ proptype_shape.js:24:20
@@ -2588,7 +2593,7 @@ References:
    14|     foo: React.PropTypes.shape({
    15|       bar: React.PropTypes.string.isRequired,
    16|     }).isRequired,
-           -^ [1]
+           ------------^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- proptypes_builtins.js:7:2

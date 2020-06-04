@@ -471,13 +471,13 @@ Error --------------------------------------------------------------------------
 Cannot create `Example` element because string [1] is incompatible with number [2] in property `a`. [incompatible-type]
 
    react.js:17:13
-    17| (<Example a="bad" />); // error: number ~> string
-                    ^^^^^ [1]
+   17| (<Example a="bad" />); // error: number ~> string
+                   ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   react.js:9:22
+    9|     get a() { return React.PropTypes.number.isRequired; },
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- react.js:18:20
@@ -485,13 +485,13 @@ Error --------------------------------------------------------------------------
 Cannot create `Example` element because number [1] is incompatible with string [2] in property `c`. [incompatible-type]
 
    react.js:18:20
-    18| (<Example a={0} c={0} />); // error: number ~> string
-                           ^ [1]
+   18| (<Example a={0} c={0} />); // error: number ~> string
+                          ^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   react.js:11:8
+   11|     c: React.PropTypes.string,
+              ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:21:2

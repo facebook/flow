@@ -313,7 +313,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let coerce_prop_type = function
       | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
         let loc = aloc_of_reason reason in
-        Ok (required, reposition cx ~trace loc t)
+        Ok (required, reposition cx ~trace ~annot_loc:loc loc t)
       | DefT (reason, _, FunT _) as t ->
         rec_flow_t
           ~use_op:unknown_use

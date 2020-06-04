@@ -187,9 +187,9 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with s
                    ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   test.js:79:14
+    79|     string1: React.PropTypes.string.isRequired,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:106:12
@@ -202,9 +202,9 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with s
                    ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:490:36
-   490|   string: React$PropType$Primitive<string>,
-                                           ^^^^^^ [2]
+   test.js:80:14
+    80|     string2: React.PropTypes.string.isRequired,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:107:13
@@ -217,9 +217,9 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with b
                     ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:34
-   486|   bool: React$PropType$Primitive<boolean>,
-                                         ^^^^^^^ [2]
+   test.js:81:15
+    81|     boolean1: React.PropTypes.bool.isRequired,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:108:13
@@ -232,9 +232,9 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with b
                     ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:486:34
-   486|   bool: React$PropType$Primitive<boolean>,
-                                         ^^^^^^^ [2]
+   test.js:82:15
+    82|     boolean2: React.PropTypes.bool.isRequired,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:109:11
@@ -247,9 +247,9 @@ Cannot create `Legacy_ManyProps` element because null [1] is incompatible with n
                   ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   test.js:83:13
+    83|     number: React.PropTypes.number.isRequired,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:123:2
@@ -291,9 +291,9 @@ Cannot create `Legacy_ManyProps` element because null or undefined [1] is incomp
                                                              ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   test.js:83:13
+    83|     number: React.PropTypes.number.isRequired,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:148:2
@@ -2825,9 +2825,9 @@ Cannot create `Legacy_OptionalProps` element because undefined [1] is incompatib
                                    ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   test.js:776:10
+   776|     foo: React.PropTypes.number.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:788:7
@@ -2840,9 +2840,9 @@ Cannot create `Legacy_OptionalProps` element because string [1] is incompatible 
               ^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   test.js:776:10
+   776|     foo: React.PropTypes.number.isRequired,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:793:7
@@ -2855,9 +2855,9 @@ Cannot create `Legacy_OptionalProps` element because string [1] is incompatible 
               ^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
+   test.js:777:10
+   777|     bar: React.PropTypes.number,
+                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:797:2
