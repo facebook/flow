@@ -28,7 +28,7 @@ let regenerate ~reader =
       let add_unused_suppression_warnings checked unused warnings =
         (* For each unused suppression, create an warning *)
         let deps = CheckedSet.dependencies checked in
-        let all_locs = Error_suppressions.all_locs unused in
+        let all_locs = Error_suppressions.all_unused_locs unused in
         Loc_collections.LocSet.fold
           (fun loc warnings ->
             let source_file =

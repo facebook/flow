@@ -3296,7 +3296,6 @@ let is_lint_error = function
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
-  | EBigIntNotYetSupported _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
@@ -3360,6 +3359,7 @@ let error_code_of_message err : error_code option =
   | EBadDefaultImportAccess _ -> Some DefaultImportAccess
   | EBadDefaultImportDestructuring _ -> Some DefaultImportAccess
   | EInvalidImportStarUse _ -> Some InvalidImportStarUse
+  | EBigIntNotYetSupported _ -> Some BigIntUnsupported
   | EBinaryInLHS _ -> Some InvalidInLhs
   | EBinaryInRHS _ -> Some InvalidInRhs
   | EBindingError (binding_error, _, _, _) ->
@@ -3539,7 +3539,6 @@ let error_code_of_message err : error_code option =
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
-  | EBigIntNotYetSupported _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _

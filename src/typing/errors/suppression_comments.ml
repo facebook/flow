@@ -14,21 +14,26 @@
 *)
 open Utils_js
 
-module CodeSet : Set.S with type elt = string = Set.Make (struct
-  type t = string
+module CodeSet : Set.S with type elt = string * Loc.t = Set.Make (struct
+  type t = string * Loc.t
 
-  let compare = Pervasives.compare
+  (* Locs are just metadata here, should not affect behavior *)
+  let compare (c1, _) (c2, _) = Base.String.compare c1 c2
 end)
 
 type applicable_codes =
-  | All
+  | All of Loc.t
   | Specific of CodeSet.t
+
+let locs_of_applicable_codes = function
+  | All loc -> [loc]
+  | Specific codes -> CodeSet.elements codes |> List.map snd
 
 let join_applicable_codes c1 c2 =
   match (c1, c2) with
-  | (All, _)
-  | (_, All) ->
-    All
+  | (All loc, _)
+  | (_, All loc) ->
+    All loc
   | (Specific c1, Specific c2) -> Specific (CodeSet.union c1 c2)
 
 let consume_token token str =
@@ -63,7 +68,7 @@ let is_valid_code_char c =
 
 (* lowercase letters*)
 
-let should_suppress comment =
+let should_suppress comment loc =
   let (comment, is_suppressor) =
     consume_tokens [" "; "\n"; "\t"; "\r"; "*"] comment
     |> fst
@@ -75,10 +80,10 @@ let should_suppress comment =
     let (comment, has_preceding_spaces) = consume_tokens [" "; "\n"; "\t"; "\r"] comment in
     let (comment, has_code) = consume_token "[" comment in
     if not has_code then
-      Ok (Some All)
+      Ok (Some (All loc))
     else
       match Base.String.index comment ']' with
-      | None -> Ok (Some All) (* Not a code if the bracket is not terminated *)
+      | None -> Ok (Some (All loc)) (* Not a code if the bracket is not terminated *)
       | Some 0 -> Error () (* $FlowFixMe[] is not a real code *)
       | Some index ->
         (* //$FlowFixMe [code] is invalid *)
@@ -87,6 +92,6 @@ let should_suppress comment =
         else
           let code = Base.String.prefix comment index in
           if Base.String.for_all ~f:is_valid_code_char code then
-            Ok (Some (Specific (CodeSet.singleton code)))
+            Ok (Some (Specific (CodeSet.singleton (code, loc))))
           else
             Error ()

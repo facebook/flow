@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Utils_js
 module Ast = Flow_ast
 
 (* infer phase services *)
@@ -32,12 +33,39 @@ let infer_core cx statements =
   | Abnormal.Exn _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
   | exc -> raise exc
 
+(* Scan the list of comments to place suppressions on the appropriate locations.
+   Because each comment can only contain a single code, in order to support
+   suppressing multiple types of errors on one location we allow you to stack
+   comments like so:
+   //$FlowFixMe[x]
+   //$FlowFixMe[y]
+    some code causing errors x and y
+
+  This logic produces a set of error codes associated with the location of the
+  bottom suppression in the stack *)
+
 let scan_for_error_suppressions cx =
-  List.iter (function (loc, { Ast.Comment.text; _ }) ->
-      (match Suppression_comments.should_suppress text with
-      | Ok (Some _) -> Context.add_error_suppression cx loc
-      | Ok None -> ()
-      | Error () -> Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc))))
+  let open Suppression_comments in
+  (* If multiple comments are stacked together, we join them into a codeset positioned on the
+     location of the last comment *)
+  Base.List.fold_left
+    ~f:(fun acc -> function
+      | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) ->
+        begin
+          match (should_suppress text loc, acc) with
+          | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
+            when line = prev_loc.Loc._end.Loc.line + 1 ->
+            Some ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
+          | (Ok codes, _) ->
+            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+            Base.Option.map codes ~f:(mk_tuple loc)
+          | (Error (), _) ->
+            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
+            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+            None
+        end)
+    ~init:None
+  %> Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry)
 
 type 'a located = {
   value: 'a;
@@ -322,6 +350,7 @@ let scan_for_lint_suppressions =
     Context.add_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx lint_severities comments =
+  let comments = List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments in
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx lint_severities comments
 
