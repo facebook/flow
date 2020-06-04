@@ -8307,7 +8307,7 @@ struct
       let t =
         mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
       in
-      rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id t destructor, tout)
+      rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, tout)
     (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
    bounds, which prevents the speculative match process from working.
@@ -8316,7 +8316,7 @@ struct
     | UnionT (r, rep) ->
       let destructor = TypeDestructorT (use_op, reason, d) in
       let unresolved =
-        UnionRep.members rep |> Base.List.map ~f:(fun t -> Cache.Eval.id t destructor)
+        UnionRep.members rep |> Base.List.map ~f:(fun t -> Cache.Eval.id cx t destructor)
       in
       let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
       let u =
@@ -8336,16 +8336,16 @@ struct
       let rep =
         UnionRep.make
           (let null = NullT.make reason |> with_trust bogus_trust in
-           Cache.Eval.id null destructor)
+           Cache.Eval.id cx null destructor)
           (let void = VoidT.make reason |> with_trust bogus_trust in
-           Cache.Eval.id void destructor)
-          [Cache.Eval.id t destructor]
+           Cache.Eval.id cx void destructor)
+          [Cache.Eval.id cx t destructor]
       in
       rec_flow_t cx trace ~use_op:unknown_use (UnionT (r, rep), tout)
     | AnnotT (r, t, use_desc) ->
       let t = reposition_reason ~trace cx r ~use_desc t in
       let destructor = TypeDestructorT (use_op, reason, d) in
-      rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id t destructor, tout)
+      rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, tout)
     | _ ->
       rec_flow
         cx
@@ -12070,11 +12070,11 @@ struct
         let reason = reason_of_defer_use_t defer_use_t in
         let use_desc = Base.Option.is_some desc in
         begin
-          match Cache.Eval.find_repos root defer_use_t id with
+          match Cache.Eval.find_repos cx root defer_use_t id with
           | Some tvar -> tvar
           | None ->
             Tvar.mk_where cx reason (fun tvar ->
-                Cache.Eval.add_repos root defer_use_t id tvar;
+                Cache.Eval.add_repos cx root defer_use_t id tvar;
                 flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar))))
         end
       | MaybeT (r, t) ->

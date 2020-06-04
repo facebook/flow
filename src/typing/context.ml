@@ -159,6 +159,9 @@ type component_t = {
   subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
   instantiation_cache: (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t;
   repos_cache: Repos_cache.t ref;
+  eval_id_cache:
+    (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t;
+  eval_repos_cache: (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t;
 }
 
 type phase =
@@ -301,6 +304,8 @@ let make_ccx sig_cx =
     subst_cache = Hashtbl.create 0;
     instantiation_cache = Hashtbl.create 0;
     repos_cache = ref Repos_cache.empty;
+    eval_id_cache = (Hashtbl.create 0, Hashtbl.create 0);
+    eval_repos_cache = Hashtbl.create 0;
   }
 
 (* create a new context structure.
@@ -875,3 +880,7 @@ let subst_cache cx = cx.ccx.subst_cache
 let instantiation_cache cx = cx.ccx.instantiation_cache
 
 let repos_cache cx = cx.ccx.repos_cache
+
+let eval_id_cache cx = cx.ccx.eval_id_cache
+
+let eval_repos_cache cx = cx.ccx.eval_repos_cache

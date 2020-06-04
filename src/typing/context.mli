@@ -459,3 +459,8 @@ val subst_cache : t -> (Type.Poly.id * Type.t list, subst_cache_err list * Type.
 val instantiation_cache : t -> (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t
 
 val repos_cache : t -> Repos_cache.t ref
+
+val eval_id_cache :
+  t -> (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t
+
+val eval_repos_cache : t -> (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t

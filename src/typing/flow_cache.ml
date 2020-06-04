@@ -66,17 +66,8 @@ module PolyInstantiation = struct
 end
 
 module Eval = struct
-  type id_cache_key = Type.t * Type.defer_use_t
-
-  type repos_cache_key = Type.t * Type.defer_use_t * Type.Eval.id
-
-  let eval_id_cache : (Type.Eval.id, Type.t) Hashtbl.t = Hashtbl.create 0
-
-  let id_cache : (id_cache_key, Type.Eval.id) Hashtbl.t = Hashtbl.create 0
-
-  let repos_cache : (repos_cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
-
-  let id t defer_use =
+  let id cx t defer_use =
+    let (eval_id_cache, id_cache) = Context.eval_id_cache cx in
     match t with
     | EvalT (_, d, i) when d = defer_use ->
       (match Hashtbl.find_opt eval_id_cache i with
@@ -97,11 +88,13 @@ module Eval = struct
       in
       EvalT (t, defer_use, id)
 
-  let find_repos t defer_use id =
+  let find_repos cx t defer_use id =
+    let repos_cache = Context.eval_repos_cache cx in
     let cache_key = (t, defer_use, id) in
     Hashtbl.find_opt repos_cache cache_key
 
-  let add_repos t defer_use id tvar =
+  let add_repos cx t defer_use id tvar =
+    let repos_cache = Context.eval_repos_cache cx in
     let cache_key = (t, defer_use, id) in
     Hashtbl.add repos_cache cache_key tvar
 end
@@ -197,9 +190,6 @@ module Spread = struct
 end
 
 let clear () =
-  Hashtbl.clear Eval.eval_id_cache;
-  Hashtbl.clear Eval.id_cache;
-  Hashtbl.clear Eval.repos_cache;
   Hashtbl.clear Fix.cache;
   Hashtbl.clear Spread.cache;
   ()
