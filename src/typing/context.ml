@@ -157,6 +157,7 @@ type component_t = {
   mutable openness_graph: Openness.graph;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
+  instantiation_cache: (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t;
 }
 
 type phase =
@@ -297,6 +298,7 @@ let make_ccx sig_cx =
     openness_graph = Openness.empty_graph;
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = Hashtbl.create 0;
+    instantiation_cache = Hashtbl.create 0;
   }
 
 (* create a new context structure.
@@ -867,3 +869,5 @@ let in_normalizer_mode cx = cx.phase = Normalizing
 let constraint_cache cx = cx.ccx.constraint_cache
 
 let subst_cache cx = cx.ccx.subst_cache
+
+let instantiation_cache cx = cx.ccx.instantiation_cache

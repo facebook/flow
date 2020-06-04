@@ -56,13 +56,8 @@ end
    those representing the result): the cache would be useless if we considered
    those type variables as part of the identity of the operation. *)
 module PolyInstantiation = struct
-  type cache_key = reason * reason * op_reason
-
-  and op_reason = reason Nel.t
-
-  let cache : (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
-
   let find cx reason_tapp typeparam op_reason =
+    let cache = Context.instantiation_cache cx in
     try Hashtbl.find cache (reason_tapp, typeparam.reason, op_reason)
     with _ ->
       let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
@@ -204,7 +199,6 @@ module Spread = struct
 end
 
 let clear () =
-  Hashtbl.clear PolyInstantiation.cache;
   repos_cache := Repos_cache.empty;
   Hashtbl.clear Eval.eval_id_cache;
   Hashtbl.clear Eval.id_cache;
@@ -213,7 +207,9 @@ let clear () =
   Hashtbl.clear Spread.cache;
   ()
 
-let stats_poly_instantiation () = Hashtbl.stats PolyInstantiation.cache
+let stats_poly_instantiation cx =
+  let cache = Context.instantiation_cache cx in
+  Hashtbl.stats cache
 
 (* debug util: please don't dead-code-eliminate *)
 (* Summarize flow constraints in cache as ctor/reason pairs, and return counts
