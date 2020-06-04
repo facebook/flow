@@ -500,12 +500,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
              * exponential blowup due to multiple spread operands having multiple lower bounds. To do
              * that, we increment the amount of lower bounds found at this resolution index by
              * the amount of lower bounds found at this index. If multiple indices have multiple lower
-             * bounds, Cache.Spread.can_spread will return false and we can error instead of proceeding.
+             * bounds, Spread_cache.can_spread will return false and we can error instead of proceeding.
              *
              * Any other latent constraints involving this spread_id will also stop when they hit this
              * logic.
              *)
-            let prev_can_spread = Flow_cache.Spread.can_spread spread_id in
+            let cache = Context.spread_cache cx in
+            let prev_can_spread = Spread_cache.can_spread cache spread_id in
             if not prev_can_spread then
               ()
             else (
@@ -514,19 +515,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | (None, x) ->
                   Nel.iter
                     (fun ({ Object.reason; _ } as slice) ->
-                      Flow_cache.Spread.add_lower_bound
+                      Spread_cache.add_lower_bound
+                        cache
                         spread_id
                         curr_resolve_idx
                         reason
                         (Nel.one slice))
                     x
                 | (Some reason, _) ->
-                  Flow_cache.Spread.add_lower_bound spread_id curr_resolve_idx reason x
+                  Spread_cache.add_lower_bound cache spread_id curr_resolve_idx reason x
               end;
-              let can_spread = Flow_cache.Spread.can_spread spread_id in
+              let can_spread = Spread_cache.can_spread cache spread_id in
               if prev_can_spread && not can_spread then (
                 let (reasons_for_operand1, reasons_for_operand2) =
-                  Flow_cache.Spread.get_error_groups spread_id
+                  Spread_cache.get_error_groups cache spread_id
                 in
                 add_output
                   cx

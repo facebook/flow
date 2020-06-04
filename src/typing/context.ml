@@ -163,6 +163,7 @@ type component_t = {
     (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t;
   eval_repos_cache: (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t;
   fix_cache: (Reason.t * Type.t, Type.t) Hashtbl.t;
+  spread_cache: Spread_cache.t;
 }
 
 type phase =
@@ -308,6 +309,7 @@ let make_ccx sig_cx =
     eval_id_cache = (Hashtbl.create 0, Hashtbl.create 0);
     eval_repos_cache = Hashtbl.create 0;
     fix_cache = Hashtbl.create 0;
+    spread_cache = Hashtbl.create 0;
   }
 
 (* create a new context structure.
@@ -888,3 +890,5 @@ let eval_id_cache cx = cx.ccx.eval_id_cache
 let eval_repos_cache cx = cx.ccx.eval_repos_cache
 
 let fix_cache cx = cx.ccx.fix_cache
+
+let spread_cache cx = cx.ccx.spread_cache

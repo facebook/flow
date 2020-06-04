@@ -466,3 +466,5 @@ val eval_id_cache :
 val eval_repos_cache : t -> (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t
 
 val fix_cache : t -> (Reason.t * Type.t, Type.t) Hashtbl.t
+
+val spread_cache : t -> Spread_cache.t
