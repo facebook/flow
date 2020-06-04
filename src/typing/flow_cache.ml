@@ -47,21 +47,6 @@ module FlowConstraint = struct
       found
 end
 
-(* Cache that maps TypeApp(Poly (...id), ts) to its result. *)
-module Subst = struct
-  type cache_key = Type.Poly.id * Type.t list
-
-  type cache_value_el =
-    | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
-    | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
-
-  let cache : (cache_key, cache_value_el list * Type.t) Hashtbl.t = Hashtbl.create 0
-
-  let find = Hashtbl.find_opt cache
-
-  let add = Hashtbl.add cache
-end
-
 (* Cache that limits instantiation of polymorphic definitions. Intuitively,
    for each operation on a polymorphic definition, we remember the type
    arguments we use to specialize the type parameters. An operation is
@@ -219,7 +204,6 @@ module Spread = struct
 end
 
 let clear () =
-  Hashtbl.clear Subst.cache;
   Hashtbl.clear PolyInstantiation.cache;
   repos_cache := Repos_cache.empty;
   Hashtbl.clear Eval.eval_id_cache;

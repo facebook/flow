@@ -81,6 +81,10 @@ type computed_property_state =
   | ResolvedOnce of Reason.t
   | ResolvedMultipleTimes
 
+type subst_cache_err =
+  | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
+  | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -152,6 +156,7 @@ type component_t = {
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   mutable openness_graph: Openness.graph;
   constraint_cache: Type.FlowSet.t ref;
+  subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
 }
 
 type phase =
@@ -291,6 +296,7 @@ let make_ccx sig_cx =
     invariants_useful = ALocMap.empty;
     openness_graph = Openness.empty_graph;
     constraint_cache = ref Type.FlowSet.empty;
+    subst_cache = Hashtbl.create 0;
   }
 
 (* create a new context structure.
@@ -859,3 +865,5 @@ let with_normalizer_mode cx f = f { cx with phase = Normalizing }
 let in_normalizer_mode cx = cx.phase = Normalizing
 
 let constraint_cache cx = cx.ccx.constraint_cache
+
+let subst_cache cx = cx.ccx.subst_cache

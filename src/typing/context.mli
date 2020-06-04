@@ -97,6 +97,10 @@ type computed_property_state =
   | ResolvedOnce of Reason.t
   | ResolvedMultipleTimes
 
+type subst_cache_err =
+  | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
+  | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
+
 val make_sig : unit -> sig_t
 
 val make_ccx : sig_t -> component_t
@@ -449,3 +453,5 @@ val with_normalizer_mode : t -> (t -> 'a) -> 'a
 val in_normalizer_mode : t -> bool
 
 val constraint_cache : t -> Type.FlowSet.t ref
+
+val subst_cache : t -> (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t

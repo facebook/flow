@@ -8460,7 +8460,7 @@ struct
         ~trace
         (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       Base.Option.iter errs_ref ~f:(fun errs_ref ->
-          errs_ref := Cache.Subst.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
+          errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
     );
     let (map, _) =
       Nel.fold_left
@@ -8477,7 +8477,7 @@ struct
                 ~trace
                 (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
-                  errs_ref := Cache.Subst.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
+                  errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
               (AnyT (reason_op, AnyError), [])
             | (_, t :: ts) -> (t, ts)
           in
@@ -11868,7 +11868,8 @@ struct
         ts
     | None ->
       let key = (id, ts) in
-      (match Cache.Subst.find key with
+      let cache = Context.subst_cache cx in
+      (match Hashtbl.find_opt cache key with
       | None ->
         let errs_ref = ref [] in
         let t =
@@ -11882,17 +11883,17 @@ struct
             (tparams_loc, xs, t)
             ts
         in
-        Cache.Subst.add key (!errs_ref, t);
+        Hashtbl.add cache key (!errs_ref, t);
         t
       | Some (errs, t) ->
         errs
         |> List.iter (function
-               | Cache.Subst.ETooManyTypeArgs (reason_arity, maximum_arity) ->
+               | Context.ETooManyTypeArgs (reason_arity, maximum_arity) ->
                  let msg =
                    Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity)
                  in
                  add_output cx ~trace msg
-               | Cache.Subst.ETooFewTypeArgs (reason_arity, maximum_arity) ->
+               | Context.ETooFewTypeArgs (reason_arity, maximum_arity) ->
                  let msg =
                    Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, maximum_arity)
                  in
