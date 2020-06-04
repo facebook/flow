@@ -287,21 +287,18 @@ let selectively_omit_errors (request_name : string) (response : lsp_message) =
   | _ -> response
 
 let get_next_event_from_server (fd : Unix.file_descr) : event =
-  let r =
-    try Server_message (Marshal_tools.from_fd_with_preamble fd)
-    with e ->
-      let e = Exception.wrap e in
-      let edata = edata_of_exception e in
-      raise (Server_fatal_connection_exception edata)
-  in
-  (* The server sends an explicit 'EOF' message in case the underlying *)
-  (* transport protocol doesn't result in EOF normally. We'll respond  *)
-  (* to it by synthesizing the EOF exception we'd otherwise get. *)
-  if r = Server_message LspProt.(NotificationFromServer EOF) then
+  match Marshal_tools.from_fd_with_preamble fd with
+  | LspProt.(NotificationFromServer EOF) ->
+    (* The server sends an explicit 'EOF' message in case the underlying
+       transport protocol doesn't result in EOF normally. We'll respond
+       to it by synthesizing the EOF exception we'd otherwise get. *)
     let stack = Exception.get_current_callstack_string 100 in
     raise (Server_fatal_connection_exception { Marshal_tools.message = "End_of_file"; stack })
-  else
-    r
+  | msg -> Server_message msg
+  | exception e ->
+    let e = Exception.wrap e in
+    let edata = edata_of_exception e in
+    raise (Server_fatal_connection_exception edata)
 
 let get_next_event_from_client
     (state : state) (client : Jsonrpc.queue) (parser : Jsonrpc.message -> Lsp.lsp_message) :
