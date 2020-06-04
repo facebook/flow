@@ -1662,6 +1662,7 @@ let dump_error_message =
         (string_of_use_op use_op)
         (dump_reason cx reason)
         (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
+    | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

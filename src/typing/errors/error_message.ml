@@ -396,6 +396,7 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       blame_reasons: 'loc virtual_reason list;
     }
+  | EMalformedCode of 'loc
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -922,6 +923,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason = map_reason reason;
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
+  | EMalformedCode loc -> EMalformedCode (f loc)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1120,7 +1122,8 @@ let util_use_op_of_msg nope util = function
   | EEnumNotAllChecked _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
-  | EAssignExportedConstLikeBinding _ ->
+  | EAssignExportedConstLikeBinding _
+  | EMalformedCode _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1258,7 +1261,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropertyTypeAnnot loc
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
-  | EAssignExportedConstLikeBinding { loc; _ } ->
+  | EAssignExportedConstLikeBinding { loc; _ }
+  | EMalformedCode loc ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -3268,6 +3272,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EMalformedCode _ ->
+    Normal
+      {
+        features =
+          [
+            text "Suppression contains a malformed error code. Suppressions with error codes ";
+            text "should be formatted as ";
+            code "$FlowFixMe[<CODE>]";
+            text ".";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3507,7 +3522,9 @@ let error_code_of_message err : error_code option =
   | EUnsupportedKeyInObjectType _ -> Some IllegalKey
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
-  | EUnusedSuppression _ -> None
+  | EMalformedCode _
+  | EUnusedSuppression _ ->
+    None
   | EUseArrayLiteral _ -> Some IllegalNewArray
   | EValueUsedAsType _ -> Some ValueAsType
   (* lints should match their lint name *)

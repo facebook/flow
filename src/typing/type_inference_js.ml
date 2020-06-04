@@ -33,11 +33,11 @@ let infer_core cx statements =
   | exc -> raise exc
 
 let scan_for_error_suppressions cx =
-  List.iter (function
-      | (loc, { Ast.Comment.text; _ })
-        when Suppression_comments.should_suppress text |> Base.Option.is_some ->
-        Context.add_error_suppression cx loc
-      | _ -> ())
+  List.iter (function (loc, { Ast.Comment.text; _ }) ->
+      (match Suppression_comments.should_suppress text with
+      | Ok (Some _) -> Context.add_error_suppression cx loc
+      | Ok None -> ()
+      | Error () -> Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc))))
 
 type 'a located = {
   value: 'a;
