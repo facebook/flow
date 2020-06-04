@@ -12044,8 +12044,9 @@ struct
                   resolve_id cx trace ~use_op ~fully_resolved id t'))
           | Unresolved _ ->
             (* Try to re-use an already created repositioning tvar.
-         See repos_cache.ml for details. *)
-            (match Repos_cache.find id reason !Cache.repos_cache with
+             * See repos_cache.ml for details. *)
+            let repos_cache = Context.repos_cache cx in
+            (match Repos_cache.find id reason !repos_cache with
             | Some t -> t
             | None ->
               let mk_tvar_where =
@@ -12055,7 +12056,7 @@ struct
                   Tvar.mk_where
               in
               mk_tvar_where cx reason (fun tvar ->
-                  Cache.(repos_cache := Repos_cache.add reason t tvar !repos_cache);
+                  repos_cache := Repos_cache.add reason t tvar !repos_cache;
                   flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))))
         end
       | EvalT (root, defer_use_t, id) as t ->

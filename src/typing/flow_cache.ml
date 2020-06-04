@@ -65,8 +65,6 @@ module PolyInstantiation = struct
       t
 end
 
-let repos_cache = ref Repos_cache.empty
-
 module Eval = struct
   type id_cache_key = Type.t * Type.defer_use_t
 
@@ -199,7 +197,6 @@ module Spread = struct
 end
 
 let clear () =
-  repos_cache := Repos_cache.empty;
   Hashtbl.clear Eval.eval_id_cache;
   Hashtbl.clear Eval.id_cache;
   Hashtbl.clear Eval.repos_cache;

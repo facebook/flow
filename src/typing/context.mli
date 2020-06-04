@@ -457,3 +457,5 @@ val constraint_cache : t -> Type.FlowSet.t ref
 val subst_cache : t -> (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t
 
 val instantiation_cache : t -> (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t
+
+val repos_cache : t -> Repos_cache.t ref
