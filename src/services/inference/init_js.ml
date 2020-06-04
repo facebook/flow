@@ -155,6 +155,7 @@ let load_lib_files ~ccx ~options ~reader files =
 let init ~options ~reader lib_files =
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx in
+  Flow.Cache.clear ();
   let master_cx =
     let metadata =
       Context.(
@@ -176,7 +177,6 @@ let init ~options ~reader lib_files =
   Flow_js.mk_builtins master_cx;
 
   let%lwt result = load_lib_files ~ccx ~options ~reader lib_files in
-  Flow.Cache.clear ();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);

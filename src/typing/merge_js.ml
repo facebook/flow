@@ -332,6 +332,7 @@ let merge_component
     (master_cx : Context.sig_t) =
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx in
+  Flow_js.Cache.clear ();
   let need_merge_master_cx = ref true in
   let (aloc_tables, rev_aloc_tables) =
     Nel.fold_left
@@ -392,7 +393,6 @@ let merge_component
   let results = Base.List.rev rev_results in
   let (cxs, _, tasts) = Base.List.unzip3 results in
   let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
-  Flow_js.Cache.clear ();
 
   dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
 

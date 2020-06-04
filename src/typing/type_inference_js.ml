@@ -361,8 +361,6 @@ let add_require_tvars =
 let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
-  Flow_js.Cache.clear ();
-
   let ( prog_aloc,
         {
           Ast.Program.statements = aloc_statements;
@@ -461,7 +459,6 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
   let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
-  Flow_js.Cache.clear ();
 
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty

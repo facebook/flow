@@ -194,6 +194,7 @@ let init_builtins filenames =
   let root = Path.dummy_path in
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx in
+  Flow_js.Cache.clear ();
   let master_cx =
     let aloc_table = Utils_js.FilenameMap.empty in
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
@@ -218,7 +219,6 @@ let init_builtins filenames =
       (fun _file _sups -> ())
       (fun _file _lint -> ())
   in
-  Flow_js.Cache.clear ();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
@@ -230,7 +230,6 @@ let infer_and_merge ~root filename ast file_sig =
      it relies on the JS version only supporting libs + 1 file, so every
      module you can require() must come from a lib; this skips resolving
      module names and just adds them all to the `decls` list. *)
-  Flow_js.Cache.clear ();
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
   let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
