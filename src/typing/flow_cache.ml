@@ -11,26 +11,6 @@ open Type
 open TypeUtil
 module ImplicitTypeArgument = Instantiation_utils.ImplicitTypeArgument
 
-module FlowSet = struct
-  let empty = TypeMap.empty
-
-  let add_not_found u = function
-    | None -> UseTypeSet.singleton u
-    | Some us -> UseTypeSet.add u us
-
-  let cache (l, u) setr =
-    (* update returns ref eq map if no change *)
-    let setr' = TypeMap.update l (add_not_found u %> Base.Option.return) !setr in
-    if setr' == !setr then
-      true
-    else (
-      setr := setr';
-      false
-    )
-
-  let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
-end
-
 (* Cache that remembers pairs of types that are passed to __flow. *)
 module FlowConstraint = struct
   let cache = ref FlowSet.empty
@@ -55,8 +35,11 @@ module FlowConstraint = struct
          non-termination problems. To ensure proper caching, we hash use ops
          to just their toplevel structure. *)
       let u = mod_use_op_of_use_t toplevel_use_op u in
-      let found = FlowSet.cache (l, u) cache in
-      if found && Context.is_verbose cx then
+      let cache' = FlowSet.add (l, u) !cache in
+      let found = cache' == !cache in
+      if not found then
+        cache := cache'
+      else if Context.is_verbose cx then
         prerr_endlinef
           "%sFlowConstraint cache hit on (%s, %s)"
           (Context.pid_prefix cx)

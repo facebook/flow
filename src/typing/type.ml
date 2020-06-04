@@ -2509,6 +2509,22 @@ and React : sig
 end =
   React
 
+module FlowSet = struct
+  type t = UseTypeSet.t TypeMap.t
+
+  let empty = TypeMap.empty
+
+  (* returns ref eq map if no change *)
+  let add (l, u) x =
+    let f = function
+      | None -> Some (UseTypeSet.singleton u)
+      | Some us -> Some (UseTypeSet.add u us)
+    in
+    TypeMap.update l f x
+
+  let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
+end
+
 (* Type scheme: a type and an attendant environment of type parameters.
  * See normalizer for use. *)
 module TypeScheme = struct
