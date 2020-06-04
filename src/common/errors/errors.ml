@@ -113,11 +113,9 @@ module Friendly = struct
     | Text of string
     | Code of string
 
-  let rec codes_of_message = function
-    | Normal { code = Some code; _ } -> [code]
-    | Normal { code = None; _ } -> []
-    | Speculation { branches; _ } ->
-      Base.List.bind ~f:(fun (_, err) -> codes_of_message err.message) branches
+  let code_of_message = function
+    | Normal { code; _ } -> code
+    | Speculation { code; _ } -> code
 
   (* The composition of some root error message and a list of associated
    * error messages. This structure is used in two contexts:
@@ -636,7 +634,8 @@ module Friendly = struct
              )
         else
           [] );
-      error_codes = codes_of_message error.message;
+      error_codes =
+        code_of_message error.message |> Base.Option.value_map ~f:(fun code -> [code]) ~default:[];
     }
 end
 
@@ -694,6 +693,8 @@ let mk_speculation_error
       } ))
 
 (*******************************)
+
+let code_of_printable_error (_, _, f) = Friendly.code_of_message f.Friendly.message
 
 let to_pp = function
   | BlameM (loc, s) -> (loc, s)

@@ -568,8 +568,8 @@ let add_env cx frame env = cx.ccx.envs <- IMap.add frame env cx.ccx.envs
 
 let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.errors
 
-let add_error_suppression cx loc =
-  cx.ccx.error_suppressions <- Error_suppressions.add loc cx.ccx.error_suppressions
+let add_error_suppression cx loc codes =
+  cx.ccx.error_suppressions <- Error_suppressions.add loc codes cx.ccx.error_suppressions
 
 let add_severity_cover cx filekey severity_cover =
   cx.ccx.severity_cover <- Utils_js.FilenameMap.add filekey severity_cover cx.ccx.severity_cover

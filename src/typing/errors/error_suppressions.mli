@@ -10,7 +10,7 @@ type t
 val empty : t
 
 (* Raises if the given loc has `source` set to `None` *)
-val add : Loc.t -> t -> t
+val add : Loc.t -> Suppression_comments.applicable_codes -> t -> t
 
 val add_lint_suppressions : Loc_collections.LocSet.t -> t -> t
 
@@ -24,7 +24,7 @@ val union : t -> t -> t
  * discard those included in the first argument. *)
 val update_suppressions : t -> t -> t
 
-val all_locs : t -> Loc_collections.LocSet.t
+val all_unused_locs : t -> Loc_collections.LocSet.t
 
 val filter_suppressed_errors :
   root:Path.t ->

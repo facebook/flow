@@ -1,0 +1,679 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:8:2
+   8| (x : string); // error correctly
+       ^
+
+References:
+   test.js:6:9
+   6| let x : number = 1;
+              ^^^^^^ [1]
+   test.js:8:6
+   8| (x : string); // error correctly
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   13| //$FlowFixMe[]
+       ^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:14:2
+   14| (x : string); // error not suppressed, malformed code
+        ^
+
+References:
+   test.js:6:9
+    6| let x : number = 1;
+               ^^^^^^ [1]
+   test.js:14:6
+   14| (x : string); // error not suppressed, malformed code
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   33| // $FlowFixMe [incompatible-cast]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:34:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:34:2
+   34| (x : string); // error not suppressed, malformed code
+        ^
+
+References:
+   test.js:6:9
+    6| let x : number = 1;
+               ^^^^^^ [1]
+   test.js:34:6
+   34| (x : string); // error not suppressed, malformed code
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:37:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:37:2
+   37| (x : string); // error not suppressed + unused suppression
+        ^
+
+References:
+   test.js:6:9
+    6| let x : number = 1;
+               ^^^^^^ [1]
+   test.js:37:6
+   37| (x : string); // error not suppressed + unused suppression
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:2
+
+Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:43:2
+   43| (y.x : string); // both errors appear
+        ^^^
+
+References:
+   test.js:41:24
+   41| let y : number | { x : number }  = 1;
+                              ^^^^^^ [1]
+   test.js:43:8
+   43| (y.x : string); // both errors appear
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:4
+
+Cannot get `y.x` because property `x` is missing in `Number` [1]. [prop-missing]
+
+   test.js:43:4
+   43| (y.x : string); // both errors appear
+          ^
+
+References:
+   test.js:41:9
+   41| let y : number | { x : number }  = 1;
+               ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:49:4
+
+Cannot get `y.x` because property `x` is missing in `Number` [1]. [prop-missing]
+
+   test.js:49:4
+   49| (y.x : string); // only the property access shows up
+          ^
+
+References:
+   test.js:41:9
+   41| let y : number | { x : number }  = 1;
+               ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:2
+
+Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:52:2
+   52| (y.x : string); // only the incompatibility shows up
+        ^^^
+
+References:
+   test.js:41:24
+   41| let y : number | { x : number }  = 1;
+                              ^^^^^^ [1]
+   test.js:52:8
+   52| (y.x : string); // only the incompatibility shows up
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:73:2
+
+Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:73:2
+   73| (y.x : string); // incompatibility shows up
+        ^^^
+
+References:
+   test.js:41:24
+   41| let y : number | { x : number }  = 1;
+                              ^^^^^^ [1]
+   test.js:73:8
+   73| (y.x : string); // incompatibility shows up
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:78:2
+
+Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:78:2
+   78| (y.x : string); // incompatibility shows up
+        ^^^
+
+References:
+   test.js:41:24
+   41| let y : number | { x : number }  = 1;
+                              ^^^^^^ [1]
+   test.js:78:8
+   78| (y.x : string); // incompatibility shows up
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:83:2
+
+Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:83:2
+   83| (y.x : string); // both
+        ^^^
+
+References:
+   test.js:41:24
+   41| let y : number | { x : number }  = 1;
+                              ^^^^^^ [1]
+   test.js:83:8
+   83| (y.x : string); // both
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:83:4
+
+Cannot get `y.x` because property `x` is missing in `Number` [1]. [prop-missing]
+
+   test.js:83:4
+   83| (y.x : string); // both
+          ^
+
+References:
+   test.js:41:9
+   41| let y : number | { x : number }  = 1;
+               ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:101:2
+
+Cannot cast `z` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with boolean [3].
+
+   test.js:101:2
+   101| (z : string | boolean); // error + unused suppression
+         ^
+
+References:
+   test.js:92:9
+    92| let z : number = 3;
+                ^^^^^^ [1]
+   test.js:101:6
+   101| (z : string | boolean); // error + unused suppression
+             ^^^^^^ [2]
+   test.js:101:15
+   101| (z : string | boolean); // error + unused suppression
+                      ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:114:8
+
+Cannot call `foo` because no more than 1 argument is expected by function type [1]. [extra-arg]
+
+   test.js:114:8
+   114| foo(3, 4); // one error
+               ^
+
+References:
+   test.js:104:22
+   104| declare function foo (string) : void;
+                             ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:117:5
+
+Cannot call `foo` with `3` bound to the first parameter because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   test.js:117:5
+   117| foo(3, 4); // one error
+            ^ [1]
+
+References:
+   test.js:104:23
+   104| declare function foo (string) : void;
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:122:2
+
+Cannot cast `any` to object type because property `bar` is missing in object type [1] but exists in object type [2].
+[incompatible-cast]
+
+   test.js:122:2
+   122| ((any: {} & number): {bar:string}); // error
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:122:8
+   122| ((any: {} & number): {bar:string}); // error
+               ^^ [1]
+   test.js:122:22
+   122| ((any: {} & number): {bar:string}); // error
+                             ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:131:2
+
+Cannot cast `any` to object type because property `bar` is missing in object type [1] but exists in object type [2].
+[incompatible-cast]
+
+   test.js:131:2
+   131| ((any: {} & number): {bar:string});  // error + unused suppression
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:131:8
+   131| ((any: {} & number): {bar:string});  // error + unused suppression
+               ^^ [1]
+   test.js:131:22
+   131| ((any: {} & number): {bar:string});  // error + unused suppression
+                             ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:134:2
+
+Cannot cast `any` to object type because property `bar` is missing in object type [1] but exists in object type [2].
+[incompatible-cast]
+
+   test.js:134:2
+   134| ((any: {} & number): {bar:string});  // error + unused suppression
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:134:8
+   134| ((any: {} & number): {bar:string});  // error + unused suppression
+               ^^ [1]
+   test.js:134:22
+   134| ((any: {} & number): {bar:string});  // error + unused suppression
+                             ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:138:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   138| //$FlowFixMe[incompatible-use, arithmetic]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:139:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:139:2
+   139| (x : string); // error + unused suppression
+         ^
+
+References:
+   test.js:6:9
+     6| let x : number = 1;
+                ^^^^^^ [1]
+   test.js:139:6
+   139| (x : string); // error + unused suppression
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:141:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   141| //$FlowFixMe[incompatible-use,arithmetic]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:142:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:142:2
+   142| (x : string); // error + unused suppression
+         ^
+
+References:
+   test.js:6:9
+     6| let x : number = 1;
+                ^^^^^^ [1]
+   test.js:142:6
+   142| (x : string); // error + unused suppression
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:145:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:145:2
+   145| (x : string); // error + unused suppression
+         ^
+
+References:
+   test.js:6:9
+     6| let x : number = 1;
+                ^^^^^^ [1]
+   test.js:145:6
+   145| (x : string); // error + unused suppression
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:147:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   147| //$FlowFixMe[A]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:150:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   150| //$FlowFixMe[ ]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:153:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   153| //$FlowFixMe[<]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:156:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   156| //$FlowFixMe[>]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:159:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   159| //$FlowFixMe[*]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:162:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   162| //$FlowFixMe[_]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:165:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   165| //$FlowFixMe[1]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:168:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+   168| //$FlowFixMe[0]
+        ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:171:1
+
+Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+
+        v------------
+   171| /*$FlowFixMe[
+   172| ]*/
+        --^
+
+
+Error --------------------------------------------------------------------------------------------------- unused.js:41:2
+
+Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   unused.js:41:2
+   41| (y.x : string); // error w/incompatible cast
+        ^^^
+
+References:
+   unused.js:3:24
+    3| let y : number | { x : number }  = 1;
+                              ^^^^^^ [1]
+   unused.js:41:8
+   41| (y.x : string); // error w/incompatible cast
+              ^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:36:1
+
+Unused suppression comment.
+
+   36| // $FlowFixMe[arithmetic]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:70:1
+
+Unused suppression comment.
+
+   70| //$FlowFixMe[incompatible-cast]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:75:1
+
+Unused suppression comment.
+
+   75| //$FlowFixMe[incompatible-cast]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:80:1
+
+Unused suppression comment.
+
+   80| //$FlowFixMe[incompatible-cast]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:81:1
+
+Unused suppression comment.
+
+   81| //$FlowFixMe[prop-missing]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:87:1
+
+Unused suppression comment.
+
+   87| //$FlowFixMe[arithmetic]
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:100:1
+
+Unused suppression comment.
+
+   100| //$FlowFixMe[prop-missing]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:130:1
+
+Unused suppression comment.
+
+   130| // $FlowFixMe[incompatible-type]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:133:1
+
+Unused suppression comment.
+
+   133| // $FlowFixMe[prop-missing]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:144:1
+
+Unused suppression comment.
+
+   144| //$FlowFixMe[incompatible-use]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- unused.js:7:1
+
+Unused suppression comment.
+
+   7| //$FlowFixMe[arithmetic] unused
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:10:1
+
+Unused suppression comment.
+
+   10| //$FlowFixMe[arithmetic] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:15:1
+
+Unused suppression comment.
+
+   15| //$FlowFixMe[arithmetic] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:17:1
+
+Unused suppression comment.
+
+   17| //$FlowFixMe[incompatible-type] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:21:1
+
+Unused suppression comment.
+
+   21| //$FlowFixMe[arithmetic] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:22:1
+
+Unused suppression comment.
+
+   22| //$FlowFixMe[incompatible-cast] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:23:1
+
+Unused suppression comment.
+
+   23| //$FlowFixMe[incompatible-type] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:24:1
+
+Unused suppression comment.
+
+   24| //$FlowFixMe[prop-missing] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:29:1
+
+Unused suppression comment.
+
+   29| //$FlowFixMe unused
+       ^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:30:1
+
+Unused suppression comment.
+
+   30| //$FlowFixMe[arithmetic] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:32:1
+
+Unused suppression comment.
+
+   32| //$FlowFixMe[incompatible-type] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:36:1
+
+Unused suppression comment.
+
+   36| //$FlowFixMe[arithmetic] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:37:1
+
+Unused suppression comment.
+
+   37| //$FlowFixMe[incompatible-cast] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:38:1
+
+Unused suppression comment.
+
+   38| //$FlowFixMe unused
+       ^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:39:1
+
+Unused suppression comment.
+
+   39| //$FlowFixMe[incompatible-type] unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 35 errors and 25 warnings
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
