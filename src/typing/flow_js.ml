@@ -3130,11 +3130,11 @@ struct
             List.fold_left
               (fun tout t ->
                 let tvar =
-                  match Cache.Fix.find reason_op t with
+                  match Cache.Fix.find cx reason_op t with
                   | Some tvar -> tvar
                   | None ->
                     Tvar.mk_where cx reason_op (fun tvar ->
-                        Cache.Fix.add reason_op t tvar;
+                        Cache.Fix.add cx reason_op t tvar;
                         rec_flow cx trace (t, ObjAssignFromT (use_op, reason_op, proto, tvar, kind)))
                 in
                 rec_flow_t cx ~use_op trace (tvar, tout);
@@ -8558,12 +8558,12 @@ struct
    instance type. *)
   and fix_this_class cx trace reason (r, i) =
     let i' =
-      match Cache.Fix.find reason i with
+      match Cache.Fix.find cx reason i with
       | Some i' -> i'
       | None ->
         let this = Tvar.mk cx reason in
         let i' = subst cx (SMap.singleton "this" this) i in
-        Cache.Fix.add reason i i';
+        Cache.Fix.add cx reason i i';
         rec_unify cx trace ~use_op:unknown_use this i';
         i'
     in

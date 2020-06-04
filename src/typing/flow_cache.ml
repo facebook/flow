@@ -100,15 +100,13 @@ module Eval = struct
 end
 
 module Fix = struct
-  type cache_key = reason * Type.t
-
-  let cache : (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
-
-  let find reason i =
+  let find cx reason i =
+    let cache = Context.fix_cache cx in
     let cache_key = (reason, i) in
     Hashtbl.find_opt cache cache_key
 
-  let add reason i tvar =
+  let add cx reason i tvar =
+    let cache = Context.fix_cache cx in
     let cache_key = (reason, i) in
     Hashtbl.add cache cache_key tvar
 end
@@ -190,7 +188,6 @@ module Spread = struct
 end
 
 let clear () =
-  Hashtbl.clear Fix.cache;
   Hashtbl.clear Spread.cache;
   ()
 
