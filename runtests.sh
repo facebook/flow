@@ -639,12 +639,11 @@ runtest() {
               printf "flow check return code: %d\\n" "$st" >> "$stderr_dest"
               return_status=$RUNTEST_ERROR
             fi
-        elif [ "$(echo "$cmd" | awk '{print $1}')" == "codemod" ]
+        elif [ "$(echo "$cmd" | awk '{print $1}')" == "annotate-exports" ]
         then
-          subcmd=$(echo "$cmd" | awk '{print $2}')
 
-          # parse flags after 'cmd: codemod subcommand'
-          config_cmd_args="$(echo "$cmd" | awk '{$1="";$2="";print}')"
+          # parse flags after 'cmd: annotate-exports'
+          config_cmd_args="$(echo "$cmd" | awk '{$1="";print}')"
           cmd_args=("$config_cmd_args")
 
           input_file="input.txt"
@@ -656,7 +655,7 @@ runtest() {
 
           # shellcheck disable=SC2086
           codemod_out=$(\
-            "$FLOW" "codemod" "$subcmd" \
+            "$FLOW" "codemod" "annotate-exports" \
                 $flowlib \
                 ${cmd_args[*]} \
                 $types_first_flag \

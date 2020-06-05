@@ -1,2 +1,2 @@
 
-cmd: codemod annotate-exports --preserve-literals auto
+cmd: annotate-exports --preserve-literals auto
