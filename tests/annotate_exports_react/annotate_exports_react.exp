@@ -1,4 +1,4 @@
->>> createClass.js (#changes: 1)
+>>> ./createClass.js
 // @flow
 
 var React = require('react');
@@ -7,7 +7,7 @@ const Comp: Class<React$Component<any, {...}>> & {defaultProps: void,...} = Reac
 
 module.exports = Comp;
 
->>> element-component.js (#changes: 1)
+>>> ./element-component.js
 // @flow
 
 const React = require('react');
@@ -19,7 +19,7 @@ module.exports = (): React.Node => {
   return <Abc/>;
 }
 
->>> element-div.js (#changes: 1)
+>>> ./element-div.js
 // @flow
 
 const React = require('react');
@@ -27,7 +27,7 @@ const React = require('react');
 declare var div: React$Element<'div'>;
 module.exports = (): React.Element<"div"> => div;
 
->>> no-import.js (#changes: 3)
+>>> ./no-import.js
 // @flow
 
 import type {ComponentType} from "React";
@@ -41,14 +41,14 @@ export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
   return bar();
 }
 
->>> node.js (#changes: 1)
+>>> ./node.js
 // @flow
 
 const React = require('react');
 declare var n: React.Node
 module.exports = (): React.Node => n;
 
->>> propTypes.js (#changes: 3)
+>>> ./propTypes.js
 // @flow
 
 const { PropTypes } = require('react');
@@ -67,7 +67,7 @@ module.exports = {
   Bar
 };
 
->>> qualified.js (#changes: 1)
+>>> ./qualified.js
 // @flow
 
 const React = require("react");

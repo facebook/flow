@@ -1,4 +1,4 @@
->>> a.js (#changes: 5)
+>>> ./a.js
 // @flow
 
 import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
@@ -10,7 +10,7 @@ module.exports = [
   (foo2(): $IMPORTED_TYPE$_C_1),
 ]
 
->>> b.js (#changes: 5)
+>>> ./b.js
 // @flow
 
 import typeof {C} from "./lib1.js";
@@ -22,7 +22,7 @@ module.exports = [
   (foo2(): $IMPORTED_TYPE$_C_1),
 ]
 
->>> c.js (#changes: 5)
+>>> ./c.js
 // @flow
 
 import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";

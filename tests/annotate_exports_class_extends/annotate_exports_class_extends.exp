@@ -1,4 +1,4 @@
->>> fileA.js (#changes: 3)
+>>> ./fileA.js
 // @flow
 
 import type {Base} from "./lib.js";import { foo } from "./lib";

@@ -1,4 +1,4 @@
->>> b.js (#changes: 3)
+>>> ./b.js
 // @flow
 
 import typeof C from "./lib.js";import { foo } from './a';

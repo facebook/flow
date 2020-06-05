@@ -1,4 +1,4 @@
->>> a.js (#changes: 2)
+>>> ./a.js
 // @flow
 
 class C {}
@@ -8,7 +8,7 @@ export default class {
   num: number = 1;
 }
 
->>> b.js (#changes: 1)
+>>> ./b.js
 // @flow
 
 class C {
@@ -18,7 +18,7 @@ class C {
 }
 module.exports = C;
 
->>> c.js (#changes: 2)
+>>> ./c.js
 // @flow
 
 class A {

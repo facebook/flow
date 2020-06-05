@@ -1,4 +1,4 @@
->>> exports-default-class-funcall-a.js (#changes: 2)
+>>> ./exports-default-class-funcall-a.js
 // @flow
 
 declare class Base {}
@@ -8,7 +8,7 @@ function foo() { return B };
 
 module.exports = (foo(): typeof B);
 
->>> exports-default-class-funcall-b.js (#changes: 2)
+>>> ./exports-default-class-funcall-b.js
 // @flow
 
 declare class Base {}
@@ -18,7 +18,7 @@ function foo() { return B };
 
 module.exports = (foo(): typeof B);
 
->>> exports-default-instance.js (#changes: 2)
+>>> ./exports-default-instance.js
 // @flow
 
 declare class Base {}
@@ -26,14 +26,14 @@ class A extends Base {}
 
 module.exports = (new A(): A);
 
->>> exports-default-poly-instance.js (#changes: 2)
+>>> ./exports-default-poly-instance.js
 // @flow
 
 class P<X> {}
 
 module.exports = (new P<number>(): P<number>);
 
->>> import-default.js (#changes: 17)
+>>> ./import-default.js
 // @flow
 
 import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1.js";

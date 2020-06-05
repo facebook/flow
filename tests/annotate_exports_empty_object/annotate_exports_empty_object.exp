@@ -1,14 +1,14 @@
->>> a.js (#changes: 2)
+>>> ./a.js
 // @flow
 
 module.exports = ({}: {...});
 
->>> b.js (#changes: 2)
+>>> ./b.js
 // @flow
 
 module.exports = { f: ({}: {...}) };
 
->>> c.js (#changes: 2)
+>>> ./c.js
 // @flow
 
 const obj = { f: ({}: {...}) };
@@ -18,7 +18,7 @@ obj.f = { x: "a" };
 
 module.exports = obj;
 
->>> d.js (#changes: 1)
+>>> ./d.js
 // @flow
 
 const obj: {|f: {|x: number|}, g: {|x: string|}|} = { };
@@ -28,7 +28,7 @@ obj["g"] = { x: "a" };
 
 module.exports = obj;
 
->>> e.js (#changes: 1)
+>>> ./e.js
 // @flow
 
 const obj: {|a: number|} = {};
@@ -36,14 +36,14 @@ declare function foo(x: { a: number }): void;
 foo(obj);
 module.exports = obj;
 
->>> f.js (#changes: 1)
+>>> ./f.js
 // @flow
 
 const obj: {|f: number|} = {};
 (obj.f: number);
 module.exports = obj;
 
->>> g.js (#changes: 1)
+>>> ./g.js
 // @flow
 
 declare function foo<X: { a: 1 }>(x: X): void;

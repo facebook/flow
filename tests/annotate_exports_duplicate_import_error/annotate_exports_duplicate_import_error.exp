@@ -1,4 +1,4 @@
->>> b.js (#changes: 5)
+>>> ./b.js
 // @flow
 
 import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
@@ -7,7 +7,7 @@ import { foo as foo2 } from "./a2";
 
 module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
 
->>> c.js (#changes: 2)
+>>> ./c.js
 // @flow
 
 import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";

@@ -1,4 +1,4 @@
->>> a.js (#changes: 3)
+>>> ./a.js
 // @flow
 
 import type {Element} from "React";declare function f(): React$Element<'a'> | React$Element<'b'>;

@@ -1,4 +1,4 @@
->>> a.js (#changes: 3)
+>>> ./a.js
 // @flow strict
 
 const a0: Array<$FlowFixMeEmpty> = [];

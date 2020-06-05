@@ -1,11 +1,11 @@
->>> fileA.js (#changes: 3)
+>>> ./fileA.js
 // @flow
 
 import type {T} from "react-redux";const {foo} = require('react-redux');
 
 module.exports = (foo(): T);
 
->>> fileB.js (#changes: 2)
+>>> ./fileB.js
 // @flow
 
 import type {T} from 'react-redux';

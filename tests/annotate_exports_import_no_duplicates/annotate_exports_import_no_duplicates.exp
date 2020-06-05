@@ -1,4 +1,4 @@
->>> main.js (#changes: 7)
+>>> ./main.js
 // @flow
 
 import type {C} from "./lib.js";import { foo } from "./lib";

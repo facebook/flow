@@ -1,11 +1,11 @@
->>> lib.js (#changes: 2)
+>>> ./lib.js
 // @flow
 
 class C {}
 
 module.exports = (new C: C);
 
->>> main.js (#changes: 2)
+>>> ./main.js
 // @flow
 
 import typeof C from "./lib.js";const c = require('./lib');

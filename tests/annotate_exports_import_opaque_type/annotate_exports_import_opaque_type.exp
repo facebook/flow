@@ -1,4 +1,4 @@
->>> main.js (#changes: 3)
+>>> ./main.js
 // @flow
 
 'use strict';import type {O} from "./lib.js";

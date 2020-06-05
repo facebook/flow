@@ -647,17 +647,43 @@ runtest() {
           config_cmd_args="$(echo "$cmd" | awk '{$1="";$2="";print}')"
           cmd_args=("$config_cmd_args")
 
+          input_file="input.txt"
+          # LC_ALL=C ensures stable sorting between linux & macos
+          find . -name "*.js" -o -name "*.js.flow" | env LC_ALL=C sort > "$input_file"
+
+          # keep copies of the original files
+          xargs -I {} cp {} {}.orig < "$input_file"
+
           # shellcheck disable=SC2086
-          "$FLOW" "codemod" "$subcmd" \
-              $flowlib \
-              ${cmd_args[*]} \
-              $types_first_flag \
-              --strip-root \
-              --quiet \
-              . \
-              1>> "$abs_out_file" \
-              2>> "$stderr_dest"
+          codemod_out=$(\
+            "$FLOW" "codemod" "$subcmd" \
+                $flowlib \
+                ${cmd_args[*]} \
+                $types_first_flag \
+                --strip-root \
+                --quiet \
+                --input-file "$input_file" \
+                --write \
+                . \
+                2>> "$stderr_dest"
+          )
           st=$?
+
+          # Keep copies of codemod-ed files
+          xargs -I {} cp {} {}.codemod < "$input_file"
+
+          # Compare codemod-ed with original
+          while read -r file; do
+            diff --strip-trailing-cr \
+              --label "$file.orig" --label "$file.codemod" \
+              "$file.orig" "$file" > /dev/null
+            code=$?
+            if [ $code -ne 0 ]; then
+              (echo ">>> $file"; cat "$file"; echo "") >> "$abs_out_file"
+            fi
+          done <"$input_file"
+
+          (echo "$codemod_out"; echo "") >> "$abs_out_file"
 
           if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
             printf "flow codemod return code: %d\\n" "$st" >> "$stderr_dest"

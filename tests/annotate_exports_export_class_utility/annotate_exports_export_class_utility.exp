@@ -1,4 +1,4 @@
->>> mainA1.js (#changes: 1)
+>>> ./mainA1.js
 // @flow
 
 import type LibA1 from "./libA1";
@@ -7,7 +7,7 @@ declare var x: LibA1;
 
 module.exports = (): LibA1 => x;
 
->>> mainA2.js (#changes: 1)
+>>> ./mainA2.js
 // @flow
 
 import type LibA2 from "./libA2";
@@ -16,7 +16,7 @@ declare var x: LibA2;
 
 module.exports = (): LibA2 => x;
 
->>> mainB2.js (#changes: 2)
+>>> ./mainB2.js
 // @flow
 
 import type LibB2 from "./libB2";import type {B2} from "./libB2.js";

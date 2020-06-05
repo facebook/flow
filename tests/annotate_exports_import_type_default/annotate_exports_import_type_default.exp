@@ -1,4 +1,4 @@
->>> b.js (#changes: 2)
+>>> ./b.js
 // @flow
 import type A from "./lib.js";const foo = require('./a');
 

@@ -1,4 +1,4 @@
->>> a.js (#changes: 1)
+>>> ./a.js
 // @flow
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
   }
 }
 
->>> b.js (#changes: 1)
+>>> ./b.js
 // @flow
 
 function foo(): {|f: number, g: number, h: string|} {
@@ -31,7 +31,7 @@ function foo(): {|f: number, g: number, h: string|} {
 }
 module.exports = { foo };
 
->>> c.js (#changes: 1)
+>>> ./c.js
 // @flow
 
 module.exports = {
@@ -40,7 +40,7 @@ module.exports = {
   },
 };
 
->>> d.js (#changes: 2)
+>>> ./d.js
 // @flow
 
 function foo() {

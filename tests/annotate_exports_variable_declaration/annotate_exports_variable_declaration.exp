@@ -1,4 +1,4 @@
->>> simple-let.js (#changes: 1)
+>>> ./simple-let.js
 // @flow
 
 declare var n: number;
@@ -8,7 +8,7 @@ let a: number | string = n;
 a = s;
 module.exports = a;
 
->>> simple-var.js (#changes: 1)
+>>> ./simple-var.js
 // @flow
 
 declare var n: number;

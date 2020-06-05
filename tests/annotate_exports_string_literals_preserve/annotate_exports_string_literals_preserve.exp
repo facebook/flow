@@ -1,4 +1,4 @@
->>> a.js (#changes: 5)
+>>> ./a.js
 // @flow
 
 declare var cond: boolean;

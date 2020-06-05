@@ -1,4 +1,4 @@
->>> a.js (#changes: 5)
+>>> ./a.js
 // @flow
 
 import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
@@ -7,7 +7,7 @@ const b = require("./b");
 
 module.exports = [(foo(): C), (bar(): D)];
 
->>> b.js (#changes: 5)
+>>> ./b.js
 // @flow
 
 import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
@@ -16,7 +16,7 @@ const c = require("./c");
 
 module.exports = [(foo(): C), (baz(): E)];
 
->>> c.js (#changes: 3)
+>>> ./c.js
 // @flow
 
 import type {E, C} from "./lib.js";import { foo, baz } from "./lib";

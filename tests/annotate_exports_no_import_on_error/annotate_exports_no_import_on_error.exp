@@ -1,4 +1,4 @@
->>> main-2.js (#changes: 3)
+>>> ./main-2.js
 // @flow
 
 import type {D} from "./lib-2.js";import { foo, bar } from "./lib-2";

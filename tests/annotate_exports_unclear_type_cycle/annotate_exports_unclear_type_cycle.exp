@@ -1,4 +1,4 @@
->>> cycle1.js (#changes: 2)
+>>> ./cycle1.js
 // @flow
 
 import {f} from './cycle2';
@@ -7,7 +7,7 @@ declare export function g(): any;
 
 export default (f(): any); // any okay
 
->>> cycle2.js (#changes: 2)
+>>> ./cycle2.js
 // @flow strict-local
 
 import {g} from './cycle1';
@@ -16,7 +16,7 @@ declare export function f(): $MyPreferedSuppression;
 
 export default (g(): $MyPreferedSuppression); // should be annotated with $MyPreferedSuppression
 
->>> other_cycle1.js (#changes: 2)
+>>> ./other_cycle1.js
 // @flow strict-local
 
 import {f} from './other_cycle2';
@@ -25,7 +25,7 @@ declare export function g(): $MyPreferedSuppression;
 
 export default (f(): $MyPreferedSuppression); // should be annotated with $MyPreferedSuppression
 
->>> other_cycle2.js (#changes: 2)
+>>> ./other_cycle2.js
 // @flow
 
 import {g} from './other_cycle1';

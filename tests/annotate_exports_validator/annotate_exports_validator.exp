@@ -1,4 +1,4 @@
->>> simplify-empty.js (#changes: 1)
+>>> ./simplify-empty.js
 // @flow
 
 export function foo(x: any): any {

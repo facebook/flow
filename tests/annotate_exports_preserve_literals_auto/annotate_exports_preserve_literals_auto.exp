@@ -1,4 +1,4 @@
->>> file.js (#changes: 4)
+>>> ./file.js
 // @flow
 
 export function tag_like_values(): $TEMPORARY$object<

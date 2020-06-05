@@ -1,4 +1,4 @@
->>> any-in-union.js (#changes: 5)
+>>> ./any-in-union.js
 // @flow
 
 const React = require('react');
@@ -17,19 +17,19 @@ module.exports = [
   (): any | {f: number,...} | {node: React.Node,...} => x5,
 ];
 
->>> any-to-flowfixme-no-strict.js (#changes: 1)
+>>> ./any-to-flowfixme-no-strict.js
 // @flow
 
 declare var x1: { f: number } | any;
 module.exports = (): any | {f: number,...} => x1;
 
->>> any-to-flowfixme-strict-local.js (#changes: 1)
+>>> ./any-to-flowfixme-strict-local.js
 // @flow strict-local
 
 declare var x1: { f: number } | any;
 module.exports = (): any | {f: number,...} => x1;
 
->>> any-to-flowfixme-strict.js (#changes: 1)
+>>> ./any-to-flowfixme-strict.js
 // @flow strict
 
 declare var x1: { f: number } | any;

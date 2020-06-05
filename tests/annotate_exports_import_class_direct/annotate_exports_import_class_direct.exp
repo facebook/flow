@@ -1,4 +1,4 @@
->>> main.js (#changes: 1)
+>>> ./main.js
 // @flow
 
 const C = require('./lib');
