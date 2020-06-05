@@ -147,7 +147,8 @@ let warning_flags prev =
            "Warnings above this number will cause a nonzero exit code (implies --include-warnings)")
 
 let profile_flag prev =
-  CommandSpec.ArgSpec.(prev |> flag "--profile" no_arg ~doc:"Output profiling information")
+  let open CommandSpec.ArgSpec in
+  prev |> flag "--profile" no_arg ~doc:"Output profiling information" ~env:"FLOW_PROFILE"
 
 let error_flags prev =
   CommandSpec.ArgSpec.(
@@ -907,7 +908,7 @@ let options_flags =
     CommandSpec.ArgSpec.(
       prev
       |> collect collect_options_flags
-      |> flag "--debug" no_arg ~doc:"Print debug info during typecheck"
+      |> flag "--debug" no_arg ~doc:"Print debug info during typecheck" ~env:"FLOW_DEBUG"
       |> profile_flag
       |> flag "--all" no_arg ~doc:"Typecheck all files, not just @flow"
       |> flag
@@ -1019,6 +1020,7 @@ let file_watcher_flag prev =
        "--file-watcher-debug"
        no_arg
        ~doc:"Enable debug logging for the file watcher. This is very noisy"
+       ~env:"FLOW_FILE_WATCHER_DEBUG"
   |> flag
        "--file-watcher-timeout"
        uint
