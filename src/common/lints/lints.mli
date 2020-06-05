@@ -46,6 +46,7 @@ type lint_kind =
   | NonConstVarExport
   | ThisInExportedFunction
   | MixedImportAndRequire
+  | ExportRenamedDefault
 
 val string_of_kind : lint_kind -> string
 

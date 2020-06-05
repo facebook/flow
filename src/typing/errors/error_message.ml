@@ -210,6 +210,7 @@ and 'loc t' =
   | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EThisInExportedFunction of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
+  | EExportRenamedDefault of 'loc * string
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -772,6 +773,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
+  | EExportRenamedDefault (loc, s) -> EExportRenamedDefault (f loc, s)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1070,6 +1072,7 @@ let util_use_op_of_msg nope util = function
   | ENonConstVarExport _
   | EThisInExportedFunction _
   | EMixedImportAndRequire _
+  | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
@@ -1238,6 +1241,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonConstVarExport (loc, _)
   | EThisInExportedFunction loc
   | EMixedImportAndRequire (loc, _)
+  | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1357,6 +1361,7 @@ let kind_of_msg =
     | ENonConstVarExport _ -> LintError Lints.NonConstVarExport
     | EThisInExportedFunction _ -> LintError Lints.ThisInExportedFunction
     | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
+    | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -2458,6 +2463,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " statements in the same file.";
           ];
       }
+  | EExportRenamedDefault (_, name) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot set the default export of a module by renaming ";
+            code name;
+            text " to ";
+            code "default";
+            text ". If you intended to set the default export use ";
+            code (spf "export default %s" name);
+            text " instead.";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -3495,6 +3514,7 @@ let error_code_of_message err : error_code option =
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
   | EStrictLookupFailed _ -> Some Error_codes.PropMissing
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
+  | EExportRenamedDefault _ -> Some ExportRenamedDefault
   | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
   | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
   | ETrustedAnnot _ -> Some InvalidTrustedTypeArg

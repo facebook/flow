@@ -46,6 +46,7 @@ type lint_kind =
   | NonConstVarExport
   | ThisInExportedFunction
   | MixedImportAndRequire
+  | ExportRenamedDefault
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -85,6 +86,7 @@ let string_of_kind = function
   | NonConstVarExport -> "non-const-var-export"
   | ThisInExportedFunction -> "this-in-exported-function"
   | MixedImportAndRequire -> "mixed-import-and-require"
+  | ExportRenamedDefault -> "export-renamed-default"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -124,6 +126,7 @@ let kinds_of_string = function
   | "non-const-var-export" -> Some [NonConstVarExport]
   | "this-in-exported-function" -> Some [ThisInExportedFunction]
   | "mixed-import-and-require" -> Some [MixedImportAndRequire]
+  | "export-renamed-default" -> Some [ExportRenamedDefault]
   | _ -> None
 
 module LintKind = struct

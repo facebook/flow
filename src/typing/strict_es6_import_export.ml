@@ -183,6 +183,9 @@ class import_export_visitor ~cx ~scope_info ~declarations =
     method private add_this_in_exported_function_error loc =
       this#add_error (Error_message.EThisInExportedFunction loc)
 
+    method private add_export_named_default_error loc name =
+      this#add_error (Error_message.EExportRenamedDefault (loc, name))
+
     method private import_star_from_use =
       (* Create a map from import star use locs to the import star specifier *)
       let import_star_uses =
@@ -382,7 +385,15 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         match specifiers with
         | Some (ExportSpecifiers specifiers) ->
           List.iter
-            (fun (_, { ExportSpecifier.local = (id_loc, _); _ }) ->
+            (fun ( spec_loc,
+                   { ExportSpecifier.local = (id_loc, { Ast.Identifier.name; _ }); exported } ) ->
+              (* Check for renaming export to be default export *)
+              begin
+                match exported with
+                | Some (_, { Ast.Identifier.name = "default"; _ }) ->
+                  this#add_export_named_default_error spec_loc name
+                | _ -> ()
+              end;
               match Scopes.def_of_use_opt scope_info id_loc with
               | Some def ->
                 let def_loc = Nel.hd def.Scopes.Def.locs in

@@ -22,6 +22,15 @@ Cannot use `this` in an exported function. [this-in-exported-function]
                                   ^^^^
 
 
+Error ------------------------------------------------------------------------------------ export_renamed_default.js:5:9
+
+Cannot set the default export of a module by renaming `Foo` to `default`. If you intended to set the default export use
+`export default Foo` instead. [export-renamed-default]
+
+   5| export {Foo as default}
+              ^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------- export_unresolved_ident.js:4:9
 
 Cannot resolve name `A`. [cannot-resolve-name]
@@ -395,4 +404,4 @@ References:
 
 
 
-Found 33 errors
+Found 34 errors

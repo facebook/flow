@@ -31,6 +31,7 @@ type error_code =
   | DynamicExport
   | EnumValueAsType
   | ExponentialSpread
+  | ExportRenamedDefault
   | ExportValueAsType
   | ExtraArg
   | ExtraTypeArg
@@ -168,6 +169,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.NonConstVarExport -> NonConstVarExport
   | Lints.ThisInExportedFunction -> ThisInExportedFunction
   | Lints.MixedImportAndRequire -> MixedImportAndRequire
+  | Lints.ExportRenamedDefault -> ExportRenamedDefault
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -195,6 +197,7 @@ let string_of_code : error_code -> string = function
   | DynamicExport -> "dynamic-export"
   | EnumValueAsType -> "enum-value-as-type"
   | ExponentialSpread -> "exponential-spread"
+  | ExportRenamedDefault -> "export-renamed-default"
   | ExportValueAsType -> "export-value-as-type"
   | ExtraArg -> "extra-arg"
   | ExtraTypeArg -> "extra-type-arg"
