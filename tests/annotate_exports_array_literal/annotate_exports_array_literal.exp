@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -44,4 +47,33 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+type Inexact = { data: string; type: string; }
+type Exact = {| data: string; type: string; |}
+
+function foo(): Array<{data: string, type: string,...}> {
+  return [
+    {data: "", type: ""},
+    {data: "", type: ""},
+  ];
+}
+
+(foo(): Array<Inexact>);
+(foo(): Array<Exact>);
+
+module.exports = foo;
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+6c6
+< function foo(): Array<{|data: string, type: string|}> {
+---
+> function foo(): Array<{data: string, type: string,...}> {
 

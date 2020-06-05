@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -55,4 +58,100 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+import { foo, bar } from "./lib";
+
+const b = require("./b");
+
+module.exports = [(foo(): C), (bar(): D)];
+
+>>> ./b.js
+// @flow
+
+import { foo, baz } from "./lib";
+
+const c = require("./c");
+
+module.exports = [(foo(): C), (baz(): E)];
+
+>>> ./c.js
+// @flow
+
+import { foo, baz } from "./lib";
+
+const a = require("./a");
+
+module.exports = [
+  (0 < 1 ? foo() : baz(): C | E)
+];
+
+>>> ./error-a.js
+// @flow
+
+// This test ensures that no imports are added since there is an error
+
+import { foo, bar } from "./lib";
+import { error_foo, error_bar } from "./error-lib";
+
+const b = require("./error-b");
+
+module.exports = [
+  (0 < 1 ? foo() : error_foo(): C | C),
+  (0 < 1 ? bar() : error_bar(): D | D),
+];
+
+>>> ./error-b.js
+// @flow
+
+import { foo, baz } from "./lib";
+import { error_foo, error_baz } from "./error-lib";
+
+const a = require("./error-a");
+
+module.exports = [
+  (0 < 1 ? foo() : error_foo(): C | C),
+  (0 < 1 ? baz() : error_baz(): E | E),
+];
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+3c3
+< import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
+---
+> import { foo, bar } from "./lib";
+
+>>> ./b.js
+3c3
+< import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+---
+> import { foo, baz } from "./lib";
+
+>>> ./c.js
+3c3
+< import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+---
+> import { foo, baz } from "./lib";
+
+>>> ./error-a.js
+11,12c11,12
+<   0 < 1 ? foo() : error_foo(),
+<   0 < 1 ? bar() : error_bar(),
+---
+>   (0 < 1 ? foo() : error_foo(): C | C),
+>   (0 < 1 ? bar() : error_bar(): D | D),
+
+>>> ./error-b.js
+9,10c9,10
+<   0 < 1 ? foo() : error_foo(),
+<   0 < 1 ? baz() : error_baz(),
+---
+>   (0 < 1 ? foo() : error_foo(): C | C),
+>   (0 < 1 ? baz() : error_baz(): E | E),
 

@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -61,4 +64,76 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+import { foo1a } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1a(): C),
+  (foo2(): C),
+]
+
+>>> ./b.js
+// @flow
+
+import { foo1b } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1b(): typeof C),
+  (foo2(): C),
+]
+
+>>> ./c.js
+// @flow
+
+import { foo1a, foo1b } from './lib1';
+
+module.exports = [
+  (foo1a(): C),
+  (foo1b(): typeof C),
+]
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+3,4c3
+< import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
+< import type {C} from "./lib1.js";import { foo1a } from './lib1';
+---
+> import { foo1a } from './lib1';
+9c8
+<   (foo2(): $IMPORTED_TYPE$_C_1),
+---
+>   (foo2(): C),
+
+>>> ./b.js
+3,4c3
+< import typeof {C} from "./lib1.js";
+< import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";import { foo1b } from './lib1';
+---
+> import { foo1b } from './lib1';
+8,9c7,8
+<   (foo1b(): C),
+<   (foo2(): $IMPORTED_TYPE$_C_1),
+---
+>   (foo1b(): typeof C),
+>   (foo2(): C),
+
+>>> ./c.js
+3,4c3
+< import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";
+< import type {C} from "./lib1.js";import { foo1a, foo1b } from './lib1';
+---
+> import { foo1a, foo1b } from './lib1';
+8c7
+<   (foo1b(): $IMPORTED_TYPEOF$_C_1),
+---
+>   (foo1b(): typeof C),
 

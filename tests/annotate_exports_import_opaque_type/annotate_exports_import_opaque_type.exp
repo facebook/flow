@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./main.js
 // @flow
 
@@ -35,4 +38,24 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./main.js
+// @flow
+
+'use strict';
+
+const o = require('./lib');
+
+module.exports = (o(): O);
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./main.js
+3c3
+< 'use strict';import type {O} from "./lib.js";
+---
+> 'use strict';
 

@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./simplify-empty.js
 // @flow
 
@@ -37,3 +40,18 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./simplify-empty.js
+// @flow
+
+export function foo(x: any): any {
+  if (x && x.bar) {
+    return x.bar();
+  }
+  return x;
+}
+
+
+=== Diff between codemod-ed & autofix-ed ===

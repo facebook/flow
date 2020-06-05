@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./main.js
 // @flow
 
@@ -37,4 +40,26 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./main.js
+// @flow
+
+import { foo } from "./lib";
+
+module.exports = {
+  f: (foo(): C),
+  g: (foo(): C),
+  h: (foo(): C)
+};
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./main.js
+3c3
+< import type {C} from "./lib.js";import { foo } from "./lib";
+---
+> import { foo } from "./lib";
 

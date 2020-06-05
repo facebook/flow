@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow strict
 
@@ -42,4 +45,23 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            1
   Empty SomeKnownUpper:                     2
+
+
+=== Autofix exports ===
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+3c3
+< const a0: Array<$FlowFixMeEmpty> = [];
+---
+> const a0 = [];
+5c5
+< const a1: Array<$FlowFixMe | number> = [];
+---
+> const a1 = [];
+8c8
+< const a2: Array<number> = [];
+---
+> const a2 = [];
 

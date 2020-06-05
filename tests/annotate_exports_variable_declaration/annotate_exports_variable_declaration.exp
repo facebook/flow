@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./simple-let.js
 // @flow
 
@@ -47,3 +50,28 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./simple-let.js
+// @flow
+
+declare var n: number;
+declare var s: string;
+
+let a: number | string = n;
+a = s;
+module.exports = a;
+
+>>> ./simple-var.js
+// @flow
+
+declare var n: number;
+declare var s: string;
+
+var a: number | string = n;
+a = s;
+module.exports = a;
+
+
+=== Diff between codemod-ed & autofix-ed ===

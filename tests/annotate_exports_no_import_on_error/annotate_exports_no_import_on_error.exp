@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./main-2.js
 // @flow
 
@@ -35,4 +38,43 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./main-1.js
+// @flow
+
+import { foo } from "./lib-1";
+
+module.exports = (foo(): C); // error: C is not exported
+
+>>> ./main-2.js
+// @flow
+
+import { foo, bar } from "./lib-2";
+
+module.exports._1 = (foo(): C); // error: C is not exported
+module.exports._2 = (0 < 1 ? foo() : bar(): C | D); // error: C is not exported, even though D is okay
+module.exports._3 = (bar(): D); // okay
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./main-1.js
+5c5
+< module.exports = foo(); // error: C is not exported
+---
+> module.exports = (foo(): C); // error: C is not exported
+
+>>> ./main-2.js
+3c3
+< import type {D} from "./lib-2.js";import { foo, bar } from "./lib-2";
+---
+> import { foo, bar } from "./lib-2";
+5,6c5,6
+< module.exports._1 = foo(); // error: C is not exported
+< module.exports._2 = 0 < 1 ? foo() : bar(); // error: C is not exported, even though D is okay
+---
+> module.exports._1 = (foo(): C); // error: C is not exported
+> module.exports._2 = (0 < 1 ? foo() : bar(): C | D); // error: C is not exported, even though D is okay
 

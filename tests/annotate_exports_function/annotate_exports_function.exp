@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -48,3 +51,29 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+export function f(): number {
+  return 1;
+}
+
+>>> ./arrow-annot.js
+// @flow
+
+const f = (x: string): number => 1;
+f("");
+module.exports = f;
+
+>>> ./b.js
+// @flow
+
+const functionArray = (): Array<(x: number) => number> => ([(x: number) => x])
+
+module.exports = functionArray;
+
+
+=== Diff between codemod-ed & autofix-ed ===

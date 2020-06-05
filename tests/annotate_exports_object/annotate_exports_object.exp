@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -94,4 +97,95 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+module.exports = {
+  a: (): {x: string,...} => {
+  return {
+    x:
+      // comment
+      "blah"
+    };
+  }
+}
+
+>>> ./b.js
+// @flow
+
+function foo(): {f: number, g: number, h: string,...} {
+  // Comment 0
+  const x = {
+    // Comment 1
+    f: 1,
+    // Comment 2
+    g: 2,
+    // Comment 3
+    h:
+    // Comment 4
+      "blah",
+  }
+  // Comment 5
+  return x;
+}
+module.exports = { foo };
+
+>>> ./c.js
+// @flow
+
+module.exports = {
+  m(): number {
+    return 1;
+  },
+};
+
+>>> ./d.js
+// @flow
+
+function foo() {
+  return {
+    '-': 1,
+    '': 2,
+    '\u{1F60A}': 3,
+    [1]: 4,
+  };
+}
+
+export const foo_: {"": number, "-": number, "\ud83d\ude0a": number,...} = foo();
+
+declare var b: {
+  '-': 1,
+  '': 2,
+  '\u{1F60A}': 3,
+  [1]: 4,
+};
+function bar() {
+  return b;
+}
+
+export const bar_: {[1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3} = bar();
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+4c4
+<   a: (): {|x: string|} => {
+---
+>   a: (): {x: string,...} => {
+
+>>> ./b.js
+3c3
+< function foo(): {|f: number, g: number, h: string|} {
+---
+> function foo(): {f: number, g: number, h: string,...} {
+
+>>> ./d.js
+12c12
+< export const foo_: {|"": number, "-": number, "\ud83d\ude0a": number|} = foo();
+---
+> export const foo_: {"": number, "-": number, "\ud83d\ude0a": number,...} = foo();
 

@@ -650,6 +650,8 @@ runtest() {
           # LC_ALL=C ensures stable sorting between linux & macos
           find . -name "*.js" -o -name "*.js.flow" | env LC_ALL=C sort > "$input_file"
 
+          (echo ""; echo "=== Codemod annotate-exports ==="; echo "") >> "$abs_out_file"
+
           # keep copies of the original files
           xargs -I {} cp {} {}.orig < "$input_file"
 
@@ -683,6 +685,49 @@ runtest() {
           done <"$input_file"
 
           (echo "$codemod_out"; echo "") >> "$abs_out_file"
+
+          (echo ""; echo "=== Autofix exports ==="; echo "") >> "$abs_out_file"
+
+          # Restore original versions
+          xargs -I {} cp {}.orig {} < "$input_file"
+
+          # Run autofix version
+          start_flow . --quiet
+          while read -r file; do
+            "$FLOW" "autofix" "exports" \
+                --strip-root \
+                --in-place \
+                "$file" \
+                2>> "$stderr_dest"
+          done <"$input_file"
+
+          # Keep copies of autofix-ed files
+          xargs -I {} cp {} {}.autofix < "$input_file"
+
+          # Compare autofix-ed with original
+          while read -r file; do
+            diff --strip-trailing-cr \
+              --label "$file.orig" --label "$file.autofix" \
+              "$file.orig" "$file" > /dev/null
+            code=$?
+            if [ $code -ne 0 ]; then
+              (echo ">>> $file"; cat "$file.autofix"; echo "") >> "$abs_out_file"
+            fi
+          done <"$input_file"
+
+          # Compare codemod-ed and autofix-ed files
+          (echo ""; echo "=== Diff between codemod-ed & autofix-ed ===") >> "$abs_out_file"
+          while read -r file; do
+            diff_result=$(\
+              diff --strip-trailing-cr \
+                --label "$file.codemod" --label "$file.autofix" \
+                "$file.codemod" "$file.autofix"\
+              )
+            code=$?
+            if [ $code -ne 0 ]; then
+              (echo ">>> $file"; echo "$diff_result"; echo "") >> "$abs_out_file"
+            fi
+          done <"$input_file"
 
           if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
             printf "flow codemod return code: %d\\n" "$st" >> "$stderr_dest"

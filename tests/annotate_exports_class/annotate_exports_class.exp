@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -58,4 +61,47 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            1
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+class C {}
+// XYZXYZ
+export default class {
+  array: Array<empty> = [];
+  num: number = 1;
+}
+
+>>> ./b.js
+// @flow
+
+class C {
+  m(): number {
+    return 1;
+  }
+}
+module.exports = C;
+
+>>> ./c.js
+// @flow
+
+class A {
+  f: ((x: string) => string) = (x: string) => x;
+}
+
+module.exports = {
+  a: A,
+  b: (x: string): string => x,
+};
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+6c6
+<   array: Array<any> = [];
+---
+>   array: Array<empty> = [];
 

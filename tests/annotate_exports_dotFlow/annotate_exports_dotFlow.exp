@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -37,3 +40,18 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+module.exports = (): number => 1;
+
+>>> ./a.js.flow
+// @flow
+
+module.exports = (): number => 1;
+
+
+=== Diff between codemod-ed & autofix-ed ===

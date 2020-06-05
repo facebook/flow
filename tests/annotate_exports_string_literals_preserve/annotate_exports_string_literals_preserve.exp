@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./a.js
 // @flow
 
@@ -40,4 +43,39 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+declare var cond: boolean;
+
+module.exports = {
+  f1: (): string => (cond ? "0" : "1"),
+  f2: (): string => (cond ? "A0" : "A1"),
+  f3: (): string => (cond ? "Aa" : "Bb"),
+  f4: (): string => (cond ? "A_" : "B_"),
+
+  f5: (): string => (cond ? "1/1/2000" : "1/1/2001"),
+}
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+6,9c6,9
+<   f1: (): $TEMPORARY$string<"0"> | $TEMPORARY$string<"1"> => (cond ? "0" : "1"),
+<   f2: (): $TEMPORARY$string<"A0"> | $TEMPORARY$string<"A1"> => (cond ? "A0" : "A1"),
+<   f3: (): $TEMPORARY$string<"Aa"> | $TEMPORARY$string<"Bb"> => (cond ? "Aa" : "Bb"),
+<   f4: (): $TEMPORARY$string<"A_"> | $TEMPORARY$string<"B_"> => (cond ? "A_" : "B_"),
+---
+>   f1: (): string => (cond ? "0" : "1"),
+>   f2: (): string => (cond ? "A0" : "A1"),
+>   f3: (): string => (cond ? "Aa" : "Bb"),
+>   f4: (): string => (cond ? "A_" : "B_"),
+11c11
+<   f5: (): $TEMPORARY$string<"1/1/2000"> | $TEMPORARY$string<"1/1/2001"> => (cond ? "1/1/2000" : "1/1/2001"),
+---
+>   f5: (): string => (cond ? "1/1/2000" : "1/1/2001"),
 

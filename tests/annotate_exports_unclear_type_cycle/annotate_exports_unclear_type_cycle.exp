@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./cycle1.js
 // @flow
 
@@ -62,4 +65,57 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./cycle1.js
+// @flow
+
+import {f} from './cycle2';
+
+declare export function g(): any;
+
+export default (f(): any); // any okay
+
+>>> ./cycle2.js
+// @flow strict-local
+
+import {g} from './cycle1';
+
+declare export function f(): $MyPreferedSuppression;
+
+export default (g(): any); // should be annotated with $MyPreferedSuppression
+
+>>> ./other_cycle1.js
+// @flow strict-local
+
+import {f} from './other_cycle2';
+
+declare export function g(): $MyPreferedSuppression;
+
+export default (f(): any); // should be annotated with $MyPreferedSuppression
+
+>>> ./other_cycle2.js
+// @flow
+
+import {g} from './other_cycle1';
+
+declare export function f(): any;
+
+export default (g(): any); // any okay
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./cycle2.js
+7c7
+< export default (g(): $MyPreferedSuppression); // should be annotated with $MyPreferedSuppression
+---
+> export default (g(): any); // should be annotated with $MyPreferedSuppression
+
+>>> ./other_cycle1.js
+7c7
+< export default (f(): $MyPreferedSuppression); // should be annotated with $MyPreferedSuppression
+---
+> export default (f(): any); // should be annotated with $MyPreferedSuppression
 

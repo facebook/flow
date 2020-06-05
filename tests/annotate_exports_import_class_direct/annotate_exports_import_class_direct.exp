@@ -1,3 +1,6 @@
+
+=== Codemod annotate-exports ===
+
 >>> ./main.js
 // @flow
 
@@ -34,3 +37,15 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./main.js
+// @flow
+
+const C = require('./lib');
+
+module.exports = (): typeof C => C;
+
+
+=== Diff between codemod-ed & autofix-ed ===
