@@ -340,6 +340,65 @@ RUNTEST_SKIP=2
 RUNTEST_MISSING_FILES=3
 RUNTEST_ERROR=4
 
+
+# start_flow_unsafe ROOT [OPTIONS]...
+start_flow_unsafe () {
+  local root=$1; shift
+
+  if [ ! -d "$root" ]; then
+    printf "Invalid root directory '%s'\\n" "$root" >&2
+    return 1
+  fi
+
+  if [[ "$saved_state" -eq 1 ]]; then
+    local flowconfig_name=".flowconfig"
+    for ((i=1; i<=$#; i++)); do
+      opt="${!i}"
+      if [ "$opt" = "--flowconfig-name" ]
+      then
+        ((i++))
+        flowconfig_name=${!i}
+      fi
+    done
+
+    if create_saved_state "$root" "$flowconfig_name"
+    then
+      PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
+      "$FLOW" start "$root" \
+        $flowlib --wait \
+        $types_first_flag \
+        --wait-for-recheck "$wait_for_recheck" \
+        --saved-state-fetcher "local" \
+        --saved-state-no-fallback \
+        --file-watcher "$file_watcher" \
+        --log-file "$abs_log_file" \
+        --monitor-log-file "$abs_monitor_log_file" \
+        "$@"
+      return $?
+    else
+        printf "Failed to generate saved state\\n" >&2
+        return 1
+    fi
+  else
+    # start server and wait
+    PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
+    "$FLOW" start "$root" \
+      $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
+      $types_first_flag \
+      --file-watcher "$file_watcher" \
+      --log-file "$abs_log_file" \
+      --monitor-log-file "$abs_monitor_log_file" \
+      "$@"
+    return $?
+  fi
+}
+
+# start_flow_unsafe ROOT [OPTIONS]...
+start_flow () {
+  assert_ok start_flow_unsafe "$@"
+}
+
+
 # This function runs in the background so it shouldn't output anything to
 # stdout or stderr. It should only communicate through its return value
 runtest() {
@@ -606,63 +665,6 @@ runtest() {
           fi
         else
             # otherwise, run specified flow command, then kill the server
-
-            # start_flow_unsafe ROOT [OPTIONS]...
-            start_flow_unsafe () {
-              local root=$1; shift
-
-              if [ ! -d "$root" ]; then
-                printf "Invalid root directory '%s'\\n" "$root" >&2
-                return 1
-              fi
-
-              if [[ "$saved_state" -eq 1 ]]; then
-                local flowconfig_name=".flowconfig"
-                for ((i=1; i<=$#; i++)); do
-                  opt="${!i}"
-                  if [ "$opt" = "--flowconfig-name" ]
-                  then
-                    ((i++))
-                    flowconfig_name=${!i}
-                  fi
-                done
-
-                if create_saved_state "$root" "$flowconfig_name"
-                then
-                  PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
-                  "$FLOW" start "$root" \
-                    $flowlib --wait \
-                    $types_first_flag \
-                    --wait-for-recheck "$wait_for_recheck" \
-                    --saved-state-fetcher "local" \
-                    --saved-state-no-fallback \
-                    --file-watcher "$file_watcher" \
-                    --log-file "$abs_log_file" \
-                    --monitor-log-file "$abs_monitor_log_file" \
-                    "$@"
-                  return $?
-                else
-                    printf "Failed to generate saved state\\n" >&2
-                    return 1
-                fi
-              else
-                # start server and wait
-                PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
-                "$FLOW" start "$root" \
-                  $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
-                  $types_first_flag \
-                  --file-watcher "$file_watcher" \
-                  --log-file "$abs_log_file" \
-                  --monitor-log-file "$abs_monitor_log_file" \
-                  "$@"
-                return $?
-              fi
-            }
-
-            # start_flow_unsafe ROOT [OPTIONS]...
-            start_flow () {
-              assert_ok start_flow_unsafe "$@"
-            }
 
             if [ $auto_start = true ]; then
               start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
