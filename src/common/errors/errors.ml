@@ -532,7 +532,7 @@ module Friendly = struct
             } ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    loop ~hidden_branches:false ~show_code:true []
+    loop ~hidden_branches:false []
 
   let extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =
@@ -606,7 +606,9 @@ module Friendly = struct
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic error =
-    let (_, loc, message) = message_group_of_error ~show_all_branches:false ~show_root:true error in
+    let (_, loc, message) =
+      message_group_of_error ~show_all_branches:false ~show_root:true ~show_code:true error
+    in
     (* Extract the references from the message. *)
     let (references, message) = extract_references message in
     (* We use a basic strategy that concatenates all group messages together.
@@ -2619,7 +2621,7 @@ module Cli_output = struct
      * render a trace. *)
     Friendly.(
       let (primary_loc, { group_message; group_message_list }) =
-        check (message_group_of_error ~show_all_branches ~show_root:true error)
+        check (message_group_of_error ~show_all_branches ~show_root:true ~show_code:true error)
       in
       get_pretty_printed_friendly_error_group
         ~stdin_file
@@ -2934,7 +2936,7 @@ module Json_output = struct
     Hh_json.(
       Friendly.(
         let (_, primary_loc, message_group) =
-          message_group_of_error ~show_all_branches:false ~show_root:true error
+          message_group_of_error ~show_all_branches:false ~show_root:true ~show_code:true error
         in
         let (references, message_group) = extract_references message_group in
         let root_loc =
@@ -3249,7 +3251,11 @@ module Lsp_output = struct
     (* and the LSP related location will have message "[1]: `foo`"      *)
     let (kind, _, friendly) = error in
     let (_, loc, group) =
-      Friendly.message_group_of_error ~show_all_branches:false ~show_root:true friendly
+      Friendly.message_group_of_error
+        ~show_all_branches:false
+        ~show_root:true
+        ~show_code:false
+        friendly
     in
     let (references, group) = Friendly.extract_references group in
     let features = Friendly.message_of_group_message group in
@@ -3271,7 +3277,9 @@ module Lsp_output = struct
     {
       loc;
       message = String.trim message;
-      code = string_of_kind kind;
+      code =
+        code_of_printable_error error
+        |> Base.Option.value_map ~f:Error_codes.string_of_code ~default:(string_of_kind kind);
       relatedLocations = List.rev relatedLocations;
     }
 end
