@@ -44,19 +44,27 @@ const baz = 3;
 `;
 
 const testOutput =
-`/* this is a really long comment that definitely goes over the line length
- * limit so the tool has to wrap it */
+`/* $FlowFixMe[code1] this is a really long comment that definitely goes over
+ * the line length limit so the tool has to wrap it */
+/* $FlowFixMe[code2] this is a really long comment that definitely goes over
+ * the line length limit so the tool has to wrap it */
 const bar = 4;
 const foo = 4;
-/* this is a really long comment that definitely goes over the line length
- * limit so the tool has to wrap it */
+/* $FlowFixMe[code1] this is a really long comment that definitely goes over
+ * the line length limit so the tool has to wrap it */
+/* $FlowFixMe[code2] this is a really long comment that definitely goes over
+ * the line length limit so the tool has to wrap it */
 const baz = 3;
 <>
-  {/* this is a really long comment that definitely goes over the line length
-    * limit so the tool has to wrap it */}
+  {/* $FlowFixMe[code1] this is a really long comment that definitely goes over
+    * the line length limit so the tool has to wrap it */}
+  {/* $FlowFixMe[code2] this is a really long comment that definitely goes over
+    * the line length limit so the tool has to wrap it */}
   <div>
-    {/* this is a really long comment that definitely goes over the line length
-      * limit so the tool has to wrap it */}
+    {/* $FlowFixMe[code1] this is a really long comment that definitely goes
+      * over the line length limit so the tool has to wrap it */}
+    {/* $FlowFixMe[code2] this is a really long comment that definitely goes
+      * over the line length limit so the tool has to wrap it */}
     <span>
       foo
     </span>
@@ -83,5 +91,6 @@ function makeSuppression(line: number): Suppression {
     },
     isError: true,
     lints: new Set(),
+    error_codes:["code2","code1"]
   };
 }

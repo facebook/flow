@@ -35,6 +35,7 @@ export type Suppression = {|
   loc: FlowLoc,
   isError: boolean,
   lints: Set<string>,
+  error_codes: Array<string>,
 |};
 
 const unselectedBox = '[ ]';
@@ -77,6 +78,10 @@ class BlessedError {
     } else {
       return mainSourceLocOfError(this.error);
     }
+  }
+
+  getErrorCodes(): Array<string> {
+    return this.error.error_codes;
   }
 
   getStringOfLocation(): string {
@@ -623,18 +628,16 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
     string,
     Map<number, Suppression>,
   > = new Map();
-  // Filter out errors without a main location, and dedupe errors that share
-  // the same main location
+  // Filter out errors without a main location
   let errorCount = 0;
   for (const error of errors) {
     const loc = error.getLocation();
+    const error_codes = error.getErrorCodes();
     if (loc != null && loc.source != null) {
       const source = loc.source;
       const lineToLocsMap = filenameToLineToLocsMap.get(source) || new Map();
-      const prevValue = lineToLocsMap.get(loc.start.line);
-      const isError =
-        (prevValue && prevValue.isError) || error.error.kind !== 'lint';
-      let lints = (prevValue && prevValue.lints) || new Set();
+      const isError = error.error.kind !== 'lint';
+      let lints = new Set();
       if (error.error.kind === 'lint') {
         // \u0060 is `. using the escape to avoid a syntax highlighting bug in vscode-language-babel
         const match = /\(\u0060([^\u0060]+)\u0060\)$/.exec(
@@ -644,7 +647,27 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
           lints.add(match[1]);
         }
       }
-      const value = {loc, isError, lints};
+      function joinSuppression(
+        prevValue: ?Suppression,
+        newValue: Suppression,
+      ): Suppression {
+        if (!prevValue) {
+          return newValue;
+        }
+        return {
+          loc: newValue.loc,
+          isError: newValue.isError || prevValue.isError,
+          lints: new Set([...newValue.lints, ...prevValue.lints]),
+          error_codes: [...newValue.error_codes, ...prevValue.error_codes],
+        };
+      }
+      const prevValue: ?Suppression = lineToLocsMap.get(loc.start.line);
+      const value = joinSuppression(prevValue, {
+        loc,
+        isError,
+        lints,
+        error_codes,
+      });
       lineToLocsMap.set(loc.start.line, value);
       filenameToLineToLocsMap.set(source, lineToLocsMap);
       errorCount++;
@@ -698,7 +721,7 @@ export async function addCommentsToCode(
   const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
-  for (const {loc, isError, lints} of locs) {
+  for (const {loc, isError, lints, error_codes} of locs) {
     const path = getPathToLoc(loc, ast);
 
     if (path != null) {
@@ -711,7 +734,12 @@ export async function addCommentsToCode(
           .join(', ')}`;
         wrap = false;
       }
-      code = addCommentToCode(c, code, loc, path, wrap);
+      const comments = [...new Set(error_codes)].map(
+        error_code => '$FlowFixMe[' + error_code + '] ' + c,
+      );
+      for (c of comments) {
+        code = addCommentToCode(c, code, loc, path, wrap);
+      }
       commentCount++;
     }
   }

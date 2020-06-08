@@ -61,7 +61,7 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
       {
         type: 'string',
         name: 'comment',
-        argName: '"\\$FlowFixMe foo"',
+        argName: '"foo"',
         description:
           'Comment to add before the selected errors. If not set, you will be prompted later for it',
       },

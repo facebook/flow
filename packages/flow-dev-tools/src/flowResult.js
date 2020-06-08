@@ -18,6 +18,7 @@ export type FlowResult = {
 };
 export type FlowError = {
   kind: string,
+  error_codes : Array<string>,
   level: string,
   message: Array<FlowMessage>,
   trace: ?Array<FlowMessage>,
