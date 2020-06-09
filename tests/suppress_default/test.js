@@ -12,6 +12,9 @@
 /* $FlowFixMe */
 (3 : string);  // no error
 
+/* $FlowIgnore */
+(3 : string);  // no error
+
 /** $FlowFixMe */
 (3 : string);  // no error
 
