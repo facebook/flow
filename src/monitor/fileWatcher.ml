@@ -333,7 +333,14 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.server_options; file_watcher_debug; _ } = monitor_options in
+        let {
+          FlowServerMonitorOptions.server_options;
+          file_watcher_debug;
+          file_watcher_sync_timeout;
+          _;
+        } =
+          monitor_options
+        in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
         let settings =
@@ -342,6 +349,7 @@ end = struct
             Watchman.subscribe_mode = Watchman.Defer_changes;
             expression_terms = watchman_expression_terms;
             subscription_prefix = "flow_watcher";
+            sync_timeout = file_watcher_sync_timeout;
             roots = Files.watched_paths file_options;
             debug_logging = file_watcher_debug;
           }

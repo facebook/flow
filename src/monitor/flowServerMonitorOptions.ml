@@ -30,4 +30,6 @@ type t = {
   file_watcher_debug: bool;
   (* How long to wait for the file watcher to initialize, in seconds *)
   file_watcher_timeout: float option;
+  (* How long to wait for the file watcher to synchronize, in milliseconds *)
+  file_watcher_sync_timeout: int option;
 }

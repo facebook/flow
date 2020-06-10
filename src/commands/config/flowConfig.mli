@@ -180,6 +180,8 @@ val type_asserts : config -> bool
 
 val types_first : config -> bool
 
+val watchman_sync_timeout : config -> int option
+
 val wait_for_recheck : config -> bool
 
 val weak : config -> bool

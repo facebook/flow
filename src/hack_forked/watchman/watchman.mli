@@ -32,6 +32,7 @@ type init_settings = {
   debug_logging: bool;
   roots: Path.t list;
   subscription_prefix: string;
+  sync_timeout: int option;
 }
 
 type clock = string
