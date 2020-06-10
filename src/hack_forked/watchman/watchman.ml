@@ -50,6 +50,7 @@ type init_settings = {
   debug_logging: bool;
   roots: Path.t list;
   subscription_prefix: string;
+  sync_timeout: int option;
 }
 
 type clock = string
@@ -214,6 +215,11 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
       | None -> expressions
     in
     assert (not (List.is_empty expressions));
+    let extra_kv =
+      match env.settings.sync_timeout with
+      | Some sync_timeout -> ("sync_timeout", JSON_Number (Int.to_string sync_timeout)) :: extra_kv
+      | None -> extra_kv
+    in
     let directives =
       [
         JSON_Object
@@ -484,8 +490,8 @@ let prepend_relative_path_term ~relative_path ~terms =
     Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
 
 let re_init
-    ?prior_clockspec { subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix }
-    =
+    ?prior_clockspec
+    { subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix; sync_timeout } =
   with_crash_record_opt "init" @@ fun () ->
   let%bind conn = open_connection () in
   let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
@@ -571,7 +577,15 @@ let re_init
   in
   let env =
     {
-      settings = { debug_logging; subscribe_mode; expression_terms; roots; subscription_prefix };
+      settings =
+        {
+          debug_logging;
+          subscribe_mode;
+          expression_terms;
+          roots;
+          subscription_prefix;
+          sync_timeout;
+        };
       conn;
       watch_root;
       watched_path_expression_terms;
@@ -834,6 +848,7 @@ module Testing = struct
       debug_logging = false;
       roots = [Path.dummy_path];
       subscription_prefix = "dummy_prefix";
+      sync_timeout = None;
     }
 
   let get_test_conn () =

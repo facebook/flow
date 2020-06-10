@@ -1026,6 +1026,11 @@ let file_watcher_flag prev =
          (Printf.sprintf
             "Maximum time to wait for the file watcher to initialize, in seconds. 0 means no timeout (default: %d)"
             default_file_watcher_timeout)
+  |> flag
+       "--file-watcher-sync-timeout"
+       uint
+       ~doc:
+         "Maximum time to wait for the file watcher to synchronize, in milliseconds. 0 means no timeout. Currently only used by Watchman."
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let options_and_json_flags =
@@ -1642,6 +1647,14 @@ let choose_file_watcher_timeout ~flowconfig cli_timeout =
   | Some 0 -> None
   | Some x -> Some (float x)
   | None -> Some (float default_file_watcher_timeout)
+
+let choose_file_watcher_sync_timeout ~flowconfig file_watcher cli_timeout =
+  match cli_timeout with
+  | Some x -> Some x
+  | None ->
+    (match file_watcher with
+    | Options.Watchman -> FlowConfig.watchman_sync_timeout flowconfig
+    | _ -> None)
 
 (* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
  * has changed since the location was constructed, the offset could be incorrect. If the file has
