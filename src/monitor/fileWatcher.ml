@@ -7,7 +7,7 @@
 
 module Logger = FlowServerMonitorLogger
 
-exception FileWatcherDied of exn
+exception FileWatcherDied of Exception.t
 
 (* TODO - Push-based API for dfind. While the FileWatcher API is push based, dfind is faking it
  * by polling every seconds.
@@ -95,8 +95,12 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             files <- SSet.union files new_files;
             Lwt.return_unit
           with
-          | Sys_error msg as exn when msg = "Broken pipe" -> raise (FileWatcherDied exn)
-          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as exn -> raise (FileWatcherDied exn))
+          | Sys_error msg as e when msg = "Broken pipe" ->
+            let exn = Exception.wrap e in
+            raise (FileWatcherDied exn)
+          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as e ->
+            let exn = Exception.wrap e in
+            raise (FileWatcherDied exn))
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in

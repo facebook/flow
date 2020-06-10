@@ -42,7 +42,7 @@ type command =
  * before the monitor exits *)
 let exiting = ref false
 
-let exit ~msg exit_status =
+let exit ?error ~msg exit_status =
   if !exiting then
     (* We're already exiting, so there's nothing to do. But no one expects `exit` to return, so
      * let's just wait forever *)
@@ -57,9 +57,23 @@ let exit ~msg exit_status =
     (* Protect this thread from getting canceled *)
     Lwt.protected
       (let%lwt () = Lwt_unix.sleep 1.0 in
-       FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
+       FlowEventLogger.exit ?error (Some msg) (FlowExitStatus.to_string exit_status);
        Stdlib.exit (FlowExitStatus.error_code exit_status))
   )
+
+type stop_reason =
+  | Stopped  (** `flow stop` *)
+  | Autostopped  (** no more active connections *)
+  | Legacy_client  (** very old client tried to connect *)
+
+let stop reason =
+  let (msg, status) =
+    match reason with
+    | Stopped -> ("Killed by `flow stop`. Exiting.", FlowExitStatus.No_error)
+    | Autostopped -> ("Autostop", FlowExitStatus.Autostop)
+    | Legacy_client -> ("Killed by legacy client. Exiting.", FlowExitStatus.Build_id_mismatch)
+  in
+  exit ~msg status
 
 (* Exit after 7 days of no requests *)
 module Doomsday : sig
@@ -219,17 +233,20 @@ end = struct
     type acc = FileWatcher.watcher
 
     (* Poll for file changes every second *)
-    let main watcher =
+    let main (watcher : acc) =
       let%lwt () = watcher#wait_for_changed_files in
       push_to_command_stream (Some Notify_file_changes);
       Lwt.return watcher
 
-    let catch watcher exn =
+    let catch (watcher : acc) exn =
       match Exception.unwrap exn with
       | FileWatcher.FileWatcherDied exn ->
         let msg = spf "File watcher (%s) died" watcher#name in
-        Logger.fatal ~exn "%s" msg;
-        exit ~msg FlowExitStatus.Dfind_died
+        Logger.fatal ~exn:(Exception.to_exn exn) "%s" msg;
+        let error =
+          (Exception.get_ctor_string exn, Utils.Callstack (Exception.get_backtrace_string exn))
+        in
+        exit ~error ~msg FlowExitStatus.Dfind_died
       | _ ->
         Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server file watcher loop";
         Exception.reraise exn
@@ -313,11 +330,12 @@ end = struct
      * or failed *)
     Lwt.join [t.watcher#stop; ServerConnection.close_immediately t.connection]
 
-  let handle_file_watcher_exit watcher =
+  let handle_file_watcher_exit ?error ?msg watcher =
     (* TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
      * We could probably just restart it. For dfind, we'd also need to start a new server, but for
      * watchman we probably could just start a new watchman daemon and use the clockspec *)
-    exit ~msg:(spf "File watcher (%s) died" watcher#name) FlowExitStatus.Dfind_died
+    let msg = Base.Option.value ~default:(spf "File watcher (%s) died" watcher#name) msg in
+    exit ?error ~msg FlowExitStatus.Dfind_died
 
   let server_num = ref 0
 
@@ -406,20 +424,22 @@ end = struct
       | Ok x -> Lwt.return x
       | Error msg ->
         Logger.fatal "%s" msg;
-        handle_file_watcher_exit watcher
+        handle_file_watcher_exit ~msg watcher
     in
     Logger.debug "File watcher (%s) ready!" watcher#name;
     let file_watcher_exit_thread =
-      let%lwt () =
-        try%lwt watcher#waitpid with
-        | Lwt.Canceled as exn ->
-          let exn = Exception.wrap exn in
-          Exception.reraise exn
-        | exn ->
-          Logger.error ~exn "Uncaught exception in watcher#waitpid";
-          Lwt.return_unit
-      in
-      handle_file_watcher_exit watcher
+      match%lwt watcher#waitpid with
+      | exception (Lwt.Canceled as exn) ->
+        let exn = Exception.wrap exn in
+        Exception.reraise exn
+      | exception e ->
+        let exn = Exception.wrap e in
+        Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in watcher#waitpid";
+        let error =
+          (Exception.get_ctor_string exn, Utils.Callstack (Exception.get_backtrace_string exn))
+        in
+        handle_file_watcher_exit ~error watcher
+      | () -> handle_file_watcher_exit watcher
     in
     StatusStream.file_watcher_ready ();
 
