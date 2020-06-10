@@ -8,7 +8,7 @@
 (*
     Suppression comments have the following syntax:
 
-    <SUPPRESSOR> := $FlowIssue | $FlowFixMe | $FlowExpectedError
+    <SUPPRESSOR> := $FlowIssue | $FlowFixMe | $FlowExpectedError | $FlowIgnore
 
     //<SUPPRESSOR>[CODE]...
 *)
@@ -72,7 +72,7 @@ let should_suppress comment loc =
   let (comment, is_suppressor) =
     consume_tokens [" "; "\n"; "\t"; "\r"; "*"] comment
     |> fst
-    |> consume_tokens ["$FlowFixMe"; "$FlowIssue"; "$FlowExpectedError"]
+    |> consume_tokens ["$FlowFixMe"; "$FlowIssue"; "$FlowExpectedError"; "$FlowIgnore"]
   in
   if not is_suppressor then
     Ok None
