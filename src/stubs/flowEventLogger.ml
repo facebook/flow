@@ -78,7 +78,7 @@ let lock_stolen _ = ()
 
 let out_of_date _ = ()
 
-let exit _ _ = ()
+let exit ?error:_ _ _ = ()
 
 let report_from_monitor_server_exit_due_to_signal _ = ()
 
