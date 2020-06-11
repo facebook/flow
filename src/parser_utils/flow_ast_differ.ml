@@ -288,14 +288,18 @@ let is_import_expr (expr : (Loc.t, Loc.t) Ast.Expression.t) =
   | _ -> false
 
 (* Guess whether a statement is an import or not *)
-let is_import_or_directive_stmt (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
+let is_directive_stmt (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
+  let open Ast.Statement.Expression in
+  match stmt with
+  | (_, Ast.Statement.Expression { directive = Some _; _ }) -> true
+  | _ -> false
+
+let is_import_stmt (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
   let open Ast.Statement.Expression in
   let open Ast.Statement.VariableDeclaration in
   let open Ast.Statement.VariableDeclaration.Declarator in
   match stmt with
-  | (_, Ast.Statement.Expression { directive = Some _; _ })
-  | (_, Ast.Statement.ImportDeclaration _) ->
-    true
+  | (_, Ast.Statement.ImportDeclaration _) -> true
   | (_, Ast.Statement.Expression { expression = expr; _ }) -> is_import_expr expr
   | (_, Ast.Statement.VariableDeclaration { declarations = decs; _ }) ->
     List.exists
@@ -303,14 +307,23 @@ let is_import_or_directive_stmt (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
       decs
   | _ -> false
 
+type partition_result =
+  | Partitioned of {
+      directives: (Loc.t, Loc.t) Ast.Statement.t list;
+      imports: (Loc.t, Loc.t) Ast.Statement.t list;
+      body: (Loc.t, Loc.t) Ast.Statement.t list;
+    }
+
 let partition_imports (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
-  let rec partition_import_helper rec_stmts top =
+  let rec partition_import_helper rec_stmts (directives, imports) =
     match rec_stmts with
-    | [] -> (List.rev top, [])
-    | hd :: tl when is_import_or_directive_stmt hd -> partition_import_helper tl (hd :: top)
-    | _ -> (List.rev top, rec_stmts)
+    | hd :: tl when is_directive_stmt hd -> partition_import_helper tl (hd :: directives, imports)
+    | hd :: tl when is_import_stmt hd -> partition_import_helper tl (directives, hd :: imports)
+    | _ ->
+      Partitioned { directives = List.rev directives; imports = List.rev imports; body = rec_stmts }
   in
-  partition_import_helper stmts []
+
+  partition_import_helper stmts ([], [])
 
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
@@ -467,8 +480,14 @@ let program
       (stmts1 : (Loc.t, Loc.t) Ast.Statement.t list) (stmts2 : (Loc.t, Loc.t) Ast.Statement.t list)
       =
     Base.Option.(
-      let (imports1, body1) = partition_imports stmts1 in
-      let (imports2, body2) = partition_imports stmts2 in
+      let (imports1, body1) =
+        let (Partitioned { directives; imports; body }) = partition_imports stmts1 in
+        (directives @ imports, body)
+      in
+      let (imports2, body2) =
+        let (Partitioned { directives; imports; body }) = partition_imports stmts2 in
+        (directives @ imports, body)
+      in
       let imports_diff = list_diff algo imports1 imports2 in
       let body_diff = list_diff algo body1 body2 in
       let whole_program_diff = list_diff algo stmts1 stmts2 in

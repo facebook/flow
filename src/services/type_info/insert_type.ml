@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
 module Utils = Insert_type_utils
 
 type unexpected =
@@ -441,6 +442,15 @@ let expected_error_to_string = function
 let error_to_string = function
   | Unexpected err -> "flow autofix insert-type: " ^ unexpected_error_to_string err
   | Expected err -> "flow autofix insert-type: " ^ expected_error_to_string err
+
+let add_statement_after_directive_and_type_imports stmts new_imports =
+  let open Flow_ast_differ in
+  let (Partitioned { directives; imports; body }) = partition_imports stmts in
+  directives @ new_imports @ imports @ body
+
+let add_imports remote_converter stmts =
+  let new_imports = remote_converter#to_import_stmts () in
+  add_statement_after_directive_and_type_imports stmts new_imports
 
 let insert_type
     ~full_cx

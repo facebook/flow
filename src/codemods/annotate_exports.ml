@@ -350,28 +350,6 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         | (None, SignatureVerification.NoErrors ty) ->
           this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
 
-    (* Copied from here: /facebook/compiler/utils/transform_utils.ml
-     * Was having trouble importing due to buck.
-     *)
-    method private is_directive_statement (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
-      let open Ast.Statement in
-      match stmt with
-      | (_loc, Expression { Expression.directive = Some _; _ })
-      | (_loc, ImportDeclaration { ImportDeclaration.importKind = ImportDeclaration.ImportType; _ })
-        ->
-        true
-      | _ -> false
-
-    method private add_statement_after_directive_and_type_imports
-        (block_stmts : (Loc.t, Loc.t) Ast.Statement.t list)
-        (insert_stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
-      match block_stmts with
-      | [] -> insert_stmts
-      | stmt :: block when this#is_directive_statement stmt ->
-        (* TODO make tail-recursive *)
-        stmt :: this#add_statement_after_directive_and_type_imports block insert_stmts
-      | _ -> insert_stmts @ block_stmts
-
     method! variable_declarator ~kind decl =
       let open Flow_ast.Statement.VariableDeclaration.Declarator in
       match (kind, decl) with
@@ -626,6 +604,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         let hardcoded_imports = HardCodedImportMap.to_import_stmts hardcoded_imports in
         let inferred_imports = this#get_remote_converter#to_import_stmts () in
         let generated_imports = hardcoded_imports @ inferred_imports in
-        let stmts = this#add_statement_after_directive_and_type_imports stmts generated_imports in
+        let stmts =
+          Insert_type.add_statement_after_directive_and_type_imports stmts generated_imports
+        in
         (loc, { Ast.Program.statements = stmts; comments; all_comments })
   end

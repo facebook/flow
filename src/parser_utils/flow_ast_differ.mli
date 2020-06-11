@@ -56,3 +56,12 @@ val program :
 type 'a diff_result = int * 'a change'
 
 val list_diff : diff_algorithm -> 'a list -> 'a list -> 'a diff_result list option
+
+type partition_result =
+  | Partitioned of {
+      directives: (Loc.t, Loc.t) Flow_ast.Statement.t list;
+      imports: (Loc.t, Loc.t) Flow_ast.Statement.t list;
+      body: (Loc.t, Loc.t) Flow_ast.Statement.t list;
+    }
+
+val partition_imports : (Loc.t, Loc.t) Flow_ast.Statement.t list -> partition_result
