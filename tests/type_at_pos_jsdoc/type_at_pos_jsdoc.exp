@@ -150,3 +150,22 @@ Flags: --strip-root --pretty
   "end":15
 }
 
+function_declaration.js:8:4
+Flags: --strip-root --pretty
+{
+  "documentation":"this is foo!",
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"function_declaration.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":3,"offset":54},
+    "end":{"line":8,"column":5,"offset":57}
+  },
+  "path":"function_declaration.js",
+  "line":8,
+  "endline":8,
+  "start":3,
+  "end":5
+}
+
