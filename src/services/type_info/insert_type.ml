@@ -302,14 +302,6 @@ class mapper
 
     method! type_annotation_hint = this#update_type_annotation_hint ?type_loc:None ~check_loc:true
 
-    method! class_extends location (extends : ('loc, 'loc) Flow_ast.Class.Extends.t') =
-      match extends with
-      | { Flow_ast.Class.Extends.targs = None; _ } -> super#class_extends location extends
-      | _ ->
-        raise
-        @@ expected
-        @@ UnsupportedAnnotation { location; error_message = "Classes with type arguments" }
-
     method! function_param_pattern node =
       let open Flow_ast.Pattern in
       let open Flow_ast.Pattern.Identifier in

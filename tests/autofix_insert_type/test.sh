@@ -34,6 +34,7 @@ do_file "class-0.js" 4 3 4 4
 do_file "class-1.js" 5 6
 do_file "class-2.js" 4 6
 do_file "class-3.js" 9 15
+do_file "class-poly-0.js" 5 10
 do_file "comments-0.js" 4 33
 do_file "dictionary.js" 12 12
 do_file "func-0.js" 3 26

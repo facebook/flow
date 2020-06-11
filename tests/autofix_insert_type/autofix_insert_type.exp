@@ -103,6 +103,18 @@ class A {
 function foo(x: (() => A)) {}
 foo(new A().m);
 No errors!
+class-poly-0.js 5 10
+// @flow
+
+class D<T> {}
+class C<T> extends D<T> {
+  m(x: T): T {
+    return x;
+  }
+}
+
+module.exports = C;
+No errors!
 comments-0.js 4 33
 // @flow
 
