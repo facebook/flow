@@ -131,3 +131,22 @@ Flags: --strip-root --pretty
   "end":6
 }
 
+class_declaration.js:8:14
+Flags: --strip-root --pretty
+{
+  "documentation":"this is Foo!",
+  "type":"class Foo",
+  "reasons":[],
+  "loc":{
+    "source":"class_declaration.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":13,"offset":59},
+    "end":{"line":8,"column":15,"offset":62}
+  },
+  "path":"class_declaration.js",
+  "line":8,
+  "endline":8,
+  "start":13,
+  "end":15
+}
+

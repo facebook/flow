@@ -33,6 +33,12 @@ class documentation_searcher (def_loc : Loc.t) =
             find_description comments
           | _ -> ());
       super#variable_declaration stmt_loc decl
+
+    method! class_ stmt_loc cls =
+      let open Flow_ast.Class in
+      let { id; comments; _ } = cls in
+      Base.Option.iter id ~f:(fun (loc, _) -> if this#is_target loc then find_description comments);
+      super#class_ stmt_loc cls
   end
 
 let documentation_of_def_loc def_loc typed_ast =

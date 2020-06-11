@@ -5,3 +5,4 @@
 # LICENSE file in the root directory of this source tree.
 
 queries_in_file "type-at-pos" "variable_declaration.js" --strip-root --pretty
+queries_in_file "type-at-pos" "class_declaration.js" --strip-root --pretty
