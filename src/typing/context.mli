@@ -49,6 +49,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
   enable_const_params: bool;
@@ -287,6 +288,8 @@ val pid_prefix : t -> string
 val copy_of_context : t -> t
 
 val merge_into : sig_t -> sig_t -> unit
+
+val automatic_require_default : t -> bool
 
 (* modules *)
 val push_declare_module : t -> Module_info.t -> unit

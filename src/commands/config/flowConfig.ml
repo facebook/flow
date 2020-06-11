@@ -38,6 +38,7 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
+    automatic_require_default: bool;
     babel_loose_array_spread: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
@@ -141,6 +142,7 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
+      automatic_require_default = false;
       babel_loose_array_spread = false;
       disable_live_non_parse_errors = false;
       emoji = false;
@@ -581,6 +583,8 @@ module Opts = struct
         types_first_max_rss_bytes_for_check_per_worker_parser );
       ( "experimental.strict_es6_import_export",
         boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
+      ( "experimental.module.automatic_require_default",
+        boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
     ]
 
   let parse =
@@ -1096,6 +1100,8 @@ let libs config = config.libs
 let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
+
+let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 

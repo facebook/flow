@@ -1579,7 +1579,8 @@ struct
         (**************************************************************************)
 
         (* require('SomeModule') *)
-        | (ModuleT (_, exports, imported_is_strict), CJSRequireT (reason, t, is_strict)) ->
+        | (ModuleT (module_reason, exports, imported_is_strict), CJSRequireT (reason, t, is_strict))
+          ->
           check_nonstrict_import cx trace is_strict imported_is_strict reason;
           let cjs_exports =
             match exports.cjs_export with
@@ -1588,13 +1589,22 @@ struct
              we create below for non-CommonJS exports *)
               reposition ~trace cx (aloc_of_reason reason) t
             | None ->
-              (* convert ES module's named exports to an object *)
-              let proto = ObjProtoT reason in
               let exports_tmap = Context.find_exports cx exports.exports_tmap in
-              let props =
-                SMap.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
+              (* Convert ES module's named exports to an object *)
+              let mk_exports_object () =
+                let proto = ObjProtoT reason in
+                let props =
+                  SMap.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
+                in
+                Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
               in
-              Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
+              (* Use default export if option is enabled and module is not lib *)
+              if Context.automatic_require_default cx && not (is_lib_reason_def module_reason) then
+                match SMap.find_opt "default" exports_tmap with
+                | Some (_, default_t) -> default_t
+                | _ -> mk_exports_object ()
+              else
+                mk_exports_object ()
           in
           rec_flow_t ~use_op:unknown_use cx trace (cjs_exports, t)
         (* import * as X from 'SomeModule'; *)

@@ -867,6 +867,11 @@ let is_builtin_reason f r = r.loc |> f |> ( = ) (Some File_key.Builtins)
 let is_lib_reason r =
   r.loc |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 
+let is_lib_reason_def r =
+  def_aloc_of_reason r
+  |> ALoc.source
+  |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
+
 let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 
 (* reason transformers: *)

@@ -56,6 +56,7 @@ type react_runtime =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
+  opt_automatic_require_default: bool;
   opt_arch: arch;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
@@ -126,6 +127,8 @@ type t = {
 let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
+
+let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 

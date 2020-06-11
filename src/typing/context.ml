@@ -33,6 +33,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
   enable_const_params: bool;
@@ -207,6 +208,7 @@ let metadata_of_options options =
     strict = false;
     strict_local = false;
     (* global *)
+    automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     max_literal_length = Options.max_literal_length options;
     enable_const_params = Options.enable_const_params options;
@@ -524,6 +526,8 @@ let voidable_checks cx = cx.ccx.voidable_checks
 let use_def cx = cx.use_def
 
 let exported_locals cx = cx.exported_locals
+
+let automatic_require_default cx = cx.metadata.automatic_require_default
 
 let trust_tracking cx =
   match cx.metadata.trust_mode with

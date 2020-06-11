@@ -1276,6 +1276,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
       opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
+      opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
     })
 
 let make_env flowconfig_name connect_flags root =

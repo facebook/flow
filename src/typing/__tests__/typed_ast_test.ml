@@ -20,6 +20,7 @@ let metadata =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    automatic_require_default = false;
     babel_loose_array_spread = false;
     max_literal_length = 100;
     enable_const_params = false;
