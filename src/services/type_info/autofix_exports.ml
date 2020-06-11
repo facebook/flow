@@ -25,22 +25,37 @@ let set_of_fixable_signature_verification_locations file_sig =
       in
       List.fold_left add_fixable_sig_ver_error LocSet.empty tolerable_errors))
 
-let fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast =
-  Insert_type.(
-    insert_type
-      ~full_cx
-      ~file_sig
-      ~typed_ast
-      ~expand_aliases:false
-      ~omit_targ_defaults:false
-      ~strict:false
-      ~ambiguity_strategy:Autofix_options.Generalize)
+let fix_signature_verification_error_at_loc ?remote_converter ~full_cx ~file_sig ~typed_ast =
+  let open Insert_type in
+  insert_type
+    ~full_cx
+    ~file_sig
+    ~typed_ast
+    ~expand_aliases:false
+    ?remote_converter
+    ~omit_targ_defaults:false
+    ~strict:false
+    ~ambiguity_strategy:Autofix_options.Generalize
 
-let fix_signature_verification_errors ~full_cx ~file_sig ~typed_ast =
-  Insert_type.(
-    let do_it = fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast in
-    let try_it loc (ast, it_errs) =
-      try (do_it ast loc, it_errs)
-      with FailedToInsertType err -> (ast, error_to_string err :: it_errs)
-    in
-    (fun ast locs -> LocSet.fold try_it locs (ast, [])))
+let fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast =
+  let open Insert_type in
+  let remote_converter =
+    new ImportsHelper.remote_converter ~iteration:0 ~file:file_key ~reserved_names:SSet.empty
+  in
+  let try_it loc (ast, it_errs) =
+    try
+      ( fix_signature_verification_error_at_loc
+          ~remote_converter
+          ~full_cx
+          ~file_sig
+          ~typed_ast
+          ast
+          loc,
+        it_errs )
+    with FailedToInsertType err -> (ast, error_to_string err :: it_errs)
+  in
+  fun ast locs ->
+    let ((loc, p), it_errors) = LocSet.fold try_it locs (ast, []) in
+    let statements = add_imports remote_converter p.Flow_ast.Program.statements in
+    let ast' = (loc, { p with Flow_ast.Program.statements }) in
+    (ast', it_errors)

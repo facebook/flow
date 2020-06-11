@@ -43,15 +43,9 @@ Warnings:
 >>> ./fileA.js
 // @flow
 
-import { foo } from "./lib";
+import type {Base} from "./lib.js";import { foo } from "./lib";
 
 module.exports = class C extends (foo(): Class<Base>) {};
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./fileA.js
-3c3
-< import type {Base} from "./lib.js";import { foo } from "./lib";
----
-> import { foo } from "./lib";
-

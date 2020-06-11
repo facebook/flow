@@ -43,19 +43,9 @@ Warnings:
 >>> ./b.js
 // @flow
 
-import { foo } from './a';
+import typeof C from "./lib.js";import { foo } from './a';
 
-module.exports = (foo(): typeof C);
+module.exports = (foo(): C);
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./b.js
-3c3
-< import typeof C from "./lib.js";import { foo } from './a';
----
-> import { foo } from './a';
-5c5
-< module.exports = (foo(): C);
----
-> module.exports = (foo(): typeof C);
-

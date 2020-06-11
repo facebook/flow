@@ -155,10 +155,10 @@ module.exports = (): React$Element<"div"> => div;
 >>> ./no-import.js
 // @flow
 
-import { foo } from "./lib";
+import type {ComponentType} from "./fake-react.js";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
-export function my_foo(): React.ComponentType<any> {
+export function my_foo(): ComponentType<any> {
   return foo();
 }
 export function my_bar(): ComponentType<any> {
@@ -232,11 +232,7 @@ module.exports = (): {
 < import type {ComponentType} from "React";
 < import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react.js";import { foo } from "./lib";
 ---
-> import { foo } from "./lib";
-7c6
-< export function my_foo(): ComponentType<any> {
----
-> export function my_foo(): React.ComponentType<any> {
+> import type {ComponentType} from "./fake-react.js";import { foo } from "./lib";
 10c9
 < export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
 ---

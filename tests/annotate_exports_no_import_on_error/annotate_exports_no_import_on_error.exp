@@ -52,7 +52,7 @@ module.exports = (foo(): C); // error: C is not exported
 >>> ./main-2.js
 // @flow
 
-import { foo, bar } from "./lib-2";
+import type {D} from "./lib-2.js";import { foo, bar } from "./lib-2";
 
 module.exports._1 = (foo(): C); // error: C is not exported
 module.exports._2 = (0 < 1 ? foo() : bar(): C | D); // error: C is not exported, even though D is okay
@@ -67,10 +67,6 @@ module.exports._3 = (bar(): D); // okay
 > module.exports = (foo(): C); // error: C is not exported
 
 >>> ./main-2.js
-3c3
-< import type {D} from "./lib-2.js";import { foo, bar } from "./lib-2";
----
-> import { foo, bar } from "./lib-2";
 5,6c5,6
 < module.exports._1 = foo(); // error: C is not exported
 < module.exports._2 = 0 < 1 ? foo() : bar(); // error: C is not exported, even though D is okay

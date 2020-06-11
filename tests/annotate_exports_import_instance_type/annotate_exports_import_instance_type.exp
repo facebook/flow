@@ -57,15 +57,9 @@ module.exports = (new C: C);
 >>> ./main.js
 // @flow
 
-const c = require('./lib');
+import typeof C from "./lib.js";const c = require('./lib');
 
 module.exports = (): C => c;
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./main.js
-3c3
-< import typeof C from "./lib.js";const c = require('./lib');
----
-> const c = require('./lib');
-

@@ -67,7 +67,7 @@ declare export function bar(): { ok: OK };
 >>> ./main.js
 // @flow
 
-import { foo, bar } from './lib';
+import type {OK} from "./lib.js";import { foo, bar } from './lib';
 
 import { props } from './props';
 
@@ -88,10 +88,6 @@ module.exports = {
 > export function foo(): {ok: OK, props: Props,...} {
 
 >>> ./main.js
-3c3
-< import type {OK} from "./lib.js";import { foo, bar } from './lib';
----
-> import { foo, bar } from './lib';
 7c7
 < const f = foo();
 ---

@@ -43,15 +43,9 @@ Warnings:
 >>> ./main.js
 // @flow
 
-const i = require('./lib');
+import type {I} from "./lib.js";const i = require('./lib');
 
 module.exports = (i(): I);
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./main.js
-3c3
-< import type {I} from "./lib.js";const i = require('./lib');
----
-> const i = require('./lib');
-

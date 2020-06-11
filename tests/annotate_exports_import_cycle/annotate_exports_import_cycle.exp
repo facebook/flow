@@ -65,7 +65,7 @@ Warnings:
 >>> ./a.js
 // @flow
 
-import { foo, bar } from "./lib";
+import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
 
 const b = require("./b");
 
@@ -74,7 +74,7 @@ module.exports = [(foo(): C), (bar(): D)];
 >>> ./b.js
 // @flow
 
-import { foo, baz } from "./lib";
+import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
 
 const c = require("./c");
 
@@ -83,7 +83,7 @@ module.exports = [(foo(): C), (baz(): E)];
 >>> ./c.js
 // @flow
 
-import { foo, baz } from "./lib";
+import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
 
 const a = require("./a");
 
@@ -121,24 +121,6 @@ module.exports = [
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./a.js
-3c3
-< import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
----
-> import { foo, bar } from "./lib";
-
->>> ./b.js
-3c3
-< import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
----
-> import { foo, baz } from "./lib";
-
->>> ./c.js
-3c3
-< import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
----
-> import { foo, baz } from "./lib";
-
 >>> ./error-a.js
 11,12c11,12
 <   0 < 1 ? foo() : error_foo(),

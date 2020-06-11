@@ -54,40 +54,26 @@ Warnings:
 >>> ./b.js
 // @flow
 
-import { foo as foo1 } from "./a1";
+import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
+import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
-module.exports = [(foo1(): A), (foo2(): A)]; // duplicate import in different types
+module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
 
 >>> ./c.js
 // @flow
 
-import { foo as foo1 } from "./a1";
+import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
+import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
-module.exports = (): Array<A | A> => [foo1(), foo2()]; // duplicate import in same type
+module.exports = (): Array<$IMPORTED_TYPE$_A_1 | A> => [foo1(), foo2()]; // duplicate import in same type
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./b.js
-3,4c3
-< import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
-< import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
----
-> import { foo as foo1 } from "./a1";
-7c6
-< module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
----
-> module.exports = [(foo1(): A), (foo2(): A)]; // duplicate import in different types
-
 >>> ./c.js
-3,4c3
-< import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
-< import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
----
-> import { foo as foo1 } from "./a1";
-7c6
+7c7
 < module.exports = (): Array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // duplicate import in same type
 ---
-> module.exports = (): Array<A | A> => [foo1(), foo2()]; // duplicate import in same type
+> module.exports = (): Array<$IMPORTED_TYPE$_A_1 | A> => [foo1(), foo2()]; // duplicate import in same type
 

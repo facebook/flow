@@ -51,7 +51,7 @@ Warnings:
 >>> ./fileA.js
 // @flow
 
-const {foo} = require('react-redux');
+import type {T} from "react-redux";const {foo} = require('react-redux');
 
 module.exports = (foo(): T);
 
@@ -65,9 +65,3 @@ module.exports = (foo(): T);
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./fileA.js
-3c3
-< import type {T} from "react-redux";const {foo} = require('react-redux');
----
-> const {foo} = require('react-redux');
-

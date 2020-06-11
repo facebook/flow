@@ -7,9 +7,12 @@
 
 module Ast = Flow_ast
 module Utils = Insert_type_utils
+module Import = Insert_type_imports
+module ImportsHelper = Import.ImportsHelper
 
 type unexpected =
   | UnknownTypeAtPoint of Loc.t
+  | NoFileInLocation of Loc.t
   | FailedToSerialize of {
       ty: Ty.t;
       error_message: string;
@@ -36,6 +39,7 @@ type expected =
     }
   | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
   | FailedToNormalize of (Loc.t * string)
+  | FailedToImport of Insert_type_utils.Error.import_error
 
 type errors =
   | Unexpected of unexpected
@@ -186,10 +190,9 @@ let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
 let serialize ?(imports_react = false) ~exact_by_default loc ty =
-  ( (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty
-  |> simplify
-  |> Ty_serializer.(type_ { exact_by_default }) )
-  |> function
+  let mapper = new Utils.stylize_ty_mapper ~imports_react () in
+  let ast_result = mapper#on_t loc ty |> simplify |> Ty_serializer.(type_ { exact_by_default }) in
+  match ast_result with
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
 
@@ -213,10 +216,24 @@ let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
   | Fixme -> fixme_ambiguous_types ty
   | Suppress -> Utils.Builtins.flowfixme_ty_default
 
+let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string, string) result =
+  match Loc.source loc with
+  | Some src -> File_key.to_path src
+  | None -> error
+
 (* This class maps each node that contains the target until a node is contained
    by the target *)
+
 class mapper
-  ?(size_limit = 30) ~ambiguity_strategy ~strict ~normalize ~ty_lookup ~exact_by_default target =
+  ?(size_limit = 30)
+  ~ambiguity_strategy
+  ~strict
+  ~normalize
+  ~ty_lookup
+  ~exact_by_default
+  ~imports_react
+  ~remote_converter
+  target =
   let target_is_point = Utils.is_point target in
   object (this)
     inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
@@ -228,6 +245,16 @@ class mapper
     method private is_target loc = Loc.equal target loc
 
     method loc_annot_contains_target = this#target_contained_by
+
+    (* If we can't fix the type annotation we insert the type anyway which will fail to typecheck
+       but might provide a hint as to what the type is. *)
+    method private try_to_fix_imports ty =
+      match remote_converter#type_ ty with
+      | Ok ty -> ty
+      | Error e ->
+        (* TODO: surface these errors to user *)
+        Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
+        ty
 
     method private synth_type location =
       let scheme = ty_lookup location in
@@ -253,7 +280,8 @@ class mapper
           let err = FailedToNormalize (location, "Non-type") in
           raise (expected err)
       in
-      (location, serialize ~imports_react:true ~exact_by_default location ty)
+      let ty = this#try_to_fix_imports ty in
+      (location, serialize ~imports_react ~exact_by_default location ty)
 
     method private synth_type_annotation_hint loc = Flow_ast.Type.Available (this#synth_type loc)
 
@@ -403,6 +431,7 @@ let type_to_string t =
   |> Source.contents
 
 let unexpected_error_to_string = function
+  | NoFileInLocation _ -> "Target passed to insert-type without source in location"
   | UnknownTypeAtPoint _ -> "Couldn't locate a type for this annotation"
   | FailedToSerialize { error_message = msg; _ } -> "couldn't print type: " ^ msg
   | FailedToNormalizeNoMatch -> "couldn't print type: couldn't locate a type for this annotation"
@@ -438,6 +467,8 @@ let expected_error_to_string = function
     ^ ")"
   | FailedToValidateType { error_message = msg; _ } -> "Failed to validate type: " ^ msg
   | FailedToNormalize (_, msg) -> "couldn't print type: " ^ msg
+  | FailedToImport e ->
+    "failed to import needed type: " ^ Insert_type_utils.Error.serialize_import_error e
 
 let error_to_string = function
   | Unexpected err -> "flow autofix insert-type: " ^ unexpected_error_to_string err
@@ -460,14 +491,40 @@ let insert_type
     ~omit_targ_defaults
     ~strict
     ~ambiguity_strategy
+    ?remote_converter
     ast
     target =
   let file_sig = File_sig.abstractify_locs file_sig in
   let exact_by_default = Context.exact_by_default full_cx in
   let ty_lookup = type_lookup_at_location typed_ast in
   let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
-  (new mapper ~normalize ~ty_lookup ~strict ~ambiguity_strategy ~exact_by_default target)#program
-    ast
+  let file =
+    match target.Loc.source with
+    | Some source -> source
+    | None -> raise (unexpected (NoFileInLocation target))
+  in
+  let (remote_converter, maybe_add_imports) =
+    match remote_converter with
+    | Some rc -> (rc, (fun x -> x)) (* External remote_converters must add there own imports *)
+    | None ->
+      let rc = new ImportsHelper.remote_converter ~iteration:0 ~file ~reserved_names:SSet.empty in
+      (rc, add_imports rc)
+  in
+  let imports_react = ImportsHelper.imports_react file_sig in
+  let mapper =
+    new mapper
+      ~normalize
+      ~ty_lookup
+      ~strict
+      ~ambiguity_strategy
+      ~imports_react
+      ~exact_by_default
+      ~remote_converter
+      target
+  in
+  let (loc, ast') = mapper#program ast in
+  let statements = maybe_add_imports ast'.Flow_ast.Program.statements in
+  (loc, { ast' with Flow_ast.Program.statements })
 
 let mk_diff ast new_ast = Flow_ast_differ.(program Standard ast new_ast)
 

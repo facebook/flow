@@ -97,10 +97,11 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
     Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
     | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
       let sv_errors = set_of_fixable_signature_verification_locations file_sig in
-      let fix_sv_errors = fix_signature_verification_errors ~full_cx ~file_sig ~typed_ast in
-      let (new_ast, it_errs) = fix_sv_errors ast sv_errors in
+      let (new_ast, it_errs) =
+        fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
+      in
       Ok (Insert_type.mk_patch ast new_ast file_content, it_errs)
-    | (None, _errs, _) -> Error ":o")
+    | (None, _errs, _) -> Error "Failed to type-check file")
 
 let dump_types ~expand_aliases ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
