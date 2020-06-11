@@ -909,55 +909,27 @@ module ToggleTypeCoverage : sig
 end
 
 module Error : sig
+  type code =
+    | ParseError [@value -32700]
+    | InvalidRequest [@value -32600]
+    | MethodNotFound [@value -32601]
+    | InvalidParams [@value -32602]
+    | InternalError [@value -32603]
+    | ServerErrorStart [@value -32099]
+    | ServerErrorEnd [@value -32000]
+    | ServerNotInitialized [@value -32002]
+    | UnknownErrorCode [@value -32001]
+    | RequestCancelled [@value -32800]
+    | ContentModified [@value -32801]
+  [@@deriving show, enum]
+
   type t = {
-    code: int;
+    code: code;
     message: string;
     data: Hh_json.json option;
   }
 
-  exception Parse of string
-
-  exception InvalidRequest of string
-
-  exception MethodNotFound of string
-
-  exception InvalidParams of string
-
-  exception InternalError of string
-
-  exception ServerErrorStart of string * Initialize.errorData
-
-  exception ServerErrorEnd of string
-
-  exception ServerNotInitialized of string
-
-  exception Unknown of string
-
-  exception RequestCancelled of string
-
-  module Code : sig
-    val parseError : int
-
-    val invalidRequest : int
-
-    val methodNotFound : int
-
-    val invalidParams : int
-
-    val internalError : int
-
-    val serverErrorStart : int
-
-    val serverErrorEnd : int
-
-    val serverNotInitialized : int
-
-    val unknownErrorCode : int
-
-    val requestCancelled : int
-
-    val contentModified : int
-  end
+  exception LspException of t
 end
 
 type lsp_registration_options =

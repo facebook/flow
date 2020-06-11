@@ -801,7 +801,13 @@ let track_from_server (state : state) (c : Lsp.lsp_message) : state =
 
 let dismiss_tracks (state : state) : state =
   let decline_request_to_server (id : lsp_id) : unit =
-    let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "Connection to server has been lost") in
+    let e =
+      {
+        Error.code = Error.RequestCancelled;
+        message = "Connection to server has been lost";
+        data = None;
+      }
+    in
     let stack = Exception.get_current_callstack_string 100 in
     let json =
       let key = command_key_of_state state in
@@ -1667,15 +1673,25 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       ~root:(Path.to_string i_root)
       ~root_name:(FlowConfig.root_name flowconfig);
 
-    (* If the version in .flowconfig is simply incompatible with our current *)
-    (* binary then it doesn't even make sense for us to start up. And future *)
-    (* attempts by the client to launch us will fail as well. Clients which  *)
-    (* receive the following response are expected to shut down their LSP.   *)
+    (* If the version in .flowconfig is simply incompatible with our current
+       binary then it doesn't even make sense for us to start up. And future
+       attempts by the client to launch us will fail as well. Clients which
+       receive the following response are expected to shut down their LSP.
+
+       see InitializeError in the LSP spec and
+       https://github.com/microsoft/vscode-languageserver-node/blob/859f626f61e854ddbd9b132fad508219a4ed77b5/client/src/common/client.ts#L3049-L3065 *)
     let required_version = FlowConfig.required_version flowconfig in
     begin
       match CommandUtils.check_version required_version with
       | Ok () -> ()
-      | Error msg -> raise (Error.ServerErrorStart (msg, { Initialize.retry = false }))
+      | Error msg ->
+        raise
+          (Error.LspException
+             {
+               Error.code = Error.ServerErrorStart;
+               message = msg;
+               data = Some Hh_json.(JSON_Object [("retry", JSON_Bool false)]);
+             })
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
     let json =
@@ -1709,7 +1725,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       lsp_exit_ok ()
     else
       lsp_exit_bad ()
-  | (Pre_init _, Client_message _) -> raise (Error.ServerNotInitialized "Server not initialized")
+  | (Pre_init _, Client_message _) ->
+    raise
+      (Error.LspException
+         {
+           Error.code = Error.ServerNotInitialized;
+           message = "Server not initialized";
+           data = None;
+         })
   | (_, Client_message ((ResponseMessage (id, result) as c), metadata)) ->
     let ienv =
       match state with
@@ -1830,7 +1853,12 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let (state, _) = track_to_server state c in
     let exn =
       let method_ = Lsp_fmt.denorm_message_to_string c in
-      Error.RequestCancelled ("Server not connected; can't handle " ^ method_)
+      Error.LspException
+        {
+          Error.code = Error.RequestCancelled;
+          message = "Server not connected; can't handle " ^ method_;
+          data = None;
+        }
     in
     Base.Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Errored state);
     (match c with
@@ -1846,7 +1874,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       Ok (state, LogNeeded metadata)
     | _ -> Error (state, Exception.wrap_unraised exn))
   | (Post_shutdown, Client_message (_, _metadata)) ->
-    raise (Error.RequestCancelled "Server shutting down")
+    raise
+      (Error.LspException
+         { Error.code = Error.RequestCancelled; message = "Server shutting down"; data = None })
   | (Connected cenv, Server_message LspProt.(NotificationFromServer (ServerExit exit_code))) ->
     let state = Connected { cenv with c_about_to_exit_code = Some exit_code } in
     Ok (state, LogNotNeeded)
@@ -1870,11 +1900,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             (ResponseMessage (id, RageResult (items @ do_rage flowconfig_name state)), metadata, ux)
           | ResponseMessage (_, ErrorResult (e, _)) ->
             let ux =
-              LspInteraction.(
-                if e.Error.code = Error.Code.requestCancelled then
-                  Canceled
-                else
-                  Errored)
+              if e.Error.code = Error.RequestCancelled then
+                LspInteraction.Canceled
+              else
+                LspInteraction.Errored
             in
             (outgoing, metadata, ux)
           | _ -> (outgoing, metadata, LspInteraction.Responded)
@@ -1907,7 +1936,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           let e =
             Lsp.Error.
               {
-                code = Code.unknownErrorCode;
+                code = UnknownErrorCode;
                 message =
                   "Flow encountered an unexpected error while handling this request. "
                   ^ "See the Flow logs for more details.";
@@ -1919,7 +1948,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         | LspToServer _ ->
           (* We'll just send a telemetry notification, since the client wasn't expecting a response *)
           let text =
-            Printf.sprintf "%s [%i]\n%s" exception_constructor Lsp.Error.Code.unknownErrorCode stack
+            let code = Error.code_to_enum Lsp.Error.UnknownErrorCode in
+            Printf.sprintf "%s [%i]\n%s" exception_constructor code stack
           in
           Some
             (NotificationMessage
@@ -2272,7 +2302,8 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
       let e = Lsp_fmt.error_of_exn e in
       main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack event;
       let text =
-        Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message e.Error.code stack
+        let code = Error.code_to_enum e.Error.code in
+        Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message code stack
       in
       let () =
         match event with

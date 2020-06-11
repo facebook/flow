@@ -1367,17 +1367,19 @@ let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
         "Flow encountered an unexpected error while handling this request. "
         ^ "See the Flow logs for more details."
       in
-      let e = Lsp_fmt.error_of_exn (Error.Unknown friendly_message) in
+      let e = { Error.code = Error.UnknownErrorCode; message = friendly_message; data = None } in
       ResponseMessage (id, ErrorResult (e, stack))
     | None ->
-      let text = Printf.sprintf "%s [%i]\n%s" reason Error.Code.unknownErrorCode stack in
+      let text =
+        Printf.sprintf "%s [%s]\n%s" reason (Error.show_code Error.UnknownErrorCode) stack
+      in
       NotificationMessage
         (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message = text })
   in
   Lwt.return (ret, LspProt.LspFromServer (Some message), metadata)
 
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
-  let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
+  let e = { Error.code = Error.RequestCancelled; message = "cancelled"; data = None } in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
   let metadata = with_error metadata ~reason:"cancelled" in
   Lwt.return (ret, LspProt.LspFromServer (Some response), metadata)

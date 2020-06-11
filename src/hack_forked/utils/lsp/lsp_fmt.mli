@@ -144,8 +144,6 @@ val print_documentOnTypeFormatting : Lsp.DocumentOnTypeFormatting.result -> Hh_j
 
 val parse_initialize : Hh_json.json option -> Lsp.Initialize.params
 
-val print_initializeError : Lsp.Initialize.errorData -> Hh_json.json
-
 val print_registerCapability : Lsp.RegisterCapability.params -> Hh_json.json
 
 val parse_didChangeWatchedFiles : Hh_json.json option -> Lsp.DidChangeWatchedFiles.params

@@ -1167,8 +1167,22 @@ end
 
 (* ErrorResponse *)
 module Error = struct
+  type code =
+    | ParseError [@value -32700]
+    | InvalidRequest [@value -32600]
+    | MethodNotFound [@value -32601]
+    | InvalidParams [@value -32602]
+    | InternalError [@value -32603]
+    | ServerErrorStart [@value -32099]
+    | ServerErrorEnd [@value -32000]
+    | ServerNotInitialized [@value -32002]
+    | UnknownErrorCode [@value -32001]
+    | RequestCancelled [@value -32800]
+    | ContentModified [@value -32801]
+  [@@deriving show, enum]
+
   type t = {
-    code: int;
+    code: code;
     message: string;
     data: Hh_json.json option;
   }
@@ -1176,53 +1190,7 @@ module Error = struct
   (* Legacy: some code uses exceptions instead of Error.t. *)
   (* Be careful with that since if you unmarshal one then you can't pattern-match it. *)
 
-  (* Defined by JSON-RPC. *)
-  exception Parse of string (* -32700 *)
-
-  exception InvalidRequest of string (* -32600 *)
-
-  exception MethodNotFound of string (* -32601 *)
-
-  exception InvalidParams of string (* -32602 *)
-
-  exception InternalError of string (* -32603 *)
-
-  exception ServerErrorStart of string * Initialize.errorData (* -32099 *)
-
-  exception ServerErrorEnd of string (* -32000 *)
-
-  exception ServerNotInitialized of string (* -32002 *)
-
-  exception Unknown of string (* -32001 *)
-
-  (* Defined by the protocol. *)
-  exception RequestCancelled of string (* -32800 *)
-
-  module Code = struct
-    (* Defined by JSON RPC *)
-    let parseError = -32700
-
-    let invalidRequest = -32600
-
-    let methodNotFound = -32601
-
-    let invalidParams = -32602
-
-    let internalError = -32603
-
-    let serverErrorStart = -32099
-
-    let serverErrorEnd = -32000
-
-    let serverNotInitialized = -32002
-
-    let unknownErrorCode = -32001
-
-    (* Defined by the protocol. *)
-    let requestCancelled = -32800
-
-    let contentModified = -32801
-  end
+  exception LspException of t
 end
 
 type lsp_registration_options =
