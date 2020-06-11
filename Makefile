@@ -133,6 +133,7 @@ MODULES=\
   src/services/coverage\
   src/services/get_def\
   src/services/inference\
+  src/services/jsdoc\
   src/services/module\
   src/services/refactor\
   src/services/references\
