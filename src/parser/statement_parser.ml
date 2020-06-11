@@ -1479,6 +1479,17 @@ module Statement
                   exportKind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
                 }
+            | T_ENUM ->
+              error env Parse_error.EnumInvalidExport;
+              Expect.token env T_TYPE;
+              Statement.ExportNamedDeclaration
+                {
+                  declaration = None;
+                  specifiers = None;
+                  source = None;
+                  exportKind = Statement.ExportType;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
             | _ ->
               let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
               record_export
