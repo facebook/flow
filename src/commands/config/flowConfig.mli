@@ -54,8 +54,6 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
-val autofix_exports : config -> bool
-
 val babel_loose_array_spread : config -> bool
 
 val disable_live_non_parse_errors : config -> bool

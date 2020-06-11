@@ -224,11 +224,8 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
            ~default:true
            CodeActionKind.quickfix
            context.CodeActionRequest.only ->
-    (* The current ide-lsp-server/flow-lsp-client doesn't necessarily get restarted for every project.
-     * Checking the option here ensures that the flow server doesn't do too much work for code
-     * action requests on projects where code actions are not enabled in the `.flowconfig`. *)
     let experimental_code_actions =
-      if options.Options.opt_autofix_exports then
+      if Inference_utils.well_formed_exports_enabled options file_key then
         autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast
       else
         []

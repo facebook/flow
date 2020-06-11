@@ -1,0 +1,6 @@
+// @flow
+
+import { newNode } from './exports-func';
+
+const node = newNode();
+module.exports = node;

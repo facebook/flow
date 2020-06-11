@@ -38,7 +38,6 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
-    autofix_exports: bool;
     babel_loose_array_spread: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
@@ -142,7 +141,6 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
-      autofix_exports = false;
       babel_loose_array_spread = false;
       disable_live_non_parse_errors = false;
       emoji = false;
@@ -545,7 +543,6 @@ module Opts = struct
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
-      ("experimental.autofix_exports", boolean (fun opts v -> Ok { opts with autofix_exports = v }));
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
       ("well_formed_exports", well_formed_exports_parser);
@@ -1174,8 +1171,6 @@ let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode
 
 let log_file c = c.options.Opts.log_file
-
-let autofix_exports c = c.options.Opts.autofix_exports
 
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 

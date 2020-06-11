@@ -175,5 +175,74 @@ export default suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('textDocument/codeAction #3', [
+      addFile('exports-func.js.ignored', 'exports-func.js'),
+      addFile('needs-import.js.ignored', 'needs-import.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/needs-import.js',
+        },
+        range: {
+          start: {
+            line: 4,
+            character: 13,
+          },
+          end: {
+            line: 4,
+            character: 22,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/codeAction',
+            `{${JSON.stringify([
+              {
+                title: 'insert type annotation',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/needs-import.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 0,
+                          },
+                          end: {
+                            line: 2,
+                            character: 0,
+                          },
+                        },
+                        newText: 'import type {Node} from "./exports-func.js";',
+                      },
+                      {
+                        range: {
+                          start: {
+                            line: 4,
+                            character: 10,
+                          },
+                          end: {
+                            line: 4,
+                            character: 10,
+                          },
+                        },
+                        newText: ': Node',
+                      },
+                    ],
+                  },
+                },
+              },
+            ])}}`,
+          ],
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 );

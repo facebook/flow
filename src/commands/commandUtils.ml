@@ -1253,7 +1253,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
       opt_file_options = file_options;
       opt_lint_severities = lint_severities;
-      opt_autofix_exports = FlowConfig.autofix_exports flowconfig;
       opt_strict_mode = strict_mode;
       opt_merge_timeout;
       opt_saved_state_fetcher;

@@ -56,7 +56,6 @@ type react_runtime =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
-  opt_autofix_exports: bool;
   opt_arch: arch;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
