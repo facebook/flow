@@ -45,6 +45,24 @@ class documentation_searcher (def_loc : Loc.t) =
       let { comments; _ } = func in
       if this#is_target loc then find_description comments;
       super#function_ loc func
+
+    method! declare_variable stmt_loc decl =
+      let open Flow_ast.Statement.DeclareVariable in
+      let { id = (loc, _); comments; _ } = decl in
+      if this#is_target loc then find_description comments;
+      super#declare_variable stmt_loc decl
+
+    method! declare_class stmt_loc decl =
+      let open Flow_ast.Statement.DeclareClass in
+      let { id = (loc, _); comments; _ } = decl in
+      if this#is_target loc then find_description comments;
+      super#declare_class stmt_loc decl
+
+    method! declare_function stmt_loc decl =
+      let open Flow_ast.Statement.DeclareFunction in
+      let { id = (loc, _); comments; _ } = decl in
+      if this#is_target loc then find_description comments;
+      super#declare_function stmt_loc decl
   end
 
 let documentation_of_def_loc def_loc typed_ast =

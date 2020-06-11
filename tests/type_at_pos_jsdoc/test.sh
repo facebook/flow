@@ -7,3 +7,4 @@
 queries_in_file "type-at-pos" "variable_declaration.js" --strip-root --pretty
 queries_in_file "type-at-pos" "class_declaration.js" --strip-root --pretty
 queries_in_file "type-at-pos" "function_declaration.js" --strip-root --pretty
+queries_in_file "type-at-pos" "declare.js" --strip-root --pretty

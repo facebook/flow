@@ -169,3 +169,60 @@ Flags: --strip-root --pretty
   "end":5
 }
 
+declare.js:8:4
+Flags: --strip-root --pretty
+{
+  "documentation":"declaration of foo",
+  "type":"empty",
+  "reasons":[],
+  "loc":{
+    "source":"declare.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":3,"offset":59},
+    "end":{"line":8,"column":5,"offset":62}
+  },
+  "path":"declare.js",
+  "line":8,
+  "endline":8,
+  "start":3,
+  "end":5
+}
+
+declare.js:16:6
+Flags: --strip-root --pretty
+{
+  "documentation":"declaration of Bar",
+  "type":"class Bar",
+  "reasons":[],
+  "loc":{
+    "source":"declare.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":5,"offset":127},
+    "end":{"line":16,"column":7,"offset":130}
+  },
+  "path":"declare.js",
+  "line":16,
+  "endline":16,
+  "start":5,
+  "end":7
+}
+
+declare.js:24:4
+Flags: --strip-root --pretty
+{
+  "documentation":"declaration of baz",
+  "type":"(any) => any",
+  "reasons":[],
+  "loc":{
+    "source":"declare.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":3,"offset":208},
+    "end":{"line":24,"column":5,"offset":211}
+  },
+  "path":"declare.js",
+  "line":24,
+  "endline":24,
+  "start":3,
+  "end":5
+}
+
