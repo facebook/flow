@@ -24,12 +24,6 @@ do_file () {
   assert_ok "$FLOW" force-recheck "$FILE"
   echo "> cat $FILE"
   cat "$FILE"
-
-  echo "> flow autofix exports tmp/$FILE"
-  assert_ok "$FLOW" autofix exports --in-place "tmp/$FILE"
-  assert_ok "$FLOW" force-recheck "tmp/$FILE"
-  echo "> cat tmp/$FILE"
-  cat "tmp/$FILE"
 }
 
 do_file a.js 6 3 6 14    7 3 7 11

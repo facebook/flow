@@ -5,13 +5,6 @@ const React = require("react");
 
 const foo = () => <fbt />;
 module.exports = (foo(): FbtResultBase);
-> cat tmp/a.js
-// @flow
-
-const React = require("react");
-
-const foo = () => <fbt />;
-module.exports = (foo(): FbtResultBase);
 > flow status
 No errors!
 > flow status tmp

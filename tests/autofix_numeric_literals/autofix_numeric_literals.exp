@@ -1,8 +1,0 @@
-> cat a.js
-// @flow
-
-declare var cond: boolean;
-
-module.exports = (): number => (cond ? 0 : 1);
-> flow status
-No errors!
