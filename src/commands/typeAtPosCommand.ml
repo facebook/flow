@@ -52,7 +52,9 @@ let spec =
   }
 
 let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response =
-  let (ServerProt.Response.Infer_type_response { loc; ty = t; exact_by_default }) = response in
+  let (ServerProt.Response.Infer_type_response { loc; ty = t; exact_by_default; documentation }) =
+    response
+  in
   let ty =
     match t with
     | None -> "(unknown)"
@@ -84,16 +86,26 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
       else
         json_assoc
     in
+    let json_assoc =
+      match documentation with
+      | Some doc -> ("documentation", JSON_String doc) :: json_assoc
+      | None -> json_assoc
+    in
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
   else
+    let doc =
+      match documentation with
+      | Some doc -> doc ^ "\n"
+      | None -> ""
+    in
     let range =
       if loc = Loc.none then
         ""
       else
         spf "\n%s" (range_string_of_loc ~strip_root loc)
     in
-    print_endline (ty ^ range)
+    print_endline (doc ^ ty ^ range)
 
 let handle_error err ~json ~pretty =
   if json then

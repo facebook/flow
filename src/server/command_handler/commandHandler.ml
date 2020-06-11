@@ -199,6 +199,42 @@ let check_file ~options ~env ~profiling ~force file_input =
     else
       Lwt.return ServerProt.Response.NOT_COVERED
 
+(* This returns result, json_data_to_log, where json_data_to_log is the json data from
+ * getdef_get_result which we end up using *)
+let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
+  let loc = Loc.make file line col in
+  let (cx, _, file_sig, typed_ast, parse_errors) = check_result in
+  Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
+      try_with_json2 (fun () ->
+          Lwt.return
+            ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
+            |> fun (result, request_history) ->
+              let open GetDef_js.Get_def_result in
+              let json_props =
+                [
+                  ( "request_history",
+                    Hh_json.JSON_Array
+                      (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
+                ]
+                |> fold_json_of_parse_errors parse_errors
+              in
+              match result with
+              | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
+              | Partial (loc, msg) ->
+                ( Ok loc,
+                  Some
+                    ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+                    :: ("error", Hh_json.JSON_String msg)
+                    :: json_props ) )
+              | Bad_loc ->
+                (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+              | Def_error msg ->
+                ( Error msg,
+                  Some
+                    ( ("result", Hh_json.JSON_String "FAILURE")
+                    :: ("error", Hh_json.JSON_String msg)
+                    :: json_props ) ) )))
+
 type infer_type_input = {
   file_input: File_input.t;
   query_position: Loc.position;
@@ -212,6 +248,7 @@ type infer_type_input = {
 
 let infer_type
     ~(options : Options.t)
+    ~(reader : Parsing_heaps.Reader.reader)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_contents_cache
@@ -239,13 +276,13 @@ let infer_type
           let%lwt (type_contents_result, did_hit_cache) =
             type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
           in
-          let result =
+          let%lwt result =
             match type_contents_result with
             | Error str ->
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-              Error (str, Some (Hh_json.JSON_Object json_props))
-            | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
-              let ((loc, ty), json_props) =
+              Lwt.return (Error (str, Some (Hh_json.JSON_Object json_props)))
+            | Ok ((cx, _info, file_sig, typed_ast, _parse_errors) as check_result) ->
+              let ((loc, ty), type_at_pos_json_props) =
                 Type_info_service.type_at_pos
                   ~cx
                   ~file_sig
@@ -259,12 +296,33 @@ let infer_type
                   line
                   column
               in
-              let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
+              let%lwt (getdef_loc_result, get_def_json_props) =
+                get_def_of_check_result
+                  ~options
+                  ~reader
+                  ~profiling
+                  ~check_result
+                  (file, line, column)
+              in
+              let documentation =
+                match getdef_loc_result with
+                | Error _ -> None
+                | Ok getdef_loc -> Find_documentation.of_getdef_loc ~reader getdef_loc
+              in
+              let json_props =
+                let documentation_get_def =
+                  match get_def_json_props with
+                  | None -> Hh_json.JSON_Null
+                  | Some props -> Hh_json.JSON_Object props
+                in
+                ("documentation_get_def", documentation_get_def)
+                :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
+              in
               let exact_by_default = Options.exact_by_default options in
               let response =
-                ServerProt.Response.Infer_type_response { loc; ty; exact_by_default }
+                ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
               in
-              Ok (response, Some (Hh_json.JSON_Object json_props))
+              Lwt.return (Ok (response, Some (Hh_json.JSON_Object json_props)))
           in
           Lwt.return result)
     in
@@ -569,42 +627,6 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
   FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
   |> Lwt_result.map convert_find_refs_result
 
-(* This returns result, json_data_to_log, where json_data_to_log is the json data from
- * getdef_get_result which we end up using *)
-let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  let loc = Loc.make file line col in
-  let (cx, _, file_sig, typed_ast, parse_errors) = check_result in
-  Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-      try_with_json2 (fun () ->
-          Lwt.return
-            ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
-            |> fun (result, request_history) ->
-              let open GetDef_js.Get_def_result in
-              let json_props =
-                [
-                  ( "request_history",
-                    Hh_json.JSON_Array
-                      (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
-                ]
-                |> fold_json_of_parse_errors parse_errors
-              in
-              match result with
-              | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
-              | Partial (loc, msg) ->
-                ( Ok loc,
-                  Some
-                    ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                    :: ("error", Hh_json.JSON_String msg)
-                    :: json_props ) )
-              | Bad_loc ->
-                (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
-              | Def_error msg ->
-                ( Error msg,
-                  Some
-                    ( ("result", Hh_json.JSON_String "FAILURE")
-                    :: ("error", Hh_json.JSON_String msg)
-                    :: json_props ) ) )))
-
 let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
@@ -794,6 +816,7 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~
 
 let handle_infer_type
     ~options
+    ~reader
     ~input
     ~line
     ~char
@@ -818,7 +841,7 @@ let handle_infer_type
     }
   in
   let%lwt (result, json_data) =
-    infer_type ~options ~env ~profiling ~type_contents_cache:None input
+    infer_type ~options ~reader ~env ~profiling ~type_contents_cache:None input
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -1019,6 +1042,7 @@ let get_ephemeral_handler genv command =
       ~options
       (handle_infer_type
          ~options
+         ~reader
          ~input
          ~line
          ~char
@@ -1446,57 +1470,68 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
       Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
 
-let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
-  TextDocumentPositionParams.(
-    let (file, line, column) =
-      match loc with
-      | Some loc -> loc
-      | None ->
-        (* We must have failed to get the client when we first tried. We could throw here, but this is
-         * a little more defensive. The only danger here is that the file contents may have changed *)
-        Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~client ~profiling ~env
+    =
+  let open TextDocumentPositionParams in
+  let (file, line, column) =
+    match loc with
+    | Some loc -> loc
+    | None ->
+      (* We must have failed to get the client when we first tried. We could throw here, but this is
+       * a little more defensive. The only danger here is that the file contents may have changed *)
+      Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+  in
+  (* if Some, would write to server logs *)
+  let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+  let input =
+    {
+      file_input = file;
+      query_position = { Loc.line; column };
+      verbose = None;
+      expand_aliases = false;
+      omit_targ_defaults = false;
+      evaluate_type_destructors = false;
+      verbose_normalizer = false;
+      max_depth = 50;
+    }
+  in
+  let%lwt (result, extra_data) =
+    infer_type ~options ~reader ~env ~profiling ~type_contents_cache input
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok (ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }) ->
+    (* loc may be the 'none' location; content may be None. *)
+    (* If both are none then we'll return null; otherwise we'll return a hover *)
+    let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+    let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
+    let range =
+      if loc = Loc.none then
+        None
+      else
+        Some location.Lsp.Location.range
     in
-    (* if Some, would write to server logs *)
-    let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
-    let input =
-      {
-        file_input = file;
-        query_position = { Loc.line; column };
-        verbose = None;
-        expand_aliases = false;
-        omit_targ_defaults = false;
-        evaluate_type_destructors = false;
-        verbose_normalizer = false;
-        max_depth = 50;
-      }
+    let contents =
+      match
+        Base.List.concat
+          [
+            Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
+            Base.Option.to_list ty
+            |> List.map (fun elt ->
+                   MarkedCode ("flow", Ty_printer.string_of_elt elt ~exact_by_default));
+          ]
+      with
+      | [] -> [MarkedString "?"]
+      | _ :: _ as contents -> contents
     in
-    let%lwt (result, extra_data) = infer_type ~options ~env ~profiling ~type_contents_cache input in
-    let metadata = with_data ~extra_data metadata in
-    match result with
-    | Ok (ServerProt.Response.Infer_type_response { loc; ty = content; exact_by_default }) ->
-      (* loc may be the 'none' location; content may be None. *)
-      (* If both are none then we'll return null; otherwise we'll return a hover *)
-      let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
-      let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
-      let range =
-        if loc = Loc.none then
-          None
-        else
-          Some location.Lsp.Location.range
-      in
-      let contents =
-        match content with
-        | None -> [MarkedString "?"]
-        | Some content -> [MarkedCode ("flow", Ty_printer.string_of_elt ~exact_by_default content)]
-      in
-      let r =
-        match (range, content) with
-        | (None, None) -> None
-        | (_, _) -> Some { Lsp.Hover.contents; range }
-      in
-      let response = ResponseMessage (id, HoverResult r) in
-      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
+    let r =
+      match (range, ty) with
+      | (None, None) -> None
+      | (_, _) -> Some { Lsp.Hover.contents; range }
+    in
+    let response = ResponseMessage (id, HoverResult r) in
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_code_action_request
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
@@ -2187,7 +2222,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     in
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_infer_type ~options ~id ~params ~loc ~metadata)
+      (handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata)
   | LspToServer (RequestMessage (id, CodeActionRequest params)) ->
     mk_parallelizable_persistent
       ~options

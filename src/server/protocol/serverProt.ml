@@ -260,6 +260,7 @@ module Response = struct
         loc: Loc.t;
         ty: Ty.elt option;
         exact_by_default: bool;
+        documentation: string option;
       }
 
   type infer_type_response = (infer_type_response_ok, string) result
