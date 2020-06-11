@@ -7,7 +7,6 @@
 
 open Lints
 open Severity
-open Utils_js
 
 let ( >>= ) = Base.Result.( >>= )
 
@@ -20,7 +19,7 @@ type 'a t = {
   explicit_values: ('a * Loc.t option) LintMap.t;
 }
 
-let default_lint_severities = [(Lints.DeprecatedUtility, (Severity.Err, None))]
+let default_explicit_values = LintMap.singleton Lints.DeprecatedUtility (Severity.Err, None)
 
 let ignored_by_all =
   [
@@ -31,9 +30,8 @@ let ignored_by_all =
     Lints.UninitializedInstanceProperty;
   ]
 
-let config_default =
-  Base.List.Assoc.find default_lint_severities ~equal:( = )
-  %> Base.Option.value ~default:(Severity.Off, None)
+let config_default kind =
+  LintMap.find_opt kind default_explicit_values |> Base.Option.value ~default:(Severity.Off, None)
 
 let of_default default_value =
   let explicit_values = LintMap.of_function ignored_by_all config_default in
@@ -71,6 +69,8 @@ let map f settings =
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
 let empty_severities = { default_value = Off; explicit_values = LintMap.empty }
+
+let default_severities = { empty_severities with explicit_values = default_explicit_values }
 
 let is_enabled lint_kind settings =
   match get_value lint_kind settings with

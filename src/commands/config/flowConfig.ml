@@ -678,17 +678,15 @@ end = struct
           pp_opt o "include_warnings" (string_of_bool options.include_warnings))
 
   let lints o config =
-    Lints.(
-      Severity.(
-        let lint_severities = config.lint_severities in
-        let lint_default = LintSettings.get_default lint_severities in
-        (* Don't print an 'all' setting if it matches the default setting. *)
-        if lint_default <> LintSettings.get_default LintSettings.empty_severities then
-          fprintf o "all=%s\n" (string_of_severity lint_default);
-        LintSettings.iter
-          (fun kind (state, _) ->
-            fprintf o "%s=%s\n" (string_of_kind kind) (string_of_severity state))
-          lint_severities))
+    let lint_severities = config.lint_severities in
+    let lint_default = LintSettings.get_default lint_severities in
+    (* Don't print an 'all' setting if it matches the default setting. *)
+    if lint_default <> LintSettings.get_default LintSettings.empty_severities then
+      fprintf o "all=%s\n" (Severity.string_of_severity lint_default);
+    LintSettings.iter
+      (fun kind (state, _) ->
+        fprintf o "%s=%s\n" (Lints.string_of_kind kind) (Severity.string_of_severity state))
+      lint_severities
 
   let strict o config =
     Lints.(
@@ -1025,15 +1023,6 @@ let read filename =
   in
   (lines, hash)
 
-let get_empty_config () =
-  let lint_severities =
-    Base.List.fold_left
-      ~f:(fun acc (lint, severity) -> LintSettings.set_value lint severity acc)
-      ~init:empty_config.lint_severities
-      LintSettings.default_lint_severities
-  in
-  { empty_config with lint_severities }
-
 let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let ( >>= )
       (acc : (config * warning list, error) result)
@@ -1070,7 +1059,8 @@ let get_from_cache ?(allow_cache = true) filename =
     cached_data
   | _ ->
     let (lines, hash) = read filename in
-    let config = parse (get_empty_config ()) lines in
+    let config = { empty_config with lint_severities = LintSettings.default_severities } in
+    let config = parse config lines in
     let cached_data = (filename, config, hash) in
     cache := Some cached_data;
     cached_data
