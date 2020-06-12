@@ -173,17 +173,25 @@ module Expression
     fun env ->
       match (Peek.token env, Peek.is_identifier env) with
       | (T_YIELD, _) when allow_yield env -> Cover_expr (yield env)
-      | (T_LPAREN, _)
-      | (T_LESS_THAN, _)
-      | (_, true) ->
+      | ((T_LPAREN as t), _)
+      | ((T_LESS_THAN as t), _)
+      | (t, true) ->
         (* Ok, we don't know if this is going to be an arrow function or a
          * regular assignment expression. Let's first try to parse it as an
          * assignment expression. If that fails we'll try an arrow function.
+         * Unless it begins with `async <` in which case we first try parsing
+         * it as an arrow function, and then an assignment expression.
          *)
-        (match Try.to_parse env try_assignment_but_not_arrow_function with
+        let (initial, secondary) =
+          if t = T_ASYNC && should_parse_types env && Peek.ith_token ~i:1 env = T_LESS_THAN then
+            (try_arrow_function, try_assignment_but_not_arrow_function)
+          else
+            (try_assignment_but_not_arrow_function, try_arrow_function)
+        in
+        (match Try.to_parse env initial with
         | Try.ParsedSuccessfully expr -> expr
         | Try.FailedToParse ->
-          (match Try.to_parse env try_arrow_function with
+          (match Try.to_parse env secondary with
           | Try.ParsedSuccessfully expr -> expr
           | Try.FailedToParse ->
             (* Well shoot. It doesn't parse cleanly as a normal
