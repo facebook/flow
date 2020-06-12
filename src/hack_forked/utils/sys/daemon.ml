@@ -150,8 +150,8 @@ let exec entry param ic oc =
     f param (ic, oc);
     exit 0
   with e ->
-    prerr_endline (Printexc.to_string e);
-    Printexc.print_backtrace stderr;
+    let e = Exception.wrap e in
+    prerr_endline (Exception.to_string e);
     exit 2
 
 let register_entry_point = Entry.register
@@ -215,8 +215,8 @@ let fork
        f param (child_in, child_out);
        exit 0
      with e ->
-       prerr_endline (Printexc.to_string e);
-       Printexc.print_backtrace stderr;
+       let e = Exception.wrap e in
+       prerr_endline (Exception.to_string e);
        exit 1)
   | pid ->
     (* parent *)
