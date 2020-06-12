@@ -25,4 +25,8 @@ val get_backtrace_string : t -> string
 
 val get_current_callstack_string : int -> string
 
+val print_full_backtrace : out_channel -> int -> t -> unit
+
+val get_full_backtrace_string : int -> t -> string
+
 val record_backtrace : bool -> unit
