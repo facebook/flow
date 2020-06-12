@@ -1,3 +1,18 @@
+### 0.127.0
+
+Misc:
+
+* Improvements to editor in flow.org/try, including syntax highlighting
+* [Fix broken links in docs](https://github.com/facebook/flow/pull/8388)
+* Standardized error suppression syntax, added ability to suppress errors based on error codes
+
+Library Definitions:
+
+* [Add KD functions](https://github.com/facebook/flow/pull/7376)
+* Add onended callback to OscillatorNode
+* Make 3rd parameter of node.js symlinkSync optional
+
+
 ### 0.126.1
 
 * Fixed an issue where changing `.flowconfig` or `package.json` and then running `flow status` would get stuck in a restart loop, if using lazy mode with Watchman and Mercurial.
