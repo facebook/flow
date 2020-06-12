@@ -218,6 +218,61 @@ type node =
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Ast.JSX.Identifier.t
 
+let expand_loc_with_comments loc node =
+  let open Comment_attachment in
+  let bounds (loc, node) f =
+    let collector = new comment_bounds_collector ~loc in
+    ignore (f collector (loc, node));
+    collector#comment_bounds
+  in
+  let comment_bounds =
+    match node with
+    | Literal (loc, lit) -> bounds (loc, lit) (fun collect (loc, lit) -> collect#literal loc lit)
+    | StringLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#string_literal_type loc lit)
+    | NumberLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#number_literal_type loc lit)
+    | BigIntLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#bigint_literal_type loc lit)
+    | BooleanLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#boolean_literal_type loc lit)
+    | Statement stmt -> bounds stmt (fun collect stmt -> collect#statement stmt)
+    | Expression expr -> bounds expr (fun collect expr -> collect#expression expr)
+    | Pattern pat -> bounds pat (fun collect pat -> collect#pattern pat)
+    | Params params -> bounds params (fun collect params -> collect#function_params params)
+    | Variance var -> bounds var (fun collect var -> collect#variance (Some var))
+    | Type ty -> bounds ty (fun collect ty -> collect#type_ ty)
+    | TypeParam tparam -> bounds tparam (fun collect tparam -> collect#type_param tparam)
+    | TypeAnnotation annot
+    | FunctionTypeAnnotation annot ->
+      bounds annot (fun collect annot -> collect#type_annotation annot)
+    | ClassProperty prop -> bounds prop (fun collect (loc, prop) -> collect#class_property loc prop)
+    | ObjectProperty (Ast.Expression.Object.Property prop) ->
+      bounds prop (fun collect prop -> collect#object_property prop)
+    | ObjectProperty (Ast.Expression.Object.SpreadProperty prop) ->
+      bounds prop (fun collect prop -> collect#spread_property prop)
+    | TemplateLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#template_literal loc lit)
+    | JSXIdentifier id -> bounds id (fun collect id -> collect#jsx_identifier id)
+    (* Nodes that do have attached comments *)
+    | Raw _
+    | Comment _
+    | Program _
+    | JSXChild _ ->
+      (None, None)
+  in
+  expand_loc_with_comment_bounds loc comment_bounds
+
+let expand_statement_comment_bounds ((loc, _) as stmt) =
+  let open Comment_attachment in
+  let comment_bounds = statement_comment_bounds stmt in
+  expand_loc_with_comment_bounds loc comment_bounds
+
+let replace loc old_node new_node =
+  (expand_loc_with_comments loc old_node, Replace (old_node, new_node))
+
+let delete loc node = (expand_loc_with_comments loc node, Delete node)
+
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
  * exists. This allows us to easily avoid calling the diffing function if there is no difference. *)
@@ -460,14 +515,12 @@ let program
       ((_loc2, comment2) as cmt2 : Loc.t Ast.Comment.t) =
     let open Ast.Comment in
     match (comment1, comment2) with
-    | ({ kind = Line; _ }, { kind = Block; _ }) ->
-      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
-    | ({ kind = Block; _ }, { kind = Line; _ }) ->
-      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+    | ({ kind = Line; _ }, { kind = Block; _ }) -> Some [replace loc1 (Comment cmt1) (Comment cmt2)]
+    | ({ kind = Block; _ }, { kind = Line; _ }) -> Some [replace loc1 (Comment cmt1) (Comment cmt2)]
     | ({ kind = Line; text = c1; _ }, { kind = Line; text = c2; _ })
     | ({ kind = Block; text = c1; _ }, { kind = Block; text = c2; _ })
       when not (String.equal c1 c2) ->
-      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+      Some [replace loc1 (Comment cmt1) (Comment cmt2)]
     | _ -> None
   and program' (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t) Ast.Program.t) :
       node change list =
@@ -475,7 +528,7 @@ let program
     let (program_loc, { statements = statements1; _ }) = program1 in
     let (_, { statements = statements2; _ }) = program2 in
     toplevel_statement_list statements1 statements2
-    |> Base.Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
+    |> Base.Option.value ~default:[replace program_loc (Program program1) (Program program2)]
   and toplevel_statement_list
       (stmts1 : (Loc.t, Loc.t) Ast.Statement.t list) (stmts2 : (Loc.t, Loc.t) Ast.Statement.t list)
       =
@@ -502,14 +555,14 @@ let program
         whole_program_diff
         >>= recurse_into_diff
               (fun x y -> Some (statement x y))
-              (fun s -> Some (Ast_utils.loc_of_statement s, Statement s))
+              (fun s -> Some (expand_statement_comment_bounds s, Statement s))
               stmts1
               0
       else
         imports_diff
         >>= recurse_into_diff
               (fun x y -> Some (statement x y))
-              (fun s -> Some (Ast_utils.loc_of_statement s, Statement s))
+              (fun s -> Some (expand_statement_comment_bounds s, Statement s))
               stmts1
               0
         >>= fun import_recurse ->
@@ -517,7 +570,7 @@ let program
         >>= ( List.length imports1
             |> recurse_into_diff
                  (fun x y -> Some (statement x y))
-                 (fun s -> Some (Ast_utils.loc_of_statement s, Statement s))
+                 (fun s -> Some (expand_statement_comment_bounds s, Statement s))
                  stmts1 )
         >>| fun body_recurse -> import_recurse @ body_recurse)
   and statement_list
@@ -525,7 +578,7 @@ let program
       : node change list option =
     diff_and_recurse_nonopt
       statement
-      (fun s -> Some (Ast_utils.loc_of_statement s, Statement s))
+      (fun s -> Some (expand_statement_comment_bounds s, Statement s))
       stmts1
       stmts2
   and statement (stmt1 : (Loc.t, Loc.t) Ast.Statement.t) (stmt2 : (Loc.t, Loc.t) Ast.Statement.t) :
@@ -581,7 +634,7 @@ let program
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
-    Base.Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
+    Base.Option.value changes ~default:[replace old_loc (Statement stmt1) (Statement stmt2)]
   and export_named_declaration loc export1 export2 =
     let open Ast.Statement.ExportNamedDeclaration in
     let {
@@ -789,7 +842,7 @@ let program
             (_, { Params.params = [_p2]; rest = None; comments = _ }),
             Some [_] ) ->
           (* reprint the parameter if it's the single parameter of a lambda to add () *)
-          Some [(l, Replace (Params params1, Params params2))]
+          Some [replace l (Params params1) (Params params2)]
         | _ -> params
       in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Base.Option.return in
@@ -1078,7 +1131,7 @@ let program
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       let comments = syntax_opt loc1 comments1 comments2 in
       join_diff_list [vals; annots; comments] )
-    |> Base.Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
+    |> Base.Option.value ~default:[replace loc1 (ClassProperty prop1) (ClassProperty prop2)]
   and class_property_value val1 val2 : node change list option =
     let open Ast.Class.Property in
     match (val1, val2) with
@@ -1189,11 +1242,11 @@ let program
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
-    Base.Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+    Base.Option.value changes ~default:[replace old_loc (Expression expr1) (Expression expr2)]
   and literal
       (loc1 : Loc.t) (loc2 : Loc.t) (lit1 : Loc.t Ast.Literal.t) (lit2 : Loc.t Ast.Literal.t) :
       node change list =
-    [(loc1, Replace (Literal (loc1, lit1), Literal (loc2, lit2)))]
+    [replace loc1 (Literal (loc1, lit1)) (Literal (loc2, lit2))]
   and string_literal
       ((loc1, lit1) : Loc.t * Loc.t Ast.StringLiteral.t)
       ((loc2, lit2) : Loc.t * Loc.t Ast.StringLiteral.t) : node change list option =
@@ -1204,7 +1257,7 @@ let program
       if String.equal val1 val2 && String.equal raw1 raw2 then
         Some []
       else
-        Some [(loc1, Replace (StringLiteral (loc1, lit1), StringLiteral (loc2, lit2)))]
+        Some [replace loc1 (StringLiteral (loc1, lit1)) (StringLiteral (loc2, lit2))]
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
@@ -1218,7 +1271,7 @@ let program
       if value1 = value2 && String.equal raw1 raw2 then
         Some []
       else
-        Some [(loc1, Replace (NumberLiteral (loc1, lit1), NumberLiteral (loc2, lit2)))]
+        Some [replace loc1 (NumberLiteral (loc1, lit1)) (NumberLiteral (loc2, lit2))]
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
@@ -1232,7 +1285,7 @@ let program
       if value1 = value2 && String.equal bigint1 bigint2 then
         Some []
       else
-        Some [(loc1, Replace (BigIntLiteral (loc1, lit1), BigIntLiteral (loc2, lit2)))]
+        Some [replace loc1 (BigIntLiteral (loc1, lit1)) (BigIntLiteral (loc2, lit2))]
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
@@ -1246,7 +1299,7 @@ let program
       if value1 = value2 then
         Some []
       else
-        Some [(loc1, Replace (BooleanLiteral (loc1, lit1), BooleanLiteral (loc2, lit2)))]
+        Some [replace loc1 (BooleanLiteral (loc1, lit1)) (BooleanLiteral (loc2, lit2))]
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
@@ -1276,7 +1329,7 @@ let program
     let result = join_diff_list [quasis_diff; exprs_diff; comments_diff] in
     Base.Option.value
       result
-      ~default:[(loc1, Replace (TemplateLiteral (loc1, t_lit1), TemplateLiteral (loc2, t_lit2)))]
+      ~default:[replace loc1 (TemplateLiteral (loc1, t_lit1)) (TemplateLiteral (loc2, t_lit2))]
   and template_literal_element
       (tl_elem1 : Loc.t Ast.Expression.TemplateLiteral.Element.t)
       (tl_elem2 : Loc.t Ast.Expression.TemplateLiteral.Element.t) : node change list option =
@@ -1373,7 +1426,7 @@ let program
       if name1 = name2 then
         []
       else
-        [(old_loc, Replace (JSXIdentifier id1, JSXIdentifier id2))]
+        [replace old_loc (JSXIdentifier id1) (JSXIdentifier id2)]
     in
     let comments_diff = syntax_opt old_loc comments1 comments2 |> Base.Option.value ~default:[] in
     name_diff @ comments_diff
@@ -1473,7 +1526,7 @@ let program
         | (Text _, Text _) -> None
         | _ -> None
       in
-      Base.Option.value changes ~default:[(old_loc, Replace (JSXChild child1, JSXChild child2))]
+      Base.Option.value changes ~default:[replace old_loc (JSXChild child1) (JSXChild child2)]
   and jsx_expression
       (loc : Loc.t)
       (jsx_expr1 : (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t)
@@ -1559,7 +1612,7 @@ let program
     match (prop1, prop2) with
     | (Property (loc, p1), Property p2) ->
       object_regular_property (loc, p1) p2
-      |> Base.Option.value ~default:[(loc, Replace (ObjectProperty prop1, ObjectProperty prop2))]
+      |> Base.Option.value ~default:[replace loc (ObjectProperty prop1) (ObjectProperty prop2)]
       |> Base.Option.return
     | (SpreadProperty (loc, p1), SpreadProperty (_, p2)) -> object_spread_property loc p1 p2
     | _ -> None
@@ -1602,7 +1655,7 @@ let program
       if String.equal name1 name2 then
         []
       else
-        [(old_loc, Replace (Raw name1, Raw name2))]
+        [replace old_loc (Raw name1) (Raw name2)]
     in
     let comments = syntax_opt old_loc comments1 comments2 |> Base.Option.value ~default:[] in
     comments @ name
@@ -1959,7 +2012,7 @@ let program
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_pattern p1 in
-    Base.Option.value changes ~default:[(old_loc, Replace (Pattern p1, Pattern p2))]
+    Base.Option.value changes ~default:[replace old_loc (Pattern p1) (Pattern p2)]
   and pattern_object
       (loc : Loc.t)
       (o1 : (Loc.t, Loc.t) Ast.Pattern.Object.t)
@@ -2098,7 +2151,7 @@ let program
       | (Array t1, Array t2) -> diff_if_changed_ret_opt (array_type loc1) t1 t2
       | _ -> None
     in
-    Base.Option.value type_diff ~default:[(loc1, Replace (Type (loc1, type1), Type (loc1, type2)))]
+    Base.Option.value type_diff ~default:[replace loc1 (Type (loc1, type1)) (Type (loc1, type2))]
   and interface_type
       (loc : Loc.t)
       (it1 : (Loc.t, Loc.t) Ast.Type.Interface.t)
@@ -2570,13 +2623,13 @@ let program
     let result = join_diff_list [variance_diff; name_diff; bound_diff; default_diff] in
     Base.Option.value
       result
-      ~default:[(loc1, Replace (TypeParam (loc1, t_param1), TypeParam (loc1, t_param2)))]
+      ~default:[replace loc1 (TypeParam (loc1, t_param1)) (TypeParam (loc1, t_param2))]
   and variance (var1 : Loc.t Ast.Variance.t option) (var2 : Loc.t Ast.Variance.t option) :
       node change list option =
     match (var1, var2) with
     | (Some (loc1, var1), Some (_, var2)) ->
-      Some [(loc1, Replace (Variance (loc1, var1), Variance (loc1, var2)))]
-    | (Some (loc1, var1), None) -> Some [(loc1, Delete (Variance (loc1, var1)))]
+      Some [replace loc1 (Variance (loc1, var1)) (Variance (loc1, var2))]
+    | (Some (loc1, var1), None) -> Some [delete loc1 (Variance (loc1, var1))]
     | (None, None) -> Some []
     | _ -> None
   and type_annotation_hint
@@ -2590,7 +2643,7 @@ let program
     in
     match (return1, return2) with
     | (Missing _, Missing _) -> []
-    | (Available (loc1, typ), Missing _) -> [(loc1, Delete (TypeAnnotation (loc1, typ)))]
+    | (Available (loc1, typ), Missing _) -> [delete loc1 (TypeAnnotation (loc1, typ))]
     | (Missing loc1, Available annot) -> [(loc1, Insert (None, [annot_change annot]))]
     | (Available annot1, Available annot2) -> type_annotation annot1 annot2
   and type_annotation
@@ -2599,7 +2652,7 @@ let program
     let open Ast.Type in
     match (typ1, typ2) with
     | (_, (_, Function _)) ->
-      [(loc1, Replace (TypeAnnotation (loc1, typ1), FunctionTypeAnnotation (loc2, typ2)))]
+      [replace loc1 (TypeAnnotation (loc1, typ1)) (FunctionTypeAnnotation (loc2, typ2))]
     | (_, _) -> type_ typ1 typ2
   and type_cast
       (loc : Loc.t)

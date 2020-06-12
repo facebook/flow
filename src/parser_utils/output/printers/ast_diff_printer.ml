@@ -42,51 +42,6 @@ let layout_of_node ~opts = function
     end
   | JSXIdentifier id -> Js_layout_generator.jsx_identifier id
 
-let expand_loc_with_comments loc node =
-  let open Comment_attachment in
-  let bounds (loc, node) f =
-    let collector = new comment_bounds_collector ~loc in
-    ignore (f collector (loc, node));
-    collector#comment_bounds
-  in
-  let comment_bounds =
-    match node with
-    | Literal (loc, lit) -> bounds (loc, lit) (fun collect (loc, lit) -> collect#literal loc lit)
-    | StringLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#string_literal_type loc lit)
-    | NumberLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#number_literal_type loc lit)
-    | BigIntLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#bigint_literal_type loc lit)
-    | BooleanLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#boolean_literal_type loc lit)
-    | Statement stmt -> bounds stmt (fun collect stmt -> collect#statement stmt)
-    | Expression expr -> bounds expr (fun collect expr -> collect#expression expr)
-    | Pattern pat -> bounds pat (fun collect pat -> collect#pattern pat)
-    | Params params -> bounds params (fun collect params -> collect#function_params params)
-    | Variance var -> bounds var (fun collect var -> collect#variance (Some var))
-    | Type ty -> bounds ty (fun collect ty -> collect#type_ ty)
-    | TypeParam tparam -> bounds tparam (fun collect tparam -> collect#type_param tparam)
-    | TypeAnnotation annot
-    | FunctionTypeAnnotation annot ->
-      bounds annot (fun collect annot -> collect#type_annotation annot)
-    | ClassProperty prop -> bounds prop (fun collect (loc, prop) -> collect#class_property loc prop)
-    | ObjectProperty (Ast.Expression.Object.Property prop) ->
-      bounds prop (fun collect prop -> collect#object_property prop)
-    | ObjectProperty (Ast.Expression.Object.SpreadProperty prop) ->
-      bounds prop (fun collect prop -> collect#spread_property prop)
-    | TemplateLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#template_literal loc lit)
-    | JSXIdentifier id -> bounds id (fun collect id -> collect#jsx_identifier id)
-    (* Nodes that do have attached comments *)
-    | Raw _
-    | Comment _
-    | Program _
-    | JSXChild _ ->
-      (None, None)
-  in
-  expand_loc_with_comment_bounds loc comment_bounds
-
 let text_of_node ~opts =
   layout_of_node ~opts
   (* TODO if we are reprinting the entire program we probably want this to be
@@ -103,10 +58,9 @@ let text_of_nodes ~opts break nodes =
   ListUtils.to_string sep (text_of_node ~opts) nodes
 
 let edit_of_change ~opts = function
-  | (loc, Replace (old_node, new_node)) ->
-    (expand_loc_with_comments loc old_node, text_of_node ~opts new_node)
+  | (loc, Replace (_, new_node)) -> (loc, text_of_node ~opts new_node)
   | (loc, Insert (break, new_nodes)) -> (loc, text_of_nodes ~opts break new_nodes)
-  | (loc, Delete node) -> (expand_loc_with_comments loc node, "")
+  | (loc, Delete _) -> (loc, "")
 
 let edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
   List.map (edit_of_change ~opts) changes
