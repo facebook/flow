@@ -1182,9 +1182,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         layout_node_with_comments_opt loc comments (template_literal ~opts template)
       | E.JSXElement el -> jsx_element ~opts loc el
       | E.JSXFragment fr -> jsx_fragment ~opts loc fr
-      | E.TypeCast { E.TypeCast.expression = expr; annot; comments } ->
-        layout_node_with_comments_opt loc comments
-        @@ wrap_in_parens (fuse [expression ~opts expr; type_annotation ~opts annot])
+      | E.TypeCast cast -> type_cast ~opts loc cast
       | E.Import { E.Import.argument; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
@@ -1392,6 +1390,21 @@ and string_literal (loc, { Ast.StringLiteral.value; comments; _ }) =
   source_location_with_comments
     ?comments
     (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
+
+and type_cast ~opts loc cast =
+  let { Ast.Expression.TypeCast.expression = expr; annot; comments } = cast in
+  let expr_layout = expression ~opts expr in
+  (* Work around Babel bug present in current version of Babel (7.10) where arrow functions with
+     type params in type casts are a parse error. Wrapping the arrow function in parens fixes this.
+     Babel issue: https://github.com/babel/babel/issues/11716 *)
+  let expr_layout =
+    match expr with
+    | (_, Ast.Expression.ArrowFunction { Ast.Function.tparams = Some _; _ }) ->
+      wrap_in_parens expr_layout
+    | _ -> expr_layout
+  in
+  layout_node_with_comments_opt loc comments
+  @@ wrap_in_parens (fuse [expr_layout; type_annotation ~opts annot])
 
 and pattern_object_property_key ~opts =
   let open Ast.Pattern.Object in

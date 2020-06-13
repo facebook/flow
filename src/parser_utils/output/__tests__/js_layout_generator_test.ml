@@ -1807,7 +1807,9 @@ let tests =
            in
            assert_output ~ctxt ("(" ^ a80 ^ ":mixed)") layout;
            assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout;
-           assert_statement_string ~ctxt ~pretty:true "var a = (b: mixed);" );
+           assert_statement_string ~ctxt ~pretty:true "var a = (b: mixed);";
+           (* Arrow function with type params is wrapped in parens *)
+           assert_expression_string ~ctxt "((<A>()=>B):C)" );
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt "type a<a,b>=a;";
