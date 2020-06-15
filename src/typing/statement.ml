@@ -838,7 +838,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   *)
   | (loc, If { If.test; consequent; alternate; comments }) ->
     let (loc_test, _) = test in
-    let (test_ast, preds, not_preds, xts) = predicates_of_condition cx ~cond:IfTest test in
+    let (test_ast, preds, not_preds, xts) = predicates_of_condition cx ~cond:OtherTest test in
     (* grab a reference to the incoming env -
          we'll restore it and merge branched envs later *)
     let start_env = Env.peek_env () in

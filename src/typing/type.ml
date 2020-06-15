@@ -819,7 +819,6 @@ module rec TypeTerm : sig
         case_test_reason: reason;
         switch_discriminant_reason: reason;
       }
-    | IfTest
     | OtherTest
 
   (* Bindings created from destructuring annotations should themselves act like
