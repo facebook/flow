@@ -182,11 +182,9 @@ type notification_from_server =
     }
   | StartRecheck
   | EndRecheck of ServerProt.Response.lazy_stats
-  (* only used for the subset of exists which client handles *)
-  | ServerExit of FlowExitStatus.t
+  | ServerExit of FlowExitStatus.t  (** only used for the subset of exits which client handles *)
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
-  (* monitor is about to close the connection *)
-  | EOF
+  | EOF  (** monitor is about to close the connection *)
 
 type message_from_server =
   | RequestResponse of response_with_metadata

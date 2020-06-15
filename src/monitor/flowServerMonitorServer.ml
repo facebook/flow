@@ -658,14 +658,10 @@ end)
 let setup_signal_handlers =
   let signals =
     [
-      Sys.sigint;
-      (* Interrupt - ctrl-c *)
-      Sys.sigterm;
-      (* Termination - like a nicer sigkill giving you a chance to cleanup *)
-      Sys.sighup;
-      (* Hang up - the terminal went away *)
-      Sys.sigquit;
-      (* Dump core - Kind of a meaner sigterm *)
+      Sys.sigint (* Interrupt - ctrl-c *);
+      Sys.sigterm (* Termination - like a nicer sigkill giving you a chance to cleanup *);
+      Sys.sighup (* Hang up - the terminal went away *);
+      Sys.sigquit (* Dump core - Kind of a meaner sigterm *);
     ]
   in
   let handle_signal signal =
