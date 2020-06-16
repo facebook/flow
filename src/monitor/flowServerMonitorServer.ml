@@ -337,6 +337,24 @@ end = struct
     let msg = Base.Option.value ~default:(spf "File watcher (%s) died" watcher#name) msg in
     exit ?error ~msg FlowExitStatus.Dfind_died
 
+  (** `close_if_open fd` closes the `fd` file descriptor, ignoring errors if it's already closed.
+
+    So it's actually important that we close the Lwt_unix.file_descr and not just the
+    underlying Unix.file_descr. Why?
+
+    1. Unix.file_descr is just an int
+    2. File descriptors can be reused after they are closed
+    3. You might get a reaaaally weird bug where your seemly closed Lwt_unix.file_descr
+       suddenly starts getting data again. This totally happened to Gabe on halloween and it
+       totally freaked him out.
+
+    Lwt_unix.file_descr, on the otherhand, carries around some state, like whether it is open
+    or closed. So a closed Lwt_unix.file_descr won't resurrect.
+  *)
+  let close_if_open (fd : Lwt_unix.file_descr) =
+    try Lwt_unix.close fd (* If it's already closed, we'll get EBADF *)
+    with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+
   let server_num = ref 0
 
   (* Spawn a brand new Flow server *)
@@ -377,22 +395,6 @@ end = struct
       |> Daemon.descr_of_out_channel
       |> Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true
     in
-    let close_if_open fd =
-      try Lwt_unix.close fd (* If it's already closed, we'll get EBADF *)
-      with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
-    in
-    (* So it's actually important that we close the Lwt_unix.file_descr and not just the
-     * underlying Unix.file_descr. Why?
-     *
-     * 1. Unix.file_descr is just an int
-     * 2. File descriptors can be reused after they are closed
-     * 3. You might get a reaaaally weird bug where your seemly closed Lwt_unix.file_descr
-     *    suddenly starts getting data again. This totally happened to Gabe on halloween and it
-     *    totally freaked him out.
-     *
-     * Lwt_unix.file_descr, on the otherhand, carries around some state, like whether it is open
-     * or closed. So a closed Lwt_unix.file_descr won't resurrect.
-     *)
     let close () =
       (* Lwt.join will run these threads in parallel and only finish when EVERY thread has finished
        * or failed *)
