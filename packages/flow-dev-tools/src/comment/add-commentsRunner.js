@@ -735,7 +735,7 @@ export async function addCommentsToCode(
         wrap = false;
       }
       const comments = [...new Set(error_codes)].map(
-        error_code => '$FlowFixMe[' + error_code + '] ' + c,
+        error_code => `$FlowFixMe[${error_code}]${c ? ` ${c}` : ''}`,
       );
       for (c of comments) {
         code = addCommentToCode(c, code, loc, path, wrap);
