@@ -652,7 +652,6 @@ let close env = close_connection env.conn
 
 let close_channel_on_instance env =
   let%map () = close env in
-  EventLogger.watchman_died_caught ();
   dead_env_from_alive env
 
 let with_instance instance ~try_to_restart ~on_alive ~on_dead =
@@ -690,12 +689,16 @@ let call_on_instance :
           let%bind env = close_channel_on_instance env in
           on_dead' on_dead env
         in
+        let log_died msg =
+          Hh_logger.log "%s" msg;
+          EventLogger.watchman_died_caught msg
+        in
         match Exception.unwrap exn with
         | Sys_error msg when String.equal msg "Broken pipe" ->
-          Hh_logger.log "Watchman Pipe broken.";
+          log_died "Watchman Pipe broken.";
           close_channel_on_instance' env
         | Sys_error msg when String.equal msg "Connection reset by peer" ->
-          Hh_logger.log "Watchman connection reset by peer.";
+          log_died "Watchman connection reset by peer.";
           close_channel_on_instance' env
         | Sys_error msg when String.equal msg "Bad file descriptor" ->
           (* This happens when watchman is tearing itself down after we
@@ -707,20 +710,19 @@ let call_on_instance :
            * file descriptor of it). I'm pretty sure we don't need to close the
            * channel when that happens since we never had a useable channel
            * to start with. *)
-          Hh_logger.log "Watchman bad file descriptor.";
-          EventLogger.watchman_died_caught ();
+          log_died "Watchman bad file descriptor.";
           on_dead' on_dead (dead_env_from_alive env)
         | End_of_file ->
-          Hh_logger.log "Watchman connection End_of_file. Closing channel";
+          log_died "Watchman connection End_of_file. Closing channel";
           close_channel_on_instance' env
         | Read_payload_too_long ->
-          Hh_logger.log "Watchman reading payload too long. Closing channel";
+          log_died "Watchman reading payload too long. Closing channel";
           close_channel_on_instance' env
         | Timeout ->
-          Hh_logger.log "Watchman reading Timeout. Closing channel";
+          log_died "Watchman reading Timeout. Closing channel";
           close_channel_on_instance' env
         | Watchman_error msg ->
-          Hh_logger.log "Watchman error: %s. Closing channel" msg;
+          log_died (Printf.sprintf "Watchman error: %s. Closing channel" msg);
           close_channel_on_instance' env
         | _ ->
           let msg = Exception.to_string exn in
