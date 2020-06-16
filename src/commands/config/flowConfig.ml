@@ -548,12 +548,9 @@ module Opts = struct
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
       ("well_formed_exports", well_formed_exports_parser);
-      ("experimental.well_formed_exports", well_formed_exports_parser);
       ("well_formed_exports.whitelist", well_formed_exports_whitelist_parser);
-      ("experimental.well_formed_exports.whitelist", well_formed_exports_whitelist_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("types_first", types_first_parser);
-      ("experimental.types_first", types_first_parser);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -571,15 +568,9 @@ module Opts = struct
           (fun opts react_runtime -> Ok { opts with react_runtime }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ("types_first.max_files_checked_per_worker", types_first_max_files_checked_per_worker_parser);
-      ( "experimental.types_first.max_files_checked_per_worker",
-        types_first_max_files_checked_per_worker_parser );
       ( "types_first.max_seconds_for_check_per_worker",
         types_first_max_seconds_for_check_per_worker_parser );
-      ( "experimental.types_first.max_seconds_for_check_per_worker",
-        types_first_max_seconds_for_check_per_worker_parser );
       ( "types_first.max_rss_bytes_for_check_per_worker",
-        types_first_max_rss_bytes_for_check_per_worker_parser );
-      ( "experimental.types_first.max_rss_bytes_for_check_per_worker",
         types_first_max_rss_bytes_for_check_per_worker_parser );
       ( "experimental.strict_es6_import_export",
         boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
