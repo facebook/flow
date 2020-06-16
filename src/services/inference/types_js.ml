@@ -187,7 +187,7 @@ let collate_parse_results ~options parse_results =
     (* In practice, the only `tolerable_errors` are related to well formed exports. If this flag
      * were not temporary in nature, it would be worth adding some complexity to avoid conflating
      * them. *)
-    Inference_utils.fold_whitelisted_well_formed_exports
+    Inference_utils.fold_included_well_formed_exports
       ~f:(fun file file_sig_errors errors ->
         let file_sig_errors = File_sig.abstractify_tolerable_errors file_sig_errors in
         let errset =

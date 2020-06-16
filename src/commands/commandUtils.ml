@@ -1228,8 +1228,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
               Commandline_usage_error)
         else
           options_flags.types_first || FlowConfig.enforce_well_formed_exports flowconfig );
-      opt_enforce_well_formed_exports_whitelist =
-        FlowConfig.enforce_well_formed_exports_whitelist flowconfig;
+      opt_enforce_well_formed_exports_includes =
+        FlowConfig.enforce_well_formed_exports_includes flowconfig;
       opt_enums = FlowConfig.enums flowconfig;
       opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
       opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;

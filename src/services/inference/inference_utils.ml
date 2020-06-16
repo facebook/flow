@@ -67,14 +67,14 @@ let set_of_file_sig_tolerable_errors ~source_file =
 (* This is an options-aware fold over the files in `m`. Function `f` will be applied
  * to a file FILE in `m` iff:
  *  - flag 'opt_enforce_well_formed_exportst' is set to true, and
- *  - if at least one 'opt_enforce_well_formed_exports_whitelist=PATH' has been
+ *  - if at least one 'opt_enforce_well_formed_exports_includes=PATH' has been
  *    set, then there exists PATH for which FILE is within PATH.
  *)
-let fold_whitelisted_well_formed_exports ~f options m acc =
+let fold_included_well_formed_exports ~f options m acc =
   if not options.Options.opt_enforce_well_formed_exports then
     acc
   else
-    match options.Options.opt_enforce_well_formed_exports_whitelist with
+    match options.Options.opt_enforce_well_formed_exports_includes with
     | [] -> Utils_js.FilenameMap.fold f m acc
     | paths ->
       let root = Options.root options in
@@ -92,7 +92,7 @@ let fold_whitelisted_well_formed_exports ~f options m acc =
 let well_formed_exports_enabled options file =
   options.Options.opt_enforce_well_formed_exports
   &&
-  match options.Options.opt_enforce_well_formed_exports_whitelist with
+  match options.Options.opt_enforce_well_formed_exports_includes with
   | [] -> true
   | paths ->
     let root = Options.root options in

@@ -4,10 +4,10 @@ libB/
 
 [options]
 well_formed_exports=true
-well_formed_exports.whitelist=<PROJECT_ROOT>/a.js
-well_formed_exports.whitelist=<PROJECT_ROOT>/dirA
-well_formed_exports.whitelist=<PROJECT_ROOT>/libA
-well_formed_exports.whitelist=<PROJECT_ROOT>/node_modules/a.js
+well_formed_exports.includes=<PROJECT_ROOT>/a.js
+well_formed_exports.includes=<PROJECT_ROOT>/dirA
+well_formed_exports.includes=<PROJECT_ROOT>/libA
+well_formed_exports.includes=<PROJECT_ROOT>/node_modules/a.js
 
 [lints]
 signature-verification-failure=error
