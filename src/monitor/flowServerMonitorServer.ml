@@ -224,9 +224,8 @@ end = struct
       Lwt.return (watcher, conn)
 
     let catch _ exn =
-      let exn = Exception.to_exn exn in
-      Logger.fatal ~exn "Uncaught exception in Server command loop";
-      raise exn
+      Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server command loop";
+      Exception.reraise exn
   end)
 
   module FileWatcherLoop = LwtLoop.Make (struct
@@ -416,8 +415,9 @@ end = struct
       with
       | Lwt.Canceled -> Lwt.return_unit
       | exn ->
-        Logger.fatal ~exn "Uncaught exception in on_exit_thread";
-        raise exn
+        let exn = Exception.wrap exn in
+        Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in on_exit_thread";
+        Exception.reraise exn
     in
     (* This may block for quite awhile. No messages will be sent to the server process until the
      * file watcher is up and running *)

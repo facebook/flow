@@ -112,7 +112,12 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     (Lwt.async_exception_hook :=
        fun exn ->
          let exn = Exception.wrap exn in
-         let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+         let msg =
+           Utils.spf
+             "Uncaught async exception: %s\n%s"
+             (Exception.get_ctor_string exn)
+             (Exception.get_full_backtrace_string max_int exn)
+         in
          Logger.fatal_s ~exn "Uncaught async exception. Exiting";
          FlowExitStatus.(exit ~msg Unknown_error));
 
