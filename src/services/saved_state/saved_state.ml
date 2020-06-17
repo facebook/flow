@@ -32,7 +32,7 @@ type unparsed_file_data = {
 type saved_state_data = {
   (* The version header should guarantee that a saved state is used by the same version of Flow.
    * However, config might have changed in a way that invalidates the saved state. In the future,
-   * we probably could whitelist some config options, whitespace, etc. But for now, let's
+   * we probably could allow some config options, whitespace, etc. But for now, let's
    * invalidate the saved state if the config has changed at all *)
   flowconfig_hash: Xx.hash;
   parsed_heaps: parsed_file_data FilenameMap.t;
