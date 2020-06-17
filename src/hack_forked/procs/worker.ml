@@ -142,7 +142,7 @@ let worker_main ic oc =
     let e_str = Printexc.to_string e in
     let pid = Unix.getpid () in
     Printf.printf "Worker %d exception: %s\n%!" pid e_str;
-    EventLogger.log_if_initialized (fun () -> EventLogger.worker_exception e_str);
+    if EventLogger.should_log () then EventLogger.worker_exception e_str;
     Printf.printf "Worker %d Potential backtrace:\n%s\n%!" pid e_backtrace;
     exit 2
 

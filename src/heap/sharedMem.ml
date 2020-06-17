@@ -42,7 +42,7 @@ external hh_shared_init : config -> num_workers:int -> handle = "hh_shared_init"
 let init config ~num_workers =
   try hh_shared_init config ~num_workers
   with Failed_memfd_init _ ->
-    EventLogger.(log_if_initialized (fun () -> sharedmem_failed_memfd_init ()));
+    if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init ();
     Hh_logger.log "Failed to use anonymous memfd init";
     (* TODO: The server should exit, but we should exit with a different
      * message, since Out_of_shared_memory is also raised when memfd_reserve
