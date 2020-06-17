@@ -66,7 +66,7 @@ let set_of_file_sig_tolerable_errors ~source_file =
 
 (* This is an options-aware fold over the files in `m`. Function `f` will be applied
  * to a file FILE in `m` iff:
- *  - flag 'opt_enforce_well_formed_exportst' is set to true, and
+ *  - flag 'opt_enforce_well_formed_exports' is set to true, and
  *  - if at least one 'opt_enforce_well_formed_exports_includes=PATH' has been
  *    set, then there exists PATH for which FILE is within PATH.
  *)
