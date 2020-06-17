@@ -49,7 +49,7 @@ declare var b4: typeof is_number_def;
 
 //
 // Refinement weakening
-///
+//
 function is_number_def_2b(x: mixed, y: mixed): boolean %checks {
   return typeof x === 'number';
 }

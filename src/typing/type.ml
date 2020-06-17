@@ -730,7 +730,7 @@ module rec TypeTerm : sig
      * support subtyping of predicated functions, but the scaffolding might be
      * useful later on.
      *)
-    | SubstOnPredT of reason * substitution * t
+    | SubstOnPredT of use_op * reason * substitution * t
     (*
      * `RefineT (reason, pred, tvar)` is an instruction to refine an incoming
      * flow using the predicate `pred`. The result will be stored in `tvar`,

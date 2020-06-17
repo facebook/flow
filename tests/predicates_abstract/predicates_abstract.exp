@@ -160,9 +160,12 @@ arguments [2]. [function-predicate]
 
    sanity-refine.js:19:26
    19| var e = refine3(c, d, e, is_string_and_number);
-                                ^^^^^^^^^^^^^^^^^^^^ [1]
+                                ^^^^^^^^^^^^^^^^^^^^
 
 References:
+   sanity-refine.js:22:1
+   22| function is_string_and_number(x, y): %checks {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    sanity-refine.js:17:32
    17| declare function refine3<T, P: $Pred<3>>(u: T, v: T, w: T, cb: P): $Refine<T,P,1>;
                                       ^^^^^^^^ [2]

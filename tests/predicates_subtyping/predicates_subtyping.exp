@@ -1,85 +1,37 @@
-Error ------------------------------------------------------------------------------------------------------ file.js:9:1
+Error ----------------------------------------------------------------------------------------------------- file.js:21:2
 
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
+Cannot cast `a3` to `typeof is_number` because predicate encoded in return [1] is incompatible with predicate encoded in
+return [2]. [incompatible-cast]
 
-   file.js:9:1
-   9| declare function instance_of_C(node: mixed): boolean %checks(node instanceof C);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   file.js:9:62
-   9| declare function instance_of_C(node: mixed): boolean %checks(node instanceof C);
-                                                                   ^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:23:1
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   file.js:23:1
-   23| function is_string_def(x: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   file.js:21:2
+   21| (a3: typeof is_number); // error incompatible predicates
+        ^^
 
 References:
-   file.js:24:10
+   pred-decls.js:3:54
+    3| declare export function is_string(x: mixed): boolean %checks(typeof x === "string");
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   pred-decls.js:4:54
+    4| declare export function is_number(x: mixed): boolean %checks(typeof x === "number");
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:34:2
+
+Cannot cast `b2` to `typeof is_number_def` because predicate encoded in return [1] is incompatible with predicate
+encoded in return [2]. [incompatible-cast]
+
+   file.js:34:2
+   34| (b2: typeof is_number_def); // error incompatible predicates
+        ^^
+
+References:
+   file.js:24:3
    24|   return typeof x === 'string';
-                ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:26:1
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   file.js:26:1
-   26| function is_number_def(x: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   file.js:24:10
-   24|   return typeof x === 'string';
-                ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:26:1
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   file.js:26:1
-   26| function is_number_def(x: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   file.js:40:10
-   40|   return typeof x === 'number' && typeof y === 'number';
-                ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:26:1
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   file.js:26:1
-   26| function is_number_def(x: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   file.js:40:35
-   40|   return typeof x === 'number' && typeof y === 'number';
-                                         ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:39:1
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   file.js:39:1
-   39| function is_number_def_2a(x: mixed, y: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   file.js:54:10
-   54|   return typeof x === 'number';
-                ^^^^^^^^^^^^^^^^^^^^^ [1]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:27:3
+   27|   return typeof x === 'number';
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- file.js:47:2
@@ -89,69 +41,34 @@ arguments [2]. [function-predicate]
 
    file.js:47:2
    47| (b4: typeof is_number_def_2a); // error: arrity mismatch
-        ^^ [1]
+        ^^
 
 References:
+   file.js:46:17
+   46| declare var b4: typeof is_number_def;
+                       ^^^^^^^^^^^^^^^^^^^^ [1]
    file.js:47:6
    47| (b4: typeof is_number_def_2a); // error: arrity mismatch
             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- file.js:53:1
+Error ----------------------------------------------------------------------------------------------------- file.js:61:2
 
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
+Cannot cast `b6` to `typeof is_number_def_2a` because predicate encoded in return [1] is incompatible with predicate
+encoded in return [2]. [incompatible-cast]
 
-   file.js:53:1
-   53| function is_number_def_2b(x: mixed, y: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   file.js:61:2
+   61| (b6: typeof is_number_def_2a); // error: is_number_def_2b does not refine at least `y`
+        ^^
 
 References:
-   file.js:40:10
+   file.js:54:3
+   54|   return typeof x === 'number';
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:40:3
    40|   return typeof x === 'number' && typeof y === 'number';
-                ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:53:1
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   file.js:53:1
-   53| function is_number_def_2b(x: mixed, y: mixed): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   file.js:40:35
-   40|   return typeof x === 'number' && typeof y === 'number';
-                                         ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- pred-decls.js:3:16
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   pred-decls.js:3:16
-   3| declare export function is_string(x: mixed): boolean %checks(typeof x === "string");
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   pred-decls.js:3:62
-   3| declare export function is_string(x: mixed): boolean %checks(typeof x === "string");
-                                                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- pred-decls.js:4:16
-
-boolean [1] is not supported by unclassified use SubstOnPredT. [incompatible-use]
-
-   pred-decls.js:4:16
-   4| declare export function is_number(x: mixed): boolean %checks(typeof x === "number");
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   pred-decls.js:3:62
-   3| declare export function is_string(x: mixed): boolean %checks(typeof x === "string");
-                                                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
-Found 11 errors
+Found 4 errors

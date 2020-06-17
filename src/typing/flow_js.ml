@@ -3608,17 +3608,25 @@ struct
          * functions (which are not the same). `SubstOnPredT` is a use that does
          * this matching by carrying a substitution (`subst`) from keys from the
          * function in the left-hand side to keys in the right-hand side.
-         *
-         * Each matched pair of predicates is subsequently checked for consistency.
          *)
-        | ( OpenPredT { base_t = t1; m_pos = _; m_neg = _; reason = _ },
+        | ( OpenPredT { base_t = t1; m_pos = _p_pos_1; m_neg = _p_neg_1; reason = _ },
             SubstOnPredT
-              (_, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ }) )
+              (use_op, _, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ })
+          )
           when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
-          rec_flow_t ~use_op:unknown_use cx trace (t1, t2)
-        | (OpenPredT _, UseT (_, OpenPredT _)) ->
-          let loc = aloc_of_reason (reason_of_use_t u) in
-          add_output cx ~trace Error_message.(EInternal (loc, OpenPredWithoutSubst))
+          rec_flow_t ~use_op cx trace (t1, t2)
+        (* Identical predicates are okay, just do the base type check. *)
+        | ( OpenPredT { base_t = t1; m_pos = p_pos_1; m_neg = _; reason = lreason },
+            UseT (use_op, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = _; reason = ureason })
+          ) ->
+          if TypeUtil.pred_map_implies p_pos_1 p_pos_2 then
+            rec_flow_t ~use_op cx trace (t1, t2)
+          else
+            let error =
+              Error_message.EIncompatibleWithUseOp
+                { reason_lower = lreason; reason_upper = ureason; use_op }
+            in
+            add_output cx ~trace error
         (*********************************************)
         (* Using predicate functions as regular ones *)
         (*********************************************)
@@ -4211,52 +4219,23 @@ struct
           multiflow_subtype cx trace ~use_op ureason args ft1;
 
           (* Well-formedness adjustment: If this is predicate function subtyping,
-         make sure to apply a latent substitution on the right-hand use to
-         bridge the mismatch of the parameter naming. Otherwise, proceed with
-         the subtyping of the return types normally. In general it should
-         hold as an invariant that OpenPredTs (where free variables appear)
-         should not flow to other OpenPredTs without wrapping the latter in
-         SubstOnPredT.
-      *)
+             make sure to apply a latent substitution on the right-hand use to
+             bridge the mismatch of the parameter naming. Otherwise, proceed with
+             the subtyping of the return types normally. In general it should
+             hold as an invariant that OpenPredTs (where free variables appear)
+             should not flow to other OpenPredTs without wrapping the latter in
+             SubstOnPredT.
+           *)
           if ft2.is_predicate then
             if not ft1.is_predicate then
               (* Non-predicate functions are incompatible with predicate ones
-             TODO: somehow the original flow needs to be propagated as well *)
+                 TODO: somehow the original flow needs to be propagated as well *)
               add_output
                 cx
                 ~trace
                 (Error_message.EFunPredCustom ((lreason, ureason), "Function is incompatible with"))
             else
-              let reason =
-                update_desc_new_reason
-                  (fun desc -> RCustom (spf "predicate of %s" (string_of_desc desc)))
-                  (reason_of_t ft2.return_t)
-              in
-              let rec subst_map (n, map) = function
-                | ((Some k, _) :: ps1, (Some v, _) :: ps2) ->
-                  subst_map (n + 1, SMap.add k (v, []) map) (ps1, ps2)
-                | (_, []) -> Ok map
-                | ([], ps2) ->
-                  (* Flag an error if predicate counts do not coincide
-                 TODO: somehow the original flow needs to be propagated
-                 as well *)
-                  let mod_reason n =
-                    update_desc_new_reason (fun _ ->
-                        RCustom (spf "predicate function with %d arguments" n))
-                  in
-                  let n2 = n + List.length ps2 in
-                  Error
-                    (Error_message.EFunPredCustom
-                       ( (mod_reason n lreason, mod_reason n2 ureason),
-                         "Predicate function is incompatible with" ))
-                | ((None, _) :: _, _)
-                | (_, (None, _) :: _) ->
-                  let loc = aloc_of_reason ureason in
-                  Error Error_message.(EInternal (loc, PredFunWithoutParamNames))
-              in
-              match subst_map (0, SMap.empty) (ft1.params, ft2.params) with
-              | Error e -> add_output cx ~trace e
-              | Ok map -> rec_flow cx trace (ft1.return_t, SubstOnPredT (reason, map, ft2.return_t))
+              flow_predicate_func cx trace use_op (lreason, ft1) (ureason, ft2)
           else
             let use_op =
               Frame
@@ -7763,8 +7742,8 @@ struct
     | NotT (reason, t) ->
       rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, t);
       true
-    | SubstOnPredT (_, _, OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ }) ->
-      covariant_flow ~use_op:unknown_use t;
+    | SubstOnPredT (use_op, _, _, OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ }) ->
+      covariant_flow ~use_op t;
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
@@ -12338,6 +12317,59 @@ struct
   and continue_repos cx trace reason ?(use_desc = false) t = function
     | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
     | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
+
+  and flow_predicate_func =
+    let rec subst_map (n, map) = function
+      | ((Some k, _) :: ps1, (Some v, _) :: ps2) ->
+        let map' =
+          if k <> v then
+            SMap.add k (v, []) map
+          else
+            (* Skip trivial entry *)
+            map
+        in
+        subst_map (n + 1, map') (ps1, ps2)
+      | (_, []) -> Ok map
+      | ([], ps2) ->
+        (* Flag an error if predicate counts do not coincide
+           TODO: somehow the original flow needs to be propagated as well *)
+        let n2 = n + List.length ps2 in
+        Error (`ArityMismatch (n, n2))
+      | ((None, _) :: _, _)
+      | (_, (None, _) :: _) ->
+        Error `NoParamNames
+    in
+    fun cx trace use_op (lreason, ft1) (ureason, ft2) ->
+      match subst_map (0, SMap.empty) (ft1.params, ft2.params) with
+      | Error (`ArityMismatch (n1, n2)) ->
+        let mod_reason n =
+          replace_desc_reason (RCustom (spf "predicate function with %d arguments" n))
+        in
+        let error =
+          Error_message.EFunPredCustom
+            ( (mod_reason n1 lreason, mod_reason n2 ureason),
+              "Predicate function is incompatible with" )
+        in
+        add_output cx ~trace error
+      | Error `NoParamNames ->
+        let error = Error_message.(EInternal (aloc_of_reason ureason, PredFunWithoutParamNames)) in
+        add_output cx ~trace error
+      | Ok map ->
+        let reason =
+          update_desc_new_reason
+            (fun desc -> RCustom (spf "predicate of %s" (string_of_desc desc)))
+            (reason_of_t ft2.return_t)
+        in
+        (* We need to treat the return type of the predicated function as an
+           annotation, to ensure that the LHS return type is checked against it,
+           if ft2.return_t happens to be an OpenT. *)
+        let out =
+          if SMap.is_empty map then
+            UseT (use_op, annot false ft2.return_t)
+          else
+            SubstOnPredT (use_op, reason, map, annot false ft2.return_t)
+        in
+        rec_flow cx trace (ft1.return_t, out)
 
   include AssertGround
   include CheckPolarity

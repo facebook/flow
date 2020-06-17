@@ -1450,12 +1450,12 @@ class virtual ['a] t_with_uses =
           t
         else
           CallOpenPredT (r, b, key, t1', t2')
-      | SubstOnPredT (r, sub, t') ->
+      | SubstOnPredT (use_op, r, sub, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          SubstOnPredT (r, sub, t'')
+          SubstOnPredT (use_op, r, sub, t'')
       | RefineT (r, p, t') ->
         let p' = self#predicate cx map_cx p in
         let t'' = self#type_ cx map_cx t' in

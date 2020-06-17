@@ -429,7 +429,6 @@ and internal_error =
   | AbnormalControlFlow
   | MethodNotAFunction
   | OptionalMethod
-  | OpenPredWithoutSubst
   | PredFunWithoutParamNames
   | UnsupportedGuardPredicate of string
   | BreakEnvMissingForCase
@@ -1401,7 +1400,6 @@ let string_of_internal_error = function
   | AbnormalControlFlow -> "abnormal control flow"
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
-  | OpenPredWithoutSubst -> "OpenPredT ~> OpenPredT without substitution"
   | PredFunWithoutParamNames -> "FunT -> FunT no params"
   | UnsupportedGuardPredicate pred -> spf "unsupported guard predicate (%s)" pred
   | BreakEnvMissingForCase -> "break env missing for case"

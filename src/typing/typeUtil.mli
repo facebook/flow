@@ -84,3 +84,5 @@ val implicit_typeapp : ?annot_loc:ALoc.t -> Type.t -> Type.t list -> Type.t
 val this_typeapp : ?annot_loc:ALoc.t -> Type.t -> Type.t -> Type.t list option -> Type.t
 
 val push_type_alias_reason : reason -> Type.t -> Type.t
+
+val pred_map_implies : Type.predicate Key_map.t -> Type.predicate Key_map.t -> bool

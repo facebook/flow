@@ -140,7 +140,7 @@ and reason_of_use_t = function
   | StrictEqT { reason; _ } -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
   | ModuleExportsAssignT (reason, _, _) -> reason
-  | SubstOnPredT (reason, _, _) -> reason
+  | SubstOnPredT (_, reason, _, _) -> reason
   | SuperT (_, reason, _) -> reason
   | TestPropT (reason, _, _, _) -> reason
   | ThisSpecializeT (reason, _, _) -> reason
@@ -327,7 +327,7 @@ and mod_reason_of_use_t f = function
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
     ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
-  | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
+  | SubstOnPredT (use_op, reason, subst, t) -> SubstOnPredT (use_op, f reason, subst, t)
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
   | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
@@ -475,7 +475,7 @@ let rec util_use_op_of_use_t :
   | InvariantT _
   | CallLatentPredT (_, _, _, _, _)
   | CallOpenPredT (_, _, _, _, _)
-  | SubstOnPredT (_, _, _)
+  | SubstOnPredT (_, _, _, _)
   | RefineT (_, _, _)
   | CondT (_, _, _, _)
   | ReactPropsToOut _
@@ -790,3 +790,42 @@ let push_type_alias_reason r t =
   | RTypeAlias (n, _, _) ->
     mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (n, None, desc))) t
   | _ -> t
+
+let rec eq_predicate (p1, p2) =
+  match (p1, p2) with
+  (* trivial *)
+  | (ExistsP _, ExistsP _)
+  | (NullP, NullP)
+  | (MaybeP, MaybeP)
+  | (BoolP _, BoolP _)
+  | (FunP, FunP)
+  | (NumP _, NumP _)
+  | (ObjP, ObjP)
+  | (StrP _, StrP _)
+  | (SymbolP _, SymbolP _)
+  | (VoidP, VoidP)
+  | (ArrP, ArrP) ->
+    true
+  (* Recursive *)
+  | (AndP (p1a, p1b), AndP (p2a, p2b)) -> eq_predicate (p1a, p2a) && eq_predicate (p1b, p2b)
+  | (OrP (p1a, p1b), OrP (p2a, p2b)) -> eq_predicate (p1a, p2a) && eq_predicate (p1b, p2b)
+  | (NotP p1, NotP p2) -> eq_predicate (p1, p2)
+  | (SingletonBoolP (_, s1), SingletonBoolP (_, s2)) -> s1 = s2
+  | (SingletonStrP (_, s1, v1), SingletonStrP (_, s2, v2)) -> s1 = s2 && v1 = v2
+  | (SingletonNumP (_, s1, v1), SingletonNumP (_, s2, v2)) -> s1 = s2 && v1 = v2
+  | (LatentP (t1, i1), LatentP (t2, i2)) -> t1 == t2 && i1 = i2
+  | (PropExistsP (s1, _), PropExistsP (s2, _)) -> s1 = s2
+  | (PropNonMaybeP (s1, _), PropNonMaybeP (s2, _)) -> s1 = s2
+  (* Complex *)
+  | (LeftP _, LeftP _)
+  | (RightP _, RightP _) ->
+    p1 = p2
+  | _ -> false
+
+let pred_map_implies p1 p2 =
+  Key_map.for_all
+    (fun k2 v2 ->
+      match Key_map.find_opt k2 p1 with
+      | None -> false
+      | Some v1 -> eq_predicate (v1, v2))
+    p2

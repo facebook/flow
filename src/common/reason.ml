@@ -680,7 +680,7 @@ let rec string_of_desc = function
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
-  | RPredicateOf d -> spf "predicate of %s" (string_of_desc d)
+  | RPredicateOf d -> spf "predicate encoded in %s" (string_of_desc d)
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)

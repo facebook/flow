@@ -756,7 +756,13 @@ and dump_use_t_ (depth, tvars) cx t =
         ~reason:false
         ~extra:(spf "%s, %b, %s, %s" (kid l) sense (string_of_sentinel sentinel) (kid result))
         t
-    | SubstOnPredT _ -> p t
+    | SubstOnPredT (_, _, subst, arg) ->
+      let subst =
+        SMap.bindings subst
+        |> List.map (fun (k, v) -> spf "%s -> %s" k (Key.string_of_key v))
+        |> String.concat ", "
+      in
+      p t ~extra:(spf "[subst: {%s}] %s" subst (kid arg))
     | SuperT _ -> p t
     | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | SetElemT (_, _, ix, _, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
@@ -1036,7 +1042,6 @@ let dump_error_message =
     | AbnormalControlFlow -> "AbnormalControlFlow"
     | MethodNotAFunction -> "MethodNotAFunction"
     | OptionalMethod -> "OptionalMethod"
-    | OpenPredWithoutSubst -> "OpenPredWithoutSubst"
     | PredFunWithoutParamNames -> "PredFunWithoutParamNames"
     | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
     | BreakEnvMissingForCase -> "BreakEnvMissingForCase"

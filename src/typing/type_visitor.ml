@@ -549,7 +549,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | SubstOnPredT (_, _, t) -> self#type_ cx pole_TODO acc t
+      | SubstOnPredT (_, _, _, t) -> self#type_ cx pole_TODO acc t
       | RefineT (_, predicate, t) ->
         let acc = self#predicate cx acc predicate in
         let acc = self#type_ cx pole_TODO acc t in
