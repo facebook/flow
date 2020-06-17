@@ -3,4 +3,4 @@ module.system=haste
 module.system.haste.use_name_reducers=true
 module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\)\.js\(\.flow\)?$' -> '\1'
 module.system.haste.paths.includes=<PROJECT_ROOT>/.*
-module.system.haste.paths.includes=<PROJECT_ROOT>/B.*
+module.system.haste.paths.excludes=<PROJECT_ROOT>/B.*

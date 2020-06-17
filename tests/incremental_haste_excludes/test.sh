@@ -9,12 +9,14 @@ assert_ok $FLOW status --no-auto-start --strip-root .
 
 printf "\nMove A.js to B.js (excluded):\n"
 mv A.js B.js
-assert_ok $FLOW force-recheck --no-auto-start A.js B.js
+sed -i -e "s/require('A')/require('B')/g" index.js
+assert_ok $FLOW force-recheck --no-auto-start A.js B.js index.js
 assert_errors $FLOW status --no-auto-start --strip-root .
 
 printf "\nMove B.js to A.js:\n"
 mv B.js A.js
-assert_ok $FLOW force-recheck --no-auto-start A.js B.js
+sed -i -e "s/require('B')/require('A')/g" index.js
+assert_ok $FLOW force-recheck --no-auto-start A.js B.js index.js
 assert_ok $FLOW status --no-auto-start --strip-root .
 
 printf "\nDone!\n"

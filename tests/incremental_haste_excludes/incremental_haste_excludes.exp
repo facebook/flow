@@ -5,9 +5,9 @@ No errors!
 Move A.js to B.js (excluded):
 Error ----------------------------------------------------------------------------------------------------- index.js:2:9
 
-Cannot resolve module `A`. [cannot-resolve-module]
+Cannot resolve module `B`. [cannot-resolve-module]
 
-   2| require('A');
+   2| require('B');
               ^^^
 
 
