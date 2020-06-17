@@ -211,20 +211,30 @@ let run ~monitor_channels ~shared_mem_config options =
   in
   LwtInit.run_lwt initial_lwt_thread
 
+let exit_msg_of_exception exn msg =
+  let bt = Exception.get_full_backtrace_string max_int exn in
+  Utils.spf
+    "%s%s"
+    msg
+    ( if bt = "" then
+      bt
+    else
+      ":\n" ^ bt )
+
 let run_from_daemonize ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config options with
   | SharedMem_js.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
-    let bt = Exception.get_backtrace_string exn in
-    let msg =
-      Utils.spf
-        "Out of shared memory%s"
-        ( if bt = "" then
-          bt
-        else
-          ":\n" ^ bt )
-    in
+    let msg = exit_msg_of_exception exn "Out of shared memory" in
     FlowExitStatus.(exit ~msg Out_of_shared_memory)
+  | SharedMem_js.Hash_table_full as exn ->
+    let exn = Exception.wrap exn in
+    let msg = exit_msg_of_exception exn "Hash table is full" in
+    FlowExitStatus.(exit ~msg Hash_table_full)
+  | SharedMem_js.Heap_full as exn ->
+    let exn = Exception.wrap exn in
+    let msg = exit_msg_of_exception exn "Heap is full" in
+    FlowExitStatus.(exit ~msg Heap_full)
   | MonitorRPC.Monitor_died ->
     FlowExitStatus.(exit ~msg:"Monitor died unexpectedly" Killed_by_monitor)
   | e ->

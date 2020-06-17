@@ -89,11 +89,14 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
            (* The worker is still running or exited normally. It's odd that we failed to read
             * the response, so just raise that exception *)
            raise exn
-         | (_, Unix.WEXITED i) when i = Exit_status.(exit_code Out_of_shared_memory) ->
-           raise SharedMem.Out_of_shared_memory
          | (_, Unix.WEXITED i) ->
-           let () = Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
-           raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i)))
+           (match FlowExitStatus.error_type_opt i with
+           | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+           | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
+           | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
+           | _ ->
+             let () = Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
+             raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i))))
          | (_, Unix.WSTOPPED i) ->
            let () = Printf.eprintf "Subprocess(%d): stopped %d" worker_pid i in
            raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))

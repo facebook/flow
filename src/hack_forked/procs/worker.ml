@@ -111,39 +111,43 @@ let worker_main ic oc =
     ()
   in
   try
-    Measure.push_global ();
-    let (Request do_process) =
-      Measure.time "worker_read_request" (fun () -> Marshal_tools.from_fd_with_preamble infd)
-    in
-    WorkerCancel.set_on_worker_cancelled (fun () -> on_job_cancelled outfd);
-    let tm = Unix.times () in
-    let gc = Gc.quick_stat () in
-    Sys_utils.start_gc_profiling ();
+    try
+      Measure.push_global ();
+      let (Request do_process) =
+        Measure.time "worker_read_request" (fun () -> Marshal_tools.from_fd_with_preamble infd)
+      in
+      WorkerCancel.set_on_worker_cancelled (fun () -> on_job_cancelled outfd);
+      let tm = Unix.times () in
+      let gc = Gc.quick_stat () in
+      Sys_utils.start_gc_profiling ();
 
-    start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
-    start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
-    start_minor_words := gc.Gc.minor_words;
-    start_promoted_words := gc.Gc.promoted_words;
-    start_major_words := gc.Gc.major_words;
-    start_minor_collections := gc.Gc.minor_collections;
-    start_major_collections := gc.Gc.major_collections;
-    start_wall_time := Unix.gettimeofday ();
-    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
-    Mem_profile.start ();
-    do_process { send = send_result };
-    exit 0
-  with
-  | End_of_file -> exit 1
-  | SharedMem.Out_of_shared_memory -> Exit_status.(exit Out_of_shared_memory)
-  | SharedMem.Hash_table_full -> Exit_status.(exit Hash_table_full)
-  | SharedMem.Heap_full -> Exit_status.(exit Heap_full)
-  | e ->
-    let e_backtrace = Printexc.get_backtrace () in
-    let e_str = Printexc.to_string e in
+      start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
+      start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
+      start_minor_words := gc.Gc.minor_words;
+      start_promoted_words := gc.Gc.promoted_words;
+      start_major_words := gc.Gc.major_words;
+      start_minor_collections := gc.Gc.minor_collections;
+      start_major_collections := gc.Gc.major_collections;
+      start_wall_time := Unix.gettimeofday ();
+      start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
+      Mem_profile.start ();
+      do_process { send = send_result };
+      exit 0
+    with
+    | End_of_file -> exit 1
+    | SharedMem.Out_of_shared_memory -> FlowExitStatus.(exit Out_of_shared_memory)
+    | SharedMem.Hash_table_full -> FlowExitStatus.(exit Hash_table_full)
+    | SharedMem.Heap_full -> FlowExitStatus.(exit Heap_full)
+  with e ->
+    let exn = Exception.wrap e in
+    let e_str = Exception.get_ctor_string exn in
     let pid = Unix.getpid () in
     Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     if EventLogger.should_log () then EventLogger.worker_exception e_str;
-    Printf.printf "Worker %d Potential backtrace:\n%s\n%!" pid e_backtrace;
+    Printf.printf
+      "Worker %d Potential backtrace:\n%s\n%!"
+      pid
+      (Exception.get_full_backtrace_string max_int exn);
     exit 2
 
 let win32_worker_main restore (state, _controller_fd) (ic, oc) =

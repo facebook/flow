@@ -507,6 +507,14 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* Uncaught exn. We probably could survive this, but it's a little risky *)
         | Watchman_error
         (* We ran into an issue with Watchman *)
+        | Hash_table_full
+        (* The hash table is full. It accumulates cruft, so restarting _might_ help, but
+           if it's just too small, we could get stuck in a crash loop. Ideally we'd delete
+           unused keys so that it being full is definitely a permanent failure. *)
+        | Heap_full
+        (* The heap is full. Restarting might help clear out cruft, but it could also just
+           be too small, leading to a crash loop. We should limit how often we try restarting
+           before recovering from this. *)
         (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
         | Interrupted
         | Build_id_mismatch

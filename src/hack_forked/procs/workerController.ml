@@ -311,11 +311,14 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
             with End_of_file -> snd pid_stat)
     in
     match pid_stat with
-    | Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
-      raise SharedMem.Out_of_shared_memory
     | Unix.WEXITED i ->
-      Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i;
-      raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i)))
+      (match FlowExitStatus.error_type_opt i with
+      | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+      | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
+      | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
+      | _ ->
+        Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i;
+        raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i))))
     | Unix.WSTOPPED i -> raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))
     | Unix.WSIGNALED i -> raise (Worker_failed (worker_pid, Worker_quit (Unix.WSIGNALED i)))
   in
