@@ -235,5 +235,5 @@ let exit ?msg t =
   | Some msg -> prerr_endline msg
   | None -> ());
   print_json ?msg t;
-  FlowEventLogger.exit msg (to_string t);
+  if FlowEventLogger.should_log () then FlowEventLogger.exit msg (to_string t);
   Stdlib.exit (error_code t)

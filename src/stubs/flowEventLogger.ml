@@ -70,6 +70,8 @@ let init_done
 
 let init_flow_command ~version:_ = ()
 
+let should_log () = false
+
 let killed _ = ()
 
 let lock_lost _ = ()
