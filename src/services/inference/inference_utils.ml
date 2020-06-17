@@ -81,7 +81,7 @@ let fold_included_well_formed_exports ~f options m acc =
       let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
       Utils_js.FilenameMap.fold
         (fun file v b ->
-          let file_str = File_key.to_string file in
+          let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
           if List.exists (fun r -> String_utils.is_substring r file_str) paths then
             f file v b
           else
@@ -97,5 +97,5 @@ let well_formed_exports_enabled options file =
   | paths ->
     let root = Options.root options in
     let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
-    let file_str = File_key.to_string file in
+    let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
     List.exists (fun r -> String_utils.is_substring r file_str) paths
