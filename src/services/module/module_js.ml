@@ -491,18 +491,18 @@ module Haste : MODULE_SYSTEM = struct
     Files.expand_project_root_token_to_regexp ~root:(Options.root options) str
 
   let is_haste_file =
-    let matched_haste_paths_whitelist options name =
+    let matched_haste_paths_includes options name =
       List.exists
         (fun r -> Str.string_match (expand_project_root_token options r) name 0)
-        (Options.haste_paths_whitelist options)
+        (Options.haste_paths_includes options)
     in
-    let matched_haste_paths_blacklist options name =
+    let matched_haste_paths_excludes options name =
       List.exists
         (fun r -> Str.string_match (expand_project_root_token options r) name 0)
-        (Options.haste_paths_blacklist options)
+        (Options.haste_paths_excludes options)
     in
     fun options name ->
-      matched_haste_paths_whitelist options name && not (matched_haste_paths_blacklist options name)
+      matched_haste_paths_includes options name && not (matched_haste_paths_excludes options name)
 
   let haste_name =
     let reduce_name name (regexp, template) = Str.global_replace regexp template name in

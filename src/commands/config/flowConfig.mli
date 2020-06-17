@@ -100,9 +100,9 @@ val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
 
-val haste_paths_blacklist : config -> string list
+val haste_paths_excludes : config -> string list
 
-val haste_paths_whitelist : config -> string list
+val haste_paths_includes : config -> string list
 
 val haste_use_name_reducers : config -> bool
 

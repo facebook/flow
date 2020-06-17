@@ -61,8 +61,8 @@ module Opts = struct
     watchman_sync_timeout: int option;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
-    haste_paths_blacklist: string list;
-    haste_paths_whitelist: string list;
+    haste_paths_excludes: string list;
+    haste_paths_includes: string list;
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
@@ -166,8 +166,8 @@ module Opts = struct
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
-      haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
-      haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
+      haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
+      haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
@@ -367,6 +367,18 @@ module Opts = struct
   let types_first_max_rss_bytes_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
 
+  let haste_paths_excludes_parser =
+    string
+      ~init:(fun opts -> { opts with haste_paths_excludes = [] })
+      ~multiple:true
+      (fun opts v -> Ok { opts with haste_paths_excludes = v :: opts.haste_paths_excludes })
+
+  let haste_paths_includes_parser =
+    string
+      ~init:(fun opts -> { opts with haste_paths_includes = [] })
+      ~multiple:true
+      (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
+
   let parsers =
     [
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
@@ -426,18 +438,12 @@ module Opts = struct
           ~multiple:true
           (fun (pattern, template) -> Ok (Str.regexp pattern, template))
           (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers }) );
-      ( "module.system.haste.paths.blacklist",
-        string
-          ~init:(fun opts -> { opts with haste_paths_blacklist = [] })
-          ~multiple:true
-          (fun opts v -> Ok { opts with haste_paths_blacklist = v :: opts.haste_paths_blacklist })
-      );
-      ( "module.system.haste.paths.whitelist",
-        string
-          ~init:(fun opts -> { opts with haste_paths_whitelist = [] })
-          ~multiple:true
-          (fun opts v -> Ok { opts with haste_paths_whitelist = v :: opts.haste_paths_whitelist })
-      );
+      ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
+      (* TODO remove this alias once there has been a transitional release *)
+      ("module.system.haste.paths.blacklist", haste_paths_excludes_parser);
+      ("module.system.haste.paths.includes", haste_paths_includes_parser);
+      (* TODO remove this alias once there has been a transitional release *)
+      ("module.system.haste.paths.whitelist", haste_paths_includes_parser);
       ( "module.system.haste.use_name_reducers",
         boolean
           ~init:(fun opts -> { opts with haste_use_name_reducers = false })
@@ -1146,9 +1152,9 @@ let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 
-let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
+let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
-let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
+let haste_paths_includes c = c.options.Opts.haste_paths_includes
 
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 

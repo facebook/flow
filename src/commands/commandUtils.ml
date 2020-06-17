@@ -1248,8 +1248,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
       opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
       opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
-      opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;
-      opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
+      opt_haste_paths_excludes = FlowConfig.haste_paths_excludes flowconfig;
+      opt_haste_paths_includes = FlowConfig.haste_paths_includes flowconfig;
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
       opt_file_options = file_options;
       opt_lint_severities = lint_severities;

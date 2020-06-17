@@ -2,7 +2,7 @@
 Initial status:
 No errors!
 
-Move A.js to B.js (blacklisted):
+Move A.js to B.js (excluded):
 Error ----------------------------------------------------------------------------------------------------- index.js:2:9
 
 Cannot resolve module `A`. [cannot-resolve-module]

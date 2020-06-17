@@ -7,7 +7,7 @@
 printf "\nInitial status:\n"
 assert_ok $FLOW status --no-auto-start --strip-root .
 
-printf "\nMove A.js to B.js (blacklisted):\n"
+printf "\nMove A.js to B.js (excluded):\n"
 mv A.js B.js
 assert_ok $FLOW force-recheck --no-auto-start A.js B.js
 assert_errors $FLOW status --no-auto-start --strip-root .

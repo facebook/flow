@@ -79,8 +79,8 @@ type t = {
   opt_flowconfig_name: string;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
-  opt_haste_paths_blacklist: string list;
-  opt_haste_paths_whitelist: string list;
+  opt_haste_paths_excludes: string list;
+  opt_haste_paths_includes: string list;
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
@@ -164,9 +164,9 @@ let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
 let haste_name_reducers opts = opts.opt_haste_name_reducers
 
-let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
+let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 
-let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
+let haste_paths_includes opts = opts.opt_haste_paths_includes
 
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 
