@@ -24,8 +24,17 @@ module Signature = struct
   let add_variable_declaration env loc variable_declaration =
     add_env_list env (Entry.variable_declaration loc variable_declaration)
 
-  let add_function_declaration env loc function_declaration =
-    add_env env (Entry.function_declaration loc function_declaration)
+  let add_extra_properties extra_properties entry =
+    let (((_, { Ast.Identifier.name; _ }) as id), (loc, base)) = entry in
+    match SMap.find_opt name extra_properties with
+    | None -> entry
+    | Some properties -> (id, (loc, Signature_builder_kind.WithPropertiesDef { base; properties }))
+
+  let add_function_declaration env extra_properties loc function_declaration =
+    let entry =
+      Entry.function_declaration loc function_declaration |> add_extra_properties extra_properties
+    in
+    add_env env entry
 
   let add_function_expression env loc function_expression =
     add_env env (Entry.function_expression loc function_expression)
@@ -59,14 +68,14 @@ module Signature = struct
     | Interface (loc, interface) -> add_interface env loc interface
     | DefaultType _ -> assert false
 
-  let add_export_default_declaration env =
+  let add_export_default_declaration env extra_properties =
     let open Ast.Statement.ExportDefaultDeclaration in
     function
     | Declaration
         ( loc,
           Ast.Statement.FunctionDeclaration ({ Ast.Function.id = Some _; _ } as function_declaration)
         ) ->
-      add_function_declaration env loc function_declaration
+      add_function_declaration env extra_properties loc function_declaration
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       add_class env loc class_
     | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> add_enum env loc enum
@@ -77,14 +86,14 @@ module Signature = struct
 
   (* TODO: class? *)
 
-  let add_stmt env =
+  let add_stmt env extra_properties =
     let open Ast.Statement in
     function
     | (loc, VariableDeclaration variable_declaration) ->
       add_variable_declaration env loc variable_declaration
     | (loc, DeclareVariable declare_variable) -> add_declare_variable env loc declare_variable
     | (loc, FunctionDeclaration function_declaration) ->
-      add_function_declaration env loc function_declaration
+      add_function_declaration env extra_properties loc function_declaration
     | (loc, DeclareFunction declare_function) -> add_declare_function env loc declare_function
     | (loc, ClassDeclaration class_) -> add_class env loc class_
     | (loc, DeclareClass declare_class) -> add_declare_class env loc declare_class
@@ -121,7 +130,7 @@ module Signature = struct
     | (_, With _) ->
       assert false
 
-  let add_export_value_bindings named named_infos env =
+  let add_export_value_bindings named named_infos env extra_properties =
     File_sig.(
       let named =
         List.filter
@@ -150,13 +159,14 @@ module Signature = struct
           | (ExportDefault { local; _ }, ExportDefaultDef export_default_declaration) ->
             begin
               match local with
-              | Some _id -> add_export_default_declaration env export_default_declaration
+              | Some _id ->
+                add_export_default_declaration env extra_properties export_default_declaration
               | None -> env
             end
           | (ExportNamed { kind; _ }, ExportNamedDef stmt) ->
             begin
               match kind with
-              | NamedDeclaration -> add_stmt env stmt
+              | NamedDeclaration -> add_stmt env extra_properties stmt
               | NamedSpecifier _ -> assert false
             end
           | _ -> assert false)
@@ -164,7 +174,7 @@ module Signature = struct
         named
         named_infos)
 
-  let add_export_type_bindings type_named type_named_infos env =
+  let add_export_type_bindings type_named type_named_infos env extra_properties =
     File_sig.(
       let type_named =
         List.filter
@@ -185,7 +195,7 @@ module Signature = struct
           | (TypeExportNamed { kind; _ }, ExportNamedDef stmt) ->
             begin
               match kind with
-              | NamedDeclaration -> add_stmt env stmt
+              | NamedDeclaration -> add_stmt env extra_properties stmt
               | NamedSpecifier _ -> assert false
             end
           | _ -> assert false)
@@ -215,7 +225,7 @@ module Signature = struct
     | None -> env
     | Some id -> add_env env (Entry.import_star import_loc id kind source)
 
-  let mk env file_sig =
+  let mk env file_sig extra_properties =
     File_sig.(
       let module_sig = file_sig.module_sig in
       let { requires = imports_info; info = exports_info; module_kind; type_exports_named; _ } =
@@ -226,10 +236,11 @@ module Signature = struct
         let env =
           match (module_kind, module_kind_info) with
           | (CommonJS _, CommonJSInfo _) -> env
-          | (ES { named; _ }, ESInfo named_infos) -> add_export_value_bindings named named_infos env
+          | (ES { named; _ }, ESInfo named_infos) ->
+            add_export_value_bindings named named_infos env extra_properties
           | _ -> assert false
         in
-        add_export_type_bindings type_exports_named type_exports_named_info env
+        add_export_type_bindings type_exports_named type_exports_named_info env extra_properties
       in
       let env =
         List.fold_left
@@ -332,9 +343,17 @@ module Signature = struct
         program )
 end
 
+type extra_properties =
+  ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t, Loc.t) Ast.Expression.t) list SMap.t
+
+(* Type hoister creates an Env filled with signature information from sources other than
+   ES import and export declarations. The type hoister also returns a map of property
+   assignments, which will be used to determine function statics for ES exports in a later pass. *)
+type type_hoister_result = Env.t * extra_properties
+
 class type_hoister =
   object (this)
-    inherit [Env.t, Loc.t] visitor ~init:Env.empty as super
+    inherit [type_hoister_result, Loc.t] visitor ~init:(Env.empty, SMap.empty) as super
 
     (* tracks the current block scope level; for now, this can only take on values 0 and 1 *)
     val mutable level = 0
@@ -354,27 +373,34 @@ class type_hoister =
           let (id, (loc, _)) = entry in
           Entry.sketchy_toplevel loc id
       in
-      this#update_acc (Env.add entry)
+      this#update_acc (fun (env, extra_properties) -> (Env.add entry env, extra_properties))
 
     method private update_binding (x, id, expr) =
-      this#update_acc (fun env ->
+      this#update_acc (fun (env, extra_properties) ->
           match SMap.find_opt x env with
-          | None -> env
+          (* Collect properties that are not yet present in the env, as these may belong to 
+             ES exported functions that will be added to the env after this pass is complete. *)
+          | None ->
+            ( env,
+              (match SMap.find_opt x extra_properties with
+              | None -> SMap.add x [(id, expr)] extra_properties
+              | Some properties -> SMap.add x ((id, expr) :: properties) extra_properties) )
           | Some u ->
-            SMap.add
-              x
-              (Loc_collections.LocMap.map
-                 (function
-                   | (loc, Signature_builder_kind.WithPropertiesDef def) ->
-                     ( loc,
-                       Signature_builder_kind.WithPropertiesDef
-                         { def with properties = (id, expr) :: def.properties } )
-                   | (loc, base) ->
-                     ( loc,
-                       Signature_builder_kind.WithPropertiesDef { base; properties = [(id, expr)] }
-                     ))
-                 u)
-              env)
+            ( SMap.add
+                x
+                (Loc_collections.LocMap.map
+                   (function
+                     | (loc, Signature_builder_kind.WithPropertiesDef def) ->
+                       ( loc,
+                         Signature_builder_kind.WithPropertiesDef
+                           { def with properties = (id, expr) :: def.properties } )
+                     | (loc, base) ->
+                       ( loc,
+                         Signature_builder_kind.WithPropertiesDef
+                           { base; properties = [(id, expr)] } ))
+                   u)
+                env,
+              extra_properties ))
 
     method private add_binding_opt =
       function
@@ -567,8 +593,8 @@ class type_hoister =
   end
 
 let program ast ~exports_info =
-  let env =
+  let (env, extra_properties) =
     let hoist = new type_hoister in
     hoist#eval hoist#program ast
   in
-  Signature.mk env exports_info
+  Signature.mk env exports_info extra_properties

@@ -753,7 +753,7 @@ let tests =
                  "  },";
                  ">;";
                ];
-         "function_statics"
+         "cjs_function_statics"
          >:: mk_signature_generator_test
                ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "module.exports = bar;"]
                [
@@ -767,6 +767,21 @@ let tests =
                  "declare var x: $TEMPORARY$number<42>;";
                  "";
                  "declare module.exports: typeof bar;";
+               ];
+         "es_function_statics"
+         >:: mk_signature_generator_test
+               ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "export default bar;"]
+               [
+                 "declare var bar: $TEMPORARY$function<";
+                 "  () => void,";
+                 "  {";
+                 "    x: typeof x,";
+                 "    ...,";
+                 "  },";
+                 ">;";
+                 "declare var x: $TEMPORARY$number<42>;";
+                 "";
+                 "declare export default typeof bar;";
                ];
          "function_predicates1"
          >:: mk_signature_generator_test
