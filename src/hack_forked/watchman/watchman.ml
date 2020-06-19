@@ -147,9 +147,7 @@ type env = {
   (* See https://facebook.github.io/watchman/docs/clockspec.html
    *
    * This is also used to reliably detect a crashed watchman. Watchman has a
-   * facility to detect watchman process crashes between two "since" queries
-   *
-   * See also assert_no_fresh_instance *)
+   * facility to detect watchman process crashes between two "since" queries. *)
   mutable clockspec: string;
   conn: conn;
   settings: init_settings;
@@ -186,6 +184,13 @@ type watchman_instance =
 (****************************************************************************)
 (* JSON methods. *)
 (****************************************************************************)
+
+(* Projects down from the boolean error monad into booleans.
+  * Error states go to false, values are projected directly. *)
+let project_bool m =
+  match m with
+  | Ok (v, _) -> v
+  | Error _ -> false
 
 let clock root = J.strlist ["clock"; root]
 
@@ -267,17 +272,8 @@ let watch_project root = J.strlist ["watch-project"; root]
    * Watchman server crashes.
    *
    * See also Watchman docs on "since" query parameter. *)
-let assert_no_fresh_instance obj =
-  Hh_json.Access.(
-    let _ =
-      return obj >>= get_bool "is_fresh_instance" >>= fun (is_fresh, trace) ->
-      if is_fresh then (
-        Hh_logger.log "Watchman server is fresh instance. Exiting.";
-        raise Exit_status.(Exit_with Watchman_fresh_instance)
-      ) else
-        Ok ((), trace)
-    in
-    ())
+let is_fresh_instance obj =
+  Hh_json.Access.(return obj >>= get_bool "is_fresh_instance" |> project_bool)
 
 (****************************************************************************)
 (* I/O stuff *)
@@ -438,14 +434,13 @@ let with_crash_record_opt source f =
 
 (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
  * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
- * the new Watchman, then we may miss updates. It is important for Flow and Hack to restart
- * in that case.
+ * the new Watchman, then we may miss updates.
  *
  * Unfortunately, the response to "subscribe" doesn't have the "is_fresh_instance" field. So
  * we'll instead send a small "query" request. It should always return 0 files, but it should
  * tell us whether the Watchman service has restarted since clockspec.
  *)
-let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~timeout ~watch_root ~clockspec =
+let has_watchman_restarted_since ~debug_logging ~conn ~timeout ~watch_root ~clockspec =
   let hard_to_match_name = "irrelevant.potato" in
   let query =
     Hh_json.(
@@ -462,19 +457,19 @@ let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~timeout ~watch
         ])
   in
   let%bind response = request ~debug_logging ~conn ~timeout query in
-  match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
-  | Some false -> Lwt.return ()
-  | Some true ->
-    Hh_logger.error "Watchman server restarted so we may have missed some updates";
-    raise Watchman_restarted
-  | None ->
-    (* The response to this query **always** should include the `is_fresh_instance` boolean
-     * property. If it is missing then something has gone wrong with Watchman. Since we can't
-     * prove that Watchman has not restarted, we must treat this as an error. *)
-    Hh_logger.error
-      "Invalid Watchman response to `empty_on_fresh_instance` query:\n%s"
-      (Hh_json.json_to_string ~pretty:true response);
-    raise Exit_status.(Exit_with Watchman_failed)
+  let result =
+    match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
+    | Some has_restarted -> Ok has_restarted
+    | None ->
+      (* The response to this query **always** should include the `is_fresh_instance` boolean
+       * property. If it is missing then something has gone wrong with Watchman. Since we can't
+       * prove that Watchman has not restarted, we must treat this as an error. *)
+      Error
+        (spf
+           "Invalid Watchman response to `empty_on_fresh_instance` query:\n%s"
+           (Hh_json.json_to_string ~pretty:true response))
+  in
+  Lwt.return result
 
 let prepend_relative_path_term ~relative_path ~terms =
   match terms with
@@ -553,15 +548,22 @@ let re_init
   let%bind clockspec =
     match prior_clockspec with
     | Some clockspec ->
-      let%bind () =
-        assert_watchman_has_not_restarted_since
+      let%bind has_restarted =
+        has_watchman_restarted_since
           ~debug_logging
           ~conn
           ~timeout:None (* the whole init process should be wrapped in a timeout *)
           ~watch_root
           ~clockspec
       in
-      Lwt.return clockspec
+      (match has_restarted with
+      | Ok true ->
+        Hh_logger.error "Watchman server restarted so we may have missed some updates";
+        raise Watchman_restarted
+      | Ok false -> Lwt.return clockspec
+      | Error err ->
+        Hh_logger.error "%s" err;
+        raise Exit_status.(Exit_with Watchman_failed))
     | None ->
       let%map response =
         request
@@ -770,13 +772,17 @@ let transform_asynchronous_get_changes_response env data =
       | Ok (env, response) -> (env, response)
       | Error _ ->
         env.clockspec <- Jget.string_exn (Some data) "clock";
-        assert_no_fresh_instance data;
-        (match Jget.string_opt (Some data) "state-enter" with
-        | Some state -> (env, make_state_change_response `Enter state data)
-        | None ->
-          (match Jget.string_opt (Some data) "state-leave" with
-          | Some state -> (env, make_state_change_response `Leave state data)
-          | None -> (env, Files_changed (set_of_list @@ extract_file_names env data))))
+        if is_fresh_instance data then (
+          Hh_logger.log "Watchman server is fresh instance. Exiting.";
+          raise Exit_status.(Exit_with Watchman_fresh_instance)
+        ) else (
+          match Jget.string_opt (Some data) "state-enter" with
+          | Some state -> (env, make_state_change_response `Enter state data)
+          | None ->
+            (match Jget.string_opt (Some data) "state-leave" with
+            | Some state -> (env, make_state_change_response `Leave state data)
+            | None -> (env, Files_changed (set_of_list @@ extract_file_names env data)))
+        )
     end
 
 let get_changes ?deadline instance =
