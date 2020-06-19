@@ -255,7 +255,7 @@ let check_structural_equality relative_path file_name stmts1 stmts2 =
     ^ " * restore the produced Typed AST, or\n"
     ^ " * include \""
     ^ relative_path
-    ^ "\" in the blacklist section\n"
+    ^ "\" in the blocklist section\n"
     ^ "   in src/typing/__tests__/typed_ast_test.ml and file a task with the\n"
     ^ "   'flow-typed-ast' tag.\n"
   in
@@ -268,7 +268,7 @@ let test_case relative_path file_name _ =
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
-let blacklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
+let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
 
 let tests =
   let relative_test_dir = "flow/tests" in
@@ -279,7 +279,7 @@ let tests =
     SSet.fold
       (fun file acc ->
         let relative_path = Files.relative_path root file in
-        if SSet.mem relative_path blacklist then
+        if SSet.mem relative_path blocklist then
           acc
         else
           let test_name =
