@@ -2734,6 +2734,7 @@ let init_from_scratch ~profiling ~workers options =
   let (ordered_libs, libs) = Files.init file_options in
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
   Hh_logger.info "Parsing";
+  MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
   let%lwt (parsed, unparsed, unchanged, local_errors) =
     parse ~options ~profiling ~workers ~reader next_files
   in
