@@ -92,6 +92,8 @@ val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option
 
+val facebook_module_interop : config -> bool
+
 val file_watcher : config -> Options.file_watcher option
 
 val file_watcher_timeout : config -> int option

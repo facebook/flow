@@ -64,6 +64,7 @@ type metadata = {
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
+  facebook_module_interop: bool;
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
@@ -244,6 +245,8 @@ val root : t -> Path.t
 val facebook_fbs : t -> string option
 
 val facebook_fbt : t -> string option
+
+val facebook_module_interop : t -> bool
 
 val haste_module_ref_prefix : t -> string option
 

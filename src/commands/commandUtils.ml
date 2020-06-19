@@ -1236,6 +1236,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
       opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
       opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
+      opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;
       opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
       opt_include_warnings =
         options_flags.include_warnings

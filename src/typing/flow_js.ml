@@ -1613,12 +1613,15 @@ struct
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
           let props = SMap.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap in
           let props =
-            match exports.cjs_export with
-            | Some t ->
-              (* TODO this Field should probably have a location *)
-              let p = Field (None, t, Polarity.Positive) in
-              SMap.add "default" p props
-            | None -> props
+            if Context.facebook_module_interop cx then
+              props
+            else
+              match exports.cjs_export with
+              | Some t ->
+                (* TODO this Field should probably have a location *)
+                let p = Field (None, t, Polarity.Positive) in
+                SMap.add "default" p props
+              | None -> props
           in
           let obj_kind =
             if exports.has_every_named_export then

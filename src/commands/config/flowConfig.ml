@@ -56,6 +56,7 @@ module Opts = struct
     exact_by_default: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
+    facebook_module_interop: bool;
     file_watcher: Options.file_watcher option;
     file_watcher_timeout: int option;
     watchman_sync_timeout: int option;
@@ -160,6 +161,7 @@ module Opts = struct
       exact_by_default = false;
       facebook_fbs = None;
       facebook_fbt = None;
+      facebook_module_interop = false;
       file_watcher = None;
       file_watcher_timeout = None;
       watchman_sync_timeout = None;
@@ -583,6 +585,8 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
       ( "experimental.module.automatic_require_default",
         boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
+      ( "experimental.facebook_module_interop",
+        boolean (fun opts v -> Ok { opts with facebook_module_interop = v }) );
     ]
 
   let parse =
@@ -1147,6 +1151,8 @@ let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
 let facebook_fbt c = c.options.Opts.facebook_fbt
+
+let facebook_module_interop c = c.options.Opts.facebook_module_interop
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 
