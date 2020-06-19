@@ -44,7 +44,7 @@
 (library
   (name flow_typing_type)
   (wrapped false)
-  (modules type source_or_generated_id)
+  (modules type typeUtil source_or_generated_id)
   (libraries
     flow_common
     flow_typing_changeset
@@ -58,13 +58,14 @@
 (library
   (name flow_typing)
   (wrapped false)
-  (modules (:standard \ changeset key key_map trust type scope source_or_generated_id))
+  (modules (:standard \ changeset key key_map trust type typeUtil scope source_or_generated_id))
   (libraries
     flow_common
     flow_common_errors
     flow_common_modulename
     flow_common_monad
     flow_common_tarjan
+    flow_openness
     flow_parser_utils
     flow_state_heaps_parsing_exceptions
     flow_typing_errors

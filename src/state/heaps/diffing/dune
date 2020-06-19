@@ -1,0 +1,11 @@
+(library
+  (name flow_state_heaps_diffing)
+  (wrapped false)
+  (libraries
+    flow_common_audit
+    flow_common_utils
+    flow_shared_mem
+    heap_shared_mem
+    flow_parser
+  )
+)

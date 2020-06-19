@@ -36,4 +36,14 @@
   (name flow_openness)
   (wrapped false)
   (modules openness)
+  (libraries
+    collections)
+)
+
+(library
+  (name codemod_annotate_exports_hardcoded)
+  (wrapped false)
+  (modules annotate_exports_hardcoded_expr_fixes annotate_exports_hardcoded_module_fixes)
+  (libraries
+    flow_parser)
 )

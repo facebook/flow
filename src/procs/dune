@@ -4,6 +4,7 @@
   (libraries
     base
     flow_common_lwt
+    flow_exit_status
     procs_procs
     procs_bucket
     lwt
