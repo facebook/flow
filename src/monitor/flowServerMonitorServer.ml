@@ -407,6 +407,9 @@ end = struct
     start ();
 
     let pid = handle.Daemon.pid in
+
+    Logger.info "Spawned %s (pid=%d)" name pid;
+
     (* Close the connection to the server when we're about to exit *)
     let on_exit_thread =
       try%lwt
