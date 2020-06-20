@@ -147,7 +147,7 @@ let close client_fd () =
      * it, does shutting down first actually make any difference? *)
     try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL) with
     (* Already closed *)
-    | Unix.Unix_error (Unix.EBADF, _, _) -> ()
+    | Unix.Unix_error ((Unix.EBADF | Unix.ENOTCONN), _, _) -> ()
     | exn -> Logger.error ~exn "Failed to shutdown socket client"
   end;
   try%lwt Lwt_unix.close client_fd with
