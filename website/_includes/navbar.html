@@ -1,22 +1,22 @@
 {% include vars.html %}
 
-<nav class="navbar navbar-full navbar-fixed-top navbar-dark">
+<nav class="navbar navbar-full navbar-expand-lg fixed-top navbar-dark">
   <div class="container">
     <a class="navbar-brand" href="{{url_base}}/">
       {% include svg/logo-flow-nav.svg %}
       <span class="sr-only">Flow</span>
     </a>
 
-    <div class="clearfix hidden-lg-up">
-      <button class="navbar-toggler float-xs-right" type="button"
+    <div class="clearfix d-lg-none">
+      <button class="navbar-toggler float-right" type="button"
         data-toggle="collapse" data-target="#navbar"
-        aria-controls="exCollapsingNavbar2" aria-expanded="false" aria-label="Toggle navigation">
-        <!-- &#9776; -->
+        aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
       </button>
     </div>
 
-    <div class="collapse navbar-toggleable-md" id="navbar">
-      <ul class="nav navbar-nav">
+    <div class="collapse navbar-collapse" id="navbar">
+      <ul class="navbar-nav mr-auto">
         <li class="nav-item">
           <a class="nav-link" href="{{url_base}}/docs/getting-started/">{{i18n.navbar_getting_started}}</a>
         </li>
@@ -31,7 +31,7 @@
         </li>
       </ul>
 
-      <ul class="nav navbar-nav float-lg-right">
+      <ul class="navbar-nav">
         {% assign path = page.url | split: '/' %}
         {% unless true || path[1] == 'blog' %}
           <li class="nav-item dropdown">
