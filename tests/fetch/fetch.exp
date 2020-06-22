@@ -307,8 +307,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property `cache`.
-[incompatible-call]
+Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+`cache`. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -325,7 +325,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
 `credentials`. [incompatible-call]
 
    request.js:6:35
@@ -433,8 +433,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property `mode`.
-[incompatible-call]
+Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+`mode`. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -451,7 +451,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
 `redirect`. [incompatible-call]
 
    request.js:6:35
@@ -487,7 +487,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because enum [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
 `referrerPolicy`. [incompatible-call]
 
    request.js:6:35

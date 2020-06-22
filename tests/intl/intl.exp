@@ -30,8 +30,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- collator.js:7:18
 
-Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
-property `localeMatcher`. [incompatible-call]
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
    collator.js:7:18
     7|   localeMatcher: 'look fit',
@@ -45,8 +45,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- collator.js:8:10
 
-Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
-property `usage`. [incompatible-call]
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `usage`. [incompatible-call]
 
    collator.js:8:10
     8|   usage: 'find',
@@ -60,8 +60,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- collator.js:9:16
 
-Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
-property `sensitivity`. [incompatible-call]
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `sensitivity`. [incompatible-call]
 
    collator.js:9:16
     9|   sensitivity: '',
@@ -105,8 +105,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ collator.js:12:14
 
-Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with enum [2] in
-property `caseFirst`. [incompatible-call]
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `caseFirst`. [incompatible-call]
 
    collator.js:12:14
    12|   caseFirst: 'true'
@@ -158,8 +158,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:7:18
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `localeMatcher`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
    date_time_format.js:7:18
      7|   localeMatcher: 'look',
@@ -203,8 +203,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:10:18
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `formatMatcher`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `formatMatcher`. [incompatible-call]
 
    date_time_format.js:10:18
     10|   formatMatcher: 'basic fit',
@@ -218,8 +218,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:11:12
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `weekday`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `weekday`. [incompatible-call]
 
    date_time_format.js:11:12
     11|   weekday: '2-digit',
@@ -233,8 +233,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:12:8
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `era`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `era`. [incompatible-call]
 
    date_time_format.js:12:8
     12|   era: '',
@@ -248,8 +248,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:13:9
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `year`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `year`. [incompatible-call]
 
    date_time_format.js:13:9
     13|   year: '',
@@ -263,8 +263,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:14:10
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `month`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `month`. [incompatible-call]
 
    date_time_format.js:14:10
     14|   month: '',
@@ -278,8 +278,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:15:8
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `day`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `day`. [incompatible-call]
 
    date_time_format.js:15:8
     15|   day: '',
@@ -293,8 +293,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:16:9
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `hour`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `hour`. [incompatible-call]
 
    date_time_format.js:16:9
     16|   hour: '',
@@ -308,8 +308,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:17:11
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `minute`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `minute`. [incompatible-call]
 
    date_time_format.js:17:11
     17|   minute: 'long',
@@ -323,8 +323,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:18:11
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `second`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `second`. [incompatible-call]
 
    date_time_format.js:18:11
     18|   second: 'short',
@@ -338,8 +338,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:19:17
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
-enum [2] in property `timeZoneName`. [incompatible-call]
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `timeZoneName`. [incompatible-call]
 
    date_time_format.js:19:17
     19|   timeZoneName: 'narrow'
@@ -511,8 +511,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- number_format.js:7:18
 
-Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with enum [2]
-in property `localeMatcher`. [incompatible-call]
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
    number_format.js:7:18
      7|   localeMatcher: 'best',
@@ -526,8 +526,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- number_format.js:8:10
 
-Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with enum [2]
-in property `style`. [incompatible-call]
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `style`. [incompatible-call]
 
    number_format.js:8:10
      8|   style: 'octal',
@@ -556,8 +556,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- number_format.js:10:20
 
-Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with enum [2]
-in property `currencyDisplay`. [incompatible-call]
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `currencyDisplay`. [incompatible-call]
 
    number_format.js:10:20
     10|   currencyDisplay: 'sym',
@@ -728,8 +728,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- plural_rules.js:12:20
 
-Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with enum [2] in
-property `localeMatcher`. [incompatible-call]
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
    plural_rules.js:12:20
     12|     localeMatcher: 'best one',
@@ -743,8 +743,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- plural_rules.js:13:11
 
-Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with enum [2] in
-property `type`. [incompatible-call]
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `type`. [incompatible-call]
 
    plural_rules.js:13:11
     13|     type: 'count',

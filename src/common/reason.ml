@@ -576,7 +576,7 @@ let rec string_of_desc = function
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
-  | RUnionEnum -> "enum"
+  | RUnionEnum -> "literal union"
   | REnum name -> spf "enum `%s`" name
   | REnumRepresentation representation -> spf "%s enum" (string_of_desc representation)
   | RGetterSetterProperty -> "getter/setter property"

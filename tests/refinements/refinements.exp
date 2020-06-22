@@ -1630,7 +1630,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:97:14
 
-Cannot return `s` because number literal `3` [1] is incompatible with enum [2]. [incompatible-return]
+Cannot return `s` because number literal `3` [1] is incompatible with literal union [2]. [incompatible-return]
 
    number.js:97:14
    97|       return s; // error
@@ -1647,7 +1647,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:97:14
 
-Cannot return `s` because number literal `3` [1] is incompatible with enum [2]. [incompatible-return]
+Cannot return `s` because number literal `3` [1] is incompatible with literal union [2]. [incompatible-return]
 
    number.js:97:14
    97|       return s; // error
@@ -2246,7 +2246,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:98:14
 
-Cannot return `s` because string literal `d` [1] is incompatible with enum [2]. [incompatible-return]
+Cannot return `s` because string literal `d` [1] is incompatible with literal union [2]. [incompatible-return]
 
    string.js:98:14
    98|       return s; // error
@@ -2263,7 +2263,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:98:14
 
-Cannot return `s` because string literal `d` [1] is incompatible with enum [2]. [incompatible-return]
+Cannot return `s` because string literal `d` [1] is incompatible with literal union [2]. [incompatible-return]
 
    string.js:98:14
    98|       return s; // error
@@ -2440,7 +2440,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
 
-Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with literal union [2].
+[incompatible-cast]
 
    tagged_union.js:40:6
    40|     (x.raw: 'Yes' | 'No'); // 2 errors:

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- yuge.js:23:6
 
-Cannot cast empty string to `ErrorCode` because string [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast empty string to `ErrorCode` because string [1] is incompatible with literal union [2]. [incompatible-cast]
 
    yuge.js:23:6
    23|     ("": ErrorCode);  // also, error pos omits this line completely

@@ -36,7 +36,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:8
 
-string literal `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:14:8
    14|   case 'qux': // error
@@ -50,7 +50,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:8
 
-string literal `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:22:8
    22|   case 'qux': // error

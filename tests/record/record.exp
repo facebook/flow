@@ -15,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-string `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:7:1
    7| o1.qux; // error: qux not found

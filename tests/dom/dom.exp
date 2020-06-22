@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:10:45
 
-Cannot call `ClipboardEvent` with `'invalid'` bound to `type` because string [1] is incompatible with enum [2].
+Cannot call `ClipboardEvent` with `'invalid'` bound to `type` because string [1] is incompatible with literal union [2].
 [incompatible-call]
 
    ClipboardEvent.js:10:45
@@ -89,8 +89,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `behavior`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `behavior`. [incompatible-call]
 
    Element.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -107,8 +107,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `block`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `block`. [incompatible-call]
 
    Element.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -182,8 +182,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:22:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `behavior`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `behavior`. [incompatible-call]
 
    HTMLElement.js:22:28
      22|     element.scrollIntoView({behavior: 'invalid'});
@@ -200,8 +200,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:23:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `block`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `block`. [incompatible-call]
 
    HTMLElement.js:23:28
      23|     element.scrollIntoView({block: 'invalid'});
@@ -499,7 +499,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:8
 
-Cannot call `el.setRangeText` because string [1] is incompatible with enum [2]. [incompatible-call]
+Cannot call `el.setRangeText` because string [1] is incompatible with literal union [2]. [incompatible-call]
 
    HTMLInputElement.js:10:8
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -1042,7 +1042,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- traversal.js:186:60
 
 Cannot call `document.createNodeIterator` with function bound to `filter` because string [1] is incompatible with
-enum [2] in the return value. [incompatible-call]
+literal union [2] in the return value. [incompatible-call]
 
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
@@ -1060,7 +1060,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- traversal.js:188:74
 
 Cannot call `document.createNodeIterator` with object literal bound to `filter` because string [1] is incompatible with
-enum [2] in the return value of property `acceptNode`. [incompatible-call]
+literal union [2] in the return value of property `acceptNode`. [incompatible-call]
 
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1119,8 +1119,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:193:58
 
-Cannot call `document.createTreeWalker` with function bound to `filter` because string [1] is incompatible with enum [2]
-in the return value. [incompatible-call]
+Cannot call `document.createTreeWalker` with function bound to `filter` because string [1] is incompatible with literal
+union [2] in the return value. [incompatible-call]
 
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
@@ -1138,7 +1138,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- traversal.js:195:72
 
 Cannot call `document.createTreeWalker` with object literal bound to `filter` because string [1] is incompatible with
-enum [2] in the return value of property `acceptNode`. [incompatible-call]
+literal union [2] in the return value of property `acceptNode`. [incompatible-call]
 
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid

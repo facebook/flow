@@ -14,8 +14,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:18:24
 
-Cannot create `Consumer` element because enum [1] is incompatible with string [2] in the first argument of property
-`children`. [incompatible-type]
+Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first argument of
+property `children`. [incompatible-type]
 
    createContext.js:18:24
    18|                 {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -29,8 +29,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:24:22
 
-Cannot create `Consumer` element because enum [1] is incompatible with string [2] in the first argument of property
-`children`. [incompatible-type]
+Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first argument of
+property `children`. [incompatible-type]
 
    createContext.js:24:22
    24|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -2347,7 +2347,8 @@ Cannot call `React.PropTypes.objectOf` because number [1] is not a React propTyp
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:14:15
 
-Cannot create `Example` element because string [1] is incompatible with enum [2] in property `str`. [incompatible-type]
+Cannot create `Example` element because string [1] is incompatible with literal union [2] in property `str`.
+[incompatible-type]
 
    proptype_oneOf.js:14:15
    14| (<Example str="baz" />); // error: 'baz' not in enum
@@ -2361,7 +2362,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:17:16
 
-Cannot create `Example` element because number [1] is incompatible with enum [2] in property `num`. [incompatible-type]
+Cannot create `Example` element because number [1] is incompatible with literal union [2] in property `num`.
+[incompatible-type]
 
    proptype_oneOf.js:17:16
    17| (<Example num={3} />); // error: 3 not in enum
@@ -2390,7 +2392,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:24:18
 
-Cannot create `Example` element because string [1] is incompatible with enum [2] in property `mixed`.
+Cannot create `Example` element because string [1] is incompatible with literal union [2] in property `mixed`.
 [incompatible-type]
 
    proptype_oneOf.js:24:18

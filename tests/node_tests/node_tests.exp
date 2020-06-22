@@ -113,8 +113,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:26:24
 
-Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with enum [2].
-[incompatible-call]
+Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with literal
+union [2]. [incompatible-call]
 
    crypto/crypto.js:26:24
     26|     hmac.update('foo', 'bogus'); // 1 error
@@ -130,8 +130,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:29:22
 
-Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with enum [2].
-[incompatible-call]
+Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with literal
+union [2]. [incompatible-call]
 
    crypto/crypto.js:29:22
     29|     hmac.update(buf, 'bogus'); // 1 error

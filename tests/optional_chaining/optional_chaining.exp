@@ -1880,7 +1880,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:49:4
 
-Cannot cast `a` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `a` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements.js:49:4
    49|   (a: (null | void)); // should fail, sanity check
@@ -2091,7 +2091,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:100:4
 
-Cannot cast `a` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `a` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements.js:100:4
    100|   (a: (null | void)); // should fail, sanity check
@@ -2385,7 +2385,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements2.js:9:4
 
-Cannot cast `t` to union type because `T` [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `t` to union type because `T` [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:9:4
    9|   (t: (null | void)); // no
@@ -2433,7 +2433,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:13:4
 
-Cannot cast `t` to union type because `T` [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `t` to union type because `T` [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:13:4
    13|   (t: (null | void)); // no
@@ -2755,7 +2755,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:69:4
 
-Cannot cast `a` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `a` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:69:4
    69|   (a: (null | void));// nope
@@ -2786,7 +2786,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:75:4
 
-Cannot cast `b` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `b` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:75:4
    75|   (b: (null | void)); // nope
@@ -2817,7 +2817,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:86:4
 
-Cannot cast `b` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `b` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:86:4
    86|   (b: (null | void)); // nope
@@ -2848,7 +2848,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:95:4
 
-Cannot cast `c` to union type because object type [1] is incompatible with enum [2]. [incompatible-cast]
+Cannot cast `c` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:95:4
    95|   (c: (null | void)); //nope

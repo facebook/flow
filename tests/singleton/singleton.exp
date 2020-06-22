@@ -63,7 +63,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- boolean.js:29:5
 
-Cannot call `bar` with `1` bound to `x` because number [1] is incompatible with enum [2]. [incompatible-call]
+Cannot call `bar` with `1` bound to `x` because number [1] is incompatible with literal union [2]. [incompatible-call]
 
    boolean.js:29:5
    29| bar(1); // error
@@ -92,7 +92,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:19:5
 
-Cannot call `bar` with `3` bound to `num` because number [1] is incompatible with enum [2]. [incompatible-call]
+Cannot call `bar` with `3` bound to `num` because number [1] is incompatible with literal union [2]. [incompatible-call]
 
    number.js:19:5
    19| bar(3); // error

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:10:8
 
-string literal `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:10:8
    10|   case 'qux': // error
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:8
 
-number literal `3` [1] is incompatible with enum [2]. [incompatible-type]
+number literal `3` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:19:8
    19|   case 3: // error
@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:8
 
-string literal `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:28:8
    28|   case 'qux': // error
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:35:16
 
-string literal `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:35:16
    35| else if (x === 'qux') {} // error
@@ -56,7 +56,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:39:16
 
-string literal `qux` [1] is incompatible with enum [2]. [incompatible-type]
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:39:16
    39| else if (x === 'qux') {} // error
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:8
 
-number literal `4` [1] is incompatible with enum [2]. [incompatible-type]
+number literal `4` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:47:8
    47|   case 4: // error
@@ -84,7 +84,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:8
 
-number literal `4` [1] is incompatible with enum [2]. [incompatible-type]
+number literal `4` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:56:8
    56|   case 4: // error
