@@ -2609,9 +2609,7 @@ struct
         | ( DefT (reason_o, _, InstanceT (_, _, _, instance)),
             HasOwnPropT (use_op, reason_op, Literal (_, x)) ) ->
           let own_props = Context.find_props cx instance.own_props in
-          let proto_props = Context.find_props cx instance.proto_props in
-          let fields = SMap.union own_props proto_props in
-          (match SMap.find_opt x fields with
+          (match SMap.find_opt x own_props with
           | Some _ -> ()
           | None ->
             let err =

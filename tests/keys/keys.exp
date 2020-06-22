@@ -42,6 +42,64 @@ References:
              ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- instance.js:23:2
+
+Cannot cast `'missing'` to `T` because property `missing` is missing in `B` [1]. [prop-missing]
+
+   instance.js:23:2
+   23| ('missing': T); // Error
+        ^^^^^^^^^
+
+References:
+   instance.js:23:13
+   23| ('missing': T); // Error
+                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:25:2
+
+Cannot cast `'bMethod'` to `T` because property `bMethod` (did you mean `bMethod`?) is missing in `B` [1].
+[prop-missing]
+
+   instance.js:25:2
+   25| ('bMethod': T); // Error: methods are on proto
+        ^^^^^^^^^
+
+References:
+   instance.js:25:13
+   25| ('bMethod': T); // Error: methods are on proto
+                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:27:2
+
+Cannot cast `'aOne'` to `T` because property `aOne` (did you mean `bOne`?) is missing in `B` [1]. [prop-missing]
+
+   instance.js:27:2
+   27| ('aOne': T); // Error: non-own field
+        ^^^^^^
+
+References:
+   instance.js:27:10
+   27| ('aOne': T); // Error: non-own field
+                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:28:2
+
+Cannot cast `'aMethod'` to `T` because property `aMethod` (did you mean `bMethod`?) is missing in `B` [1].
+[prop-missing]
+
+   instance.js:28:2
+   28| ('aMethod': T); // Error: non-own field
+        ^^^^^^^^^
+
+References:
+   instance.js:28:13
+   28| ('aMethod': T); // Error: non-own field
+                   ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- keys.js:10:4
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
@@ -171,4 +229,4 @@ References:
 
 
 
-Found 12 errors
+Found 16 errors
