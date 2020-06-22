@@ -166,7 +166,9 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
     let catch connection exn =
       (match Exception.unwrap exn with
-      | End_of_file -> Logger.error "Connection '%s' was closed from the other side" connection.name
+      | End_of_file
+      | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
+        Logger.error "Connection '%s' was closed from the other side" connection.name
       | _ ->
         let exn = Exception.to_exn exn in
         Logger.error
