@@ -7,7 +7,12 @@
 
 type 'a change' =
   | Replace of 'a * 'a
-  | Insert of (* separator. Defaults to \n *) string option * 'a list
+  | Insert of {
+      items: 'a list;
+      (* separator. Defaults to \n *)
+      separator: string option;
+      leading_separator: bool;
+    }
   | Delete of 'a
 
 type 'a change = Loc.t * 'a change'

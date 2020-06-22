@@ -49,17 +49,22 @@ let text_of_node ~opts =
   %> Pretty_printer.print ~source_maps:None ~skip_endline:true
   %> Source.contents
 
-let text_of_nodes ~opts break nodes =
+let text_of_nodes ~opts ~separator ~leading_separator nodes =
   let sep =
-    match break with
+    match separator with
     | Some str -> str
     | None -> "\n"
   in
-  ListUtils.to_string sep (text_of_node ~opts) nodes
+  let text = ListUtils.to_string sep (text_of_node ~opts) nodes in
+  if leading_separator then
+    sep ^ text
+  else
+    text
 
 let edit_of_change ~opts = function
   | (loc, Replace (_, new_node)) -> (loc, text_of_node ~opts new_node)
-  | (loc, Insert (break, new_nodes)) -> (loc, text_of_nodes ~opts break new_nodes)
+  | (loc, Insert { items; separator; leading_separator }) ->
+    (loc, text_of_nodes ~opts ~separator ~leading_separator items)
   | (loc, Delete _) -> (loc, "")
 
 let edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =

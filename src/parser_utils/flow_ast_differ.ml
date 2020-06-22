@@ -11,7 +11,12 @@ open Utils_js
 
 type 'a change' =
   | Replace of 'a * 'a
-  | Insert of (* separator. Defaults to \n *) string option * 'a list
+  | Insert of {
+      items: 'a list;
+      (* separator. Defaults to \n *)
+      separator: string option;
+      leading_separator: bool;
+    }
   | Delete of 'a
 
 type 'a change = Loc.t * 'a change'
@@ -153,7 +158,11 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
             else
               trace_array.(k) |> fst
           in
-          (start, Insert (None, gen_inserts first last)) :: script |> add_inserts (k + 1)
+          ( start,
+            Insert { items = gen_inserts first last; separator = None; leading_separator = false }
+          )
+          :: script
+          |> add_inserts (k + 1)
         else
           add_inserts (k + 1) script
     in
@@ -165,11 +174,14 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
       | []
       | [_] ->
         script
-      | (i1, Insert (_, [x])) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
+      | (i1, Insert { items = [x]; _ }) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
         (i2, Replace (y, x)) :: convert_to_replace t
-      | (i1, Insert (break, x :: rst)) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
-        (* We are only removing the first element of the insertion *)
-        (i2, Replace (y, x)) :: convert_to_replace ((i2, Insert (break, rst)) :: t)
+      | (i1, Insert { items = x :: rst; separator; _ }) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
+        (* We are only removing the first element of the insertion. We make sure to indicate
+           that the rest of the insert should have a leading separator between it and the replace. *)
+        (i2, Replace (y, x))
+        :: convert_to_replace
+             ((i2, Insert { items = rst; separator; leading_separator = true }) :: t)
       | h :: t -> h :: convert_to_replace t
     in
     (* Deletes are added for every element of old_list that does not have a
@@ -272,6 +284,8 @@ let replace loc old_node new_node =
   (expand_loc_with_comments loc old_node, Replace (old_node, new_node))
 
 let delete loc node = (expand_loc_with_comments loc node, Delete node)
+
+let insert ~sep nodes = Insert { items = nodes; separator = sep; leading_separator = false }
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -429,7 +443,7 @@ let program
     Base.Option.(
       let recurse_into_change = function
         | (_, Replace (x1, x2)) -> f x1 x2
-        | (index, Insert (break, lst)) ->
+        | (index, Insert { items = lst; separator; leading_separator }) ->
           let index = index + index_offset in
           let loc =
             if List.length old_list = 0 then
@@ -446,7 +460,7 @@ let program
           Base.List.map ~f:trivial lst
           |> all
           >>| Base.List.map ~f:snd (* drop the loc *)
-          >>| (fun x -> Insert (break, x))
+          >>| (fun x -> Insert { items = x; separator; leading_separator })
           |> both loc
           >>| Base.List.return
         | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
@@ -485,13 +499,13 @@ let program
         let leading_inserts =
           match leading with
           | [] -> []
-          | leading -> [({ loc with _end = loc.start }, Insert (None, List.rev leading))]
+          | leading -> [({ loc with _end = loc.start }, insert ~sep:None (List.rev leading))]
         in
         let trailing = List.fold_left fold_comment [] trailing in
         let trailing_inserts =
           match trailing with
           | [] -> []
-          | trailing -> [({ loc with start = loc._end }, Insert (None, List.rev trailing))]
+          | trailing -> [({ loc with start = loc._end }, insert ~sep:None (List.rev trailing))]
         in
         leading_inserts @ trailing_inserts)
     in
@@ -2644,7 +2658,7 @@ let program
     match (return1, return2) with
     | (Missing _, Missing _) -> []
     | (Available (loc1, typ), Missing _) -> [delete loc1 (TypeAnnotation (loc1, typ))]
-    | (Missing loc1, Available annot) -> [(loc1, Insert (None, [annot_change annot]))]
+    | (Missing loc1, Available annot) -> [(loc1, insert ~sep:None [annot_change annot])]
     | (Available annot1, Available annot2) -> type_annotation annot1 annot2
   and type_annotation
       ((loc1, typ1) : (Loc.t, Loc.t) Ast.Type.annotation)
@@ -2674,10 +2688,10 @@ let program
       let { expression = expr2; annot = annot2; comments = _ } = type_cast in
       let expr_diff_rev = diff_if_changed expression expr expr2 |> List.rev in
       let append_annot_rev =
-        ({ loc with start = loc._end }, Insert (Some "", [TypeAnnotation annot2; Raw ")"]))
+        ({ loc with start = loc._end }, insert ~sep:(Some "") [TypeAnnotation annot2; Raw ")"])
         :: expr_diff_rev
       in
-      ({ loc with _end = loc.start }, Insert (Some "", [Raw "("])) :: List.rev append_annot_rev)
+      ({ loc with _end = loc.start }, insert ~sep:(Some "") [Raw "("]) :: List.rev append_annot_rev)
   and update
       loc
       (update1 : (Loc.t, Loc.t) Ast.Expression.Update.t)
