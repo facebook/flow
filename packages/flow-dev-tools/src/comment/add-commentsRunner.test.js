@@ -20,7 +20,7 @@ test('addCommentsToCode', async () => {
       longComment,
       testInput,
       /* Intentionally made these out of order to test that they are still inserted properly */
-      [1, 6, 5, 3].map(makeSuppression),
+      [1, 6, 5, 3].map((line) => makeSuppression(line, testInput)),
       flowBinPath,
     )
   ).toEqual([
@@ -75,22 +75,32 @@ const baz = 3;
 // This simulates an error location spanning the entire line. The code looks for AST nodes that are
 // completely contained by the error location, so this location goes from column 1 to a ridiculously
 // large column number.
-function makeSuppression(line: number): Suppression {
+function makeSuppression(line: number, text: string): Suppression {
+  const [startOffset, endOffset] = offsetsForLine(line, text);
   return {
     loc: {
       start: {
         line,
         column: 1,
-        offset: 0,
+        offset: startOffset,
       },
       end: {
         line,
         column: 10000,
-        offset: 0,
+        offset: endOffset,
       },
     },
     isError: true,
     lints: new Set(),
     error_codes:["code2","code1"]
   };
+}
+function offsetsForLine(line: number, text: string): [number, number] {
+  let startOffset = 0;
+  const lines = text.split('\n');
+  for (let currLine = 0; currLine < line - 1; currLine++ ) {
+    // Add the line length + \n to the offset
+    startOffset += lines[currLine].length + 1;
+  }
+  return [startOffset, startOffset + lines[line -1].length];
 }
