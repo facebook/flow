@@ -24,6 +24,7 @@ export type FlowError = {
   trace: ?Array<FlowMessage>,
   operation?: FlowMessage,
   extra?: FlowExtra,
+  error_codes: Array<string>,
 };
 export type FlowMessage = {
   descr: string,

@@ -733,7 +733,7 @@ export function addCommentToCode(
     Buffer.from(code),
     loc,
     inside,
-    comment,
+    [comment],
     ast,
   ).toString();
 }

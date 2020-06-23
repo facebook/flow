@@ -185,7 +185,7 @@ export function addCommentToText(
   contents: Buffer,
   loc: FlowLoc,
   inside: Context,
-  comment: string,
+  comments: Array<string>,
   ast: any,
   startOfLine?: number,
 ): Buffer {
@@ -206,13 +206,13 @@ export function addCommentToText(
     return insertCommentToText(
       contents,
       start,
-      formatComment(comment, line, {jsx: false}).join('\n') + '\n',
+      formatComment(comments, line, {jsx: false}).join('\n') + '\n',
     );
   } else if (inJSX && ast.type === 'JSXElement') {
     return insertCommentToText(
       contents,
       start,
-      formatComment(comment, line, {jsx: true}).join('\n') + '\n',
+      formatComment(comments, line, {jsx: true}).join('\n') + '\n',
     );
   } else if (
     inside === TEMPLATE ||
@@ -255,7 +255,7 @@ export function addCommentToText(
     const part2 = padding + line.substr(start_col);
     const newCode = []
       // $FlowFixMe unsealed object but should just be {||}
-      .concat([part1], formatComment(comment, part2, {}), [part2])
+      .concat([part1], formatComment(comments, part2, {}), [part2])
       .join('\n');
     return Buffer.concat([
       contents.slice(0, start),
@@ -305,7 +305,7 @@ export function addCommentToText(
     return insertCommentToText(
       contents,
       start,
-      formatComment(comment, line, {jsx: true}).join('\n') + '\n',
+      formatComment(comments, line, {jsx: true}).join('\n') + '\n',
     );
   }
   return contents;
@@ -357,7 +357,7 @@ function splitAtWord(str: string, max: number): [string, string] {
 
 /* Figures out how to pad the comment and split it into multiple lines */
 export function formatComment(
-  comment: string,
+  comments: Array<string>,
   line: string,
   args: {|
     jsx?: boolean,
@@ -369,33 +369,47 @@ export function formatComment(
   padding.length > 40 && (padding = '    ');
 
   if (jsx === false) {
-    const singleLineComment = format('%s// %s', padding, comment);
-    if (singleLineComment.length <= 80) {
-      return [singleLineComment];
+    const singleLineComments = comments.map(comment =>
+      format('%s// %s', padding, comment),
+    );
+    const allUnder80 = comments.reduce(
+      (acc, comment) => acc && comment.length <= 80,
+      true,
+    );
+    if (allUnder80) {
+      return singleLineComments;
     }
   }
 
-  const firstLinePrefix = format(!jsx ? '%s/* ' : '%s{/* ', padding);
-
   const commentLines = [];
-  let firstLineComment;
-  [firstLineComment, comment] = splitAtWord(
-    comment.trim(),
-    80 - firstLinePrefix.length,
-  );
-  commentLines.push(firstLinePrefix + firstLineComment.trim());
+  const firstLinePrefix = format(!jsx ? '%s/* ' : '%s /* ', padding);
+  for (let comment of comments) {
+    let firstLineComment;
+    [firstLineComment, comment] = splitAtWord(
+      comment.trim(),
+      80 - firstLinePrefix.length,
+    );
+    commentLines.push(firstLinePrefix + firstLineComment.trim());
 
-  const prefix = format(!jsx ? '%s * ' : '%s  * ', padding);
-  let commentLine;
-  while (comment.length > 0) {
-    [commentLine, comment] = splitAtWord(comment.trim(), 80 - prefix.length);
-    commentLines.push(prefix + commentLine.trim());
+    const prefix = format(!jsx ? '%s * ' : '%s  * ', padding);
+    let commentLine;
+    while (comment.length > 0) {
+      [commentLine, comment] = splitAtWord(comment.trim(), 80 - prefix.length);
+      commentLines.push(prefix + commentLine.trim());
+    }
+    if (commentLines[commentLines.length - 1].length < 76) {
+      const last = commentLines.pop();
+      commentLines.push(format('%s */', last));
+    } else {
+      commentLines.push(format('%s */%s', padding));
+    }
   }
-  if (commentLines[commentLines.length - 1].length < 76) {
-    const last = commentLines.pop();
-    commentLines.push(format(!jsx ? '%s */' : '%s */}', last));
-  } else {
-    commentLines.push(format(!jsx ? '%s */' : '%s  */}', padding));
+  if (jsx) {
+    commentLines[0] = format('%s{%s', padding, commentLines[0].trim());
+    commentLines[commentLines.length - 1] = format(
+      '%s}',
+      commentLines[commentLines.length - 1],
+    );
   }
   return commentLines;
 }
