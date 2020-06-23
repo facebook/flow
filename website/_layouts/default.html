@@ -36,7 +36,7 @@
           {% for script in page.scripts %}
           '{% asset {{script}} @name %}': '{{ script | asset:"@path" | strip_extension }}',
           {% endfor %}
-          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.0/jquery.min',
+          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min',
           'tether-min': 'https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min',
           'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.5/js/bootstrap.min',
           'docsearch': 'https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min',
