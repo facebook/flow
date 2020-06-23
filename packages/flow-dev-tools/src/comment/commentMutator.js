@@ -206,13 +206,13 @@ export function addCommentToText(
     return insertCommentToText(
       contents,
       start,
-      formatComment(comment, line, {jsx: false, wrap: true}).join('\n') + '\n',
+      formatComment(comment, line, {jsx: false}).join('\n') + '\n',
     );
   } else if (inJSX && ast.type === 'JSXElement') {
     return insertCommentToText(
       contents,
       start,
-      formatComment(comment, line, {jsx: true, wrap: true}).join('\n') + '\n',
+      formatComment(comment, line, {jsx: true}).join('\n') + '\n',
     );
   } else if (
     inside === TEMPLATE ||
@@ -254,7 +254,8 @@ export function addCommentToText(
     const padding = match ? match[0] + '  ' : '  ';
     const part2 = padding + line.substr(start_col);
     const newCode = []
-      .concat([part1], formatComment(comment, part2, {wrap: true}), [part2])
+      // $FlowFixMe unsealed object but should just be {||}
+      .concat([part1], formatComment(comment, part2, {}), [part2])
       .join('\n');
     return Buffer.concat([
       contents.slice(0, start),
@@ -304,7 +305,7 @@ export function addCommentToText(
     return insertCommentToText(
       contents,
       start,
-      formatComment(comment, line, {jsx: true, wrap: true}).join('\n') + '\n',
+      formatComment(comment, line, {jsx: true}).join('\n') + '\n',
     );
   }
   return contents;
@@ -360,27 +361,21 @@ export function formatComment(
   line: string,
   args: {|
     jsx?: boolean,
-    wrap?: boolean,
   |},
 ): Array<string> {
-  const {jsx = false, wrap = true} = args;
+  const {jsx = false} = args;
   const match = line.match(/^ */);
   let padding = match ? match[0] : '';
   padding.length > 40 && (padding = '    ');
 
   if (jsx === false) {
     const singleLineComment = format('%s// %s', padding, comment);
-    if (!wrap || singleLineComment.length <= 80) {
+    if (singleLineComment.length <= 80) {
       return [singleLineComment];
     }
   }
 
   const firstLinePrefix = format(!jsx ? '%s/* ' : '%s{/* ', padding);
-
-  if (!wrap) {
-    // jsx === true
-    return [format('%s{/* %s */}', padding, comment.trim())];
-  }
 
   const commentLines = [];
   let firstLineComment;

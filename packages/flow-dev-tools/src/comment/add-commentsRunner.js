@@ -710,19 +710,11 @@ export async function addCommentsToCode(
 
     if (path != null) {
       let c = comment || '';
-      let wrap = true;
-      if (!isError && lints.size > 0) {
-        const sortedLints = Array.from(lints).sort();
-        c = `flowlint-next-line ${sortedLints
-          .map(lint => `${lint}:off`)
-          .join(', ')}`;
-        wrap = false;
-      }
       const comments = [...new Set(error_codes)].map(
         error_code => `$FlowFixMe[${error_code}]${c ? ` ${c}` : ''}`,
       );
       for (c of comments) {
-        code = addCommentToCode(c, code, loc, path, wrap);
+        code = addCommentToCode(c, code, loc, path);
       }
       commentCount++;
     }
@@ -735,7 +727,6 @@ export function addCommentToCode(
   code: string,
   loc: FlowLoc,
   path: Array<PathNode>,
-  wrap: boolean,
 ): string {
   const [inside, ast] = getContext(loc, path);
   return addCommentToText(
