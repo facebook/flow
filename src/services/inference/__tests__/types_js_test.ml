@@ -62,7 +62,6 @@ let dummy_options_flags =
     merge_timeout = None;
     munge_underscore_members = false;
     no_flowlib = false;
-    no_saved_state = true;
     profile = false;
     quiet = false;
     saved_state_fetcher = None;

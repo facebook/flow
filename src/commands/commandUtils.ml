@@ -803,7 +803,6 @@ module Options_flags = struct
     merge_timeout: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
-    no_saved_state: bool;
     profile: bool;
     quiet: bool;
     saved_state_fetcher: Options.saved_state_fetcher option;
@@ -865,7 +864,6 @@ let options_flags =
       saved_state_fetcher
       saved_state_force_recheck
       saved_state_no_fallback
-      no_saved_state
       types_first
       abstract_locations
       include_suppressions
@@ -897,7 +895,6 @@ let options_flags =
         saved_state_fetcher;
         saved_state_force_recheck;
         saved_state_no_fallback;
-        no_saved_state;
         trust_mode;
         types_first;
         abstract_locations;
@@ -962,10 +959,6 @@ let options_flags =
            no_arg
            ~doc:
              "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
-      |> flag
-           "--no-saved-state"
-           no_arg
-           ~doc:"Do not load from a saved state even if one is available"
       |> flag "--types-first" no_arg ~doc:"[EXPERIMENTAL] types-first architecture"
       |> flag
            "--abstract-locations"
@@ -1259,7 +1252,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_saved_state_fetcher;
       opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
       opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
-      opt_no_saved_state = options_flags.no_saved_state;
       opt_node_resolver_allow_root_relative =
         FlowConfig.node_resolver_allow_root_relative flowconfig;
       opt_node_resolver_root_relative_dirnames =
