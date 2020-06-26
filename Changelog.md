@@ -1,3 +1,20 @@
+### 0.128.0
+
+New Features:
+* Enable LSP support for autofix exports by default.
+* Added a lint rule to ensure exports named `default` were exported with `export default` syntax.
+* Enabled support for JSDoc in some LSP results.
+
+Library Definitions:
+* Add parameter to MediaStreamTrack.applyConstraints()
+
+Parser:
+* Fix parsing async arrow functions with multiple type parameters
+
+Config:
+* Remove types-first flag aliases prefixed with "experimental"
+* Replace well_formed_exports.whitelist with well_formed_exports.includes
+
 ### 0.127.0
 
 Misc:
