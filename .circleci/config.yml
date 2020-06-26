@@ -209,6 +209,38 @@ jobs:
           path: dist/flow_parser.js
           destination: flow_parser.js
 
+  build_aarch64_linux:
+    machine:
+      image: ubuntu-1604:201903-01
+    working_directory: ~/flow
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Activate QEMU
+          command:
+            sudo docker run -it --rm --privileged multiarch/qemu-user-static --reset --credential yes --persistent yes
+      - run:
+          name: Build flow
+          no_output_timeout: 30m
+          command: |
+            cp .circleci/Dockerfile_aarch64 .
+            cp .circleci/build_flow_aarch64.sh .
+            docker build -t flow-image -f Dockerfile_aarch64 .
+            sudo docker run --rm -it -v$(pwd):/flow flow-image
+      - run:
+          name: Create artifacts
+          command: |
+            sudo cp dist/flow.zip dist/flow-linux-aarch64.zip
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux-aarch64/flow
+            - dist/flow-linux-aarch64.zip
+      - store_artifacts:
+          path: dist/flow-linux-aarch64.zip
+          destination: flow-linux-aarch64.zip
+
   build_macos:
     executor: mac
     steps:
@@ -551,6 +583,9 @@ workflows:
       - build_linux:
           requires:
             - checkout
+      - build_aarch64_linux:
+          requires:
+            - checkout
       - build_macos:
           requires:
             - checkout
@@ -595,6 +630,10 @@ workflows:
       - checkout:
           <<: *run_on_release_tags
       - build_linux:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
+      - build_aarch64_linux:
           <<: *run_on_release_tags
           requires:
             - checkout

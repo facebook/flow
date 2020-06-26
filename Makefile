@@ -17,8 +17,10 @@ INTERNAL_FLAGS=
 
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
+  UNAME_M=
 else
   UNAME_S=$(shell uname -s)
+  UNAME_M=$(shell uname -m)
 endif
 
 # Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
@@ -263,7 +265,11 @@ BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 
 # Any additional C flags can be added here
-CC_FLAGS=-mcx16
+ifeq ($(UNAME_M), aarch64)
+  CC_FLAGS=
+else
+  CC_FLAGS=-mcx16
+endif
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
