@@ -88,3 +88,5 @@ assert_ok "$FLOW" force-recheck --profile src/node_modules/dependency.js \
 grep "Resolved requires" "$log_file" | tail -n 2 | cut -d"]" -f 2
 printf "\n"
 assert_errors "$FLOW" status --no-auto-start src
+
+"$FLOW" stop src 1> /dev/null 2>&1

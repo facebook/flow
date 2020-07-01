@@ -700,6 +700,7 @@ runtest() {
                 "$file" \
                 2>> "$stderr_dest"
           done <"$input_file"
+          "$FLOW" stop . 1> /dev/null 2>&1
 
           # Keep copies of autofix-ed files
           xargs -I {} cp {} {}.autofix < "$input_file"
