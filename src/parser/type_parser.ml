@@ -584,8 +584,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
+            let start_loc = Peek.loc env in
             let tparams = type_params_remove_trailing env (type_params env) in
-            let value = methodish env (Peek.loc env) tparams in
+            let value = methodish env start_loc tparams in
             Type.Object.CallProperty.
               {
                 value;
