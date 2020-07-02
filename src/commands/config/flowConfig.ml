@@ -441,11 +441,7 @@ module Opts = struct
           (fun (pattern, template) -> Ok (Str.regexp pattern, template))
           (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers }) );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
-      (* TODO remove this alias once there has been a transitional release *)
-      ("module.system.haste.paths.blacklist", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
-      (* TODO remove this alias once there has been a transitional release *)
-      ("module.system.haste.paths.whitelist", haste_paths_includes_parser);
       ( "module.system.haste.use_name_reducers",
         boolean
           ~init:(fun opts -> { opts with haste_use_name_reducers = false })
@@ -556,8 +552,6 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
       ("well_formed_exports", well_formed_exports_parser);
       ("well_formed_exports.includes", well_formed_exports_includes_parser);
-      (* TODO remove this alias once there has been a transitional release *)
-      ("well_formed_exports.whitelist", well_formed_exports_includes_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("types_first", types_first_parser);
       ( "experimental.abstract_locations",
