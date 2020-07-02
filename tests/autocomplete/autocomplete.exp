@@ -1587,16 +1587,16 @@ Flags: --lsp
 {
   "label":"cast",
   "kind":3,
-  "detail":"(input: string) => (void | E)",
-  "inlineDetail":"(input: string) => (void | E)",
+  "detail":"(input: ?string) => (void | E)",
+  "inlineDetail":"(input: ?string) => (void | E)",
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
 {
   "label":"isValid",
   "kind":3,
-  "detail":"(input: string) => boolean",
-  "inlineDetail":"(input: string) => boolean",
+  "detail":"(input: ?string) => boolean",
+  "inlineDetail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
