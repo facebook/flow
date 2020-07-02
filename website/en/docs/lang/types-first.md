@@ -81,13 +81,13 @@ module.exports = (foo(1): number);
 
 #### Seal your intermediate results <a class="toc" id="toc-seal-your-intermediate-results" href="#toc-seal-your-intermediate-results"></a>
 
-As you make progress adding types to your codebase, you can whitelist directories
+As you make progress adding types to your codebase, you can include directories
 so that they don’t regress as new code gets committed, and until the entire project
 has well-formed exports. You can do this by adding lines like the following to your
 .flowconfig:
 
 ```
-well_formed_exports.whitelist=<PROJECT_ROOT>/path/to/directory
+well_formed_exports.includes=<PROJECT_ROOT>/path/to/directory
 ```
 
 > Warning: That this is a *substring* check, not a regular expression (for performance
@@ -121,7 +121,7 @@ Unfortunately, it is not possible to enable types-first mode for part of your re
 affects all files managed by the current `.flowconfig`.
 
 > Note: The above flags are available in versions of Flow `>=0.102` with the `experimental.`
-prefix:
+prefix (and prior to v0.128, it used `whitelist` in place of `includes`):
 ```
 experimental.well_formed_exports=true
 experimental.well_formed_exports.whitelist=<PROJECT_ROOT>/path/to/directory

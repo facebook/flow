@@ -530,18 +530,20 @@ This option is implied by [`types_first`](#toc-types-first-boolean), but the opt
 is useful on its own when upgrading a project to types-first mode. The default value
 is `false`.
 
-#### `well_formed_exports.whitelist` _`(string)`_ {% since 0.125.0 %} <a class="toc" id="toc-well-formed-exports-whitelist-string" href="#toc-well-formed-exports-whitelist-string"></a>
+#### `well_formed_exports.includes` _`(string)`_ {% since 0.128.0 %} <a class="toc" id="toc-well-formed-exports-includes-string" href="#toc-well-formed-exports-includes-string"></a>
 
 
 Limit the scope of the `well_formed_exports` requirement to a specific directory
 of this project. For example
 ```
 well_formed_exports=true
-well_formed_exports.whitelist=<PROJECT_ROOT>/dirA
-well_formed_exports.whitelist=<PROJECT_ROOT>/dirB
+well_formed_exports.includes=<PROJECT_ROOT>/dirA
+well_formed_exports.includes=<PROJECT_ROOT>/dirB
 ```
 will only report export related errors in files under `dirA` and `dirB`. This option
 requires `well_formed_exports` to be set to `true`.
 
 The purpose of this option is to help prepare a codebase for Flow types-first mode.
 See [this section](#toc-seal-your-intermediate-results) for more.
+
+Between versions v0.125.0 and v0.127.0, this option was named `well_formed_exports.whitelist`.
