@@ -1,0 +1,16 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+types_first=true
+exact_by_default=true
+experimental.abstract_locations=true
+no_flowlib=true
+
+[strict]
