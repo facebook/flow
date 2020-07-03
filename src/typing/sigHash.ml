@@ -221,6 +221,20 @@ type hash =
   | FilterOptionalH
   | FilterMaybeH
   | FunImplicitVoidReturnH
+  | DestructNonMaybeTypeH
+  | DestructPropertyTypeH
+  | DestructElementTypeH
+  | DestructBindH
+  | DestructReadOnlyTypeH
+  | DestructSpreadTypeH
+  | DestructRestTypeH
+  | DestructValuesTypeH
+  | DestructCallTypeH
+  | DestructTypeMapH
+  | DestructReactElementPropsTypeH
+  | DestructReactElementConfigTypeH
+  | DestructReactElementRefTypeH
+  | DestructReactConfigTypeH
 
 let hash_of_def_ctor =
   Type.(
@@ -326,6 +340,24 @@ let hash_of_ctor =
     | ThisTypeAppT _ -> ThisTypeAppH
     | TypeAppT _ -> TypeAppH
     | UnionT _ -> UnionH)
+
+let hash_of_destructor =
+  Type.(
+    function
+    | NonMaybeType -> DestructNonMaybeTypeH
+    | PropertyType _ -> DestructPropertyTypeH
+    | ElementType _ -> DestructElementTypeH
+    | Bind _ -> DestructBindH
+    | ReadOnlyType -> DestructReadOnlyTypeH
+    | SpreadType _ -> DestructSpreadTypeH
+    | RestType _ -> DestructRestTypeH
+    | ValuesType -> DestructValuesTypeH
+    | CallType _ -> DestructCallTypeH
+    | TypeMap _ -> DestructTypeMapH
+    | ReactElementPropsType -> DestructReactElementPropsTypeH
+    | ReactElementConfigType -> DestructReactElementConfigTypeH
+    | ReactElementRefType -> DestructReactElementRefTypeH
+    | ReactConfigType _ -> DestructReactConfigTypeH)
 
 let hash_of_use_ctor =
   Type.(
@@ -472,6 +504,8 @@ let add_type state t =
     | _ -> ())
 
 let add_use state use = add_int state (hash_of_use_ctor use)
+
+let add_destructor state d = add_int state (hash_of_destructor d)
 
 let add_file_key state =
   File_key.(
