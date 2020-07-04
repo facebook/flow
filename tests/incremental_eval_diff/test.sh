@@ -10,4 +10,4 @@ cp a.js.after a.js
 
 assert_ok "$FLOW" force-recheck --no-auto-start a.js b.js
 
-assert_ok "$FLOW" status # TODO should error
+assert_errors "$FLOW" status

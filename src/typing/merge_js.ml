@@ -774,6 +774,77 @@ module ContextOptimizer = struct
             reduced_evaluated <- Eval.Map.add id t' reduced_evaluated;
             id
 
+      method! destructor cx map_cx t =
+        SigHash.add_destructor sig_hash t;
+        match t with
+        | NonMaybeType -> t
+        | PropertyType s ->
+          SigHash.add sig_hash s;
+          t
+        | ElementType t' ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then
+            t
+          else
+            ElementType t''
+        | Bind t' ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then
+            t
+          else
+            Bind t''
+        | ReadOnlyType -> t
+        | SpreadType (options, tlist, acc) ->
+          let () =
+            match options with
+            | Object.Spread.Annot { make_exact } -> SigHash.add_bool sig_hash make_exact
+            | _ -> ()
+          in
+          let tlist' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) tlist in
+          let acc' = OptionUtils.ident_map (self#object_kit_spread_operand_slice cx map_cx) acc in
+          if tlist' == tlist && acc == acc' then
+            t
+          else
+            SpreadType (options, tlist', acc')
+        | RestType (options, x) ->
+          let open Object.Rest in
+          let () =
+            match options with
+            | Sound -> SigHash.add_int sig_hash 1
+            | IgnoreExactAndOwn -> SigHash.add_int sig_hash 2
+            | ReactConfigMerge p ->
+              SigHash.add_int sig_hash 3;
+              SigHash.add sig_hash (Polarity.sigil p)
+          in
+          let x' = self#type_ cx map_cx x in
+          if x' == x then
+            t
+          else
+            RestType (options, x')
+        | ValuesType -> t
+        | CallType args ->
+          let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
+          if args' == args then
+            t
+          else
+            CallType args'
+        | TypeMap tmap ->
+          let tmap' = self#type_map cx map_cx tmap in
+          if tmap' == tmap then
+            t
+          else
+            TypeMap tmap'
+        | ReactConfigType default_props ->
+          let default_props' = self#type_ cx map_cx default_props in
+          if default_props' == default_props then
+            t
+          else
+            ReactConfigType default_props'
+        | ReactElementPropsType
+        | ReactElementConfigType
+        | ReactElementRefType ->
+          t
+
       method! dict_type cx pole dicttype =
         let dicttype' = super#dict_type cx pole dicttype in
         SigHash.add_polarity sig_hash dicttype'.dict_polarity;
