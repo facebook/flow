@@ -1,0 +1,38 @@
+Error --------------------------------------------------------------------------------------------------------- b.js:6:2
+
+Cannot cast `a` to object type because inexact `A` [1] is incompatible with exact object type [2]. [incompatible-exact]
+
+   b.js:6:2
+   6| (a: { f: string, t: number });
+       ^
+
+References:
+   b.js:5:16
+   5| declare var a: A;
+                     ^ [1]
+   b.js:6:5
+   6| (a: { f: string, t: number });
+          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
+Error --------------------------------------------------------------------------------------------------------- b.js:6:2
+
+Cannot cast `a` to object type because inexact `A` [1] is incompatible with exact object type [2]. [incompatible-exact]
+
+   b.js:6:2
+   6| (a: { f: string, t: number });
+       ^
+
+References:
+   b.js:5:16
+   5| declare var a: A;
+                     ^ [1]
+   b.js:6:5
+   6| (a: { f: string, t: number });
+          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
