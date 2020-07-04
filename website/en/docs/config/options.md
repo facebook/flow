@@ -49,7 +49,6 @@ can be overridden with command line flags.
 * [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
 * [`strip_root`](#toc-strip-root-boolean)
-* [`suppress_comment`](#toc-suppress-comment-regex)
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
@@ -434,34 +433,6 @@ in error messages when using `--json`, `--from emacs`, and `--from vim`.
 Do not use this option. Instead, pass the command line flag `--strip-root`.
 
 By default this is `false`.
-
-#### `suppress_comment` _`(regex)`_ <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
-
-Defines a magical comment that suppresses any Flow errors on the following
-line. For example:
-
-```
-suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
-```
-
-will match a comment like this:
-
-```
-// $FlowFixMe: suppressing this error until we can refactor
-var x : string = 123;
-```
-
-and suppress the error. If there is no error on the next line (the suppression
-is unnecessary), an "Unused suppression" warning will be shown instead.
-
-If no suppression comments are specified in your config, Flow will apply one
-default: `// $FlowFixMe`.
-
-> **Note:** You can specify `suppress_comment` multiple times. If you do define
-> any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased
-> in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
-> some additional custom suppression comments, you must manually specify
-> `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
 
 #### `suppress_type` _`(string)`_ <a class="toc" id="toc-suppress-type-string" href="#toc-suppress-type-string"></a>
 
