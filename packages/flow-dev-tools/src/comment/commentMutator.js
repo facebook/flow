@@ -401,7 +401,7 @@ export function formatComment(
       const last = commentLines.pop();
       commentLines.push(format('%s */', last));
     } else {
-      commentLines.push(format('%s */%s', padding));
+      commentLines.push(format('%s */', padding));
     }
   }
   if (jsx) {
