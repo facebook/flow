@@ -435,7 +435,7 @@ Do not use this option. Instead, pass the command line flag `--strip-root`.
 
 By default this is `false`.
 
-#### `suppress_comment` _`(regex)`_ <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
+#### `suppress_comment` _`(regex)`_ {% until 0.126 %} <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
 
 Defines a magical comment that suppresses any Flow errors on the following
 line. For example:
@@ -462,6 +462,11 @@ default: `// $FlowFixMe`.
 > in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
 > some additional custom suppression comments, you must manually specify
 > `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
+
+> **Note:** In version v0.127.0, the option to specify the suppression comment
+> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`,
+> and `$FlowIgnore` became the only standard suppressions.
+
 
 #### `suppress_type` _`(string)`_ <a class="toc" id="toc-suppress-type-string" href="#toc-suppress-type-string"></a>
 
