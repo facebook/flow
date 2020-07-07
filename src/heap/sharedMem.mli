@@ -64,16 +64,12 @@ module type Key = sig
   val string_of_md5 : md5 -> string
 end
 
-module Immediate (Key : Key) (Value : Value.Type) : sig
-  val add : Key.md5 -> Value.t -> unit
+module type Value = sig
+  type t
 
-  val mem : Key.md5 -> bool
+  val prefix : Prefix.t
 
-  val get : Key.md5 -> Value.t
-
-  val remove : Key.md5 -> unit
-
-  val move : Key.md5 -> Key.md5 -> unit
+  val description : string
 end
 
 module type NoCache = sig
@@ -110,22 +106,6 @@ module type NoCache = sig
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
-
-  module LocalChanges : sig
-    val has_local_changes : unit -> bool
-
-    val push_stack : unit -> unit
-
-    val pop_stack : unit -> unit
-
-    val revert_batch : KeySet.t -> unit
-
-    val commit_batch : KeySet.t -> unit
-
-    val revert_all : unit -> unit
-
-    val commit_all : unit -> unit
-  end
 end
 
 module type DebugCacheType = sig
@@ -148,18 +128,6 @@ module type WithCache = sig
   module DebugCache : DebugLocalCache
 end
 
-module type Raw = functor (Key : Key) (Value : Value.Type) -> sig
-  val add : Key.md5 -> Value.t -> unit
-
-  val mem : Key.md5 -> bool
-
-  val get : Key.md5 -> Value.t
-
-  val remove : Key.md5 -> unit
-
-  val move : Key.md5 -> Key.md5 -> unit
-end
-
 module type UserKeyType = sig
   type t
 
@@ -168,7 +136,7 @@ module type UserKeyType = sig
   val compare : t -> t -> int
 end
 
-module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : sig
+module WithCache (UserKeyType : UserKeyType) (Value : Value) : sig
   include
     WithCache
       with type key = UserKeyType.t
@@ -177,7 +145,7 @@ module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : 
        and module KeyMap = WrappedMap.Make(UserKeyType)
 end
 
-module NoCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : sig
+module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
   include
     NoCache
       with type key = UserKeyType.t

@@ -25,7 +25,7 @@ let test_add_remove (module IntHeap : SharedMem.NoCache with type t = int and ty
   assert (not @@ IntHeap.mem "a");
   assert (SharedMem.debug_removed_count () = 1)
 
-module TestNoCache = SharedMem.NoCache (SharedMem.Immediate) (StringKey) (IntVal)
+module TestNoCache = SharedMem.NoCache (StringKey) (IntVal)
 
 let tests () =
   let list = [("test_add_remove", test_add_remove (module TestNoCache))] in

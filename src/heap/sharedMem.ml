@@ -180,6 +180,14 @@ module type Key = sig
   val string_of_md5 : md5 -> string
 end
 
+module type Value = sig
+  type t
+
+  val prefix : Prefix.t
+
+  val description : string
+end
+
 module KeyFunctor (UserKeyType : sig
   type t
 
@@ -216,24 +224,12 @@ end) : Key with type userkey = UserKeyType.t = struct
   let string_of_md5 x = x
 end
 
-module type Raw = functor (Key : Key) (Value : Value.Type) -> sig
-  val add : Key.md5 -> Value.t -> unit
-
-  val mem : Key.md5 -> bool
-
-  val get : Key.md5 -> Value.t
-
-  val remove : Key.md5 -> unit
-
-  val move : Key.md5 -> Key.md5 -> unit
-end
-
 (*****************************************************************************)
 (* Immediate access to shared memory (cf hh_shared.c for the underlying
  * representation).
  *)
 (*****************************************************************************)
-module Immediate (Key : Key) (Value : Value.Type) : sig
+module Raw (Key : Key) (Value : Value) : sig
   val add : Key.md5 -> Value.t -> unit
 
   val mem : Key.md5 -> bool
@@ -304,246 +300,19 @@ end = struct
   let move from_key to_key = hh_move from_key to_key
 end
 
-(*****************************************************************************)
-(* Direct access to shared memory, but with a layer of local changes that allow
- * us to decide whether or not to commit specific values.
- *)
-(*****************************************************************************)
-module WithLocalChanges : functor (Raw : Raw) (Key : Key) (Value : Value.Type) -> sig
-  include module type of Raw (Key) (Value)
-
-  module LocalChanges : sig
-    val has_local_changes : unit -> bool
-
-    val push_stack : unit -> unit
-
-    val pop_stack : unit -> unit
-
-    val revert : Key.md5 -> unit
-
-    val commit : Key.md5 -> unit
-
-    val revert_all : unit -> unit
-
-    val commit_all : unit -> unit
-  end
-end =
-functor
-  (Raw : Raw)
-  (Key : Key)
-  (Value : Value.Type)
-  ->
-  struct
-    module Raw = Raw (Key) (Value)
-
-    (**
-   * Represents a set of local changes to the view of the shared memory heap
-   * WITHOUT materializing to the changes in the actual heap. This allows us to
-   * make speculative changes to the view of the world that can be reverted
-   * quickly and correctly.
-   *
-   * A LocalChanges maintains the same invariants as the shared heap. Except
-   * add are allowed to overwrite filled keys. This is for convenience so we
-   * do not need to remove filled keys upfront.
-   *
-   * LocalChanges can be committed. This will apply the changes to the previous
-   * stack, or directly to shared memory if there are no other active stacks.
-   * Since changes are kept local to the process, this is NOT compatible with
-   * the parallelism provided by multiWorkerLwt.ml
-   *)
-    module LocalChanges = struct
-      type action =
-        (* The value does not exist in the current stack. When committed this
-         * action will invoke remove on the previous stack.
-         *)
-        | Remove
-        (* The value is added to a previously empty slot. When committed this
-         * action will invoke add on the previous stack.
-         *)
-        | Add of Value.t
-        (* The value is replacing a value already associated with a key in the
-         * previous stack. When committed this action will invoke remove then
-         * add on the previous stack.
-         *)
-        | Replace of Value.t
-
-      type t = {
-        current: (Key.md5, action) Hashtbl.t;
-        prev: t option;
-      }
-
-      let stack : t option ref = ref None
-
-      let has_local_changes () = Base.Option.is_some !stack
-
-      let rec mem stack_opt key =
-        match stack_opt with
-        | None -> Raw.mem key
-        | Some stack ->
-          (try Hashtbl.find stack.current key <> Remove with Not_found -> mem stack.prev key)
-
-      let rec get stack_opt key =
-        match stack_opt with
-        | None -> Raw.get key
-        | Some stack ->
-          (try
-             match Hashtbl.find stack.current key with
-             | Remove -> failwith "Trying to get a non-existent value"
-             | Replace value
-             | Add value ->
-               value
-           with Not_found -> get stack.prev key)
-
-      (*
-       * For remove/add it is best to think of them in terms of a state machine.
-       * A key can be in the following states:
-       *
-       *  Remove:
-       *    Local changeset removes a key from the previous stack
-       *  Replace:
-       *    Local changeset replaces value of a key in previous stack
-       *  Add:
-       *    Local changeset associates a value with a key. The key is not
-       *    present in the previous stacks
-       *  Empty:
-       *    No local changes and key is not present in previous stack
-       *  Filled:
-       *    No local changes and key has an associated value in previous stack
-       *  *Error*:
-       *    This means an exception will occur
-       *)
-      (*
-       * Transitions table:
-       *   Remove  -> *Error*
-       *   Replace -> Remove
-       *   Add     -> Empty
-       *   Empty   -> *Error*
-       *   Filled  -> Remove
-       *)
-      let remove stack_opt key =
-        match stack_opt with
-        | None -> Raw.remove key
-        | Some stack ->
-          (try
-             match Hashtbl.find stack.current key with
-             | Remove -> failwith "Trying to remove a non-existent value"
-             | Replace _ -> Hashtbl.replace stack.current key Remove
-             | Add _ -> Hashtbl.remove stack.current key
-           with Not_found ->
-             if mem stack.prev key then
-               Hashtbl.replace stack.current key Remove
-             else
-               failwith "Trying to remove a non-existent value")
-
-      (*
-       * Transitions table:
-       *   Remove  -> Replace
-       *   Replace -> Replace
-       *   Add     -> Add
-       *   Empty   -> Add
-       *   Filled  -> Replace
-       *)
-      let add stack_opt key value =
-        match stack_opt with
-        | None -> Raw.add key value
-        | Some stack ->
-          (try
-             match Hashtbl.find stack.current key with
-             | Remove
-             | Replace _ ->
-               Hashtbl.replace stack.current key (Replace value)
-             | Add _ -> Hashtbl.replace stack.current key (Add value)
-           with Not_found ->
-             if mem stack.prev key then
-               Hashtbl.replace stack.current key (Replace value)
-             else
-               Hashtbl.replace stack.current key (Add value))
-
-      let move stack_opt from_key to_key =
-        match stack_opt with
-        | None -> Raw.move from_key to_key
-        | Some _stack ->
-          assert (mem stack_opt from_key);
-          assert (not @@ mem stack_opt to_key);
-          let value = get stack_opt from_key in
-          remove stack_opt from_key;
-          add stack_opt to_key value
-
-      let commit_action changeset key elem =
-        match elem with
-        | Remove -> remove changeset key
-        | Add value -> add changeset key value
-        | Replace value ->
-          remove changeset key;
-          add changeset key value
-
-      (* Public API **)
-      let push_stack () = stack := Some { current = Hashtbl.create 128; prev = !stack }
-
-      let pop_stack () =
-        match !stack with
-        | None -> failwith "There are no active local change stacks. Nothing to pop!"
-        | Some { prev; _ } -> stack := prev
-
-      let revert key =
-        match !stack with
-        | None -> ()
-        | Some changeset -> Hashtbl.remove changeset.current key
-
-      let commit key =
-        match !stack with
-        | None -> ()
-        | Some changeset ->
-          (try commit_action changeset.prev key @@ Hashtbl.find changeset.current key
-           with Not_found -> ())
-
-      let revert_all () =
-        match !stack with
-        | None -> ()
-        | Some changeset -> Hashtbl.clear changeset.current
-
-      let commit_all () =
-        match !stack with
-        | None -> ()
-        | Some changeset -> Hashtbl.iter (commit_action changeset.prev) changeset.current
-    end
-
-    let add key value = LocalChanges.(add !stack key value)
-
-    let mem key = LocalChanges.(mem !stack key)
-
-    let get key = LocalChanges.(get !stack key)
-
-    let remove key = LocalChanges.(remove !stack key)
-
-    let move from_key to_key = LocalChanges.(move !stack from_key to_key)
-  end
-
-(*****************************************************************************)
-(* Module used to access "new" values (as opposed to old ones).
- * There are several cases where we need to compare the old and the new
- * representation of objects (to determine what has changed).
- * The "old" representation is the value that was bound to that key in the
- * last round of type-checking.
- * Despite the fact that the same storage is used under the hood, it's good
- * to separate the two interfaces to make sure we never mix old and new
- * values.
- *)
-(*****************************************************************************)
-
-module New : functor (Raw : Raw) (Key : Key) (Value : Value.Type) -> sig
+module New (Key : Key) (Value : Value) : sig
   (* Adds a binding to the table, the table is left unchanged if the
    * key was already bound.
    *)
   val add : Key.t -> Value.t -> unit
 
-  val get : Key.t -> Value.t option
+  val mem : Key.t -> bool
 
   val find_unsafe : Key.t -> Value.t
 
-  val remove : Key.t -> unit
+  val get : Key.t -> Value.t option
 
-  val mem : Key.t -> bool
+  val remove : Key.t -> unit
 
   (* Binds the key to the old one.
    * If 'mykey' is bound to 'myvalue', oldifying 'mykey' makes 'mykey'
@@ -551,56 +320,43 @@ module New : functor (Raw : Raw) (Key : Key) (Value : Value.Type) -> sig
    * true and "New.mem mykey" returns false after oldifying.
    *)
   val oldify : Key.t -> unit
+end = struct
+  module Raw = Raw (Key) (Value)
 
-  module WithLocalChanges : module type of WithLocalChanges (Raw) (Key) (Value)
-end =
-functor
-  (Raw : Raw)
-  (Key : Key)
-  (Value : Value.Type)
-  ->
-  struct
-    module WithLocalChanges = WithLocalChanges (Raw) (Key) (Value)
+  let add key value = Raw.add (Key.md5 key) value
 
-    let add key value = WithLocalChanges.add (Key.md5 key) value
+  let mem key = Raw.mem (Key.md5 key)
 
-    let mem key = WithLocalChanges.mem (Key.md5 key)
+  let get key =
+    let key = Key.md5 key in
+    if Raw.mem key then
+      Some (Raw.get key)
+    else
+      None
 
-    let get key =
-      let key = Key.md5 key in
-      if WithLocalChanges.mem key then
-        Some (WithLocalChanges.get key)
-      else
-        None
+  let find_unsafe key =
+    match get key with
+    | None -> raise Not_found
+    | Some x -> x
 
-    let find_unsafe key =
-      match get key with
-      | None -> raise Not_found
-      | Some x -> x
+  let remove key =
+    let key = Key.md5 key in
+    if Raw.mem key then (
+      Raw.remove key;
+      assert (not (Raw.mem key))
+    ) else
+      ()
 
-    let remove key =
-      let key = Key.md5 key in
-      if WithLocalChanges.mem key then (
-        WithLocalChanges.remove key;
-        assert (not (WithLocalChanges.mem key))
-      ) else
-        ()
-
-    let oldify key =
-      if mem key then
-        let old_key = Key.to_old key in
-        WithLocalChanges.move (Key.md5 key) (Key.md5_old old_key)
-      else
-        ()
-  end
+  let oldify key =
+    if mem key then
+      let old_key = Key.to_old key in
+      Raw.move (Key.md5 key) (Key.md5_old old_key)
+    else
+      ()
+end
 
 (* Same as new, but for old values *)
-module Old : functor
-  (Raw : Raw)
-  (Key : Key)
-  (Value : Value.Type)
-  (WithLocalChanges : module type of WithLocalChanges (Raw) (Key) (Value))
-  -> sig
+module Old (Key : Key) (Value : Value) : sig
   val get : Key.old -> Value.t option
 
   val remove : Key.old -> unit
@@ -609,34 +365,29 @@ module Old : functor
 
   (* Takes an old value and moves it back to a "new" one *)
   val revive : Key.old -> unit
-end =
-functor
-  (Raw : Raw)
-  (Key : Key)
-  (Value : Value.Type)
-  (WithLocalChanges : module type of WithLocalChanges (Raw) (Key) (Value))
-  ->
-  struct
-    let get key =
-      let key = Key.md5_old key in
-      if WithLocalChanges.mem key then
-        Some (WithLocalChanges.get key)
-      else
-        None
+end = struct
+  module Raw = Raw (Key) (Value)
 
-    let mem key = WithLocalChanges.mem (Key.md5_old key)
+  let get key =
+    let key = Key.md5_old key in
+    if Raw.mem key then
+      Some (Raw.get key)
+    else
+      None
 
-    let remove key = if mem key then WithLocalChanges.remove (Key.md5_old key)
+  let mem key = Raw.mem (Key.md5_old key)
 
-    let revive key =
-      if mem key then (
-        let new_key = Key.new_from_old key in
-        let new_key = Key.md5 new_key in
-        let old_key = Key.md5_old key in
-        if WithLocalChanges.mem new_key then WithLocalChanges.remove new_key;
-        WithLocalChanges.move old_key new_key
-      )
-  end
+  let remove key = if mem key then Raw.remove (Key.md5_old key)
+
+  let revive key =
+    if mem key then (
+      let new_key = Key.new_from_old key in
+      let new_key = Key.md5 new_key in
+      let old_key = Key.md5_old key in
+      if Raw.mem new_key then Raw.remove new_key;
+      Raw.move old_key new_key
+    )
+end
 
 (*****************************************************************************)
 (* All the caches are functors returning a module of the following signature *)
@@ -700,22 +451,6 @@ module type NoCache = sig
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
-
-  module LocalChanges : sig
-    val has_local_changes : unit -> bool
-
-    val push_stack : unit -> unit
-
-    val pop_stack : unit -> unit
-
-    val revert_batch : KeySet.t -> unit
-
-    val commit_batch : KeySet.t -> unit
-
-    val revert_all : unit -> unit
-
-    val commit_all : unit -> unit
-  end
 end
 
 module type DebugLocalCache = sig
@@ -766,7 +501,7 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : sig
+module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
   include
     NoCache
       with type key = UserKeyType.t
@@ -775,8 +510,8 @@ module NoCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : si
        and module KeyMap = WrappedMap.Make(UserKeyType)
 end = struct
   module Key = KeyFunctor (UserKeyType)
-  module New = New (Raw) (Key) (Value)
-  module Old = Old (Raw) (Key) (Value) (New.WithLocalChanges)
+  module New = New (Key) (Value)
+  module Old = Old (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = WrappedMap.Make (UserKeyType)
 
@@ -865,28 +600,6 @@ end = struct
         Old.remove key
       end
       xs
-
-  module LocalChanges = struct
-    include New.WithLocalChanges.LocalChanges
-
-    let revert_batch keys =
-      KeySet.iter
-        begin
-          fun str_key ->
-          let key = Key.make Value.prefix str_key in
-          revert (Key.md5 key)
-        end
-        keys
-
-    let commit_batch keys =
-      KeySet.iter
-        begin
-          fun str_key ->
-          let key = Key.make Value.prefix str_key in
-          commit (Key.md5 key)
-        end
-        keys
-  end
 end
 
 (*****************************************************************************)
@@ -1035,7 +748,7 @@ end
 
 let invalidate_callback_list = ref []
 
-module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) :
+module LocalCache (UserKeyType : UserKeyType) (Value : Value) :
   LocalCache with type key = UserKeyType.t and type value = Value.t = struct
   type key = UserKeyType.t
 
@@ -1097,7 +810,7 @@ end
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)
-module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : sig
+module WithCache (UserKeyType : UserKeyType) (Value : Value) : sig
   include
     WithCache
       with type key = UserKeyType.t
@@ -1105,7 +818,7 @@ module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) : 
        and module KeySet = Set.Make(UserKeyType)
        and module KeyMap = WrappedMap.Make(UserKeyType)
 end = struct
-  module Direct = NoCache (Raw) (UserKeyType) (Value)
+  module Direct = NoCache (UserKeyType) (Value)
 
   type key = Direct.key
 
@@ -1208,32 +921,4 @@ end = struct
       :: !invalidate_callback_list
 
   let remove_old_batch = Direct.remove_old_batch
-
-  module LocalChanges = struct
-    let push_stack () =
-      Direct.LocalChanges.push_stack ();
-      Cache.clear ()
-
-    let pop_stack () =
-      Direct.LocalChanges.pop_stack ();
-      Cache.clear ()
-
-    let revert_batch keys =
-      Direct.LocalChanges.revert_batch keys;
-      KeySet.iter Cache.remove keys
-
-    let commit_batch keys =
-      Direct.LocalChanges.commit_batch keys;
-      KeySet.iter Cache.remove keys
-
-    let revert_all () =
-      Direct.LocalChanges.revert_all ();
-      Cache.clear ()
-
-    let commit_all () =
-      Direct.LocalChanges.commit_all ();
-      Cache.clear ()
-
-    let has_local_changes () = Direct.LocalChanges.has_local_changes ()
-  end
 end

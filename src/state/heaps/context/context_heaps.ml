@@ -10,7 +10,8 @@ open Utils_js
 (****************** shared context heap *********************)
 
 module SigContextHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = Context.sig_t
 
@@ -29,7 +30,8 @@ let add_sig ~audit cx =
   add_sig_context ~audit cx_file (Context.sig_cx cx)
 
 module SigHashHeap =
-  SharedMem_js.NoCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.NoCache
+    (File_key)
     (struct
       type t = Xx.hash
 
@@ -39,7 +41,8 @@ module SigHashHeap =
     end)
 
 module LeaderHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = File_key.t
 

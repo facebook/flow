@@ -9,7 +9,8 @@
 (* Maps module names to the filenames which provide those modules             *)
 
 module NameHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (Modulename.Key)
+  SharedMem_js.WithCache
+    (Modulename.Key)
     (struct
       type t = File_key.t
 
@@ -54,7 +55,8 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   { resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = resolved_requires
 
@@ -76,7 +78,8 @@ type info = {
 }
 
 module InfoHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = info
 
@@ -92,7 +95,8 @@ module InfoHeap =
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey)
+  SharedMem_js.WithCache
+    (StringKey)
     (struct
       type t = (Package_json.t, unit) result
 
@@ -103,7 +107,8 @@ module PackageHeap =
 
 (* shared heap for package.json directories by package name *)
 module ReversePackageHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey)
+  SharedMem_js.WithCache
+    (StringKey)
     (struct
       type t = string
 

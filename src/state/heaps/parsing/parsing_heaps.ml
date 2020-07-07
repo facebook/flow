@@ -10,7 +10,8 @@ open Parsing_heaps_exceptions
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
 
@@ -20,7 +21,8 @@ module ASTHeap =
     end)
 
 module SigASTHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = (ALoc.t, ALoc.t) Flow_ast.Program.t
 
@@ -30,7 +32,8 @@ module SigASTHeap =
     end)
 
 module SigASTALocTableHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = ALoc.table
 
@@ -94,7 +97,8 @@ let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 let add_source_aloc file ast = (source_adder_aloc (Some file))#program ast
 
 module DocblockHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = Docblock.t
 
@@ -104,7 +108,8 @@ module DocblockHeap =
     end)
 
 module FileSigHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = File_sig.With_Loc.t
 
@@ -114,7 +119,8 @@ module FileSigHeap =
     end)
 
 module SigFileSigHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = File_sig.With_ALoc.t
 
@@ -125,7 +131,8 @@ module SigFileSigHeap =
 
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       (* In the future I imagine a system like this:
        *
