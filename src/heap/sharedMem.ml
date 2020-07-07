@@ -90,8 +90,6 @@ external hash_slots : unit -> int = "hh_hash_slots"
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
-external debug_removed_count : unit -> int = "hh_removed_count"
-
 let init_done () = EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {

@@ -322,8 +322,6 @@ static size_t used_heap_size(void) {
   return info->heap - info->heap_init;
 }
 
-static long removed_count = 0;
-
 /* Expose so we can display diagnostics */
 CAMLprim value hh_used_heap_size(void) {
   return Val_long(used_heap_size());
@@ -1197,11 +1195,5 @@ void hh_remove(value key) {
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(entry->header));
   info->wasted_heap_size += slot_size;
   hashtbl[slot].addr = NULL_ADDR;
-  removed_count++;
   info->hcounter_filled -= 1;
-}
-
-CAMLprim value hh_removed_count(value unit) {
-    CAMLparam1(unit);
-    return Val_long(removed_count);
 }

@@ -155,5 +155,3 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
 end
 
 val debug_value_size : Obj.t -> int
-
-val debug_removed_count : unit -> int
