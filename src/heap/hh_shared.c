@@ -1085,34 +1085,6 @@ static unsigned int find_slot(value key) {
   }
 }
 
-/*
-hh_mem_inner
- 1 -- key exists and is associated with non-zero data
--1 -- key is not present in the hash table at all
--2 -- key is present in the hash table but associated with zero-valued data.
-      This means that the data has been explicitly deleted.
-
-Note that the only valid return values are {1,-1,-2}. In order to use the result
-of this function in an "if" statement an explicit test must be performed.
-*/
-int hh_mem_inner(value key) {
-  check_should_exit();
-  unsigned int slot = find_slot(key);
-  _Bool good_hash = hashtbl[slot].hash == get_hash(key);
-  _Bool non_null_addr = hashtbl[slot].addr != NULL_ADDR;
-  if (good_hash && non_null_addr) {
-    return 1;
-  }
-  else if (good_hash) {
-    // if the hash matches and the key is zero
-    // then we've removed the key.
-    return -2;
-  } else {
-    // otherwise the key is simply absent
-    return -1;
-  }
-}
-
 /*****************************************************************************/
 /* Returns true if the key is present. We need to check both the hash and
  * the address of the data. This is due to the fact that we remove by setting
@@ -1122,20 +1094,9 @@ int hh_mem_inner(value key) {
 /*****************************************************************************/
 value hh_mem(value key) {
   CAMLparam1(key);
-  CAMLreturn(Val_bool(hh_mem_inner(key) == 1));
-}
-
-CAMLprim value hh_mem_status(value key) {
-  CAMLparam1(key);
-  int res = hh_mem_inner(key);
-  switch (res) {
-    case 1:
-    case -1:
-    case -2:
-      CAMLreturn(Val_int(res));
-    default:
-      caml_failwith("Unreachable case: result must be 1 or -1 or -2");
-  }
+  check_should_exit();
+  helt_t elt = hashtbl[find_slot(key)];
+  CAMLreturn(Val_bool(elt.hash == get_hash(key) && elt.addr != NULL_ADDR));
 }
 
 /*****************************************************************************/
