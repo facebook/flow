@@ -95,6 +95,7 @@ module Opts = struct
     shm_heap_size: int;
     shm_log_level: int;
     strict_es6_import_export: bool;
+    strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     temp_dir: string;
     traces: int;
@@ -203,6 +204,7 @@ module Opts = struct
       (* 25 gigs *)
       shm_log_level = 0;
       strict_es6_import_export = false;
+      strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
       traces = 0;
@@ -380,6 +382,17 @@ module Opts = struct
       ~init:(fun opts -> { opts with haste_paths_includes = [] })
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
+
+  let strict_es6_import_export_excludes_parser =
+    string
+      ~init:(fun opts -> { opts with strict_es6_import_export_excludes = [] })
+      ~multiple:true
+      (fun opts v ->
+        Ok
+          {
+            opts with
+            strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
+          })
 
   let parsers =
     [
@@ -577,6 +590,7 @@ module Opts = struct
         types_first_max_rss_bytes_for_check_per_worker_parser );
       ( "experimental.strict_es6_import_export",
         boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
+      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ( "experimental.module.automatic_require_default",
         boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
       ( "experimental.facebook_module_interop",
@@ -1215,6 +1229,8 @@ let shm_heap_size c = c.options.Opts.shm_heap_size
 let shm_log_level c = c.options.Opts.shm_log_level
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
+
+let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_export_excludes
 
 let suppress_types c = c.options.Opts.suppress_types
 

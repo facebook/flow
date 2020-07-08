@@ -170,6 +170,8 @@ val shm_log_level : config -> int
 
 val strict_es6_import_export : config -> bool
 
+val strict_es6_import_export_excludes : config -> string list
+
 val suppress_types : config -> SSet.t
 
 val temp_dir : config -> string

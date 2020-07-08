@@ -99,3 +99,27 @@ let well_formed_exports_enabled options file =
     let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
     let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
     List.exists (fun r -> String_utils.is_substring r file_str) paths
+
+(* Iterate over the files in `ctx_nel`, applying function `f` to a file iff:
+ *  - Flowconfig flag 'strict_es6_import_export' is set to true, and
+ *  - There does not exist an 'strict_es6_import_export_excludes=PATH' for which
+ *    the file is within PATH
+ *)
+let iter_strict_es6_import_export ~f options ctx_nel =
+  if Options.strict_es6_import_export options then
+    let root = Options.root options in
+    let excluded_paths =
+      options.Options.opt_strict_es6_import_export_excludes
+      |> Base.List.map ~f:(Files.expand_project_root_token_to_regexp ~root)
+    in
+    Nel.iter
+      (fun (ctx, ast, _) ->
+        let file_key = Context.file ctx in
+        let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
+        if
+          Base.List.for_all
+            ~f:(fun excluded -> not (Str.string_match excluded file_str 0))
+            excluded_paths
+        then
+          f ast)
+      ctx_nel

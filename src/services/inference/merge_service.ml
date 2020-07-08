@@ -161,8 +161,10 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       None
     | (Options.TypesFirst, Context.Checking)
     | (Options.Classic, _) ->
-      if Options.strict_es6_import_export options then
-        Nel.iter (fun (_, ast, _) -> Strict_es6_import_export.detect_errors full_cx ast) cx_nel;
+      Inference_utils.iter_strict_es6_import_export
+        ~f:(Strict_es6_import_export.detect_errors full_cx)
+        options
+        cx_nel;
       Some
         (Nel.fold_left
            (fun acc (ctx, _, typed_ast) ->

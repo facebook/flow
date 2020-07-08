@@ -112,6 +112,7 @@ type t = {
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
   opt_strict_es6_import_export: bool;
+  opt_strict_es6_import_export_excludes: string list;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
   opt_suppress_types: SSet.t;
