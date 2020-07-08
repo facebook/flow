@@ -59,6 +59,12 @@ val expression :
 val statement :
   ?pretty_semicolon:bool -> opts:opts -> (Loc.t, Loc.t) Flow_ast.Statement.t -> Layout.layout_node
 
+val statement_list :
+  ?pretty_semicolon:bool ->
+  opts:opts ->
+  (Loc.t, Loc.t) Flow_ast.Statement.t list ->
+  Layout.layout_node list
+
 val object_property :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node
 

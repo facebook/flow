@@ -42,12 +42,27 @@ let layout_of_node ~opts = function
     end
   | JSXIdentifier id -> Js_layout_generator.jsx_identifier id
 
-let text_of_node ~opts =
-  layout_of_node ~opts
+let text_of_layout =
   (* TODO if we are reprinting the entire program we probably want this to be
    * false. Add some tests and make sure we get it right. *)
-  %> Pretty_printer.print ~source_maps:None ~skip_endline:true
-  %> Source.contents
+  Pretty_printer.print ~source_maps:None ~skip_endline:true %> Source.contents
+
+let text_of_node ~opts = layout_of_node ~opts %> text_of_layout
+
+let is_statement_list =
+  Base.List.for_all ~f:(function
+      | Statement _ -> true
+      | _ -> false)
+
+let text_of_statement_list ~opts nodes =
+  let stmts =
+    Base.List.filter_map
+      ~f:(function
+        | Statement stmt -> Some stmt
+        | _ -> None)
+      nodes
+  in
+  text_of_layout (Layout.fuse (Js_layout_generator.statement_list ~opts stmts))
 
 let text_of_nodes ~opts ~separator ~leading_separator nodes =
   let sep =
@@ -63,9 +78,19 @@ let text_of_nodes ~opts ~separator ~leading_separator nodes =
 
 let edit_of_change ~opts = function
   | (loc, Replace (_, new_node)) -> (loc, text_of_node ~opts new_node)
+  | (loc, Insert { items; _ }) when is_statement_list items ->
+    (loc, text_of_statement_list ~opts items)
   | (loc, Insert { items; separator; leading_separator }) ->
     (loc, text_of_nodes ~opts ~separator ~leading_separator items)
   | (loc, Delete _) -> (loc, "")
 
-let edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
-  List.map (edit_of_change ~opts) changes
+let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
+  match changes with
+  | [] -> []
+  (* Detect the case when a statement list was broken up into a Replace with a statement
+     followed by an Insert containing a statement list. Reconstruct the original statement
+     list to print so that whitespace can be preserved between the first and second statements. *)
+  | (loc1, Replace (_, Statement item)) :: (loc2, Insert { items; _ }) :: tl
+    when Loc.equal (Loc.end_loc loc1) loc2 && is_statement_list items ->
+    (loc1, text_of_statement_list ~opts (Statement item :: items)) :: edits_of_changes ~opts tl
+  | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl
