@@ -1,3 +1,15 @@
+### 0.129.0
+
+Likely to cause new Flow errors:
+* $Keys<...> will no longer include non-own instance properties, matching the behavior of Object.keys. 
+
+Notable bug fixes:
+* Fixed an incremental rechecking issue caused by the hashes of type destructors
+
+Misc:
+* Updated the type of `cast` and `isValid` to take in optional representation type for enums
+* Added missing links to Medium articles from flow.org (thanks @jamesisaac)
+
 ### 0.128.0
 
 New Features:
