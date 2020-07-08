@@ -44,10 +44,10 @@ val input_value : 'a in_channel -> 'b
    to Unix specifics parts.
 
    This module provides a mechanism to "spawn" new instance of the
-   current program, but with a custom entry point (e.g. Slaves,
-   DfindServer, ...). Then, alternate entry points should not depend
-   on global references that may not have been (re)initialised in the
-   new process.
+   current program, but with a custom entry point (e.g. DfindServer,
+   ...). Then, alternate entry points should not depend on global
+   references that may not have been (re)initialised in the new
+   process.
 
    All required data must be passed through the typed channels.
    associated to the spawned process.
