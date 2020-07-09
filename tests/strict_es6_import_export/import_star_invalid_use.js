@@ -22,8 +22,19 @@ let Foo4: Foo.TypeExport;
 
 // Destructuring is allowed
 const {named1: renamed1} = Foo;
+const {'named1': renamed2} = Foo;
 let x = 0;
 ({named1: x}) = Foo;
+({'named1': x}) = Foo;
 
 // Error on invalid use of module object in destructuring
 const {y = Foo} = Foo;
+
+// Error on use of rest element in destructuring
+const {named1: renamed3, ...rest} = Foo;
+let z = {};
+({named1: x, ...z}) = Foo;
+
+// Error on use of computed property in destructuring pattern
+const {named1: renamed4, [1 + 2]: computed1} = Foo;
+({named1: x, [1 + 2]: z}) = Foo;

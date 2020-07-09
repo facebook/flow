@@ -266,14 +266,74 @@ References:
               ^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:31:12
 
 `import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
 [invalid-import-star-use]
 
-   import_star_invalid_use.js:29:12
-   29| const {y = Foo} = Foo;
+   import_star_invalid_use.js:31:12
+   31| const {y = Foo} = Foo;
                   ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:34:37
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:34:37
+   34| const {named1: renamed3, ...rest} = Foo;
+                                           ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:36:23
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:36:23
+   36| ({named1: x, ...z}) = Foo;
+                             ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:39:48
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:39:48
+   39| const {named1: renamed4, [1 + 2]: computed1} = Foo;
+                                                      ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:40:29
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:40:29
+   40| ({named1: x, [1 + 2]: z}) = Foo;
+                                   ^^^
 
 References:
    import_star_invalid_use.js:3:8
@@ -404,4 +464,4 @@ References:
 
 
 
-Found 34 errors
+Found 38 errors

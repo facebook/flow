@@ -264,6 +264,17 @@ class import_export_visitor ~cx ~scope_info ~declarations =
           | _ -> None)
         properties
 
+    method is_simple_object_destructuring object_pattern =
+      let open Ast.Pattern.Object in
+      let { properties; _ } = object_pattern in
+      Base.List.for_all
+        ~f:(fun prop ->
+          let open Property in
+          match prop with
+          | Ast.Pattern.Object.Property (_, { key = Identifier _ | Literal _; _ }) -> true
+          | _ -> false)
+        properties
+
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
       match decl with
@@ -280,9 +291,12 @@ class import_export_visitor ~cx ~scope_info ~declarations =
             | Some default_loc -> this#add_bad_default_import_access_error default_loc import_star
             | None -> ()
           end;
-          (* Do not recurse into init since init is valid use of module object *)
-          ignore (this#variable_declarator_pattern ~kind id);
-          decl
+          if this#is_simple_object_destructuring object_pattern then begin
+            (* Do not recurse into init if init is valid use of module object *)
+            ignore (this#variable_declarator_pattern ~kind id);
+            decl
+          end else
+            super#variable_declarator ~kind decl
         | None -> super#variable_declarator ~kind decl)
       | _ -> super#variable_declarator ~kind decl
 
@@ -302,7 +316,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
           this#add_bad_default_import_access_error default_loc import_star;
           assign
         (* Do not recurse since RHS is a valid use of module object *)
-        | (None, Some _) -> assign
+        | (None, Some _) when this#is_simple_object_destructuring object_pattern -> assign
         | _ -> super#assignment loc assign)
       | _ -> super#assignment loc assign
 
