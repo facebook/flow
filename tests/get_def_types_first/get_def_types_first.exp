@@ -1,0 +1,4 @@
+requires.js:5:4
+Flags: --strip-root --pretty
+{"path":"module_exports.js","line":3,"endline":3,"start":1,"end":17}
+

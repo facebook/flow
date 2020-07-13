@@ -176,16 +176,16 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
     in
     extract_member_def ~reader cx obj_t name
   | Get_def_request.Type v ->
-    let loc =
-      match v with
-      | Type.OpenT _ ->
-        (match Flow_js.possible_types_of_type cx v with
-        | [t] -> Def (TypeUtil.def_loc_of_t t |> loc_of_aloc ~reader)
+    let rec loop = function
+      | Type.OpenT _ as t ->
+        (match Flow_js.possible_types_of_type cx t with
+        | [t'] -> loop t'
         | [] -> Def_error "No possible types"
-        | _ -> Def_error "More than one possible type")
-      | _ -> Def (TypeUtil.def_loc_of_t v |> loc_of_aloc ~reader)
+        | _ :: _ -> Def_error "More than one possible type")
+      | Type.AnnotT (_, t, _) -> loop t
+      | t -> Def (TypeUtil.def_loc_of_t t |> loc_of_aloc ~reader)
     in
-    Done loc
+    Done (loop v)
   | Get_def_request.Require ((source_loc, name), require_loc) ->
     let module_t = Context.find_require cx source_loc |> Members.resolve_type cx in
     (* function just so we don't do the work unless it's actually needed. *)
