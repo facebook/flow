@@ -562,3 +562,5 @@ end = struct
 
   let add_file_hash = FileHashHeap.add
 end
+
+let add_aloc_table = SigASTALocTableHeap.add
