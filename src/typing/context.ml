@@ -106,6 +106,8 @@ type sig_t = {
 
 type component_t = {
   sig_cx: sig_t;
+  (* mapping from keyed alocs to concrete locations *)
+  aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
   mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
@@ -178,13 +180,6 @@ type t = {
   ccx: component_t;
   file: File_key.t;
   phase: phase;
-  (* Tables for the current component (cycle) *)
-  aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
-  (* Reverse lookup table for the current file. Unlike the aloc_tables, we only
-     store the rev_table for the leader file, rather than the whole component.
-     We only need this table during the check phase, when we are checking single
-     files, so storing the rev table for the whole component would be a waste
-     of space/ *)
   rev_aloc_table: ALoc.reverse_table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
@@ -285,9 +280,10 @@ let make_sig () =
     module_map = SMap.empty;
   }
 
-let make_ccx sig_cx =
+let make_ccx sig_cx aloc_tables =
   {
     sig_cx;
+    aloc_tables;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
@@ -321,12 +317,11 @@ let make_ccx sig_cx =
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make ccx metadata file aloc_tables rev_aloc_table module_ref phase =
+let make ccx metadata file rev_aloc_table module_ref phase =
   {
     ccx;
     file;
     phase;
-    aloc_tables;
     rev_aloc_table;
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
@@ -421,7 +416,7 @@ let exact_by_default cx = cx.metadata.exact_by_default
 
 let file cx = cx.file
 
-let aloc_tables cx = cx.aloc_tables
+let aloc_tables cx = cx.ccx.aloc_tables
 
 let find_props cx id =
   try Type.Properties.Map.find id cx.ccx.sig_cx.property_maps

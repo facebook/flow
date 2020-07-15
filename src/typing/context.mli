@@ -105,17 +105,10 @@ type subst_cache_err =
 
 val make_sig : unit -> sig_t
 
-val make_ccx : sig_t -> component_t
+val make_ccx : sig_t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> component_t
 
 val make :
-  component_t ->
-  metadata ->
-  File_key.t ->
-  ALoc.table Lazy.t Utils_js.FilenameMap.t ->
-  ALoc.reverse_table Lazy.t ->
-  string ->
-  phase ->
-  t
+  component_t -> metadata -> File_key.t -> ALoc.reverse_table Lazy.t -> string -> phase -> t
 
 val metadata_of_options : Options.t -> metadata
 

@@ -95,17 +95,9 @@ let load_lib_files
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
-             let aloc_table = Utils_js.FilenameMap.empty in
              let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
              let cx =
-               Context.make
-                 ccx
-                 metadata
-                 lib_file
-                 aloc_table
-                 rev_table
-                 Files.lib_module_ref
-                 Context.Checking
+               Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
              in
              let syms =
                Type_inference_js.infer_lib_file
@@ -193,17 +185,16 @@ let get_master_cx root =
     sig_cx
 
 let init_builtins filenames =
+  let aloc_tables = Utils_js.FilenameMap.empty in
   let root = Path.dummy_path in
   let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx in
+  let ccx = Context.make_ccx sig_cx aloc_tables in
   let master_cx =
-    let aloc_table = Utils_js.FilenameMap.empty in
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
     Context.make
       ccx
       (stub_metadata ~root ~checked:false)
       File_key.Builtins
-      aloc_table
       rev_table
       Files.lib_module_ref
       Context.Checking
