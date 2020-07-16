@@ -1222,7 +1222,9 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
         else
           options_flags.types_first || FlowConfig.enforce_well_formed_exports flowconfig );
       opt_enforce_well_formed_exports_includes =
-        FlowConfig.enforce_well_formed_exports_includes flowconfig;
+        Base.List.map
+          ~f:(Files.expand_project_root_token ~root)
+          (FlowConfig.enforce_well_formed_exports_includes flowconfig);
       opt_enums = FlowConfig.enums flowconfig;
       opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
       opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
@@ -1242,8 +1244,14 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
       opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
       opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
-      opt_haste_paths_excludes = FlowConfig.haste_paths_excludes flowconfig;
-      opt_haste_paths_includes = FlowConfig.haste_paths_includes flowconfig;
+      opt_haste_paths_excludes =
+        Base.List.map
+          ~f:(Files.expand_project_root_token ~root)
+          (FlowConfig.haste_paths_excludes flowconfig);
+      opt_haste_paths_includes =
+        Base.List.map
+          ~f:(Files.expand_project_root_token ~root)
+          (FlowConfig.haste_paths_includes flowconfig);
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
       opt_file_options = file_options;
       opt_lint_severities = lint_severities;
@@ -1270,7 +1278,9 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
       opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
       opt_strict_es6_import_export_excludes =
-        FlowConfig.strict_es6_import_export_excludes flowconfig;
+        Base.List.map
+          ~f:(Files.expand_project_root_token ~root)
+          (FlowConfig.strict_es6_import_export_excludes flowconfig);
       opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
     })
 

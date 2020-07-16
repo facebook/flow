@@ -129,6 +129,4 @@ val imaginary_realpath : string -> string
 val canonicalize_filenames :
   cwd:string -> handle_imaginary:(string -> string) -> string list -> string list
 
-val expand_project_root_token_to_string : root:Path.t -> string -> string
-
-val expand_project_root_token_to_regexp : root:Path.t -> string -> Str.regexp
+val expand_project_root_token : root:Path.t -> string -> string

@@ -487,18 +487,15 @@ module Haste : MODULE_SYSTEM = struct
       let file = Sys_utils.normalize_filename_dir_sep file in
       Str.string_match mock_path file 0
 
-  let expand_project_root_token options str =
-    Files.expand_project_root_token_to_regexp ~root:(Options.root options) str
-
   let is_haste_file =
     let matched_haste_paths_includes options name =
       List.exists
-        (fun r -> Str.string_match (expand_project_root_token options r) name 0)
+        (fun r -> Str.string_match (Str.regexp r) name 0)
         (Options.haste_paths_includes options)
     in
     let matched_haste_paths_excludes options name =
       List.exists
-        (fun r -> Str.string_match (expand_project_root_token options r) name 0)
+        (fun r -> Str.string_match (Str.regexp r) name 0)
         (Options.haste_paths_excludes options)
     in
     fun options name ->

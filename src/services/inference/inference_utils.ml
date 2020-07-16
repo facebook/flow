@@ -77,8 +77,6 @@ let fold_included_well_formed_exports ~f options m acc =
     match options.Options.opt_enforce_well_formed_exports_includes with
     | [] -> Utils_js.FilenameMap.fold f m acc
     | paths ->
-      let root = Options.root options in
-      let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
       Utils_js.FilenameMap.fold
         (fun file v b ->
           let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
@@ -95,8 +93,6 @@ let well_formed_exports_enabled options file =
   match options.Options.opt_enforce_well_formed_exports_includes with
   | [] -> true
   | paths ->
-    let root = Options.root options in
-    let paths = Base.List.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
     let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
     List.exists (fun r -> String_utils.is_substring r file_str) paths
 
@@ -107,19 +103,13 @@ let well_formed_exports_enabled options file =
  *)
 let iter_strict_es6_import_export ~f options ctx_nel =
   if Options.strict_es6_import_export options then
-    let root = Options.root options in
-    let excluded_paths =
-      options.Options.opt_strict_es6_import_export_excludes
-      |> Base.List.map ~f:(Files.expand_project_root_token_to_regexp ~root)
+    let excludes =
+      Base.List.map ~f:Str.regexp options.Options.opt_strict_es6_import_export_excludes
     in
     Nel.iter
       (fun (ctx, ast, _) ->
         let file_key = Context.file ctx in
         let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
-        if
-          Base.List.for_all
-            ~f:(fun excluded -> not (Str.string_match excluded file_str 0))
-            excluded_paths
-        then
-          f ast)
+        let excluded = Base.List.exists ~f:(fun r -> Str.string_match r file_str 0) excludes in
+        if not excluded then f ast)
       ctx_nel
