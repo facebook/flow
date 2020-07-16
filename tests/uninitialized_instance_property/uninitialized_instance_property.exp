@@ -816,6 +816,20 @@ It is unsafe to call a property function in the constructor before all class pro
             ^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:664:29
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   test.js:664:29
+   664|     this.f = x => this.p += x;
+                                    ^
+
+References:
+   test.js:665:12
+   665|     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
+                   ^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:665:5
 
 It is unsafe to call a property function in the constructor before all class properties are definitely initialized.
@@ -927,6 +941,20 @@ It is unsafe to call a property function in the constructor before all class pro
 
    756|     this.f(); // PropertyFunctionCallBeforeEverythingInitialized
             ^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:763:22
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   test.js:763:22
+   763|   f = x => this.p += x;
+                             ^
+
+References:
+   test.js:765:12
+   765|     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
+                   ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:765:5
@@ -1066,4 +1094,4 @@ It is unsafe to read from a class property before it is definitely initialized. 
 
 
 
-Found 120 errors
+Found 122 errors
