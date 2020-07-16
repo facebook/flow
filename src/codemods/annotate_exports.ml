@@ -56,7 +56,6 @@ module SignatureVerification = struct
     | WithErrors of Error.kind list * Ty.t
 
   let supported_error_kind cctx norm_opts ~max_type_size acc loc =
-    let loc = ALoc.to_loc_exn loc in
     let add_ty ty =
       (* NOTE simplify before validating to avoid flagging spurious empty's,
        * eg. empty's that will be simplified away as parts of unions.
@@ -87,13 +86,12 @@ module SignatureVerification = struct
 
   let unsupported_error_kind ~default_any acc loc =
     if default_any then
-      let loc = ALoc.to_loc_exn loc in
       let ty_entry = WithErrors ([Error.Unsupported_error_kind], Ty.explicit_any) in
       LMap.add loc ty_entry acc
     else
       acc
 
-  let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size file_sig =
+  let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size ast =
     let preserve_inferred_literal_types =
       Hardcoded_Ty_Fixes.PreserveLiterals.(
         match preserve_literals with
@@ -117,34 +115,48 @@ module SignatureVerification = struct
         max_depth = None;
       }
     in
-    let tolerable_errors = file_sig.File_sig.With_ALoc.tolerable_errors in
-    let (total_errors, ty_map) =
-      List.fold_left
-        (fun (tot_errors, acc) err ->
+    let { Codemod_context.Typed.options; docblock; _ } = cctx in
+    let module_ref_prefix = Options.haste_module_ref_prefix options in
+    match File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix with
+    | Error _ -> (0, LMap.empty)
+    | Ok exports_info ->
+      let signature = Signature_builder.program ast ~exports_info in
+      let (sig_errors, _, _) =
+        let prevent_munge =
+          let should_munge = Options.should_munge_underscores options in
+          Docblock.preventMunge docblock || not should_munge
+        in
+        let facebook_fbt = Options.facebook_fbt options in
+        let ignore_static_propTypes = true in
+        let facebook_keyMirror = true in
+        Signature_builder.Signature.verify
+          ~prevent_munge
+          ~facebook_fbt
+          ~ignore_static_propTypes
+          ~facebook_keyMirror
+          signature
+      in
+      Signature_builder_deps.With_Loc.PrintableErrorSet.fold
+        (fun err (tot_errors, acc) ->
+          let open Signature_error in
           match err with
-          | File_sig.With_ALoc.SignatureVerificationError sve ->
-            Signature_error.(
-              (match sve with
-              | ExpectedAnnotation (loc, _)
-              | UnexpectedExpression (loc, _)
-              | UnexpectedObjectKey (loc, _)
-              | UnexpectedObjectSpread (loc, _)
-              | EmptyArray loc
-              | EmptyObject loc
-              | UnexpectedArraySpread (loc, _) ->
-                (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
-              | ExpectedSort (_, _, loc)
-              | InvalidTypeParamUse loc
-              | SketchyToplevelDef loc
-              | UnexpectedArrayHole loc
-              | UnsupportedPredicateExpression loc
-              | TODO (_, loc) ->
-                (tot_errors + 1, unsupported_error_kind ~default_any acc loc)))
-          | _ -> (tot_errors, acc))
+          | ExpectedAnnotation (loc, _)
+          | UnexpectedExpression (loc, _)
+          | UnexpectedObjectKey (loc, _)
+          | UnexpectedObjectSpread (loc, _)
+          | EmptyArray loc
+          | EmptyObject loc
+          | UnexpectedArraySpread (loc, _) ->
+            (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
+          | ExpectedSort (_, _, loc)
+          | InvalidTypeParamUse loc
+          | SketchyToplevelDef loc
+          | UnexpectedArrayHole loc
+          | UnsupportedPredicateExpression loc
+          | TODO (_, loc) ->
+            (tot_errors + 1, unsupported_error_kind ~default_any acc loc))
+        sig_errors
         (0, LMap.empty)
-        tolerable_errors
-    in
-    (total_errors, ty_map)
 end
 
 module Queries = struct
@@ -201,14 +213,6 @@ end
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let { Codemod_context.Typed.file; file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
-  let (total_errors, sig_verification_loc_tys) =
-    SignatureVerification.collect_annotations
-      cctx
-      ~preserve_literals
-      ~default_any
-      ~max_type_size
-      file_sig
-  in
   let metadata = Context.docblock_overrides docblock metadata in
   let { Context.strict; strict_local; _ } = metadata in
   let lint_severities =
@@ -226,6 +230,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
   let flowfixme_ast = Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default in
   object (this)
     inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
+
+    (* initialized in this#program *)
+    val mutable sig_verification_loc_tys = LMap.empty
 
     val mutable added_annotations_locmap = LMap.empty
 
@@ -532,6 +539,15 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | _ -> this#function_ loc expr
 
     method! program prog =
+      let (total_errors, sig_verification_loc_tys_) =
+        SignatureVerification.collect_annotations
+          cctx
+          ~preserve_literals
+          ~default_any
+          ~max_type_size
+          prog
+      in
+      sig_verification_loc_tys <- sig_verification_loc_tys_;
       if LMap.is_empty sig_verification_loc_tys then
         (* short when no signature *)
         prog
