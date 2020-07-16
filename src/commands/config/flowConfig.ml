@@ -359,6 +359,8 @@ module Opts = struct
     boolean (fun opts v ->
         if v && opts.enforce_well_formed_exports = Some false then
           Error "Cannot set it to \"true\" when \"well_formed_exports\" is set to \"false\"."
+        else if v && opts.enforce_well_formed_exports_includes <> [] then
+          Error "Cannot set it to \"true\" when \"well_formed_exports.includes\" is set."
         else
           Ok { opts with types_first = v })
 

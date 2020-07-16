@@ -37,3 +37,9 @@ well_formed_exports=false
 Check with --types-first
 
 Cannot start in types-first mode when "well_formed_exports" is set to false.
+
+In .flowconfig:
+well_formed_exports=true
+well_formed_exports.includes=foo
+types_first=true
+.flowconfig:4 Error setting value for "types_first". Cannot set it to "true" when "well_formed_exports.includes" is set.
