@@ -63,8 +63,7 @@ type t = {
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
-  opt_enforce_well_formed_exports: bool;
-  opt_enforce_well_formed_exports_includes: string list;
+  opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_class_static_fields: esproposal_feature_mode;

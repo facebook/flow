@@ -1128,11 +1128,8 @@ let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enforce_well_formed_exports c =
-  Base.Option.value ~default:false c.options.Opts.enforce_well_formed_exports
-  || c.options.Opts.types_first
-
-let well_formed_exports_set_explicitly c =
-  Base.Option.is_some c.options.Opts.enforce_well_formed_exports
+  c.options.Opts.types_first
+  || Base.Option.value ~default:false c.options.Opts.enforce_well_formed_exports
 
 let enforce_well_formed_exports_includes c = c.options.Opts.enforce_well_formed_exports_includes
 

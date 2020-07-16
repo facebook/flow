@@ -30,23 +30,8 @@ assert_exit "$EXIT_INVALID_FLOWCONFIG" "$FLOW" start . 2>&1
 
 echo ""
 echo "In .flowconfig:"
-echo "well_formed_exports=false"
-echo "Start with --types-first"
-echo ""
-mv .flowconfig.err3 .flowconfig
-assert_exit "$EXIT_USAGE" "$FLOW" start --types-first . 2>&1
-
-echo ""
-echo "In .flowconfig:"
-echo "well_formed_exports=false"
-echo "Check with --types-first"
-echo ""
-assert_exit "$EXIT_USAGE" "$FLOW" check --types-first . 2>&1
-
-echo ""
-echo "In .flowconfig:"
 echo "well_formed_exports=true"
 echo "well_formed_exports.includes=foo"
 echo "types_first=true"
-mv .flowconfig.err4 .flowconfig
+mv .flowconfig.err3 .flowconfig
 assert_exit "$EXIT_INVALID_FLOWCONFIG" "$FLOW" start --types-first . 2>&1

@@ -1168,6 +1168,19 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     else
       Options.Classic
   in
+  let opt_enforce_well_formed_exports =
+    if flags.types_first then
+      Some []
+    else if FlowConfig.enforce_well_formed_exports flowconfig then
+      let paths =
+        Base.List.map
+          ~f:(Files.expand_project_root_token ~root)
+          (FlowConfig.enforce_well_formed_exports_includes flowconfig)
+      in
+      Some paths
+    else
+      None
+  in
   let opt_abstract_locations =
     flags.abstract_locations || FlowConfig.abstract_locations flowconfig
   in
@@ -1205,22 +1218,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
-    opt_enforce_well_formed_exports =
-      ( if
-        flags.types_first
-        && FlowConfig.well_formed_exports_set_explicitly flowconfig
-        && not (FlowConfig.enforce_well_formed_exports flowconfig)
-      then
-        FlowExitStatus.(
-          exit
-            ~msg:"Cannot start in types-first mode when \"well_formed_exports\" is set to false."
-            Commandline_usage_error)
-      else
-        flags.types_first || FlowConfig.enforce_well_formed_exports flowconfig );
-    opt_enforce_well_formed_exports_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.enforce_well_formed_exports_includes flowconfig);
+    opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
     opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
