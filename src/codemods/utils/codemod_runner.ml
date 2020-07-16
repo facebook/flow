@@ -8,7 +8,7 @@
 open Utils_js
 
 let log_input_files fileset =
-  Hh_logger.info
+  Hh_logger.debug
     "Running codemod on %d files:\n%s"
     (FilenameSet.cardinal fileset)
     (FilenameSet.elements fileset |> Base.List.map ~f:File_key.to_string |> String.concat "\n")
