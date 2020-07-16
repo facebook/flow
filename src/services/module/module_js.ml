@@ -487,44 +487,45 @@ module Haste : MODULE_SYSTEM = struct
       let file = Sys_utils.normalize_filename_dir_sep file in
       Str.string_match mock_path file 0
 
-  let is_haste_file =
-    let matched_haste_paths_includes options name =
-      List.exists
-        (fun r -> Str.string_match (Str.regexp r) name 0)
-        (Options.haste_paths_includes options)
+  let is_haste_file options =
+    let includes = lazy (Base.List.map ~f:Str.regexp (Options.haste_paths_includes options)) in
+    let excludes = lazy (Base.List.map ~f:Str.regexp (Options.haste_paths_excludes options)) in
+    let matches_includes name =
+      List.exists (fun r -> Str.string_match r name 0) (Lazy.force includes)
     in
-    let matched_haste_paths_excludes options name =
-      List.exists
-        (fun r -> Str.string_match (Str.regexp r) name 0)
-        (Options.haste_paths_excludes options)
+    let matches_excludes name =
+      List.exists (fun r -> Str.string_match r name 0) (Lazy.force excludes)
     in
-    fun options name ->
-      matched_haste_paths_includes options name && not (matched_haste_paths_excludes options name)
+    (fun name -> matches_includes name && not (matches_excludes name))
 
   let haste_name =
     let reduce_name name (regexp, template) = Str.global_replace regexp template name in
     (fun options name -> List.fold_left reduce_name name (Options.haste_name_reducers options))
 
-  let exported_module options file info =
-    match file with
-    | File_key.SourceFile _ ->
-      if is_mock file then
-        Modulename.String (short_module_name_of file)
-      else if Options.haste_use_name_reducers options then
-        (* Standardize \ to / in path for Windows *)
-        let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
-        if is_haste_file options normalized_file_name then
-          Modulename.String (haste_name options normalized_file_name)
-        else
-          Modulename.Filename file
-      else (
-        match Docblock.providesModule info with
-        | Some m -> Modulename.String m
-        | None -> Modulename.Filename file
-      )
-    | _ ->
-      (* Lib files, resource files, etc don't have any fancy haste name *)
-      Modulename.Filename file
+  let exported_module options =
+    let is_haste_file = is_haste_file options in
+    fun file info ->
+      match file with
+      | File_key.SourceFile _ ->
+        if is_mock file then
+          Modulename.String (short_module_name_of file)
+        else if Options.haste_use_name_reducers options then
+          (* Standardize \ to / in path for Windows *)
+          let normalized_file_name =
+            Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
+          in
+          if is_haste_file normalized_file_name then
+            Modulename.String (haste_name options normalized_file_name)
+          else
+            Modulename.Filename file
+        else (
+          match Docblock.providesModule info with
+          | Some m -> Modulename.String m
+          | None -> Modulename.Filename file
+        )
+      | _ ->
+        (* Lib files, resource files, etc don't have any fancy haste name *)
+        Modulename.Filename file
 
   let expanded_name ~reader r =
     match Str.split_delim (Str.regexp_string "/") r with
@@ -614,9 +615,9 @@ let get_module_system opts =
     module_system := Some system;
     system
 
-let exported_module ~options file info =
+let exported_module ~options =
   let module M = (val get_module_system options) in
-  M.exported_module options file info
+  M.exported_module options
 
 let imported_module ~options ~reader ~node_modules_containers file loc ?resolution_acc r =
   let module M = (val get_module_system options) in
@@ -954,14 +955,16 @@ end = struct
   (* Before and after inference, we add per-file module info to the shared heap
      from worker processes. Note that we wait to choose providers until inference
      is complete. *)
-  let add_parsed_info ~mutator ~reader ~options file =
+  let add_parsed_info ~options =
+    let exported_module = exported_module ~options in
     let force_check = Options.all options in
-    let docblock = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader file in
-    let module_name = exported_module ~options file docblock in
-    let checked = force_check || Docblock.is_flow docblock in
-    let info = { Module_heaps.module_name; checked; parsed = true } in
-    Module_heaps.Introduce_files_mutator.add_info mutator file info;
-    (file, module_name)
+    fun ~mutator ~reader file ->
+      let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
+      let module_name = exported_module file docblock in
+      let checked = force_check || Docblock.is_flow docblock in
+      let info = { Module_heaps.module_name; checked; parsed = true } in
+      Module_heaps.Introduce_files_mutator.add_info mutator file info;
+      (file, module_name)
 
   (* We need to track files that have failed to parse. This begins with
      adding tracking records for unparsed files to InfoHeap. They never
@@ -970,13 +973,15 @@ end = struct
      the module names of unparsed files, we're able to tell whether an
      unparsed file has been required/imported.
    *)
-  let add_unparsed_info ~mutator ~options (file, docblock) =
+  let add_unparsed_info ~options =
+    let exported_module = exported_module ~options in
     let force_check = Options.all options in
-    let module_name = exported_module ~options file docblock in
-    let checked = force_check || File_key.is_lib_file file || Docblock.is_flow docblock in
-    let info = { Module_heaps.module_name; checked; parsed = false } in
-    Module_heaps.Introduce_files_mutator.add_info mutator file info;
-    (file, module_name)
+    fun ~mutator ~reader:_ (file, docblock) ->
+      let module_name = exported_module file docblock in
+      let checked = force_check || File_key.is_lib_file file || Docblock.is_flow docblock in
+      let info = { Module_heaps.module_name; checked; parsed = false } in
+      Module_heaps.Introduce_files_mutator.add_info mutator file info;
+      (file, module_name)
 
   let calc_new_modules ~all_providers_mutator ~options file_module_assoc =
     (* all modules provided by newly parsed / unparsed files must be repicked *)
@@ -1004,6 +1009,7 @@ end = struct
   let introduce_files_generic
       ~add_parsed_info
       ~add_unparsed_info
+      ~mutator
       ~reader
       ~all_providers_mutator
       ~workers
@@ -1014,10 +1020,15 @@ end = struct
     let%lwt unparsed_file_module_assoc =
       MultiWorkerLwt.call
         workers
-        ~job:
-          (List.fold_left (fun file_module_assoc unparsed_file ->
-               let (filename, m) = add_unparsed_info ~options unparsed_file in
-               (filename, get_files ~reader ~audit:Expensive.ok filename m) :: file_module_assoc))
+        ~job:(fun acc files ->
+          let add_unparsed_info = add_unparsed_info ~options in
+          List.fold_left
+            (fun acc unparsed ->
+              let (file, m) = add_unparsed_info ~mutator ~reader unparsed in
+              let providers = get_files ~reader ~audit:Expensive.ok file m in
+              (file, providers) :: acc)
+            acc
+            files)
         ~neutral:[]
         ~merge:List.rev_append
         ~next:(MultiWorkerLwt.next workers unparsed)
@@ -1026,10 +1037,15 @@ end = struct
     let%lwt parsed_file_module_assoc =
       MultiWorkerLwt.call
         workers
-        ~job:
-          (List.fold_left (fun file_module_assoc parsed_file ->
-               let (filename, m) = add_parsed_info ~options parsed_file in
-               (filename, get_files ~reader ~audit:Expensive.ok filename m) :: file_module_assoc))
+        ~job:(fun acc files ->
+          let add_parsed_info = add_parsed_info ~options in
+          List.fold_left
+            (fun acc parsed ->
+              let (file, m) = add_parsed_info ~mutator ~reader parsed in
+              let providers = get_files ~reader ~audit:Expensive.ok file m in
+              (file, providers) :: acc)
+            acc
+            files)
         ~neutral:[]
         ~merge:List.rev_append
         ~next:(MultiWorkerLwt.next workers parsed)
@@ -1040,21 +1056,21 @@ end = struct
     Lwt.return (calc_new_modules ~all_providers_mutator ~options new_file_module_assoc)
 
   let introduce_files ~mutator ~reader =
-    let add_parsed_info = add_parsed_info ~mutator ~reader in
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let add_unparsed_info = add_unparsed_info ~mutator in
-    introduce_files_generic ~add_parsed_info ~add_unparsed_info ~reader
+    introduce_files_generic ~add_parsed_info ~add_unparsed_info ~mutator ~reader
 
-  let introduce_files_from_saved_state ~mutator =
-    let add_info_from_saved_state ~options:_ (filename, info) =
+  let introduce_files_from_saved_state =
+    let add_info_from_saved_state ~options:_ ~mutator ~reader:_ (filename, info) =
       Module_heaps.Introduce_files_mutator.add_info mutator filename info;
       (filename, info.Module_heaps.module_name)
     in
-    let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
-    introduce_files_generic
-      ~add_parsed_info:add_info_from_saved_state
-      ~add_unparsed_info:add_info_from_saved_state
-      ~reader
+    fun ~mutator ->
+      let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
+      introduce_files_generic
+        ~add_parsed_info:add_info_from_saved_state
+        ~add_unparsed_info:add_info_from_saved_state
+        ~mutator
+        ~reader
 end
 
 let introduce_files = IntroduceFiles.introduce_files
