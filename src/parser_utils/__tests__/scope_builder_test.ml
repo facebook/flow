@@ -177,6 +177,14 @@ let tests =
          >:: mk_scope_builder_all_uses_test
                "declare function foo(): void; foo()"
                [mk_loc (1, 17) (1, 20); mk_loc (1, 30) (1, 33)];
+         "import_named"
+         >:: mk_scope_builder_all_uses_test
+               "import {A} from 'A'; A()"
+               [mk_loc (1, 8) (1, 9); mk_loc (1, 21) (1, 22)];
+         "import_named_as"
+         >:: mk_scope_builder_all_uses_test
+               "const B = 1; import {B as A} from 'A'; A()"
+               [mk_loc (1, 6) (1, 7); mk_loc (1, 26) (1, 27); mk_loc (1, 39) (1, 40)];
          "export_named_function"
          >:: mk_scope_builder_all_uses_test
                "export function foo() {}; foo()"
@@ -197,6 +205,14 @@ let tests =
          >:: mk_scope_builder_all_uses_test
                "export default class Foo {} new Foo()"
                [mk_loc (1, 21) (1, 24); mk_loc (1, 32) (1, 35)];
+         "export_specifier"
+         >:: mk_scope_builder_all_uses_test
+               "const A = 1; export {A};"
+               [mk_loc (1, 6) (1, 7); mk_loc (1, 21) (1, 22)];
+         "export_specifier_as"
+         >:: mk_scope_builder_all_uses_test
+               "const A = 1; const B = 1; export {A as B};"
+               [mk_loc (1, 6) (1, 7); mk_loc (1, 19) (1, 20); mk_loc (1, 34) (1, 35)];
          "computed_property_destructuring"
          >:: mk_scope_builder_all_uses_test
                "const x = {}; const foo = ''; const {[foo]: bar} = x;"

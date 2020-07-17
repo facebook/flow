@@ -194,6 +194,23 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* don't rename the `foo` in `{ foo: ... }` *)
       method! object_key_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
 
+      (* don't rename the `foo` in `import {foo as bar} from ...;` *)
+      method! import_named_specifier
+          (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
+        let open Ast.Statement.ImportDeclaration in
+        (match specifier with
+        | { local = Some ident; _ } -> ignore (this#identifier ident)
+        | { local = None; remote = ident; _ } -> ignore (this#identifier ident));
+        specifier
+
+      (* don't rename the `bar` in `export {foo as bar}` *)
+      method! export_named_declaration_specifier
+          (spec : L.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+        let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+        let (_, { local; exported = _ }) = spec in
+        ignore (this#identifier local);
+        spec
+
       method! block loc (stmt : (L.t, L.t) Ast.Statement.Block.t) =
         let lexical_hoist = new lexical_hoister in
         let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
