@@ -1,4 +1,9 @@
-(* (c) Facebook, Inc. and its affiliates. Confidential and proprietary. *)
+(*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 
 (* This module is useful for converting an OCaml data structure into a compact,
  * table-based representation. This module supports cycles and ensures the
