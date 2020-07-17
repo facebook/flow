@@ -33,7 +33,7 @@ let verify_and_generate
   let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix:None in
   let signature =
     match exports_info with
-    | Ok exports_info -> Signature_builder.program ast ~exports_info
+    | Ok (exports_info, _) -> Signature_builder.program ast ~exports_info
     | Error _ -> failwith "Signature builder failure!"
   in
   Signature_builder.Signature.verify_and_generate
@@ -90,7 +90,7 @@ let mk_generated_signature_file_sig_test
         contents
     in
     match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
-    | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
+    | Ok (fs, _) -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
     | Error _ -> []
   in
   let printer v = "\n" ^ String.concat "\n" v in

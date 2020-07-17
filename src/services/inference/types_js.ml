@@ -248,8 +248,8 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
         (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
            and they'll hit the Parse_fail case instead when ~check_syntax:true *)
         (* TODO: docblock errors get dropped *)
-        let (ast, file_sig) = Parsing_service_js.basic parse_ok in
-        Lwt.return (Ok (ast, file_sig, parse_errors), info)
+        let (ast, file_sig, tolerable_errors) = Parsing_service_js.basic parse_ok in
+        Lwt.return (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
       | Parsing_service_js.Parse_fail fails ->
         let errors =
           match fails with
@@ -1211,11 +1211,11 @@ let merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig
       let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
       Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig))
 
-let errors_of_context ~options ~env ~lazy_table_of_aloc filename file_sig cx =
+let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx =
   let errors = Context.errors cx in
   let local_errors =
     if Inference_utils.well_formed_exports_enabled options filename then
-      File_sig.With_Loc.(file_sig.tolerable_errors)
+      tolerable_errors
       |> File_sig.abstractify_tolerable_errors
       |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
     else
@@ -1287,14 +1287,14 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   (* override docblock info *)
   let info = Docblock.set_flow_mode_for_ide_command info in
   match parse_result with
-  | Ok (ast, file_sig, _parse_errors) ->
+  | Ok (ast, file_sig, tolerable_errors, _parse_errors) ->
     let%lwt (cx, typed_ast) =
       merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
     in
     let (errors, warnings) =
-      errors_of_context ~options ~env ~lazy_table_of_aloc filename file_sig cx
+      errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx
     in
-    Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings)
+    Lwt.return (Some (cx, ast, file_sig, tolerable_errors, typed_ast), errors, warnings)
   | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
@@ -1310,11 +1310,11 @@ let type_contents ~options ~env ~profiling contents filename =
     (* override docblock info *)
     let info = Docblock.set_flow_mode_for_ide_command info in
     match parse_result with
-    | Ok (ast, file_sig, parse_errors) ->
+    | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
       let%lwt (cx, typed_ast) =
         merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
       in
-      Lwt.return (Ok (cx, info, file_sig, typed_ast, parse_errors))
+      Lwt.return (Ok (cx, info, file_sig, tolerable_errors, typed_ast, parse_errors))
     | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn

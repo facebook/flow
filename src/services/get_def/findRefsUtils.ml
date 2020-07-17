@@ -32,7 +32,7 @@ let compute_ast_result options file content =
     let result = do_parse ~parse_options ~info:docblock content file in
     match result with
     | Parse_ok (parse_ok, _parse_errors) ->
-      let (ast, file_sig) = basic parse_ok in
+      let (ast, file_sig, _tolerable_errors) = basic parse_ok in
       Ok (ast, file_sig, docblock)
     (* The parse should not fail; we have passed ~fail:false *)
     | Parse_fail _ -> Error "Parse unexpectedly failed"

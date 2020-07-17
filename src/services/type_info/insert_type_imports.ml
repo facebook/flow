@@ -232,7 +232,7 @@ end = struct
       None
 
   let from_exports_info ~use_mode exports_info loc remote_name =
-    let { module_sig; declare_modules = _; tolerable_errors = _; _ } = exports_info in
+    let { module_sig; declare_modules = _; _ } = exports_info in
     let { info; requires = _; module_kind = _; type_exports_named; type_exports_star = _ } =
       module_sig
     in
@@ -254,7 +254,7 @@ end = struct
   let from_exports_info_result ~use_mode exports_info_result loc remote_name =
     match exports_info_result with
     | Error (IndeterminateModuleType _) -> Error Error.Indeterminate_module_type
-    | Ok exports_info -> from_exports_info ~use_mode exports_info loc remote_name
+    | Ok (exports_info, _) -> from_exports_info ~use_mode exports_info loc remote_name
 
   (* Try to find out whether a given symbol is exported and what kind of import
    * we need to use for it. *)

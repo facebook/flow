@@ -11,7 +11,7 @@ open File_sig.With_Loc
 let visit ?parse_options ?(module_ref_prefix = None) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
   match program ~ast ~module_ref_prefix with
-  | Ok fsig -> fsig
+  | Ok (fsig, _) -> fsig
   | Error _ -> assert_failure "Unexpected error"
 
 let visit_err ?parse_options ?(module_ref_prefix = None) source =

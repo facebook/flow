@@ -473,7 +473,7 @@ let mk_signature_verifier_test
   let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix:None in
   let signature =
     match exports_info with
-    | Ok exports_info -> Signature_builder.program ast ~exports_info
+    | Ok (exports_info, _) -> Signature_builder.program ast ~exports_info
     | Error _ -> failwith "Signature builder failure!"
   in
   let (errors, remote_dependencies, env) =

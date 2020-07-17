@@ -7,23 +7,22 @@
 
 module LocSet = Loc_collections.LocSet
 
-let set_of_fixable_signature_verification_locations file_sig =
-  File_sig.With_Loc.(
-    Signature_error.(
-      let tolerable_errors = file_sig.File_sig.With_Loc.tolerable_errors in
-      let add_fixable_sig_ver_error acc = function
-        | SignatureVerificationError
-            ( ExpectedAnnotation (loc, _)
-            | UnexpectedExpression (loc, _)
-            | UnexpectedObjectKey (loc, _)
-            | UnexpectedObjectSpread (loc, _)
-            | EmptyArray loc
-            | EmptyObject loc
-            | UnexpectedArraySpread (loc, _) ) ->
-          LocSet.add loc acc
-        | _ -> acc
-      in
-      List.fold_left add_fixable_sig_ver_error LocSet.empty tolerable_errors))
+let set_of_fixable_signature_verification_locations tolerable_errors =
+  let open File_sig.With_Loc in
+  let open Signature_error in
+  let add_fixable_sig_ver_error acc = function
+    | SignatureVerificationError
+        ( ExpectedAnnotation (loc, _)
+        | UnexpectedExpression (loc, _)
+        | UnexpectedObjectKey (loc, _)
+        | UnexpectedObjectSpread (loc, _)
+        | EmptyArray loc
+        | EmptyObject loc
+        | UnexpectedArraySpread (loc, _) ) ->
+      LocSet.add loc acc
+    | _ -> acc
+  in
+  List.fold_left add_fixable_sig_ver_error LocSet.empty tolerable_errors
 
 let fix_signature_verification_error_at_loc ?remote_converter ~full_cx ~file_sig ~typed_ast =
   let open Insert_type in

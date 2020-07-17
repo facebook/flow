@@ -71,7 +71,7 @@ let parse_content file content =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
   match File_sig.program ~ast ~module_ref_prefix:None with
-  | Ok fsig -> Ok (ast, fsig)
+  | Ok (fsig, _) -> Ok (ast, fsig)
   | Error e -> Error e
 
 (* copied from Type_inference_js *)

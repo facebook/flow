@@ -11,7 +11,8 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-type t = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t
+type t =
+  (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * File_sig.With_Loc.tolerable_error list
 
 type aloc_t = (ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
 

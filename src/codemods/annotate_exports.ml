@@ -119,7 +119,7 @@ module SignatureVerification = struct
     let module_ref_prefix = Options.haste_module_ref_prefix options in
     match File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix with
     | Error _ -> (0, LMap.empty)
-    | Ok exports_info ->
+    | Ok (exports_info, _) ->
       let signature = Signature_builder.program ast ~exports_info in
       let (sig_errors, _, _) =
         let prevent_munge =

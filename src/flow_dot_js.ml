@@ -62,7 +62,7 @@ let parse_content file content =
     match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
     | Error e ->
       Error (Errors.ConcreteLocPrintableErrorSet.singleton (error_of_file_sig_error file e))
-    | Ok fsig -> Ok (ast, fsig)
+    | Ok (fsig, _tolerable_errors) -> Ok (ast, fsig)
 
 let array_of_list f lst = Array.of_list (List.map f lst)
 

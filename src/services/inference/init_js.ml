@@ -33,13 +33,14 @@ let parse_lib_file ~reader options file =
     in
     Lwt.return
       ( if not (FilenameMap.is_empty results.Parsing.parse_ok) then
+        let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
         (* Parsing_service_js.result only returns tolerable file sig errors, dropping parse
            errors. So there may actually have been some, but they were ignored.
            TODO: where do we surface lib parse errors? *)
         let parse_errors = [] in
-        Parsing.Parse_ok (Parsing.Classic (ast, file_sig), parse_errors)
+        Parsing.Parse_ok (Parsing.Classic (ast, file_sig, tolerable_errors), parse_errors)
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
@@ -73,8 +74,9 @@ let load_lib_files ~ccx ~options ~reader files =
              (match result with
              | Parsing.Parse_ok (parse_result, _parse_errors) ->
                (* parse_lib_file doesn't return any parse errors right now *)
-               let (ast, file_sig) = Parsing.basic parse_result in
+               let (ast, file_sig, tolerable_errors) = Parsing.basic parse_result in
                let file_sig = File_sig.abstractify_locs file_sig in
+               let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
                let metadata =
                  Context.(
                    let metadata = metadata_of_options options in
@@ -88,7 +90,7 @@ let load_lib_files ~ccx ~options ~reader files =
                let errors = Context.errors cx in
                let errors =
                  if Inference_utils.well_formed_exports_enabled options lib_file then
-                   file_sig.File_sig.With_ALoc.tolerable_errors
+                   tolerable_errors
                    |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
                    |> Flow_error.ErrorSet.union errors
                  else

@@ -82,6 +82,7 @@ type type_contents_artifacts =
   Context.t
   * Docblock.t
   * File_sig.With_Loc.t
+  * File_sig.With_Loc.tolerable_error list
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (Loc.t * Parse_error.t) list
 

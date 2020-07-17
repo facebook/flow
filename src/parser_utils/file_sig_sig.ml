@@ -22,7 +22,6 @@ module type S = sig
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    tolerable_errors: tolerable_error list;
     exported_locals: L.LSet.t SMap.t option;
   }
 
@@ -168,7 +167,7 @@ module type S = sig
         kind: named_export_kind;
       }
 
-  and tolerable_error =
+  type tolerable_error =
     (* e.g. `module.exports.foo = 4` when not at the top level *)
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
@@ -199,7 +198,7 @@ module type S = sig
   val program_with_exports_info :
     ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
-    (exports_info t', error) result
+    (exports_info t' * tolerable_error list, error) result
 
   (* Use for debugging; not for exposing info the the end user *)
   val exports_info_to_string : exports_info -> string
@@ -212,10 +211,11 @@ module type S = sig
   val init : t
 
   val program :
-    ast:(L.t, L.t) Flow_ast.Program.t -> module_ref_prefix:string option -> (t, error) result
+    ast:(L.t, L.t) Flow_ast.Program.t ->
+    module_ref_prefix:string option ->
+    (t * tolerable_error list, error) result
 
-  val verified :
-    Signature_builder_deps.PrintableErrorSet.t -> L.LSet.t SMap.t option -> exports_info t' -> t
+  val verified : L.LSet.t SMap.t option -> exports_info t' -> t
 
   (* Use for debugging; not for exposing info the the end user *)
   val to_string : t -> string

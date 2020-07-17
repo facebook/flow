@@ -9,7 +9,7 @@ module Ast = Flow_ast
 open Utils_js
 open Sys_utils
 
-type t = (Loc.t, Loc.t) Ast.Program.t * File_sig.With_Loc.t
+type t = (Loc.t, Loc.t) Ast.Program.t * File_sig.With_Loc.t * File_sig.With_Loc.tolerable_error list
 
 type aloc_t = (ALoc.t, ALoc.t) Ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
 
@@ -396,7 +396,7 @@ let do_parse ~parse_options ~info content file =
     | File_key.JsonFile _ ->
       let (ast, parse_errors) = parse_json_file ~fail content file in
       (* NOTE: if ~fail:true, we'll never get parse errors here *)
-      Parse_ok (Classic (ast, File_sig.With_Loc.init), parse_errors)
+      Parse_ok (Classic (ast, File_sig.With_Loc.init, []), parse_errors)
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
@@ -418,7 +418,7 @@ let do_parse ~parse_options ~info content file =
         let facebook_keyMirror = true in
         let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
-        | Ok exports_info ->
+        | Ok (exports_info, tolerable_errors) ->
           let signature = Signature_builder.program ast ~exports_info in
           let (errors, env, sig_ast) =
             Signature_builder.Signature.verify_and_generate
@@ -428,14 +428,6 @@ let do_parse ~parse_options ~info content file =
               ~facebook_keyMirror
               signature
               ast
-          in
-          let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
-          let (aloc_table, sig_ast) =
-            if abstract_locations then
-              let (aloc_table, sig_ast) = Ast_loc_utils.keyify_alocs file sig_ast in
-              (Some aloc_table, sig_ast)
-            else
-              (None, sig_ast)
           in
           let env =
             match arch with
@@ -450,19 +442,34 @@ let do_parse ~parse_options ~info content file =
                        Loc_collections.LocSet.empty)
                    env)
           in
-          let file_sig = File_sig.With_Loc.verified errors env (snd signature) in
-          let sig_file_sig =
-            match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
-            | Ok fs -> fs
-            | Error _ -> assert false
+          let file_sig = File_sig.With_Loc.verified env (snd signature) in
+          let tolerable_errors =
+            Signature_builder_deps.PrintableErrorSet.fold
+              (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
+              errors
+              tolerable_errors
           in
-          begin
+          let t = (ast, file_sig, tolerable_errors) in
+          let t =
             match arch with
-            | Options.Classic -> Parse_ok (Classic (ast, file_sig), parse_errors)
+            | Options.Classic -> Classic t
             | Options.TypesFirst ->
-              Parse_ok
-                (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)), parse_errors)
-          end
+              let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
+              let (aloc_table, sig_ast) =
+                if abstract_locations then
+                  let (aloc_table, sig_ast) = Ast_loc_utils.keyify_alocs file sig_ast in
+                  (Some aloc_table, sig_ast)
+                else
+                  (None, sig_ast)
+              in
+              let (sig_file_sig, _) =
+                match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
+                | Ok fs -> fs
+                | Error _ -> assert false
+              in
+              TypesFirst (t, (sig_ast, sig_file_sig, aloc_table))
+          in
+          Parse_ok (t, parse_errors)
         | Error e -> Parse_fail (File_sig_error e))
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
@@ -554,15 +561,10 @@ let reducer
             | Parse_ok (parse_result, _parse_errors) ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
-              let (ast, file_sig) = basic parse_result in
+              let (ast, file_sig, tolerable_errors) = basic parse_result in
               let sig_opt = sig_opt parse_result in
               worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_opt;
-              let parse_ok =
-                FilenameMap.add
-                  file
-                  file_sig.File_sig.With_Loc.tolerable_errors
-                  parse_results.parse_ok
-              in
+              let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->
               let fail = (file, info, converted) in

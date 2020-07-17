@@ -72,7 +72,7 @@ let insert_type
     ~ambiguity_strategy =
   Insert_type.(
     Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-    | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
+    | (Some (full_cx, ast, file_sig, _, typed_ast), _, _) ->
       begin
         try
           let new_ast =
@@ -95,8 +95,8 @@ let insert_type
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   Autofix_exports.(
     Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-    | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
-      let sv_errors = set_of_fixable_signature_verification_locations file_sig in
+    | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _) ->
+      let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
       let (new_ast, it_errs) =
         fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
       in
@@ -131,7 +131,7 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
 
 let suggest ~options ~env ~profiling file_key file_content =
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
+  | (Some (cx, ast, file_sig, _, tast), tc_errors, tc_warnings) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query = Query_types.suggest_types cx file_sig tast in
     let exact_by_default = Options.exact_by_default options in
@@ -147,9 +147,9 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
   let open Lsp in
   let CodeActionRequest.{ textDocument; range = _; context } = params in
   let uri = TextDocumentIdentifier.(textDocument.uri) |> string_of_uri in
-  let autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast =
+  let autofix_exports_code_actions ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast =
     let open Autofix_exports in
-    let fixable_locs = set_of_fixable_signature_verification_locations file_sig in
+    let fixable_locs = set_of_fixable_signature_verification_locations tolerable_errors in
     if LocSet.mem loc fixable_locs then
       match fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc with
       | new_ast ->
@@ -219,14 +219,14 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
       []
   in
   Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
-  | (Some (full_cx, ast, file_sig, typed_ast), _, _)
+  | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _)
     when CodeActionKind.contains_kind_opt
            ~default:true
            CodeActionKind.quickfix
            context.CodeActionRequest.only ->
     let experimental_code_actions =
       if Inference_utils.well_formed_exports_enabled options file_key then
-        autofix_exports_code_actions ~full_cx ~ast ~file_sig ~typed_ast
+        autofix_exports_code_actions ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast
       else
         []
     in
