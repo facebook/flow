@@ -11,22 +11,17 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-type t =
-  (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * File_sig.With_Loc.tolerable_error list
-
-type aloc_t = (ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
-
-type parse_ok =
-  | Classic of t
-  | TypesFirst of t * aloc_t
-
-(* sig *)
-
-val basic : parse_ok -> t
+type sig_extra = (ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of parse_ok * parse_error list
+  | Parse_ok of {
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      sig_extra: sig_extra option;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: parse_error list;
+    }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 

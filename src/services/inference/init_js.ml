@@ -40,7 +40,7 @@ let parse_lib_file ~reader options file =
            errors. So there may actually have been some, but they were ignored.
            TODO: where do we surface lib parse errors? *)
         let parse_errors = [] in
-        Parsing.Parse_ok (Parsing.Classic (ast, file_sig, tolerable_errors), parse_errors)
+        Parsing.Parse_ok { ast; file_sig; sig_extra = None; tolerable_errors; parse_errors }
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
@@ -72,9 +72,8 @@ let load_lib_files ~ccx ~options ~reader files =
            let%lwt result = parse_lib_file ~reader options file in
            Lwt.return
              (match result with
-             | Parsing.Parse_ok (parse_result, _parse_errors) ->
+             | Parsing.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
                (* parse_lib_file doesn't return any parse errors right now *)
-               let (ast, file_sig, tolerable_errors) = Parsing.basic parse_result in
                let file_sig = File_sig.abstractify_locs file_sig in
                let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
                let metadata =

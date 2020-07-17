@@ -9,26 +9,16 @@ module Ast = Flow_ast
 open Utils_js
 open Sys_utils
 
-type t = (Loc.t, Loc.t) Ast.Program.t * File_sig.With_Loc.t * File_sig.With_Loc.tolerable_error list
-
-type aloc_t = (ALoc.t, ALoc.t) Ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
-
-type parse_ok =
-  | Classic of t
-  | TypesFirst of t * aloc_t
-
-(* sig *)
-
-let basic = function
-  | Classic t -> t
-  | TypesFirst (t, _) -> t
-
-let sig_opt = function
-  | Classic _ -> None
-  | TypesFirst (_, t) -> Some t
+type sig_extra = (ALoc.t, ALoc.t) Ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
 
 type result =
-  | Parse_ok of parse_ok * parse_error list
+  | Parse_ok of {
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      sig_extra: sig_extra option;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: parse_error list;
+    }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -396,7 +386,14 @@ let do_parse ~parse_options ~info content file =
     | File_key.JsonFile _ ->
       let (ast, parse_errors) = parse_json_file ~fail content file in
       (* NOTE: if ~fail:true, we'll never get parse errors here *)
-      Parse_ok (Classic (ast, File_sig.With_Loc.init, []), parse_errors)
+      Parse_ok
+        {
+          ast;
+          file_sig = File_sig.With_Loc.init;
+          sig_extra = None;
+          tolerable_errors = [];
+          parse_errors;
+        }
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
@@ -449,10 +446,9 @@ let do_parse ~parse_options ~info content file =
               errors
               tolerable_errors
           in
-          let t = (ast, file_sig, tolerable_errors) in
-          let t =
+          let sig_extra =
             match arch with
-            | Options.Classic -> Classic t
+            | Options.Classic -> None
             | Options.TypesFirst ->
               let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
               let (aloc_table, sig_ast) =
@@ -467,9 +463,9 @@ let do_parse ~parse_options ~info content file =
                 | Ok fs -> fs
                 | Error _ -> assert false
               in
-              TypesFirst (t, (sig_ast, sig_file_sig, aloc_table))
+              Some (sig_ast, sig_file_sig, aloc_table)
           in
-          Parse_ok (t, parse_errors)
+          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
         | Error e -> Parse_fail (File_sig_error e))
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
@@ -558,12 +554,10 @@ let reducer
           in
           begin
             match do_parse ~parse_options ~info content file with
-            | Parse_ok (parse_result, _parse_errors) ->
+            | Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors = _ } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
-              let (ast, file_sig, tolerable_errors) = basic parse_result in
-              let sig_opt = sig_opt parse_result in
-              worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_opt;
+              worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_extra;
               let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->
