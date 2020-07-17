@@ -114,6 +114,7 @@ MODULES=\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parser_utils/signature_builder\
+  src/parser_utils/type_sig\
   src/parsing\
   src/procs\
   src/server\
