@@ -9,7 +9,7 @@ type heap
 
 type chunk
 
-type size
+type size = int
 
 type 'a addr
 
