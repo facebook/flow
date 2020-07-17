@@ -47,13 +47,31 @@ module Reader : READER with type reader = State_reader.t
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
+type 'loc type_sig =
+  'loc Type_sig_pack.exports
+  * 'loc Type_sig_pack.packed option
+  * string Type_sig_collections.Module_refs.t
+  * 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t
+  * 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t
+  * 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t
+  * 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t
+
+type sig_extra =
+  | Classic
+  | TypesFirst of {
+      sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
+      sig_file_sig: File_sig.With_ALoc.t;
+      aloc_table: ALoc.table option;
+    }
+  | TypeSig of ALoc.t type_sig * ALoc.table option
+
 (* For use by a worker process *)
 type worker_mutator = {
   add_file:
     File_key.t ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
-    ((ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option) option ->
+    sig_extra ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }

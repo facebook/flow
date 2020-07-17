@@ -42,6 +42,26 @@ module SigASTALocTableHeap =
       let description = "ALocTable"
     end)
 
+type 'loc type_sig =
+  'loc Type_sig_pack.exports
+  * 'loc Type_sig_pack.packed option
+  * string Type_sig_collections.Module_refs.t
+  * 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t
+  * 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t
+  * 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t
+  * 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t
+
+module TypeSigHeap =
+  SharedMem_js.NoCache
+    (File_key)
+    (struct
+      type t = ALoc.t type_sig
+
+      let prefix = Prefix.make ()
+
+      let description = "TypeSig"
+    end)
+
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
 let loc_compactifier =
@@ -158,20 +178,35 @@ module FileHashHeap =
       let description = "FileHash"
     end)
 
+type sig_extra =
+  | Classic
+  | TypesFirst of {
+      sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
+      sig_file_sig: File_sig.With_ALoc.t;
+      aloc_table: ALoc.table option;
+    }
+  | TypeSig of ALoc.t type_sig * ALoc.table option
+
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file info (ast, file_sig) sig_opt =
+  let add file info (ast, file_sig) extra =
     ASTHeap.add file (compactify_loc ast);
     DocblockHeap.add file info;
     FileSigHeap.add file file_sig;
-    Base.Option.iter sig_opt ~f:(fun (sig_ast, sig_file_sig, aloc_table) ->
-        SigASTHeap.add file (remove_source_aloc sig_ast);
-        Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
-        SigFileSigHeap.add file sig_file_sig)
+    match extra with
+    | Classic -> ()
+    | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
+      SigASTHeap.add file (remove_source_aloc sig_ast);
+      Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
+      SigFileSigHeap.add file sig_file_sig
+    | TypeSig (type_sig, aloc_table) ->
+      TypeSigHeap.add file type_sig;
+      Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file)
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
     SigASTHeap.oldify_batch files;
+    TypeSigHeap.oldify_batch files;
     SigASTALocTableHeap.oldify_batch files;
     DocblockHeap.oldify_batch files;
     FileSigHeap.oldify_batch files;
@@ -181,6 +216,7 @@ module ParsingHeaps = struct
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
     SigASTHeap.remove_old_batch files;
+    TypeSigHeap.remove_old_batch files;
     SigASTALocTableHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
     FileSigHeap.remove_old_batch files;
@@ -191,6 +227,7 @@ module ParsingHeaps = struct
   let revive_batch files =
     ASTHeap.revive_batch files;
     SigASTHeap.revive_batch files;
+    TypeSigHeap.revive_batch files;
     SigASTALocTableHeap.revive_batch files;
     DocblockHeap.revive_batch files;
     FileSigHeap.revive_batch files;
@@ -303,7 +340,7 @@ type worker_mutator = {
     File_key.t ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
-    ((ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option) option ->
+    sig_extra ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }

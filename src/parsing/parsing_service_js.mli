@@ -11,14 +11,12 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-type sig_extra = (ALoc.t, ALoc.t) Flow_ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
-
 (* result of individual parse *)
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
-      sig_extra: sig_extra option;
+      sig_extra: Parsing_heaps.sig_extra;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
     }

@@ -9,13 +9,11 @@ module Ast = Flow_ast
 open Utils_js
 open Sys_utils
 
-type sig_extra = (ALoc.t, ALoc.t) Ast.Program.t * File_sig.With_ALoc.t * ALoc.table option
-
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
-      sig_extra: sig_extra option;
+      sig_extra: Parsing_heaps.sig_extra;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
     }
@@ -390,7 +388,7 @@ let do_parse ~parse_options ~info content file =
         {
           ast;
           file_sig = File_sig.With_Loc.init;
-          sig_extra = None;
+          sig_extra = Parsing_heaps.Classic;
           tolerable_errors = [];
           parse_errors;
         }
@@ -448,7 +446,7 @@ let do_parse ~parse_options ~info content file =
           in
           let sig_extra =
             match arch with
-            | Options.Classic -> None
+            | Options.Classic -> Parsing_heaps.Classic
             | Options.TypesFirst ->
               let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
               let (aloc_table, sig_ast) =
@@ -463,7 +461,7 @@ let do_parse ~parse_options ~info content file =
                 | Ok fs -> fs
                 | Error _ -> assert false
               in
-              Some (sig_ast, sig_file_sig, aloc_table)
+              Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table }
           in
           Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
         | Error e -> Parse_fail (File_sig_error e))
