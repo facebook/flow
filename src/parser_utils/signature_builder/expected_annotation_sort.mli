@@ -10,6 +10,7 @@ type property_key =
   | Identifier of string
   | PrivateName of string
   | Computed of string
+[@@deriving show]
 
 type t =
   | ArrayPattern
@@ -17,5 +18,6 @@ type t =
   | PrivateField of { name: string }
   | Property of { name: property_key }
   | VariableDefinition of { name: string }
+[@@deriving show]
 
 val to_string : t -> string

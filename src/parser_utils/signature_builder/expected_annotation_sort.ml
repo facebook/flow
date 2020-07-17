@@ -12,6 +12,7 @@ type property_key =
   | Identifier of string
   | PrivateName of string
   | Computed of string
+[@@deriving show]
 
 type t =
   | ArrayPattern
@@ -19,6 +20,7 @@ type t =
   | PrivateField of { name: string }
   | Property of { name: property_key }
   | VariableDefinition of { name: string }
+[@@deriving show]
 
 let property_key_to_string = function
   | Literal lit -> spf "literal property %s" lit

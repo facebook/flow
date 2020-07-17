@@ -15,7 +15,7 @@ module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = s
   module L = L
 
   module Error = struct
-    type t = L.t Signature_error.t
+    type t = L.t Signature_error.t [@@deriving show]
 
     let compare = Signature_error.compare
   end

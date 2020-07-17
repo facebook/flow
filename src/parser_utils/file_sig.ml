@@ -104,6 +104,7 @@ struct
         loc: L.t;
         kind: named_export_kind;
       }
+  [@@deriving show]
 
   type tolerable_error =
     (* e.g. `module.exports.foo = 4` when not at the top level *)
@@ -111,6 +112,7 @@ struct
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
     | SignatureVerificationError of Signature_builder_deps.Error.t
+  [@@deriving show]
 
   type exports_info = {
     module_kind_info: module_kind_info;
@@ -130,6 +132,7 @@ struct
     | DeclareExportDef of (L.t, L.t) Ast.Statement.DeclareExportDeclaration.declaration
     | ExportDefaultDef of (L.t, L.t) Ast.Statement.ExportDefaultDeclaration.declaration
     | ExportNamedDef of (L.t, L.t) Ast.Statement.t
+  [@@deriving show]
 
   type error = IndeterminateModuleType of L.t
 
@@ -188,9 +191,9 @@ struct
       ]
 
   (* Applications may not care about the info carried by signatures. *)
-  type module_sig = unit module_sig'
+  type module_sig = unit module_sig' [@@deriving show]
 
-  type t = unit t'
+  type t = unit t' [@@deriving show]
 
   let init = mk_file_sig ()
 

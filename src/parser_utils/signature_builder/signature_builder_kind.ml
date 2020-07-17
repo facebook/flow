@@ -42,6 +42,7 @@ module Sort = struct
   type t =
     | Type
     | Value
+  [@@deriving show]
 
   let to_string = function
     | Type -> "type"

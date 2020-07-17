@@ -19,6 +19,7 @@ type 'loc t =
   | SketchyToplevelDef of 'loc
   | UnsupportedPredicateExpression of 'loc
   | TODO of string * 'loc
+[@@deriving show]
 
 let compare = Stdlib.compare
 
