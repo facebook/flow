@@ -1103,7 +1103,7 @@ module Verifier (Env : EvalEnv) = struct
       check cache env dynamic_sources (validate_and_eval env dynamic_sources dep)
     )
 
-  let check env file_sig deps =
+  let check (env : Signature_builder_env.t) file_sig deps =
     let cache = ref Deps.DepSet.empty in
     let dynamic_sources =
       File_sig.(

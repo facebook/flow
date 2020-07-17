@@ -195,6 +195,8 @@ struct
 
   type t = unit t' [@@deriving show]
 
+  type exports_t = exports_info t' [@@deriving show]
+
   let init = mk_file_sig ()
 
   let to_string t =
@@ -1122,7 +1124,8 @@ struct
         ListUtils.ident_map map_statement stmts
     end
 
-  let program_with_exports_info ~ast ~module_ref_prefix =
+  let program_with_exports_info ~ast ~module_ref_prefix :
+      (exports_t * tolerable_error list, error) result =
     let walk = new requires_exports_calculator ~ast ~module_ref_prefix in
     walk#eval walk#program ast
 

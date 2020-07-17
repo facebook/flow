@@ -2186,7 +2186,8 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         _end = { line = program_loc._end.line + loc._end.line; column = loc._end.column };
       }
 
-  let make env file_sig program =
+  let make (env : Signature_builder_env.t) (file_sig : File_sig.exports_t) program :
+      (Loc.t, Loc.t) Flow_ast.Program.t =
     let (program_loc, _) = program in
     let outlined = T.Outlined.create () in
     let env = make_env outlined env in

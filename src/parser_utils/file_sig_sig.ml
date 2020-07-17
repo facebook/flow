@@ -198,10 +198,12 @@ module type S = sig
 
   type error = IndeterminateModuleType of L.t
 
+  type exports_t = exports_info t' [@@deriving show]
+
   val program_with_exports_info :
     ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
-    (exports_info t' * tolerable_error list, error) result
+    (exports_t * tolerable_error list, error) result
 
   (* Use for debugging; not for exposing info the the end user *)
   val exports_info_to_string : exports_info -> string

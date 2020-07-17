@@ -14,8 +14,11 @@ module G = Signature_builder_generate.Generator
 module Signature_builder_deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
 
+type extra_properties =
+  ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t, Loc.t) Ast.Expression.t) list SMap.t
+
 module Signature = struct
-  type t = Env.t * File_sig.exports_info File_sig.t'
+  type t = Env.t * File_sig.exports_t [@@deriving show]
 
   let add_env env entry = Env.add entry env
 
@@ -24,7 +27,7 @@ module Signature = struct
   let add_variable_declaration env loc variable_declaration =
     add_env_list env (Entry.variable_declaration loc variable_declaration)
 
-  let add_extra_properties extra_properties entry =
+  let add_extra_properties (extra_properties : extra_properties) entry =
     let (((_, { Ast.Identifier.name; _ }) as id), (loc, base)) = entry in
     match SMap.find_opt name extra_properties with
     | None -> entry
@@ -225,7 +228,7 @@ module Signature = struct
     | None -> env
     | Some id -> add_env env (Entry.import_star import_loc id kind source)
 
-  let mk env file_sig extra_properties =
+  let mk (env : Env.t) (file_sig : File_sig.exports_t) (extra_properties : extra_properties) : t =
     File_sig.(
       let module_sig = file_sig.module_sig in
       let { requires = imports_info; info = exports_info; module_kind; type_exports_named; _ } =
@@ -276,7 +279,7 @@ module Signature = struct
       ?(facebook_fbt = None)
       ?(ignore_static_propTypes = false)
       ?(facebook_keyMirror = false)
-      (env, file_sig) =
+      ((env : Env.t), (file_sig : File_sig.exports_t)) =
     let module Verify = V (struct
       let prevent_munge = prevent_munge
 
@@ -317,7 +320,8 @@ module Signature = struct
       ?(ignore_static_propTypes = false)
       ?(facebook_keyMirror = false)
       (env, file_sig)
-      program =
+      (program : (Loc.t, Loc.t) Ast.Program.t) :
+      Signature_builder_deps.PrintableErrorSet.t * Env.t * (Loc.t, Loc.t) Ast.Program.t =
     let (errors, _, pruned_env) =
       verify
         ~prevent_munge
@@ -342,9 +346,6 @@ module Signature = struct
         (env, file_sig)
         program )
 end
-
-type extra_properties =
-  ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t, Loc.t) Ast.Expression.t) list SMap.t
 
 (* Type hoister creates an Env filled with signature information from sources other than
    ES import and export declarations. The type hoister also returns a map of property
@@ -378,7 +379,7 @@ class type_hoister =
     method private update_binding (x, id, expr) =
       this#update_acc (fun (env, extra_properties) ->
           match SMap.find_opt x env with
-          (* Collect properties that are not yet present in the env, as these may belong to 
+          (* Collect properties that are not yet present in the env, as these may belong to
              ES exported functions that will be added to the env after this pass is complete. *)
           | None ->
             ( env,

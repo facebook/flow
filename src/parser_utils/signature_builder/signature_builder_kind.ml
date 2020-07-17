@@ -12,6 +12,7 @@ module Annot_path = struct
   type t =
     | Annot of (Loc.t, Loc.t) Ast.Type.annotation
     | Object of Loc.t * (t * (Loc.t * string))
+  [@@deriving show]
 
   let mk_annot ?annot_path = function
     | Ast.Type.Missing _ -> annot_path
@@ -27,6 +28,7 @@ module Init_path = struct
   type t =
     | Init of (Loc.t, Loc.t) Ast.Expression.t
     | Object of Loc.t * (t * (Loc.t * string))
+  [@@deriving show]
 
   let mk_init = function
     | None -> None
@@ -141,6 +143,7 @@ type t =
       name: Loc.t Ast_utils.ident Nel.t option;
     }
   | SketchyToplevelDef
+[@@deriving show]
 
 type ctor =
   | VariableDefKind
