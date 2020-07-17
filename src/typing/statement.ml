@@ -5304,10 +5304,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
     let (((_, t2), _) as right) = expression cx right in
     let desc =
       RBinaryOperator
-        ( (match operator with
-          | Equal -> "=="
-          | NotEqual -> "!="
-          | _ -> failwith "unreachable"),
+        ( Flow_ast_utils.string_of_binary_operator operator,
           desc_of_reason (reason_of_t t1),
           desc_of_reason (reason_of_t t2) )
     in
@@ -5330,10 +5327,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
     let (((_, t2), _) as right) = expression cx right in
     let desc =
       RBinaryOperator
-        ( (match operator with
-          | StrictEqual -> "==="
-          | StrictNotEqual -> "!=="
-          | _ -> failwith "unreachable"),
+        ( Flow_ast_utils.string_of_binary_operator operator,
           desc_of_reason (reason_of_t t1),
           desc_of_reason (reason_of_t t2) )
     in
@@ -5352,12 +5346,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
     let (((_, t2), _) as right) = expression cx right in
     let desc =
       RBinaryOperator
-        ( (match operator with
-          | LessThan -> "<"
-          | LessThanEqual -> "<="
-          | GreaterThan -> ">"
-          | GreaterThanEqual -> ">="
-          | _ -> failwith "unreachable"),
+        ( Flow_ast_utils.string_of_binary_operator operator,
           desc_of_reason (reason_of_t t1),
           desc_of_reason (reason_of_t t2) )
     in
