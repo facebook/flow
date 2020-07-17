@@ -420,7 +420,14 @@ module UntypedFlowInitRunner :
     let { ServerEnv.workers; options } = genv in
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
-        let options = { options with Options.opt_saved_state_fetcher = Options.Dummy_fetcher } in
+        let options =
+          {
+            options with
+            Options.opt_saved_state_fetcher = Options.Dummy_fetcher;
+            (* Parse all files (even non @flow files) *)
+            opt_all = true;
+          }
+        in
         let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
 
         let file_options = Options.file_options options in
