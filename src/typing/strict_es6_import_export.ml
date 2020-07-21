@@ -148,6 +148,11 @@ class this_visitor =
 
     (* `this` is allowed in classes so do not recurse into class body *)
     method! class_body body = body
+
+    (* Function decls and exprs will have a new scope, so `this` usage is allowed *)
+    method! function_declaration _ func = func
+
+    method! function_expression _ func = func
   end
 
 (* Visitor that uses the previously found declaration info to check for errors in imports/exports. *)

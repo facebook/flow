@@ -20,6 +20,21 @@ const internal3 = () => { this; };
 // Do not error if this is within a class
 export function thisWithinClass() {
   class C {
+    a = this.b;
+    b;
     classMethod() { this; }
+  }
+}
+
+// Do not error if this is within a nested function decl or expr
+export function thisWithinNestedFunctionDecl() {
+  function foo() {
+    this;
+  }
+}
+
+export function thisWithinNestedAsyncFunction(): () => void {
+  return function() {
+    this;
   }
 }
