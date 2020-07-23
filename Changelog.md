@@ -1,3 +1,14 @@
+### 0.130.0
+
+New Features:
+* Improved IDE get definition behavior of imported names by jumping past `module.exports = ...` to the actual definition.
+
+Library Definitions:
+* Made `offset` an optional argument for the sized Buffer read/writes (thanks @isker!)
+
+Misc:
+* Removed deprecated blacklist/whitelist aliases for config options, use `includes`/`excludes` instead (see updated docs: for [Types First](https://flow.org/en/docs/lang/types-first/#toc-prepare-your-codebase-for-types-first) and [flowconfig options](https://flow.org/en/docs/config/options/)).
+
 ### 0.129.0
 
 Likely to cause new Flow errors:

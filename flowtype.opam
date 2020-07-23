@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flowtype"
-version: "0.129.0"
+version: "0.130.0"
 maintainer: "flow@fb.com"
 authors: "Flow Team <flow@fb.com>"
 license: "MIT"
