@@ -1,8 +1,23 @@
-# Flow [![Build Status](https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/flow/tree/master) [![Join the chat at https://discordapp.com/invite/8ezwRUK](https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white)](https://discordapp.com/invite/8ezwRUK)
-
-Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
-
-For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
+<p align="center">
+  <img src="https://scontent.fnag1-3.fna.fbcdn.net/v/t39.2365-6/47963403_2276942729207149_7966349449934929920_n.svg?_nc_cat=111&_nc_sid=ad8a9d&_nc_ohc=FpzjXMws_CgAX_i9y8g&_nc_ht=scontent.fnag1-3.fna&oh=88dc0156652c01596e09f466abf9c55a&oe=5F40FF22" alt="logo" width="15%" /> 
+</p>
+<h1 align="center">
+  Flow
+</h1>
+<p align="center">
+  <a href="https://circleci.com/gh/facebook/flow/tree/master">
+    <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="Build Status" />
+  </a>
+  <a href="https://discordapp.com/invite/8ezwRUK">
+    <img src="https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white" alt="Join the chat at https://discordapp.com/invite/8ezwRUK" />
+  </a>
+  <p align="center">
+    Flow is a static typechecker for JavaScript. To find out more about Flow, check out <a href="https://flow.org/">flow.org</a>.
+  </p>
+  <p align="center">
+    For a background on the project, please read <a href="https://flow.org/en/docs/lang/">this overview</a>.
+  </p>
+</p>
 
 ## Contents
 
