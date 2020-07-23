@@ -28,7 +28,6 @@ type error_code =
   | DuplicateJsxDecl
   | DuplicateModule
   | DuplicateProvideModuleDecl
-  | DynamicExport
   | EnumValueAsType
   | ExponentialSpread
   | ExportRenamedDefault
@@ -150,7 +149,6 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnclearType -> UnclearType
   | Lints.DeprecatedType -> DeprecatedType
   | Lints.DeprecatedUtility -> DeprecatedUtility
-  | Lints.DynamicExport -> DynamicExport
   | Lints.UnsafeGettersSetters -> UnsafeGettersSetters
   | Lints.UnnecessaryOptionalChain -> UnnecessaryOptionalChain
   | Lints.UnnecessaryInvariant -> UnnecessaryInvariant
@@ -194,7 +192,6 @@ let string_of_code : error_code -> string = function
   | DuplicateJsxDecl -> "duplicate-jsx-decl"
   | DuplicateModule -> "duplicate-module"
   | DuplicateProvideModuleDecl -> "duplicate-provide-module-decl"
-  | DynamicExport -> "dynamic-export"
   | EnumValueAsType -> "enum-value-as-type"
   | ExponentialSpread -> "exponential-spread"
   | ExportRenamedDefault -> "export-renamed-default"

@@ -210,19 +210,6 @@ let force_annotations leader_cx other_cxs =
       |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
     (leader_cx :: other_cxs)
 
-let is_builtin_or_flowlib cx =
-  File_key.(
-    function
-    | Builtins -> true
-    | LibFile f
-    | SourceFile f ->
-      begin
-        match Context.default_lib_dir cx with
-        | Some path -> Files.is_prefix (Path.to_string path) f
-        | None -> false
-      end
-    | _ -> false)
-
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
    * type without actually creating the flow so as not to disturb type inference.
@@ -586,33 +573,6 @@ module ContextOptimizer = struct
 
       val mutable export_file = None
 
-      method private warn_dynamic_exports cx r reason_exp =
-        match Reason.aloc_of_reason reason_exp |> ALoc.source with
-        (* The second check here may seem unnecessary, but if the exports of a file are exactly what
-         * it imports from another file this can cause positioning issues. Consider
-         *
-         *     module.exports = require('lib');
-         *
-         * In this case the reason produced by the require statement is actually positioned in the
-         * 'lib' file where the exports were defined; this can break our invariant that all lints have
-         * their primary position in the file where the lint occurs. We don't want to change the
-         * positioning of the require, because this increases the verbosity of all error messages that
-         * reference types or values defined in other files. Instead, we just don't report any export
-         * warnings that arise when the reason isn't in the current file. Given that this warning is
-         * only reported when the type we are exporting contains an any, and we are exporting exactly
-         * what we import from another file, it must follow that the imported file itself exported an
-         * any and the warning was raised there.
-
-         * The alternative check that export_file is builtin allows this lint to appear in libdefs,
-         * since the source of the export of a libdef is set to `Builtins` even if the libdef is
-         * user-provided. Actual builtin files will be filtered out by the first check.
-         *)
-        | Some file
-          when (not @@ is_builtin_or_flowlib cx file)
-               && (export_file = Some file || export_file = Some File_key.Builtins) ->
-          Error_message.EDynamicExport (r, reason_exp) |> Flow_js.add_output cx
-        | _ -> ()
-
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
         export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
@@ -877,12 +837,6 @@ module ContextOptimizer = struct
         | OpaqueT (_, { opaque_id; _ }) ->
           SigHash.add_aloc sig_hash (opaque_id :> ALoc.t);
           super#type_ cx pole t
-        | AnyT (r, src) when Unsoundness.banned_in_exports src && Base.Option.is_some export_reason
-          ->
-          self#warn_dynamic_exports cx r (Base.Option.value_exn export_reason);
-          let t' = super#type_ cx pole t in
-          SigHash.add_type sig_hash t';
-          t'
         | DefT (_, _, PolyT { id = poly_id; _ }) ->
           if Context.mem_nominal_poly_id cx poly_id then
             Poly.id_as_int poly_id

@@ -2695,12 +2695,6 @@ module Unsoundness = struct
   let why kind = Unsound kind |> AnyT.why
 
   let at kind = Unsound kind |> AnyT.at
-
-  (* Unsound types would be too noisy if we banned them in exports,
-     so we allow them for now *)
-  let banned_in_exports = function
-    | Unsound _ -> false
-    | _ -> true
 end
 
 module VoidT = Primitive (struct

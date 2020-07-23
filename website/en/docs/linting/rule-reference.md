@@ -8,7 +8,6 @@ layout: guide
 * [`ambiguous-object-type`](#toc-ambiguous-object-type)
 * [`deprecated-type`](#toc-deprecated-type)
 * [`deprecated-utility`](#toc-deprecated-utility)
-* [`dynamic-export`](#toc-dynamic-export)
 * [`implicit-inexact-object`](#toc-implicit-inexact-object)
 * [`nonstrict-import`](#toc-nonstrict-import)
 * [`sketchy-null`](#toc-sketchy-null)
@@ -37,11 +36,6 @@ The effect of `*` can generally be achieved by simply not providing a type annot
 #### `deprecated-utility` <a class="toc" id="toc-deprecated-utility" href="#toc-deprecated-utility"></a>
 Triggers when you use the `$Supertype` or `$Subtype` utility types, as these types are
 unsafe and equivalent to `any`.
-
-#### `dynamic-export` <a class="toc" id="toc-dynamic-export" href="#toc-dynamic-export"></a>
-Triggers when a dynamic type (usually `any`) appears in a position exported from a file. Note that this is a very noisy lint, and can be triggered even
-when exporting types that are defined in our library definitions to include `any` types. For this reason we recommend turning it on on a per-file or even
-per-line basis using [flowlint comments](../flowlint-comments/#toc-flowlint) rather than for your whole repository in the `.flowconfig`.
 
 #### `implicit-inexact-object` <a class="toc" id="toc-implicit-inexact-object" href="#toc-implicit-inexact-object"></a>
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.

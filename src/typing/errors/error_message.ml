@@ -270,7 +270,6 @@ and 'loc t' =
   | EUnclearType of 'loc
   | EDeprecatedType of 'loc
   | EDeprecatedUtility of 'loc * string
-  | EDynamicExport of 'loc virtual_reason * 'loc virtual_reason
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
   | ELintSetting of 'loc * LintSettings.lint_parse_error
@@ -800,7 +799,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedType loc -> EDeprecatedType (f loc)
   | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
-  | EDynamicExport (r1, r2) -> EDynamicExport (map_reason r1, map_reason r2)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
   | ELintSetting (loc, err) -> ELintSetting (f loc, err)
@@ -1096,7 +1094,6 @@ let util_use_op_of_msg nope util = function
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDynamicExport _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
   | ELintSetting _
@@ -1134,7 +1131,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
-  | EDynamicExport (_, primary)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
@@ -1343,7 +1339,6 @@ let kind_of_msg =
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedType _ -> LintError Lints.DeprecatedType
     | EDeprecatedUtility _ -> LintError Lints.DeprecatedUtility
-    | EDynamicExport _ -> LintError Lints.DynamicExport
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -2846,17 +2841,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       {
         features = [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
       }
-  | EDynamicExport (reason, reason_exp) ->
-    let features =
-      [
-        text "Dynamic ";
-        ref reason;
-        text " unsafely appears in exported ";
-        ref reason_exp;
-        text ". This can cause importing modules to lose type coverage!";
-      ]
-    in
-    Normal { features }
   | EUnsafeGettersSetters _ ->
     Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
   | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
@@ -3309,7 +3293,6 @@ let is_lint_error = function
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDynamicExport _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
@@ -3553,7 +3536,6 @@ let error_code_of_message err : error_code option =
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDynamicExport _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _

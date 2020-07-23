@@ -25,7 +25,6 @@ let default_explicit_values =
 
 let ignored_by_all =
   [
-    Lints.DynamicExport;
     Lints.DeprecatedUtility;
     Lints.ImplicitInexactObject;
     Lints.AmbiguousObjectType;
