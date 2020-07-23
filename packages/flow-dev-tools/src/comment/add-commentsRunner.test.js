@@ -13,11 +13,12 @@ import * as path from 'path';
 test('addCommentsToCode', async () => {
   const flowBinPath = path.resolve(process.env.FLOW_BIN);
 
-  expect(await addCommentsToCode('foobar', '', [], flowBinPath)).toEqual(['', 0]);
+  expect(await addCommentsToCode('foobar', null, '', [], flowBinPath)).toEqual(['', 0]);
 
   expect(
     await addCommentsToCode(
       longComment,
+      null,
       testInput,
       /* Intentionally made these out of order to test that they are still inserted properly */
       [1, 6, 5, 3].map((line) => makeSuppression(line, testInput)),
@@ -25,7 +26,7 @@ test('addCommentsToCode', async () => {
     )
   ).toEqual([
     testOutput,
-    4
+    8
   ]);
 });
 

@@ -684,6 +684,7 @@ async function addCommentsToSource(
 
   const [code, commentCount] = await addCommentsToCode(
     args.comment,
+    args.error_code,
     codeBuffer.toString(),
     locs,
     args.bin,
@@ -694,6 +695,7 @@ async function addCommentsToSource(
 
 export async function addCommentsToCode(
   comment: ?string,
+  error_code: ?string,
   code: string,
   locs: Array<Suppression>,
   flowBinPath: string,
@@ -705,7 +707,11 @@ export async function addCommentsToCode(
   const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
-  for (const {loc, isError, lints, error_codes} of locs) {
+  for (let {loc, isError, lints, error_codes} of locs) {
+    if (error_code != null) {
+      error_codes = error_codes.filter(c => c === error_code);
+    }
+
     const path = getPathToLoc(loc, ast);
 
     if (path != null) {
@@ -716,7 +722,7 @@ export async function addCommentsToCode(
       for (c of comments) {
         code = addCommentToCode(c, code, loc, path);
       }
-      commentCount++;
+      commentCount += error_codes.length;
     }
   }
   return [code, commentCount];
