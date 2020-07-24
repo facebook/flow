@@ -40,7 +40,7 @@ variable_declaration.js:19:4
 Flags: --strip-root --pretty
 {
   "documentation":"this is bar!",
-  "type":"any (implicit)",
+  "type":"void",
   "reasons":[],
   "loc":{
     "source":"variable_declaration.js",
@@ -59,7 +59,7 @@ variable_declaration.js:27:4
 Flags: --strip-root --pretty
 {
   "documentation":"this is baz!",
-  "type":"any (implicit)",
+  "type":"void",
   "reasons":[],
   "loc":{
     "source":"variable_declaration.js",
@@ -224,5 +224,233 @@ Flags: --strip-root --pretty
   "endline":24,
   "start":3,
   "end":5
+}
+
+requires.js:9:6
+Flags: --strip-root --pretty
+{
+  "documentation":"foo is an identifier property",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":5,"offset":188},
+    "end":{"line":9,"column":7,"offset":191}
+  },
+  "path":"requires.js",
+  "line":9,
+  "endline":9,
+  "start":5,
+  "end":7
+}
+
+requires.js:11:6
+Flags: --strip-root --pretty
+{
+  "documentation":"bar is a getter property",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":207},
+    "end":{"line":11,"column":7,"offset":210}
+  },
+  "path":"requires.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":7
+}
+
+requires.js:13:6
+Flags: --strip-root --pretty
+{
+  "documentation":"baz is an identifier property with variance",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":5,"offset":226},
+    "end":{"line":13,"column":7,"offset":229}
+  },
+  "path":"requires.js",
+  "line":13,
+  "endline":13,
+  "start":5,
+  "end":7
+}
+
+requires.js:15:6
+Flags: --strip-root --pretty
+{
+  "documentation":"qux is a literal property",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":5,"offset":245},
+    "end":{"line":15,"column":7,"offset":248}
+  },
+  "path":"requires.js",
+  "line":15,
+  "endline":15,
+  "start":5,
+  "end":7
+}
+
+requires.js:21:6
+Flags: --strip-root --pretty
+{
+  "documentation":"foo is an identifier property",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":5,"offset":325},
+    "end":{"line":21,"column":7,"offset":328}
+  },
+  "path":"requires.js",
+  "line":21,
+  "endline":21,
+  "start":5,
+  "end":7
+}
+
+requires.js:23:6
+Flags: --strip-root --pretty
+{
+  "documentation":"bar is a getter property",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":5,"offset":344},
+    "end":{"line":23,"column":7,"offset":347}
+  },
+  "path":"requires.js",
+  "line":23,
+  "endline":23,
+  "start":5,
+  "end":7
+}
+
+requires.js:25:6
+Flags: --strip-root --pretty
+{
+  "documentation":"baz is an identifier property with variance",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":25,"column":5,"offset":363},
+    "end":{"line":25,"column":7,"offset":366}
+  },
+  "path":"requires.js",
+  "line":25,
+  "endline":25,
+  "start":5,
+  "end":7
+}
+
+requires.js:27:6
+Flags: --strip-root --pretty
+{
+  "documentation":"qux is a literal property",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":27,"column":5,"offset":382},
+    "end":{"line":27,"column":7,"offset":385}
+  },
+  "path":"requires.js",
+  "line":27,
+  "endline":27,
+  "start":5,
+  "end":7
+}
+
+requires.js:32:6
+Flags: --strip-root --pretty
+{
+  "documentation":"foo is an identifier property",
+  "type":"1",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":5,"offset":448},
+    "end":{"line":32,"column":7,"offset":451}
+  },
+  "path":"requires.js",
+  "line":32,
+  "endline":32,
+  "start":5,
+  "end":7
+}
+
+requires.js:34:6
+Flags: --strip-root --pretty
+{
+  "documentation":"bar is a getter property",
+  "type":"2",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":5,"offset":464},
+    "end":{"line":34,"column":7,"offset":467}
+  },
+  "path":"requires.js",
+  "line":34,
+  "endline":34,
+  "start":5,
+  "end":7
+}
+
+requires.js:36:6
+Flags: --strip-root --pretty
+{
+  "documentation":"baz is an identifier property with variance",
+  "type":"3",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":36,"column":5,"offset":480},
+    "end":{"line":36,"column":7,"offset":483}
+  },
+  "path":"requires.js",
+  "line":36,
+  "endline":36,
+  "start":5,
+  "end":7
+}
+
+requires.js:38:6
+Flags: --strip-root --pretty
+{
+  "documentation":"qux is a literal property",
+  "type":"4",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":38,"column":5,"offset":496},
+    "end":{"line":38,"column":7,"offset":499}
+  },
+  "path":"requires.js",
+  "line":38,
+  "endline":38,
+  "start":5,
+  "end":7
 }
 

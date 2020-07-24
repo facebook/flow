@@ -7,5 +7,7 @@
 [lints]
 
 [options]
+no_flowlib=false
+types_first=true
 
 [strict]

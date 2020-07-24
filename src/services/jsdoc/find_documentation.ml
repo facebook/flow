@@ -14,6 +14,29 @@ let find documentation = raise (Found documentation)
 let find_description comments =
   Base.Option.iter (Jsdoc.of_comments comments) ~f:(Jsdoc.description %> find)
 
+let loc_of_object_key =
+  let open Flow_ast.Expression.Object.Property in
+  function
+  | Identifier (loc, _)
+  | Literal (loc, _)
+  | Computed (_, Flow_ast.ComputedKey.{ expression = (loc, _); _ })
+  | PrivateName (loc, _) ->
+    loc
+
+let comments_of_variance =
+  let open Flow_ast.Variance in
+  Base.Option.bind ~f:(fun (_, { comments; _ }) -> comments)
+
+let comments_of_object_key =
+  let open Flow_ast.Expression.Object.Property in
+  function
+  | Identifier (_, Flow_ast.Identifier.{ comments; _ })
+  | Literal (_, Flow_ast.Literal.{ comments; _ }) ->
+    comments
+  | PrivateName _
+  | Computed _ ->
+    None
+
 class documentation_searcher (def_loc : Loc.t) =
   object (this)
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
@@ -65,12 +88,29 @@ class documentation_searcher (def_loc : Loc.t) =
       let { id = (loc, _); comments; _ } = decl in
       if this#is_target loc then find_description comments;
       super#declare_function stmt_loc decl
+
+    method! object_property_type prop_type =
+      let open Flow_ast.Type.Object.Property in
+      let (_, { key; value; comments; variance; _ }) = prop_type in
+      let value_loc =
+        match value with
+        | Init (value_loc, _)
+        | Get (_, Flow_ast.Type.Function.{ return = (value_loc, _); _ })
+        | Set (value_loc, _) ->
+          value_loc
+      in
+      if this#is_target (loc_of_object_key key) || this#is_target value_loc then begin
+        find_description comments;
+        find_description (comments_of_variance variance);
+        find_description (comments_of_object_key key)
+      end;
+      super#object_property_type prop_type
   end
 
-let documentation_of_def_loc def_loc typed_ast =
+let documentation_of_def_loc def_loc ast =
   let searcher = new documentation_searcher def_loc in
   try
-    ignore (searcher#program typed_ast);
+    ignore (searcher#program ast);
     None
   with Found documentation -> Some documentation
 
