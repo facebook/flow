@@ -179,7 +179,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
 
     method! pattern ?kind (((_, t), p) as pat) =
       let open Flow_ast.Pattern in
-      begin
+      ( if not in_require_declarator then
         match p with
         | Object { Object.properties; _ } ->
           List.iter
@@ -198,8 +198,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
                 end
               | _ -> ())
             properties
-        | _ -> ()
-      end;
+        | _ -> () );
       super#pattern ?kind pat
 
     method! t_pattern_identifier ?kind ((loc, t), name) =

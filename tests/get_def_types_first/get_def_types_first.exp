@@ -2,3 +2,15 @@ requires.js:5:4
 Flags: --strip-root --pretty
 {"path":"module_exports.js","line":3,"endline":3,"start":1,"end":17}
 
+requires.js:10:4
+Flags: --strip-root --pretty
+{"path":"module_exports2.js","line":3,"endline":3,"start":7,"end":9}
+
+requires.js:12:4
+Flags: --strip-root --pretty
+{"path":"module_exports2.js","line":5,"endline":5,"start":13,"end":17}
+
+requires.js:14:4
+Flags: --strip-root --pretty
+{"path":"module_exports2.js","line":7,"endline":7,"start":1,"end":17}
+

@@ -22,7 +22,7 @@ Parent.js:3:23,3:27
 Parent.js:3:18,3:20
 
 Trace `ParentFoo` back to its def
-Parent.js:4:19,4:27
+Parent.js:3:17,3:28
 
 React class and attribute expressions
 react.js:6:7,6:7
