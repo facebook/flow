@@ -31,11 +31,17 @@ let comments_of_object_key =
   let open Flow_ast.Expression.Object.Property in
   function
   | Identifier (_, Flow_ast.Identifier.{ comments; _ })
-  | Literal (_, Flow_ast.Literal.{ comments; _ }) ->
+  | Literal (_, Flow_ast.Literal.{ comments; _ })
+  | Computed (_, Flow_ast.ComputedKey.{ comments; _ }) ->
     comments
-  | PrivateName _
-  | Computed _ ->
-    None
+  | PrivateName _ -> None
+
+let loc_of_annotation_or_hint =
+  let open Flow_ast.Type in
+  function
+  | Missing loc
+  | Available (_, (loc, _)) ->
+    loc
 
 class documentation_searcher (def_loc : Loc.t) =
   object (this)
@@ -124,6 +130,23 @@ class documentation_searcher (def_loc : Loc.t) =
         find_description (comments_of_object_key key)
       end;
       super#class_property prop_loc prop
+
+    method! object_property prop =
+      let open Flow_ast.Expression.Object.Property in
+      let (locs, comments) =
+        match prop with
+        | (_, Init { key; value = (value_loc, _); _ }) ->
+          ([loc_of_object_key key; value_loc], [comments_of_object_key key])
+        | ( _,
+            Method { key; value = (_, Flow_ast.Function.{ params = (value_loc, _); comments; _ }) }
+          ) ->
+          ([loc_of_object_key key; value_loc], [comments_of_object_key key; comments])
+        | (_, Get { key; value = (_, Flow_ast.Function.{ return; _ }); comments }) ->
+          ([loc_of_object_key key; loc_of_annotation_or_hint return], [comments])
+        | (_, Set _) -> ([], [])
+      in
+      if List.exists this#is_target locs then List.iter find_description comments;
+      super#object_property prop
   end
 
 let documentation_of_def_loc def_loc ast =

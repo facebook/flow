@@ -49,3 +49,49 @@ class Foo {
 }
 
 module.exports = {FunctionComponent, ClassComponent, Foo}
+
+let bar = {
+  /**
+   * identifier property of an object literal
+   */
+  a : 1,
+  /**
+   * literal property of an object literal
+   */
+  'b' : 2,
+  /**
+   * computed property of an object literal
+   */
+  ['c'] : 3,
+  /**
+   * annotated getter property of an object literal
+   */
+  get d(): number { return 4; },
+  /**
+   * unannotated getter property of an object literal
+   */
+  get e()      {},
+  /**
+   * method property of an object literal
+   */
+  f() {},
+  /**
+   * async method property of an object literal
+   */
+  async g() {},
+}
+
+bar.a;
+//  ^
+bar.b;
+//  ^
+bar.c;
+//  ^
+bar.d;
+//  ^
+bar.e;
+//  TODO: investigate/fix get-def of unnanotated getter property
+bar.f;
+//  ^
+bar.g;
+//  ^

@@ -549,3 +549,117 @@ Flags: --strip-root --pretty
   "end":20
 }
 
+objects.js:84:5
+Flags: --strip-root --pretty
+{
+  "documentation":"identifier property of an object literal",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"objects.js",
+    "type":"SourceFile",
+    "start":{"line":84,"column":5,"offset":1354},
+    "end":{"line":84,"column":5,"offset":1355}
+  },
+  "path":"objects.js",
+  "line":84,
+  "endline":84,
+  "start":5,
+  "end":5
+}
+
+objects.js:86:5
+Flags: --strip-root --pretty
+{
+  "documentation":"literal property of an object literal",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"objects.js",
+    "type":"SourceFile",
+    "start":{"line":86,"column":5,"offset":1367},
+    "end":{"line":86,"column":5,"offset":1368}
+  },
+  "path":"objects.js",
+  "line":86,
+  "endline":86,
+  "start":5,
+  "end":5
+}
+
+objects.js:88:5
+Flags: --strip-root --pretty
+{
+  "documentation":"computed property of an object literal",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"objects.js",
+    "type":"SourceFile",
+    "start":{"line":88,"column":5,"offset":1380},
+    "end":{"line":88,"column":5,"offset":1381}
+  },
+  "path":"objects.js",
+  "line":88,
+  "endline":88,
+  "start":5,
+  "end":5
+}
+
+objects.js:90:5
+Flags: --strip-root --pretty
+{
+  "documentation":"annotated getter property of an object literal",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"objects.js",
+    "type":"SourceFile",
+    "start":{"line":90,"column":5,"offset":1393},
+    "end":{"line":90,"column":5,"offset":1394}
+  },
+  "path":"objects.js",
+  "line":90,
+  "endline":90,
+  "start":5,
+  "end":5
+}
+
+objects.js:94:5
+Flags: --strip-root --pretty
+{
+  "documentation":"method property of an object literal",
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"objects.js",
+    "type":"SourceFile",
+    "start":{"line":94,"column":5,"offset":1478},
+    "end":{"line":94,"column":5,"offset":1479}
+  },
+  "path":"objects.js",
+  "line":94,
+  "endline":94,
+  "start":5,
+  "end":5
+}
+
+objects.js:96:5
+Flags: --strip-root --pretty
+{
+  "documentation":"async method property of an object literal",
+  "type":"() => Promise<void>",
+  "reasons":[],
+  "loc":{
+    "source":"objects.js",
+    "type":"SourceFile",
+    "start":{"line":96,"column":5,"offset":1491},
+    "end":{"line":96,"column":5,"offset":1492}
+  },
+  "path":"objects.js",
+  "line":96,
+  "endline":96,
+  "start":5,
+  "end":5
+}
+
