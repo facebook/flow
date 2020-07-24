@@ -1,7 +1,7 @@
 //@flow
 
 const React = require('React');
-const {FunctionComponent, ClassComponent} = require('./objects');
+const {FunctionComponent, ClassComponent, Foo} = require('./objects');
 import type {Props} from './objects';
 
 let component1 =
@@ -38,3 +38,15 @@ let component2 =
   x.qux
 //   ^
 });
+
+Foo.staticProp
+//    ^
+Foo.staticMethod();
+//    ^
+let fooInst = new Foo();
+fooInst.instanceProp;
+//         ^
+fooInst.instanceMethod();
+//         ^
+fooInst.varianceProp;
+//         ^

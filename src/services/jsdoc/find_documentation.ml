@@ -105,6 +105,25 @@ class documentation_searcher (def_loc : Loc.t) =
         find_description (comments_of_object_key key)
       end;
       super#object_property_type prop_type
+
+    method! class_method method_loc meth =
+      let open Flow_ast.Class.Method in
+      let { key; comments; _ } = meth in
+      if this#is_target (loc_of_object_key key) then begin
+        find_description comments;
+        find_description (comments_of_object_key key)
+      end;
+      super#class_method method_loc meth
+
+    method! class_property prop_loc prop =
+      let open Flow_ast.Class.Property in
+      let { key; variance; comments; _ } = prop in
+      if this#is_target (loc_of_object_key key) then begin
+        find_description comments;
+        find_description (comments_of_variance variance);
+        find_description (comments_of_object_key key)
+      end;
+      super#class_property prop_loc prop
   end
 
 let documentation_of_def_loc def_loc ast =

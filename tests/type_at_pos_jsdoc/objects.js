@@ -25,4 +25,27 @@ function FunctionComponent(x: Props) {}
 
 class ClassComponent extends React.Component<Props> {}
 
-module.exports = {FunctionComponent, ClassComponent}
+class Foo {
+  /**
+   * this is a static property
+   */
+  static staticProp : 1;
+  /**
+   * this is a static method
+   */
+  static staticMethod() {}
+  /**
+   * this is an instance property
+   */
+  instanceProp : 2;
+  /**
+   * this is an instance method
+   */
+  instanceMethod() {}
+  /**
+   * property with variance
+   */
+  +varianceProp : 3;
+}
+
+module.exports = {FunctionComponent, ClassComponent, Foo}
