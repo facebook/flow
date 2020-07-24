@@ -25,3 +25,8 @@ type t =
   | Type of Type.t
   | Member of member_info
   | Require of (ALoc.t * string) * ALoc.t
+  | JsxAttribute of {
+      component_t: Type.t;
+      name: string;
+      loc: ALoc.t;
+    }

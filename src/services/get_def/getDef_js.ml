@@ -127,6 +127,20 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              "Internal Flow Error: Expected ModuleT for %S, but got %S!"
              name
              (string_of_ctor module_t))))
+  | Get_def_request.JsxAttribute { component_t; name; loc } ->
+    let reason = Reason.mk_reason (Reason.RCustom name) loc in
+    let props_object =
+      Tvar.mk_where cx reason (fun tvar ->
+          let use_op = Type.Op Type.UnknownUse in
+          Flow_js.flow cx (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
+    in
+    process_request
+      ~options
+      ~reader
+      ~cx
+      ~is_legit_require
+      ~typed_ast
+      Get_def_request.(Member { prop_name = name; object_source = ObjectType props_object })
 
 let get_def ~options ~reader cx file_sig typed_ast requested_loc =
   let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in

@@ -34,6 +34,14 @@ let rec is_require ~is_legit_require expr =
     true
   | _ -> false
 
+let type_of_jsx_name =
+  let open Flow_ast.JSX in
+  function
+  | Identifier ((_, t), _)
+  | NamespacedName (_, NamespacedName.{ name = ((_, t), _); _ })
+  | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
+    t
+
 class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
   object (this)
     inherit
@@ -143,6 +151,27 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
     method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as id) =
       if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
       super#t_identifier id
+
+    method! jsx_opening_element elt =
+      let open Flow_ast.JSX in
+      let (_, Opening.{ name = component_name; attributes; _ }) = elt in
+      List.iter
+        (function
+          | Opening.Attribute
+              ( _,
+                {
+                  Attribute.name =
+                    Attribute.Identifier
+                      ((loc, _), { Identifier.name = attribute_name; comments = _ });
+                  _;
+                } )
+            when this#covers_target loc ->
+            this#request
+              (Get_def_request.JsxAttribute
+                 { component_t = type_of_jsx_name component_name; name = attribute_name; loc })
+          | _ -> ())
+        attributes;
+      super#jsx_opening_element elt
 
     method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
       if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
