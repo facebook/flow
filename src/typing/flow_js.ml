@@ -7246,7 +7246,7 @@ struct
         ()
       else
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx ~trace (Error_message.EComparison reasons)
+        add_output cx ~trace (Error_message.ENonStrictEqualityComparison reasons)
 
   and flow_strict_eq cx trace reason cond_context flip l r =
     if needs_resolution r then

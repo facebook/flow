@@ -121,6 +121,7 @@ and 'loc t' =
       ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
+  | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of
       ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
@@ -716,6 +717,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
+  | ENonStrictEqualityComparison (r1, r2) ->
+    ENonStrictEqualityComparison (map_reason r1, map_reason r2)
   | ESpeculationAmbiguous
       { reason; prev_case = (prev_i, prev_case_reason); case = (i, case_reason); cases } ->
     ESpeculationAmbiguous
@@ -1024,6 +1027,7 @@ let util_use_op_of_msg nope util = function
   | EBuiltinLookupFailed _
   | EStrictLookupFailed { use_op = None; _ }
   | EComparison (_, _)
+  | ENonStrictEqualityComparison _
   | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
   | EIdxArity _
@@ -1130,6 +1134,7 @@ let util_use_op_of_msg nope util = function
 let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
+  | ENonStrictEqualityComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
@@ -1846,6 +1851,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EComparison (lower, upper) ->
     Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
+  | ENonStrictEqualityComparison (lower, upper) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot compare ";
+            ref lower;
+            text " to ";
+            ref upper;
+            text " with a non-strict equality check. ";
+            text "Make sure the arguments are valid, ";
+            text "or try using strict equality (";
+            code "===";
+            text " or ";
+            code "!==";
+            text ") instead.";
+          ];
+      }
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
     let (lower, upper) = reasons in
     UseOp
@@ -3388,7 +3411,9 @@ let error_code_of_message err : error_code option =
   | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
   | ECannotSpreadInterface _ -> Some CannotSpreadInterface
   | ECharSetAnnot _ -> Some InvalidCharsetTypeArg
-  | EComparison (_, _) -> Some InvalidCompare
+  | ENonStrictEqualityComparison _
+  | EComparison _ ->
+    Some InvalidCompare
   | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
   | EDebugPrint (_, _) -> None

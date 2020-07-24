@@ -379,7 +379,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:21:1
 
-Cannot compare string [1] to `E` [2]. [invalid-compare]
+Cannot compare string [1] to `E` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:21:1
    21| s == e; // Error
@@ -400,7 +401,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:22:1
 
-Cannot compare `E` [1] to string [2]. [invalid-compare]
+Cannot compare `E` [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:22:1
    22| e == s; // Error
@@ -421,7 +423,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:24:1
 
-Cannot compare string [1] to `E` [2]. [invalid-compare]
+Cannot compare string [1] to `E` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:24:1
    24| s != e; // Error
@@ -442,7 +445,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:25:1
 
-Cannot compare `E` [1] to string [2]. [invalid-compare]
+Cannot compare `E` [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:25:1
    25| e != s; // Error
@@ -463,7 +467,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:27:1
 
-Cannot compare `E` [1] to `E` [1]. [invalid-compare]
+Cannot compare `E` [1] to `E` [1] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:27:1
    27| e == E.A; // Error
@@ -481,7 +486,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:28:1
 
-Cannot compare `E` [1] to `E` [2]. [invalid-compare]
+Cannot compare `E` [1] to `E` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:28:1
    28| ef == E.A; // Error
@@ -502,7 +508,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:28:1
 
-Cannot compare `F` [1] to `E` [2]. [invalid-compare]
+Cannot compare `F` [1] to `E` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:28:1
    28| ef == E.A; // Error
@@ -523,7 +530,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:29:1
 
-Cannot compare `F` [1] to `E` [2]. [invalid-compare]
+Cannot compare `F` [1] to `E` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:29:1
    29| F.A == E.A; // Error
@@ -548,7 +556,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:31:1
 
-Cannot compare enum `E` [1] to string [2]. [invalid-compare]
+Cannot compare enum `E` [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equality.js:31:1
    31| eo == s; // Error

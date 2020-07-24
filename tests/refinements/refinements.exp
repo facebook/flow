@@ -308,7 +308,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:5:9
 
-Cannot compare string [1] to number [2]. [invalid-compare]
+Cannot compare string [1] to number [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:5:9
    5|     if (x == y) {} // error, string & number are not comparable (unsafe casting)
@@ -325,7 +326,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `foo` [1] to number [2]. [invalid-compare]
+Cannot compare string literal `foo` [1] to number [2] with a non-strict equality check. Make sure the arguments are
+valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -342,7 +344,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `bar` [1] to number [2]. [invalid-compare]
+Cannot compare string literal `bar` [1] to number [2] with a non-strict equality check. Make sure the arguments are
+valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error

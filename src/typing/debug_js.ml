@@ -1241,6 +1241,8 @@ let dump_error_message =
       spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
     | EComparison (reason1, reason2) ->
       spf "EComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | ENonStrictEqualityComparison (reason1, reason2) ->
+      spf "ENonStrictEqualityComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
       spf
         "ETupleArityMismatch (%s, %s, %d, %d, %s)"
