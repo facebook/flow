@@ -207,17 +207,9 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json2 (fun () ->
           Lwt.return
-            ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
-            |> fun (result, request_history) ->
+            ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc |> fun result ->
               let open GetDef_js.Get_def_result in
-              let json_props =
-                [
-                  ( "request_history",
-                    Hh_json.JSON_Array
-                      (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
-                ]
-                |> fold_json_of_parse_errors parse_errors
-              in
+              let json_props = fold_json_of_parse_errors parse_errors [] in
               match result with
               | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
               | Partial (loc, msg) ->

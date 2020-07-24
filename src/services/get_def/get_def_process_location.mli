@@ -6,9 +6,9 @@
  *)
 
 type result =
-  | Loc of ALoc.t
-  | Chain of Get_def_request.t
-  | No_loc
+  | OwnDef of ALoc.t
+  | Request of Get_def_request.t
+  | LocNotFound
 
 val process_location :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->

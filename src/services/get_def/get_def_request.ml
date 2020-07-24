@@ -17,7 +17,6 @@ type member_info = {
 }
 
 type t =
-  | Location of Loc.t
   | Identifier of {
       name: string;
       loc: ALoc.t;

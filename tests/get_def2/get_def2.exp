@@ -17,7 +17,7 @@ Parent.js:4:18,4:28
 Parent.js:4:18,4:28
 
 Trace `NonDestructuredFoo` back to its def
-main.js:20:5,20:7
+Parent.js:3:23,3:27
 Parent.js:3:23,3:27
 Parent.js:3:18,3:20
 
@@ -38,7 +38,7 @@ override.js:4:3,4:10
 Directly jump to required/imported modules (TODO #2)
 Parent.js:4:18,4:28
 types.js:0:1,0:0
-types.js:3:1,3:21
+types.js:3:13,3:15
 types.js:3:13,3:15
 
 Refinements
