@@ -11,7 +11,7 @@ type t
 (* accessors *)
 (*************)
 
-val description : t -> string
+val description : t -> string option
 
 (***********)
 (* parsing *)

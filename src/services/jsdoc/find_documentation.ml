@@ -12,7 +12,7 @@ exception Found of string
 let find documentation = raise (Found documentation)
 
 let find_description comments =
-  Base.Option.iter (Jsdoc.of_comments comments) ~f:(Jsdoc.description %> find)
+  Base.Option.iter (Jsdoc.of_comments comments) ~f:(Jsdoc.description %> Base.Option.iter ~f:find)
 
 let loc_of_object_key =
   let open Flow_ast.Expression.Object.Property in

@@ -48,16 +48,18 @@ let mk_test comment ?(should_not_parse = false) ?description ctxt =
     Base.Option.iter description ~f:(fun description ->
         assert_equal
           ~ctxt
-          ~printer:Base.Fn.id
+          ~printer:(function
+            | None -> "None"
+            | Some desc -> Printf.sprintf "Some %S" desc)
           ~msg:"description"
-          (Jsdoc.description jsdoc)
-          description)
+          description
+          (Jsdoc.description jsdoc))
 
 let tests =
   "JSDoc"
   >::: [
          "dont_parse_line" >:: mk_test (mk_line_comment "* foo") ~should_not_parse:true;
-         "parse_description" >:: mk_test (mk_block_comment "* foo") ~description:"foo";
+         "parse_description" >:: mk_test (mk_block_comment "* foo") ~description:(Some "foo");
          "trim_whitespace_and_asterisks"
          >:: mk_test
                (mk_block_comment
@@ -66,11 +68,12 @@ let tests =
                     *   bar
                     *   @snap crackle
                     *   |})
-               ~description:"foo\nbar";
+               ~description:(Some "foo\nbar");
          "pick_last_jsdoc-containing_leading_comment"
          >:: mk_test
                (mk_block_comments
                   ~leading:["* foo"; "bar"; "* baz"; "snap"]
                   ~trailing:["* crackle"])
-               ~description:"baz";
+               ~description:(Some "baz");
+         "no_description" >:: mk_test (mk_block_comment "*\n @unsupported") ~description:None;
        ]

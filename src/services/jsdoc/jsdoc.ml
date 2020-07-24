@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = { description: string }
+type t = { description: string option }
 
 (*************)
 (* accessors *)
@@ -28,7 +28,14 @@ module Parser = struct
 
   let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
 
+  (* Helpers *)
+
   let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
+
+  let description_of_desc_buf desc_buf =
+    match trimmed_string_of_buffer desc_buf with
+    | "" -> None
+    | s -> Some s
 
   (* Parsing functions *)
 
@@ -43,11 +50,11 @@ module Parser = struct
     | any ->
       Buffer.add_string desc_buf (Sedlexing.Utf8.lexeme lexbuf);
       description desc_buf lexbuf
-    | _ (* eof *) -> Some { description = trimmed_string_of_buffer desc_buf }
+    | _ (* eof *) -> Some { description = description_of_desc_buf desc_buf }
 
   and description_or_tag desc_buf lexbuf =
     match%sedlex lexbuf with
-    | '@' -> tag (trimmed_string_of_buffer desc_buf) lexbuf
+    | '@' -> tag (description_of_desc_buf desc_buf) lexbuf
     | _ -> description desc_buf lexbuf
 
   and description_startline desc_buf lexbuf =
