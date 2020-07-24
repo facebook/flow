@@ -114,9 +114,9 @@
       additional_reading:
         - guide: libdefs
 
-# - id: errors
-#   pages:
-#     - path: "/docs/errors/"
+- id: errors
+  pages:
+    - path: "/docs/errors/"
 
 - id: react
   pages:
