@@ -1124,10 +1124,25 @@ struct
         ListUtils.ident_map map_statement stmts
     end
 
+  (* Now that we've determined the kind of the export, we can filter out
+     BadExportPosition and BadExportContext from ES modules. These errors are only
+     relevant for CommonJS modules, since their goal is to capture aliasing of
+     `module` and `module.exports`. For ES modules these uses should be allowed,
+     so we discard these errors to allow more flexibility. Note that this pass only
+     accummulates BadExportPosition and BadExportContext errors. *)
+  let filter_irrelevant_errors ~module_kind tolerable_errors =
+    match module_kind with
+    | CommonJS _ -> tolerable_errors
+    | ES _ -> []
+
   let program_with_exports_info ~ast ~module_ref_prefix :
       (exports_t * tolerable_error list, error) result =
     let walk = new requires_exports_calculator ~ast ~module_ref_prefix in
-    walk#eval walk#program ast
+    match walk#eval walk#program ast with
+    | Ok (exports, tolerable_errors) ->
+      let module_kind = exports.module_sig.module_kind in
+      Ok (exports, filter_irrelevant_errors ~module_kind tolerable_errors)
+    | Error e -> Error e
 
   let map_unit_file_sig =
     let map_unit_module_sig module_sig = { module_sig with info = () } in
