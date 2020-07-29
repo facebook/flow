@@ -97,14 +97,11 @@ end
 module Patterns = struct
   open Ast.Pattern
 
-  let identifier ?(loc = Loc.none) str =
+  let identifier ?(loc = Loc.none) ?annot str =
+    let annot = Base.Option.value ~default:(Ast.Type.Missing loc) annot in
     ( loc,
       Identifier
-        {
-          Identifier.name = Flow_ast_utils.ident_of_source (loc, str);
-          annot = Ast.Type.Missing loc;
-          optional = false;
-        } )
+        { Identifier.name = Flow_ast_utils.ident_of_source (loc, str); annot; optional = false } )
 
   let array elements =
     let elements =
@@ -270,8 +267,8 @@ module Statements = struct
 
   let variable_declarator_generic id init = (Loc.none, { VariableDeclaration.Declarator.id; init })
 
-  let variable_declarator ?init ?(loc = Loc.none) str =
-    (loc, { VariableDeclaration.Declarator.id = Patterns.identifier ~loc str; init })
+  let variable_declarator ?init ?annot ?(loc = Loc.none) str =
+    (loc, { VariableDeclaration.Declarator.id = Patterns.identifier ~loc ?annot str; init })
 
   let variable_declaration
       ?(kind = Ast.Statement.VariableDeclaration.Var) ?(loc = Loc.none) ?comments declarations =
