@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module CodeLocSet : Set.S with type elt = string * Loc.t
+
 type t
 
 val empty : t
@@ -25,6 +27,8 @@ val union : t -> t -> t
 val update_suppressions : t -> t -> t
 
 val all_unused_locs : t -> Loc_collections.LocSet.t
+
+val universally_suppressed_codes : t -> CodeLocSet.t
 
 val filter_suppressed_errors :
   root:Path.t ->

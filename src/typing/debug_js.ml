@@ -1489,6 +1489,7 @@ let dump_error_message =
     | EDeprecatedType loc -> spf "EDeprecatedType (%s)" (string_of_aloc loc)
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
+    | ECodelessSuppression (loc, c) -> spf "ECodelessSuppression (%s, %s)" (string_of_aloc loc) c
     | ELintSetting (loc, kind) ->
       LintSettings.(
         let kind_str =

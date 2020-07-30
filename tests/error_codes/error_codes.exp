@@ -472,12 +472,63 @@ References:
               ^^^^^^ [2]
 
 
+Warning --------------------------------------------------------------------------------------------------- test.js:10:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   10| //$FlowFixMe
+       ^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:16:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   16| // $FlowFixMe
+       ^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:19:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+       v-
+   19| /*
+   20|
+   21| $FlowFixMe*/
+       -----------^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:24:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   24| //$FlowFixMe arithmetic isn't parsed as an error code
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Warning --------------------------------------------------------------------------------------------------- test.js:36:1
 
 Unused suppression comment.
 
    36| // $FlowFixMe[arithmetic]
        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:45:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   45| // $FlowFixMe
+       ^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:45:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[prop-missing]`
+
+   45| // $FlowFixMe
+       ^^^^^^^^^^^^^
 
 
 Warning --------------------------------------------------------------------------------------------------- test.js:70:1
@@ -520,12 +571,44 @@ Unused suppression comment.
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Warning --------------------------------------------------------------------------------------------------- test.js:94:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   94| //$FlowFixMe
+       ^^^^^^^^^^^^
+
+
 Warning -------------------------------------------------------------------------------------------------- test.js:100:1
 
 Unused suppression comment.
 
    100| //$FlowFixMe[prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:106:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[extra-arg]`
+
+   106| // $FlowFixMe
+        ^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:106:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-call]`
+
+   106| // $FlowFixMe
+        ^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:124:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   124| // $FlowFixMe
+        ^^^^^^^^^^^^^
 
 
 Warning -------------------------------------------------------------------------------------------------- test.js:130:1
@@ -616,6 +699,22 @@ Unused suppression comment.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Warning ------------------------------------------------------------------------------------------------- unused.js:25:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[incompatible-cast]`
+
+   25| // $FlowExpectedError
+       ^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------- unused.js:25:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[prop-missing]`
+
+   25| // $FlowExpectedError
+       ^^^^^^^^^^^^^^^^^^^^^
+
+
 Warning ------------------------------------------------------------------------------------------------- unused.js:29:1
 
 Unused suppression comment.
@@ -673,7 +772,7 @@ Unused suppression comment.
 
 
 
-Found 35 errors and 25 warnings
+Found 35 errors and 37 warnings
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

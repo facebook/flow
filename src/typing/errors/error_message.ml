@@ -273,6 +273,7 @@ and 'loc t' =
   | EDeprecatedUtility of 'loc * string
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
+  | ECodelessSuppression of 'loc * string
   | ELintSetting of 'loc * LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
@@ -804,6 +805,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
+  | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
   | ELintSetting (loc, err) -> ELintSetting (f loc, err)
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
@@ -1100,6 +1102,7 @@ let util_use_op_of_msg nope util = function
   | EDeprecatedUtility _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
+  | ECodelessSuppression _
   | ELintSetting _
   | ESketchyNullLint { kind = _; loc = _; null_loc = _; falsy_loc = _ }
   | ESketchyNumberLint _
@@ -1224,6 +1227,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EOptionalChainingMethods loc
   | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
+  | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
   | EAmbiguousObjectType loc
@@ -2867,6 +2871,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EUnsafeGettersSetters _ ->
     Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
   | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
+  | ECodelessSuppression (_, c) ->
+    Normal
+      {
+        features =
+          [
+            text
+              "Suppression is missing a code. Please update this suppression to use an error code: ";
+            code ("$FlowFixMe[" ^ c ^ "]");
+          ];
+      }
   | ELintSetting (_, kind) ->
     let features =
       match kind with
@@ -3411,6 +3425,7 @@ let error_code_of_message err : error_code option =
   | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
   | ECannotSpreadInterface _ -> Some CannotSpreadInterface
   | ECharSetAnnot _ -> Some InvalidCharsetTypeArg
+  | ECodelessSuppression _ -> None
   | ENonStrictEqualityComparison _
   | EComparison _ ->
     Some InvalidCompare

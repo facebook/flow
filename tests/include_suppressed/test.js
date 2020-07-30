@@ -2,7 +2,7 @@
 
 (123: string); // Normal error
 
-// $FlowFixMe
+// $FlowFixMe[incompatible-cast]
 (123: string); // Suppressed error
 
 // $FlowFixMe - unused suppression comment

@@ -162,8 +162,8 @@ JSON without --include-suppressed
           "loc":{
             "source":"test.js",
             "type":"SourceFile",
-            "start":{"line":8,"column":1,"offset":92},
-            "end":{"line":8,"column":42,"offset":134}
+            "start":{"line":8,"column":1,"offset":111},
+            "end":{"line":8,"column":42,"offset":153}
           },
           "path":"test.js",
           "line":8,
@@ -275,8 +275,8 @@ JSON with --include-suppressed
           "loc":{
             "source":"test.js",
             "type":"SourceFile",
-            "start":{"line":8,"column":1,"offset":92},
-            "end":{"line":8,"column":42,"offset":134}
+            "start":{"line":8,"column":1,"offset":111},
+            "end":{"line":8,"column":42,"offset":153}
           },
           "path":"test.js",
           "line":8,
@@ -296,7 +296,7 @@ JSON with --include-suppressed
             "source":"test.js",
             "type":"SourceFile",
             "start":{"line":5,"column":1,"offset":42},
-            "end":{"line":5,"column":13,"offset":55}
+            "end":{"line":5,"column":32,"offset":74}
           }
         }
       ],
@@ -324,8 +324,8 @@ JSON with --include-suppressed
               "loc":{
                 "source":"test.js",
                 "type":"SourceFile",
-                "start":{"line":6,"column":2,"offset":57},
-                "end":{"line":6,"column":4,"offset":60}
+                "start":{"line":6,"column":2,"offset":76},
+                "end":{"line":6,"column":4,"offset":79}
               },
               "path":"test.js",
               "line":6,
@@ -344,8 +344,8 @@ JSON with --include-suppressed
               "loc":{
                 "source":"test.js",
                 "type":"SourceFile",
-                "start":{"line":6,"column":7,"offset":62},
-                "end":{"line":6,"column":12,"offset":68}
+                "start":{"line":6,"column":7,"offset":81},
+                "end":{"line":6,"column":12,"offset":87}
               },
               "path":"test.js",
               "line":6,
@@ -364,8 +364,8 @@ JSON with --include-suppressed
           "loc":{
             "source":"test.js",
             "type":"SourceFile",
-            "start":{"line":6,"column":2,"offset":57},
-            "end":{"line":6,"column":4,"offset":60}
+            "start":{"line":6,"column":2,"offset":76},
+            "end":{"line":6,"column":4,"offset":79}
           },
           "path":"test.js",
           "line":6,
