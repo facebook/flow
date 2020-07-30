@@ -1229,6 +1229,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_warnings =
       flags.include_warnings || flags.max_warnings <> None || FlowConfig.include_warnings flowconfig;
+    opt_jsdoc = FlowConfig.jsdoc flowconfig;
     opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
     opt_esproposal_class_instance_fields = FlowConfig.esproposal_class_instance_fields flowconfig;
     opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;

@@ -85,6 +85,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_jsdoc: bool;
   opt_lazy_mode: lazy_mode;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_max_files_checked_per_worker: int;
@@ -181,6 +182,8 @@ let is_lazy_mode opts = opts.opt_lazy_mode <> NON_LAZY_MODE
 let lazy_mode opts = opts.opt_lazy_mode
 
 let is_quiet opts = opts.opt_quiet
+
+let jsdoc opts = opts.opt_jsdoc
 
 let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
