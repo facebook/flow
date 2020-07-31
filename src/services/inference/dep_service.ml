@@ -203,14 +203,15 @@ let implementation_file ~reader ~audit r =
   else
     None
 
-let file_dependencies ~audit ~reader file =
+let file_dependencies ~options ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
-  let sig_file_sig_opt = Parsing_heaps.Mutator_reader.get_sig_file_sig reader file in
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =
-    match sig_file_sig_opt with
-    | None -> require_set
-    | Some sig_file_sig -> File_sig.With_ALoc.(require_set sig_file_sig.module_sig)
+    match Options.arch options with
+    | Options.Classic -> require_set
+    | Options.TypesFirst ->
+      let sig_file_sig = Parsing_heaps.Mutator_reader.get_sig_file_sig_unsafe reader file in
+      File_sig.With_ALoc.(require_set sig_file_sig.module_sig)
   in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
@@ -240,10 +241,12 @@ let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
       workers
       ~job:
         (List.fold_left (fun dependency_info file ->
-             FilenameMap.add
-               file
-               (file_dependencies ~audit:Expensive.ok ~reader file)
-               dependency_info))
+             let dependencies =
+               match file with
+               | File_key.JsonFile _ -> (FilenameSet.empty, FilenameSet.empty)
+               | _ -> file_dependencies ~options ~audit:Expensive.ok ~reader file
+             in
+             FilenameMap.add file dependencies dependency_info))
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))

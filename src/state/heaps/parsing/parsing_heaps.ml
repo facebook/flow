@@ -246,8 +246,6 @@ module type READER = sig
 
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
-  val get_sig_file_sig : reader:reader -> File_key.t -> File_sig.With_ALoc.t option
-
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
@@ -295,8 +293,6 @@ end = struct
   let get_docblock ~reader:_ = DocblockHeap.get
 
   let get_file_sig ~reader:_ = FileSigHeap.get
-
-  let get_sig_file_sig ~reader:_ = SigFileSigHeap.get
 
   let get_file_hash ~reader:_ = FileHashHeap.get
 
@@ -540,11 +536,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig ~reader
     | State_reader reader -> Reader.get_file_sig ~reader
-
-  let get_sig_file_sig ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_sig_file_sig ~reader
-    | State_reader reader -> Reader.get_sig_file_sig ~reader
 
   let get_file_hash ~reader =
     match reader with
