@@ -9,5 +9,6 @@
 [options]
 no_flowlib=false
 types_first=true
+experimental.jsdoc=true
 
 [strict]

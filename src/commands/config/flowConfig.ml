@@ -67,6 +67,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    jsdoc: bool;
     lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
     max_files_checked_per_worker: int;
@@ -174,6 +175,7 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
+      jsdoc = false;
       lazy_mode = None;
       log_file = None;
       max_files_checked_per_worker = 100;
@@ -597,6 +599,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
       ( "experimental.facebook_module_interop",
         boolean (fun opts v -> Ok { opts with facebook_module_interop = v }) );
+      ("experimental.jsdoc", boolean (fun opts v -> Ok { opts with jsdoc = v }));
     ]
 
   let parse =
@@ -1174,6 +1177,8 @@ let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
+
+let jsdoc c = c.options.Opts.jsdoc
 
 let lazy_mode c = c.options.Opts.lazy_mode
 
