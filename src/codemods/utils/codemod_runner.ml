@@ -125,8 +125,12 @@ module TypedRunner :
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let result =
       if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
-        let { Merge_service.cx; master_cx; file_sigs; typed_asts; _ } =
-          Merge_service.merge_context ~options ~reader component
+        let (cx, master_cx, check_opt) =
+          let open Merge_service in
+          match merge_context ~options ~reader component with
+          | MergeResult { cx; master_cx } -> (cx, master_cx, None)
+          | CheckResult { cx; master_cx; file_sigs; typed_asts; _ } ->
+            (cx, master_cx, Some (file_sigs, typed_asts))
         in
         let full_cx = Context.copy_of_context cx in
         let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
@@ -139,8 +143,9 @@ module TypedRunner :
           component
           md5;
         let metadata = Context.metadata_of_options options in
-        match Options.arch options with
-        | Options.Classic ->
+        match check_opt with
+        | None -> FilenameMap.empty
+        | Some (file_sigs, typed_asts) ->
           Nel.fold_left
             (fun acc file ->
               (* Merge will have potentially merged more that the target files (roots).
@@ -168,7 +173,6 @@ module TypedRunner :
                 acc)
             FilenameMap.empty
             component
-        | Options.TypesFirst -> FilenameMap.empty
       ) else
         FilenameMap.empty
     in

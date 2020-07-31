@@ -44,14 +44,19 @@ type sig_opts_data = {
 
 type 'a merge_results = 'a merge_job_results * sig_opts_data
 
-type merge_context_result = {
-  cx: Context.t;
-  other_cxs: Context.t list;
-  master_cx: Context.sig_t;
-  file_sigs: File_sig.With_ALoc.t FilenameMap.t;
-  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
-  coverage_map: Coverage_response.file_coverage FilenameMap.t option;
-}
+type merge_context_result =
+  | MergeResult of {
+      cx: Context.t;
+      master_cx: Context.sig_t;
+    }
+  | CheckResult of {
+      cx: Context.t;
+      other_cxs: Context.t list;
+      master_cx: Context.sig_t;
+      file_sigs: File_sig.With_ALoc.t FilenameMap.t;
+      typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
+      coverage: Coverage_response.file_coverage FilenameMap.t;
+    }
 
 val merge_context :
   options:Options.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> merge_context_result

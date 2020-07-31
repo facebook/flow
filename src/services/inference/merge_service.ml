@@ -44,14 +44,19 @@ type sig_opts_data = {
 
 type 'a merge_results = 'a merge_job_results * sig_opts_data
 
-type merge_context_result = {
-  cx: Context.t;
-  other_cxs: Context.t list;
-  master_cx: Context.sig_t;
-  file_sigs: File_sig.With_ALoc.t FilenameMap.t;
-  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
-  coverage_map: Coverage_response.file_coverage FilenameMap.t option;
-}
+type merge_context_result =
+  | MergeResult of {
+      cx: Context.t;
+      master_cx: Context.sig_t;
+    }
+  | CheckResult of {
+      cx: Context.t;
+      other_cxs: Context.t list;
+      master_cx: Context.sig_t;
+      file_sigs: File_sig.With_ALoc.t FilenameMap.t;
+      typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
+      coverage: Coverage_response.file_coverage FilenameMap.t;
+    }
 
 (* To merge the contexts of a component with their dependencies, we call the
    functions `merge_component` and `restore` defined in merge_js.ml
@@ -152,38 +157,34 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
-  (* Only compute coverage and imports/exports errors on Types-First checking,
-     or Classic merging phases *)
-  let coverage_map =
-    match (Options.arch options, phase) with
-    | (_, Context.Normalizing)
-    | (Options.TypesFirst, Context.Merging) ->
-      None
-    | (Options.TypesFirst, Context.Checking)
-    | (Options.Classic, _) ->
-      Inference_utils.iter_strict_es6_import_export
-        ~f:(Strict_es6_import_export.detect_errors full_cx)
-        options
-        cx_nel;
-      Some
-        (Nel.fold_left
-           (fun acc (ctx, _, typed_ast) ->
-             let file = Context.file ctx in
-             let cov = Coverage.file_coverage ~full_cx typed_ast in
-             FilenameMap.add file cov acc)
-           FilenameMap.empty
-           cx_nel)
-  in
-  let typed_asts =
-    Nel.fold_left
-      (fun typed_asts (ctx, _, typed_ast) ->
-        let file = Context.file ctx in
-        FilenameMap.add file typed_ast typed_asts)
-      FilenameMap.empty
-      cx_nel
-  in
-  let other_cxs = Base.List.map ~f:(fun (cx, _, _) -> cx) other_cxs in
-  { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
+  match (Options.arch options, phase) with
+  | (_, Context.Normalizing) -> failwith "unexpected phase: Normalizing"
+  | (Options.TypesFirst, Context.Merging) -> MergeResult { cx = full_cx; master_cx }
+  | (Options.TypesFirst, Context.Checking)
+  | (Options.Classic, _) ->
+    Inference_utils.iter_strict_es6_import_export
+      ~f:(Strict_es6_import_export.detect_errors full_cx)
+      options
+      cx_nel;
+    let coverage =
+      Nel.fold_left
+        (fun acc (ctx, _, typed_ast) ->
+          let file = Context.file ctx in
+          let cov = Coverage.file_coverage ~full_cx typed_ast in
+          FilenameMap.add file cov acc)
+        FilenameMap.empty
+        cx_nel
+    in
+    let typed_asts =
+      Nel.fold_left
+        (fun acc (ctx, _, typed_ast) ->
+          let file = Context.file ctx in
+          FilenameMap.add file typed_ast acc)
+        FilenameMap.empty
+        cx_nel
+    in
+    let other_cxs = Base.List.map ~f:(fun (cx, _, _) -> cx) other_cxs in
+    CheckResult { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage }
 
 let merge_context ~options ~reader component =
   merge_context_generic
@@ -292,27 +293,32 @@ let merge_component ~worker_mutator ~options ~reader component =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; other_cxs = _; master_cx; coverage_map; _ } =
-      merge_context ~options ~reader component
+    let (cx, master_cx, errors, warnings, suppressions, coverage) =
+      match merge_context ~options ~reader component with
+      | MergeResult { cx; master_cx } ->
+        let errors = Flow_error.ErrorSet.empty in
+        let warnings = Flow_error.ErrorSet.empty in
+        let suppressions = Error_suppressions.empty in
+        (cx, master_cx, errors, warnings, suppressions, None)
+      | CheckResult { cx; master_cx; coverage; _ } ->
+        let errors = Context.errors cx in
+        let suppressions = Context.error_suppressions cx in
+        let severity_cover = Context.severity_cover cx in
+        let include_suppressions = Context.include_suppressions cx in
+        let aloc_tables = Context.aloc_tables cx in
+        let (errors, warnings, suppressions) =
+          Error_suppressions.filter_lints
+            ~include_suppressions
+            suppressions
+            errors
+            aloc_tables
+            severity_cover
+        in
+        (cx, master_cx, errors, warnings, suppressions, Some coverage)
     in
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
     Context.clear_master_shared cx master_cx;
-
-    let errors = Context.errors cx in
-    let suppressions = Context.error_suppressions cx in
-    let severity_cover = Context.severity_cover cx in
-    let include_suppressions = Context.include_suppressions cx in
-    let aloc_tables = Context.aloc_tables cx in
-    let (errors, warnings, suppressions) =
-      Error_suppressions.filter_lints
-        ~include_suppressions
-        suppressions
-        errors
-        aloc_tables
-        severity_cover
-    in
-
     Context_heaps.Merge_context_mutator.add_merge_on_diff
       ~audit:Expensive.ok
       worker_mutator
@@ -320,7 +326,7 @@ let merge_component ~worker_mutator ~options ~reader component =
       component
       md5;
     let merge_time = Unix.gettimeofday () -. start_merge_time in
-    Ok (errors, warnings, suppressions, coverage_map, merge_time)
+    Ok (errors, warnings, suppressions, coverage, merge_time)
   ) else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
@@ -333,7 +339,7 @@ let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; coverage_map; typed_asts; file_sigs; _ } =
+    let merge_context_result =
       merge_context_generic
         ~options
         ~reader
@@ -349,6 +355,12 @@ let check_file options ~reader file =
           |> File_sig.abstractify_locs)
         (Nel.one file)
     in
+    let (cx, coverage, typed_asts, file_sigs) =
+      match merge_context_result with
+      | MergeResult _ -> failwith "unexpected merge result"
+      | CheckResult { cx; coverage; typed_asts; file_sigs; _ } ->
+        (cx, Some coverage, typed_asts, file_sigs)
+    in
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in
     let severity_cover = Context.severity_cover cx in
@@ -363,7 +375,7 @@ let check_file options ~reader file =
         severity_cover
     in
     let check_time = Unix.gettimeofday () -. start_check_time in
-    (Some (cx, file_sigs, typed_asts), (errors, warnings, suppressions, coverage_map, check_time))
+    (Some (cx, file_sigs, typed_asts), (errors, warnings, suppressions, coverage, check_time))
   else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
