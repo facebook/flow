@@ -4004,6 +4004,21 @@ let%expect_test "enum_export" =
          name = "E"; rep = StringRep {truthy = true};
          members = { "A" -> [1:16-17]; "B" -> [1:19-20] }} |}]
 
+let%expect_test "enum_default_export" =
+  print_sig {|
+    export default enum E { A, B }
+  |};
+  [%expect {|
+    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
+      types = {}; stars = []; type_stars = [];
+      strict = true}
+
+    Local defs:
+    0. EnumBinding {id_loc = [1:20-21];
+         name = "E"; rep = StringRep {truthy = true};
+         members = { "A" -> [1:24-25]; "B" -> [1:27-28] }}
+  |}]
+
 let%expect_test "enum_stmt" =
   print_sig {|
     enum E { A, B };

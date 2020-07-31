@@ -3504,6 +3504,9 @@ let export_default_decl =
     | D.Declaration (loc, S.FunctionDeclaration decl) ->
       let loc = Locs.push locs loc in
       export_default_fun opts scope locs default_loc loc decl
+    | D.Declaration (_, S.EnumDeclaration decl) ->
+      enum_decl opts scope locs decl;
+      Scope.export_default_binding scope default_loc decl.S.EnumDeclaration.id
     | D.Declaration _ ->
       failwith "unexpected default export declaration"
     | D.Expression expr ->
