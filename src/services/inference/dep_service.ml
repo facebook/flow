@@ -75,68 +75,67 @@ open Utils_js
                 function to read any other state, make sure to update the DirectDependentFilesCache!
  *)
 let calc_direct_dependents_utils ~reader workers fileset root_fileset =
-  Module_heaps.(
-    let root_fileset =
-      FilenameSet.fold
-        (fun f root_fileset ->
-          match f with
-          | File_key.SourceFile s
-          | File_key.JsonFile s
-          | File_key.ResourceFile s ->
-            SSet.add s root_fileset
-          | File_key.LibFile _
-          | File_key.Builtins ->
-            root_fileset)
-        root_fileset
-        SSet.empty
-    in
-    (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
-    let job =
-      List.fold_left (fun utils f ->
-          let resolved_requires =
-            Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok f
-          in
-          let required = Modulename.Set.of_list (SMap.values resolved_requires.resolved_modules) in
-          let entry =
-            (* For every required module m, add f to the reverse dependency list for m,
-       stored in `module_dependents_tbl`. This will be used downstream when computing
-       direct_dependents, and also in calc_all_dependents.
+  let open Module_heaps in
+  let root_fileset =
+    FilenameSet.fold
+      (fun f root_fileset ->
+        match f with
+        | File_key.SourceFile s
+        | File_key.JsonFile s
+        | File_key.ResourceFile s ->
+          SSet.add s root_fileset
+        | File_key.LibFile _
+        | File_key.Builtins ->
+          root_fileset)
+      root_fileset
+      SSet.empty
+  in
+  (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
+  let job =
+    List.fold_left (fun acc f ->
+        let { resolved_modules; phantom_dependents; _ } =
+          Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok f
+        in
 
-       TODO: should generate this map once on startup, keep required_by in
-       module records and update incrementally on recheck.
-    *)
-            ( required,
-              (* If f's phantom dependents are in root_fileset, then add f to
-       `resolution_path_files`. These are considered direct dependencies (in
-       addition to others computed by direct_dependents downstream). *)
-              resolved_requires.phantom_dependents |> SSet.exists (fun f -> SSet.mem f root_fileset)
-            )
-          in
-          (f, entry) :: utils)
-    in
-    (* merge results *)
-    let merge = List.rev_append in
-    let%lwt result =
-      MultiWorkerLwt.call
-        workers
-        ~job
-        ~merge
-        ~neutral:[]
-        ~next:(MultiWorkerLwt.next workers (FilenameSet.elements fileset))
-    in
-    let module_dependents_tbl = Hashtbl.create 0 in
-    let resolution_path_files =
-      List.fold_left
-        (fun resolution_path_files (f, (rs, b)) ->
-          Modulename.Set.iter (fun r -> Hashtbl.add module_dependents_tbl r f) rs;
-          if b then
-            FilenameSet.add f resolution_path_files
-          else
-            resolution_path_files)
-        FilenameSet.empty
-        result
-    in
-    Lwt.return (module_dependents_tbl, resolution_path_files))
+        (* For every required module m, add f to the reverse dependency list for m,
+           stored in `module_dependents_tbl`. This will be used downstream when computing
+           direct_dependents, and also in calc_all_dependents.
+
+           TODO: should generate this map once on startup, keep required_by in
+           module records and update incrementally on recheck.
+        *)
+        let required = Modulename.Set.of_list (SMap.values resolved_modules) in
+        (* If f's phantom dependents are in root_fileset, then add f to
+           `resolution_path_files`. These are considered direct dependencies (in
+           addition to others computed by direct_dependents downstream). *)
+        let is_resolution_path_file =
+          SSet.exists (fun f -> SSet.mem f root_fileset) phantom_dependents
+        in
+        (f, required, is_resolution_path_file) :: acc)
+  in
+  (* merge results *)
+  let merge = List.rev_append in
+  let%lwt result =
+    MultiWorkerLwt.call
+      workers
+      ~job
+      ~merge
+      ~neutral:[]
+      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements fileset))
+  in
+  let module_dependents_tbl = Hashtbl.create 0 in
+  let resolution_path_files =
+    List.fold_left
+      (fun resolution_path_files (f, required, is_resolution_path_file) ->
+        Modulename.Set.iter (fun r -> Hashtbl.add module_dependents_tbl r f) required;
+        if is_resolution_path_file then
+          FilenameSet.add f resolution_path_files
+        else
+          resolution_path_files)
+      FilenameSet.empty
+      result
+  in
+  Lwt.return (module_dependents_tbl, resolution_path_files)
 
 (* Identify the direct dependents of new, changed, and deleted files.
 
