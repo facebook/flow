@@ -1,4 +1,25 @@
-# Flow [![Build Status](https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/flow/tree/master) [![Join the chat at https://discordapp.com/invite/8ezwRUK](https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white)](https://discordapp.com/invite/8ezwRUK)
+# Flow
+<p align="center">
+  <a href="https://circleci.com/gh/facebook/flow/tree/master">
+    <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
+  </a>
+  <a href=https://twitter.com/flowtype">
+   <img src="https://img.shields.io/twitter/follow/flowtype?style=social" alt="Follow @flowtype" />
+  </a>
+  <a href="https://github.com/facebook/flow/blob/master/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/facebook/flow">
+  </a>
+  <a href="https://github.com/facebook/flow/graphs/contributors">
+   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/facebook/flow">
+  </a>
+  <a href="">
+    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/facebook/flow">
+  <a/>
+  <a href="https://discordapp.com/invite/8ezwRUK">
+     <img alt="Join Discord Chat" src="https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white">
+  <a/>
+</p>
+
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
