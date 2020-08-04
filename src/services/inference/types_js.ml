@@ -2379,7 +2379,7 @@ end = struct
       ~files_to_force
       ~recheck_reasons
       ~env =
-    let%lwt (env, _intermediate_values) =
+    let%lwt (env, intermediate_values) =
       recheck_parse_and_update_dependency_info
         ~profiling
         ~transaction
@@ -2391,7 +2391,8 @@ end = struct
         ~recheck_reasons
         ~env
     in
-    Lwt.return env
+    let (_, _, errors, _, _, _, _, _, _, _) = intermediate_values in
+    Lwt.return { env with ServerEnv.errors }
 end
 
 let with_transaction f =
