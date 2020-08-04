@@ -21,10 +21,10 @@ assert_ok "$FLOW" force-recheck --focus b.js
 
 echo "Parse error should be reported:"
 echo ""
-assert_ok "$FLOW" # TODO parse error should be reported
+assert_errors "$FLOW" # parse error is reported
 
 echo "(a: empty);" >> b.js
 echo ""
 echo "Parse error, but no typing error in b.js:"
 echo ""
-assert_ok "$FLOW" # TODO this should be a parse error, but not a typing error (because of the parse error in a.js)
+assert_errors "$FLOW" # this should be a parse error, but not a typing error (because of the parse error in a.js)

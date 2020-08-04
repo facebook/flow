@@ -19,4 +19,4 @@ assert_ok "$FLOW" start --saved-state-fetcher local --saved-state-no-fallback --
 
 assert_ok "$FLOW" force-recheck --focus b.js
 
-assert_errors "$FLOW" # TODO This should not error
+assert_ok "$FLOW"
