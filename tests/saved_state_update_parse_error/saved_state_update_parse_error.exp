@@ -1,0 +1,13 @@
+Parse error should be reported:
+
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Parse error, but no typing error in b.js:
+
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
