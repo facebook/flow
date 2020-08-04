@@ -298,7 +298,7 @@ let merge_component ~worker_mutator ~options ~reader component =
       | MergeResult { cx; master_cx } ->
         let errors = Flow_error.ErrorSet.empty in
         let warnings = Flow_error.ErrorSet.empty in
-        let suppressions = Error_suppressions.empty in
+        let suppressions = Context.error_suppressions cx in
         (cx, master_cx, errors, warnings, suppressions, None)
       | CheckResult { cx; master_cx; coverage; _ } ->
         let errors = Context.errors cx in
