@@ -123,19 +123,25 @@ let calc_direct_dependents_utils ~reader workers fileset root_fileset =
       ~neutral:[]
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements fileset))
   in
-  let module_dependents_tbl = Hashtbl.create 0 in
-  let resolution_path_files =
-    List.fold_left
-      (fun resolution_path_files (f, required, is_resolution_path_file) ->
-        Modulename.Set.iter (fun r -> Hashtbl.add module_dependents_tbl r f) required;
+  List.fold_left
+    (fun (module_dependents, resolution_path_files) (f, required, is_resolution_path_file) ->
+      let add_file = function
+        | None -> Some [f]
+        | Some fs -> Some (f :: fs)
+      in
+      let module_dependents =
+        Modulename.Set.fold (fun r -> Modulename.Map.update r add_file) required module_dependents
+      in
+      let resolution_path_files =
         if is_resolution_path_file then
           FilenameSet.add f resolution_path_files
         else
-          resolution_path_files)
-      FilenameSet.empty
-      result
-  in
-  Lwt.return (module_dependents_tbl, resolution_path_files)
+          resolution_path_files
+      in
+      (module_dependents, resolution_path_files))
+    (Modulename.Map.empty, FilenameSet.empty)
+    result
+  |> Lwt.return
 
 (* Identify the direct dependents of new, changed, and deleted files.
 
@@ -169,15 +175,16 @@ let calc_direct_dependents ~reader workers ~candidates ~root_files ~root_modules
     (* Get the modules provided by candidate files, the reverse dependency map
        for candidate files, and the subset of candidate files whose resolution
        paths may encounter new or changed modules. *)
-      let%lwt (module_dependents_tbl, resolution_path_files) =
+      let%lwt (module_dependents, resolution_path_files) =
         calc_direct_dependents_utils ~reader workers candidates root_files
       in
       (* resolution_path_files, plus files that require root_modules *)
       let direct_dependents =
         Modulename.Set.fold
           (fun m acc ->
-            let files = Hashtbl.find_all module_dependents_tbl m in
-            List.fold_left (fun acc f -> FilenameSet.add f acc) acc files)
+            match Modulename.Map.find_opt m module_dependents with
+            | None -> acc
+            | Some files -> List.fold_left (fun acc f -> FilenameSet.add f acc) acc files)
           root_modules
           resolution_path_files
       in
