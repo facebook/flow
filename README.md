@@ -3,7 +3,7 @@
   <a href="https://circleci.com/gh/facebook/flow/tree/master">
     <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
   </a>
-  <a href=https://twitter.com/flowtype">
+  <a href="https://twitter.com/flowtype">
    <img src="https://img.shields.io/twitter/follow/flowtype?style=social" alt="Follow @flowtype" />
   </a>
   <a href="https://github.com/facebook/flow/blob/master/LICENSE">
@@ -14,10 +14,10 @@
   </a>
   <a href="">
     <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/facebook/flow">
-  <a/>
+  </a>
   <a href="https://discordapp.com/invite/8ezwRUK">
      <img alt="Join Discord Chat" src="https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white">
-  <a/>
+  </a>
 </p>
 
 
