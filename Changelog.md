@@ -1,3 +1,14 @@
+### 0.131.0
+
+* "Go to Definition" on a JSX attribute name now jumps to the prop's type.
+* Improved error messages for non-strict equality checks
+* Fixed a bug that prevented the use of `module` in ES modules when `well_formed_exports` is enabled.
+* Fixed an issue that allowed types-first mode to be enabled (`types_first=true`) when using `well_formed_exports.include`. For types-first to function properly, the entire project's exports must be well-formed, not just specific paths.
+* Fixed a similar issue so that `--types-first` on the command line overrides `well_formed_exports=false` in `.flowconfig`. This makes it easier to test types-first mode.
+* The `unsafe-addition` lint now defaults to being an error. It will be converted from a lint to a type error in the future.
+* Removed `dynamic-export` lint which does not work in types-first mode
+* Improved initialization performance
+
 ### 0.130.0
 
 New Features:
@@ -12,7 +23,7 @@ Misc:
 ### 0.129.0
 
 Likely to cause new Flow errors:
-* $Keys<...> will no longer include non-own instance properties, matching the behavior of Object.keys. 
+* $Keys<...> will no longer include non-own instance properties, matching the behavior of Object.keys.
 
 Notable bug fixes:
 * Fixed an incremental rechecking issue caused by the hashes of type destructors
