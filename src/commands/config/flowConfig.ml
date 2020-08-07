@@ -103,6 +103,7 @@ module Opts = struct
     trust_mode: Options.trust_mode;
     type_asserts: bool;
     types_first: bool;
+    new_signatures: bool;
     wait_for_recheck: bool;
     weak: bool;
   }
@@ -192,6 +193,7 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
+      new_signatures = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -365,6 +367,13 @@ module Opts = struct
           Error "Cannot set it to \"true\" when \"well_formed_exports.includes\" is set."
         else
           Ok { opts with types_first = v })
+
+  let new_signatures_parser =
+    boolean (fun opts v ->
+        if v && not opts.types_first then
+          Error "Cannot set it to \"true\" when \"types_first\" is set to \"false\"."
+        else
+          Ok { opts with new_signatures = v })
 
   let types_first_max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -571,6 +580,7 @@ module Opts = struct
       ("well_formed_exports.includes", well_formed_exports_includes_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("types_first", types_first_parser);
+      ("experimental.new_signatures", new_signatures_parser);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -1247,6 +1257,8 @@ let trust_mode c = c.options.Opts.trust_mode
 let type_asserts c = c.options.Opts.type_asserts
 
 let types_first c = c.options.Opts.types_first
+
+let new_signatures c = c.options.Opts.new_signatures
 
 let required_version c = c.version
 
