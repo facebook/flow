@@ -1125,11 +1125,11 @@ and merge_tparams_helper component file reason t = function
       DefT (poly_reason, trust, PolyT { tparams_loc; tparams; t_out = t (Nel.to_list tparams); id }))
 
 and merge_tparam component file tp =
-  let (TParam { loc; name; polarity; bound; default }) = tp in
-  let reason = Reason.(mk_reason (RType name) loc) in
+  let (TParam { name_loc; name; polarity; bound; default }) = tp in
+  let reason = Reason.(mk_reason (RType name) name_loc) in
   let bound =
     match bound with
-    | None -> Type.MixedT.at loc trust
+    | None -> Type.(DefT (reason, trust, MixedT Mixed_everything))
     | Some t -> merge component file t
   in
   let default =

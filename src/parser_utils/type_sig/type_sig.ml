@@ -59,7 +59,7 @@ type ('key, 'loc, 'a) predicate =
   [@@deriving iter, map, show {with_path = false}]
 
 type ('loc, 'a) tparam = TParam of {
-  loc: 'loc;
+  name_loc: 'loc;
   name: string;
   polarity: Polarity.t;
   bound: 'a option;

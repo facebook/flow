@@ -1948,7 +1948,7 @@ let%expect_test "interface_coverage" =
          name = "Foo";
          tparams =
          (Poly ([1:21-24],
-            TParam {loc = [1:22-23];
+            TParam {name_loc = [1:22-23];
               name = "X"; polarity = Polarity.Neutral;
               bound = None; default = None},
             []));
@@ -1989,7 +1989,7 @@ let%expect_test "bound_coverage" =
                FunSig {
                  tparams =
                  (Poly ([2:16-24],
-                    TParam {loc = [2:17-23];
+                    TParam {name_loc = [2:17-18];
                       name = "X"; polarity = Polarity.Neutral;
                       bound =
                       (Some (TyRef (Unqualified LocalRef {ref_loc = [2:20-23]; index = 0})));
@@ -2162,7 +2162,7 @@ let%expect_test "function_return" =
          FunSig {
            tparams =
            (Poly ([2:19-32],
-              TParam {loc = [2:20-31];
+              TParam {name_loc = [2:20-21];
                 name = "X"; polarity = Polarity.Neutral;
                 bound =
                 (Some (Annot
@@ -2639,7 +2639,7 @@ let%expect_test "object_annot_call_poly" =
                        FunSig {
                          tparams =
                          (Poly ([1:18-21],
-                            TParam {loc = [1:19-20];
+                            TParam {name_loc = [1:19-20];
                               name = "T";
                               polarity = Polarity.Neutral;
                               bound = None;
@@ -3070,7 +3070,7 @@ let%expect_test "existential" =
          ClassSig {
            tparams =
            (Poly ([1:7-10],
-              TParam {loc = [1:8-9];
+              TParam {name_loc = [1:8-9];
                 name = "T"; polarity = Polarity.Neutral;
                 bound = None; default = None},
               []));

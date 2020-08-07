@@ -2133,16 +2133,16 @@ and tparams =
     | None -> None
   in
   let tparam opts scope locs xs tp =
-    let (loc, {T.
-      name = (_, {Ast.Identifier.name; comments = _});
+    let (_, {T.
+      name = (name_loc, {Ast.Identifier.name; comments = _});
       bound = b;
       variance = v;
       default = d;
     }) = tp in
-    let loc = Locs.push locs loc in
+    let name_loc = Locs.push locs name_loc in
     let bound = bound opts scope locs xs b in
     let default = default opts scope locs xs d in
-    TParam { loc; name; polarity = polarity v; bound; default }
+    TParam { name_loc; name; polarity = polarity v; bound; default }
   in
   let rec loop opts scope locs tparams_loc xs acc = function
     | [] ->
