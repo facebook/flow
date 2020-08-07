@@ -1635,7 +1635,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       | (loc, Init { key; value; shorthand = _ }) ->
         let x = object_key key in
         (loc, T.OInit (x, literal_expr value))
-      | (loc, Method { key; value = (fn_loc, fn) }) ->
+      | (loc, Method { key; value = (_, fn) }) ->
         let x = object_key key in
         let {
           Ast.Function.generator;
@@ -1651,7 +1651,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
         } =
           fn
         in
-        (loc, T.OMethod (x, (fn_loc, function_ generator async tparams params return body)))
+        (loc, T.OMethod (x, (loc, function_ generator async tparams params return body)))
       | (loc, Get { key; value = (fn_loc, fn); comments = _ }) ->
         let x = object_key key in
         let {

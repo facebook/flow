@@ -137,10 +137,8 @@ class documentation_searcher (def_loc : Loc.t) =
         match prop with
         | (_, Init { key; value = (value_loc, _); _ }) ->
           ([loc_of_object_key key; value_loc], [comments_of_object_key key])
-        | ( _,
-            Method { key; value = (_, Flow_ast.Function.{ params = (value_loc, _); comments; _ }) }
-          ) ->
-          ([loc_of_object_key key; value_loc], [comments_of_object_key key; comments])
+        | (prop_loc, Method { key; value = (_, Flow_ast.Function.{ comments; _ }) }) ->
+          ([prop_loc], [comments_of_object_key key; comments])
         | (_, Get { key; value = (_, Flow_ast.Function.{ return; _ }); comments }) ->
           ([loc_of_object_key key; loc_of_annotation_or_hint return], [comments])
         | (_, Set _) -> ([], [])

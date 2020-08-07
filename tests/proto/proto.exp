@@ -308,9 +308,9 @@ Cannot cast `o_method.__proto__` to empty because function [1] is incompatible w
         ^^^^^^^^^^^^^^^^^^
 
 References:
-   literal.js:12:27
+   literal.js:12:18
    12| var o_method = { __proto__() {} };
-                                 ^^ [1]
+                        ^^^^^^^^^^^^^^ [1]
    literal.js:13:22
    13| (o_method.__proto__: empty); // error: function ~> empty
                             ^^^^^ [2]

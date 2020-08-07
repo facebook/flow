@@ -2686,12 +2686,7 @@ and object_prop cx acc prop =
               | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as key;
             value = (fn_loc, func);
           } ) ->
-    let ((_, t), v) = expression cx (fn_loc, Ast.Expression.Function func) in
-    let func =
-      match v with
-      | Ast.Expression.Function func -> func
-      | _ -> assert false
-    in
+    let (t, func) = mk_function_expression None cx prop_loc func in
     ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
       Property
         ( prop_loc,
