@@ -413,41 +413,42 @@ let do_parse ~parse_options ~info content file =
         let facebook_keyMirror = true in
         let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
+        | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
-          let signature = Signature_builder.program ast ~exports_info in
-          let (errors, env, sig_ast) =
-            Signature_builder.Signature.verify_and_generate
-              ~prevent_munge
-              ~facebook_fbt
-              ~ignore_static_propTypes
-              ~facebook_keyMirror
-              signature
-              ast
-          in
-          let env =
+          let (env, errors, sig_extra) =
             match arch with
-            | Options.Classic -> None
+            | Options.Classic ->
+              let signature = Signature_builder.program ast ~exports_info in
+              let (errors, _, _) =
+                Signature_builder.Signature.verify
+                  ~prevent_munge
+                  ~facebook_fbt
+                  ~ignore_static_propTypes
+                  ~facebook_keyMirror
+                  signature
+              in
+              (None, errors, Parsing_heaps.Classic)
             | Options.TypesFirst ->
-              Some
-                (SMap.map
-                   (fun lmap ->
-                     Loc_collections.LocMap.fold
-                       (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
-                       lmap
-                       Loc_collections.LocSet.empty)
-                   env)
-          in
-          let file_sig = File_sig.With_Loc.verified env (snd signature) in
-          let tolerable_errors =
-            Signature_builder_deps.PrintableErrorSet.fold
-              (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
-              errors
-              tolerable_errors
-          in
-          let sig_extra =
-            match arch with
-            | Options.Classic -> Parsing_heaps.Classic
-            | Options.TypesFirst ->
+              let signature = Signature_builder.program ast ~exports_info in
+              let (errors, env, sig_ast) =
+                Signature_builder.Signature.verify_and_generate
+                  ~prevent_munge
+                  ~facebook_fbt
+                  ~ignore_static_propTypes
+                  ~facebook_keyMirror
+                  signature
+                  ast
+              in
+              let env =
+                Some
+                  (SMap.map
+                     (fun lmap ->
+                       Loc_collections.LocMap.fold
+                         (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
+                         lmap
+                         Loc_collections.LocSet.empty)
+                     env)
+              in
               let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
               let (aloc_table, sig_ast) =
                 if abstract_locations then
@@ -461,10 +462,16 @@ let do_parse ~parse_options ~info content file =
                 | Ok fs -> fs
                 | Error _ -> assert false
               in
-              Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table }
+              (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table })
           in
-          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
-        | Error e -> Parse_fail (File_sig_error e))
+          let file_sig = File_sig.With_Loc.verified env exports_info in
+          let tolerable_errors =
+            Signature_builder_deps.PrintableErrorSet.fold
+              (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
+              errors
+              tolerable_errors
+          in
+          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
