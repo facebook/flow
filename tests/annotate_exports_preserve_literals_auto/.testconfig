@@ -1,2 +1,2 @@
-
 cmd: annotate-exports --preserve-literals auto
+TODO_new_signatures: true

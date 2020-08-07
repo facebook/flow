@@ -141,6 +141,8 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
+  echo "    -z"
+  echo "        test new signatures"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -154,11 +156,12 @@ export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 OPTIND=1
 record=0
 saved_state=0
+new_signatures=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-while getopts "b:d:f:lqrst:vh?" opt; do
+while getopts "b:d:f:lqrszt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -185,6 +188,9 @@ while getopts "b:d:f:lqrst:vh?" opt; do
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
+  z)
+    new_signatures=1
+    ;;
   v)
     verbose=1
     ;;
@@ -202,6 +208,8 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  elif [[ "$new_signatures" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-new-signatures$/\1/')
   fi
 
   filter="^$specific_test$"
@@ -367,6 +375,7 @@ start_flow_unsafe () {
       "$FLOW" start "$root" \
         $flowlib --wait \
         $types_first_flag \
+        $new_signatures_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -385,6 +394,7 @@ start_flow_unsafe () {
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
       $types_first_flag \
+      $new_signatures_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
@@ -501,6 +511,11 @@ runtest() {
         file_watcher="none"
         wait_for_recheck="true"
         types_first_flag="--types-first"
+        if [[ "$new_signatures" -eq 1 ]]; then
+          new_signatures_flag="--new-signatures"
+        else
+          new_signatures_flag=""
+        fi
         if [ -e ".testconfig" ]
         then
             # auto_start
@@ -549,6 +564,7 @@ runtest() {
             if [ "$(awk '$1=="classic_only:"{print $2}' .testconfig)" == "true" ]
             then
                 types_first_flag=""
+                new_signatures_flag=""
             fi
 
             if [[ "$saved_state" -eq 1 ]] && \
@@ -559,6 +575,12 @@ runtest() {
 
             if [[ "$saved_state" -eq 0 ]] && \
               [ "$(awk '$1=="saved_state_only:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "$new_signatures" -eq 1 ]] && \
+              [ "$(awk '$1=="TODO_new_signatures:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
@@ -590,6 +612,7 @@ runtest() {
             "$FLOW" start "$root" \
               $flowlib --wait \
               $types_first_flag \
+              $new_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy \
               --file-watcher "$file_watcher" \
@@ -619,6 +642,7 @@ runtest() {
                 "$FLOW" check . \
                   $flowlib --strip-root --show-all-errors \
                   $types_first_flag \
+                  $new_signatures_flag \
                   --saved-state-fetcher "local" \
                   --saved-state-no-fallback \
                    1>> "$abs_out_file" 2>> "$stderr_dest"
@@ -632,6 +656,7 @@ runtest() {
               "$FLOW" check . \
                 $flowlib --strip-root --show-all-errors \
                 $types_first_flag \
+                $new_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -661,6 +686,7 @@ runtest() {
                 $flowlib \
                 ${cmd_args[*]} \
                 $types_first_flag \
+                $new_signatures_flag \
                 --strip-root \
                 --quiet \
                 --input-file "$input_file" \
@@ -872,6 +898,8 @@ if [[ "$list_tests" -eq 1 ]]; then
 
       if [[ "$saved_state" -eq 1 ]]; then
         echo "$name-saved-state"
+      elif [[ "$new_signatures" -eq 1 ]]; then
+        echo "$name-new-signatures"
       else
         echo "$name"
       fi

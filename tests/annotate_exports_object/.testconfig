@@ -1,2 +1,3 @@
 all: false
 cmd: annotate-exports
+TODO_new_signatures: true
