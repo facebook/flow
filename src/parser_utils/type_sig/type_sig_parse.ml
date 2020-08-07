@@ -2408,7 +2408,7 @@ let rec expression opts scope locs (loc, expr) =
       });
       targs = None;
       arguments = (_, {E.ArgList.
-        arguments = [E.Expression (_, E.Object {E.Object.properties; comments = _})];
+        arguments = [E.Expression (obj_loc, E.Object {E.Object.properties; comments = _})];
         comments = _;
       });
       comments = _
@@ -2416,7 +2416,8 @@ let rec expression opts scope locs (loc, expr) =
     (* TODO: Similar to the "require" case above, we should only special-case
      * this call "Object" is not in scope. Again, we should fix the existing
      * signature builder first. *)
-    object_literal opts scope locs loc ~frozen:true properties
+    let obj_loc = Locs.push locs obj_loc in
+    object_literal opts scope locs obj_loc ~frozen:true properties
   | E.Call {E.Call.
       callee = (_, E.Identifier (_, {Ast.Identifier.name = "keyMirror"; comments = _}));
       targs = None;

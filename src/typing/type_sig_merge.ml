@@ -963,7 +963,21 @@ and merge_value component file = function
     Type.(DefT (reason, trust, BoolT (Some lit)))
   | NullLit loc -> Type.NullT.at loc trust
   | ObjLit { loc; frozen; proto; props } ->
-    let reason = Reason.(mk_reason RObjectLit loc) in
+    let reason =
+      let open Reason in
+      (* RFrozen RObjectType should be RFrozen RObjectLit instead, but this
+       * matches the behavior of types-first, where Object.freeze({...}) is
+       * converted to $TEMPORARY$Object$freeze<{...}> in the sig AST.
+       *
+       * TODO Fix once T71257430 is closed. *)
+      let desc =
+        if frozen then
+          RFrozen RObjectType
+        else
+          RObjectLit
+      in
+      mk_reason desc loc
+    in
     let proto =
       match proto with
       | None -> Type.ObjProtoT reason

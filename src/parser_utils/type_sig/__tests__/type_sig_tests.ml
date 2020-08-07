@@ -2054,7 +2054,7 @@ let%expect_test "frozen_object" =
 
     Export_def:
     (Value
-       ObjLit {loc = [1:17-57]; frozen = true;
+       ObjLit {loc = [1:31-56]; frozen = true;
          proto = None;
          props =
          { "bar" ->
@@ -2072,7 +2072,7 @@ let%expect_test "frozen_object_empty" =
     CJSExports {types = {}; type_stars = []; strict = true}
 
     Export_def:
-    (Value ObjLit {loc = [1:17-34]; frozen = true; proto = None; props = {}}) |}]
+    (Value ObjLit {loc = [1:31-33]; frozen = true; proto = None; props = {}}) |}]
 
 let%expect_test "fbt_empty_open_close" =
   print_sig ~facebook_fbt:"FbtElement" {|
