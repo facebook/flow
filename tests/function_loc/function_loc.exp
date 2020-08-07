@@ -75,9 +75,9 @@ Cannot cast `f` to empty because function type [1] is incompatible with empty [2
        ^
 
 References:
-   arrow_with_statics.js:2:1
+   arrow_with_statics.js:2:11
    2| const f = () => {};
-      ^^^^^^^^^^^^^^^^^^^ [1]
+                ^^^^^^^^ [1]
    arrow_with_statics_dep.js:3:5
    3| (f: empty); // err
           ^^^^^ [2]
@@ -109,9 +109,9 @@ Cannot get `f.missing` because property `missing` is missing in statics of funct
         ^^^^^^^
 
 References:
-   arrow_with_statics.js:2:1
+   arrow_with_statics.js:2:11
    2| const f = () => {};
-      ^^^^^^^^^^^^^^^^^^^ [1]
+                ^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- declare_fun.js:3:2
@@ -176,7 +176,7 @@ Cannot cast `f` to empty because function type [1] is incompatible with empty [2
 References:
    function_decl.js:2:1
    2| function f() {}
-      ^^^^^^^^^^^^^^^ [1]
+      ^^^^^^^^^^^^ [1]
    function_decl_dep.js:3:5
    3| (f: empty); // err
           ^^^^^ [2]
@@ -227,7 +227,7 @@ Cannot cast `f` to empty because function type [1] is incompatible with empty [2
 References:
    function_decl_with_statics.js:2:1
    2| function f() {};
-      ^^^^^^^^^^^^^^^ [1]
+      ^^^^^^^^^^^^ [1]
    function_decl_with_statics_dep.js:3:5
    3| (f: empty); // err
           ^^^^^ [2]
@@ -261,7 +261,7 @@ Cannot get `f.missing` because property `missing` is missing in statics of funct
 References:
    function_decl_with_statics.js:2:1
    2| function f() {};
-      ^^^^^^^^^^^^^^^ [1]
+      ^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- function_expr.js:3:2
@@ -292,7 +292,7 @@ Cannot cast `f` to empty because function type [1] is incompatible with empty [2
 References:
    function_expr.js:2:11
    2| const f = function() {};
-                ^^^^^^^^^^^^^ [1]
+                ^^^^^^^^^^ [1]
    function_expr_dep.js:3:5
    3| (f: empty); // err
           ^^^^^ [2]

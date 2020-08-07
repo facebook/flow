@@ -1148,7 +1148,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
           (T.Class
              ( Base.Option.map ~f:Flow_ast_utils.source_of_ident id,
                class_ tparams body super super_targs implements )) )
-    | ( loc,
+    | ( _,
         Function
           {
             Ast.Function.generator;
@@ -1159,10 +1159,10 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
             id = _;
             async;
             predicate = _;
-            sig_loc = _;
+            sig_loc;
             comments = _;
           } ) ->
-      (loc, T.Function (function_ generator async tparams params return body))
+      (sig_loc, T.Function (function_ generator async tparams params return body))
     | ( loc,
         ArrowFunction
           {
@@ -1713,7 +1713,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Kind.WithPropertiesDef { base; properties } ->
       begin
         match Kind.get_function_kind_info base with
-        | Some (generator, async, tparams, params, return, body) ->
+        | Some (loc, generator, async, tparams, params, return, body) ->
           T.FunctionWithStaticsDecl
             {
               base = (loc, T.Function (Eval.function_ generator async tparams params return body));
@@ -1724,9 +1724,9 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         | None -> eval (loc, base)
       end
     | Kind.VariableDef { id = _; annot; init } -> T.VariableDecl (Eval.annotation loc ?init annot)
-    | Kind.FunctionDef { generator; async; tparams; params; return; body; predicate } ->
+    | Kind.FunctionDef { generator; async; tparams; params; return; body; predicate; sig_loc } ->
       let annot =
-        T.EXPR (loc, T.Function (Eval.function_ generator async tparams params return body))
+        T.EXPR (sig_loc, T.Function (Eval.function_ generator async tparams params return body))
       in
       let predicate = Eval.function_predicate body predicate in
       T.FunctionDecl { annot; predicate }

@@ -814,7 +814,7 @@ module Verifier (Env : EvalEnv) = struct
     | Kind.WithPropertiesDef { base; properties } ->
       begin
         match Kind.get_function_kind_info base with
-        | Some (generator, _async, tparams, params, return, body) ->
+        | Some (_, generator, _async, tparams, params, return, body) ->
           let deps = Eval.function_ SSet.empty generator tparams params return body None in
           let deps =
             List.fold_left
@@ -828,7 +828,8 @@ module Verifier (Env : EvalEnv) = struct
     | Kind.VariableDef { id; annot; init } ->
       let (_, { Ast.Identifier.name; _ }) = id in
       Eval.annotation ~sort:(EASort.VariableDefinition { name }) ?init SSet.empty (id_loc, annot)
-    | Kind.FunctionDef { generator; async = _; tparams; params; return; body; predicate } ->
+    | Kind.FunctionDef
+        { generator; async = _; tparams; params; return; body; predicate; sig_loc = _ } ->
       Eval.function_ SSet.empty generator tparams params return body predicate
     | Kind.DeclareFunctionDef { annot = (_, t); predicate } ->
       let deps = Eval.type_ SSet.empty t in

@@ -26,7 +26,7 @@ Cannot get `a.other` because property `other` is missing in statics of function 
 References:
    a.js:3:1
    3| function foo() {}
-      ^^^^^^^^^^^^^^^^^ [1]
+      ^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:15:2
@@ -57,7 +57,7 @@ Cannot get `poly_a.other` because property `other` is missing in statics of func
 References:
    poly_a.js:3:1
     3| function foo<T>() {}
-       ^^^^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^^^^ [1]
 
 
 
