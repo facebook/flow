@@ -591,20 +591,20 @@ and merge_annot component file = function
     let reason = Reason.(mk_reason (RType "$PropertyType") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let obj = merge component file obj in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.PropertyType prop), id))
   | ElementType { loc; obj; elem } ->
     let reason = Reason.(mk_reason (RType "$ElementType") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let obj = merge component file obj in
     let elem = merge component file elem in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType elem), id))
   | NonMaybeType (loc, t) ->
     let reason = Reason.(mk_reason (RType "$NonMaybeType") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge component file t in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.NonMaybeType), id))
   | Shape (_loc, t) ->
     let t = merge component file t in
@@ -617,14 +617,14 @@ and merge_annot component file = function
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t1 = merge component file t1 in
     let t2 = merge component file t2 in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(
       EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id))
   | ReadOnly (loc, t) ->
     let reason = Reason.(mk_reason (RType "$ReadOnly") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge component file t in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), id))
   | Keys (loc, t) ->
     let reason = Reason.(mk_reason RKeySet loc) in
@@ -634,7 +634,7 @@ and merge_annot component file = function
     let reason = Reason.(mk_reason (RType "$Values") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge component file t in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ValuesType), id))
   | Exact (loc, t) ->
     let t = merge component file t in
@@ -646,7 +646,7 @@ and merge_annot component file = function
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t1 = merge component file t1 in
     let t2 = merge component file t2 in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
@@ -662,28 +662,28 @@ and merge_annot component file = function
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let fn = merge component file fn in
     let args = List.map (merge component file) args in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (fn, TypeDestructorT (use_op, reason, CallType args), id))
   | TupleMap { loc; tup; fn } ->
     let reason = Reason.(mk_reason RTupleMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let tup = merge component file tup in
     let fn = merge component file fn in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (tup, TypeDestructorT (use_op, reason, TypeMap (Type.TupleMap fn)), id))
   | ObjMap { loc; obj; fn } ->
     let reason = Reason.(mk_reason RObjectMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let obj = merge component file obj in
     let fn = merge component file fn in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMap fn)), id))
   | ObjMapi { loc; obj; fn } ->
     let reason = Reason.(mk_reason RObjectMapi loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let obj = merge component file obj in
     let fn = merge component file fn in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapi fn)), id))
   | CharSet (loc, str) ->
     let chars = String_utils.CharSet.of_string str in
@@ -730,7 +730,7 @@ and merge_annot component file = function
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let props = merge component file props in
     let default = merge component file default in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (props, TypeDestructorT (use_op, reason, ReactConfigType default), id))
   | ReactPropTypePrimitive (loc, t) ->
     let reason = Reason.(mk_reason RFunctionType loc) in
@@ -775,19 +775,19 @@ and merge_annot component file = function
     let reason = Reason.(mk_reason (RType "React$ElementProps") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge component file t in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementPropsType), id))
   | ReactElementConfig (loc, t) ->
     let reason = Reason.(mk_reason (RType "React$ElementConfig") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge component file t in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementConfigType), id))
   | ReactElementRef (loc, t) ->
     let reason = Reason.(mk_reason (RType "React$ElementRef") loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge component file t in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementRefType), id))
   | FacebookismIdx loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
@@ -838,7 +838,7 @@ and merge_annot component file = function
     let reason = Reason.(mk_reason (RCustom "refined type") loc) in
     let base = merge component file base in
     let fn_pred = merge component file fn_pred in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (base, LatentPredT (reason, Type.LatentP (fn_pred, index)), id))
   | Trusted (loc, t) ->
     begin
@@ -921,7 +921,7 @@ and merge_annot component file = function
       | (Slice _, Slice _ :: _) -> failwith "unexpected adjacent slices"
       | (Slice _, []) -> failwith "unexpected solo slice"
     in
-    let id = Type.Eval.generate_id () in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(
       EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, todo_rev, head_slice)), id))
   | InlineInterface (loc, def) ->
