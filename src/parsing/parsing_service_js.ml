@@ -79,6 +79,11 @@ type parse_options = {
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
   parse_abstract_locations: bool;
+  parse_type_asserts: bool;
+  parse_suppress_types: SSet.t;
+  parse_max_literal_len: int;
+  parse_exact_by_default: bool;
+  parse_enable_enums: bool;
 }
 
 let parse_source_file ~fail ~types ~use_strict content file =
@@ -376,6 +381,11 @@ let do_parse ~parse_options ~info content file =
     parse_facebook_fbt = facebook_fbt;
     parse_arch = arch;
     parse_abstract_locations = abstract_locations;
+    parse_type_asserts = type_asserts;
+    parse_suppress_types = suppress_types;
+    parse_max_literal_len = max_literal_len;
+    parse_exact_by_default = exact_by_default;
+    parse_enable_enums = enable_enums;
   } =
     parse_options
   in
@@ -428,7 +438,7 @@ let do_parse ~parse_options ~info content file =
                   signature
               in
               (None, errors, Parsing_heaps.Classic)
-            | Options.TypesFirst ->
+            | Options.TypesFirst { new_signatures = false } ->
               let signature = Signature_builder.program ast ~exports_info in
               let (errors, env, sig_ast) =
                 Signature_builder.Signature.verify_and_generate
@@ -463,14 +473,50 @@ let do_parse ~parse_options ~info content file =
                 | Error _ -> assert false
               in
               (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table })
+            | Options.TypesFirst { new_signatures = true } ->
+              let sig_opts =
+                {
+                  Type_sig_parse.type_asserts;
+                  suppress_types;
+                  munge = not prevent_munge;
+                  ignore_static_propTypes;
+                  facebook_keyMirror;
+                  facebook_fbt;
+                  max_literal_len;
+                  exact_by_default;
+                  module_ref_prefix;
+                  enable_enums;
+                }
+              in
+              let (errors, locs, type_sig) =
+                let strict = Docblock.is_strict info in
+                Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+              in
+              (* TODO: extract env from type_sig *)
+              let env = None in
+              (* TODO: make type sig errors match signature builder errors *)
+              let errors =
+                List.fold_left
+                  (fun acc (loc, err) ->
+                    let loc = Type_sig_collections.Locs.get locs loc in
+                    let err = Signature_error.TODO (Type_sig.show_errno err, loc) in
+                    Signature_builder_deps.PrintableErrorSet.add err acc)
+                  Signature_builder_deps.PrintableErrorSet.empty
+                  errors
+              in
+              let aloc_table =
+                Type_sig_collections.Locs.to_array locs
+                |> ALoc.ALocRepresentationDoNotUse.make_table file
+              in
+              (env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
           in
-          let file_sig = File_sig.With_Loc.verified env exports_info in
           let tolerable_errors =
             Signature_builder_deps.PrintableErrorSet.fold
               (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
               errors
               tolerable_errors
           in
+          let file_sig = File_sig.With_Loc.verified env exports_info in
           Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
@@ -747,6 +793,11 @@ let make_parse_options_internal
     parse_facebook_fbt = facebook_fbt;
     parse_arch = arch;
     parse_abstract_locations = abstract_locations;
+    parse_type_asserts = Options.type_asserts options;
+    parse_suppress_types = Options.suppress_types options;
+    parse_max_literal_len = Options.max_literal_length options;
+    parse_exact_by_default = Options.exact_by_default options;
+    parse_enable_enums = Options.enums options;
   }
 
 let make_parse_options ?fail ?types_mode ?use_strict docblock options =

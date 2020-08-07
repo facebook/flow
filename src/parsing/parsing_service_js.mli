@@ -65,6 +65,11 @@ type parse_options = {
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
   parse_abstract_locations: bool;
+  parse_type_asserts: bool;
+  parse_suppress_types: SSet.t;
+  parse_max_literal_len: int;
+  parse_exact_by_default: bool;
+  parse_enable_enums: bool;
 }
 
 val make_parse_options :

@@ -1164,7 +1164,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
   in
   let opt_arch =
     if flags.types_first || FlowConfig.types_first flowconfig then
-      Options.TypesFirst
+      let new_signatures = FlowConfig.new_signatures flowconfig in
+      Options.TypesFirst { new_signatures }
     else
       Options.Classic
   in

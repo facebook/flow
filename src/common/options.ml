@@ -42,7 +42,7 @@ type saved_state_fetcher =
 
 type arch =
   | Classic
-  | TypesFirst
+  | TypesFirst of { new_signatures: bool }
 
 type trust_mode =
   | NoTrust

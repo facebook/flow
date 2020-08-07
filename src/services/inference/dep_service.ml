@@ -215,9 +215,16 @@ let file_dependencies ~options ~audit ~reader file =
   let sig_require_set =
     match Options.arch options with
     | Options.Classic -> require_set
-    | Options.TypesFirst ->
+    | Options.TypesFirst { new_signatures = false } ->
       let sig_file_sig = Parsing_heaps.Mutator_reader.get_sig_file_sig_unsafe reader file in
       File_sig.With_ALoc.(require_set sig_file_sig.module_sig)
+    | Options.TypesFirst { new_signatures = true } ->
+      let (_, _, mrefs, _, _, _, _) =
+        Parsing_heaps.Mutator_reader.get_type_sig_unsafe reader file
+      in
+      let acc = ref SSet.empty in
+      Type_sig_collections.Module_refs.iter (fun x -> acc := SSet.add x !acc) mrefs;
+      !acc
   in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
@@ -264,7 +271,7 @@ let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
         (FilenameMap.map
            (fun (_sig_files, all_files) -> FilenameSet.inter parsed all_files)
            dependency_graph)
-    | Options.TypesFirst ->
+    | Options.TypesFirst _ ->
       Partial_dependency_graph.PartialTypesFirstDepGraph
         (FilenameMap.map
            (fun (sig_files, all_files) ->

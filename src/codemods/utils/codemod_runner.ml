@@ -250,7 +250,7 @@ module TypedRunner :
         | Options.Classic ->
           (* Nothing to do here *)
           Lwt.return merge_result
-        | Options.TypesFirst ->
+        | Options.TypesFirst _ ->
           Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
           let%lwt result =
             MultiWorkerLwt.call

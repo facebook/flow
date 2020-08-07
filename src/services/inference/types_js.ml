@@ -574,10 +574,10 @@ let remove_old_results options phase current_results file =
   let (errors, warnings, suppressions, coverage, first_internal_error) = current_results in
   let new_coverage =
     match (Options.arch options, phase) with
-    | (Options.TypesFirst, Context.Merging)
-    | (Options.TypesFirst, Context.Normalizing) ->
+    | (Options.TypesFirst _, Context.Merging)
+    | (Options.TypesFirst _, Context.Normalizing) ->
       coverage
-    | (Options.TypesFirst, Context.Checking)
+    | (Options.TypesFirst _, Context.Checking)
     | (Options.Classic, _) ->
       FilenameMap.remove file coverage
   in
@@ -811,7 +811,7 @@ let merge
     let persistent_connections =
       match Options.arch options with
       | Options.Classic -> persistent_connections
-      | Options.TypesFirst -> None
+      | Options.TypesFirst _ -> None
     in
     mk_intermediate_result_callback
       ~reader
@@ -1032,7 +1032,7 @@ end = struct
       ~cannot_skip_direct_dependents =
     match Options.arch options with
     | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None, None, None)
-    | Options.TypesFirst ->
+    | Options.TypesFirst _ ->
       with_timer_lwt ~options "Check" profiling (fun () ->
           Hh_logger.info "Check prep";
           Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
