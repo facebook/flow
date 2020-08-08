@@ -1,1 +1,11 @@
-Found 0 errors
+Error --------------------------------------------------------------------------------------------------------- A.js:9:6
+
+Cannot use `T` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   9|   p: T;
+           ^
+
+
+
+Found 1 error

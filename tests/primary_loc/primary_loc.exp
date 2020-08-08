@@ -35,6 +35,15 @@ Cannot resolve module `react`. [cannot-resolve-module]
                              ^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:26:45
+
+Cannot use `Node` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   26| declare function MyComponent(props: Props): React.Node;
+                                                   ^^^^^^^^^^
+
+
 Warning ---------------------------------------------------------------------------------------------------- test.js:3:1
 
 Unused suppression comment.
@@ -60,4 +69,4 @@ Unused suppression comment.
 
 
 
-Found 3 errors and 3 warnings
+Found 4 errors and 3 warnings

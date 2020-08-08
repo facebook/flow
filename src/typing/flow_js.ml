@@ -4836,7 +4836,10 @@ struct
           add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_name })
         (* non-class/function values used in annotations are errors *)
         | (_, UseT (_, DefT (reason_use, _, TypeT _))) ->
-          add_output cx ~trace Error_message.(EValueUsedAsType { reason_use })
+          (match l with
+          (* Short-circut as we already error on the unresolved name. *)
+          | AnyT (_, AnyError (Some UnresolvedName)) -> ()
+          | _ -> add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
         | (DefT (rl, _, ClassT l), UseT (use_op, DefT (_, _, ClassT u))) ->
           rec_flow cx trace (reposition cx ~trace (aloc_of_reason rl) l, UseT (use_op, u))
         | ( DefT (_, _, FunT (static1, prototype, _)),
@@ -7763,11 +7766,6 @@ struct
       (* function type *)
       any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
-    | UseT (_, DefT (reason, _, TypeT (_, t))) ->
-      (* import type *)
-      (* any can function as class, hence ok for annotations *)
-      rec_flow cx trace (any, BecomeT (reason, t));
-      true
     | ReactKitT (_, _, React.CreateClass (React.CreateClass.PropTypes _, _, _))
     | ReactKitT (_, _, React.SimplifyPropType _) ->
       (* Propagating through here causes exponential blowup. React PropTypes are deprecated
@@ -7854,6 +7852,7 @@ struct
     (* Handled in __flow *)
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
+    | UseT (_, DefT (_, _, TypeT _))
     | CreateObjWithComputedPropT _ (* Handled in __flow *)
     (* Should never occur, so we just defer to __flow to handle errors *)
     | UseT (_, InternalT _)
