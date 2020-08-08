@@ -2012,7 +2012,7 @@ struct
             match call_type.call_targs with
             | None ->
               add_output cx ~trace (Error_message.ETooFewTypeArgs (reason, reason, 1));
-              AnyT.at AnyError fun_loc
+              AnyT.at (AnyError None) fun_loc
             | Some [ExplicitArg t] ->
               let (kind, return_t) =
                 match l with
@@ -2055,7 +2055,7 @@ struct
               return_t
             | Some _ ->
               add_output cx ~trace (Error_message.ETooManyTypeArgs (reason, reason, 1));
-              AnyT.at AnyError fun_loc
+              AnyT.at (AnyError None) fun_loc
           in
           let funtype =
             DefT
@@ -2821,11 +2821,7 @@ struct
             CreateObjWithComputedPropT { reason; value = _; tout_tvar = (tout_reason, tout_id) } )
           ->
           Context.computed_property_add_multiple_lower_bounds cx tout_id;
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (AnyT.why AnyError reason, OpenT (tout_reason, tout_id));
+          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, OpenT (tout_reason, tout_id));
           add_output
             cx
             ~trace
@@ -6781,7 +6777,7 @@ struct
                 { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
-          let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
+          let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
           perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
@@ -7076,7 +7072,7 @@ struct
                  use_op = Some use_op;
                  branches = [];
                });
-          rec_flow cx trace (AnyT.make AnyError lreason, u)
+          rec_flow cx trace (AnyT.make (AnyError None) lreason, u)
         (* Special cases of FunT *)
         | (FunProtoApplyT reason, _)
         | (FunProtoBindT reason, _)
@@ -8468,7 +8464,7 @@ struct
                 (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
                   errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
-              (AnyT (reason_op, AnyError), [])
+              (AnyT (reason_op, AnyError None), [])
             | (_, t :: ts) -> (t, ts)
           in
           let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in

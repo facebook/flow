@@ -3177,7 +3177,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               reason_arity = Reason.(locationless_reason (RType "Function"));
               expected_arity = 0;
             });
-      ( (loc, AnyT.at AnyError loc),
+      ( (loc, AnyT.at (AnyError None) loc),
         New
           {
             New.callee = (callee_annot, Identifier ((id_loc, id_t), name));
@@ -3802,13 +3802,13 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         | (None, arguments) ->
           ignore (arg_list cx arguments);
           let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
           if not ignore_non_literals then
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
@@ -3905,11 +3905,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         | (None, arguments) ->
           ignore (arg_list cx arguments);
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
@@ -5168,7 +5168,7 @@ and literal cx loc lit =
   | BigInt _ ->
     let reason = mk_annot_reason (RBigIntLit lit.raw) loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    AnyT.why AnyError reason
+    AnyT.error reason
   | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) "RegExp"
 
 (* traverse a unary expression, return result type *)
@@ -7409,7 +7409,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = arity;
           });
-    (AnyT.at AnyError loc, Some (targs_loc, targs), args)
+    (AnyT.at (AnyError None) loc, Some (targs_loc, targs), args)
   (* TODO *)
   | _ ->
     let (targts, targ_asts) = convert_call_targs_opt cx targs in

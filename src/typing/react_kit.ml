@@ -720,7 +720,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let elem_t =
             match coerce_prop_type l with
             | Ok (_required, t) -> t
-            | Error reason -> AnyT.make AnyError reason
+            | Error reason -> AnyT.make (AnyError None) reason
           in
           let reason = replace_desc_reason RArrayType reason_op in
           let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, None))) in
@@ -734,7 +734,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let value =
             match coerce_prop_type l with
             | Ok (_required, t) -> t
-            | Error reason -> AnyT.make AnyError reason
+            | Error reason -> AnyT.make (AnyError None) reason
           in
           let props = SMap.empty in
           let dict =
@@ -769,11 +769,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | ResolveArray ->
             (match coerce_array l with
             | Ok todo -> next todo []
-            | Error _ -> AnyT.make AnyError reason_op |> resolve)
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveElem (todo, done_rev) ->
             (match coerce_singleton l with
             | Ok t -> next todo (t :: done_rev)
-            | Error _ -> AnyT.make AnyError reason_op |> resolve))
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | OneOfType tool ->
           (* TODO: This is _very_ similar to `one_of` above. *)
           let next todo done_rev =
@@ -795,12 +795,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | ResolveArray ->
             (match coerce_array l with
             | Ok todo -> next todo []
-            | Error _ -> AnyT.make AnyError reason_op |> resolve)
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveElem (todo, done_rev) ->
             (* TODO: Don't ignore the required flag. *)
             (match coerce_prop_type l with
             | Ok (_required, t) -> next todo (t :: done_rev)
-            | Error _ -> AnyT.make AnyError reason_op |> resolve))
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | Shape tool ->
           (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
            for reasons descriptions/locations, recursive ReactKit constraints, and
@@ -868,12 +868,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       ( unknown_use,
                         reason_op,
                         SimplifyPropType (Shape (ResolveDict (dicttype, todo, shape)), tout) ) ))
-            | Error _ -> AnyT.make AnyError reason_op |> resolve)
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveDict (dicttype, todo, shape) ->
             let dict =
               match coerce_prop_type l with
               | Ok (_, t) -> { dicttype with value = t }
-              | Error reason -> { dicttype with value = AnyT.make AnyError reason }
+              | Error reason -> { dicttype with value = AnyT.make (AnyError None) reason }
             in
             next todo (add_dict dict shape)
           | ResolveProp (k, todo, shape) ->
@@ -884,7 +884,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   t
                 else
                   optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
-              | Error _ -> AnyT.make AnyError reason_op |> optional
+              | Error _ -> AnyT.make (AnyError None) reason_op |> optional
             in
             next todo (add_prop k t shape)))
     in
@@ -1353,7 +1353,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             let dict =
               match coerce_prop_type l with
               | Ok (_, t) -> { dicttype with value = t }
-              | Error reason -> { dicttype with value = AnyT.make AnyError reason }
+              | Error reason -> { dicttype with value = AnyT.make (AnyError None) reason }
             in
             next todo (add_dict dict prop_types)
           | ResolveProp (k, todo, prop_types) ->
@@ -1364,7 +1364,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   t
                 else
                   optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
-              | Error reason -> AnyT.make AnyError reason |> optional
+              | Error reason -> AnyT.make (AnyError None) reason |> optional
             in
             next todo (add_prop k t prop_types))
         | DefaultProps (todo, acc) ->

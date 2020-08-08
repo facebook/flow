@@ -251,7 +251,7 @@ let rec merge component file = function
   | Pack.Pattern i ->
     let p = Patterns.get file.patterns i in
     visit_pattern component file p
-  | Pack.Err loc -> Type.(AnyT.at AnyError loc)
+  | Pack.Err loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.Eval (loc, t, op) ->
     let t = merge component file t in
     let op = merge_op component file op in
@@ -285,7 +285,7 @@ and merge_pattern component file = function
     let use_op = Type.unknown_use in
     Tvar.mk_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetElemT (use_op, reason, elem, tout)))
-  | Pack.UnsupportedLiteralP loc -> Type.(AnyT.at AnyError loc)
+  | Pack.UnsupportedLiteralP loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.ObjRestP { loc; xs; def } ->
     let def = Patterns.get file.patterns def in
     let t = visit_pattern component file def in
@@ -479,7 +479,7 @@ and merge_annot component file = function
   | Number loc -> Type.NumT.at loc trust
   | BigInt loc ->
     let reason = Reason.(mk_annot_reason RBigInt loc) in
-    Type.(AnyT.why AnyError reason)
+    Type.(AnyT.error reason)
   | String loc -> Type.StrT.at loc trust
   | Boolean loc -> Type.BoolT.at loc trust
   | Exists { loc; force } ->
@@ -535,7 +535,7 @@ and merge_annot component file = function
     Type.(DefT (reason, trust, SingletonNumT (num, raw)))
   | SingletonBigInt (loc, raw) ->
     let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-    Type.(AnyT.why AnyError reason)
+    Type.(AnyT.error reason)
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
     Type.(DefT (reason, trust, SingletonBoolT b))
@@ -846,7 +846,7 @@ and merge_annot component file = function
       | Type.DefT (r, trust, def_t) ->
         let reason = Reason.(mk_annot_reason (RTrusted (desc_of_reason r)) loc) in
         Type.(DefT (reason, trust, def_t))
-      | _ -> Type.(AnyT.at AnyError loc)
+      | _ -> Type.(AnyT.at (AnyError None) loc)
     end
   | Private (loc, t) ->
     begin
@@ -854,7 +854,7 @@ and merge_annot component file = function
       | Type.DefT (r, trust, def_t) ->
         let reason = Reason.(mk_annot_reason (RPrivate (desc_of_reason r)) loc) in
         Type.(DefT (reason, trust, def_t))
-      | _ -> Type.(AnyT.at AnyError loc)
+      | _ -> Type.(AnyT.at (AnyError None) loc)
     end
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in

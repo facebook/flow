@@ -794,7 +794,7 @@ let read_entry ~lookup_mode ~specific cx name ?desc loc =
     | Type _ when lookup_mode != ForType ->
       let msg = Error_message.ETypeInValuePosition in
       binding_error msg cx name entry loc;
-      AnyT.at AnyError (entry_loc entry)
+      AnyT.at (AnyError None) (entry_loc entry)
     | Type t -> t.type_
     | Class _ -> assert_false "Internal Error: Classes should only be read using get_class_entries"
     | Value v ->
@@ -802,7 +802,7 @@ let read_entry ~lookup_mode ~specific cx name ?desc loc =
       | { Entry.kind; value_state = State.Undeclared; value_declare_loc; _ }
         when lookup_mode = ForValue && (not (allow_forward_ref kind)) && same_activation scope ->
         tdz_error cx name loc v;
-        AnyT.at AnyError value_declare_loc
+        AnyT.at (AnyError None) value_declare_loc
       | _ ->
         Changeset.Global.change_var (scope.id, name, Changeset.Read);
         let (s, g) = value_entry_types ~lookup_mode scope v in

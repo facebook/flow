@@ -921,9 +921,11 @@ module rec TypeTerm : sig
 
   and any_source =
     | Annotated
-    | AnyError
+    | AnyError of any_error_kind option
     | Unsound of unsoundness_kind
     | Untyped
+
+  and any_error_kind = UnresolvedName
 
   (* Tracks the kinds of unsoundness inherent in Flow. If you can't find a kind that matches
      your use case, make one *)
@@ -2624,7 +2626,9 @@ module AnyT = struct
 
   let annot = why Annotated
 
-  let error = why AnyError
+  let error = why (AnyError None)
+
+  let error_of_kind kind = why (AnyError (Some kind))
 
   let untyped = why Untyped
 
