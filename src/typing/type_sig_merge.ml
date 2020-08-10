@@ -499,7 +499,15 @@ and merge_annot component file = function
     let t0 = merge component file t0 in
     let t1 = merge component file t1 in
     let ts = List.map (merge component file) ts in
-    Type.(UnionT (reason, UnionRep.make t0 t1 ts))
+    let open Type in
+    let rep = UnionRep.make t0 t1 ts in
+    UnionRep.optimize
+      rep
+      ~reasonless_eq:TypeUtil.reasonless_eq
+      ~flatten:(Type_mapper.union_flatten file.cx)
+      ~find_resolved:(Context.find_resolved file.cx)
+      ~find_props:(Context.find_props file.cx);
+    UnionT (reason, rep)
   | Intersection { loc; t0; t1; ts } ->
     let reason = Reason.(mk_annot_reason RIntersectionType loc) in
     let t0 = merge component file t0 in
