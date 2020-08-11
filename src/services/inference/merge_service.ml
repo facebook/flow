@@ -162,10 +162,6 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   | (Options.TypesFirst _, Context.Merging) -> MergeResult { cx = full_cx; master_cx }
   | (Options.TypesFirst _, Context.Checking)
   | (Options.Classic, _) ->
-    Inference_utils.iter_strict_es6_import_export
-      ~f:(Strict_es6_import_export.detect_errors full_cx)
-      options
-      cx_nel;
     let coverage =
       Nel.fold_left
         (fun acc (ctx, _, typed_ast) ->

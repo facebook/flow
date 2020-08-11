@@ -55,6 +55,8 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  strict_es6_import_export: bool;
+  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
@@ -227,6 +229,8 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
+    strict_es6_import_export = Options.strict_es6_import_export options;
+    strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     default_lib_dir = (Options.file_options options).Files.default_lib_dir;

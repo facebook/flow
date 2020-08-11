@@ -422,6 +422,7 @@ let merge_component
     detect_unnecessary_optional_chains cx;
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
+    Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
 
     force_annotations cx other_cxs;
 

@@ -168,6 +168,8 @@ let stub_metadata ~root ~checked =
     react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     root;
+    strict_es6_import_export = false;
+    strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
     default_lib_dir = None;

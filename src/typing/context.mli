@@ -71,6 +71,8 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  strict_es6_import_export: bool;
+  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;

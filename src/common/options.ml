@@ -243,6 +243,8 @@ let should_strip_root opts = opts.opt_strip_root
 
 let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 
+let strict_es6_import_export_excludes opts = opts.opt_strict_es6_import_export_excludes
+
 let suppress_types opts = opts.opt_suppress_types
 
 let temp_dir opts = opts.opt_temp_dir
