@@ -857,7 +857,7 @@ let ensure_parsed ~reader options workers files =
   (* We want to parse unchanged files, since this is our first time parsing them *)
   let parse_unchanged = true in
   (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
-   * simle Parse_mutator rather than the rollback-able Reparse_mutator *)
+   * simple Parse_mutator rather than the rollback-able Reparse_mutator *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let progress_fn ~total ~start ~length:_ =
     MonitorRPC.status_update
